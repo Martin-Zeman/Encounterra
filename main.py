@@ -40,10 +40,10 @@ if __name__ == '__main__':
 
     #--------------------------------------------------
     battle_map = Map(10, 10)
-    cyanwrath_attacks = [Attack(7, "1d10", 4, False, [19, 20]), Attack(7, "1d4", 4, True, [19, 20])]
-    Cyanwrath = Character("Cyanwrath", cyanwrath_attacks, 95, 17, 1, 30, "Blue", num_attacks=2)
-    rena_attacks = [Attack(7, "1d12", 4, False)]
-    Rena = Character("Rena", rena_attacks, 122, 15, 1, 40, "Red", num_attacks=2)
+    cyanwrath_attacks = [Attack("Polearm", 7, "1d10", 4, False, "Slashing", [19, 20]), Attack("Butt end of Polearm", 7, "1d4", 4, True, "Bludgeoning", [19, 20])]
+    Cyanwrath = Character("Cyanwrath", cyanwrath_attacks, 95, 17, 1, 30,["Lightning"], "Blue", num_attacks=2)
+    rena_attacks = [Attack("Two-handed axe", 7, "1d12", 4, False, "Slashing")]
+    Rena = Character("Rena", rena_attacks, 61, 15, 1, 40, ["Slashing", "Bludgeoning"], "Red", num_attacks=2)
     battle_map.set_character_coordinates(Cyanwrath, 4, 5)
     battle_map.set_character_coordinates(Rena, 5, 5)
     combatants = [Cyanwrath, Rena]

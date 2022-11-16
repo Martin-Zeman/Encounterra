@@ -28,13 +28,15 @@ class CombatManager:
         if rolled == 1:
             print("Natural 1 rolled!")
             return
-        elif rolled in action.get_attack().crit_range:
+        elif rolled in action.crit_range:
             multiplier = 2
-        if rolled + action.get_attack().to_hit >= target.ac:
-            num_dice, dice_size = parse_dmg_dice(action.get_attack().dmg_dice)
+        if rolled + action.to_hit >= target.ac:
+            num_dice, dice_size = parse_dmg_dice(action.dmg_dice)
             dmg_dice_sum = 0
             for i in range(num_dice):
                 dmg_dice_sum += random.randint(1, dice_size)
-            total_dmg = multiplier * dmg_dice_sum + action.get_attack().dmg_bonus
+            total_dmg = multiplier * dmg_dice_sum + action.dmg_bonus
             print(f"Attack hits for {total_dmg}")
-            target.curr_hp -= total_dmg
+            target.receive_dmg(total_dmg, action.get_dmg_type())
+        else:
+            print("Attack misses")

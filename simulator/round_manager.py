@@ -36,19 +36,23 @@ class RoundManager:
         self.order_by_initiative()
         print("--------------START--------------")
         for r in range(self.num_rounds):
+            print(f"Round {r + 1}:")
             if self.is_only_one_team_standing():
                 print("EARLY END")
                 return
             for character in self.characters:
                 if character.is_alive():
-                    action = character.get_action(self.battle_map)
-                    self.combat_manager.resolve_action(action)
+                    character.new_round()
+                    while True:
+                        action = character.get_action(self.battle_map)
+                        if action is None:
+                            break
+                        self.combat_manager.resolve_action(action)
                     # if (self.is_only_one_team_standing()):
                     #     print("EARLY END")
                     #     return
                 else:
                     print(f"Character {character.get_name()} is dead. Skipping")
-            print(f"Round {r+1}:")
             self.print_status()
 
     def print_status(self):
