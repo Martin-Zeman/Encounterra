@@ -20,7 +20,7 @@ def print_ac_dc_range(min, max, attacks, monster_name="Monster"):
     print(monster_name + ":")
     for i in range(min, max + 1):
         dmg_sum = reduce((lambda a, b: a + b), [a(i) for a in attacks])
-        print("{:.2f}".format(dmg_sum))
+        print("{:d}: {:.2f}".format(i, dmg_sum))
     print()
 
 def attack(to_hit, hit_dice, dmg_bonus):
