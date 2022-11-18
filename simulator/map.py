@@ -22,9 +22,10 @@ class GridCell:
 
 
 class Map:
-    def __init__(self, width, height):
+    def __init__(self, width, height, teams):
         self.width = width
         self.height = height
+        self.__teams = teams
         self.grid = [[GridCell() for _ in range(width)] for _ in range(height)]
 
     def get_character(self, x, y):
@@ -46,7 +47,7 @@ class Map:
         """ TODO, simplified"""
         for row in self.grid:
             for cell in row:
-                if not cell.is_empty() and cell.get_character().get_team() != character.get_team():
+                if not cell.is_empty() and not self.__teams.are_allies(cell.get_character(), character):
                     return cell.get_character().get_name()
 
     def get_character_position(self, name):

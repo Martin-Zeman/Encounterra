@@ -1,6 +1,7 @@
 from simulator.action import *
 import random
 from dpr_calculator import parse_dmg_dice
+import logging
 
 class CombatManager:
 
@@ -14,11 +15,11 @@ class CombatManager:
                 target = character
 
         if not target:
-            print(f"No target found for action {action.get_name()}")
+            logging.warning(f"No target found for action {action.get_name()}")
             return
 
         if action.get_type() != "ATTACK":
-            print("Non-attack actions not supported yet")
+            logging.warning("Non-attack actions not supported yet")
             return
 
         # if self.hp <= 0:
@@ -26,7 +27,7 @@ class CombatManager:
         rolled = random.randint(1, 20)
         multiplier = 1
         if rolled == 1:
-            print("Natural 1 rolled!")
+            logging.debug("Natural 1 rolled!")
             return
         elif rolled in action.crit_range:
             multiplier = 2
@@ -36,7 +37,7 @@ class CombatManager:
             for i in range(num_dice):
                 dmg_dice_sum += random.randint(1, dice_size)
             total_dmg = multiplier * dmg_dice_sum + action.dmg_bonus
-            print(f"Attack hits for {total_dmg}")
+            logging.debug(f"Attack {'CRITS' if multiplier == 2 else 'hits'} for {total_dmg}")
             target.receive_dmg(total_dmg, action.get_dmg_type())
         else:
-            print("Attack misses")
+            logging.debug("Attack misses")

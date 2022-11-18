@@ -5,6 +5,8 @@ from simulator.map import *
 from simulator.combat_manager import *
 from simulator.round_manager import *
 from simulator.attack import *
+from simulator.team import Teams
+import logging
 
 if __name__ == '__main__':
     # redbrand_shortsword = attack(4, '1d6', 2)
@@ -39,16 +41,20 @@ if __name__ == '__main__':
     # simulate_n_combats(Cyanwrath, Rena, 10000)
 
     #--------------------------------------------------
-    battle_map = Map(10, 10)
+    logging.basicConfig(level=logging.DEBUG)
     cyanwrath_attacks = [Attack("Polearm", 7, "1d10", 4, False, "Slashing", [19, 20]), Attack("Butt end of Polearm", 7, "1d4", 4, True, "Bludgeoning", [19, 20])]
-    Cyanwrath = Character("Cyanwrath", cyanwrath_attacks, 95, 17, 1, 30,["Lightning"], "Blue", num_attacks=2)
+    Cyanwrath = Character("Cyanwrath", cyanwrath_attacks, 95, 17, 1, 30,["Lightning"], num_attacks=2)
     rena_attacks = [Attack("Two-handed axe", 7, "1d12", 4, False, "Slashing")]
-    Rena = Character("Rena", rena_attacks, 61, 15, 1, 40, ["Slashing", "Bludgeoning"], "Red", num_attacks=2)
+    Rena = Character("Rena", rena_attacks, 61, 15, 1, 40, ["Slashing", "Bludgeoning"], num_attacks=2)
+    combatants = [Cyanwrath, Rena]
+    teams = Teams()
+    teams.add_char_to_team(Cyanwrath, "Blue")
+    teams.add_char_to_team(Rena, "Red")
+    battle_map = Map(10, 10, teams)
     battle_map.set_character_coordinates(Cyanwrath, 4, 5)
     battle_map.set_character_coordinates(Rena, 5, 5)
-    combatants = [Cyanwrath, Rena]
     combat_manager = CombatManager(combatants)
-    round_manager = RoundManager(combatants, battle_map, combat_manager)
-    round_manager.simulate()
-    round_manager.print_results()
+    round_manager = RoundManager(combatants, teams, battle_map, combat_manager)
+    round_manager.simulate_n(10)
+    # round_manager.print_results()
 
