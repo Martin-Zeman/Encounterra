@@ -1,1 +1,3 @@
 Multi-attack cannot be split
+So far only medium sized characters
+map only of square shape

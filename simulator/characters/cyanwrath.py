@@ -19,7 +19,6 @@ class Cyanwrath(Character):
                 if self.num_attacks and not self.multiattack_in_progress:
                     self.multiattack_in_progress = True
                 if self.curr_num_attacks and self.multiattack_in_progress:
-                    # attack = action.get_instance()
                     chosen_action = action
                     chosen_action.set_target_name(target_name)
                     self.curr_num_attacks -= 1
@@ -29,7 +28,6 @@ class Cyanwrath(Character):
                     self.has_action = False
                     self.multiattack_in_progress = False
             elif self.has_bonus_action and action.is_bonus():
-                # attack = action.get_instance()
                 chosen_action = action
                 chosen_action.set_target_name(target_name)
                 self.has_bonus_action = False

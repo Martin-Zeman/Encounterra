@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class RoundManager:
     def __init__(self, characters, teams, battle_map, combat_manager, num_rounds = 20):
         self.characters = characters
@@ -27,20 +28,6 @@ class RoundManager:
 
     def is_only_one_team_standing(self):
         return True if len(self.__teams.get_surviving_teams()) == 1 else False
-        # team_head_count = {}
-        # for character in self.characters:
-        #     if character.is_alive():
-        #         try:
-        #             team_head_count[character.get_team()] += 1
-        #         except KeyError:
-        #             team_head_count[character.get_team()] = 1
-        # num_teams_standing = 0
-        # for key, val in team_head_count.items():
-        #     if val:
-        #         num_teams_standing += 1
-        #         if num_teams_standing > 1:
-        #             return False
-        # return True
 
     def simulate_n(self, n=1):
         if n == 1:
@@ -82,9 +69,6 @@ class RoundManager:
                             break
                         if action.is_targeted_combat_action():
                             self.combat_manager.resolve_action(action)
-                    # if (self.is_only_one_team_standing()):
-                    #     print("EARLY END")
-                    #     return
                 else:
                     logger.debug(f"Character {character.get_name()} is dead. Skipping")
             self.print_status()

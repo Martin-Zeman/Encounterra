@@ -6,14 +6,6 @@ from simulator.characters.cyanwrath import Cyanwrath
 import logging
 import sys
 from simulator.logging.log_formatter import LogFormatter
-from simulator.logging.color_adapter import ColorAdapter
-
-
-class CustomLoggerAdapter(logging.LoggerAdapter):
-    def process(self, msg, kwargs):
-        yellow = '\x1b[38;5;226m'
-        reset = '\x1b[0m'
-        return yellow + f'{msg}' + reset, kwargs
 
 if __name__ == '__main__':
     # redbrand_shortsword = attack(4, '1d6', 2)
@@ -60,11 +52,15 @@ if __name__ == '__main__':
     teams = Teams()
     teams.add_char_to_team(cyanwrath, "Blue")
     teams.add_char_to_team(rena, "Red")
-    battle_map = Map(10, 10, teams)
-    battle_map.set_character_coordinates(cyanwrath, 4, 5)
-    battle_map.set_character_coordinates(rena, 5, 5)
+    battle_map = Map(5, teams)
+    battle_map.set_character_coordinates(cyanwrath, 4, 3)
+    battle_map.set_character_coordinates(rena, 2, 3)
     combat_manager = CombatManager(combatants, teams)
     round_manager = RoundManager(combatants, teams, battle_map, combat_manager)
-    round_manager.simulate_n(1000)
+    # battle_map.build_adjacency_matrix()
+    battle_map.place_circular_element((3,3), Map.DIFFICULT_TERRAIN, 1)
+    battle_map.build_adjacency_matrix()
+    battle_map.get_path_to_enemy(rena, cyanwrath)
+    # round_manager.simulate_n(10000)
     # round_manager.print_results()
 
