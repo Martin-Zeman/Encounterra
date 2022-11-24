@@ -3,7 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import sys
+import logging
 
+logger = logging.getLogger(__name__)
 
 class GridCell:
     def __init__(self):
@@ -69,16 +71,10 @@ class Map:
         N = self.size
         Nsq = N**2
         adj = np.zeros((N, N, N, N))
-        # adj2 = np.zeros((N, N, N, N))
-        # print(adj)
         # Take adj to encode (x,y) coordinate to (x,y) coordinate edges
         # Let's now connect the nodes
         for i in range(N):
             for j in range(N):
-                # Connect x=i, y=j, to x-1 and x+1, y-1 and y+1
-                # adj2[i, j, max((i - 1), 0):(i + 2), max((j - 1), 0):(j + 2)] = 1
-                # print(f" i={i} j={j}")
-                # print(f"from {max((j - 1), 0)} to {(j + 2)}")
                 adj[i, j, max((i - 1), 0), max((j - 1), 0)] = 1
                 adj[i, j, max((i - 1), 0), j] = 1
                 adj[i, j, max((i - 1), 0), min(j + 1, N-1)] = 1
@@ -94,18 +90,13 @@ class Map:
                 # max is used to avoid negative slicing, and +2 is used because
                 # slicing does not include last element.
         adj = adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
-        # adj2 = adj2.reshape(Nsq, Nsq)  # Back to node-to-node shape
         # Remove self-connections (optional)
         adj -= np.eye(Nsq)
-        # print(adj)
         for coord in self.difficult_set:
             adj[:, coord[0] * N + coord[1]] *= 2
         self.base_adjacency_matrix = adj
-        # plt.matshow(adj)
-        # plt.show()
 
-    def printSolution(self, dist, my_location, enemy_location):
-        print("Vertex \tDistance from Source")
+    def printSolution(self, dist, my_location, enemy_location, reconstructed_path):
         my_coord = my_location[0]*self.size + my_location[1]
         enemy_coord = enemy_location[0]*self.size + enemy_location[1]
         for x in range(self.size):
@@ -113,25 +104,28 @@ class Map:
             for y in range(self.size):
                 coord = x*self.size + y
                 if coord == my_coord:
-                    row += "\x1b[38;5;39m%d  \x1b[0m" % dist[x * self.size + y]
+                    row += "\x1b[38;5;39m%d\x1b[0m\t" % dist[coord]
                 elif coord == enemy_coord:
-                    row += "\x1b[38;5;196m%d  \x1b[0m" % dist[x * self.size + y]
+                    row += "\x1b[38;5;196m%d\x1b[0m\t" % dist[coord]
+                elif (x, y) in reconstructed_path:
+                    row += "\u001b[36m%d\x1b[0m\t" % dist[coord]
                 else:
-                    row += "%d  " % dist[x*self.size + y]
-            print(row)
+                    row += "%d\t" % dist[coord] if (x, y) not in self.difficult_set else "\x1b[38;5;226m%d\x1b[0m\t" % dist[coord]
+            logger.debug(row)
 
     def minDistance(self, dist, sptSet):
         Nsq = self.size ** 2
         min = sys.maxsize
 
         for u in range(Nsq):
-            if dist[u] < min and sptSet[u] == False:
+            if dist[u] < min and sptSet[u] is False:
                 min = dist[u]
                 min_index = u
 
         return min_index
 
     def dijkstra(self, src):
+        src = np.array(src)
         N = self.size
         Nsq = self.size**2
         dist = [sys.maxsize] * Nsq
@@ -144,9 +138,16 @@ class Map:
             x = self.minDistance(dist, sptSet)
             sptSet[x] = True
             for y in range(Nsq):
-                if adj[x][y] > 0 and sptSet[y] is False and dist[y] > dist[x] + adj[x][y]:
-                    dist[y] = dist[x] + adj[x][y]
-                    shortest_paths[(y // N, y % N)] = (x // N, x % N)
+                if adj[x][y] > 0 and sptSet[y] is False:
+                    coord_to = (y // N, y % N)
+                    coord_to_np = np.array([coord_to[0], coord_to[1]])
+                    coord_from = np.array([x // N, x % N])
+                    if dist[y] > dist[x] + adj[x][y]:
+                        dist[y] = dist[x] + adj[x][y]
+                        shortest_paths[coord_to] = coord_from
+                    elif dist[y] >= dist[x] + adj[x][y] and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(np.abs(coord_to_np - coord_from)):
+                        # prefer the path with the least coordinate diff, i.e. the less zig-zaggy path
+                        shortest_paths[coord_to] = coord_from
 
         return dist, shortest_paths
 
@@ -155,7 +156,7 @@ class Map:
         increments = []
         for i in range(len(path) - 1):
             increments.append(path[i + 1] - path[i])
-        print(increments)
+        logger.debug(increments)
 
     def move_character(self, coord_increments):
         pass
@@ -181,30 +182,37 @@ class Map:
     def set_character_coordinates(self, character, x, y):
         self.grid[x-1][y-1].set_character(character)
 
-    def get_nearest_enemy_name(self, character):
+    def get_nearest_enemy(self, character):
         """ TODO, simplified"""
         for row in self.grid:
             for cell in row:
                 if not cell.is_empty() and not self.__teams.are_allies(cell.get_character(), character):
-                    return cell.get_character().get_name()
+                    return cell.get_character()
+
+    def reconstruct_from_shortest_path(self, shortest_path, my_location, enemy_location):
+        current_position = enemy_location
+        path = {'tuples' : [], 'numpy': []}
+        while not np.array_equal(current_position, my_location):
+            path['numpy'].append(current_position)
+            path['tuples'].append(tuple(current_position))
+            # have to convert to tuple cause numpy array is non-hashable
+            current_position = shortest_path[tuple(current_position)]
+        else:
+            path['numpy'].append(my_location)
+            path['tuples'].append(tuple(my_location))
+        path['numpy'].reverse()
+        path['tuples'].reverse()
+        return path
 
     def get_path_to_enemy(self, character, target):
         my_location = self.get_character_position(character.name)
         enemy_location = self.get_character_position(target.name)
-        print(f"My location {my_location}")
-        print(f"Enemy location {enemy_location}")
+        print(f"My location {my_location + 1}")
+        print(f"Enemy location {enemy_location + 1}")
         dist, shortest_path = self.dijkstra(my_location)
-        # self.printSolution(dist, my_location, enemy_location)
-        current_position = enemy_location
-        path = []
-        while not np.array_equal(current_position, my_location):
-            path.append(current_position)
-            # have to convert to tuple cause numpy array is non-hashable
-            current_position = shortest_path[tuple(current_position)]
-        else:
-            path.append(my_location)
-        path.reverse()
-        return self.convert_path_to_increments(path)
+        reconstructed_path = self.reconstruct_from_shortest_path(shortest_path, my_location, enemy_location)
+        self.printSolution(dist, my_location, enemy_location, reconstructed_path['tuples'])
+        return self.convert_path_to_increments(reconstructed_path['numpy'])
 
     def get_character_position(self, name):
         for i, row in enumerate(self.grid):

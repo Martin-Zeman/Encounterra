@@ -14,7 +14,7 @@ class CombatManager:
     def resolve_action(self, action):
         target = None
         for character in self.characters:
-            if character.get_name() == action.get_target_name():
+            if character == action.get_target_character():
                 target = character
                 # TODO: Cosider including this in the action itself
 

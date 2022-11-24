@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 class Rena(Character):
 
     def __init__(self):
-        rena_attacks = [Attack("Two-handed axe", self,  7, "1d12", 4, "action", "Slashing")]
+        rena_attacks = [Attack("Two-handed axe", self,  7, "1d12", 4, "action", "Slashing", 1)]
         super().__init__("Rena", rena_attacks, 61, 15, 1, 40, [], num_attacks=2)
         rage = Rage(self, 3, 2)
         self.actions.append(rage)
