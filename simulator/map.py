@@ -37,30 +37,31 @@ class Map:
 
     def __init__(self, size, teams):
         self.size = size
-        self.__teams = teams
+        self.teams = teams
         self.grid = [[GridCell() for _ in range(size)] for _ in range(size)]
         self.base_adjacency_matrix = np.zeros((size, size))
         self.difficult_set = set()
+        self.character_coordinate_cache = {}
 
-    def place_circular_element(self, coords, type, diameter=1):
+    def place_circular_element(self, coords, element_type, diameter=1):
         N = self.size
         coords = (coords[0] - 1, coords[1] - 1) # convert to 1-based coordinates
-        if (diameter == 1):
-            if type == self.INACCESSIBLE:
+        if diameter == 1:
+            if element_type == self.INACCESSIBLE:
                 self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].is_accessible = False
-            elif type == self.DIFFICULT_TERRAIN:
+            elif element_type == self.DIFFICULT_TERRAIN:
                 self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].difficult_terrain = True
                 self.difficult_set.add((coords[0], coords[1]))
         elif diameter > 1:
             for x in range(-math.floor(diameter/2), math.floor(diameter/2) + 1):
                 for y in range(-math.floor(diameter/2), math.floor(diameter/2) + 1):
                     try:
-                        if type == self.INACCESSIBLE:
-                            self.grid[max(0, min(coords[0] + x, N - 1))][max(0, min(coords[1] + y, N - 1))].is_accessible = False
-                        elif type == self.DIFFICULT_TERRAIN:
-                            self.grid[max(0, min(coords[0] + x, N - 1))][max(0, min(coords[1] + y, N - 1))].difficult_terrain = True
-                            self.difficult_set.add((max(0, min(coords[0] + x, N - 1)), max(0, min(coords[1] + y, N - 1))))
-                    except:
+                        if element_type == self.INACCESSIBLE:
+                            self.grid[coords[0] + x][coords[1] + y].is_accessible = False
+                        elif element_type == self.DIFFICULT_TERRAIN:
+                            self.grid[coords[0] + x][coords[1] + y].difficult_terrain = True
+                            self.difficult_set.add((coords[0] + x, coords[1] + y))
+                    except IndexError:
                         pass #out of grid
 
 
@@ -151,24 +152,38 @@ class Map:
 
         return dist, shortest_paths
 
-
     def convert_path_to_increments(self, path):
         increments = []
         for i in range(len(path) - 1):
             increments.append(path[i + 1] - path[i])
         logger.debug(increments)
+        return increments
 
-    def move_character(self, coord_increments):
-        pass
+    def move_character(self, character, increment):
+        old_coord = self.character_coordinate_cache[character]
+        self.grid[old_coord[0]][old_coord[1]].set_character(None)
+        new_coord = old_coord + increment
+        try:
+            self.grid[new_coord[0]][new_coord[1]].set_character(character)
+        except IndexError as e:
+            logger.error(e)
+        self.character_coordinate_cache[character] = new_coord
+        logger.debug(f"{character.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(character)})
 
     def would_incur_aoo(self, coord, increment):
         return False
 
+    def get_aoo_illegible_characters(self, character, increment):
+        return None
+
+    def get_pam_illegible_characters(self, character, increment):
+        return None
+
     def is_stepping_into_range(self, coord, increment):
         return False
 
-    def get_character(self, x, y):
-        return self.grid[x][y].get_character()
+    # def get_character(self, x, y):
+    #     return self.grid[x][y].get_character()
 
     def is_empty(self, x, y):
         return self.grid[x][y].is_empty()
@@ -179,15 +194,26 @@ class Map:
     def shortest_distance(self, x1, y1, x2, y2):
         return 1
 
-    def set_character_coordinates(self, character, x, y):
-        self.grid[x-1][y-1].set_character(character)
+    def set_character_coordinates(self, character, coord):
+        # TODO: redo this as np.array
+        self.grid[coord[0]][coord[1]].set_character(character)
+        self.character_coordinate_cache[character] = coord
 
     def get_nearest_enemy(self, character):
-        """ TODO, simplified"""
-        for row in self.grid:
-            for cell in row:
-                if not cell.is_empty() and not self.__teams.are_allies(cell.get_character(), character):
-                    return cell.get_character()
+        min_dist = sys.float_info.max
+        nearest_enemy = None
+        self_position = self.character_coordinate_cache[character]
+        for potential_target, target_coord in self.character_coordinate_cache.items():
+            dist = np.linalg.norm(target_coord - self_position)
+            if potential_target is not character and not self.teams.are_allies(potential_target, character) and dist < min_dist:
+                min_dist = dist
+                nearest_enemy = potential_target
+        return nearest_enemy
+
+    def are_in_range(self, character1, character2, range):
+        char1_position = np.array(self.character_coordinate_cache[character1])
+        char2_position = np.array(self.character_coordinate_cache[character2])
+        return np.max(np.abs(char1_position - char2_position)) <= range
 
     def reconstruct_from_shortest_path(self, shortest_path, my_location, enemy_location):
         current_position = enemy_location
@@ -207,8 +233,8 @@ class Map:
     def get_path_to_enemy(self, character, target):
         my_location = self.get_character_position(character.name)
         enemy_location = self.get_character_position(target.name)
-        print(f"My location {my_location + 1}")
-        print(f"Enemy location {enemy_location + 1}")
+        print(f"My location {my_location}")
+        print(f"Enemy location {enemy_location}")
         dist, shortest_path = self.dijkstra(my_location)
         reconstructed_path = self.reconstruct_from_shortest_path(shortest_path, my_location, enemy_location)
         self.printSolution(dist, my_location, enemy_location, reconstructed_path['tuples'])
@@ -221,3 +247,8 @@ class Map:
                 if character and character.get_name() == name:
                     return np.array([i, j])
         return None
+
+    def remove_character(self, character):
+        old_coord = self.character_coordinate_cache[character]
+        self.grid[old_coord[0]][old_coord[1]].set_character(None)
+        del self.character_coordinate_cache[character]

@@ -24,10 +24,16 @@ class Character:
         self.has_reaction = True
         self.num_attacks = num_attacks
         self.curr_num_attacks = num_attacks
+        self.speed = speed / 5
         self.movement = speed / 5
         self.resistances = resistances
         self.multiattack_in_progress = False
         self.team_name = ""
+        self.selected_target = None
+        self.planned_movement = None
+        self.movement_generator = None
+        self.max_melee_range = 1
+        self.target_position_cache = None
 
     def is_alive(self):
         return self.curr_hp > 0
@@ -62,6 +68,7 @@ class Character:
         self.has_action = True
         self.has_bonus_action = True
         self.curr_num_attacks = self.num_attacks
+        self.movement = self.speed
 
     def get_name(self):
         return self.name
@@ -79,6 +86,11 @@ class Character:
         self.curr_hp = self.max_hp
         for action in self.actions:
             action.reset()
+        self.target_position_cache = None
+        self.movement = self.speed
 
     def add_team(self, team_name):
         self.team_name = team_name
+
+    def prompt_aoo(self, character):
+        return None

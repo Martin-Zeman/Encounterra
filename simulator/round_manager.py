@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class RoundManager:
-    def __init__(self, characters, teams, battle_map, combat_manager, num_rounds = 20):
+    def __init__(self, characters, teams, battle_map, combat_manager, num_rounds = 30):
         self.characters = characters
         self.__teams = teams
         self.num_rounds = num_rounds
@@ -29,12 +29,37 @@ class RoundManager:
     def is_only_one_team_standing(self):
         return True if len(self.__teams.get_surviving_teams()) == 1 else False
 
+    def request_movement(self, character, increment):
+        aoo_candidates = self.battle_map.get_aoo_illegible_characters(character, increment)
+        if aoo_candidates:
+            for candidate in aoo_candidates:
+                aoo = candidate.prompt_aoo(character)
+                if aoo:
+                    aoo.action_class = Action.ActionClasses.REACTION
+                    self.combat_manager.resolve_attack(aoo)
+
+        pam_candidates = self.battle_map.get_pam_illegible_characters(character, increment)
+        if pam_candidates:
+            for candidate in pam_candidates:
+                pam_attack = candidate.prompt_pam(character)
+                if pam_attack:
+                    pam_attack.action_class = Action.ActionClasses.REACTION
+                    # TODO
+
+        if character.is_alive():
+            self.battle_map.move_character(character, increment)
+
+
+
     def simulate_n(self, n=1):
         if n == 1:
             self.simulate()
         elif n > 1:
             team_tally = {name: 0 for name in self.__teams.get_team_names()}
+            character_initial_positions = {ch:self.battle_map.get_character_position(ch.get_name()) for ch in self.characters}
             for i in range(n):
+                for character in self.characters:
+                    self.battle_map.set_character_coordinates(character, character_initial_positions[character])
                 self.simulate()
                 surviving_teams = self.__teams.get_surviving_teams()
                 if len(surviving_teams) > 1:
@@ -68,7 +93,9 @@ class RoundManager:
                         if action is None:
                             break
                         if action.is_targeted_combat_action():
-                            self.combat_manager.resolve_action(action)
+                            self.combat_manager.resolve_attack(action)
+                        elif action.is_movement():
+                            self.request_movement(character, action.increment)
                 else:
                     logger.debug(f"Character {character.get_name()} is dead. Skipping")
             self.print_status()
