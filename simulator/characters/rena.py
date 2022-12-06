@@ -1,5 +1,6 @@
 from simulator.character import Character
 from simulator.attack import Attack
+from simulator.dodge import Dodge
 from simulator.abilities.rage import Rage
 from simulator.movement import Movement, MovementGenerator
 from simulator.action import Action
@@ -16,6 +17,7 @@ class Rena(Character):
         super().__init__("Rena", rena_attacks, 61, 15, 1, 40, [], num_attacks=2)
         rage = Rage(self, 3, 2)
         self.actions.append(rage)
+        self.rage = self.actions[-1]
         self.basic_attack_cache = rena_attacks[0]
 
     def get_action(self, battle_map):
@@ -23,18 +25,18 @@ class Rena(Character):
             logger.debug(f"Has action {self.has_action}, has_bonus action {self.has_bonus_action}, movement {self.movement}")
             chosen_action = None
             # First rage if not raging
-            for action in self.actions:
-                if action.get_name() == "Rage" and self.has_bonus_action:
-                    if action.activate():
-                        self.has_bonus_action = False # TODO put this into the action itself
-                        logger.debug(f"{self.name} uses bonus action {action.get_name()}", extra={"team": self.team_name})
-                        return action
+            if not self.rage.is_active() == "Rage" and self.has_bonus_action:
+                if self.rage.activate():
+                    self.has_bonus_action = False # TODO put this into the action itself
+                    logger.debug(f"{self.name} uses bonus action rage", extra={"team": self.team_name})
+                    # TODO consider returning None
+                    return self.rage
 
             if self.selected_target is None or not self.selected_target.is_alive():
                 # Get new target
                 self.selected_target = battle_map.get_nearest_enemy(self)
                 if not self.selected_target:
-                    return chosen_action
+                    return None
 
             target_position = battle_map.get_character_position(self.selected_target.get_name())
             logger.debug(f"Target is at {target_position} and my cache is {None if self.target_position_cache is None else self.target_position_cache}")
@@ -69,14 +71,16 @@ class Rena(Character):
             else:
                 logger.debug("Is out of range")
             return chosen_action
-        return None
+        logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_name})
+        return Dodge("dodge", self, Action.ActionClasses.ACTION)
 
-    def prompt_aoo(self, character):
+    def prompt_aoo(self, moving_character):
         if self.has_reaction:
             self.has_reaction = False #TODO consider moving this to the calling scope
-            chosen_aoo = copy.deepcopy(self.basic_attack_cache)
-            chosen_aoo.set_target_character(character)
-            logger.debug(f"{self.name} taken an AoO {chosen_aoo.get_name()} against {character.get_name()}",
+            # chosen_aoo = copy.deepcopy(self.basic_attack_cache)
+            chosen_aoo = self.basic_attack_cache
+            chosen_aoo.set_target_character(moving_character)
+            logger.debug(f"{self.name} taken an AoO {chosen_aoo.get_name()} against {moving_character.get_name()}",
                          extra={"team": self.team_name})
             return chosen_aoo
         return None

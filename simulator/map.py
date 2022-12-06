@@ -7,6 +7,25 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+def reconstruct_from_shortest_path(shortest_path, my_location, enemy_location):
+    current_position = enemy_location
+    path = {'tuples': [], 'numpy': []}
+    while not np.array_equal(current_position, my_location):
+        path['numpy'].append(current_position)
+        path['tuples'].append(tuple(current_position))
+        # have to convert to tuple cause numpy array is non-hashable
+        try:
+            current_position = shortest_path[tuple(current_position)]
+        except KeyError as e:
+            logger.error(e) # TODO remove this once fixed
+    else:
+        path['numpy'].append(my_location)
+        path['tuples'].append(tuple(my_location))
+    path['numpy'].reverse()
+    path['tuples'].reverse()
+    return path
+
 class GridCell:
     def __init__(self):
         self.character = None
@@ -45,7 +64,7 @@ class Map:
 
     def place_circular_element(self, coords, element_type, diameter=1):
         N = self.size
-        coords = (coords[0] - 1, coords[1] - 1) # convert to 1-based coordinates
+        coords = (coords[0], coords[1])
         if diameter == 1:
             if element_type == self.INACCESSIBLE:
                 self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].is_accessible = False
@@ -161,23 +180,40 @@ class Map:
 
     def move_character(self, character, increment):
         old_coord = self.character_coordinate_cache[character]
-        self.grid[old_coord[0]][old_coord[1]].set_character(None)
+        try:
+            self.grid[old_coord[0]][old_coord[1]].set_character(None)
+        except IndexError as e:
+            logger.error(e)# TODO remove this once fixed
         new_coord = old_coord + increment
         try:
             self.grid[new_coord[0]][new_coord[1]].set_character(character)
         except IndexError as e:
-            logger.error(e)
+            logger.error(e)# TODO remove this once fixed
         self.character_coordinate_cache[character] = new_coord
         logger.debug(f"{character.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(character)})
 
     def would_incur_aoo(self, coord, increment):
         return False
 
-    def get_aoo_illegible_characters(self, character, increment):
-        return None
+    def get_aoo_eligible_characters(self, character, increment):
+        eligible_characters = []
+        for curr_char, pos in self.character_coordinate_cache.items():
+            if curr_char is not character and not self.teams.are_allies(curr_char, character):
+                pre_increment_dist = self.get_character_distance(character, curr_char)
+                post_increment_dist = self.get_distance(self.character_coordinate_cache[character] + increment, pos)
+                if pre_increment_dist == curr_char.max_melee_range and post_increment_dist > curr_char.max_melee_range and curr_char.has_reaction:
+                    eligible_characters.append(curr_char)
+        return eligible_characters
 
-    def get_pam_illegible_characters(self, character, increment):
-        return None
+    def get_pam_eligible_characters(self, character, increment):
+        eligible_characters = []
+        for curr_char, pos in self.character_coordinate_cache.items():
+            if curr_char is not character and not self.teams.are_allies(curr_char, character):
+                pre_increment_dist = self.get_character_distance(character, curr_char)
+                post_increment_dist = self.get_distance(self.character_coordinate_cache[character] + increment, pos)
+                if pre_increment_dist > curr_char.max_melee_range and post_increment_dist == curr_char.max_melee_range and curr_char.has_reaction and curr_char.has_polearm_master:
+                    eligible_characters.append(curr_char)
+        return eligible_characters
 
     def is_stepping_into_range(self, coord, increment):
         return False
@@ -210,37 +246,47 @@ class Map:
                 nearest_enemy = potential_target
         return nearest_enemy
 
-    def are_in_range(self, character1, character2, range):
+    def are_in_range(self, character1, character2, distance):
         char1_position = np.array(self.character_coordinate_cache[character1])
         char2_position = np.array(self.character_coordinate_cache[character2])
-        return np.max(np.abs(char1_position - char2_position)) <= range
+        return np.max(np.abs(char1_position - char2_position)) <= distance
 
-    def reconstruct_from_shortest_path(self, shortest_path, my_location, enemy_location):
-        current_position = enemy_location
-        path = {'tuples' : [], 'numpy': []}
-        while not np.array_equal(current_position, my_location):
-            path['numpy'].append(current_position)
-            path['tuples'].append(tuple(current_position))
-            # have to convert to tuple cause numpy array is non-hashable
-            current_position = shortest_path[tuple(current_position)]
-        else:
-            path['numpy'].append(my_location)
-            path['tuples'].append(tuple(my_location))
-        path['numpy'].reverse()
-        path['tuples'].reverse()
-        return path
+    def get_character_distance(self, character1, character2):
+        char1_position = np.array(self.character_coordinate_cache[character1])
+        char2_position = np.array(self.character_coordinate_cache[character2])
+        return np.max(np.abs(char1_position - char2_position))
+
+    def get_distance(self, coord1, coord2):
+        return np.max(np.abs(coord1 - coord2))
 
     def get_path_to_enemy(self, character, target):
         my_location = self.get_character_position(character.name)
         enemy_location = self.get_character_position(target.name)
-        print(f"My location {my_location}")
-        print(f"Enemy location {enemy_location}")
+        logger.debug(f"My location {my_location}")
+        logger.debug(f"Enemy location {enemy_location}")
         dist, shortest_path = self.dijkstra(my_location)
-        reconstructed_path = self.reconstruct_from_shortest_path(shortest_path, my_location, enemy_location)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, enemy_location)
         self.printSolution(dist, my_location, enemy_location, reconstructed_path['tuples'])
+        return self.convert_path_to_increments(reconstructed_path['numpy'])[:-1]
+
+    def get_path_to_coord(self, character, destination_coord):
+        """
+        calculates a path to destination coordinates
+        :param character:Character who wants to move
+        :param destination_coord:
+        :return:
+        """
+        # TODO: consider making a variant which doesn't provoke AOO
+        my_location = self.get_character_position(character.name)
+        logger.debug(f"My location {my_location}")
+        logger.debug(f"Destination location {destination_coord}")
+        dist, shortest_path = self.dijkstra(my_location)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, destination_coord)
+        self.printSolution(dist, my_location, destination_coord, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])
 
     def get_character_position(self, name):
+        # TODO: Get this from the cache
         for i, row in enumerate(self.grid):
             for j, cell in enumerate(row):
                 character = cell.get_character()
@@ -248,7 +294,44 @@ class Map:
                     return np.array([i, j])
         return None
 
+    def get_free_positions_at_distance(self, target_character, distance, character):
+        """
+        Returns a list of coordinates that are unoccupied and at a given distance from a target, sorted by proximity to a
+        character
+        :param target_character: target to which the distance is measured
+        :param distance: desired distance
+        :param character: sorted by ascending proximity to this character
+        :return: list of numpy.array coordinates
+        """
+        if distance <= 0:
+            return []
+        free_positions = []
+        target_coords = self.character_coordinate_cache[target_character]
+        for x in range(-distance, distance + 1):
+            for y in range(-distance, distance + 1):
+                try:
+                    is_accessible = self.grid[target_coords[0] + x][target_coords[1] + y].is_accessible
+                    is_unoccupied = self.grid[target_coords[0] + x][target_coords[1] + y].character is None
+                    curr_coord = target_coords + np.array([x, y])
+                    if is_accessible and is_unoccupied and np.max(np.abs(target_coords - curr_coord)) == distance:
+                        free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
+                except IndexError:
+                    pass #out of grid
+
+        character_coord = self.character_coordinate_cache[character]
+        def by_distance(coord):
+            return np.linalg.norm(coord - character_coord)
+
+        free_positions.sort(key=by_distance)
+        return free_positions
+
+
     def remove_character(self, character):
+        """
+        Removes a dead character from the grid
+        :param character:
+        :return:
+        """
         old_coord = self.character_coordinate_cache[character]
         self.grid[old_coord[0]][old_coord[1]].set_character(None)
         del self.character_coordinate_cache[character]

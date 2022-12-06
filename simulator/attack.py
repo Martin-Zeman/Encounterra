@@ -1,5 +1,3 @@
-import copy
-
 from simulator.action import Action
 
 class Attack(Action):
@@ -13,6 +11,7 @@ class Attack(Action):
         self.crit_range = crit_range
         self.__target_name = ""
         self.targeted_combat_action = True
+        self.advantage = False
         # TODO: Consider having the num of attacks here
 
     def set_target_character(self, target):

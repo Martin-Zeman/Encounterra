@@ -34,6 +34,13 @@ class Character:
         self.movement_generator = None
         self.max_melee_range = 1
         self.target_position_cache = None
+        self.has_polearm_master = False
+        self.has_sentinel = False
+        self.combat_manager = None
+        self.disadvantage_on_incoming_attacks = False
+
+    def set_round_manager(self, round_manager):
+        self.round_manager = round_manager
 
     def is_alive(self):
         return self.curr_hp > 0
@@ -64,9 +71,10 @@ class Character:
             logger.debug(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
         self.curr_hp -= dmg
 
-    def new_round(self):
+    def new_turn(self):
         self.has_action = True
         self.has_bonus_action = True
+        self.has_reaction = True
         self.curr_num_attacks = self.num_attacks
         self.movement = self.speed
 
@@ -82,6 +90,7 @@ class Character:
     def reset(self):
         self.has_action = True
         self.has_bonus_action = True
+        self.has_reaction = True
         self.curr_num_attacks = self.num_attacks
         self.curr_hp = self.max_hp
         for action in self.actions:
@@ -92,5 +101,9 @@ class Character:
     def add_team(self, team_name):
         self.team_name = team_name
 
-    def prompt_aoo(self, character):
+    def prompt_aoo(self, moving_character):
         return None
+
+    def prompt_pam(self, moving_character):
+        return None
+

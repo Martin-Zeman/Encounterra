@@ -26,11 +26,14 @@ class RoundManager:
         for character in self.characters:
             logger.debug(f"{character.get_name()} with {character.get_curr_init()}")
 
+    def goes_before_in_initiative(self, char1, char2):
+        return True if self.characters.index(char1) < self.characters.index(char2) else False
+
     def is_only_one_team_standing(self):
         return True if len(self.__teams.get_surviving_teams()) == 1 else False
 
     def request_movement(self, character, increment):
-        aoo_candidates = self.battle_map.get_aoo_illegible_characters(character, increment)
+        aoo_candidates = self.battle_map.get_aoo_eligible_characters(character, increment)
         if aoo_candidates:
             for candidate in aoo_candidates:
                 aoo = candidate.prompt_aoo(character)
@@ -38,13 +41,15 @@ class RoundManager:
                     aoo.action_class = Action.ActionClasses.REACTION
                     self.combat_manager.resolve_attack(aoo)
 
-        pam_candidates = self.battle_map.get_pam_illegible_characters(character, increment)
+        pam_candidates = self.battle_map.get_pam_eligible_characters(character, increment)
         if pam_candidates:
             for candidate in pam_candidates:
                 pam_attack = candidate.prompt_pam(character)
                 if pam_attack:
                     pam_attack.action_class = Action.ActionClasses.REACTION
-                    # TODO
+                    if self.combat_manager.resolve_attack(pam_attack) and candidate.has_sentinel:
+                        character.movement = 0
+                        logger.debug(f"Character {character.get_name()} was stopped by sentinel")
 
         if character.is_alive():
             self.battle_map.move_character(character, increment)
@@ -87,7 +92,7 @@ class RoundManager:
                 break
             for character in self.characters:
                 if character.is_alive():
-                    character.new_round()
+                    character.new_turn()
                     while True:
                         action = character.get_action(self.battle_map)
                         if action is None:

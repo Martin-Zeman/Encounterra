@@ -13,6 +13,11 @@ class CombatManager:
         self.battle_map = battle_map
 
     def resolve_attack(self, attack):
+        """
+
+        :param attack:
+        :return: True is hits, false if misses or is not attack
+        """
         target = None
         for character in self.characters:
             if character == attack.get_target_character():
@@ -21,17 +26,22 @@ class CombatManager:
 
         if not target:
             logger.warning(f"No target found for action {attack.get_name()}")
-            return
+            return False
 
         if attack.get_type() != "ATTACK":
             logger.warning("Non-attack actions not supported yet")
-            return
+            return False
 
-        rolled = random.randint(1, 20)
+        if attack.advantage and not target.disadvantage_on_incoming_attacks:
+            rolled = max(random.randint(1, 20), random.randint(1, 20))
+        elif not attack.advantage and target.disadvantage_on_incoming_attacks:
+            rolled = min(random.randint(1, 20), random.randint(1, 20))
+        else:
+            rolled = random.randint(1, 20)
         multiplier = 1
         if rolled == 1:
             logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(attack.character)})
-            return
+            return False
         elif rolled in attack.crit_range:
             multiplier = 2
         if rolled + attack.to_hit >= target.ac:
@@ -44,5 +54,7 @@ class CombatManager:
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             if not target.is_alive():
                 self.battle_map.remove_character(target)
+            return True
         else:
             logger.debug("Attack misses", extra={"team": self.teams.get_team(attack.character)})
+            return False

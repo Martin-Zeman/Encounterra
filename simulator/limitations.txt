@@ -2,3 +2,6 @@ Multi-attack cannot be split
 So far only medium sized characters
 map only of square shape
 characters always know where enemies are even though they can't see them
+same initiative rolls aren't ordered by dex
+No resurrections
+currently no dodge actions
