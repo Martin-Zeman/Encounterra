@@ -59,7 +59,7 @@ class Cyanwrath(Character):
                 if not self.selected_target:
                     return None
 
-            target_position = battle_map.get_character_position(self.selected_target.get_name())
+            target_position = battle_map.get_character_position(self.selected_target)
             logger.debug(f"Target is at {target_position} and my cache is {None if self.target_position_cache is None else self.target_position_cache}")
             dist = battle_map.get_character_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 2:
@@ -79,6 +79,7 @@ class Cyanwrath(Character):
                     return attack
             elif self.movement and not self.has_action and dist <= 2:
                 # If I'm in range but no longer have an action then I want to step away
+                logger.debug(f"{self.name} wants to gain distance", extra={"team": self.team_name})
                 free_coords = battle_map.get_free_positions_at_distance(self.selected_target, 3, self)
                 if free_coords:
                     path = battle_map.get_path_to_coord(self, free_coords[0])
@@ -90,71 +91,6 @@ class Cyanwrath(Character):
                     except StopIteration:
                         pass  # can't go any farther
 
-            # if not np.array_equal(self.target_position_cache, target_position):
-            #     path = battle_map.get_path_to_enemy(self, self.selected_target)
-            #     self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
-            #     self.target_position_cache = target_position
-            #
-            # if not battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
-            #     logger.debug("Not in range")
-            #     try:
-            #         movement = next(self.movement_generator)
-            #         logger.debug("Moving")
-            #         return movement
-            #     except StopIteration:
-            #         pass #can't go any farther
-            # if battle_map.are_in_range(self, self.selected_target, 1) or not battle_map.are_in_range(self, self.selected_target, 3):
-            #     # If I'm either too close or too far move to distance 3
-            #     free_coords = battle_map.get_free_positions_at_distance(self.selected_target, 3, self)
-            #     if free_coords:
-            #         path = battle_map.get_path_to_coord(self, free_coords[0])
-            #         self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
-            #         self.target_position_cache = target_position
-
-            # target_position = battle_map.get_character_position(self.selected_target.get_name())
-            # logger.debug(f"Target is at {target_position} and my cache is {None if self.target_position_cache is None else self.target_position_cache}")
-            # if not np.array_equal(self.target_position_cache, target_position):
-            #     path = battle_map.get_path_to_enemy(self, self.selected_target)
-            #     self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
-            #     self.target_position_cache = target_position
-            #
-            # if not battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
-            #     logger.debug("Not in range")
-            #     try:
-            #         movement = next(self.movement_generator)
-            #         logger.debug("Moving")
-            #         return movement
-            #     except StopIteration:
-            #         pass #can't go any farther
-            # elif battle_map.are_in_range(self, self.selected_target, 1):
-            #     free_coords = battle_map.get_free_positions_at_distance(self.selected_target, 3, self)
-            #     if free_coords:
-            #         path = battle_map.get_path_to_coord(self, free_coords[0])
-            #         self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
-            #         self.target_position_cache = target_position
-
-            # if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
-            #     attack = self.basic_attack_cache
-            #     bonus_attack = self.bonus_attack_cache
-            #     logger.debug("Is in range")
-            #     if self.has_action and self.num_attacks and not self.multiattack_in_progress:
-            #         self.multiattack_in_progress = True
-            #         self.has_action = False
-            #     if self.curr_num_attacks and self.multiattack_in_progress:
-            #         self.attack.set_target_character(self.selected_target)
-            #         self.curr_num_attacks -= 1
-            #         logger.debug(f"{self.name} uses action {attack.get_name()} against {self.selected_target.get_name()}", extra={"team": self.team_name})
-            #         return attack
-            #     else:
-            #         self.multiattack_in_progress = False
-            #     if self.has_bonus_action and self.curr_num_attacks < self.num_attacks:# if already took the attack action
-            #         bonus_attack.set_target_character(self.selected_target)
-            #         self.has_bonus_action = False
-            #         logger.debug(f"{self.name} uses action {bonus_attack.get_name()} against {self.selected_target.get_name()}", extra={"team": self.team_name})
-            #         return bonus_attack
-            # else:
-            #     logger.debug("Is out of range")
-            # return chosen_action
             if self.has_action:
                 logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_name})
                 self.has_action = False

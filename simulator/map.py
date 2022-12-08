@@ -26,6 +26,11 @@ def reconstruct_from_shortest_path(shortest_path, my_location, enemy_location):
     path['tuples'].reverse()
     return path
 
+
+def get_distance(coord1, coord2):
+    return np.max(np.abs(coord1 - coord2))
+
+
 class GridCell:
     def __init__(self):
         self.character = None
@@ -192,15 +197,13 @@ class Map:
         self.character_coordinate_cache[character] = new_coord
         logger.debug(f"{character.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(character)})
 
-    def would_incur_aoo(self, coord, increment):
-        return False
 
     def get_aoo_eligible_characters(self, character, increment):
         eligible_characters = []
         for curr_char, pos in self.character_coordinate_cache.items():
             if curr_char is not character and not self.teams.are_allies(curr_char, character):
                 pre_increment_dist = self.get_character_distance(character, curr_char)
-                post_increment_dist = self.get_distance(self.character_coordinate_cache[character] + increment, pos)
+                post_increment_dist = get_distance(self.character_coordinate_cache[character] + increment, pos)
                 if pre_increment_dist == curr_char.max_melee_range and post_increment_dist > curr_char.max_melee_range and curr_char.has_reaction:
                     eligible_characters.append(curr_char)
         return eligible_characters
@@ -210,16 +213,10 @@ class Map:
         for curr_char, pos in self.character_coordinate_cache.items():
             if curr_char is not character and not self.teams.are_allies(curr_char, character):
                 pre_increment_dist = self.get_character_distance(character, curr_char)
-                post_increment_dist = self.get_distance(self.character_coordinate_cache[character] + increment, pos)
+                post_increment_dist = get_distance(self.character_coordinate_cache[character] + increment, pos)
                 if pre_increment_dist > curr_char.max_melee_range and post_increment_dist == curr_char.max_melee_range and curr_char.has_reaction and curr_char.has_polearm_master:
                     eligible_characters.append(curr_char)
         return eligible_characters
-
-    def is_stepping_into_range(self, coord, increment):
-        return False
-
-    # def get_character(self, x, y):
-    #     return self.grid[x][y].get_character()
 
     def is_empty(self, x, y):
         return self.grid[x][y].is_empty()
@@ -256,12 +253,9 @@ class Map:
         char2_position = np.array(self.character_coordinate_cache[character2])
         return np.max(np.abs(char1_position - char2_position))
 
-    def get_distance(self, coord1, coord2):
-        return np.max(np.abs(coord1 - coord2))
-
     def get_path_to_enemy(self, character, target):
-        my_location = self.get_character_position(character.name)
-        enemy_location = self.get_character_position(target.name)
+        my_location = self.get_character_position(character)
+        enemy_location = self.get_character_position(target)
         logger.debug(f"My location {my_location}")
         logger.debug(f"Enemy location {enemy_location}")
         dist, shortest_path = self.dijkstra(my_location)
@@ -277,7 +271,7 @@ class Map:
         :return:
         """
         # TODO: consider making a variant which doesn't provoke AOO
-        my_location = self.get_character_position(character.name)
+        my_location = self.get_character_position(character)
         logger.debug(f"My location {my_location}")
         logger.debug(f"Destination location {destination_coord}")
         dist, shortest_path = self.dijkstra(my_location)
@@ -285,14 +279,19 @@ class Map:
         self.printSolution(dist, my_location, destination_coord, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])
 
-    def get_character_position(self, name):
+    def get_character_position(self, character):
         # TODO: Get this from the cache
-        for i, row in enumerate(self.grid):
-            for j, cell in enumerate(row):
-                character = cell.get_character()
-                if character and character.get_name() == name:
-                    return np.array([i, j])
-        return None
+        try:
+            return self.character_coordinate_cache[character]
+        except KeyError as e:
+            logger.error(e)
+            return None
+        # for i, row in enumerate(self.grid):
+        #     for j, cell in enumerate(row):
+        #         character = cell.get_character()
+        #         if character and character.get_name() == name:
+        #             return np.array([i, j])
+        # return None
 
     def get_free_positions_at_distance(self, target_character, distance, character):
         """
@@ -309,14 +308,13 @@ class Map:
         target_coords = self.character_coordinate_cache[target_character]
         for x in range(-distance, distance + 1):
             for y in range(-distance, distance + 1):
-                try:
-                    is_accessible = self.grid[target_coords[0] + x][target_coords[1] + y].is_accessible
-                    is_unoccupied = self.grid[target_coords[0] + x][target_coords[1] + y].character is None
-                    curr_coord = target_coords + np.array([x, y])
-                    if is_accessible and is_unoccupied and np.max(np.abs(target_coords - curr_coord)) == distance:
-                        free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
-                except IndexError:
-                    pass #out of grid
+                if (target_coords[0] + x) < 0 or (target_coords[1] + y) < 0 or (target_coords[0] + x) >= self.size or (target_coords[1] + y) >= self.size:
+                    continue
+                is_accessible = self.grid[target_coords[0] + x][target_coords[1] + y].is_accessible
+                is_unoccupied = self.grid[target_coords[0] + x][target_coords[1] + y].character is None
+                curr_coord = target_coords + np.array([x, y])
+                if is_accessible and is_unoccupied and np.max(np.abs(target_coords - curr_coord)) == distance:
+                    free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
 
         character_coord = self.character_coordinate_cache[character]
         def by_distance(coord):
@@ -332,6 +330,7 @@ class Map:
         :param character:
         :return:
         """
+        logger.debug(f"Removing character {character.get_name()}")
         old_coord = self.character_coordinate_cache[character]
         self.grid[old_coord[0]][old_coord[1]].set_character(None)
         del self.character_coordinate_cache[character]
