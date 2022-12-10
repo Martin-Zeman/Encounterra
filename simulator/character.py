@@ -107,3 +107,9 @@ class Character:
     def prompt_pam(self, moving_character):
         return None
 
+    def prompt_attack_reaction(self, attacking_character, attack_roll):
+        return None
+
+    def prompt_dmg_reaction(self, attacking_character, dmg, dmg_type):
+        return None
+
