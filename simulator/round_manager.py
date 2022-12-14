@@ -78,6 +78,7 @@ class RoundManager:
                     team_tally[surviving_teams[0]] += 1
                 for ch in self.characters:
                     ch.reset()
+                self.battle_map.reset()
             logger.info("--------------STATISTICS--------------")
             for name, victories in team_tally.items():
                 logger.info(f"Team {name} won total of {victories} times", extra={"team": name})
@@ -108,12 +109,13 @@ class RoundManager:
                 else:
                     logger.debug(f"Character {character.get_name()} is dead. Skipping")
             self.print_status()
-        self.print_results()
+        # self.print_results()
 
     def print_status(self):
         for character in self.characters:
             status = f"alive with {character.get_curr_hp()}" if character.is_alive() else "dead"
             logger.debug(f"Character {character.get_name()} is {status}", extra={"team": self.__teams.get_team(character)})
+        logger.debug(self.battle_map)
 
     def print_results(self):
         logger.debug("--------------RESULT--------------")

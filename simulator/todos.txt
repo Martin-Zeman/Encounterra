@@ -1,0 +1,5 @@
+- Make sure allies cannot occupate the same space
+- Add large+ sized creatures
+- Add a random generator of monsters which would generate random names for selected types of monsters
+- Make allies difficult terrain but make sure they can't become the destination which might be difficult maybe I could make them impassable
+- consider geometric centers of grid for distance checking in cases such as radius etc.

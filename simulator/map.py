@@ -1,6 +1,4 @@
-import scipy.linalg as la
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 import sys
 import logging
@@ -29,6 +27,16 @@ def reconstruct_from_shortest_path(shortest_path, my_location, enemy_location):
 
 def get_distance(coord1, coord2):
     return np.max(np.abs(coord1 - coord2))
+
+def do_circles_boxes_overlap(origin1, origin2, radius):
+    """
+    :param origin1:
+    :param origin2:
+    :param radius: radius share by both circles
+    :return: True if they overlap by at least width 1, false otherwise
+    """
+    dist = get_distance(origin1, origin2)
+    return (2 * radius) >= dist + 1
 
 
 class GridCell:
@@ -67,6 +75,21 @@ class Map:
         self.difficult_set = set()
         self.character_coordinate_cache = {}
 
+
+    def __str__(self):
+        string_repr = ""
+        for row in self.grid:
+            row_text = ""
+            for cell in row:
+                character = cell.get_character()
+                if character:
+                    row_text += self.teams.get_team_color_code(character) + character.get_name()[0] +"\x1b[0m\t"
+                else:
+                    row_text += "0\t"
+            string_repr += row_text + "\n"
+        return string_repr
+
+
     def place_circular_element(self, coords, element_type, diameter=1):
         N = self.size
         coords = (coords[0], coords[1])
@@ -87,10 +110,6 @@ class Map:
                             self.difficult_set.add((coords[0] + x, coords[1] + y))
                     except IndexError:
                         pass #out of grid
-
-
-    def print(self):
-        pass
 
     def build_adjacency_matrix(self):
         N = self.size
@@ -212,8 +231,11 @@ class Map:
         eligible_characters = []
         for curr_char, pos in self.character_coordinate_cache.items():
             if curr_char is not character and not self.teams.are_allies(curr_char, character):
-                pre_increment_dist = self.get_character_distance(character, curr_char)
-                post_increment_dist = get_distance(self.character_coordinate_cache[character] + increment, pos)
+                try:
+                    pre_increment_dist = self.get_character_distance(character, curr_char)
+                    post_increment_dist = get_distance(self.character_coordinate_cache[character] + increment, pos)
+                except KeyError:
+                    continue
                 if pre_increment_dist > curr_char.max_melee_range and post_increment_dist == curr_char.max_melee_range and curr_char.has_reaction and curr_char.has_polearm_master:
                     eligible_characters.append(curr_char)
         return eligible_characters
@@ -331,6 +353,46 @@ class Map:
         :return:
         """
         logger.debug(f"Removing character {character.get_name()}")
-        old_coord = self.character_coordinate_cache[character]
+        try:
+            old_coord = self.character_coordinate_cache[character]
+        except KeyError:
+            return # already removed
         self.grid[old_coord[0]][old_coord[1]].set_character(None)
         del self.character_coordinate_cache[character]
+
+
+    def reset(self):
+        for row in self.grid:
+            for cell in row:
+                cell.set_character(None)
+        for character in self.character_coordinate_cache.keys():
+            self.character_coordinate_cache[character] = np.zeros(2)
+
+    def find_best_placement_harmful_circular(self, caster, spell_range, radius):
+        # or find a BB for all the enemy characters inflated by the range and then iterate over all cells finding one with the best hit score
+        bb = np.array([[self.size,self.size],[0, 0]]) # top left, bottom right
+        for character, coord in self.character_coordinate_cache.items():
+            if not self.teams.are_allies(caster, character):
+                bb[0] = np.minimum(bb[0], self.character_coordinate_cache[character])
+                bb[1] = np.maximum(bb[1], self.character_coordinate_cache[character])
+        # logger.debug(f"BOUNDING BOX {bb}")
+        # inflate the BB
+        bb[0] = np.maximum(bb[0] - radius, np.array([0, 0]))
+        bb[1] = np.minimum(bb[1] + radius, np.array([self.size - 1, self.size - 1]))
+        max_score = -sys.maxsize - 1
+        best_placement = None
+        caster_coord = self.character_coordinate_cache[caster]
+        for i in range(bb[0][0], bb[1][0]):
+            for j in range(bb[0][1], bb[1][1]):
+                curr_coord =  np.array([i, j])
+                if get_distance(caster_coord,curr_coord) <= spell_range and caster_coord is not curr_coord:
+                    score = 0
+                    for character, coord in self.character_coordinate_cache.items():
+                        score += (1 if not self.teams.are_allies(caster, character) else -4) if get_distance(coord, curr_coord) <= radius else 0
+                    if score > max_score:
+                        max_score = score
+                        best_placement = curr_coord
+        logger.debug(self)
+        logger.debug(f"FIREBALL PLACEMENT {best_placement} with score {max_score}")
+
+

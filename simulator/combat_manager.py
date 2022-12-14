@@ -1,9 +1,16 @@
 from simulator.action import *
 import random
-from dpr_calculator import parse_dmg_dice
 import logging
+import re
 
 logger = logging.getLogger(__name__)
+
+def parse_dmg_dice(dice_string):
+    p = re.compile('(\d+)d(\d+)')
+    m = p.match(dice_string)
+    num_dice = int(m.group(1))
+    dice_size = int(m.group(2))
+    return num_dice, dice_size
 
 class CombatManager:
 

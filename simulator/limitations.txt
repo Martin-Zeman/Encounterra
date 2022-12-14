@@ -5,4 +5,5 @@ characters always know where enemies are even though they can't see them
 same initiative rolls aren't ordered by dex
 No resurrections
 currently no dodge actions
+currently no one dashes
 upcasting? should be there

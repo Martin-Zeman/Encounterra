@@ -38,6 +38,10 @@ class Character:
         self.has_sentinel = False
         self.combat_manager = None
         self.disadvantage_on_incoming_attacks = False
+        self.saving_throws = {"STR": 0, "DEX": 0, "CON": 0, "INT": 0, "WIS": 0, "CHA": 0}
+        self.has_pack_tactics = False
+        self.has_fanatical_advantage = False
+        self.perception = 0
 
     def set_round_manager(self, round_manager):
         self.round_manager = round_manager

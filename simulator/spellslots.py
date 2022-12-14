@@ -908,6 +908,7 @@ class Spellslots:
     def __init__(self, class_name, class_level):
         self.__max_spellslots = {}
         self.__curr_spellslots = {}
+        self.class_level = class_level
         match class_name:
             case self.BARD:
                 self.__max_spellslots[self.BARD] = self.FULL_CASTER_TABLE
@@ -963,3 +964,6 @@ class Spellslots:
 
     def restore_spellslot(self, class_name, level):
         pass
+
+    def has_spellslots(self, level):
+        return self.__curr_spellslots[self.class_level][level]
