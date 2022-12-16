@@ -3,6 +3,7 @@ from simulator.attack import Attack
 from simulator.dodge import Dodge
 from simulator.action import Action
 from simulator.movement import Movement, MovementGenerator
+from simulator.misc import DamageType
 import numpy as np
 import logging
 import copy
@@ -12,9 +13,9 @@ logger = logging.getLogger(__name__)
 class Cyanwrath(Character):
 
     def __init__(self):
-        cyanwrath_attacks = [Attack("Polearm", self, 7, "1d10", 4, Action.ActionClasses.ACTION, "Slashing", 2, [19, 20]),
-                             Attack("Butt end of Polearm", self, 7, "1d4", 4, Action.ActionClasses.BONUS_ACTION, "Bludgeoning", 2, [19, 20])]
-        super().__init__("Cyanwrath", cyanwrath_attacks, 95, 17, 1, 30, ["Lightning"], num_attacks=2)
+        cyanwrath_attacks = [Attack("Polearm", self, 7, "1d10", 4, Action.ActionClasses.ACTION, DamageType.Slashing, 2, [19, 20]),
+                             Attack("Butt end of Polearm", self, 7, "1d4", 4, Action.ActionClasses.BONUS_ACTION, DamageType.Bludgeoning, 2, [19, 20])]
+        super().__init__("Cyanwrath", cyanwrath_attacks, 95, 17, 1, 30, DamageType.Lightning, num_attacks=2)
         self.basic_attack_cache = cyanwrath_attacks[0]# just a helper
         self.bonus_attack_cache = cyanwrath_attacks[1]# just a helper
         self.max_melee_range = 2 # TODO: maybe add a lookup here

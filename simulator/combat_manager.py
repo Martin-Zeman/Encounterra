@@ -19,7 +19,34 @@ class CombatManager:
         self.teams = teams
         self.battle_map = battle_map
 
-    def resolve_attack(self, attack):
+    def resolve_dmg_saving_throw(self, ability, target_char):
+        # TODO prompt reaction
+        bonus = target_char.saving_throws[ability.saving_throw]
+        rolled = random.randint(1, 20)
+        if rolled == 1:
+            result = False
+        elif rolled == 20:
+            result = True
+        elif rolled + bonus >= ability.dc:
+            result = True
+        else:
+            result = False
+        dmg = parse_dmg_dice(ability.dmg)
+        target_char.receive_dmg(dmg, ability.dmg_type)
+
+    def resolve_spell(self, caster, spell):
+        match spell.__class__.__name__:
+            case "Fireball":
+                affected = self.battle_map.get_characters_affected_by_aoe(caster, spell)
+                for ch in affected:
+                    self.resolve_dmg_saving_throw(spell, ch)
+            case _:
+                logger.error("Unknown spell")
+
+
+
+
+    def resolve_attack(self, attack):  # TODO remove character from attack and have it as a separate parameter
         """
 
         :param attack:

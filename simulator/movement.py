@@ -1,15 +1,17 @@
 import logging
 from simulator.action import Action
+from simulator.actoid import Actoid
 
 logger = logging.getLogger(__name__)
 
-class Movement(Action):
+class Movement(Action, Actoid):
 
     STANDARD = 1
     DISENGAGE = 2
     DASH = 2
 
     def __init__(self, increment, movement_type, incurs_aoo):
+        Actoid.__init__(actoid_type=Actoid.IS_MOVEMENT)
         self.increment = increment
         self.movement_type = movement_type
         self.incurs_aoo = incurs_aoo

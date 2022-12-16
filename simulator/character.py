@@ -3,12 +3,13 @@ from simulator.attack import Attack
 import random
 import math
 import logging
+from simulator.misc import SavingThrow
 
 logger = logging.getLogger(__name__)
 
 class Character:
 
-    def __init__(self, name, actions, hp, ac, init_bonus, speed, resistances, num_attacks=1):
+    def __init__(self, name, actions, hp, ac, init_bonus, speed, resistances, dc, num_attacks=1):
         self.name = name
         self.actions = actions
         # self.abilities = []
@@ -16,6 +17,7 @@ class Character:
         self.max_hp = hp
         self.curr_hp = hp
         self.ac = ac
+        self.dc = dc
         self.init_bonus = init_bonus
         self.ability_dmg_bonus = 0
         self.curr_init = None
@@ -38,7 +40,7 @@ class Character:
         self.has_sentinel = False
         self.combat_manager = None
         self.disadvantage_on_incoming_attacks = False
-        self.saving_throws = {"STR": 0, "DEX": 0, "CON": 0, "INT": 0, "WIS": 0, "CHA": 0}
+        self.saving_throws = {SavingThrow.STR: 0, SavingThrow.DEX: 0, SavingThrow.CON: 0, SavingThrow.INT: 0, SavingThrow.WIS: 0, SavingThrow.CHA: 0}
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
         self.perception = 0

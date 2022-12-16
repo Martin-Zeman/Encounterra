@@ -1,8 +1,10 @@
 from simulator.action import Action
+from simulator.actoid import Actoid
 
-class Attack(Action):
+class Attack(Action, Actoid):
     def __init__(self, name, character, to_hit, dmg_dice, dmg_bonus, action_class, dmg_type, range, crit_range=[20]):
         Action.__init__(self, name, character, "ATTACK", action_class)
+        Actoid.__init__(actoid_type=Actoid.IS_TARGETED_COMBAT_ACTION)
         self.to_hit = to_hit
         self.dmg_dice = dmg_dice
         self.dmg_bonus = dmg_bonus

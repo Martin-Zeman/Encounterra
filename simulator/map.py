@@ -2,6 +2,7 @@ import numpy as np
 import math
 import sys
 import logging
+from simulator.spells.spell import Spell
 
 logger = logging.getLogger(__name__)
 
@@ -375,7 +376,6 @@ class Map:
             if not self.teams.are_allies(caster, character):
                 bb[0] = np.minimum(bb[0], self.character_coordinate_cache[character])
                 bb[1] = np.maximum(bb[1], self.character_coordinate_cache[character])
-        # logger.debug(f"BOUNDING BOX {bb}")
         # inflate the BB
         bb[0] = np.maximum(bb[0] - radius, np.array([0, 0]))
         bb[1] = np.minimum(bb[1] + radius, np.array([self.size - 1, self.size - 1]))
@@ -384,7 +384,7 @@ class Map:
         caster_coord = self.character_coordinate_cache[caster]
         for i in range(bb[0][0], bb[1][0]):
             for j in range(bb[0][1], bb[1][1]):
-                curr_coord =  np.array([i, j])
+                curr_coord = np.array([i, j])
                 if get_distance(caster_coord,curr_coord) <= spell_range and caster_coord is not curr_coord:
                     score = 0
                     for character, coord in self.character_coordinate_cache.items():
@@ -393,6 +393,25 @@ class Map:
                         max_score = score
                         best_placement = curr_coord
         logger.debug(self)
-        logger.debug(f"FIREBALL PLACEMENT {best_placement} with score {max_score}")
+        logger.debug(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
+        return best_placement
+
+
+    def get_characters_affected_by_aoe(self, caster, ability):
+        # TODO potentially check for protective abilities
+        affected_characters = []
+        match ability.target:
+            case Spell.Target.RADIUS_10 | Spell.Target.RADIUS_20 | Spell.Target.RADIUS_30:
+                for potential_target, char_coord in self.character_coordinate_cache.items():
+                    if ability.type is Spell.Type.HARMFUL:
+                        if get_distance(char_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target]:
+                            affected_characters.append(potential_target)
+                    elif ability.type is Spell.Type.BUFF:
+                        # generally you can opt only to target your allies with buff spells
+                        if get_distance(char_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target] and self.teams.are_allies(caster, potential_target):
+                            affected_characters.append(potential_target)
+            case _:
+                logger.error("Unrecognized ability target type")
+        return affected_characters
 
 

@@ -1,3 +1,4 @@
+
 class Action:
     """ Consider doing this by inheritance """
     # TYPES = {"ATTACK":1, "DODGE":2, "DASH":3, "HIDE":4, "SPELL":5, "ABILITY":6}
@@ -30,9 +31,6 @@ class Action:
 
     def is_reaction(self):
         return self.action_class == Action.ActionClasses.REACTION
-
-    def is_targeted_combat_action(self):
-        return self.targeted_combat_action
 
     def activate(self):
         pass

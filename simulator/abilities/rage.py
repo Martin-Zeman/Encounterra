@@ -1,4 +1,5 @@
 from simulator.ability import Ability
+from simulator.misc import DamageType
 
 class Rage(Ability):
 
@@ -10,7 +11,7 @@ class Rage(Ability):
         if not self.is_active() and self.has_uses():
             self.active = True
             self.character.set_ability_dmg_bonus(self.character.get_ability_dmg_bonus() + self.rage_bonus)
-            self.character.resistances = ["Slashing", "Bludgeoning"]
+            self.character.resistances = [DamageType.Slashing, DamageType.Bludgeoning]
             self.curr_uses -= 1
             return True
         return False
@@ -19,8 +20,8 @@ class Rage(Ability):
         if self.is_active():
             self.active = False
             self.character.set_ability_dmg_bonus(self.character.get_ability_dmg_bonus() - self.rage_bonus)
-            self.character.resistances.remove("Slashing")
-            self.character.resistances.remove("Bludgeoning")
+            self.character.resistances.remove(DamageType.Slashing)
+            self.character.resistances.remove(DamageType.Bludgeoning)
 
     def reset(self):
         self.deactivate()

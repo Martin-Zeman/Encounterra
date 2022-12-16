@@ -1,4 +1,5 @@
 from simulator.combat_manager import *
+from simulator.actoid import Actoid
 from simulator.teams import Teams
 import logging
 
@@ -101,11 +102,16 @@ class RoundManager:
                         action = character.get_action(self.battle_map)
                         if action is None:
                             break
-                        if action.is_targeted_combat_action():
-                            self.combat_manager.resolve_attack(action)
-                        elif action.is_movement():
-                            if not self.request_movement(character, action.increment):
-                                break # character didn't survive
+                        match action.actoid_type:
+                            case Actoid.IS_TARGETED_COMBAT_ACTION:
+                                self.combat_manager.resolve_attack(action)
+                            case Actoid.IS_MOVEMENT:
+                                if not self.request_movement(character, action.increment):
+                                    break # character didn't survive
+                            case Actoid.IS_SPELL:
+                                self.combat_manager.resolve_spell(action)
+                            case _:
+                                logger.error("Unknown actoid type")
                 else:
                     logger.debug(f"Character {character.get_name()} is dead. Skipping")
             self.print_status()

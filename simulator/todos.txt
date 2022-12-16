@@ -3,3 +3,4 @@
 - Add a random generator of monsters which would generate random names for selected types of monsters
 - Make allies difficult terrain but make sure they can't become the destination which might be difficult maybe I could make them impassable
 - consider geometric centers of grid for distance checking in cases such as radius etc.
+- Add a statistics engine to collect things such as avg. number of killed characters, avg HP lost, avg. resources committed etc.

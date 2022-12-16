@@ -3,6 +3,7 @@ from simulator.attack import Attack
 from simulator.dodge import Dodge
 from simulator.action import Action
 from simulator.movement import Movement, MovementGenerator
+from simulator.misc import DamageType
 import numpy as np
 import logging
 import copy
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 class DragonclawCultist(Character):
 
     def __init__(self, name="Dragonclaw"):
-        scimitar_attacks = [Attack("Scimitar", self, 5, "1d6", 3, Action.ActionClasses.ACTION, "Slashing", 1, [20])]
+        scimitar_attacks = [Attack("Scimitar", self, 5, "1d6", 3, Action.ActionClasses.ACTION, DamageType.Slashing, 1, [20])]
         super().__init__(name, scimitar_attacks, 16, 14, 3, 30, [], num_attacks=2)
         self.basic_attack_cache = scimitar_attacks[0]# just a helper
         self.max_melee_range = 1 # TODO: maybe add a lookup here
