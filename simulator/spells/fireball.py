@@ -7,7 +7,7 @@ class Fireball(Spell):
         level = min(max(level, 3), 9)
         super().__init__(level=level,
                          casting_time=Spell.CastingTime.ACTION,
-                         range=Spell.Range.FEET_150,
+                         spell_range=Spell.Range.FEET_150,
                          target=Spell.Target.RADIUS_20,
                          duration=Spell.Duration.INSTANTANEOUS,
                          concentration=False,
@@ -16,5 +16,5 @@ class Fireball(Spell):
                          dmg_type=DamageType.Fire)
         self.saving_throw = SavingThrow.DEX
         self.coord = coord
-        self.dmg = "8d6"
+        self.dmg_dice = "8d6"
         self.additional_upcast_dmg = "1d6"

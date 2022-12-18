@@ -1,4 +1,4 @@
-from simulator.character import Character
+from simulator.combatant import Combatant
 from simulator.attack import Attack
 from simulator.dodge import Dodge
 from simulator.action import Action
@@ -10,11 +10,11 @@ import copy
 
 logger = logging.getLogger(__name__)
 
-class DragonclawCultist(Character):
+class DragonclawCultist(Combatant):
 
     def __init__(self, name="Dragonclaw"):
         scimitar_attacks = [Attack("Scimitar", self, 5, "1d6", 3, Action.ActionClasses.ACTION, DamageType.Slashing, 1, [20])]
-        super().__init__(name, scimitar_attacks, 16, 14, 3, 30, [], num_attacks=2)
+        super().__init__(name, actions=scimitar_attacks, hp=16, ac=14, init_bonus=3, speed=30, resistances=[], dc=0, num_attacks=2)
         self.basic_attack_cache = scimitar_attacks[0]# just a helper
         self.max_melee_range = 1 # TODO: maybe add a lookup here
         self.has_pack_tactics = False
@@ -28,7 +28,7 @@ class DragonclawCultist(Character):
                 self.multiattack_in_progress = True
                 self.has_action = False
             if self.curr_num_attacks and self.multiattack_in_progress:
-                attack.set_target_character(self.selected_target)
+                attack.set_target_combatant(self.selected_target)
                 self.curr_num_attacks -= 1
                 logger.debug(f"{self.name} uses action {attack.get_name()} against {self.selected_target.get_name()}",
                              extra={"team": self.team_name})
@@ -50,9 +50,9 @@ class DragonclawCultist(Character):
                 if not self.selected_target:
                     return None
 
-            target_position = battle_map.get_character_position(self.selected_target)
+            target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(f"Target is at {target_position}")
-            dist = battle_map.get_character_distance(self, self.selected_target)
+            dist = battle_map.get_combatant_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 1:
                 # I haven't attacked yet and I'm too far away, move into pole-arm range
                 path = battle_map.get_path_to_enemy(self, self.selected_target)
@@ -72,16 +72,16 @@ class DragonclawCultist(Character):
             if self.has_action:
                 logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_name})
                 self.has_action = False
-                return Dodge("dodge", self, Action.ActionClasses.ACTION)
+                return Dodge(self, Action.ActionClasses.ACTION)
             return None
 
-    def prompt_aoo(self, moving_character):
+    def prompt_aoo(self, moving_combatant):
         #only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction:
             self.has_reaction = False #TODO consider moving this to the calling scope
             chosen_aoo = self.basic_attack_cache
-            chosen_aoo.set_target_character(moving_character)
-            logger.debug(f"{self.name} took an AoO {chosen_aoo.get_name()} against {moving_character.get_name()}",
+            chosen_aoo.set_target_combatant(moving_combatant)
+            logger.debug(f"{self.name} took an AoO {chosen_aoo.get_name()} against {moving_combatant.get_name()}",
                          extra={"team": self.team_name})
             return chosen_aoo
         return None

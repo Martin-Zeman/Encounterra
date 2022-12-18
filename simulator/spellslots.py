@@ -1,20 +1,24 @@
+from enum import Enum
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Spellslots:
-
-    BARD = 1
-    CLERIC = 2
-    DRUID = 3
-    ELDRIDGE_KNIGHT = 4
-    PALADIN = 5
-    RANGER = 6
-    ARCANE_TRICKSTER = 7
-    SORCERER = 8
-    WARLOCK = 9
-    WIZARD = 10
-    ARTIFICER = 11
+    class Class(Enum):
+        BARD = 1
+        CLERIC = 2
+        DRUID = 3
+        ELDRIDGE_KNIGHT = 4
+        PALADIN = 5
+        RANGER = 6
+        ARCANE_TRICKSTER = 7
+        SORCERER = 8
+        WARLOCK = 9
+        WIZARD = 10
+        ARTIFICER = 11
 
     FULL_CASTER_TABLE = {
-        1 : {
+        1: {
             1: 2,
             2: 0,
             3: 0,
@@ -69,7 +73,7 @@ class Spellslots:
             8: 0,
             9: 0
         },
-        6 : {
+        6: {
             1: 4,
             2: 3,
             3: 3,
@@ -906,55 +910,55 @@ class Spellslots:
     }
 
     def __init__(self, class_name, class_level):
-        self.__max_spellslots = {}
-        self.__curr_spellslots = {}
+        self.max_spellslots = {}
+        self.curr_spellslots = {}
         self.class_level = class_level
+        self.class_name = class_name
         match class_name:
-            case self.BARD:
-                self.__max_spellslots[self.BARD] = self.FULL_CASTER_TABLE
-                self.__curr_spellslots[self.BARD] = self.FULL_CASTER_TABLE
+            case self.Class.BARD:
+                self.max_spellslots = self.FULL_CASTER_TABLE
+                self.curr_spellslots = self.FULL_CASTER_TABLE
                 return
-            case self.CLERIC:
-                self.__max_spellslots[self.CLERIC] = self.FULL_CASTER_TABLE
-                self.__curr_spellslots[self.CLERIC] = self.FULL_CASTER_TABLE
+            case self.Class.CLERIC:
+                self.max_spellslots = self.FULL_CASTER_TABLE
+                self.curr_spellslots = self.FULL_CASTER_TABLE
                 return
-            case self.DRUID:
-                self.__max_spellslots[self.DRUID] = self.FULL_CASTER_TABLE
-                self.__curr_spellslots[self.DRUID] = self.FULL_CASTER_TABLE
+            case self.Class.DRUID:
+                self.max_spellslots = self.FULL_CASTER_TABLE
+                self.curr_spellslots = self.FULL_CASTER_TABLE
                 return
-            case self.ELDRIDGE_KNIGHT:
-                self.__max_spellslots[self.ELDRIDGE_KNIGHT] = self.QUARTER_CASTER_TABLE
-                self.__curr_spellslots[self.ELDRIDGE_KNIGHT] = self.QUARTER_CASTER_TABLE
+            case self.Class.ELDRIDGE_KNIGHT:
+                self.max_spellslots = self.QUARTER_CASTER_TABLE
+                self.curr_spellslots = self.QUARTER_CASTER_TABLE
                 return
-            case self.PALADIN:
-                self.__max_spellslots[self.PALADIN] = self.HALF_CASTER_TABLE
-                self.__curr_spellslots[self.PALADIN] = self.HALF_CASTER_TABLE
+            case self.Class.PALADIN:
+                self.max_spellslots = self.HALF_CASTER_TABLE
+                self.curr_spellslots = self.HALF_CASTER_TABLE
                 return
-            case self.RANGER:
-                self.__max_spellslots[self.RANGER] = self.HALF_CASTER_TABLE
-                self.__curr_spellslots[self.RANGER] = self.HALF_CASTER_TABLE
+            case self.Class.RANGER:
+                self.max_spellslots = self.HALF_CASTER_TABLE
+                self.curr_spellslots = self.HALF_CASTER_TABLE
                 return
-            case self.ARCANE_TRICKSTER:
-                self.__max_spellslots[self.ARCANE_TRICKSTER] = self.QUARTER_CASTER_TABLE
-                self.__curr_spellslots[self.ARCANE_TRICKSTER] = self.QUARTER_CASTER_TABLE
+            case self.Class.ARCANE_TRICKSTER:
+                self.max_spellslots = self.QUARTER_CASTER_TABLE
+                self.curr_spellslots = self.QUARTER_CASTER_TABLE
                 return
-            case self.SORCERER:
-                self.__max_spellslots[self.SORCERER] = self.FULL_CASTER_TABLE
-                self.__curr_spellslots[self.SORCERER] = self.FULL_CASTER_TABLE
+            case self.Class.SORCERER:
+                self.max_spellslots = self.FULL_CASTER_TABLE
+                self.curr_spellslots = self.FULL_CASTER_TABLE
                 return
-            case self.WARLOCK:
-                self.__max_spellslots[self.WARLOCK] = self.WARLOCK_TABLE
-                self.__curr_spellslots[self.WARLOCK] = self.WARLOCK_TABLE
+            case self.Class.WARLOCK:
+                self.max_spellslots = self.WARLOCK_TABLE
+                self.curr_spellslots = self.WARLOCK_TABLE
                 return
-            case self.WIZARD:
-                self.__max_spellslots[self.WIZARD] = self.FULL_CASTER_TABLE
-                self.__curr_spellslots[self.WIZARD] = self.FULL_CASTER_TABLE
+            case self.Class.WIZARD:
+                self.max_spellslots = self.FULL_CASTER_TABLE
+                self.curr_spellslots = self.FULL_CASTER_TABLE
                 return
-            case self.ARTIFICER:
-                self.__max_spellslots[self.ARTIFICER] = self.HALF_CASTER_TABLE
-                self.__curr_spellslots[self.ARTIFICER] = self.HALF_CASTER_TABLE
+            case self.Class.ARTIFICER:
+                self.max_spellslots = self.HALF_CASTER_TABLE
+                self.curr_spellslots = self.HALF_CASTER_TABLE
                 return
-
 
     def add_spellslots(self, class_name, level):
         pass
@@ -966,4 +970,10 @@ class Spellslots:
         pass
 
     def has_spellslots(self, level):
-        return self.__curr_spellslots[self.class_level][level]
+        return self.curr_spellslots[self.class_level][level]
+
+    def use_spellslot(self, level):
+        try:
+            self.curr_spellslots[self.class_level][level] -= 1
+        except:
+            logger.error("Something gone wrong with spellslots!")

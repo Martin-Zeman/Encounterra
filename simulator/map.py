@@ -17,7 +17,7 @@ def reconstruct_from_shortest_path(shortest_path, my_location, enemy_location):
         try:
             current_position = shortest_path[tuple(current_position)]
         except KeyError as e:
-            logger.error(e) # TODO remove this once fixed
+            logger.error(e)  # TODO remove this once fixed
     else:
         path['numpy'].append(my_location)
         path['tuples'].append(tuple(my_location))
@@ -28,6 +28,7 @@ def reconstruct_from_shortest_path(shortest_path, my_location, enemy_location):
 
 def get_distance(coord1, coord2):
     return np.max(np.abs(coord1 - coord2))
+
 
 def do_circles_boxes_overlap(origin1, origin2, radius):
     """
@@ -42,16 +43,16 @@ def do_circles_boxes_overlap(origin1, origin2, radius):
 
 class GridCell:
     def __init__(self):
-        self.character = None
+        self.combatant = None
         self.difficult_terrain = False
         self.is_opaque = False
         self.is_accessible = True
 
-    def set_character(self, character):
-        self.character = character
+    def set_combatant(self, combatant):
+        self.combatant = combatant
 
-    def get_character(self):
-        return self.character
+    def get_combatant(self):
+        return self.combatant
 
     def set_opaqueness(self, opaque):
         self.is_opaque = opaque
@@ -60,11 +61,10 @@ class GridCell:
         self.is_accessible = access
 
     def is_empty(self):
-        return self.character is None
+        return self.combatant is None
 
 
 class Map:
-
     DIFFICULT_TERRAIN = 1
     INACCESSIBLE = 2
 
@@ -74,22 +74,20 @@ class Map:
         self.grid = [[GridCell() for _ in range(size)] for _ in range(size)]
         self.base_adjacency_matrix = np.zeros((size, size))
         self.difficult_set = set()
-        self.character_coordinate_cache = {}
-
+        self.combatant_coordinate_cache = {}
 
     def __str__(self):
         string_repr = ""
         for row in self.grid:
             row_text = ""
             for cell in row:
-                character = cell.get_character()
-                if character:
-                    row_text += self.teams.get_team_color_code(character) + character.get_name()[0] +"\x1b[0m\t"
+                combatant = cell.get_combatant()
+                if combatant:
+                    row_text += self.teams.get_team_color_code(combatant) + combatant.get_name()[0] + "\x1b[0m\t"
                 else:
                     row_text += "0\t"
             string_repr += row_text + "\n"
         return string_repr
-
 
     def place_circular_element(self, coords, element_type, diameter=1):
         N = self.size
@@ -101,8 +99,8 @@ class Map:
                 self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].difficult_terrain = True
                 self.difficult_set.add((coords[0], coords[1]))
         elif diameter > 1:
-            for x in range(-math.floor(diameter/2), math.floor(diameter/2) + 1):
-                for y in range(-math.floor(diameter/2), math.floor(diameter/2) + 1):
+            for x in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
+                for y in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
                     try:
                         if element_type == self.INACCESSIBLE:
                             self.grid[coords[0] + x][coords[1] + y].is_accessible = False
@@ -110,11 +108,11 @@ class Map:
                             self.grid[coords[0] + x][coords[1] + y].difficult_terrain = True
                             self.difficult_set.add((coords[0] + x, coords[1] + y))
                     except IndexError:
-                        pass #out of grid
+                        pass  # out of grid
 
     def build_adjacency_matrix(self):
         N = self.size
-        Nsq = N**2
+        Nsq = N ** 2
         adj = np.zeros((N, N, N, N))
         # Take adj to encode (x,y) coordinate to (x,y) coordinate edges
         # Let's now connect the nodes
@@ -122,15 +120,15 @@ class Map:
             for j in range(N):
                 adj[i, j, max((i - 1), 0), max((j - 1), 0)] = 1
                 adj[i, j, max((i - 1), 0), j] = 1
-                adj[i, j, max((i - 1), 0), min(j + 1, N-1)] = 1
+                adj[i, j, max((i - 1), 0), min(j + 1, N - 1)] = 1
 
                 adj[i, j, i, max((j - 1), 0)] = 1
                 adj[i, j, i, j] = 1
-                adj[i, j, i, min(j + 1, N-1)] = 1
+                adj[i, j, i, min(j + 1, N - 1)] = 1
 
-                adj[i, j, min(i + 1, N-1), max((j - 1), 0)] = 1
-                adj[i, j, min(i + 1, N-1), j] = 1
-                adj[i, j, min(i + 1, N-1), min(j + 1, N-1)] = 1
+                adj[i, j, min(i + 1, N - 1), max((j - 1), 0)] = 1
+                adj[i, j, min(i + 1, N - 1), j] = 1
+                adj[i, j, min(i + 1, N - 1), min(j + 1, N - 1)] = 1
 
                 # max is used to avoid negative slicing, and +2 is used because
                 # slicing does not include last element.
@@ -142,12 +140,12 @@ class Map:
         self.base_adjacency_matrix = adj
 
     def printSolution(self, dist, my_location, enemy_location, reconstructed_path):
-        my_coord = my_location[0]*self.size + my_location[1]
-        enemy_coord = enemy_location[0]*self.size + enemy_location[1]
+        my_coord = my_location[0] * self.size + my_location[1]
+        enemy_coord = enemy_location[0] * self.size + enemy_location[1]
         for x in range(self.size):
             row = ""
             for y in range(self.size):
-                coord = x*self.size + y
+                coord = x * self.size + y
                 if coord == my_coord:
                     row += "\x1b[38;5;39m%d\x1b[0m\t" % dist[coord]
                 elif coord == enemy_coord:
@@ -172,7 +170,7 @@ class Map:
     def dijkstra(self, src):
         src = np.array(src)
         N = self.size
-        Nsq = self.size**2
+        Nsq = self.size ** 2
         dist = [sys.maxsize] * Nsq
         dist[src[0] * self.size + src[1]] = 0
         sptSet = [False] * Nsq
@@ -190,7 +188,8 @@ class Map:
                     if dist[y] > dist[x] + adj[x][y]:
                         dist[y] = dist[x] + adj[x][y]
                         shortest_paths[coord_to] = coord_from
-                    elif dist[y] >= dist[x] + adj[x][y] and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(np.abs(coord_to_np - coord_from)):
+                    elif dist[y] >= dist[x] + adj[x][y] and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(
+                            np.abs(coord_to_np - coord_from)):
                         # prefer the path with the least coordinate diff, i.e. the less zig-zaggy path
                         shortest_paths[coord_to] = coord_from
 
@@ -203,43 +202,42 @@ class Map:
         logger.debug(increments)
         return increments
 
-    def move_character(self, character, increment):
-        old_coord = self.character_coordinate_cache[character]
+    def move_combatant(self, combatant, increment):
+        old_coord = self.combatant_coordinate_cache[combatant]
         try:
-            self.grid[old_coord[0]][old_coord[1]].set_character(None)
+            self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
         except IndexError as e:
-            logger.error(e)# TODO remove this once fixed
+            logger.error(e)  # TODO remove this once fixed
         new_coord = old_coord + increment
         try:
-            self.grid[new_coord[0]][new_coord[1]].set_character(character)
+            self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
         except IndexError as e:
-            logger.error(e)# TODO remove this once fixed
-        self.character_coordinate_cache[character] = new_coord
-        logger.debug(f"{character.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(character)})
+            logger.error(e)  # TODO remove this once fixed
+        self.combatant_coordinate_cache[combatant] = new_coord
+        logger.debug(f"{combatant.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
+    def get_aoo_eligible_combatants(self, combatant, increment):
+        eligible_combatants = []
+        for curr_combatant, pos in self.combatant_coordinate_cache.items():
+            if curr_combatant is not combatant and not self.teams.are_allies(curr_combatant, combatant):
+                pre_increment_dist = self.get_combatant_distance(combatant, curr_combatant)
+                post_increment_dist = get_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
+                if pre_increment_dist == curr_combatant.max_melee_range and post_increment_dist > curr_combatant.max_melee_range and curr_char.has_reaction:
+                    eligible_combatants.append(curr_combatant)
+        return eligible_combatants
 
-    def get_aoo_eligible_characters(self, character, increment):
-        eligible_characters = []
-        for curr_char, pos in self.character_coordinate_cache.items():
-            if curr_char is not character and not self.teams.are_allies(curr_char, character):
-                pre_increment_dist = self.get_character_distance(character, curr_char)
-                post_increment_dist = get_distance(self.character_coordinate_cache[character] + increment, pos)
-                if pre_increment_dist == curr_char.max_melee_range and post_increment_dist > curr_char.max_melee_range and curr_char.has_reaction:
-                    eligible_characters.append(curr_char)
-        return eligible_characters
-
-    def get_pam_eligible_characters(self, character, increment):
-        eligible_characters = []
-        for curr_char, pos in self.character_coordinate_cache.items():
-            if curr_char is not character and not self.teams.are_allies(curr_char, character):
+    def get_pam_eligible_combatants(self, combatant, increment):
+        eligible_combatants = []
+        for curr_combatant, pos in self.combatant_coordinate_cache.items():
+            if curr_combatant is not combatant and not self.teams.are_allies(curr_combatant, combatant):
                 try:
-                    pre_increment_dist = self.get_character_distance(character, curr_char)
-                    post_increment_dist = get_distance(self.character_coordinate_cache[character] + increment, pos)
+                    pre_increment_dist = self.get_combatant_distance(combatant, curr_combatant)
+                    post_increment_dist = get_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
                 except KeyError:
                     continue
-                if pre_increment_dist > curr_char.max_melee_range and post_increment_dist == curr_char.max_melee_range and curr_char.has_reaction and curr_char.has_polearm_master:
-                    eligible_characters.append(curr_char)
-        return eligible_characters
+                if pre_increment_dist > curr_combatant.max_melee_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction and curr_combatant.has_polearm_master:
+                    eligible_combatants.append(curr_combatant)
+        return eligible_combatants
 
     def is_empty(self, x, y):
         return self.grid[x][y].is_empty()
@@ -250,35 +248,35 @@ class Map:
     def shortest_distance(self, x1, y1, x2, y2):
         return 1
 
-    def set_character_coordinates(self, character, coord):
+    def set_combatant_coordinates(self, combatant, coord):
         # TODO: redo this as np.array
-        self.grid[coord[0]][coord[1]].set_character(character)
-        self.character_coordinate_cache[character] = coord
+        self.grid[coord[0]][coord[1]].set_combatant(combatant)
+        self.combatant_coordinate_cache[combatant] = coord
 
-    def get_nearest_enemy(self, character):
+    def get_nearest_enemy(self, combatant):
         min_dist = sys.float_info.max
         nearest_enemy = None
-        self_position = self.character_coordinate_cache[character]
-        for potential_target, target_coord in self.character_coordinate_cache.items():
+        self_position = self.combatant_coordinate_cache[combatant]
+        for potential_target, target_coord in self.combatant_coordinate_cache.items():
             dist = np.linalg.norm(target_coord - self_position)
-            if potential_target is not character and not self.teams.are_allies(potential_target, character) and dist < min_dist:
+            if potential_target is not combatant and not self.teams.are_allies(potential_target, combatant) and dist < min_dist:
                 min_dist = dist
                 nearest_enemy = potential_target
         return nearest_enemy
 
-    def are_in_range(self, character1, character2, distance):
-        char1_position = np.array(self.character_coordinate_cache[character1])
-        char2_position = np.array(self.character_coordinate_cache[character2])
-        return np.max(np.abs(char1_position - char2_position)) <= distance
+    def are_in_range(self, combatant1, combatant2, distance):
+        combatant1_position = np.array(self.combatant_coordinate_cache[combatant1])
+        combatant2_position = np.array(self.combatant_coordinate_cache[combatant2])
+        return np.max(np.abs(combatant1_position - combatant2_position)) <= distance
 
-    def get_character_distance(self, character1, character2):
-        char1_position = np.array(self.character_coordinate_cache[character1])
-        char2_position = np.array(self.character_coordinate_cache[character2])
-        return np.max(np.abs(char1_position - char2_position))
+    def get_combatant_distance(self, combatant1, combatant2):
+        combatant1_position = np.array(self.combatant_coordinate_cache[combatant1])
+        combatant2_position = np.array(self.combatant_coordinate_cache[combatant2])
+        return np.max(np.abs(combatant1_position - combatant2_position))
 
-    def get_path_to_enemy(self, character, target):
-        my_location = self.get_character_position(character)
-        enemy_location = self.get_character_position(target)
+    def get_path_to_enemy(self, combatant, target):
+        my_location = self.get_combatant_position(combatant)
+        enemy_location = self.get_combatant_position(target)
         logger.debug(f"My location {my_location}")
         logger.debug(f"Enemy location {enemy_location}")
         dist, shortest_path = self.dijkstra(my_location)
@@ -286,15 +284,15 @@ class Map:
         self.printSolution(dist, my_location, enemy_location, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])[:-1]
 
-    def get_path_to_coord(self, character, destination_coord):
+    def get_path_to_coord(self, combatant, destination_coord):
         """
         calculates a path to destination coordinates
-        :param character:Character who wants to move
+        :param combatant:Combatant who wants to move
         :param destination_coord:
         :return:
         """
         # TODO: consider making a variant which doesn't provoke AOO
-        my_location = self.get_character_position(character)
+        my_location = self.get_combatant_position(combatant)
         logger.debug(f"My location {my_location}")
         logger.debug(f"Destination location {destination_coord}")
         dist, shortest_path = self.dijkstra(my_location)
@@ -302,93 +300,94 @@ class Map:
         self.printSolution(dist, my_location, destination_coord, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])
 
-    def get_character_position(self, character):
+    def get_combatant_position(self, combatant):
         # TODO: Get this from the cache
         try:
-            return self.character_coordinate_cache[character]
+            return self.combatant_coordinate_cache[combatant]
         except KeyError as e:
             logger.error(e)
             return None
         # for i, row in enumerate(self.grid):
         #     for j, cell in enumerate(row):
-        #         character = cell.get_character()
-        #         if character and character.get_name() == name:
+        #         combatant = cell.get_combatant()
+        #         if combatant and combatant.get_name() == name:
         #             return np.array([i, j])
         # return None
 
-    def get_free_positions_at_distance(self, target_character, distance, character):
+    def get_free_positions_at_distance(self, target_combatant, distance, combatant):
         """
         Returns a list of coordinates that are unoccupied and at a given distance from a target, sorted by proximity to a
-        character
-        :param target_character: target to which the distance is measured
+        combatant
+        :param target_combatant: target to which the distance is measured
         :param distance: desired distance
-        :param character: sorted by ascending proximity to this character
+        :param combatant: sorted by ascending proximity to this combatant
         :return: list of numpy.array coordinates
         """
         if distance <= 0:
             return []
         free_positions = []
-        target_coords = self.character_coordinate_cache[target_character]
+        target_coords = self.combatant_coordinate_cache[target_combatant]
         for x in range(-distance, distance + 1):
             for y in range(-distance, distance + 1):
-                if (target_coords[0] + x) < 0 or (target_coords[1] + y) < 0 or (target_coords[0] + x) >= self.size or (target_coords[1] + y) >= self.size:
+                if (target_coords[0] + x) < 0 or (target_coords[1] + y) < 0 or (target_coords[0] + x) >= self.size or (
+                        target_coords[1] + y) >= self.size:
                     continue
                 is_accessible = self.grid[target_coords[0] + x][target_coords[1] + y].is_accessible
-                is_unoccupied = self.grid[target_coords[0] + x][target_coords[1] + y].character is None
+                is_unoccupied = self.grid[target_coords[0] + x][target_coords[1] + y].combatant is None
                 curr_coord = target_coords + np.array([x, y])
                 if is_accessible and is_unoccupied and np.max(np.abs(target_coords - curr_coord)) == distance:
                     free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
 
-        character_coord = self.character_coordinate_cache[character]
+        combatant_coord = self.combatant_coordinate_cache[combatant]
+
         def by_distance(coord):
-            return np.linalg.norm(coord - character_coord)
+            return np.linalg.norm(coord - combatant_coord)
 
         free_positions.sort(key=by_distance)
         return free_positions
 
-
-    def remove_character(self, character):
+    def remove_combatant(self, combatant):
         """
-        Removes a dead character from the grid
-        :param character:
+        Removes a dead combatant from the grid
+        :param combatant:
         :return:
         """
-        logger.debug(f"Removing character {character.get_name()}")
+        logger.debug(f"Removing combatant {combatant.get_name()}")
         try:
-            old_coord = self.character_coordinate_cache[character]
+            old_coord = self.combatant_coordinate_cache[combatant]
         except KeyError:
-            return # already removed
-        self.grid[old_coord[0]][old_coord[1]].set_character(None)
-        del self.character_coordinate_cache[character]
-
+            return  # already removed
+        self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
+        del self.combatant_coordinate_cache[combatant]
 
     def reset(self):
         for row in self.grid:
             for cell in row:
-                cell.set_character(None)
-        for character in self.character_coordinate_cache.keys():
-            self.character_coordinate_cache[character] = np.zeros(2)
+                cell.set_combatant(None)
+        for combatant in self.combatant_coordinate_cache.keys():
+            self.combatant_coordinate_cache[combatant] = np.zeros(2)
 
     def find_best_placement_harmful_circular(self, caster, spell_range, radius):
-        # or find a BB for all the enemy characters inflated by the range and then iterate over all cells finding one with the best hit score
-        bb = np.array([[self.size,self.size],[0, 0]]) # top left, bottom right
-        for character, coord in self.character_coordinate_cache.items():
-            if not self.teams.are_allies(caster, character):
-                bb[0] = np.minimum(bb[0], self.character_coordinate_cache[character])
-                bb[1] = np.maximum(bb[1], self.character_coordinate_cache[character])
+        # or find a BB for all the enemy combatants inflated by the range and then iterate over all cells finding one with the best hit score
+        bb = np.array([[self.size, self.size], [0, 0]])  # top left, bottom right
+        for combatant, coord in self.combatant_coordinate_cache.items():
+            if not self.teams.are_allies(caster, combatant):
+                bb[0] = np.minimum(bb[0], self.combatant_coordinate_cache[combatant])
+                bb[1] = np.maximum(bb[1], self.combatant_coordinate_cache[combatant])
         # inflate the BB
         bb[0] = np.maximum(bb[0] - radius, np.array([0, 0]))
         bb[1] = np.minimum(bb[1] + radius, np.array([self.size - 1, self.size - 1]))
         max_score = -sys.maxsize - 1
         best_placement = None
-        caster_coord = self.character_coordinate_cache[caster]
+        caster_coord = self.combatant_coordinate_cache[caster]
         for i in range(bb[0][0], bb[1][0]):
             for j in range(bb[0][1], bb[1][1]):
                 curr_coord = np.array([i, j])
-                if get_distance(caster_coord,curr_coord) <= spell_range and caster_coord is not curr_coord:
+                if get_distance(caster_coord, curr_coord) <= spell_range and caster_coord is not curr_coord:
                     score = 0
-                    for character, coord in self.character_coordinate_cache.items():
-                        score += (1 if not self.teams.are_allies(caster, character) else -4) if get_distance(coord, curr_coord) <= radius else 0
+                    for combatant, coord in self.combatant_coordinate_cache.items():
+                        score += (1 if not self.teams.are_allies(caster, combatant) else -4) if get_distance(coord,
+                                                                                                             curr_coord) <= radius else 0
                     if score > max_score:
                         max_score = score
                         best_placement = curr_coord
@@ -396,22 +395,20 @@ class Map:
         logger.debug(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
         return best_placement
 
-
-    def get_characters_affected_by_aoe(self, caster, ability):
+    def get_combatants_affected_by_aoe(self, caster, ability):
         # TODO potentially check for protective abilities
-        affected_characters = []
+        affected_combatants = []
         match ability.target:
             case Spell.Target.RADIUS_10 | Spell.Target.RADIUS_20 | Spell.Target.RADIUS_30:
-                for potential_target, char_coord in self.character_coordinate_cache.items():
+                for potential_target, combatant_coord in self.combatant_coordinate_cache.items():
                     if ability.type is Spell.Type.HARMFUL:
-                        if get_distance(char_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target]:
-                            affected_characters.append(potential_target)
+                        if get_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target]:
+                            affected_combatants.append(potential_target)
                     elif ability.type is Spell.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if get_distance(char_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target] and self.teams.are_allies(caster, potential_target):
-                            affected_characters.append(potential_target)
+                        if get_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target] and self.teams.are_allies(
+                                caster, potential_target):
+                            affected_combatants.append(potential_target)
             case _:
                 logger.error("Unrecognized ability target type")
-        return affected_characters
-
-
+        return affected_combatants

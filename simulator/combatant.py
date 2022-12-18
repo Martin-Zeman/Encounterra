@@ -4,10 +4,22 @@ import random
 import math
 import logging
 from simulator.misc import SavingThrow
+from enum import Enum
 
 logger = logging.getLogger(__name__)
 
-class Character:
+
+class Combatant:
+    class Condition(Enum):
+        FINE = 1
+        BLOODIED = 2
+        NEAR_DEATH = 3
+
+    class ToughnessEstimate(Enum):
+        TRASH = 1
+        LOW = 2
+        MEDIUM = 3
+        BOSS = 4
 
     def __init__(self, name, actions, hp, ac, init_bonus, speed, resistances, dc, num_attacks=1):
         self.name = name
@@ -40,10 +52,13 @@ class Character:
         self.has_sentinel = False
         self.combat_manager = None
         self.disadvantage_on_incoming_attacks = False
-        self.saving_throws = {SavingThrow.STR: 0, SavingThrow.DEX: 0, SavingThrow.CON: 0, SavingThrow.INT: 0, SavingThrow.WIS: 0, SavingThrow.CHA: 0}
+        self.saving_throws = {SavingThrow.STR: 0, SavingThrow.DEX: 0, SavingThrow.CON: 0, SavingThrow.INT: 0, SavingThrow.WIS: 0,
+                              SavingThrow.CHA: 0}
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
         self.perception = 0
+        self.condition = self.Condition.FINE
+        self.toughness = None
 
     def set_round_manager(self, round_manager):
         self.round_manager = round_manager
@@ -70,10 +85,9 @@ class Character:
     def set_ability_dmg_bonus(self, dmg_bonus):
         self.ability_dmg_bonus = dmg_bonus
 
-
     def receive_dmg(self, dmg, dmg_type):
         if dmg_type in self.resistances:
-            dmg = math.floor(dmg/2)
+            dmg = math.floor(dmg / 2)
             logger.debug(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
         self.curr_hp -= dmg
 
@@ -107,15 +121,14 @@ class Character:
     def add_team(self, team_name):
         self.team_name = team_name
 
-    def prompt_aoo(self, moving_character):
+    def prompt_aoo(self, moving_combatant):
         return None
 
-    def prompt_pam(self, moving_character):
+    def prompt_pam(self, moving_combatant):
         return None
 
-    def prompt_attack_reaction(self, attacking_character, attack_roll):
+    def prompt_attack_reaction(self, attacking_combatant, attack_roll):
         return None
 
-    def prompt_dmg_reaction(self, attacking_character, dmg, dmg_type):
+    def prompt_dmg_reaction(self, attacking_combatant, dmg, dmg_type):
         return None
-

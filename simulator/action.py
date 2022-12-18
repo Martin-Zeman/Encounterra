@@ -9,19 +9,15 @@ class Action:
         BONUS_ACTION = 2
         REACTION = 3
 
-    def __init__(self, name, character, action_type, action_class):
-        self.__name = name
-        self.character = character
-        self.TYPE = action_type
+    def __init__(self, name, combatant, action_class):
+        self.name = name
+        self.combatant = combatant
         self.action_class = action_class
         self.targeted_combat_action = False
         self.is_aoe = False
 
-    def get_type(self):
-        return self.TYPE
-
     def get_name(self):
-        return self.__name
+        return self.name
 
     def is_action(self):
         return self.action_class == Action.ActionClasses.ACTION
@@ -41,5 +37,5 @@ class Action:
     def reset(self):
         pass
 
-    def is_movement(self):
-        return False
+    # def is_movement(self):
+    #     return False

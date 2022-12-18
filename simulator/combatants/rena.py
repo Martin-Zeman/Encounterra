@@ -1,4 +1,4 @@
-from simulator.character import Character
+from simulator.combatant import Combatant
 from simulator.attack import Attack
 from simulator.dodge import Dodge
 from simulator.abilities.rage import Rage
@@ -11,11 +11,11 @@ import copy
 
 logger = logging.getLogger(__name__)
 
-class Rena(Character):
+class Rena(Combatant):
 
     def __init__(self):
         rena_attacks = [Attack("Two-handed axe", self,  7, "1d12", 4, Action.ActionClasses.ACTION, DamageType.Slashing, 1)]
-        super().__init__("Rena", rena_attacks, 61, 15, 1, 40, [], num_attacks=2)
+        super().__init__("Rena", actions=rena_attacks, hp=61, ac=15, init_bonus=1, speed=40, resistances=[], dc=15, num_attacks=2)
         rage = Rage(self, 3, 2)
         self.actions.append(rage)
         self.rage = self.actions[-1]
@@ -39,7 +39,7 @@ class Rena(Character):
                 if not self.selected_target:
                     return None
 
-            target_position = battle_map.get_character_position(self.selected_target)
+            target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(f"Target is at {target_position} and my cache is {None if self.target_position_cache is None else self.target_position_cache}")
             if not np.array_equal(self.target_position_cache, target_position):
                 path = battle_map.get_path_to_enemy(self, self.selected_target)
@@ -62,7 +62,7 @@ class Rena(Character):
                             self.multiattack_in_progress = True
                         if self.curr_num_attacks and self.multiattack_in_progress:
                             chosen_action = action
-                            chosen_action.set_target_character(self.selected_target)
+                            chosen_action.set_target_combatant(self.selected_target)
                             self.curr_num_attacks -= 1
                             logger.debug(f"{self.name} uses action {chosen_action.get_name()} against {self.selected_target.get_name()}", extra={"team": self.team_name})
                             return chosen_action
@@ -73,15 +73,15 @@ class Rena(Character):
                 logger.debug("Is out of range")
             return chosen_action
         logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_name})
-        return Dodge("dodge", self, Action.ActionClasses.ACTION)
+        return Dodge(self, Action.ActionClasses.ACTION)
 
-    def prompt_aoo(self, moving_character):
+    def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
             self.has_reaction = False #TODO consider moving this to the calling scope
             # chosen_aoo = copy.deepcopy(self.basic_attack_cache)
             chosen_aoo = self.basic_attack_cache
-            chosen_aoo.set_target_character(moving_character)
-            logger.debug(f"{self.name} taken an AoO {chosen_aoo.get_name()} against {moving_character.get_name()}",
+            chosen_aoo.set_target_combatant(moving_combatant)
+            logger.debug(f"{self.name} taken an AoO {chosen_aoo.get_name()} against {moving_combatant.get_name()}",
                          extra={"team": self.team_name})
             return chosen_aoo
         return None
