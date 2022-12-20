@@ -59,6 +59,7 @@ class Combatant:
         self.perception = 0
         self.condition = self.Condition.FINE
         self.toughness = None
+        self.is_dodging = False # TODO reconcile this somehow with disadvantage_on_incoming_attacks
 
     def set_round_manager(self, round_manager):
         self.round_manager = round_manager
@@ -97,6 +98,7 @@ class Combatant:
         self.has_reaction = True
         self.curr_num_attacks = self.num_attacks
         self.movement = self.speed
+        self.is_dodging = False
 
     def get_name(self):
         return self.name

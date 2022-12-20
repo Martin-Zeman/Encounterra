@@ -3,6 +3,7 @@ import math
 import sys
 import logging
 from simulator.spells.spell import Spell
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -111,6 +112,7 @@ class Map:
                         pass  # out of grid
 
     def build_adjacency_matrix(self):
+        start_time = time.time()
         N = self.size
         Nsq = N ** 2
         adj = np.zeros((N, N, N, N))
@@ -138,6 +140,7 @@ class Map:
         for coord in self.difficult_set:
             adj[:, coord[0] * N + coord[1]] *= 2
         self.base_adjacency_matrix = adj
+        print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
     def printSolution(self, dist, my_location, enemy_location, reconstructed_path):
         my_coord = my_location[0] * self.size + my_location[1]
@@ -222,7 +225,7 @@ class Map:
             if curr_combatant is not combatant and not self.teams.are_allies(curr_combatant, combatant):
                 pre_increment_dist = self.get_combatant_distance(combatant, curr_combatant)
                 post_increment_dist = get_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
-                if pre_increment_dist == curr_combatant.max_melee_range and post_increment_dist > curr_combatant.max_melee_range and curr_char.has_reaction:
+                if pre_increment_dist == curr_combatant.max_melee_range and post_increment_dist > curr_combatant.max_melee_range and curr_combatant.has_reaction:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 

@@ -31,7 +31,7 @@ class Spell(Actoid):
         FEET_30 = 30
         FEET_60 = 60
         FEET_100 = 100
-        FEET_120 = 120
+        FEET_120 = 24
         FEET_150 = 150
         FEET_300 = 300
 
@@ -49,7 +49,7 @@ class Spell(Actoid):
 
 
 
-    def __init__(self, level, casting_time, spell_range, target, duration, concentration, type, dc=None, dmg_type=None, orientation=None):
+    def __init__(self, level, casting_time, spell_range, target, duration, concentration, type, to_hit=None, dc=None, dmg_type=None, orientation=None):
         Actoid.__init__(self, type=Actoid.Type.IS_SPELL)
         self.level = level
         self.casting_time = casting_time
@@ -58,6 +58,7 @@ class Spell(Actoid):
         self.duration = duration
         self.concentration = concentration
         self.type = type
+        self.to_hit = to_hit
         self.dc = dc
         self.dmg_type = dmg_type
         self.orientation = orientation  # like orientation of a cone

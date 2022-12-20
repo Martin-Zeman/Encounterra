@@ -2,6 +2,7 @@ from simulator.action import *
 import random
 import logging
 import re
+from simulator.misc import SavingThrow
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,10 @@ def roll_dice(num_dice, dice_size):
 def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
     bonus = target_combatant.saving_throws[ability.saving_throw]
-    rolled = random.randint(1, 20)
+    if target_combatant.is_dodging and ability.saving_throw is SavingThrow.DEX:
+        rolled = max(random.randint(1, 20), random.randint(1, 20))
+    else:
+        rolled = random.randint(1, 20)
     if rolled == 1:
         saved = False
     elif rolled == 20:
@@ -50,6 +54,27 @@ class CombatManager:
         self.teams = teams
         self.battle_map = battle_map
 
+    def resolve_ranged_spell_attack(self, caster, spell):
+        if not (spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging):
+            rolled = max(random.randint(1, 20), random.randint(1, 20))
+        elif spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging:
+            rolled = min(random.randint(1, 20), random.randint(1, 20))
+        else:
+            rolled = random.randint(1, 20)
+        multiplier = 1
+        if rolled == 1:
+            logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
+            return False
+        elif rolled == 20:
+            multiplier = 2
+
+        if rolled + spell.to_hit >= spell.target.ac:
+            dmg = multiplier * roll_spell_dmg(spell)
+            logger.debug(f"{spell.__class__.__name__} hits {spell.target.get_name()} for {dmg} damage", extra={"team": self.teams.get_team(caster)})
+            spell.target.receive_dmg(dmg, spell.dmg_type)
+        else:
+            logger.debug(f"{spell.__class__.__name__} misses {spell.target.get_name()}", extra={"team": self.teams.get_team(caster)})
+
     def resolve_spell(self, caster, spell):
         match spell.__class__.__name__:
             case "Fireball":
@@ -58,6 +83,11 @@ class CombatManager:
                 for combatant in affected:
                     logger.debug(f"{combatant.get_name()} is hit by Fireball")
                     resolve_dmg_saving_throw(spell, dmg, combatant)
+            case "Firebolt":
+                if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
+                    self.resolve_ranged_spell_attack(caster, spell)
+                else:
+                    logger.debug("Out of Firebolt's range") # TODO could probably remove this. No map is gonna be that big
             case _:
                 logger.error("Unknown spell")
 
@@ -81,9 +111,9 @@ class CombatManager:
             logger.warning("Non-attack actions not supported yet")
             return False
 
-        if attack.advantage and not target.disadvantage_on_incoming_attacks:
+        if attack.advantage and not (target.disadvantage_on_incoming_attacks or target.is_dodging):
             rolled = max(random.randint(1, 20), random.randint(1, 20))
-        elif not attack.advantage and target.disadvantage_on_incoming_attacks:
+        elif not attack.advantage and (target.disadvantage_on_incoming_attacks or target.is_dodging):
             rolled = min(random.randint(1, 20), random.randint(1, 20))
         else:
             rolled = random.randint(1, 20)

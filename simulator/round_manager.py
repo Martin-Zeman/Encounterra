@@ -59,6 +59,19 @@ class RoundManager:
         return False
 
 
+    def resolve_by_actoid_type(self, actoid, combatant):
+        match actoid.actoid_type:
+            case Actoid.Type.IS_TARGETED_COMBAT_ACTION:
+                self.combat_manager.resolve_attack(actoid)
+            case Actoid.Type.IS_MOVEMENT:
+                if not self.request_movement(combatant, actoid):
+                    return  # combatant didn't survive
+            case Actoid.Type.IS_SPELL:
+                self.combat_manager.resolve_spell(combatant, actoid)
+            case Actoid.Type.IS_DODGE:
+                combatant.is_dodging = True
+            case _:
+                logger.error("Unknown actoid type")
 
     def simulate_n(self, n=1):
         if n == 1:
@@ -103,16 +116,7 @@ class RoundManager:
                         action = combatant.get_action(self.battle_map)
                         if action is None:
                             break
-                        match action.actoid_type:
-                            case Actoid.Type.IS_TARGETED_COMBAT_ACTION:
-                                self.combat_manager.resolve_attack(action)
-                            case Actoid.Type.IS_MOVEMENT:
-                                if not self.request_movement(combatant, action):
-                                    break # combatant didn't survive
-                            case Actoid.Type.IS_SPELL:
-                                self.combat_manager.resolve_spell(combatant, action)
-                            case _:
-                                logger.error("Unknown actoid type")
+                        self.resolve_by_actoid_type(action, combatant)
                 else:
                     logger.debug(f"Combatant {combatant.get_name()} is dead. Skipping")
             self.print_status()
