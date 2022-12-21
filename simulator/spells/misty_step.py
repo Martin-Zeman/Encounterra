@@ -1,0 +1,16 @@
+from simulator.spells.spell import Spell
+import logging
+
+logger = logging.getLogger(__name__)
+class MistyStep(Spell):
+    def __init__(self, coord):
+        super().__init__(level=2,
+                         casting_time=Spell.CastingTime.BONUS_ACTION,
+                         spell_range=Spell.Range.SELF,
+                         target=Spell.Target.SELF,
+                         duration=Spell.Duration.INSTANTANEOUS,
+                         concentration=False,
+                         type=Spell.Type.OTHER,
+                         dc=None,
+                         dmg_type=None)
+        self.coord = coord

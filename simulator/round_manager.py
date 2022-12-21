@@ -117,6 +117,8 @@ class RoundManager:
                         if action is None:
                             break
                         self.resolve_by_actoid_type(action, combatant)
+                        if not combatant.is_alive():
+                            break # could have died as a result of AoO
                 else:
                     logger.debug(f"Combatant {combatant.get_name()} is dead. Skipping")
             self.print_status()

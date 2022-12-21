@@ -60,6 +60,8 @@ class Combatant:
         self.condition = self.Condition.FINE
         self.toughness = None
         self.is_dodging = False # TODO reconcile this somehow with disadvantage_on_incoming_attacks
+        self.spellslots = []
+        self.already_cast_leveled_spell_this_turn = False
 
     def set_round_manager(self, round_manager):
         self.round_manager = round_manager
@@ -99,6 +101,7 @@ class Combatant:
         self.curr_num_attacks = self.num_attacks
         self.movement = self.speed
         self.is_dodging = False
+        self.already_cast_leveled_spell_this_turn = False
 
     def get_name(self):
         return self.name
@@ -119,6 +122,10 @@ class Combatant:
             action.reset()
         self.target_position_cache = None
         self.movement = self.speed
+        self.is_dodging = False
+        for ss in self.spellslots:
+            ss.curr_spellslots = ss.max_spellslots
+        self.already_cast_leveled_spell_this_turn = False
 
     def add_team(self, team_name):
         self.team_name = team_name

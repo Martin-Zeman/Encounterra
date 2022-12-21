@@ -13,7 +13,7 @@ import random
 
 if __name__ == '__main__':
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setFormatter(LogFormatter())
     logger.addHandler(stdout_handler)
@@ -53,6 +53,6 @@ if __name__ == '__main__':
     battle_map.place_circular_element((random.randint(0, 14), random.randint(0, 14)), Map.DIFFICULT_TERRAIN, random.randint(1, 2))
     battle_map.build_adjacency_matrix()
     # battle_map.get_path_to_enemy(rena, cyanwrath)
-    round_manager.simulate_n(1)
+    round_manager.simulate_n(10)
     # round_manager.print_results()
 

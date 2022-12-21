@@ -207,22 +207,16 @@ class Map:
 
     def move_combatant(self, combatant, increment):
         old_coord = self.combatant_coordinate_cache[combatant]
-        try:
-            self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
-        except IndexError as e:
-            logger.error(e)  # TODO remove this once fixed
+        self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
         new_coord = old_coord + increment
-        try:
-            self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
-        except IndexError as e:
-            logger.error(e)  # TODO remove this once fixed
+        self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coord
         logger.debug(f"{combatant.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
     def get_aoo_eligible_combatants(self, combatant, increment):
         eligible_combatants = []
         for curr_combatant, pos in self.combatant_coordinate_cache.items():
-            if curr_combatant is not combatant and not self.teams.are_allies(curr_combatant, combatant):
+            if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
                 pre_increment_dist = self.get_combatant_distance(combatant, curr_combatant)
                 post_increment_dist = get_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
                 if pre_increment_dist == curr_combatant.max_melee_range and post_increment_dist > curr_combatant.max_melee_range and curr_combatant.has_reaction:
@@ -232,7 +226,7 @@ class Map:
     def get_pam_eligible_combatants(self, combatant, increment):
         eligible_combatants = []
         for curr_combatant, pos in self.combatant_coordinate_cache.items():
-            if curr_combatant is not combatant and not self.teams.are_allies(curr_combatant, combatant):
+            if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
                 try:
                     pre_increment_dist = self.get_combatant_distance(combatant, curr_combatant)
                     post_increment_dist = get_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
@@ -262,10 +256,22 @@ class Map:
         self_position = self.combatant_coordinate_cache[combatant]
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
             dist = np.linalg.norm(target_coord - self_position)
-            if potential_target is not combatant and not self.teams.are_allies(potential_target, combatant) and dist < min_dist:
+            if potential_target is not combatant and self.teams.are_enemies(potential_target, combatant) and dist < min_dist:
                 min_dist = dist
                 nearest_enemy = potential_target
         return nearest_enemy
+
+    def is_enemy_adjacent(self, character):
+        self_coords = self.combatant_coordinate_cache[character]
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                try:
+                    cmbt = self.grid[self_coords[0] + x][self_coords[1] + y].combatant
+                    if cmbt and self.teams.are_enemies(character, cmbt):
+                        return True
+                except IndexError:
+                    continue
+        return False
 
     def are_in_range(self, combatant1, combatant2, distance):
         combatant1_position = np.array(self.combatant_coordinate_cache[combatant1])
@@ -304,20 +310,49 @@ class Map:
         return self.convert_path_to_increments(reconstructed_path['numpy'])
 
     def get_combatant_position(self, combatant):
-        # TODO: Get this from the cache
         try:
             return self.combatant_coordinate_cache[combatant]
         except KeyError as e:
             logger.error(e)
             return None
-        # for i, row in enumerate(self.grid):
-        #     for j, cell in enumerate(row):
-        #         combatant = cell.get_combatant()
-        #         if combatant and combatant.get_name() == name:
-        #             return np.array([i, j])
-        # return None
 
-    def get_free_positions_at_distance(self, target_combatant, distance, combatant):
+    def get_free_coords_away_from_enemies(self, character, distance):
+        """
+        Returns a list of coordinates that are at a certain distance from character. Sorted by distance to the nearest enemy
+        :param character: combatant who wants to get away
+        :param distance: how far the combatant can go
+        :return: sorted by the minimum distance to any enemy in ascending order
+        """
+        elligible_coords = []
+        self_coord = self.combatant_coordinate_cache[character]
+        # optimization - narrowing search down to a bounding box
+        for i in range(-distance, distance + 1):
+            for j in range(-distance, distance + 1):
+                curr_coord = self_coord + np.array([i, j])
+                if curr_coord[0] in range(0, self.size) and curr_coord[1] in range(0, self.size):
+                    # TODO modify and use is_empty
+                    cell = self.grid[curr_coord[0]][curr_coord[1]]
+                    if cell.is_accessible and not cell.combatant and get_distance(curr_coord, self_coord) == distance:
+                        elligible_coords.append(curr_coord)
+
+        # for i in range(self.size):
+        #     for j in range(self.size):
+        #         if get_distance(np.array([i, j]), self_coord) == distance:
+        #             elligible_coords.append(np.array([i, j]))
+
+        def by_distance_to_nearest_enemy(coord):
+            min_dist = sys.float_info.max
+            min_dist_coord = coord
+            for combatant, cmbt_coord in self.combatant_coordinate_cache.items():
+                if combatant.is_alive() and self.teams.are_enemies(character, combatant):
+                    dist = get_distance(coord, cmbt_coord)
+                    min_dist = min(dist, min_dist)
+            return min_dist
+
+        elligible_coords.sort(key=by_distance_to_nearest_enemy, reverse=True)
+        return elligible_coords
+
+    def get_free_coords_at_distance(self, target_combatant, distance, combatant):
         """
         Returns a list of coordinates that are unoccupied and at a given distance from a target, sorted by proximity to a
         combatant
@@ -374,7 +409,7 @@ class Map:
         # or find a BB for all the enemy combatants inflated by the range and then iterate over all cells finding one with the best hit score
         bb = np.array([[self.size, self.size], [0, 0]])  # top left, bottom right
         for combatant, coord in self.combatant_coordinate_cache.items():
-            if not self.teams.are_allies(caster, combatant):
+            if self.teams.are_enemies(caster, combatant):
                 bb[0] = np.minimum(bb[0], self.combatant_coordinate_cache[combatant])
                 bb[1] = np.maximum(bb[1], self.combatant_coordinate_cache[combatant])
         # inflate the BB
@@ -389,7 +424,7 @@ class Map:
                 if get_distance(caster_coord, curr_coord) <= spell_range and caster_coord is not curr_coord:
                     score = 0
                     for combatant, coord in self.combatant_coordinate_cache.items():
-                        score += (1 if not self.teams.are_allies(caster, combatant) else -4) if get_distance(coord,
+                        score += (1 if self.teams.are_enemies(caster, combatant) else -4) if get_distance(coord,
                                                                                                              curr_coord) <= radius else 0
                     if score > max_score:
                         max_score = score

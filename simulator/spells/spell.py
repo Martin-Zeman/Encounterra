@@ -24,16 +24,16 @@ class Spell(Actoid):
     TRANSLATE_RADIUS = {Target.RADIUS_10: 2, Target.RADIUS_20: 4, Target.RADIUS_30: 6}
 
     class Range(Enum):
-        SELF = 0
-        TOUCH = 1
-        SIGHT = 2
-        FEET_10 = 10
-        FEET_30 = 30
-        FEET_60 = 60
-        FEET_100 = 100
+        SELF = -1
+        TOUCH = 0
+        SIGHT = 1
+        FEET_10 = 2
+        FEET_30 = 6
+        FEET_60 = 12
+        FEET_100 = 20
         FEET_120 = 24
-        FEET_150 = 150
-        FEET_300 = 300
+        FEET_150 = 30
+        FEET_300 = 60
 
     class Duration(Enum):
         UNLIMITED = -1  # for spell longer than 10 minutes
@@ -46,6 +46,7 @@ class Spell(Actoid):
     class Type(Enum):
         HARMFUL = 1
         BUFF = 2
+        OTHER = 3
 
 
 

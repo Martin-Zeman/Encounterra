@@ -50,5 +50,8 @@ class Teams:
     def are_allies(self, first, second):
         return True if self.reverse_team_book[first] == self.reverse_team_book[second] else False
 
+    def are_enemies(self, first, second):
+        return False if self.reverse_team_book[first] == self.reverse_team_book[second] else True
+
     def get_team(self, combatant):
         return self.reverse_team_book[combatant]

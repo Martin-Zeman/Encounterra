@@ -6,3 +6,4 @@
 - consider geometric centers of grid for distance checking in cases such as radius etc.
 - Add a statistics engine to collect things such as avg. number of killed combatants, avg HP lost, avg. resources committed etc.
 - give disadvantage on ranged attacks when an enemy is adjacent
+- implement the "only one leveled spell" a turn to the environment checker
