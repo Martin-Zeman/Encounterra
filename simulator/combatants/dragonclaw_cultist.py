@@ -40,7 +40,7 @@ class DragonclawCultist(Combatant):
             return None
 
     def get_action(self, battle_map):
-        while self.has_action  or self.movement:
+        while self.has_action or self.movement:
             logger.debug(f"Has action {self.has_action}, movement {self.movement}")
             # chosen_action = None
 
@@ -52,9 +52,9 @@ class DragonclawCultist(Combatant):
 
             target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(f"Target is at {target_position}")
-            dist = battle_map.get_combatant_distance(self, self.selected_target)
+            dist = battle_map.get_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 1:
-                # I haven't attacked yet and I'm too far away, move into pole-arm range
+                # I haven't attacked yet and I'm too far away, move into range
                 path = battle_map.get_path_to_enemy(self, self.selected_target)
                 self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
                 try:

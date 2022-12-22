@@ -54,7 +54,7 @@ class RoundManager:
                             logger.debug(f"Combatant {combatant.get_name()} was stopped by sentinel")
 
         if combatant.is_alive():
-            self.battle_map.move_combatant(combatant, movement.increment)
+            self.battle_map.move_combatant_by_increment(combatant, movement.increment)
             return True
         return False
 

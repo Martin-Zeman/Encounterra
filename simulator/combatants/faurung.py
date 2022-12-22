@@ -26,7 +26,10 @@ class Faurung(Combatant):
     def get_action(self, battle_map):
         while self.has_action or self.has_bonus_action or self.movement:
             nearest_enemy = battle_map.get_nearest_enemy(self)
-            dist = battle_map.get_combatant_distance(self, nearest_enemy)
+            dist = battle_map.get_distance(self, nearest_enemy)
+            if not dist:
+                # all enemies are dead
+                return None
             if battle_map.is_enemy_adjacent(self) and self.has_bonus_action and self.spellslots[0].has_spellslots(2) and not self.already_cast_leveled_spell_this_turn and not self.nowhere_to_go:
                 free_coords = battle_map.get_free_coords_away_from_enemies(self, 6)
                 if not free_coords:
@@ -42,7 +45,7 @@ class Faurung(Combatant):
             elif self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
                 free_coords = battle_map.get_free_coords_at_distance(nearest_enemy, int(self.movement + dist), self)
                 if not free_coords:
-                    logger.debug(f"{self.name} has nowhere to Misty Step to")
+                    logger.debug(f"{self.name} has nowhere to go to")
                     self.nowhere_to_go = True
                     continue
                 path = battle_map.get_path_to_coord(self, free_coords[0])
@@ -75,6 +78,7 @@ class Faurung(Combatant):
     def new_turn(self):
         super().new_turn()
         self.nowhere_to_go = False
+        self.movement_generator_cache = None
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

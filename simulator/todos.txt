@@ -1,4 +1,4 @@
-- AOE hit score still counts dead characters
+- AOE hit score still counts dead characters - DONE
 - Make sure allies cannot occupy the same space
 - Add large+ sized creatures
 - Add a random generator of monsters which would generate random names for selected types of monsters
@@ -7,3 +7,4 @@
 - Add a statistics engine to collect things such as avg. number of killed combatants, avg HP lost, avg. resources committed etc.
 - give disadvantage on ranged attacks when an enemy is adjacent
 - implement the "only one leveled spell" a turn to the environment checker
+- the cultist seems to be able to use dodge even after an attack

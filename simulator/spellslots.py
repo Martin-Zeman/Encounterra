@@ -1,5 +1,6 @@
 from enum import Enum
 import logging
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -910,54 +911,52 @@ class Spellslots:
     }
 
     def __init__(self, class_name, class_level):
-        self.max_spellslots = {}
-        self.curr_spellslots = {}
         self.class_level = class_level
         self.class_name = class_name
         match class_name:
             case self.Class.BARD:
-                self.max_spellslots = self.FULL_CASTER_TABLE
-                self.curr_spellslots = self.FULL_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
                 return
             case self.Class.CLERIC:
-                self.max_spellslots = self.FULL_CASTER_TABLE
-                self.curr_spellslots = self.FULL_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
                 return
             case self.Class.DRUID:
-                self.max_spellslots = self.FULL_CASTER_TABLE
-                self.curr_spellslots = self.FULL_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
                 return
             case self.Class.ELDRIDGE_KNIGHT:
-                self.max_spellslots = self.QUARTER_CASTER_TABLE
-                self.curr_spellslots = self.QUARTER_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.QUARTER_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.QUARTER_CASTER_TABLE)
                 return
             case self.Class.PALADIN:
-                self.max_spellslots = self.HALF_CASTER_TABLE
-                self.curr_spellslots = self.HALF_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.HALF_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.HALF_CASTER_TABLE)
                 return
             case self.Class.RANGER:
-                self.max_spellslots = self.HALF_CASTER_TABLE
-                self.curr_spellslots = self.HALF_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.HALF_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.HALF_CASTER_TABLE)
                 return
             case self.Class.ARCANE_TRICKSTER:
-                self.max_spellslots = self.QUARTER_CASTER_TABLE
-                self.curr_spellslots = self.QUARTER_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.QUARTER_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.QUARTER_CASTER_TABLE)
                 return
             case self.Class.SORCERER:
-                self.max_spellslots = self.FULL_CASTER_TABLE
-                self.curr_spellslots = self.FULL_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
                 return
             case self.Class.WARLOCK:
-                self.max_spellslots = self.WARLOCK_TABLE
-                self.curr_spellslots = self.WARLOCK_TABLE
+                self.max_spellslots = copy.deepcopy(self.WARLOCK_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.WARLOCK_TABLE)
                 return
             case self.Class.WIZARD:
-                self.max_spellslots = self.FULL_CASTER_TABLE
-                self.curr_spellslots = self.FULL_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.FULL_CASTER_TABLE)
                 return
             case self.Class.ARTIFICER:
-                self.max_spellslots = self.HALF_CASTER_TABLE
-                self.curr_spellslots = self.HALF_CASTER_TABLE
+                self.max_spellslots = copy.deepcopy(self.HALF_CASTER_TABLE)
+                self.curr_spellslots = copy.deepcopy(self.HALF_CASTER_TABLE)
                 return
 
     def add_spellslots(self, class_name, level):
@@ -977,3 +976,6 @@ class Spellslots:
             self.curr_spellslots[self.class_level][level] -= 1
         except:
             logger.error("Something gone wrong with spellslots!")
+
+    def reset(self):
+        self.curr_spellslots = copy.deepcopy(self.max_spellslots)

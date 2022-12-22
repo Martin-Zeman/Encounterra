@@ -124,7 +124,7 @@ class Combatant:
         self.movement = self.speed
         self.is_dodging = False
         for ss in self.spellslots:
-            ss.curr_spellslots = ss.max_spellslots
+            ss.reset()
         self.already_cast_leveled_spell_this_turn = False
 
     def add_team(self, team_name):

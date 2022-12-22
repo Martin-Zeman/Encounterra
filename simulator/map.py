@@ -3,6 +3,7 @@ import math
 import sys
 import logging
 from simulator.spells.spell import Spell
+from simulator.combatant import Combatant
 import time
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ def reconstruct_from_shortest_path(shortest_path, my_location, enemy_location):
     return path
 
 
-def get_distance(coord1, coord2):
+def get_hop_distance(coord1, coord2):
     return np.max(np.abs(coord1 - coord2))
 
 
@@ -38,7 +39,7 @@ def do_circles_boxes_overlap(origin1, origin2, radius):
     :param radius: radius share by both circles
     :return: True if they overlap by at least width 1, false otherwise
     """
-    dist = get_distance(origin1, origin2)
+    dist = get_hop_distance(origin1, origin2)
     return (2 * radius) >= dist + 1
 
 
@@ -205,7 +206,7 @@ class Map:
         logger.debug(increments)
         return increments
 
-    def move_combatant(self, combatant, increment):
+    def move_combatant_by_increment(self, combatant, increment):
         old_coord = self.combatant_coordinate_cache[combatant]
         self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
         new_coord = old_coord + increment
@@ -213,12 +214,19 @@ class Map:
         self.combatant_coordinate_cache[combatant] = new_coord
         logger.debug(f"{combatant.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
+    def move_by_combatant(self, combatant, new_coord):
+        old_coord = self.combatant_coordinate_cache[combatant]
+        self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
+        self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
+        self.combatant_coordinate_cache[combatant] = new_coord
+        logger.debug(f"{combatant.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
+
     def get_aoo_eligible_combatants(self, combatant, increment):
         eligible_combatants = []
         for curr_combatant, pos in self.combatant_coordinate_cache.items():
-            if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
-                pre_increment_dist = self.get_combatant_distance(combatant, curr_combatant)
-                post_increment_dist = get_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
+            if curr_combatant is not combatant and curr_combatant.is_alive() and self.teams.are_enemies(curr_combatant, combatant):
+                pre_increment_dist = self.get_distance(combatant, curr_combatant)
+                post_increment_dist = get_hop_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
                 if pre_increment_dist == curr_combatant.max_melee_range and post_increment_dist > curr_combatant.max_melee_range and curr_combatant.has_reaction:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
@@ -228,8 +236,8 @@ class Map:
         for curr_combatant, pos in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
                 try:
-                    pre_increment_dist = self.get_combatant_distance(combatant, curr_combatant)
-                    post_increment_dist = get_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
+                    pre_increment_dist = self.get_distance(combatant, curr_combatant)
+                    post_increment_dist = get_hop_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
                 except KeyError:
                     continue
                 if pre_increment_dist > curr_combatant.max_melee_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction and curr_combatant.has_polearm_master:
@@ -242,9 +250,6 @@ class Map:
     def can_see(self, x1, y1, x2, y2):
         return True
 
-    def shortest_distance(self, x1, y1, x2, y2):
-        return 1
-
     def set_combatant_coordinates(self, combatant, coord):
         # TODO: redo this as np.array
         self.grid[coord[0]][coord[1]].set_combatant(combatant)
@@ -256,7 +261,7 @@ class Map:
         self_position = self.combatant_coordinate_cache[combatant]
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
             dist = np.linalg.norm(target_coord - self_position)
-            if potential_target is not combatant and self.teams.are_enemies(potential_target, combatant) and dist < min_dist:
+            if potential_target is not combatant and potential_target.is_alive() and self.teams.are_enemies(potential_target, combatant) and dist < min_dist:
                 min_dist = dist
                 nearest_enemy = potential_target
         return nearest_enemy
@@ -278,10 +283,20 @@ class Map:
         combatant2_position = np.array(self.combatant_coordinate_cache[combatant2])
         return np.max(np.abs(combatant1_position - combatant2_position)) <= distance
 
-    def get_combatant_distance(self, combatant1, combatant2):
-        combatant1_position = np.array(self.combatant_coordinate_cache[combatant1])
-        combatant2_position = np.array(self.combatant_coordinate_cache[combatant2])
-        return np.max(np.abs(combatant1_position - combatant2_position))
+    def get_distance(self, subject1, subject2):
+        """
+        Universal distance function. Accepts both characters or coordinates
+        :param subject1: either a character or a numpy array
+        :param subject2: either a character or a numpy array
+        :return: distance between subjects, None if one of the subjects is dead
+        """
+        subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
+        subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
+        try:
+            res = np.max(np.abs(subject1 - subject2))
+        except TypeError as e:
+            res = None
+        return res
 
     def get_path_to_enemy(self, combatant, target):
         my_location = self.get_combatant_position(combatant)
@@ -332,12 +347,12 @@ class Map:
                 if curr_coord[0] in range(0, self.size) and curr_coord[1] in range(0, self.size):
                     # TODO modify and use is_empty
                     cell = self.grid[curr_coord[0]][curr_coord[1]]
-                    if cell.is_accessible and not cell.combatant and get_distance(curr_coord, self_coord) == distance:
+                    if cell.is_accessible and not cell.combatant and get_hop_distance(curr_coord, self_coord) == distance:
                         elligible_coords.append(curr_coord)
 
         # for i in range(self.size):
         #     for j in range(self.size):
-        #         if get_distance(np.array([i, j]), self_coord) == distance:
+        #         if get_hop_distance(np.array([i, j]), self_coord) == distance:
         #             elligible_coords.append(np.array([i, j]))
 
         def by_distance_to_nearest_enemy(coord):
@@ -345,7 +360,7 @@ class Map:
             min_dist_coord = coord
             for combatant, cmbt_coord in self.combatant_coordinate_cache.items():
                 if combatant.is_alive() and self.teams.are_enemies(character, combatant):
-                    dist = get_distance(coord, cmbt_coord)
+                    dist = get_hop_distance(coord, cmbt_coord)
                     min_dist = min(dist, min_dist)
             return min_dist
 
@@ -370,7 +385,10 @@ class Map:
                 if (target_coords[0] + x) < 0 or (target_coords[1] + y) < 0 or (target_coords[0] + x) >= self.size or (
                         target_coords[1] + y) >= self.size:
                     continue
-                is_accessible = self.grid[target_coords[0] + x][target_coords[1] + y].is_accessible
+                try:
+                    is_accessible = self.grid[target_coords[0] + x][target_coords[1] + y].is_accessible
+                except TypeError:
+                    logger.error("FIXIT")
                 is_unoccupied = self.grid[target_coords[0] + x][target_coords[1] + y].combatant is None
                 curr_coord = target_coords + np.array([x, y])
                 if is_accessible and is_unoccupied and np.max(np.abs(target_coords - curr_coord)) == distance:
@@ -421,11 +439,12 @@ class Map:
         for i in range(bb[0][0], bb[1][0]):
             for j in range(bb[0][1], bb[1][1]):
                 curr_coord = np.array([i, j])
-                if get_distance(caster_coord, curr_coord) <= spell_range and caster_coord is not curr_coord:
+                if get_hop_distance(caster_coord, curr_coord) <= spell_range and caster_coord is not curr_coord:
                     score = 0
                     for combatant, coord in self.combatant_coordinate_cache.items():
-                        score += (1 if self.teams.are_enemies(caster, combatant) else -4) if get_distance(coord,
-                                                                                                             curr_coord) <= radius else 0
+                        score += (1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4) if get_hop_distance(
+                            coord,
+                            curr_coord) <= radius else 0
                     if score > max_score:
                         max_score = score
                         best_placement = curr_coord
@@ -440,11 +459,11 @@ class Map:
             case Spell.Target.RADIUS_10 | Spell.Target.RADIUS_20 | Spell.Target.RADIUS_30:
                 for potential_target, combatant_coord in self.combatant_coordinate_cache.items():
                     if ability.type is Spell.Type.HARMFUL:
-                        if get_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target]:
+                        if get_hop_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target]:
                             affected_combatants.append(potential_target)
                     elif ability.type is Spell.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if get_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target] and self.teams.are_allies(
+                        if get_hop_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target] and self.teams.are_allies(
                                 caster, potential_target):
                             affected_combatants.append(potential_target)
             case _:

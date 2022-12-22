@@ -65,7 +65,7 @@ class Cyanwrath(Combatant):
 
             target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(f"Target is at {target_position}")
-            dist = battle_map.get_combatant_distance(self, self.selected_target)
+            dist = battle_map.get_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 2:
                 # I haven't attacked yet and I'm too far away, move into pole-arm range
                 path = battle_map.get_path_to_enemy(self, self.selected_target)
