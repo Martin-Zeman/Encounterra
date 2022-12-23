@@ -5,9 +5,9 @@ import logging
 from simulator.spells.spell import Spell
 from simulator.combatant import Combatant
 import time
+from enum import Enum
 
 logger = logging.getLogger(__name__)
-
 
 def reconstruct_from_shortest_path(shortest_path, my_location, enemy_location):
     current_position = enemy_location
@@ -42,33 +42,48 @@ def do_circles_boxes_overlap(origin1, origin2, radius):
     dist = get_hop_distance(origin1, origin2)
     return (2 * radius) >= dist + 1
 
+class Terrain(Enum):
+    NORMAL_TERRAIN = 1
+    DIFFICULT_TERRAIN = 2
+    IMPASSABLE_TERRAIN = 3
+
+class Occupancy(Enum):
+    FREE = 1
+    OCCUPIED_BY_COMBATANT = 2
+    OCCUPIED_BY_TERRAIN = 3
 
 class GridCell:
     def __init__(self):
         self.combatant = None
-        self.difficult_terrain = False
+        self.terrain = Terrain.NORMAL_TERRAIN
         self.is_opaque = False
-        self.is_accessible = True
+        self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
+        if self.occupancy is not Occupancy.FREE:
+            logger.error("FIXME")
         self.combatant = combatant
+        self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
+
+    def remove_combatant(self):
+        self.combatant = None
+        self.occupancy = Occupancy.FREE
 
     def get_combatant(self):
         return self.combatant
 
-    def set_opaqueness(self, opaque):
-        self.is_opaque = opaque
+    # def set_opaqueness(self, opaque):
+    #     self.is_opaque = opaque
 
-    def set_accessibility(self, access):
-        self.is_accessible = access
+    def set_occupancy(self, occupancy):
+        self.occupancy = occupancy
 
     def is_empty(self):
-        return self.combatant is None
+        # TODO only the first two parts of the condition should suffice
+        return self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN and self.combatant is None
 
 
 class Map:
-    DIFFICULT_TERRAIN = 1
-    INACCESSIBLE = 2
 
     def __init__(self, size, teams):
         self.size = size
@@ -91,23 +106,25 @@ class Map:
             string_repr += row_text + "\n"
         return string_repr
 
-    def place_circular_element(self, coords, element_type, diameter=1):
+    def place_circular_element(self, coords, terrain_type, diameter=1):
         N = self.size
         coords = (coords[0], coords[1])
         if diameter == 1:
-            if element_type == self.INACCESSIBLE:
-                self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].is_accessible = False
-            elif element_type == self.DIFFICULT_TERRAIN:
-                self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].difficult_terrain = True
+            if terrain_type == Terrain.IMPASSABLE_TERRAIN:
+                self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].terrain = Terrain.IMPASSABLE_TERRAIN
+                self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].occupancy = Occupancy.OCCUPIED_BY_TERRAIN
+            elif terrain_type == Terrain.DIFFICULT_TERRAIN:
+                self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].terrain = Terrain.DIFFICULT_TERRAIN
                 self.difficult_set.add((coords[0], coords[1]))
         elif diameter > 1:
             for x in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
                 for y in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
                     try:
-                        if element_type == self.INACCESSIBLE:
-                            self.grid[coords[0] + x][coords[1] + y].is_accessible = False
-                        elif element_type == self.DIFFICULT_TERRAIN:
-                            self.grid[coords[0] + x][coords[1] + y].difficult_terrain = True
+                        if terrain_type == Terrain.IMPASSABLE_TERRAIN:
+                            self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.IMPASSABLE_TERRAIN
+                            self.grid[coords[0] + x][coords[1] + y].occupancy = Occupancy.OCCUPIED_BY_TERRAIN
+                        elif terrain_type == Terrain.DIFFICULT_TERRAIN:
+                            self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.DIFFICULT_TERRAIN
                             self.difficult_set.add((coords[0] + x, coords[1] + y))
                     except IndexError:
                         pass  # out of grid
@@ -143,7 +160,22 @@ class Map:
         self.base_adjacency_matrix = adj
         print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
-    def printSolution(self, dist, my_location, enemy_location, reconstructed_path):
+    def build_combatant_adjacency_mask(self, combatant):
+        """
+        Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
+        Allies are considered difficult terrain (potentially on top of already difficult terrain)
+        :param combatant: for whom the mask is to be constructed
+        :return: adjacency matrix mask
+        """
+        N = self.size
+        # TODO consider preallocating this for all combatants and only resetting it to ones
+        mask = np.ones((self.size**2, self.size**2))
+        for curr_combatant, coord in self.combatant_coordinate_cache.items():
+            if curr_combatant is not combatant and curr_combatant.is_alive():
+                mask[:, coord[0] * N + coord[1]] = 0 if self.teams.are_enemies(curr_combatant, combatant) else 2
+        return mask
+
+    def printSolution(self, distances, my_location, enemy_location, reconstructed_path):
         my_coord = my_location[0] * self.size + my_location[1]
         enemy_coord = enemy_location[0] * self.size + enemy_location[1]
         for x in range(self.size):
@@ -151,38 +183,42 @@ class Map:
             for y in range(self.size):
                 coord = x * self.size + y
                 if coord == my_coord:
-                    row += "\x1b[38;5;39m%d\x1b[0m\t" % dist[coord]
+                    row += "\x1b[38;5;39m%d\x1b[0m\t" % distances[coord]
                 elif coord == enemy_coord:
-                    row += "\x1b[38;5;196m%d\x1b[0m\t" % dist[coord]
+                    row += "\x1b[38;5;196m%d\x1b[0m\t" % distances[coord]
                 elif (x, y) in reconstructed_path:
-                    row += "\u001b[36m%d\x1b[0m\t" % dist[coord]
+                    row += "\u001b[36m%d\x1b[0m\t" % distances[coord]
                 else:
-                    row += "%d\t" % dist[coord] if (x, y) not in self.difficult_set else "\x1b[38;5;226m%d\x1b[0m\t" % dist[coord]
+                    row += "%d\t" % distances[coord] if (x, y) not in self.difficult_set else "\x1b[38;5;226m%d\x1b[0m\t" % distances[coord]
             logger.debug(row)
 
     def minDistance(self, dist, sptSet):
         Nsq = self.size ** 2
         min = sys.maxsize
+        min_index = None
 
         for u in range(Nsq):
             if dist[u] < min and sptSet[u] is False:
                 min = dist[u]
                 min_index = u
-
+        # if not min_index:
+        #     logger.error("FIXME")
         return min_index
 
-    def dijkstra(self, src):
+    def dijkstra(self, src, mask):
         src = np.array(src)
         N = self.size
         Nsq = self.size ** 2
         dist = [sys.maxsize] * Nsq
         dist[src[0] * self.size + src[1]] = 0
         sptSet = [False] * Nsq
-        adj = self.base_adjacency_matrix
+        adj = np.multiply(self.base_adjacency_matrix, mask)
         shortest_paths = {}
 
         for _ in range(Nsq):
             x = self.minDistance(dist, sptSet)
+            if not x:
+                break
             sptSet[x] = True
             for y in range(Nsq):
                 if adj[x][y] > 0 and sptSet[y] is False:
@@ -214,7 +250,7 @@ class Map:
         self.combatant_coordinate_cache[combatant] = new_coord
         logger.debug(f"{combatant.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
-    def move_by_combatant(self, combatant, new_coord):
+    def move_combatant(self, combatant, new_coord):
         old_coord = self.combatant_coordinate_cache[combatant]
         self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
         self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
@@ -244,14 +280,15 @@ class Map:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
-    def is_empty(self, x, y):
-        return self.grid[x][y].is_empty()
+    def is_empty(self, coord):
+        return self.grid[coord[0]][coord[1]].is_empty()
 
     def can_see(self, x1, y1, x2, y2):
         return True
 
     def set_combatant_coordinates(self, combatant, coord):
         # TODO: redo this as np.array
+        logger.debug(f"Setting coordinates {coord} for comabatant {combatant.get_name()}")
         self.grid[coord[0]][coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = coord
 
@@ -298,30 +335,32 @@ class Map:
             res = None
         return res
 
-    def get_path_to_enemy(self, combatant, target):
+    def get_path_to_enemy(self, combatant, target_combatant):
         my_location = self.get_combatant_position(combatant)
-        enemy_location = self.get_combatant_position(target)
+        enemy_location = self.get_combatant_position(target_combatant)
         logger.debug(f"My location {my_location}")
         logger.debug(f"Enemy location {enemy_location}")
-        dist, shortest_path = self.dijkstra(my_location)
+        mask = self.build_combatant_adjacency_mask(combatant)
+        distances, shortest_path = self.dijkstra(my_location, mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, enemy_location)
-        self.printSolution(dist, my_location, enemy_location, reconstructed_path['tuples'])
+        self.printSolution(distances, my_location, enemy_location, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])[:-1]
 
-    def get_path_to_coord(self, combatant, destination_coord):
+    def get_path_to_coord(self, combatant, target_coord):
         """
         calculates a path to destination coordinates
         :param combatant:Combatant who wants to move
-        :param destination_coord:
+        :param target_coord:
         :return:
         """
         # TODO: consider making a variant which doesn't provoke AOO
         my_location = self.get_combatant_position(combatant)
         logger.debug(f"My location {my_location}")
-        logger.debug(f"Destination location {destination_coord}")
-        dist, shortest_path = self.dijkstra(my_location)
-        reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, destination_coord)
-        self.printSolution(dist, my_location, destination_coord, reconstructed_path['tuples'])
+        logger.debug(f"Destination location {target_coord}")
+        mask = self.build_combatant_adjacency_mask(combatant)
+        distances, shortest_path = self.dijkstra(my_location, mask)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, target_coord)
+        self.printSolution(distances, my_location, target_coord, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])
 
     def get_combatant_position(self, combatant):
@@ -347,7 +386,7 @@ class Map:
                 if curr_coord[0] in range(0, self.size) and curr_coord[1] in range(0, self.size):
                     # TODO modify and use is_empty
                     cell = self.grid[curr_coord[0]][curr_coord[1]]
-                    if cell.is_accessible and not cell.combatant and get_hop_distance(curr_coord, self_coord) == distance:
+                    if cell.is_empty() and get_hop_distance(curr_coord, self_coord) == distance:
                         elligible_coords.append(curr_coord)
 
         # for i in range(self.size):
@@ -385,13 +424,9 @@ class Map:
                 if (target_coords[0] + x) < 0 or (target_coords[1] + y) < 0 or (target_coords[0] + x) >= self.size or (
                         target_coords[1] + y) >= self.size:
                     continue
-                try:
-                    is_accessible = self.grid[target_coords[0] + x][target_coords[1] + y].is_accessible
-                except TypeError:
-                    logger.error("FIXIT")
-                is_unoccupied = self.grid[target_coords[0] + x][target_coords[1] + y].combatant is None
+                is_empty = self.grid[target_coords[0] + x][target_coords[1] + y].is_empty()
                 curr_coord = target_coords + np.array([x, y])
-                if is_accessible and is_unoccupied and np.max(np.abs(target_coords - curr_coord)) == distance:
+                if is_empty and np.max(np.abs(target_coords - curr_coord)) == distance:
                     free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
 
         combatant_coord = self.combatant_coordinate_cache[combatant]
@@ -419,7 +454,7 @@ class Map:
     def reset(self):
         for row in self.grid:
             for cell in row:
-                cell.set_combatant(None)
+                cell.remove_combatant()
         for combatant in self.combatant_coordinate_cache.keys():
             self.combatant_coordinate_cache[combatant] = np.zeros(2)
 

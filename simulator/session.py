@@ -1,0 +1,112 @@
+from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.combatants.rena import Rena
+from simulator.combatants.faurung import Faurung
+from simulator.combatants.cyanwrath import Cyanwrath
+from simulator.map import *
+from simulator.round_manager import *
+from simulator.teams import Teams
+from enum import Enum
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class Session:
+
+    class PlacementScenario(Enum):
+        TWO_HALVES = 1
+        SURROUNDED = 2
+        TOTALLY_RANDOM = 3
+
+    def __init__(self):
+        self.combatants = []
+        self.num_simulations = 1
+        self.battle_map = None
+        self.map_size = 15
+        self.statistic_collector = None
+        self.character_type_counter = {
+            Faurung: 0,
+            Rena: 0,
+            DragonclawCultist: 0,
+            Cyanwrath: 0
+        }
+        self.teams = Teams()
+        self.placement_scenario = self.PlacementScenario.TWO_HALVES
+        self.combat_manager = None
+        self.round_manager = None
+
+    def add_combatant(self, combatant_type, team):
+        try:
+            curr_count = self.character_type_counter[combatant_type]
+            self.character_type_counter[combatant_type] += 1
+        except KeyError:
+            logger.error("Unknown combatant type")
+            return
+
+        match combatant_type.__name__:
+            case "Faurung":
+                self.combatants.append(Faurung())
+            case "Rena":
+                self.combatants.append(Rena())
+            case "Cyanwrath":
+                self.combatants.append(Cyanwrath())
+            case "DragonclawCultist":
+                self.combatants.append(DragonclawCultist("DragonclawCultist" + (" " + str(curr_count) if curr_count > 1 else "")))
+            case _:
+                logger.error("Unknown combatant type")
+                return
+        self.teams.add_combatant_to_team(self.combatants[-1], team)
+
+
+    def set_map_type(self):
+        pass
+
+    def set_map_size(self, size):
+        self.map_size = size
+
+    def set_num_simulations(self, num):
+        assert num > 0
+        self.num_simulations = num
+
+    def set_placement_scenario(self, scenario):
+        assert isinstance(scenario, self.PlacementScenario)
+        self.placement_scenario = scenario
+
+    def place_combatant(self, combatant, bounds1, bounds2):
+        while True:
+            # TODO place some kind of a timeout here
+            random_coord = np.array([random.randint(*bounds1), random.randint(*bounds2)])
+            if self.battle_map.is_empty(random_coord):
+                self.battle_map.set_combatant_coordinates(combatant, random_coord)
+                break
+
+    def place_combatants_on_the_map(self):
+        match self.placement_scenario:
+            case self.PlacementScenario.TWO_HALVES:
+                for combatant in self.combatants:
+                    team_color = self.teams.get_team_color_code(combatant)
+                    right_bounds = (0, self.map_size // 2 - 1) if team_color is Teams.Color.BLUE else (self.map_size // 2 + 1, self.map_size - 1)
+                    self.place_combatant(combatant, (0, self.map_size - 1), right_bounds)
+            case self.PlacementScenario.TOTALLY_RANDOM:
+                for combatant in self.combatants:
+                    self.place_combatant(combatant, (0, self.map_size - 1), (0, self.map_size - 1))
+            case _:
+                logger.error("Unsupported placement scenario. Going with default")
+                self.placement_scenario = self.PlacementScenario.TWO_HALVES
+                self.place_combatants_on_the_map()
+
+    def place_random_elements_on_the_map(self):
+        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
+        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
+        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
+
+    def simulate(self):
+        self.battle_map = Map(self.map_size, self.teams)
+        self.combat_manager = CombatManager(self.combatants, self.teams, self.battle_map)
+        self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map, self.combat_manager)
+        self.place_combatants_on_the_map()
+        for combatant in self.combatants:
+            combatant.set_round_manager(self.round_manager)
+        self.place_random_elements_on_the_map()
+        self.battle_map.build_adjacency_matrix()
+        self.round_manager.simulate_n(self.num_simulations)

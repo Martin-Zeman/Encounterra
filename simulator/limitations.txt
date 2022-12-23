@@ -1,10 +1,11 @@
-Multi-attack cannot be split
+Multi-attack cannot be split - FIXED?
 So far only medium sized combatants
 map only of square shape
 combatants always know where enemies are even though they can't see them
 same initiative rolls aren't ordered by dex
 No resurrections
-currently no dodge actions
+currently no dodge actions - FIXED
 currently no one dashes
 upcasting? should be there
 only one DC per character
+no shoving

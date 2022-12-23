@@ -81,8 +81,6 @@ class RoundManager:
             combatant_initial_positions = {ch:self.battle_map.get_combatant_position(ch) for ch in self.combatants}
             for i in range(n):
                 logger.info(f"{i}. Iteration")
-                for combatant in self.combatants:
-                    self.battle_map.set_combatant_coordinates(combatant, combatant_initial_positions[combatant])
                 self.simulate()
                 surviving_teams = self.teams.get_surviving_teams()
                 if len(surviving_teams) > 1:
@@ -94,6 +92,9 @@ class RoundManager:
                 for ch in self.combatants:
                     ch.reset()
                 self.battle_map.reset()
+                for combatant in self.combatants:
+                    # TODO consider making this part of map reset
+                    self.battle_map.set_combatant_coordinates(combatant, combatant_initial_positions[combatant])
             logger.info("--------------STATISTICS--------------")
             for name, victories in team_tally.items():
                 logger.info(f"Team {name} won total of {victories} times", extra={"team": name})

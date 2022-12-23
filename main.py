@@ -1,61 +1,26 @@
-from simulator.map import *
-from simulator.round_manager import *
-from simulator.teams import Teams
+from simulator.session import Session
 from simulator.combatants.rena import Rena
 from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
-import numpy as np
+from simulator.teams import Teams
 import logging
 import sys
 from simulator.logging.log_formatter import LogFormatter
-import random
 
 if __name__ == '__main__':
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setFormatter(LogFormatter())
     logger.addHandler(stdout_handler)
+    session = Session()
+    session.add_combatant(Faurung, Teams.Color.BLUE)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.simulate()
 
-    # cyanwrath = Cyanwrath()
-    # rena = Rena()
-    faurung = Faurung()
-    cultist1 = DragonclawCultist("Dragonclaw 1")
-    cultist2 = DragonclawCultist("Dragonclaw 2")
-    cultist3 = DragonclawCultist("Dragonclaw 3")
-    cultist4 = DragonclawCultist("Dragonclaw 4")
-    # combatants = [cyanwrath, rena, cultist1, cultist2, cultist3]
-    combatants = [faurung, cultist1, cultist2, cultist3, cultist4]
-    teams = Teams()
-    # teams.add_combatant_to_team(cyanwrath, "Blue")
-    # teams.add_combatant_to_team(rena, "Red")
-    teams.add_combatant_to_team(faurung, "Red")
-    teams.add_combatant_to_team(cultist1, "Blue")
-    teams.add_combatant_to_team(cultist2, "Blue")
-    teams.add_combatant_to_team(cultist3, "Blue")
-    teams.add_combatant_to_team(cultist4, "Blue")
-    teams.set_team_color("Blue", teams.BLUE)
-    teams.set_team_color("Red", teams.RED)
-    battle_map = Map(15, teams)
-    # battle_map.set_combatant_coordinates(cyanwrath, np.array([random.randint(0, 14), random.randint(8, 14)]))
-    battle_map.set_combatant_coordinates(faurung, np.array([random.randint(0, 14), random.randint(8, 14)]))
-    # battle_map.set_combatant_coordinates(rena, np.array([random.randint(0, 7), random.randint(0, 6)]))
-    battle_map.set_combatant_coordinates(cultist1, np.array([random.randint(0, 5), random.randint(0, 6)]))
-    battle_map.set_combatant_coordinates(cultist2, np.array([random.randint(6, 10), random.randint(0, 6)]))
-    battle_map.set_combatant_coordinates(cultist3, np.array([random.randint(11, 12), random.randint(0, 6)]))
-    battle_map.set_combatant_coordinates(cultist4, np.array([random.randint(12, 14), random.randint(0, 6)]))
-    combat_manager = CombatManager(combatants, teams, battle_map)
-    round_manager = RoundManager(combatants, teams, battle_map, combat_manager)
-    # cyanwrath.set_round_manager(round_manager)
-    # rena.set_round_manager(round_manager)
-    faurung.set_round_manager(round_manager)
-    # battle_map.build_adjacency_matrix()
-    battle_map.place_circular_element((random.randint(0, 14), random.randint(0, 14)), Map.DIFFICULT_TERRAIN, random.randint(1, 2))
-    battle_map.place_circular_element((random.randint(0, 14), random.randint(0, 14)), Map.DIFFICULT_TERRAIN, random.randint(1, 2))
-    battle_map.place_circular_element((random.randint(0, 14), random.randint(0, 14)), Map.DIFFICULT_TERRAIN, random.randint(1, 2))
-    battle_map.build_adjacency_matrix()
-    # battle_map.get_path_to_enemy(rena, cyanwrath)
-    round_manager.simulate_n(500)
-    # round_manager.print_results()
+
 
