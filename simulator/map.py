@@ -9,8 +9,10 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
-def reconstruct_from_shortest_path(shortest_path, my_location, enemy_location):
-    current_position = enemy_location
+
+def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
+    current_position = target_location
+    # The square of the enemy itself is inaccessible, have to take the closest free adjacent one
     path = {'tuples': [], 'numpy': []}
     while not np.array_equal(current_position, my_location):
         path['numpy'].append(current_position)
@@ -60,12 +62,12 @@ class GridCell:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        if self.occupancy is not Occupancy.FREE:
-            logger.error("FIXME")
+        assert self.occupancy is Occupancy.FREE and self.combatant is None  # TODO remove me
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
     def remove_combatant(self):
+        assert self.occupancy is Occupancy.OCCUPIED_BY_COMBATANT and self.combatant is not None  # TODO remove me
         self.combatant = None
         self.occupancy = Occupancy.FREE
 
@@ -201,8 +203,8 @@ class Map:
             if dist[u] < min and sptSet[u] is False:
                 min = dist[u]
                 min_index = u
-        # if not min_index:
-        #     logger.error("FIXME")
+        if min_index is None:
+            logger.error("FIXME")
         return min_index
 
     def dijkstra(self, src, mask):
@@ -217,8 +219,8 @@ class Map:
 
         for _ in range(Nsq):
             x = self.minDistance(dist, sptSet)
-            if not x:
-                break
+            if x is None:
+                continue
             sptSet[x] = True
             for y in range(Nsq):
                 if adj[x][y] > 0 and sptSet[y] is False:
@@ -230,6 +232,7 @@ class Map:
                         shortest_paths[coord_to] = coord_from
                     elif dist[y] >= dist[x] + adj[x][y] and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(
                             np.abs(coord_to_np - coord_from)):
+                        # TODO this should also work with ==, try that
                         # prefer the path with the least coordinate diff, i.e. the less zig-zaggy path
                         shortest_paths[coord_to] = coord_from
 
@@ -244,7 +247,7 @@ class Map:
 
     def move_combatant_by_increment(self, combatant, increment):
         old_coord = self.combatant_coordinate_cache[combatant]
-        self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
+        self.grid[old_coord[0]][old_coord[1]].remove_combatant()
         new_coord = old_coord + increment
         self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coord
@@ -252,7 +255,7 @@ class Map:
 
     def move_combatant(self, combatant, new_coord):
         old_coord = self.combatant_coordinate_cache[combatant]
-        self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
+        self.grid[old_coord[0]][old_coord[1]].remove_combatant()
         self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coord
         logger.debug(f"{combatant.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
@@ -335,6 +338,30 @@ class Map:
             res = None
         return res
 
+    def get_adjacent_coords(self, coord):
+        adjacent_coords = []
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                try:
+                    if self.grid[coord[0] + dx][coord[1] + dy].occupancy.FREE:
+                        adjacent_coords.append(np.array([coord[0] + dx, coord[1] + dy]))
+                except IndexError:
+                    continue
+        return adjacent_coords
+
+
+    def get_nearest_adjacent_coord(self, my_location, target_location):
+        adjacent_coords = self.get_adjacent_coords(target_location)
+        assert adjacent_coords
+        min_dist = sys.maxsize
+        min_coord = adjacent_coords[0]
+        for coord in adjacent_coords:
+            curr_dist = np.max(np.abs(coord - my_location))
+            if curr_dist < min_dist:
+                min_dist = curr_dist
+                min_coord = coord
+        return min_coord
+
     def get_path_to_enemy(self, combatant, target_combatant):
         my_location = self.get_combatant_position(combatant)
         enemy_location = self.get_combatant_position(target_combatant)
@@ -342,9 +369,10 @@ class Map:
         logger.debug(f"Enemy location {enemy_location}")
         mask = self.build_combatant_adjacency_mask(combatant)
         distances, shortest_path = self.dijkstra(my_location, mask)
-        reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, enemy_location)
+        enemy_adjacent_location = self.get_nearest_adjacent_coord(my_location, enemy_location)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, enemy_adjacent_location)
         self.printSolution(distances, my_location, enemy_location, reconstructed_path['tuples'])
-        return self.convert_path_to_increments(reconstructed_path['numpy'])[:-1]
+        return self.convert_path_to_increments(reconstructed_path['numpy'])
 
     def get_path_to_coord(self, combatant, target_coord):
         """

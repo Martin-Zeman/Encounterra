@@ -40,7 +40,7 @@ class Faurung(Combatant):
                 self.spellslots[0].use_spellslot(2)
                 self.already_cast_leveled_spell_this_turn = True
                 self.has_bonus_action = False
-                logger.debug(f"{self.name} casts Misty Step to location {free_coords[0]}", extra={"team": self.team_name})
+                logger.debug(f"{self.name} casts Misty Step to location {free_coords[0]}", extra={"team": self.team_color})
                 return misty_step
             elif self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
                 free_coords = battle_map.get_free_coords_at_distance(nearest_enemy, int(self.movement + dist), self)
@@ -63,11 +63,11 @@ class Faurung(Combatant):
                 self.spellslots[0].use_spellslot(3)
                 self.has_action = False
                 self.already_cast_leveled_spell_this_turn = True
-                logger.debug(f"{self.name} casts Fireball", extra={"team": self.team_name})
+                logger.debug(f"{self.name} casts Fireball", extra={"team": self.team_color})
                 return fireball
             elif self.has_action:
                 # cast firebolt
-                logger.debug(f"{self.name} casts Firebolt on {nearest_enemy.get_name()}", extra={"team": self.team_name})
+                logger.debug(f"{self.name} casts Firebolt on {nearest_enemy.get_name()}", extra={"team": self.team_color})
                 firebolt = Firebolt(7, 5, nearest_enemy)
                 self.has_action = False
                 return firebolt

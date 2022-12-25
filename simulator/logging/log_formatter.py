@@ -1,4 +1,5 @@
 import logging
+from simulator.teams import Teams
 
 class LogFormatter(logging.Formatter):
     """Team-colored logging formatter"""
@@ -14,19 +15,20 @@ class LogFormatter(logging.Formatter):
     def __init__(self):
         super().__init__()
         self.fmt = '%(team)s %(message)s \x1b[0m'
-        self.TEAM_COLORS = {
-            "Blue": '\x1b[38;5;39m',
-            "Red": '\x1b[38;5;196m'
-        }
+        # self.TEAM_COLORS = {
+        #     Teams.Color.BLUE.value: '\x1b[38;5;39m',
+        #     Teams.Color.RED.value: '\x1b[38;5;196m'
+        # }
 
     def format(self, record):
         formatter = logging.Formatter(self.fmt)
         if not hasattr(record, 'team'):
             record.team = ""
         formatted_msg = formatter.format(record)
-        msg_parts = formatted_msg.split()
-        try:
-            team_color = self.TEAM_COLORS[msg_parts[0]]
-            return " ".join([team_color, *msg_parts[1:]])
-        except KeyError:
-            return formatted_msg
+        # msg_parts = formatted_msg.split()
+        # try:
+        #     team_color = self.TEAM_COLORS[msg_parts[0]]
+        #     return " ".join([team_color, *msg_parts[1:]])
+        # except KeyError:
+        #     return formatted_msg
+        return formatted_msg

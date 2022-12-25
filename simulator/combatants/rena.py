@@ -29,7 +29,7 @@ class Rena(Combatant):
             if not self.rage.is_active() == "Rage" and self.has_bonus_action:
                 if self.rage.activate():
                     self.has_bonus_action = False # TODO put this into the action itself
-                    logger.debug(f"{self.name} uses bonus action rage", extra={"team": self.team_name})
+                    logger.debug(f"{self.name} uses bonus action rage", extra={"team": self.team_color})
                     # TODO consider returning None
                     return self.rage
 
@@ -64,7 +64,7 @@ class Rena(Combatant):
                             chosen_action = action
                             chosen_action.set_target_combatant(self.selected_target)
                             self.curr_num_attacks -= 1
-                            logger.debug(f"{self.name} uses action {chosen_action.get_name()} against {self.selected_target.get_name()}", extra={"team": self.team_name})
+                            logger.debug(f"{self.name} uses action {chosen_action.get_name()} against {self.selected_target.get_name()}", extra={"team": self.team_color})
                             return chosen_action
                         else:
                             self.has_action = False
@@ -72,7 +72,7 @@ class Rena(Combatant):
             else:
                 logger.debug("Is out of range")
             return chosen_action
-        logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_name})
+        logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
         return Dodge(self, Action.ActionClasses.ACTION)
 
     def prompt_aoo(self, moving_combatant):
@@ -82,6 +82,6 @@ class Rena(Combatant):
             chosen_aoo = self.basic_attack_cache
             chosen_aoo.set_target_combatant(moving_combatant)
             logger.debug(f"{self.name} taken an AoO {chosen_aoo.get_name()} against {moving_combatant.get_name()}",
-                         extra={"team": self.team_name})
+                         extra={"team": self.team_color})
             return chosen_aoo
         return None

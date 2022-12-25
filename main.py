@@ -17,9 +17,9 @@ if __name__ == '__main__':
     session = Session()
     session.add_combatant(Faurung, Teams.Color.BLUE)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.simulate()
 
 

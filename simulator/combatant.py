@@ -42,7 +42,7 @@ class Combatant:
         self.movement = speed / 5
         self.resistances = resistances
         self.multiattack_in_progress = False
-        self.team_name = ""
+        self.team_color = ""
         self.selected_target = None
         self.planned_movement = None
         self.movement_generator = None
@@ -127,8 +127,8 @@ class Combatant:
             ss.reset()
         self.already_cast_leveled_spell_this_turn = False
 
-    def add_team(self, team_name):
-        self.team_name = team_name
+    def add_team(self, team_color):
+        self.team_color = team_color
 
     def prompt_aoo(self, moving_combatant):
         return None

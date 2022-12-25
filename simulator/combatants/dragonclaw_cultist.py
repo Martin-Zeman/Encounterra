@@ -31,7 +31,7 @@ class DragonclawCultist(Combatant):
                 attack.set_target_combatant(self.selected_target)
                 self.curr_num_attacks -= 1
                 logger.debug(f"{self.name} uses action {attack.get_name()} against {self.selected_target.get_name()}",
-                             extra={"team": self.team_name})
+                             extra={"team": self.team_color})
                 return attack
             else:
                 self.multiattack_in_progress = False
@@ -70,7 +70,7 @@ class DragonclawCultist(Combatant):
                     return attack
 
             if self.has_action:
-                logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_name})
+                logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
                 self.has_action = False
                 return Dodge(self, Action.ActionClasses.ACTION)
             return None
@@ -82,7 +82,7 @@ class DragonclawCultist(Combatant):
             chosen_aoo = self.basic_attack_cache
             chosen_aoo.set_target_combatant(moving_combatant)
             logger.debug(f"{self.name} took an AoO {chosen_aoo.get_name()} against {moving_combatant.get_name()}",
-                         extra={"team": self.team_name})
+                         extra={"team": self.team_color})
             return chosen_aoo
         return None
 

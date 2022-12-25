@@ -7,10 +7,18 @@ class Teams:
         BLUE = 1
         RED = 2
 
-    COLOR_CODES = {
-        Color.BLUE: "\x1b[38;5;39m",
-        Color.RED: "\x1b[38;5;196m"
-    }
+        # COLOR_CODES = {
+        #     Color.BLUE: "\x1b[38;5;39m",
+        #     Color.RED: "\x1b[38;5;196m"
+        # }
+        def __str__(self):
+            match self:
+                case self.BLUE:
+                    return "\x1b[38;5;39m"
+                case self.RED:
+                    return "\x1b[38;5;196m"
+                case _:
+                    return ""
 
     def __init__(self):
         self.team_book = {}  # maps team_color -> [list of combatants]
@@ -26,9 +34,14 @@ class Teams:
         combatant.add_team(team_color)
 
     def get_team_color_code(self, combatant):
-        return self.COLOR_CODES[self.reverse_team_book[combatant]]
-    # def get_survivors_of_team(self, team_name):
-    #     return [ch.get_name() for ch in self.team_book[team_name] if ch.is_alive()]
+        return str(self.reverse_team_book[combatant])
+
+    def get_team_color(self, combatant):
+        return self.reverse_team_book[combatant]
+
+
+    # def get_survivors_of_team(self, team_color):
+    #     return [ch.get_name() for ch in self.team_book[team_color] if ch.is_alive()]
     #
     # def get_survivors_per_teams(self):
     #     return {k: [ch for ch in combatants if ch.is_alive()] for (k, combatants) in self.team_book.values()}

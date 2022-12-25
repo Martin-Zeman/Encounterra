@@ -77,7 +77,7 @@ class RoundManager:
         if n == 1:
             self.simulate()
         elif n > 1:
-            team_tally = {name: 0 for name in self.teams.get_team_names()}
+            team_tally = {color: 0 for color in self.teams.get_team_colors()}
             combatant_initial_positions = {ch:self.battle_map.get_combatant_position(ch) for ch in self.combatants}
             for i in range(n):
                 logger.info(f"{i}. Iteration")
