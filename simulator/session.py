@@ -25,10 +25,10 @@ class Session:
         self.map_size = 15
         self.statistic_collector = None
         self.character_type_counter = {
-            Faurung: 0,
-            Rena: 0,
-            DragonclawCultist: 0,
-            Cyanwrath: 0
+            Faurung: 1,
+            Rena: 1,
+            DragonclawCultist: 1,
+            Cyanwrath: 1
         }
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
@@ -38,7 +38,6 @@ class Session:
     def add_combatant(self, combatant_type, team):
         try:
             curr_count = self.character_type_counter[combatant_type]
-            self.character_type_counter[combatant_type] += 1
         except KeyError:
             logger.error("Unknown combatant type")
             return
@@ -51,10 +50,11 @@ class Session:
             case "Cyanwrath":
                 self.combatants.append(Cyanwrath())
             case "DragonclawCultist":
-                self.combatants.append(DragonclawCultist("DragonclawCultist" + (" " + str(curr_count) if curr_count > 1 else "")))
+                self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return
+        self.character_type_counter[combatant_type] += 1
         self.teams.add_combatant_to_team(self.combatants[-1], team)
 
 

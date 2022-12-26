@@ -9,3 +9,4 @@ currently no one dashes
 upcasting? should be there
 only one DC per character
 no shoving
+Allies are considered impassable same as enemies

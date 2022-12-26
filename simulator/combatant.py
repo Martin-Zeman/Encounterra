@@ -62,6 +62,7 @@ class Combatant:
         self.is_dodging = False # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.spellslots = []
         self.already_cast_leveled_spell_this_turn = False
+        self.shield_spell_active = False
 
     def set_round_manager(self, round_manager):
         self.round_manager = round_manager
@@ -102,6 +103,9 @@ class Combatant:
         self.movement = self.speed
         self.is_dodging = False
         self.already_cast_leveled_spell_this_turn = False
+        if self.shield_spell_active:
+            self.ac -= 5
+        self.shield_spell_active = False
 
     def get_name(self):
         return self.name
@@ -126,6 +130,9 @@ class Combatant:
         for ss in self.spellslots:
             ss.reset()
         self.already_cast_leveled_spell_this_turn = False
+        if self.shield_spell_active:
+            self.ac -= 5
+        self.shield_spell_active = False
 
     def add_team(self, team_color):
         self.team_color = team_color
@@ -140,4 +147,7 @@ class Combatant:
         return None
 
     def prompt_dmg_reaction(self, attacking_combatant, dmg, dmg_type):
+        return None
+
+    def prompt_after_hit_reaction(self, attacking_combatant):
         return None

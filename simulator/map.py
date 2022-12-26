@@ -62,8 +62,7 @@ class GridCell:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        if self.occupancy is not Occupancy.FREE or self.terrain is Terrain.IMPASSABLE_TERRAIN or self.combatant:
-            logger.error("FIXME")# TODO remove me
+        assert self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN and not self.combatant
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
@@ -133,7 +132,7 @@ class Map:
         start_time = time.time()
         N = self.size
         Nsq = N ** 2
-        adj = np.zeros((N, N, N, N))
+        adj = np.zeros((N, N, N, N), dtype=int)
         # Take adj to encode (x,y) coordinate to (x,y) coordinate edges
         # Let's now connect the nodes
         for i in range(N):
@@ -154,7 +153,7 @@ class Map:
                 # slicing does not include last element.
         adj = adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
         # Remove self-connections (optional)
-        adj -= np.eye(Nsq)
+        adj -= np.eye(Nsq, dtype=int)
         for coord in self.difficult_set:
             adj[:, coord[0] * N + coord[1]] *= 2
         self.base_adjacency_matrix = adj
@@ -169,10 +168,11 @@ class Map:
         """
         N = self.size
         # TODO consider preallocating this for all combatants and only resetting it to ones
-        mask = np.ones((self.size**2, self.size**2))
+        mask = np.ones((self.size**2, self.size**2), dtype=int)
         for curr_combatant, coord in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and curr_combatant.is_alive():
-                mask[:, coord[0] * N + coord[1]] = 0 if self.teams.are_enemies(curr_combatant, combatant) else 2
+                # TODO even allies are now impassable, try and figure out of a way to improve this
+                mask[:, coord[0] * N + coord[1]] = 0 #if self.teams.are_enemies(curr_combatant, combatant) else 2
         return mask
 
     def printSolution(self, distances, my_location, enemy_location, reconstructed_path):
@@ -182,14 +182,15 @@ class Map:
             row = ""
             for y in range(self.size):
                 coord = x * self.size + y
+                dist = str(distances[coord]) if distances[coord] < sys.maxsize else "-"
                 if coord == my_coord:
-                    row += "\x1b[38;5;39m%d\x1b[0m\t" % distances[coord]
+                    row += "\x1b[38;5;39m%s\x1b[0m\t" % dist
                 elif coord == enemy_coord:
-                    row += "\x1b[38;5;196m%d\x1b[0m\t" % distances[coord]
+                    row += "\x1b[38;5;196m%s\x1b[0m\t" % dist
                 elif (x, y) in reconstructed_path:
-                    row += "\u001b[36m%d\x1b[0m\t" % distances[coord]
+                    row += "\u001b[36m%s\x1b[0m\t" % dist
                 else:
-                    row += "%d\t" % distances[coord] if (x, y) not in self.difficult_set else "\x1b[38;5;226m%d\x1b[0m\t" % distances[coord]
+                    row += "%s\t" % dist if (x, y) not in self.difficult_set else "\x1b[38;5;226m%s\x1b[0m\t" % dist
             logger.debug(row)
 
     def minDistance(self, dist, sptSet):
@@ -283,9 +284,6 @@ class Map:
     def is_empty(self, coord):
         return self.grid[coord[0]][coord[1]].is_empty()
 
-    def can_see(self, x1, y1, x2, y2):
-        return True
-
     def set_combatant_coordinates(self, combatant, coord):
         # TODO: redo this as np.array
         logger.debug(f"Setting coordinates {coord} for comabatant {combatant.get_name()}")
@@ -348,7 +346,8 @@ class Map:
 
     def get_nearest_adjacent_coord(self, my_location, target_location):
         adjacent_coords = self.get_adjacent_coords(target_location)
-        assert adjacent_coords
+        if not adjacent_coords:
+            logger.error("FIXME")
         adjacent_coords = [np.array(x) for x in adjacent_coords]
         adjacent_coords.sort(key=lambda coord: np.linalg.norm(coord - my_location))
         return adjacent_coords[0]

@@ -72,6 +72,8 @@ class CombatManager:
             dmg = multiplier * roll_spell_dmg(spell)
             logger.debug(f"{spell.__class__.__name__} hits {spell.target.get_name()} for {dmg} damage", extra={"team": self.teams.get_team(caster)})
             spell.target.receive_dmg(dmg, spell.dmg_type)
+            if not spell.target.is_alive():
+                self.battle_map.remove_combatant(spell.target)
         else:
             logger.debug(f"{spell.__class__.__name__} misses {spell.target.get_name()}", extra={"team": self.teams.get_team(caster)})
 
@@ -83,6 +85,8 @@ class CombatManager:
                 for combatant in affected:
                     logger.debug(f"{combatant.get_name()} is hit by Fireball")
                     resolve_dmg_saving_throw(spell, dmg, combatant)
+                    if not combatant.is_alive():
+                        self.battle_map.remove_combatant(combatant)
             case "Firebolt":
                 if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
                     self.resolve_ranged_spell_attack(caster, spell)
@@ -93,8 +97,21 @@ class CombatManager:
                     self.battle_map.move_combatant(caster, spell.coord)
                 else:
                     logger.warning("Invalid MistyStep coordinates. Destination is too far!")
+            case "Shield":
+                assert not caster.shield_spell_active
+                caster.shield_spell_active = True
+                caster.ac += 5
             case _:
                 logger.error("Unknown spell")
+
+    def resolve_after_hit_reaction(self, attacker, target, reaction):
+        if reaction is None:
+            return
+        match reaction.__class__.__name__:
+            case "Shield":
+                self.resolve_spell(target, reaction)
+            case _:
+                logger.error("Unknown after hit reaction")
 
     def resolve_attack(self, attack):  # TODO remove combatant from attack and have it as a separate parameter
         """
@@ -129,6 +146,9 @@ class CombatManager:
         elif rolled in attack.crit_range:
             multiplier = 2
         if rolled + attack.to_hit >= target.ac:
+            reaction = target.prompt_after_hit_reaction(attack.combatant)
+            self.resolve_after_hit_reaction(attack.combatant, target, reaction)
+        if rolled + attack.to_hit >= target.ac:  # Potentially missing this time
             num_dice, dice_size = parse_dmg_dice(attack.dmg_dice)
             dmg_dice_sum = roll_dice(num_dice, dice_size)
             total_dmg = multiplier * dmg_dice_sum + attack.dmg_bonus + attack.combatant.get_ability_dmg_bonus()

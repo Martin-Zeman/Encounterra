@@ -8,6 +8,7 @@ from simulator.misc import DamageType
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
 from simulator.spells.misty_step import MistyStep
+from simulator.spells.shield import Shield
 import numpy as np
 import logging
 
@@ -83,4 +84,15 @@ class Faurung(Combatant):
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
             pass
+        return None
+
+    def prompt_after_hit_reaction(self, attacking_combatant):
+        if self.spellslots[0].has_spellslots(1) and self.has_reaction:
+            self.has_reaction = False
+            self.spellslots[0].use_spellslot(1)
+            shield = Shield()
+            logger.debug(f"{self.name} casts Shield", extra={"team": self.team_color})
+            return shield
+        elif self.has_reaction:
+            logger.debug(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
         return None
