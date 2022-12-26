@@ -22,7 +22,8 @@ def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
         try:
             current_position = shortest_path[tuple(current_position)]
         except KeyError as e:
-            logger.error(e)  # TODO remove this once fixed
+            # logger.error(e)  # TODO remove this once fixed
+            return None
     else:
         path['numpy'].append(my_location)
         path['tuples'].append(tuple(my_location))
@@ -347,7 +348,6 @@ class Map:
     def get_nearest_adjacent_coord(self, my_location, target_location):
         adjacent_coords = self.get_adjacent_coords(target_location)
         if not adjacent_coords:
-            logger.error("FIXME")
             return None
         adjacent_coords = [np.array(x) for x in adjacent_coords]
         adjacent_coords.sort(key=lambda coord: np.linalg.norm(coord - my_location))
@@ -365,6 +365,8 @@ class Map:
         if enemy_adjacent_location is None:
             return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, enemy_adjacent_location)
+        if reconstructed_path is None:
+            return None
         self.printSolution(distances, my_location, enemy_location, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])
 
@@ -383,6 +385,8 @@ class Map:
         mask = self.build_combatant_adjacency_mask(combatant)
         distances, shortest_path = self.dijkstra(my_location, mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, target_coord)
+        if reconstructed_path is None:
+            return None
         self.printSolution(distances, my_location, target_coord, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])
 
