@@ -42,7 +42,7 @@ class Rena(Combatant):
             target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(f"Target is at {target_position} and my cache is {None if self.target_position_cache is None else self.target_position_cache}")
             if not np.array_equal(self.target_position_cache, target_position):
-                path = battle_map.get_path_to_enemy(self, self.selected_target)
+                path = battle_map.get_path_to(self, self.selected_target)
                 self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
                 self.target_position_cache = target_position
 

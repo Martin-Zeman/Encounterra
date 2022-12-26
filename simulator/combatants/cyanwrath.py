@@ -68,7 +68,7 @@ class Cyanwrath(Combatant):
             dist = battle_map.get_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 2:
                 # I haven't attacked yet and I'm too far away, move into pole-arm range
-                path = battle_map.get_path_to_enemy(self, self.selected_target)
+                path = battle_map.get_path_to(self, self.selected_target)
                 self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
                 try:
                     movement = next(self.movement_generator)
@@ -86,7 +86,7 @@ class Cyanwrath(Combatant):
                 logger.debug(f"{self.name} wants to gain distance", extra={"team": self.team_color})
                 free_coords = battle_map.get_free_coords_at_distance(self.selected_target, 3, self)
                 if free_coords:
-                    path = battle_map.get_path_to_coord(self, free_coords[0])
+                    path = battle_map.get_path_to(self, free_coords[0])
                     self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
                     try:
                         movement = next(self.movement_generator)

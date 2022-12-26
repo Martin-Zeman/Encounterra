@@ -10,16 +10,17 @@ from simulator.logging.log_formatter import LogFormatter
 
 if __name__ == '__main__':
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setFormatter(LogFormatter())
     logger.addHandler(stdout_handler)
     session = Session()
     session.add_combatant(Faurung, Teams.Color.BLUE)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.set_num_simulations(10)
     session.simulate()
 
 

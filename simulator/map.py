@@ -4,6 +4,7 @@ import sys
 import logging
 from simulator.spells.spell import Spell
 from simulator.combatant import Combatant
+from multipledispatch import dispatch
 import time
 from enum import Enum
 
@@ -52,7 +53,6 @@ class Terrain(Enum):
 class Occupancy(Enum):
     FREE = 1
     OCCUPIED_BY_COMBATANT = 2
-    OCCUPIED_BY_TERRAIN = 3
 
 class GridCell:
     def __init__(self):
@@ -62,12 +62,12 @@ class GridCell:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        assert self.occupancy is Occupancy.FREE and self.combatant is None  # TODO remove me
+        if self.occupancy is not Occupancy.FREE or self.terrain is Terrain.IMPASSABLE_TERRAIN or self.combatant:
+            logger.error("FIXME")# TODO remove me
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
     def remove_combatant(self):
-        assert self.occupancy is Occupancy.OCCUPIED_BY_COMBATANT and self.combatant is not None  # TODO remove me
         self.combatant = None
         self.occupancy = Occupancy.FREE
 
@@ -114,7 +114,6 @@ class Map:
         if diameter == 1:
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                 self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].terrain = Terrain.IMPASSABLE_TERRAIN
-                self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].occupancy = Occupancy.OCCUPIED_BY_TERRAIN
             elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                 self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].terrain = Terrain.DIFFICULT_TERRAIN
                 self.difficult_set.add((coords[0], coords[1]))
@@ -124,7 +123,6 @@ class Map:
                     try:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                             self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.IMPASSABLE_TERRAIN
-                            self.grid[coords[0] + x][coords[1] + y].occupancy = Occupancy.OCCUPIED_BY_TERRAIN
                         elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                             self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.DIFFICULT_TERRAIN
                             self.difficult_set.add((coords[0] + x, coords[1] + y))
@@ -203,8 +201,6 @@ class Map:
             if dist[u] < min and sptSet[u] is False:
                 min = dist[u]
                 min_index = u
-        if min_index is None:
-            logger.error("FIXME")
         return min_index
 
     def dijkstra(self, src, mask):
@@ -220,6 +216,7 @@ class Map:
         for _ in range(Nsq):
             x = self.minDistance(dist, sptSet)
             if x is None:
+                # enemy-occupied cells are unreachable
                 continue
             sptSet[x] = True
             for y in range(Nsq):
@@ -339,33 +336,28 @@ class Map:
         return res
 
     def get_adjacent_coords(self, coord):
-        adjacent_coords = []
+        adjacent_coords = set()
         for dx in range(-1, 2):
             for dy in range(-1, 2):
-                try:
-                    if self.grid[coord[0] + dx][coord[1] + dy].occupancy.FREE:
-                        adjacent_coords.append(np.array([coord[0] + dx, coord[1] + dy]))
-                except IndexError:
-                    continue
+                cell = self.grid[np.clip(coord[0] + dx, 0, self.size - 1)][np.clip(coord[1] + dy, 0, self.size - 1)]
+                if cell.occupancy is Occupancy.FREE and cell.terrain is not Terrain.IMPASSABLE_TERRAIN:
+                    # have to use tuples since np.array is unhashable
+                    adjacent_coords.add((coord[0] + dx, coord[1] + dy))
         return adjacent_coords
 
 
     def get_nearest_adjacent_coord(self, my_location, target_location):
         adjacent_coords = self.get_adjacent_coords(target_location)
         assert adjacent_coords
-        min_dist = sys.maxsize
-        min_coord = adjacent_coords[0]
-        for coord in adjacent_coords:
-            curr_dist = np.max(np.abs(coord - my_location))
-            if curr_dist < min_dist:
-                min_dist = curr_dist
-                min_coord = coord
-        return min_coord
+        adjacent_coords = [np.array(x) for x in adjacent_coords]
+        adjacent_coords.sort(key=lambda coord: np.linalg.norm(coord - my_location))
+        return adjacent_coords[0]
 
-    def get_path_to_enemy(self, combatant, target_combatant):
+    @dispatch(Combatant, Combatant)
+    def get_path_to(self, combatant, target_combatant):
         my_location = self.get_combatant_position(combatant)
-        enemy_location = self.get_combatant_position(target_combatant)
         logger.debug(f"My location {my_location}")
+        enemy_location = self.get_combatant_position(target_combatant)
         logger.debug(f"Enemy location {enemy_location}")
         mask = self.build_combatant_adjacency_mask(combatant)
         distances, shortest_path = self.dijkstra(my_location, mask)
@@ -374,7 +366,8 @@ class Map:
         self.printSolution(distances, my_location, enemy_location, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])
 
-    def get_path_to_coord(self, combatant, target_coord):
+    @dispatch(Combatant, np.ndarray)
+    def get_path_to(self, combatant, target_coord):
         """
         calculates a path to destination coordinates
         :param combatant:Combatant who wants to move
@@ -458,11 +451,7 @@ class Map:
                     free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
 
         combatant_coord = self.combatant_coordinate_cache[combatant]
-
-        def by_distance(coord):
-            return np.linalg.norm(coord - combatant_coord)
-
-        free_positions.sort(key=by_distance)
+        free_positions.sort(key=lambda coord: np.linalg.norm(coord - combatant_coord))
         return free_positions
 
     def remove_combatant(self, combatant):
@@ -476,7 +465,7 @@ class Map:
             old_coord = self.combatant_coordinate_cache[combatant]
         except KeyError:
             return  # already removed
-        self.grid[old_coord[0]][old_coord[1]].set_combatant(None)
+        self.grid[old_coord[0]][old_coord[1]].remove_combatant()
         del self.combatant_coordinate_cache[combatant]
 
     def reset(self):

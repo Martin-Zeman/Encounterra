@@ -48,7 +48,7 @@ class Faurung(Combatant):
                     logger.debug(f"{self.name} has nowhere to go to")
                     self.nowhere_to_go = True
                     continue
-                path = battle_map.get_path_to_coord(self, free_coords[0])
+                path = battle_map.get_path_to(self, free_coords[0])
                 self.movement_generator_cache = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
             elif self.movement and self.movement_generator_cache:
                 try:

@@ -97,7 +97,7 @@ class RoundManager:
                     self.battle_map.set_combatant_coordinates(combatant, combatant_initial_positions[combatant])
             logger.info("--------------STATISTICS--------------")
             for name, victories in team_tally.items():
-                logger.info(f"Team {name} won total of {victories} times", extra={"team": name})
+                logger.info(f"Team {name.name} won total of {victories} times", extra={"team": name})
         else:
             logger.error("Wrong input. n has to be 1 or higher!")
 

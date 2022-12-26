@@ -55,7 +55,7 @@ class DragonclawCultist(Combatant):
             dist = battle_map.get_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 1:
                 # I haven't attacked yet and I'm too far away, move into range
-                path = battle_map.get_path_to_enemy(self, self.selected_target)
+                path = battle_map.get_path_to(self, self.selected_target)
                 self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
                 try:
                     movement = next(self.movement_generator)
