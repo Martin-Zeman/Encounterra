@@ -43,6 +43,10 @@ class Rena(Combatant):
             logger.debug(f"Target is at {target_position} and my cache is {None if self.target_position_cache is None else self.target_position_cache}")
             if not np.array_equal(self.target_position_cache, target_position):
                 path = battle_map.get_path_to(self, self.selected_target)
+                if not path:
+                    logger.debug(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
+                    self.has_action = False
+                    return Dodge(self, Action.ActionClasses.ACTION)
                 self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
                 self.target_position_cache = target_position
 

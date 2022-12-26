@@ -56,6 +56,10 @@ class DragonclawCultist(Combatant):
             if self.movement and self.has_action and dist > 1:
                 # I haven't attacked yet and I'm too far away, move into range
                 path = battle_map.get_path_to(self, self.selected_target)
+                if not path:
+                    logger.debug(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
+                    self.has_action = False
+                    return Dodge(self, Action.ActionClasses.ACTION)
                 self.movement_generator = MovementGenerator(self, Movement.STANDARD, path, True).get_generator()
                 try:
                     movement = next(self.movement_generator)

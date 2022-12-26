@@ -348,6 +348,7 @@ class Map:
         adjacent_coords = self.get_adjacent_coords(target_location)
         if not adjacent_coords:
             logger.error("FIXME")
+            return None
         adjacent_coords = [np.array(x) for x in adjacent_coords]
         adjacent_coords.sort(key=lambda coord: np.linalg.norm(coord - my_location))
         return adjacent_coords[0]
@@ -361,6 +362,8 @@ class Map:
         mask = self.build_combatant_adjacency_mask(combatant)
         distances, shortest_path = self.dijkstra(my_location, mask)
         enemy_adjacent_location = self.get_nearest_adjacent_coord(my_location, enemy_location)
+        if enemy_adjacent_location is None:
+            return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, enemy_adjacent_location)
         self.printSolution(distances, my_location, enemy_location, reconstructed_path['tuples'])
         return self.convert_path_to_increments(reconstructed_path['numpy'])
