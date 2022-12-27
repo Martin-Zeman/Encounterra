@@ -119,7 +119,6 @@ class CombatManager:
     def resolve_pack_tactics(self, attack, attacker, target):
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
             attack.advantage = True
-            logger.debug("Pack tactics activates")
 
     def resolve_attack(self, attack):  # TODO remove combatant from attack and have it as a separate parameter
         """
@@ -131,8 +130,6 @@ class CombatManager:
         attacker = attack.combatant
         assert target
         self.resolve_pack_tactics(attack, attacker, target)
-        if attack.advantage:
-            logger.debug(f"{attacker} attacks with advantage", extra={"team": self.teams.get_team(attacker)})
 
         if attack.advantage and not (target.disadvantage_on_incoming_attacks or target.is_dodging):
             rolled = max(random.randint(1, 20), random.randint(1, 20))

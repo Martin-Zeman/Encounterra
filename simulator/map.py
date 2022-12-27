@@ -328,7 +328,7 @@ class Map:
                 if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[1] + dy >= self.size:
                     continue
                 cmbt = self.grid[target_coord[0] + dx][target_coord[1] + dy].combatant
-                if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_cond(Conditions.INCAPACITATED):
+                if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_affected_by_any(Conditions.INCAPACITATED):
                     return True
         return False
 

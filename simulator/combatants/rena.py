@@ -34,9 +34,10 @@ class Rena(Combatant):
                     # TODO consider returning None
                     return self.rage
 
-            if self.selected_target is None or not self.selected_target.is_alive():
+            nearest =  battle_map.get_nearest_enemy(self)
+            if self.selected_target is None or not self.selected_target.is_alive() or self.selected_target is not nearest:
                 # Get new target
-                self.selected_target = battle_map.get_nearest_enemy(self)
+                self.selected_target = nearest
                 if not self.selected_target:
                     return None
 

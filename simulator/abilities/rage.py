@@ -14,7 +14,7 @@ class Rage(Ability, Actoid):
         if not self.is_active() and self.has_uses():
             self.active = True
             self.combatant.set_ability_dmg_bonus(self.combatant.get_ability_dmg_bonus() + self.rage_bonus)
-            self.combatant.resistances = [DamageType.Slashing, DamageType.Bludgeoning]
+            self.combatant.resistances = [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing]
             self.curr_uses -= 1
             return True
         return False
@@ -25,6 +25,7 @@ class Rage(Ability, Actoid):
             self.combatant.set_ability_dmg_bonus(self.combatant.get_ability_dmg_bonus() - self.rage_bonus)
             self.combatant.resistances.remove(DamageType.Slashing)
             self.combatant.resistances.remove(DamageType.Bludgeoning)
+            self.combatant.resistances.remove(DamageType.Piercing)
 
     def reset(self):
         self.deactivate()

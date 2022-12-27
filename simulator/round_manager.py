@@ -40,7 +40,7 @@ class RoundManager:
             if aoo_candidates:
                 for candidate in aoo_candidates:
                     aoo = candidate.prompt_aoo(combatant)
-                    if aoo:
+                    if aoo and combatant.is_alive():
                         aoo.action_class = Action.ActionClasses.REACTION
                         self.combat_manager.resolve_attack(aoo)
 
@@ -48,7 +48,7 @@ class RoundManager:
             if pam_candidates:
                 for candidate in pam_candidates:
                     pam_attack = candidate.prompt_pam(combatant)
-                    if pam_attack:
+                    if pam_attack and combatant.is_alive():
                         pam_attack.action_class = Action.ActionClasses.REACTION
                         if self.combat_manager.resolve_attack(pam_attack) and candidate.has_sentinel:
                             combatant.movement = 0
