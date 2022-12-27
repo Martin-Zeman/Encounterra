@@ -2,12 +2,13 @@ from simulator.combat_manager import *
 from simulator.actoid import Actoid
 from simulator.teams import Teams
 import logging
+import multiprocessing as mp
 
 logger = logging.getLogger(__name__)
 
 
 class RoundManager:
-    def __init__(self, combatants, teams, battle_map, combat_manager, num_rounds = 30):
+    def __init__(self, combatants, teams, battle_map, combat_manager, num_rounds=30):
         self.combatants = combatants
         self.teams = teams
         self.num_rounds = num_rounds
@@ -58,7 +59,6 @@ class RoundManager:
             return True
         return False
 
-
     def resolve_by_actoid_type(self, actoid, combatant):
         match actoid.actoid_type:
             case Actoid.Type.IS_TARGETED_COMBAT_ACTION:
@@ -73,12 +73,10 @@ class RoundManager:
             case _:
                 logger.error("Unknown actoid type")
 
-    def simulate_n(self, n=1):
-        if n == 1:
-            self.simulate()
-        elif n > 1:
+    def simulate_n(self, n=1, result_queue=None):
+        if n > 0:
             team_tally = {color: 0 for color in self.teams.get_team_colors()}
-            combatant_initial_positions = {ch:self.battle_map.get_combatant_position(ch) for ch in self.combatants}
+            combatant_initial_positions = {ch: self.battle_map.get_combatant_position(ch) for ch in self.combatants}
             for i in range(n):
                 logger.info(f"{i}. Iteration")
                 self.simulate()
@@ -95,6 +93,8 @@ class RoundManager:
                 for combatant in self.combatants:
                     # TODO consider making this part of map reset
                     self.battle_map.set_combatant_coordinates(combatant, combatant_initial_positions[combatant])
+            if result_queue:
+                result_queue.put(team_tally)
             logger.info("--------------STATISTICS--------------")
             for name, victories in team_tally.items():
                 logger.info(f"Team {name.name} won total of {victories} times", extra={"team": name})
@@ -119,7 +119,7 @@ class RoundManager:
                             break
                         self.resolve_by_actoid_type(action, combatant)
                         if not combatant.is_alive():
-                            break # could have died as a result of AoO
+                            break  # could have died as a result of AoO
                 else:
                     logger.debug(f"Combatant {combatant} is dead. Skipping")
             self.print_status()
@@ -134,4 +134,3 @@ class RoundManager:
     def print_results(self):
         logger.debug("--------------RESULT--------------")
         self.print_status()
-

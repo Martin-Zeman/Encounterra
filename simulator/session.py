@@ -7,6 +7,7 @@ from simulator.round_manager import *
 from simulator.teams import Teams
 from enum import Enum
 import logging
+import multiprocessing as mp
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +101,7 @@ class Session:
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
 
-    def simulate(self):
+    def simulate(self, parallel=False):
         self.battle_map = Map(self.map_size, self.teams)
         self.combat_manager = CombatManager(self.combatants, self.teams, self.battle_map)
         self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map, self.combat_manager)
@@ -109,4 +110,28 @@ class Session:
             combatant.set_round_manager(self.round_manager)
         self.place_random_elements_on_the_map()
         self.battle_map.build_adjacency_matrix()
-        self.round_manager.simulate_n(self.num_simulations)
+        if parallel:
+            result_acc = mp.Queue()
+            # jobs = [mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations // mp.cpu_count(), result_acc)) for _ in range(self.num_simulations // mp.cpu_count())]
+            jobs = []
+            for _ in range(mp.cpu_count() if self.num_simulations % mp.cpu_count() else mp.cpu_count() - 1):
+                jobs.append(mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations // mp.cpu_count(), result_acc)))
+            if self.num_simulations % mp.cpu_count():
+                jobs.append(mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations % mp.cpu_count(), result_acc)))
+            for job in jobs:
+                job.start()
+            for job in jobs:
+                job.join()
+            accumulated_tally = {}
+            while not result_acc.empty():
+                tally = result_acc.get()
+                for key, val in tally.items():
+                    try:
+                        accumulated_tally[key] += val
+                    except KeyError:
+                        accumulated_tally[key] = val
+            logger.info("--------------STATISTICS--------------")
+            for name, victories in accumulated_tally.items():
+                logger.info(f"Team {name.name} won total of {victories} times", extra={"team": name})
+        else:
+            self.round_manager.simulate_n(self.num_simulations)
