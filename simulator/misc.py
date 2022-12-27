@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, Flag, auto
 
 
 class SavingThrow(Enum):
@@ -23,19 +23,23 @@ class DamageType(Enum):
     Force = 10
     Psychic = 11
 
+    def __str__(self):
+        return self.name
 
-class Conditions(Enum):
-    BLINDED = 1
-    CHARMED = 2
-    DEAFENED = 3
-    FRIGHTENED = 4
-    GRAPPLED = 5
-    INCAPACITATED = 6
-    INVISIBLE = 7
-    PARALYZED = 8
-    PETRIFIED = 9
-    POISONED = 10
-    PRONE = 11
-    RESTRAINED = 12
-    STUNNED = 13
-    UNCONSCIOUS = 14
+
+class Conditions(Flag):
+    NONE = auto()
+    BLINDED = auto()
+    CHARMED = auto()
+    DEAFENED = auto()
+    FRIGHTENED = auto()
+    GRAPPLED = auto()
+    INCAPACITATED = auto()
+    INVISIBLE = auto()
+    PARALYZED = auto()
+    PETRIFIED = auto()
+    POISONED = auto()
+    PRONE = auto()
+    RESTRAINED = auto()
+    STUNNED = auto()
+    UNCONSCIOUS = auto()

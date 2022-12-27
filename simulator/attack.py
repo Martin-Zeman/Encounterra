@@ -5,7 +5,7 @@ from simulator.actoid import Actoid
 class Attack(Action, Actoid):
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, action_class, dmg_type, atk_range, crit_range=[20]):
         Action.__init__(self, name, combatant, action_class)
-        Actoid.__init__(self, type=Actoid.Type.IS_TARGETED_COMBAT_ACTION)
+        Actoid.__init__(self, type=Actoid.Type.IS_ATTACK_LIKE_ACTION)
         self.to_hit = to_hit
         self.dmg_dice = dmg_dice
         self.dmg_bonus = dmg_bonus

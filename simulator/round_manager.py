@@ -61,7 +61,7 @@ class RoundManager:
 
     def resolve_by_actoid_type(self, actoid, combatant):
         match actoid.actoid_type:
-            case Actoid.Type.IS_TARGETED_COMBAT_ACTION:
+            case Actoid.Type.IS_ATTACK_LIKE_ACTION:
                 self.combat_manager.resolve_attack(actoid)
             case Actoid.Type.IS_MOVEMENT:
                 if not self.request_movement(combatant, actoid):
@@ -70,6 +70,8 @@ class RoundManager:
                 self.combat_manager.resolve_spell(combatant, actoid)
             case Actoid.Type.IS_DODGE:
                 combatant.is_dodging = True
+            case Actoid.Type.IS_TOGGLE_ABILITY:
+                pass
             case _:
                 logger.error("Unknown actoid type")
 

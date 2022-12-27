@@ -56,12 +56,13 @@ class Combatant:
                               SavingThrow.CHA: 0}
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
+        self.has_danger_sense = False
         self.perception = 0
         self.condition = self.State.FINE
         self.toughness = None
         self.is_dodging = False # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.spellslots = []
-        self.conditions = set()
+        self.conditions = Conditions.NONE
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
 
@@ -100,7 +101,17 @@ class Combatant:
         self.curr_hp -= dmg
 
     def apply_condition(self, condition):
-        self.conditions.add(condition)
+        self.conditions |= condition
+
+    def remove_condition(self, condition):
+        self.conditions ^= condition
+
+    def is_affected_by_any(self, *argv):
+        for condition in argv:
+            if condition in self.conditions:
+                return True
+        return False
+
 
     def new_turn(self):
         self.has_action = True
@@ -140,10 +151,7 @@ class Combatant:
         if self.shield_spell_active:
             self.ac -= 5
         self.shield_spell_active = False
-        self.conditions.clear()
-
-    def is_cond(self, condition):
-        return condition in self.conditions
+        self.conditions = Conditions.NONE
 
     def add_team(self, team_color):
         self.team_color = team_color

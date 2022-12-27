@@ -1,7 +1,7 @@
 from simulator.combatant import Combatant
 from simulator.attack import Attack
 from simulator.dodge import Dodge
-from simulator.abilities.rage import Rage
+from simulator.abilities.totem_rage import TotemRage
 from simulator.movement import Movement, MovementGenerator
 from simulator.action import Action
 from simulator.misc import DamageType
@@ -16,10 +16,11 @@ class Rena(Combatant):
     def __init__(self):
         rena_attacks = [Attack("Two-handed axe", self,  7, "1d12", 4, Action.ActionClasses.ACTION, DamageType.Slashing, 1)]
         super().__init__("Rena", actions=rena_attacks, hp=61, ac=15, init_bonus=1, speed=40, resistances=[], dc=15, num_attacks=2)
-        rage = Rage(self, 3, 2)
+        rage = TotemRage(self, 3, 2)
         self.actions.append(rage)
         self.rage = self.actions[-1]
         self.basic_attack_cache = rena_attacks[0]
+        self.has_danger_sense = True
 
     def get_action(self, battle_map):
         while self.has_action or self.has_bonus_action or self.movement:

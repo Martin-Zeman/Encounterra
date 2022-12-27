@@ -25,7 +25,9 @@ def roll_dice(num_dice, dice_size):
 def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
     bonus = target_combatant.saving_throws[ability.saving_throw]
-    if target_combatant.is_dodging and ability.saving_throw is SavingThrow.DEX:
+    if (target_combatant.is_dodging or (
+            target_combatant.has_danger_sense and not target_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.BLINDED,
+                                                                                          Conditions.DEAFENED))) and ability.saving_throw is SavingThrow.DEX:
         rolled = max(random.randint(1, 20), random.randint(1, 20))
     else:
         rolled = random.randint(1, 20)
@@ -70,7 +72,8 @@ class CombatManager:
 
         if rolled + spell.to_hit >= spell.target.ac:
             dmg = multiplier * roll_spell_dmg(spell)
-            logger.debug(f"{spell.__class__.__name__} hits {spell.target} for {dmg} damage", extra={"team": self.teams.get_team(caster)})
+            logger.debug(f"{spell.__class__.__name__} {'CRITS' if multiplier == 2 else 'hits'} {spell.target} for {dmg} damage",
+                         extra={"team": self.teams.get_team(caster)})
             spell.target.receive_dmg(dmg, spell.dmg_type)
             if not spell.target.is_alive():
                 self.battle_map.remove_combatant(spell.target)
@@ -91,7 +94,7 @@ class CombatManager:
                 if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
                     self.resolve_ranged_spell_attack(caster, spell)
                 else:
-                    logger.debug("Out of Firebolt's range") # TODO could probably remove this. No map is gonna be that big
+                    logger.debug("Out of Firebolt's range")  # TODO could probably remove this. No map is gonna be that big
             case "MistyStep":
                 if self.battle_map.get_distance(caster, spell.coord) <= 6:
                     self.battle_map.move_combatant(caster, spell.coord)
