@@ -68,7 +68,7 @@ class Faurung(Combatant):
                 return fireball
             elif self.has_action:
                 # cast firebolt
-                logger.debug(f"{self.name} casts Firebolt on {nearest_enemy.get_name()}", extra={"team": self.team_color})
+                logger.debug(f"{self.name} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
                 firebolt = Firebolt(7, 5, nearest_enemy)
                 self.has_action = False
                 return firebolt

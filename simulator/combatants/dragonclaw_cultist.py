@@ -17,8 +17,8 @@ class DragonclawCultist(Combatant):
         super().__init__(name, actions=scimitar_attacks, hp=16, ac=14, init_bonus=3, speed=30, resistances=[], dc=0, num_attacks=2)
         self.basic_attack_cache = scimitar_attacks[0]# just a helper
         self.max_melee_range = 1 # TODO: maybe add a lookup here
-        self.has_pack_tactics = False
-        self.has_fanatical_advantage = False
+        self.has_pack_tactics = True
+        self.has_fanatical_advantage = True
 
     def attack_routine(self, battle_map):
         if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):

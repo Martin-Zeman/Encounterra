@@ -5,6 +5,7 @@ import logging
 from simulator.spells.spell import Spell
 from simulator.combatant import Combatant
 from multipledispatch import dispatch
+from simulator.misc import Conditions
 import time
 from enum import Enum
 
@@ -102,7 +103,7 @@ class Map:
             for cell in row:
                 combatant = cell.get_combatant()
                 if combatant:
-                    row_text += self.teams.get_team_color_code(combatant) + combatant.get_name()[0] + "\x1b[0m\t"
+                    row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + "\x1b[0m\t"
                 else:
                     row_text += "0\t"
             string_repr += row_text + "\n"
@@ -130,7 +131,7 @@ class Map:
                         pass  # out of grid
 
     def build_adjacency_matrix(self):
-        start_time = time.time()
+        # start_time = time.time()
         N = self.size
         Nsq = N ** 2
         adj = np.zeros((N, N, N, N), dtype=int)
@@ -158,7 +159,7 @@ class Map:
         for coord in self.difficult_set:
             adj[:, coord[0] * N + coord[1]] *= 2
         self.base_adjacency_matrix = adj
-        print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
+        # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
     def build_combatant_adjacency_mask(self, combatant):
         """
@@ -250,14 +251,14 @@ class Map:
         new_coord = old_coord + increment
         self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coord
-        logger.debug(f"{combatant.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
+        logger.debug(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
     def move_combatant(self, combatant, new_coord):
         old_coord = self.combatant_coordinate_cache[combatant]
         self.grid[old_coord[0]][old_coord[1]].remove_combatant()
         self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coord
-        logger.debug(f"{combatant.get_name()} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
+        logger.debug(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
     def get_aoo_eligible_combatants(self, combatant, increment):
         eligible_combatants = []
@@ -287,7 +288,7 @@ class Map:
 
     def set_combatant_coordinates(self, combatant, coord):
         # TODO: redo this as np.array
-        logger.debug(f"Setting coordinates {coord} for comabatant {combatant.get_name()}")
+        logger.debug(f"Setting coordinates {coord} for combatant {combatant}")
         self.grid[coord[0]][coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = coord
 
@@ -304,14 +305,31 @@ class Map:
 
     def is_enemy_adjacent(self, character):
         self_coords = self.combatant_coordinate_cache[character]
-        for x in range(-1, 2):
-            for y in range(-1, 2):
-                try:
-                    cmbt = self.grid[self_coords[0] + x][self_coords[1] + y].combatant
-                    if cmbt and self.teams.are_enemies(character, cmbt):
-                        return True
-                except IndexError:
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                if self_coords[0] + dx < 0 or self_coords[0] + dx >= self.size or self_coords[1] + dy < 0 or self_coords[1] + dy >= self.size:
                     continue
+                cmbt = self.grid[self_coords[0] + dx][self_coords[1] + dy].combatant
+                if cmbt and self.teams.are_enemies(character, cmbt):
+                    return True
+        return False
+
+
+    def is_ally_adjacent(self, character, target):
+        """
+        Used for pack tactics to determine if an ally that is not incapacitated is adjacent to my target
+        :param target: the target combatant
+        :param coord:
+        :return:
+        """
+        target_coord = self.combatant_coordinate_cache[target]
+        for dx in range(-1, 2):
+            for dy in range(-1, 2):
+                if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[1] + dy >= self.size:
+                    continue
+                cmbt = self.grid[target_coord[0] + dx][target_coord[1] + dy].combatant
+                if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_cond(Conditions.INCAPACITATED):
+                    return True
         return False
 
     def are_in_range(self, combatant1, combatant2, distance):
@@ -338,7 +356,9 @@ class Map:
         adjacent_coords = set()
         for dx in range(-1, 2):
             for dy in range(-1, 2):
-                cell = self.grid[np.clip(coord[0] + dx, 0, self.size - 1)][np.clip(coord[1] + dy, 0, self.size - 1)]
+                if coord[0] + dx < 0 or coord[0] + dx >= self.size or coord[1] + dy < 0 or coord[1] + dy >= self.size:
+                    continue
+                cell = self.grid[coord[0] + dx][coord[1] + dy]
                 if cell.occupancy is Occupancy.FREE and cell.terrain is not Terrain.IMPASSABLE_TERRAIN:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((coord[0] + dx, coord[1] + dy))
@@ -466,7 +486,7 @@ class Map:
         :param combatant:
         :return:
         """
-        logger.debug(f"Removing combatant {combatant.get_name()}")
+        logger.debug(f"Removing combatant {combatant}")
         try:
             old_coord = self.combatant_coordinate_cache[combatant]
         except KeyError:

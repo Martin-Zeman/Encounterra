@@ -25,7 +25,7 @@ class RoundManager:
         self.combatants.sort(key=by_initiative, reverse=True)
         logger.debug("--------------INITIATIVE ORDER--------------")
         for combatant in self.combatants:
-            logger.debug(f"{combatant.get_name()} with {combatant.get_curr_init()}")
+            logger.debug(f"{combatant} with {combatant.get_curr_init()}")
 
     def goes_before_in_initiative(self, combatant1, combatant2):
         return True if self.combatants.index(combatant1) < self.combatants.index(combatant2) else False
@@ -51,7 +51,7 @@ class RoundManager:
                         pam_attack.action_class = Action.ActionClasses.REACTION
                         if self.combat_manager.resolve_attack(pam_attack) and candidate.has_sentinel:
                             combatant.movement = 0
-                            logger.debug(f"Combatant {combatant.get_name()} was stopped by sentinel")
+                            logger.debug(f"Combatant {combatant} was stopped by sentinel")
 
         if combatant.is_alive():
             self.battle_map.move_combatant_by_increment(combatant, movement.increment)
@@ -121,14 +121,14 @@ class RoundManager:
                         if not combatant.is_alive():
                             break # could have died as a result of AoO
                 else:
-                    logger.debug(f"Combatant {combatant.get_name()} is dead. Skipping")
+                    logger.debug(f"Combatant {combatant} is dead. Skipping")
             self.print_status()
         # self.print_results()
 
     def print_status(self):
         for combatant in self.combatants:
             status = f"alive with {combatant.get_curr_hp()}" if combatant.is_alive() else "dead"
-            logger.debug(f"Combatant {combatant.get_name()} is {status}", extra={"team": self.teams.get_team(combatant)})
+            logger.debug(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
         logger.debug(self.battle_map)
 
     def print_results(self):

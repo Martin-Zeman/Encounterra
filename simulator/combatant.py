@@ -3,14 +3,14 @@ from simulator.attack import Attack
 import random
 import math
 import logging
-from simulator.misc import SavingThrow
+from simulator.misc import SavingThrow, Conditions
 from enum import Enum
 
 logger = logging.getLogger(__name__)
 
 
 class Combatant:
-    class Condition(Enum):
+    class State(Enum):
         FINE = 1
         BLOODIED = 2
         NEAR_DEATH = 3
@@ -57,12 +57,16 @@ class Combatant:
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
         self.perception = 0
-        self.condition = self.Condition.FINE
+        self.condition = self.State.FINE
         self.toughness = None
         self.is_dodging = False # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.spellslots = []
+        self.conditions = set()
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
+
+    def __str__(self):
+        return self.name
 
     def set_round_manager(self, round_manager):
         self.round_manager = round_manager
@@ -76,12 +80,12 @@ class Combatant:
     def can_react(self):
         return self.has_reaction
 
-    def __get_ability(self, name):
-        # TODO: Consider making abilities a dict
-        for ability in self.abilities:
-            if ability.name == name:
-                return ability
-        return None
+    # def get_ability(self, name):
+    #     # TODO: Consider making abilities a dict
+    #     for ability in self.abilities:
+    #         if ability.name == name:
+    #             return ability
+    #     return None
 
     def get_ability_dmg_bonus(self):
         return self.ability_dmg_bonus
@@ -94,6 +98,9 @@ class Combatant:
             dmg = math.floor(dmg / 2)
             logger.debug(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
         self.curr_hp -= dmg
+
+    def apply_condition(self, condition):
+        self.conditions.add(condition)
 
     def new_turn(self):
         self.has_action = True
@@ -133,6 +140,10 @@ class Combatant:
         if self.shield_spell_active:
             self.ac -= 5
         self.shield_spell_active = False
+        self.conditions.clear()
+
+    def is_cond(self, condition):
+        return condition in self.conditions
 
     def add_team(self, team_color):
         self.team_color = team_color

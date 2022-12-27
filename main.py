@@ -6,6 +6,7 @@ from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams
 import logging
 import sys
+import time
 from simulator.logging.log_formatter import LogFormatter
 
 if __name__ == '__main__':
@@ -20,9 +21,10 @@ if __name__ == '__main__':
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.set_num_simulations(100)
+    session.set_num_simulations(10)
+    start_time = time.time()
     session.simulate()
+    print("---Simulation took %s seconds ---" % (time.time() - start_time))
 
 
 
