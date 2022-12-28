@@ -4,3 +4,7 @@ It can return any of the above. It can tell if a character is entering the area 
 it will be able to encode its state into a fixed size vector (maximum num combatants, each cell binary vector for all aoes etc.)
 
 buffs should not track themselves
+
+(Before this would be decoding) Action is first run through the FeasibilityChecker and if feasible it's passed to the ResourceManager which
+takes the resources away from the combatant. Then it's passed to the ActionFactory which creates the action itself and passes it to the
+round_manager. The round manager resolves it either directly or passing it to the combat manager or effect_tracker.

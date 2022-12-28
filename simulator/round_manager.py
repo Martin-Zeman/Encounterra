@@ -1,8 +1,10 @@
-from simulator.combat_manager import *
+from simulator.action_resolver import *
 from simulator.actoid import Actoid
-from simulator.teams import Teams
+from simulator.feasibility import check_feasibility
+from simulator.resources import use_resource, reset_resources
+from simulator.action_factory import action_factory
+from simulator.action_factory import Passive
 import logging
-import multiprocessing as mp
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +23,12 @@ class RoundManager:
 
     def order_by_initiative(self):
         def by_initiative(e):
-            return e.get_curr_init()
+            return e.curr_init
 
         self.combatants.sort(key=by_initiative, reverse=True)
         logger.debug("--------------INITIATIVE ORDER--------------")
         for combatant in self.combatants:
-            logger.debug(f"{combatant} with {combatant.get_curr_init()}")
+            logger.debug(f"{combatant} with {combatant.curr_init}")
 
     def goes_before_in_initiative(self, combatant1, combatant2):
         return True if self.combatants.index(combatant1) < self.combatants.index(combatant2) else False
@@ -41,7 +43,6 @@ class RoundManager:
                 for candidate in aoo_candidates:
                     aoo = candidate.prompt_aoo(combatant)
                     if aoo and combatant.is_alive():
-                        aoo.action_class = Action.ActionClasses.REACTION
                         self.combat_manager.resolve_attack(aoo)
 
             pam_candidates = self.battle_map.get_pam_eligible_combatants(combatant, movement.increment)
@@ -49,8 +50,7 @@ class RoundManager:
                 for candidate in pam_candidates:
                     pam_attack = candidate.prompt_pam(combatant)
                     if pam_attack and combatant.is_alive():
-                        pam_attack.action_class = Action.ActionClasses.REACTION
-                        if self.combat_manager.resolve_attack(pam_attack) and candidate.has_sentinel:
+                        if self.combat_manager.resolve_attack(pam_attack) and candidate.has_passive(Passive.SENTINEL):
                             combatant.movement = 0
                             logger.debug(f"Combatant {combatant} was stopped by sentinel")
 
@@ -75,6 +75,15 @@ class RoundManager:
             case _:
                 logger.error("Unknown actoid type")
 
+    def resolve_action(self, action_type, args, combatant):
+        # TODO consider turning this into a pipeline
+        if not check_feasibility(combatant, action_type):
+            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible")
+            return
+        use_resource(combatant, action_type)
+        action = action_factory(combatant, action_type, *args)
+        self.resolve_by_actoid_type(action, combatant)
+
     def simulate_n(self, n=1, result_queue=None):
         if n > 0:
             team_tally = {color: 0 for color in self.teams.get_team_colors()}
@@ -89,8 +98,8 @@ class RoundManager:
                     logger.warning("Everyone's dead. No winners!")
                 else:
                     team_tally[surviving_teams[0]] += 1
-                for ch in self.combatants:
-                    ch.reset()
+                for combatant in self.combatants:
+                    reset_resources(combatant)
                 self.battle_map.reset()
                 for combatant in self.combatants:
                     # TODO consider making this part of map reset
@@ -116,20 +125,19 @@ class RoundManager:
                 if combatant.is_alive():
                     combatant.new_turn()
                     while True:
-                        action = combatant.get_action(self.battle_map)
+                        action, *args = combatant.get_action(self.battle_map)
                         if action is None:
                             break
-                        self.resolve_by_actoid_type(action, combatant)
+                        self.resolve_action(action, args, combatant)
                         if not combatant.is_alive():
                             break  # could have died as a result of AoO
                 else:
                     logger.debug(f"Combatant {combatant} is dead. Skipping")
             self.print_status()
-        # self.print_results()
 
     def print_status(self):
         for combatant in self.combatants:
-            status = f"alive with {combatant.get_curr_hp()}" if combatant.is_alive() else "dead"
+            status = f"alive with {combatant.curr_hp}" if combatant.is_alive() else "dead"
             logger.debug(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
         logger.debug(self.battle_map)
 

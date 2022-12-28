@@ -6,6 +6,7 @@ from simulator.spells.spell import Spell
 from simulator.combatant import Combatant
 from multipledispatch import dispatch
 from simulator.misc import Conditions
+from simulator.action_factory import Passive
 import time
 from enum import Enum
 
@@ -47,14 +48,17 @@ def do_circles_boxes_overlap(origin1, origin2, radius):
     dist = get_hop_distance(origin1, origin2)
     return (2 * radius) >= dist + 1
 
+
 class Terrain(Enum):
     NORMAL_TERRAIN = 1
     DIFFICULT_TERRAIN = 2
     IMPASSABLE_TERRAIN = 3
 
+
 class Occupancy(Enum):
     FREE = 1
     OCCUPIED_BY_COMBATANT = 2
+
 
 class GridCell:
     def __init__(self):
@@ -170,11 +174,11 @@ class Map:
         """
         N = self.size
         # TODO consider preallocating this for all combatants and only resetting it to ones
-        mask = np.ones((self.size**2, self.size**2), dtype=int)
+        mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
         for curr_combatant, coord in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and curr_combatant.is_alive():
                 # TODO even allies are now impassable, try and figure out of a way to improve this
-                mask[:, coord[0] * N + coord[1]] = 0 #if self.teams.are_enemies(curr_combatant, combatant) else 2
+                mask[:, coord[0] * N + coord[1]] = 0  # if self.teams.are_enemies(curr_combatant, combatant) else 2
         return mask
 
     def printSolution(self, distances, my_location, enemy_location, reconstructed_path):
@@ -279,7 +283,8 @@ class Map:
                     post_increment_dist = get_hop_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
                 except KeyError:
                     continue
-                if pre_increment_dist > curr_combatant.max_melee_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction and curr_combatant.has_polearm_master:
+                if curr_combatant.has_passive(
+                        Passive.POLEARM_MASTER) and pre_increment_dist > curr_combatant.max_melee_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
@@ -298,7 +303,8 @@ class Map:
         self_position = self.combatant_coordinate_cache[combatant]
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
             dist = np.linalg.norm(target_coord - self_position)
-            if potential_target is not combatant and potential_target.is_alive() and self.teams.are_enemies(potential_target, combatant) and dist < min_dist:
+            if potential_target is not combatant and potential_target.is_alive() and self.teams.are_enemies(potential_target,
+                                                                                                            combatant) and dist < min_dist:
                 min_dist = dist
                 nearest_enemy = potential_target
         return nearest_enemy
@@ -307,13 +313,13 @@ class Map:
         self_coords = self.combatant_coordinate_cache[character]
         for dx in range(-1, 2):
             for dy in range(-1, 2):
-                if self_coords[0] + dx < 0 or self_coords[0] + dx >= self.size or self_coords[1] + dy < 0 or self_coords[1] + dy >= self.size:
+                if self_coords[0] + dx < 0 or self_coords[0] + dx >= self.size or self_coords[1] + dy < 0 or self_coords[
+                    1] + dy >= self.size:
                     continue
                 cmbt = self.grid[self_coords[0] + dx][self_coords[1] + dy].combatant
                 if cmbt and self.teams.are_enemies(character, cmbt):
                     return True
         return False
-
 
     def is_ally_adjacent(self, character, target):
         """
@@ -325,10 +331,12 @@ class Map:
         target_coord = self.combatant_coordinate_cache[target]
         for dx in range(-1, 2):
             for dy in range(-1, 2):
-                if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[1] + dy >= self.size:
+                if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[
+                    1] + dy >= self.size:
                     continue
                 cmbt = self.grid[target_coord[0] + dx][target_coord[1] + dy].combatant
-                if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_affected_by_any(Conditions.INCAPACITATED):
+                if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_affected_by_any(
+                        Conditions.INCAPACITATED):
                     return True
         return False
 
@@ -363,7 +371,6 @@ class Map:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((coord[0] + dx, coord[1] + dy))
         return adjacent_coords
-
 
     def get_nearest_adjacent_coord(self, my_location, target_location):
         adjacent_coords = self.get_adjacent_coords(target_location)
@@ -541,7 +548,8 @@ class Map:
                             affected_combatants.append(potential_target)
                     elif ability.type is Spell.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if get_hop_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target] and self.teams.are_allies(
+                        if get_hop_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[
+                            ability.target] and self.teams.are_allies(
                                 caster, potential_target):
                             affected_combatants.append(potential_target)
             case _:

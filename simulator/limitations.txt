@@ -10,3 +10,4 @@ upcasting? should be there
 only one DC per character
 no shoving
 Allies are considered impassable same as enemies
+no multiclassing -> can only have spellslots of one class

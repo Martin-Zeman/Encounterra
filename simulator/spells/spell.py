@@ -4,12 +4,6 @@ from simulator.actoid import Actoid
 
 class Spell(Actoid):
 
-    class CastingTime(Enum):
-        ACTION = 1
-        BONUS_ACTION = 2
-        REACTION = 3
-        ONE_MINUTE = 4
-
     class Target(Enum):
         SELF = 0
         ONE_CREATURE = 1
@@ -50,10 +44,9 @@ class Spell(Actoid):
 
 
 
-    def __init__(self, level, casting_time, spell_range, target, duration, concentration, type, to_hit=None, dc=None, dmg_type=None, orientation=None):
+    def __init__(self, level, spell_range, target, duration, concentration, type, to_hit=None, dc=None, dmg_type=None, orientation=None):
         Actoid.__init__(self, type=Actoid.Type.IS_SPELL)
         self.level = level
-        self.casting_time = casting_time
         self.range = spell_range
         self.target = target
         self.duration = duration

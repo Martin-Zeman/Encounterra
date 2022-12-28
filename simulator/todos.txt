@@ -8,3 +8,4 @@
 - give disadvantage on ranged attacks when an enemy is adjacent
 - implement the "only one leveled spell" a turn to the environment checker
 - the cultist seems to be able to use dodge even after an attack
+- Add special spell slots for stuff like magic initiate

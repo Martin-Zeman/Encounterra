@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 class Firebolt(Spell):
     def __init__(self, to_hit, combatant_level, target):
         super().__init__(level=0,
-                         casting_time=Spell.CastingTime.ACTION,
                          spell_range=Spell.Range.FEET_120,
                          target=Spell.Target.ONE_CREATURE,
                          duration=Spell.Duration.INSTANTANEOUS,

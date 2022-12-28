@@ -40,16 +40,10 @@ class Teams:
         return self.reverse_team_book[combatant]
 
 
-    # def get_survivors_of_team(self, team_color):
-    #     return [ch.get_name() for ch in self.team_book[team_color] if ch.is_alive()]
-    #
-    # def get_survivors_per_teams(self):
-    #     return {k: [ch for ch in combatants if ch.is_alive()] for (k, combatants) in self.team_book.values()}
-
     def get_surviving_teams(self):
         surviving_teams = []
         for name, combatants in self.team_book.items():
-            if any([ch.get_name() for ch in combatants if ch.is_alive()]):
+            if any([ch.name for ch in combatants if ch.is_alive()]):
                 surviving_teams.append(name)
         return surviving_teams
 

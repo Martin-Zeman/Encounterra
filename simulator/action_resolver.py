@@ -1,33 +1,18 @@
-from simulator.action import *
-import random
 import logging
-import re
+from simulator.misc import *
 from simulator.misc import SavingThrow, Conditions
+from simulator.action_factory import Passive
 
 logger = logging.getLogger(__name__)
-
-
-def parse_dmg_dice(dice_string):
-    p = re.compile('(\d+)d(\d+)')
-    m = p.match(dice_string)
-    num_dice = int(m.group(1))
-    dice_size = int(m.group(2))
-    return num_dice, dice_size
-
-
-def roll_dice(num_dice, dice_size):
-    dice_sum = 0
-    for i in range(num_dice):
-        dice_sum += random.randint(1, dice_size)
-    return dice_sum
 
 
 def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
     bonus = target_combatant.saving_throws[ability.saving_throw]
     if (target_combatant.is_dodging or (
-            target_combatant.has_danger_sense and not target_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.BLINDED,
-                                                                                          Conditions.DEAFENED))) and ability.saving_throw is SavingThrow.DEX:
+            target_combatant.has_passive(Passive.DANGER_SENSE) and not target_combatant.is_affected_by_any(Conditions.INCAPACITATED,
+                                                                                                           Conditions.BLINDED,
+                                                                                                           Conditions.DEAFENED))) and ability.saving_throw is SavingThrow.DEX:
         rolled = max(random.randint(1, 20), random.randint(1, 20))
     else:
         rolled = random.randint(1, 20)
@@ -44,12 +29,7 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.dmg_type)
 
 
-def roll_spell_dmg(spell):
-    num_dice, dice_size = parse_dmg_dice(spell.dmg_dice)
-    return roll_dice(num_dice, dice_size)
-
-
-class CombatManager:
+class ActionResolver:
 
     def __init__(self, combatants, teams, battle_map):
         self.combatants = combatants
@@ -149,9 +129,9 @@ class CombatManager:
         if rolled + attack.to_hit >= target.ac:  # Potentially missing this time
             num_dice, dice_size = parse_dmg_dice(attack.dmg_dice)
             dmg_dice_sum = roll_dice(num_dice, dice_size)
-            total_dmg = multiplier * dmg_dice_sum + attack.dmg_bonus + attacker.get_ability_dmg_bonus()
+            total_dmg = multiplier * dmg_dice_sum + attack.dmg_bonus + attacker.ability_dmg_bonus
             logger.debug(
-                f"Attack {'CRITS' if multiplier == 2 else 'hits'} for {total_dmg} of which {attacker.get_ability_dmg_bonus()} is ability dmg",
+                f"Attack {'CRITS' if multiplier == 2 else 'hits'} for {total_dmg} of which {attacker.ability_dmg_bonus} is ability dmg",
                 extra={"team": self.teams.get_team(attacker)})
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             if not target.is_alive():

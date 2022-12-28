@@ -1,5 +1,6 @@
 from enum import Enum, Flag, auto
-
+import random
+import re
 
 class SavingThrow(Enum):
     STR = 1
@@ -43,3 +44,23 @@ class Conditions(Flag):
     RESTRAINED = auto()
     STUNNED = auto()
     UNCONSCIOUS = auto()
+
+
+def parse_dmg_dice(dice_string):
+    p = re.compile('(\d+)d(\d+)')
+    m = p.match(dice_string)
+    num_dice = int(m.group(1))
+    dice_size = int(m.group(2))
+    return num_dice, dice_size
+
+
+def roll_dice(num_dice, dice_size):
+    dice_sum = 0
+    for i in range(num_dice):
+        dice_sum += random.randint(1, dice_size)
+    return dice_sum
+
+
+def roll_spell_dmg(spell):
+    num_dice, dice_size = parse_dmg_dice(spell.dmg_dice)
+    return roll_dice(num_dice, dice_size)

@@ -1,4 +1,7 @@
 class EffectTracker:
+    """
+    Removes rage from combatants
+    """
     def __init__(self):
         self.buffs = {}
         self.debuffs = {}
