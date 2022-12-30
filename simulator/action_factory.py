@@ -55,7 +55,11 @@ def action_factory(combatant, action_type, *args):
             case Action.ATTACK:
                 return Attack(*args)
             case Action.DODGE:
-                return Dodge(combatant)
+                try:
+                    dodge = Dodge(combatant)
+                except TypeError:
+                    logger.error("FIXME Dodge Action factory")
+                return dodge
             case Action.DASH:
                 return None
             case Action.FIREBALL:

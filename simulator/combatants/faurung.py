@@ -12,7 +12,7 @@ class Faurung(Combatant):
 
     def __init__(self):
         # faurung_attacks = [Attack("Staff of Defence", self, 3, "1d8", -1, Action.ActionClasses.ACTION, DamageType.Bludgeoning, 1)]
-        super().__init__("Faurung", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=[], dc=15)
+        super().__init__("Faurung", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.add_ability(Action.FIREBALL)
         self.add_ability(Action.FIREBOLT)
         self.add_ability(BonusAction.MISTY_STEP)
@@ -69,14 +69,12 @@ class Faurung(Combatant):
         self.movement_generator_cache = None
 
     def prompt_aoo(self, moving_combatant):
-        if self.has_reaction:
-            pass
-        return None
+        return None,
 
     def prompt_after_hit_reaction(self, attacking_combatant):
         if self.spellslots.has_spellslots(1) and self.has_reaction:
             logger.debug(f"{self.name} casts Shield", extra={"team": self.team_color})
-            return Reaction.SHIELD
+            return Reaction.SHIELD,
         elif self.has_reaction:
             logger.debug(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
-        return None
+        return None,

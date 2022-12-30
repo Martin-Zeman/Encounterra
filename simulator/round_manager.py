@@ -1,21 +1,23 @@
 from simulator.action_resolver import *
-from simulator.actoid import Actoid
 from simulator.feasibility import check_feasibility
 from simulator.resources import use_resource, reset_resources
 from simulator.action_factory import action_factory
 from simulator.action_factory import Passive
+from simulator.effects.effect_tracker import EffectTracker
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class RoundManager:
-    def __init__(self, combatants, teams, battle_map, combat_manager, num_rounds=30):
+    def __init__(self, combatants, teams, battle_map, num_rounds=30):
         self.combatants = combatants
         self.teams = teams
         self.num_rounds = num_rounds
         self.battle_map = battle_map
-        self.combat_manager = combat_manager
+        self.effect_tracker = EffectTracker()
+        self.action_resolver = ActionResolver(combatants, teams, battle_map, self.effect_tracker)
+
 
     def roll_initiative(self):
         for combatant in self.combatants:
@@ -36,53 +38,14 @@ class RoundManager:
     def is_only_one_team_standing(self):
         return True if len(self.teams.get_surviving_teams()) == 1 else False
 
-    def request_movement(self, combatant, movement):
-        if movement.incurs_aoo:
-            aoo_candidates = self.battle_map.get_aoo_eligible_combatants(combatant, movement.increment)
-            if aoo_candidates:
-                for candidate in aoo_candidates:
-                    aoo = candidate.prompt_aoo(combatant)
-                    if aoo and combatant.is_alive():
-                        self.combat_manager.resolve_attack(aoo)
 
-            pam_candidates = self.battle_map.get_pam_eligible_combatants(combatant, movement.increment)
-            if pam_candidates:
-                for candidate in pam_candidates:
-                    pam_attack = candidate.prompt_pam(combatant)
-                    if pam_attack and combatant.is_alive():
-                        if self.combat_manager.resolve_attack(pam_attack) and candidate.has_passive(Passive.SENTINEL):
-                            combatant.movement = 0
-                            logger.debug(f"Combatant {combatant} was stopped by sentinel")
-
-        if combatant.is_alive():
-            self.battle_map.move_combatant_by_increment(combatant, movement.increment)
-            return True
-        return False
-
-    def resolve_by_actoid_type(self, actoid, combatant):
-        match actoid.actoid_type:
-            case Actoid.Type.IS_ATTACK_LIKE_ACTION:
-                self.combat_manager.resolve_attack(actoid)
-            case Actoid.Type.IS_MOVEMENT:
-                if not self.request_movement(combatant, actoid):
-                    return  # combatant didn't survive
-            case Actoid.Type.IS_SPELL:
-                self.combat_manager.resolve_spell(combatant, actoid)
-            case Actoid.Type.IS_DODGE:
-                combatant.is_dodging = True
-            case Actoid.Type.IS_TOGGLE_ABILITY:
-                pass
-            case _:
-                logger.error("Unknown actoid type")
-
-    def resolve_action(self, action_type, args, combatant):
-        # TODO consider turning this into a pipeline
-        if not check_feasibility(combatant, action_type):
-            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible")
-            return
-        use_resource(combatant, action_type)
-        action = action_factory(combatant, action_type, *args)
-        self.resolve_by_actoid_type(action, combatant)
+    def reset(self, combatant_initial_positions):
+        for combatant in self.combatants:
+            reset_resources(combatant)
+        self.battle_map.reset()
+        for combatant in self.combatants:
+            # TODO consider making this part of map reset
+            self.battle_map.set_combatant_coordinates(combatant, combatant_initial_positions[combatant])
 
     def simulate_n(self, n=1, result_queue=None):
         if n > 0:
@@ -98,12 +61,7 @@ class RoundManager:
                     logger.warning("Everyone's dead. No winners!")
                 else:
                     team_tally[surviving_teams[0]] += 1
-                for combatant in self.combatants:
-                    reset_resources(combatant)
-                self.battle_map.reset()
-                for combatant in self.combatants:
-                    # TODO consider making this part of map reset
-                    self.battle_map.set_combatant_coordinates(combatant, combatant_initial_positions[combatant])
+                self.reset(combatant_initial_positions)
             if result_queue:
                 result_queue.put(team_tally)
             logger.info("--------------STATISTICS--------------")
@@ -124,11 +82,15 @@ class RoundManager:
             for combatant in self.combatants:
                 if combatant.is_alive():
                     combatant.new_turn()
+                    self.effect_tracker.new_turn(combatant)
                     while True:
-                        action, *args = combatant.get_action(self.battle_map)
+                        try:
+                            action, *args = combatant.get_action(self.battle_map)
+                        except TypeError as e:
+                            logger.error(f"FIXME {combatant} threw {e} for action {action} with {args}")
                         if action is None:
                             break
-                        self.resolve_action(action, args, combatant)
+                        self.action_resolver.resolve_action(action, args, combatant)
                         if not combatant.is_alive():
                             break  # could have died as a result of AoO
                 else:

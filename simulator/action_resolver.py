@@ -2,6 +2,10 @@ import logging
 from simulator.misc import *
 from simulator.misc import SavingThrow, Conditions
 from simulator.action_factory import Passive
+from simulator.feasibility import check_feasibility
+from simulator.resources import use_resource
+from simulator.action_factory import action_factory
+from simulator.actoid import Actoid
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +35,11 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
 
 class ActionResolver:
 
-    def __init__(self, combatants, teams, battle_map):
+    def __init__(self, combatants, teams, battle_map, effect_tracker):
         self.combatants = combatants
         self.teams = teams
         self.battle_map = battle_map
+        self.effect_tracker = effect_tracker
 
     def resolve_ranged_spell_attack(self, caster, spell):
         if not (spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging):
@@ -106,7 +111,10 @@ class ActionResolver:
         :param attack:
         :return: True is hits, false if misses or is not attack
         """
-        target = attack.get_target_combatant()
+        try:
+            target = attack.get_target_combatant()
+        except AttributeError:
+            logger.error("FIXME Resolve Attack")
         attacker = attack.combatant
         assert target
         self.resolve_pack_tactics(attack, attacker, target)
@@ -124,8 +132,8 @@ class ActionResolver:
         elif rolled in attack.crit_range:
             multiplier = 2
         if rolled + attack.to_hit >= target.ac:
-            reaction = target.prompt_after_hit_reaction(attacker)
-            self.resolve_after_hit_reaction(attacker, target, reaction)
+            reaction, *args = target.prompt_after_hit_reaction(attacker)
+            self.resolve_action(reaction, args, target)
         if rolled + attack.to_hit >= target.ac:  # Potentially missing this time
             num_dice, dice_size = parse_dmg_dice(attack.dmg_dice)
             dmg_dice_sum = roll_dice(num_dice, dice_size)
@@ -140,3 +148,75 @@ class ActionResolver:
         else:
             logger.debug("Attack misses", extra={"team": self.teams.get_team(attacker)})
             return False
+
+    def request_movement(self, combatant, movement):
+        if movement.incurs_aoo:
+            aoo_candidates = self.battle_map.get_aoo_eligible_combatants(combatant, movement.increment)
+            if aoo_candidates:
+                for candidate in aoo_candidates:
+                    try:
+                        aoo, *args = candidate.prompt_aoo(combatant)
+                    except TypeError as e:
+                        logger.error("FIXME AOO candidates", e)
+                    if aoo and combatant.is_alive():
+                        self.resolve_action(aoo, args, combatant)
+
+            pam_candidates = self.battle_map.get_pam_eligible_combatants(combatant, movement.increment)
+            if pam_candidates:
+                for candidate in pam_candidates:
+                    pam_attack, *args = candidate.prompt_pam(combatant)
+                    if pam_attack and combatant.is_alive():
+                        did_attack_hit = self.resolve_action(pam_attack, args, combatant)
+                        if did_attack_hit and candidate.has_passive(Passive.SENTINEL):
+                            combatant.movement = 0
+                            logger.debug(f"Combatant {combatant} was stopped by sentinel")
+
+        if combatant.is_alive():
+            self.battle_map.move_combatant_by_increment(combatant, movement.increment)
+            return True
+        return False
+
+    def resolve_by_actoid_type(self, actoid, combatant):
+        """
+        Resolves an action by its actoid type
+        :param actoid: actoid to be resolved
+        :param combatant: acting combatant
+        :return: in case of an attack returns True if the attack hit, false otherwise. Dodge always returns True, unknown parameters false.
+        Other cases return None.
+        """
+        match actoid.actoid_type:
+            case Actoid.Type.IS_ATTACK_LIKE_ACTION:
+                return self.resolve_attack(actoid)
+            case Actoid.Type.IS_MOVEMENT:
+                if not self.request_movement(combatant, actoid):
+                    return None  # combatant didn't survive
+            case Actoid.Type.IS_SPELL:
+                return self.resolve_spell(combatant, actoid)
+            case Actoid.Type.IS_DODGE:
+                combatant.is_dodging = True
+                return True
+            case Actoid.Type.IS_TOGGLE_ABILITY:
+                self.resolve_toggle_ability(combatant, actoid)
+                return None
+            case _:
+                logger.error("Unknown actoid type")
+                return False
+
+    def resolve_action(self, action_type, args, combatant):
+        # TODO consider turning this into a pipeline
+        if action_type is None:
+            return
+        if not check_feasibility(combatant, action_type):
+            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible")
+            return
+        use_resource(combatant, action_type)
+        action = action_factory(combatant, action_type, *args)
+        return self.resolve_by_actoid_type(action, combatant)
+
+    def resolve_toggle_ability(self, combatant, ability):
+        match ability.__class__.__name__:
+            case "TotemRage" | "Rage":
+                ability.activate()
+                self.effect_tracker.add(ability, combatant)
+            case _:
+                logger.error("Unknown toggle ability")

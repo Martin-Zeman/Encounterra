@@ -2,10 +2,11 @@ from simulator.actoid import Actoid
 
 
 class Attack(Actoid):
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, atk_range, crit_range=[20]):
+    def __init__(self, name, combatant, target_combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, atk_range, crit_range=[20]):
         Actoid.__init__(self, type=Actoid.Type.IS_ATTACK_LIKE_ACTION)
         self.name = name
         self.combatant = combatant
+        self.target_combatant = target_combatant
         self.to_hit = to_hit
         self.dmg_dice = dmg_dice
         self.dmg_bonus = dmg_bonus
@@ -14,7 +15,6 @@ class Attack(Actoid):
         self.crit_range = crit_range
         self.targeted_combat_action = True
         self.advantage = False
-        self.target_combatant = None
         # TODO: Consider having the num of attacks here
 
     def set_target_combatant(self, target):

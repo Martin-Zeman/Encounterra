@@ -33,7 +33,6 @@ class Session:
         }
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
-        self.combat_manager = None
         self.round_manager = None
 
     def add_combatant(self, combatant_type, team):
@@ -103,8 +102,7 @@ class Session:
 
     def simulate(self, parallel=False):
         self.battle_map = Map(self.map_size, self.teams)
-        self.combat_manager = ActionResolver(self.combatants, self.teams, self.battle_map)
-        self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map, self.combat_manager)
+        self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map)
         self.place_combatants_on_the_map()
         for combatant in self.combatants:
             combatant.set_round_manager(self.round_manager)

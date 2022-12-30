@@ -1,42 +1,39 @@
 from simulator.misc import DamageType
 from simulator.actoid import Actoid
+from simulator.effects.combatant_effect import CombatantEffect
+from simulator.effects.limited_duration_effect import LimitedDurationEffect
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class TotemRage(Actoid):
+class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, combatant):
-        # Ability.__init__(self, "Rage", combatant, uses, Ability.ActionClasses.BONUS_ACTION)
         Actoid.__init__(self, type=Actoid.Type.IS_TOGGLE_ABILITY)
-        self.combatant = combatant
+        CombatantEffect.__init__(self, combatants=[combatant])
+        LimitedDurationEffect.__init__(self, rounds=10)
         self.rage_bonus = combatant.rage_bonus
 
-    # def activate(self):
-    #     if not self.is_active() and self.has_uses():
-    #         self.active = True
-    #         self.actor.ability_dmg_bonus = self.actor.ability_dmg_bonus + self.rage_bonus)
-    #         self.actor.resistances = [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Fire, DamageType.Lightning,
-    #                                       DamageType.Acid, DamageType.Cold, DamageType.Force, DamageType.Necrotic, DamageType.Piercing,
-    #                                       DamageType.Poison, DamageType.Radiant]
-    #         self.curr_uses -= 1
-    #         return True
-    #     return False
-    #
-    # def deactivate(self):
-    #     if self.is_active():
-    #         self.active = False
-    #         self.actor.set_ability_dmg_bonus(self.actor.ability_dmg_bonus - self.rage_bonus)
-    #         self.actor.resistances.remove(DamageType.Slashing)
-    #         self.actor.resistances.remove(DamageType.Bludgeoning)
-    #         self.actor.resistances.remove(DamageType.Fire)
-    #         self.actor.resistances.remove(DamageType.Lightning)
-    #         self.actor.resistances.remove(DamageType.Acid)
-    #         self.actor.resistances.remove(DamageType.Cold)
-    #         self.actor.resistances.remove(DamageType.Force)
-    #         self.actor.resistances.remove(DamageType.Necrotic)
-    #         self.actor.resistances.remove(DamageType.Piercing)
-    #         self.actor.resistances.remove(DamageType.Poison)
-    #         self.actor.resistances.remove(DamageType.Radiant)
-    #
-    # def reset(self):
-    #     self.deactivate()
-    #     self.curr_uses = self.max_uses
+    def activate(self):
+        self.combatants[0].ability_dmg_bonus += self.rage_bonus
+        self.combatants[0].resistances.update(
+            [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Fire, DamageType.Lightning, DamageType.Acid, DamageType.Cold,
+             DamageType.Force, DamageType.Necrotic, DamageType.Poison, DamageType.Radiant, DamageType.Piercing])
+
+    def deactivate(self):
+        self.combatants[0].ability_dmg_bonus -= self.rage_bonus
+        try:
+            self.combatants[0].resistances.remove(DamageType.Slashing)
+            self.combatants[0].resistances.remove(DamageType.Bludgeoning)
+            self.combatants[0].resistances.remove(DamageType.Fire)
+            self.combatants[0].resistances.remove(DamageType.Lightning)
+            self.combatants[0].resistances.remove(DamageType.Acid)
+            self.combatants[0].resistances.remove(DamageType.Cold)
+            self.combatants[0].resistances.remove(DamageType.Force)
+            self.combatants[0].resistances.remove(DamageType.Necrotic)
+            self.combatants[0].resistances.remove(DamageType.Piercing)
+            self.combatants[0].resistances.remove(DamageType.Poison)
+            self.combatants[0].resistances.remove(DamageType.Radiant)
+        except KeyError:
+            logger.error("FIXME Toten Rage Deactivate")

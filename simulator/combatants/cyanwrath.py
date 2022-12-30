@@ -10,12 +10,12 @@ logger = logging.getLogger(__name__)
 class Cyanwrath(Combatant):
 
     def __init__(self):
-        super().__init__("Cyanwrath", level=9, hp=95, ac=17, init_bonus=1, spell_to_hit=0, speed=30, resistances=[DamageType.Lightning],
+        super().__init__("Cyanwrath", level=9, hp=95, ac=17, init_bonus=1, spell_to_hit=0, speed=30, resistances={DamageType.Lightning},
                          dc=15)
-        self.attack_args = {Action.ATTACK: [None, "Polearm", 7, "1d10", 4, DamageType.Slashing, 2, [19, 20]],
-                            BonusAction.PAM_BONUS_ATTACK: [None, "Butt end of Polearm", 7, "1d4", 4, DamageType.Bludgeoning, 2,
-                                    [19, 20]],
-                            Reaction.REACTION_ATTACK: [None, "Polearm", 7, "1d10", 4, DamageType.Slashing, 2, [19, 20]]}
+        self.attack_args = {Action.ATTACK: ["Polearm", self, None, 7, "1d10", 4, DamageType.Slashing, 2, [19, 20]],
+                            BonusAction.PAM_BONUS_ATTACK: ["Butt end of Polearm", self, None, 7, "1d4", 4, DamageType.Bludgeoning, 2,
+                                                           [19, 20]],
+                            Reaction.REACTION_ATTACK: ["Polearm", self, None, 7, "1d10", 4, DamageType.Slashing, 2, [19, 20]]}
         self.add_ability(BonusAction.PAM_BONUS_ATTACK)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.POLEARM_MASTER)
@@ -29,19 +29,19 @@ class Cyanwrath(Combatant):
                 self.multiattack_in_progress = True
             if self.curr_num_attacks and self.multiattack_in_progress:
                 attack_args = self.attack_args[Action.ATTACK]
-                attack_args[0] = self.selected_target  # sets the target
-                logger.debug(f"{self.name} uses action {attack_args[1]} against {self.selected_target}",
+                attack_args[2] = self.selected_target  # sets the target
+                logger.debug(f"{self.name} uses action {attack_args[0]} against {self.selected_target}",
                              extra={"team": self.team_color})
-                return self.actions[0], *attack_args
+                return (self.actions[0], *attack_args)
             else:
                 self.multiattack_in_progress = False
             if self.has_bonus_action and self.curr_num_attacks < self.num_attacks:  # if already took the attack action
                 attack_args = self.attack_args[BonusAction.PAM_BONUS_ATTACK]
-                attack_args[0] = self.selected_target  # sets the target
+                attack_args[2] = self.selected_target  # sets the target
                 logger.debug(
-                    f"{self.name} uses action {attack_args[1]} against {self.selected_target}",
+                    f"{self.name} uses action {attack_args[0]} against {self.selected_target}",
                     extra={"team": self.team_color})
-                return self.bonus_actions[0], *attack_args
+                return (self.bonus_actions[0], *attack_args)
         else:
             logger.debug("Is out of range")
             return None,
@@ -99,19 +99,19 @@ class Cyanwrath(Combatant):
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
-        if self.has_reaction and self.round_manager.goes_before_in_initiative(self, self.selected_target):
+        if self.has_reaction and (self.selected_target is None or self.round_manager.goes_before_in_initiative(self, self.selected_target)):
             attack_args = self.attack_args[Reaction.REACTION_ATTACK]
-            attack_args[0] = moving_combatant  # sets the target
-            logger.debug(f"{self.name} took an AoO {attack_args[1]} against {moving_combatant}",
+            attack_args[2] = moving_combatant  # sets the target
+            logger.debug(f"{self.name} took an AoO {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
-            return self.reactions[0], *attack_args
-        return None
+            return (self.reactions[0], *attack_args)
+        return None,
 
     def prompt_pam(self, moving_combatant):
         if self.has_reaction:
             attack_args = self.attack_args[Reaction.REACTION_ATTACK]
-            attack_args[0] = moving_combatant  # sets the target
-            logger.debug(f"{self.name} uses an polearm master attack {attack_args[1]} against {moving_combatant}",
+            attack_args[2] = moving_combatant  # sets the target
+            logger.debug(f"{self.name} uses an polearm master attack {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
-            return self.reactions[0], *attack_args
-        return None
+            return (self.reactions[0], *attack_args)
+        return None,

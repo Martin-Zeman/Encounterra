@@ -1,30 +1,23 @@
 from simulator.misc import DamageType
 from simulator.actoid import Actoid
+from simulator.effects.combatant_effect import CombatantEffect
+from simulator.effects.limited_duration_effect import LimitedDurationEffect
 
 
-class Rage(Actoid):
+class Rage(Actoid, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, combatant):
         Actoid.__init__(self, type=Actoid.Type.IS_TOGGLE_ABILITY)
-        self.combatant = combatant
+        CombatantEffect.__init__(self, combatants=[combatant])
+        LimitedDurationEffect.__init__(self, rounds=10)
         self.rage_bonus = combatant.rage_bonus
 
-    # def activate(self):
-    #     if not self.is_active() and self.has_uses():
-    #         self.active = True
-    #         self.combatant.set_ability_dmg_bonus(self.combatant.ability_dmg_bonus + self.rage_bonus)
-    #         self.combatant.resistances = [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing]
-    #         return True
-    #     return False
-    #
-    # def deactivate(self):
-    #     if self.is_active():
-    #         self.active = False
-    #         self.combatant.set_ability_dmg_bonus(self.combatant.ability_dmg_bonus - self.rage_bonus)
-    #         self.combatant.resistances.remove(DamageType.Slashing)
-    #         self.combatant.resistances.remove(DamageType.Bludgeoning)
-    #         self.combatant.resistances.remove(DamageType.Piercing)
-    #
-    # def reset(self):
-    #     self.deactivate()
-    #     self.curr_uses = self.max_uses
+    def activate(self):
+        self.combatants[0].ability_dmg_bonus += self.rage_bonus
+        self.combatants[0].resistances.update([DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing])
+
+    def deactivate(self):
+        self.combatants[0].ability_dmg_bonus -= self.rage_bonus
+        self.combatants[0].resistances.remove(DamageType.Slashing)
+        self.combatants[0].resistances.remove(DamageType.Bludgeoning)
+        self.combatants[0].resistances.remove(DamageType.Piercing)

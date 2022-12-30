@@ -52,7 +52,7 @@ class Combatant:
         self.target_position_cache = None
         # self.has_polearm_master = False
         # self.has_sentinel = False
-        self.combat_manager = None
+        self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
         self.saving_throws = {SavingThrow.STR: 0, SavingThrow.DEX: 0, SavingThrow.CON: 0, SavingThrow.INT: 0, SavingThrow.WIS: 0,
                               SavingThrow.CHA: 0}
@@ -91,8 +91,8 @@ class Combatant:
             match action_type:
                 case Passive.MULTIATTACK:
                     try:
-                        self.num_attacks == kwargs['num_attacks']
-                        self.curr_num_attacks == kwargs['num_attacks']
+                        self.num_attacks = kwargs['num_attacks']
+                        self.curr_num_attacks = kwargs['num_attacks']
                     except KeyError:
                         logger.error("Arguments incompatible with action type")
                         return
@@ -125,7 +125,7 @@ class Combatant:
                 dmg = math.floor(dmg / 2)
                 logger.debug(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
         except TypeError:
-            logger.error("FIXME")
+            logger.error("FIXME receive_dmg")
         self.curr_hp -= dmg
 
     def apply_condition(self, condition):
@@ -174,16 +174,16 @@ class Combatant:
         self.team_color = team_color
 
     def prompt_aoo(self, moving_combatant):
-        return None
+        return None,
 
     def prompt_pam(self, moving_combatant):
-        return None
+        return None,
 
     def prompt_attack_reaction(self, attacking_combatant, attack_roll):
-        return None
+        return None,
 
     def prompt_dmg_reaction(self, attacking_combatant, dmg, dmg_type):
-        return None
+        return None,
 
     def prompt_after_hit_reaction(self, attacking_combatant):
-        return None
+        return None,
