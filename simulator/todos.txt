@@ -13,3 +13,5 @@
 - implement the "only one leveled spell" a turn to the environment checker - DONE
 - the cultist seems to be able to use dodge even after an attack - DONE?
 - Add special spell slots for stuff like magic initiate
+- Looks like Barbarian only attacked one after breaking through PAM attack. Should have had two attacks
+- Barbarian's ability dmg is not resetting between simulations
