@@ -15,6 +15,10 @@ def use_resource(combatant, action_type):
             case Action.FIREBALL:
                 combatant.spellslots.use_spellslot(3)
                 combatant.already_cast_leveled_spell_this_turn = True
+            case Action.HASTE:
+                combatant.spellslots.use_spellslot(3)
+                combatant.already_cast_leveled_spell_this_turn = True
+                combatant.is_concentrating = True
             case _:
                 logger.error("Unknown action type")
     elif isinstance(action_type, BonusAction):
@@ -40,6 +44,8 @@ def use_resource(combatant, action_type):
                 logger.error("Unknown reaction type")
     elif isinstance(action_type, Movement):
         combatant.movement -= 1
+    elif isinstance(action_type, HasteAction):
+        combatant.has_haste_action = False
     else:
         logger.error("Unknown high level action class")
 
@@ -60,6 +66,7 @@ def reset_resources(combatant):
         match bonus_action:
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 combatant.curr_rage_uses = combatant.max_rage_uses
+                combatant.rage_active = False
             case _:
                 pass
 

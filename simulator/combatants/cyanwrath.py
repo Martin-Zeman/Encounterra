@@ -44,10 +44,10 @@ class Cyanwrath(Combatant):
                 return (self.bonus_actions[0], *attack_args)
         else:
             logger.debug("Is out of range")
-            return None,
+            return (None,)
 
     def get_action(self, battle_map):
-        while self.has_action or self.has_bonus_action or self.movement:
+        while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
             logger.debug(f"Has action {self.has_action}, has_bonus action {self.has_bonus_action}, movement {self.movement}")
             # chosen_action = None
 
@@ -55,7 +55,7 @@ class Cyanwrath(Combatant):
                 # Get new target
                 self.selected_target = battle_map.get_nearest_enemy(self)
                 if not self.selected_target:
-                    return None,
+                    return (None,)
 
             target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(f"Target is at {target_position}")
@@ -65,12 +65,13 @@ class Cyanwrath(Combatant):
                 path = battle_map.get_path_to(self, self.selected_target)
                 if not path:
                     logger.debug(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
-                    return Action.DODGE,
+                    return (Action.DODGE,)
                 self.movement_generator = MovementGenerator(self, path, True).get_generator()
                 try:
                     movement = next(self.movement_generator)
                     logger.debug("Moving")
-                    return Movement.STANDARD, movement
+                    # logger.debug(f"Retuning {Movement.STANDARD, movement}")
+                    return (Movement.STANDARD, movement)
                 except StopIteration:
                     pass  # can't go any farther
             elif (self.has_action or self.multiattack_in_progress) and dist <= 2:
@@ -88,14 +89,15 @@ class Cyanwrath(Combatant):
                     try:
                         movement = next(self.movement_generator)
                         logger.debug("Moving")
-                        return Movement.STANDARD, movement
+                        return (Movement.STANDARD, movement)
                     except StopIteration:
                         pass  # can't go any farther
 
             if self.has_action:
                 logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
-                return Action.DODGE,
-            return None,
+                return (Action.DODGE,)
+            return (None,)
+        return (None,)
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
@@ -105,7 +107,7 @@ class Cyanwrath(Combatant):
             logger.debug(f"{self.name} took an AoO {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
             return (self.reactions[0], *attack_args)
-        return None,
+        return (None,)
 
     def prompt_pam(self, moving_combatant):
         if self.has_reaction:
@@ -114,4 +116,4 @@ class Cyanwrath(Combatant):
             logger.debug(f"{self.name} uses an polearm master attack {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
             return (self.reactions[0], *attack_args)
-        return None,
+        return (None,)

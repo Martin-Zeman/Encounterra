@@ -20,8 +20,10 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect):
         self.combatants[0].resistances.update(
             [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Fire, DamageType.Lightning, DamageType.Acid, DamageType.Cold,
              DamageType.Force, DamageType.Necrotic, DamageType.Poison, DamageType.Radiant, DamageType.Piercing])
+        self.combatants[0].rage_active = True
 
     def deactivate(self):
+        self.combatants[0].rage_active = False
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         try:
             self.combatants[0].resistances.remove(DamageType.Slashing)

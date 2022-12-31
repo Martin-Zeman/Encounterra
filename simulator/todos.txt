@@ -1,11 +1,15 @@
 - AOE hit score still counts dead characters - DONE
-- Make sure allies cannot occupy the same space
+- Make sure allies cannot occupy the same space - DONE
+- num of attacks should be charged to its max - 1 by taking the attack action if the combatant still has an action, otherwise it should deduct an attack
+- Implement Shield in terms of an effect
+- Add concentration mechanic
+- Feasibility checker should check spell range
 - Add large+ sized creatures
-- Add a random generator of monsters which would generate random names for selected types of monsters
-- Make allies difficult terrain but make sure they can't become the destination which might be difficult maybe I could make them impassable
+- Add a random generator of monsters which would generate random names for selected types of monsters - DONE
+- Make allies difficult terrain but make sure they can't become the destination which might be difficult maybe I could make them impassable - DONE
 - consider geometric centers of grid for distance checking in cases such as radius etc.
 - Add a statistics engine to collect things such as avg. number of killed combatants, avg HP lost, avg. resources committed etc.
 - give disadvantage on ranged attacks when an enemy is adjacent
-- implement the "only one leveled spell" a turn to the environment checker
-- the cultist seems to be able to use dodge even after an attack
+- implement the "only one leveled spell" a turn to the environment checker - DONE
+- the cultist seems to be able to use dodge even after an attack - DONE?
 - Add special spell slots for stuff like magic initiate

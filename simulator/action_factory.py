@@ -4,52 +4,17 @@ from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
 from simulator.spells.shield import Shield
 from simulator.spells.misty_step import MistyStep
+from simulator.spells.haste import Haste
 from simulator.abilities.rage import Rage
 from simulator.abilities.totem_rage import TotemRage
 from simulator.movement import MovementIncrement
-from enum import Enum, auto
+from simulator.actions import *
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class Action(Enum):
-    ATTACK = auto()
-    DODGE = auto()
-    DASH = auto()
-    FIREBALL = auto()
-    FIREBOLT = auto()
-
-
-class BonusAction(Enum):
-    BONUS_ATTACK = auto()
-    PAM_BONUS_ATTACK = auto()
-    RAGE = auto()
-    TOTEM_RAGE = auto()
-    MISTY_STEP = auto()
-    CUNNING_DODGE = auto()
-
-
-class Reaction(Enum):
-    REACTION_ATTACK = auto()
-    SHIELD = auto()
-
-
-class Movement(Enum):
-    STANDARD = auto()
-    DISENGAGE = auto()
-    CUNNING_DISENGAGE = auto()
-    FORCED = auto()
-
-
-class Passive(Enum):
-    MULTIATTACK = auto()
-    SENTINEL = auto()
-    POLEARM_MASTER = auto()
-    DANGER_SENSE = auto
-
-
-def action_factory(combatant, action_type, *args):
+def action_factory(combatant, effect_tracker, action_type, *args):
     if isinstance(action_type, Action):
         match action_type:
             case Action.ATTACK:
@@ -61,11 +26,14 @@ def action_factory(combatant, action_type, *args):
                     logger.error("FIXME Dodge Action factory")
                 return dodge
             case Action.DASH:
+                combatant.movement += combatant.speed
                 return None
             case Action.FIREBALL:
                 return Fireball(*args)
             case Action.FIREBOLT:
                 return Firebolt(combatant.spell_to_hit, combatant.level, *args)
+            case Action.HASTE:
+                return Haste(*args, combatant, effect_tracker)
             case _:
                 logger.error("Unknown action type")
                 return None
@@ -98,6 +66,15 @@ def action_factory(combatant, action_type, *args):
             case _:
                 logger.error("Unknown movement type")
                 return None
+    elif isinstance(action_type, HasteAction):
+        match action_type:
+            case HasteAction.HASTE_ATTACK:
+                return Attack(*args)
+            case HasteAction.HASTE_DASH:
+                combatant.movement += combatant.speed
+                return None
+            case _:
+                logger.error("Unknown haste action")
     else:
         logger.error("Unknown high level action class")
         return None

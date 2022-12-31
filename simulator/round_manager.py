@@ -18,7 +18,6 @@ class RoundManager:
         self.effect_tracker = EffectTracker()
         self.action_resolver = ActionResolver(combatants, teams, battle_map, self.effect_tracker)
 
-
     def roll_initiative(self):
         for combatant in self.combatants:
             combatant.roll_initiative()
@@ -38,10 +37,10 @@ class RoundManager:
     def is_only_one_team_standing(self):
         return True if len(self.teams.get_surviving_teams()) == 1 else False
 
-
     def reset(self, combatant_initial_positions):
         for combatant in self.combatants:
             reset_resources(combatant)
+        self.effect_tracker.reset()
         self.battle_map.reset()
         for combatant in self.combatants:
             # TODO consider making this part of map reset
@@ -79,20 +78,23 @@ class RoundManager:
             if self.is_only_one_team_standing():
                 logger.debug("EARLY END")
                 break
+            self.effect_tracker.new_turn()
             for combatant in self.combatants:
-                if combatant.is_alive():
-                    combatant.new_turn()
-                    self.effect_tracker.new_turn(combatant)
-                    while True:
-                        try:
-                            action, *args = combatant.get_action(self.battle_map)
-                        except TypeError as e:
-                            logger.error(f"FIXME {combatant} threw {e} for action {action} with {args}")
-                        if action is None:
-                            break
-                        self.action_resolver.resolve_action(action, args, combatant)
-                        if not combatant.is_alive():
-                            break  # could have died as a result of AoO
+                if not combatant.is_alive():
+                    continue
+                combatant.new_turn()
+                effects = self.effect_tracker.get_all_affecting_combatant(combatant)
+                self.action_resolver.resolve_effects(effects, combatant)
+                while True:
+                    try:
+                        action, *args = combatant.get_action(self.battle_map)
+                    except TypeError as e:
+                        logger.error(f"FIXME {combatant} threw {e} for action {action} with {args}")
+                    if action is None:
+                        break
+                    self.action_resolver.resolve_action(action, args, combatant)
+                    if not combatant.is_alive():
+                        break  # could have died as a result of AoO
                 else:
                     logger.debug(f"Combatant {combatant} is dead. Skipping")
             self.print_status()

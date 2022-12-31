@@ -1,7 +1,6 @@
 import random
 import math
-import logging
-from simulator.misc import SavingThrow, Conditions
+from simulator.misc import SavingThrow, Conditions, RollModifier
 from simulator.action_factory import *
 from enum import Enum
 
@@ -26,6 +25,7 @@ class Combatant:
         self.actions = [Action.ATTACK, Action.DODGE]
         self.bonus_actions = []
         self.reactions = [Reaction.REACTION_ATTACK]
+        self.haste_actions = []
         self.passive = []
         self.max_hp = hp
         self.curr_hp = hp
@@ -38,6 +38,7 @@ class Combatant:
         self.has_action = True
         self.has_bonus_action = True
         self.has_reaction = True
+        self.has_haste_action = False
         self.num_attacks = 1
         self.curr_num_attacks = 1
         self.speed = speed / 5
@@ -54,8 +55,11 @@ class Combatant:
         # self.has_sentinel = False
         self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
-        self.saving_throws = {SavingThrow.STR: 0, SavingThrow.DEX: 0, SavingThrow.CON: 0, SavingThrow.INT: 0, SavingThrow.WIS: 0,
-                              SavingThrow.CHA: 0}
+        # maps saving_throw_type -> (bonus, RollModifier)
+        self.saving_throws = {SavingThrow.STR: [0, RollModifier.STRAIGHT], SavingThrow.DEX: [0, RollModifier.STRAIGHT],
+                              SavingThrow.CON: [0, RollModifier.STRAIGHT], SavingThrow.INT: [0, RollModifier.STRAIGHT],
+                              SavingThrow.WIS: [0, RollModifier.STRAIGHT],
+                              SavingThrow.CHA: [0, RollModifier.STRAIGHT]}
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
         self.perception = 0
@@ -63,6 +67,7 @@ class Combatant:
         self.toughness = None
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.spellslots = None
+        self.is_concentrating = False
         self.conditions = Conditions.NONE
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
@@ -146,12 +151,14 @@ class Combatant:
         self.has_reaction = True
         self.curr_num_attacks = self.num_attacks
         self.movement = self.speed
+        if self.is_dodging:
+            self.saving_throws[SavingThrow.DEX][1] = RollModifier.STRAIGHT
         self.is_dodging = False
         self.already_cast_leveled_spell_this_turn = False
         if self.shield_spell_active:
             self.ac -= 5
         self.shield_spell_active = False
-
+        self.has_haste_action = False
 
     def reset(self):
         self.has_action = True
@@ -169,6 +176,9 @@ class Combatant:
             self.ac -= 5
         self.shield_spell_active = False
         self.conditions = Conditions.NONE
+        self.has_haste_action = False
+        for st in self.saving_throws.values():
+            st[1] = RollModifier.STRAIGHT
 
     def add_team(self, team_color):
         self.team_color = team_color

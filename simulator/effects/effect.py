@@ -20,3 +20,7 @@ class Effect(ABC):
     @abstractmethod
     def deactivate(self):
         pass
+
+    @abstractmethod
+    def is_affecting(self, combatant):
+        return False

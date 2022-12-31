@@ -36,48 +36,44 @@ class DragonclawCultist(Combatant):
                 self.multiattack_in_progress = False
         else:
             logger.debug("Is out of range")
-            return None,
+            return (None,)
 
     def get_action(self, battle_map):
-        try:
-            while self.has_action or self.movement:
-                logger.debug(f"Has action {self.has_action}, movement {self.movement}")
-                # chosen_action = None
+        while self.has_action or self.movement or self.has_haste_action:
+            logger.debug(f"Has action {self.has_action}, movement {self.movement}")
 
-                if self.selected_target is None or not self.selected_target.is_alive():
-                    # Get new target
-                    self.selected_target = battle_map.get_nearest_enemy(self)
-                    if not self.selected_target:
-                        return None,
+            if self.selected_target is None or not self.selected_target.is_alive():
+                # Get new target
+                self.selected_target = battle_map.get_nearest_enemy(self)
+                if not self.selected_target:
+                    return (None,)
 
-                target_position = battle_map.get_combatant_position(self.selected_target)
-                logger.debug(f"Target is at {target_position}")
-                dist = battle_map.get_distance(self, self.selected_target)
-                if self.movement and self.has_action and dist > 1:
-                    # I haven't attacked yet and I'm too far away, move into range
-                    path = battle_map.get_path_to(self, self.selected_target)
-                    if not path:
-                        logger.debug(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
-                        return Action.DODGE,
-                    self.movement_generator = MovementGenerator(self, path, True).get_generator()
-                    try:
-                        movement = next(self.movement_generator)
-                        logger.debug("Moving")
-                        return Movement.STANDARD, movement
-                    except StopIteration:
-                        pass  # can't go any farther
-                elif (self.has_action or self.multiattack_in_progress) and dist <= 1:
-                    # if I'm in range and I still have an action then attack
-                    attack = self.attack_routine(battle_map)
-                    if attack:
-                        return attack
-
-                if self.has_action:
-                    logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
-                    return Action.DODGE,
-                return None,
-        except TypeError as e:
-            logger.error("FIXME cultist whole action", e)
+            target_position = battle_map.get_combatant_position(self.selected_target)
+            logger.debug(f"Target is at {target_position}")
+            dist = battle_map.get_distance(self, self.selected_target)
+            if self.movement and self.has_action and dist > 1:
+                # I haven't attacked yet and I'm too far away, move into range
+                path = battle_map.get_path_to(self, self.selected_target)
+                if not path:
+                    logger.debug(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
+                    return (Action.DODGE,)
+                self.movement_generator = MovementGenerator(self, path, True).get_generator()
+                try:
+                    movement = next(self.movement_generator)
+                    logger.debug("Moving")
+                    return (Movement.STANDARD, movement)
+                except StopIteration:
+                    pass  # can't go any farther
+            elif (self.has_action or self.multiattack_in_progress) and dist <= 1:
+                # if I'm in range and I still have an action then attack
+                attack = self.attack_routine(battle_map)
+                if attack:
+                    return attack
+            if self.has_action:
+                logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
+                return (Action.DODGE,)
+            return (None,)
+        return (None,)
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
@@ -87,4 +83,4 @@ class DragonclawCultist(Combatant):
             logger.debug(f"{self.name} took an AoO {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
             return (self.reactions[0], *attack_args)
-        return None,
+        return (None,)

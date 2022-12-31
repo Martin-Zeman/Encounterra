@@ -4,7 +4,7 @@ from simulator.misc import SavingThrow, Conditions
 from simulator.action_factory import Passive
 from simulator.feasibility import check_feasibility
 from simulator.resources import use_resource
-from simulator.action_factory import action_factory
+from simulator.action_factory import *
 from simulator.actoid import Actoid
 
 logger = logging.getLogger(__name__)
@@ -12,12 +12,24 @@ logger = logging.getLogger(__name__)
 
 def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
-    bonus = target_combatant.saving_throws[ability.saving_throw]
-    if (target_combatant.is_dodging or (
-            target_combatant.has_passive(Passive.DANGER_SENSE) and not target_combatant.is_affected_by_any(Conditions.INCAPACITATED,
-                                                                                                           Conditions.BLINDED,
-                                                                                                           Conditions.DEAFENED))) and ability.saving_throw is SavingThrow.DEX:
+    bonus = target_combatant.saving_throws[ability.saving_throw][0]
+
+    advantage_counter = 0
+    disadvantage_counter = 0
+    if target_combatant.saving_throws[ability.saving_throw][1] is RollModifier.ADVANTAGE:
+        advantage_counter += 1
+    elif target_combatant.saving_throws[ability.saving_throw][1] is RollModifier.DISADVANTAGE:
+        disadvantage_counter += 1
+    if ability.saving_throw is SavingThrow.DEX and target_combatant.has_passive(
+            Passive.DANGER_SENSE) and not target_combatant.is_affected_by_any(Conditions.INCAPACITATED,
+                                                                              Conditions.BLINDED,
+                                                                              Conditions.DEAFENED):
+        advantage_counter += 1
+
+    if advantage_counter > 0 and disadvantage_counter == 0:
         rolled = max(random.randint(1, 20), random.randint(1, 20))
+    elif disadvantage_counter > 0 and advantage_counter == 0:
+        rolled = min(random.randint(1, 20), random.randint(1, 20))
     else:
         rolled = random.randint(1, 20)
     if rolled == 1:
@@ -29,7 +41,7 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     else:
         saved = False
     logger.debug(
-        f"{type(target_combatant).__name__} deals {dmg if not saved else dmg // 2} to {target_combatant}")
+        f"{type(ability).__name__} deals {dmg if not saved else dmg // 2} to {target_combatant}")
     target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.dmg_type)
 
 
@@ -75,6 +87,9 @@ class ActionResolver:
                     resolve_dmg_saving_throw(spell, dmg, combatant)
                     if not combatant.is_alive():
                         self.battle_map.remove_combatant(combatant)
+            case "Haste":
+                spell.activate()
+                self.effect_tracker.add(spell, caster)
             case "Firebolt":
                 if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
                     self.resolve_ranged_spell_attack(caster, spell)
@@ -149,30 +164,30 @@ class ActionResolver:
             logger.debug("Attack misses", extra={"team": self.teams.get_team(attacker)})
             return False
 
-    def request_movement(self, combatant, movement):
+    def request_movement(self, moving_combatant, movement):
         if movement.incurs_aoo:
-            aoo_candidates = self.battle_map.get_aoo_eligible_combatants(combatant, movement.increment)
+            aoo_candidates = self.battle_map.get_aoo_eligible_combatants(moving_combatant, movement.increment)
             if aoo_candidates:
                 for candidate in aoo_candidates:
                     try:
-                        aoo, *args = candidate.prompt_aoo(combatant)
+                        aoo, *args = candidate.prompt_aoo(moving_combatant)
                     except TypeError as e:
                         logger.error("FIXME AOO candidates", e)
-                    if aoo and combatant.is_alive():
-                        self.resolve_action(aoo, args, combatant)
+                    if aoo and moving_combatant.is_alive():
+                        self.resolve_action(aoo, args, candidate)
 
-            pam_candidates = self.battle_map.get_pam_eligible_combatants(combatant, movement.increment)
+            pam_candidates = self.battle_map.get_pam_eligible_combatants(moving_combatant, movement.increment)
             if pam_candidates:
                 for candidate in pam_candidates:
-                    pam_attack, *args = candidate.prompt_pam(combatant)
-                    if pam_attack and combatant.is_alive():
-                        did_attack_hit = self.resolve_action(pam_attack, args, combatant)
+                    pam_attack, *args = candidate.prompt_pam(moving_combatant)
+                    if pam_attack and moving_combatant.is_alive():
+                        did_attack_hit = self.resolve_action(pam_attack, args, candidate)
                         if did_attack_hit and candidate.has_passive(Passive.SENTINEL):
-                            combatant.movement = 0
-                            logger.debug(f"Combatant {combatant} was stopped by sentinel")
+                            moving_combatant.movement = 0
+                            logger.debug(f"Combatant {moving_combatant} was stopped by sentinel")
 
-        if combatant.is_alive():
-            self.battle_map.move_combatant_by_increment(combatant, movement.increment)
+        if moving_combatant.is_alive():
+            self.battle_map.move_combatant_by_increment(moving_combatant, movement.increment)
             return True
         return False
 
@@ -184,6 +199,8 @@ class ActionResolver:
         :return: in case of an attack returns True if the attack hit, false otherwise. Dodge always returns True, unknown parameters false.
         Other cases return None.
         """
+        if actoid is None:
+            return None
         match actoid.actoid_type:
             case Actoid.Type.IS_ATTACK_LIKE_ACTION:
                 return self.resolve_attack(actoid)
@@ -194,6 +211,7 @@ class ActionResolver:
                 return self.resolve_spell(combatant, actoid)
             case Actoid.Type.IS_DODGE:
                 combatant.is_dodging = True
+                combatant.saving_throws[SavingThrow.DEX][1] = RollModifier.ADVANTAGE
                 return True
             case Actoid.Type.IS_TOGGLE_ABILITY:
                 self.resolve_toggle_ability(combatant, actoid)
@@ -210,7 +228,7 @@ class ActionResolver:
             logger.warning(f"Action of type {action_type} by {combatant} is non-feasible")
             return
         use_resource(combatant, action_type)
-        action = action_factory(combatant, action_type, *args)
+        action = action_factory(combatant, self.effect_tracker, action_type, *args)
         return self.resolve_by_actoid_type(action, combatant)
 
     def resolve_toggle_ability(self, combatant, ability):
@@ -220,3 +238,22 @@ class ActionResolver:
                 self.effect_tracker.add(ability, combatant)
             case _:
                 logger.error("Unknown toggle ability")
+
+    def resolve_effects(self, effects, combatant):
+        for effect in effects:
+            match effect.__class__.__name__:
+                case "Haste":
+                    # resolves the part of the haste spell which needs to be applied every turn
+                    combatant.movement = combatant.speed * 2
+                    combatant.has_haste_action = True
+                case "PostHasteLethargy":
+                    combatant.movement = 0
+                    combatant.has_action = False
+                    combatant.has_bonus_action = False
+                    combatant.has_reaction = False
+                case "Shield":
+                    pass
+                case "TotemRage" | "Rage":
+                    pass # TODO track if the barbarian attacked or received dmg
+                case _:
+                    logger.error("Unknown effect")

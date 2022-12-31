@@ -1,5 +1,5 @@
 from simulator.session import Session
-from simulator.combatants.rena import Rena
+from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
@@ -18,12 +18,12 @@ if __name__ == '__main__':
     session = Session()
     session.add_combatant(Cyanwrath, Teams.Color.RED)
     session.add_combatant(Faurung, Teams.Color.BLUE)
-    session.add_combatant(Rena, Teams.Color.BLUE)
+    session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.set_num_simulations(1)
+    session.set_num_simulations(100)
     start_time = time.time()
     session.simulate(parallel=False)
     print("---Simulation took %s seconds ---" % (time.time() - start_time))

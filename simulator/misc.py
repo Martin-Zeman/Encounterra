@@ -46,6 +46,12 @@ class Conditions(Flag):
     UNCONSCIOUS = auto()
 
 
+class RollModifier(Flag):
+    STRAIGHT = auto()
+    ADVANTAGE = auto()
+    DISADVANTAGE = auto()
+
+
 def parse_dmg_dice(dice_string):
     p = re.compile('(\d+)d(\d+)')
     m = p.match(dice_string)

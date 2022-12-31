@@ -1,4 +1,6 @@
+import logging
 from enum import Enum
+import copy
 
 
 class Teams:
@@ -58,3 +60,11 @@ class Teams:
 
     def get_team(self, combatant):
         return self.reverse_team_book[combatant]
+
+    def get_allies(self, combatant):
+        team_members = copy.copy(self.team_book[self.reverse_team_book[combatant]])
+        try:
+            team_members.remove(combatant)
+        except ValueError:
+            logging.ERROR("FIXME")
+        return team_members
