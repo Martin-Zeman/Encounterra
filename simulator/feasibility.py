@@ -28,6 +28,13 @@ def check_feasibility(combatant, action_type):
         return combatant.movement > 0
     elif isinstance(action_type, HasteAction):
         return combatant.has_haste_action
+    elif isinstance(action_type, FreeAction):
+        match action_type:
+            case FreeAction.RECKLESS_ATTACK:
+                return combatant.curr_num_attacks == combatant.num_attacks and not combatant.reckless_attack_active # not attacked yet
+            case _:
+                logger.error("Unknown free action")
+                return False
     else:
         logger.error("Unknown action type")
         return False

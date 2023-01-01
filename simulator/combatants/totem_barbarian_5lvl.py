@@ -18,17 +18,21 @@ class TotemBarbarian5Lvl(Combatant):
         self.add_ability(BonusAction.TOTEM_RAGE, uses=3, rage_bonus=2)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)
+        self.add_ability(FreeAction.RECKLESS_ATTACK)
 
 
     def attack_routine(self, battle_map):
         if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
             logger.debug("Is in range")
+            if self.curr_num_attacks == self.num_attacks and self.selected_target.is_bloodied_or_worse() and not self.reckless_attack_active:
+                logger.debug(f"{self} uses Reckless Attack", extra={"team": self.team_color})
+                return (FreeAction.RECKLESS_ATTACK,)
             if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:
                 self.multiattack_in_progress = True
             if self.curr_num_attacks and self.multiattack_in_progress:
                 attack_args = self.attack_args[Action.ATTACK]
                 attack_args[2] = self.selected_target  # sets the target
-                logger.debug(f"{self.name} uses action {attack_args[0]} against {self.selected_target}",
+                logger.debug(f"{self} uses action {attack_args[0]} against {self.selected_target}",
                              extra={"team": self.team_color})
                 return (Action.ATTACK, *attack_args)
             else:
@@ -42,7 +46,7 @@ class TotemBarbarian5Lvl(Combatant):
             logger.debug(f"Has action {self.has_action}, has_bonus action {self.has_bonus_action}, movement {self.movement}")
             # First rage if not raging
             if not self.rage_active and self.curr_rage_uses and self.has_bonus_action:
-                logger.debug(f"{self.name} uses bonus action rage", extra={"team": self.team_color})
+                logger.debug(f"{self} uses bonus action rage", extra={"team": self.team_color})
                 return (BonusAction.TOTEM_RAGE,)
 
             nearest = battle_map.get_nearest_enemy(self)
@@ -58,7 +62,7 @@ class TotemBarbarian5Lvl(Combatant):
             if not np.array_equal(self.target_position_cache, target_position):
                 path = battle_map.get_path_to(self, self.selected_target)
                 if not path:
-                    logger.debug(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
+                    logger.debug(f"{self} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
                     return (Action.DODGE,)
                 self.movement_generator = MovementGenerator(self, path, True).get_generator()
                 self.target_position_cache = target_position
@@ -69,12 +73,12 @@ class TotemBarbarian5Lvl(Combatant):
                     return (Movement.STANDARD, movement)
                 except StopIteration:
                     if self.has_haste_action and not battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
-                        logger.debug(f"{self.name} uses haste dash", extra={"team": self.team_color})
+                        logger.debug(f"{self} uses haste dash", extra={"team": self.team_color})
                         return (HasteAction.HASTE_DASH,)
                     elif self.has_haste_action:
                         attack_args = self.attack_args[Action.ATTACK]
                         attack_args[2] = self.selected_target  # sets the target
-                        logger.debug(f"{self.name} takes a haste attack", extra={"team": self.team_color})
+                        logger.debug(f"{self} takes a haste attack", extra={"team": self.team_color})
                         return (HasteAction.HASTE_ATTACK, *attack_args)
                     logger.debug("Out of movement or at destination")
                     pass  # can't go any farther
@@ -87,10 +91,10 @@ class TotemBarbarian5Lvl(Combatant):
             elif self.has_haste_action:
                 attack_args = self.attack_args[Action.ATTACK]
                 attack_args[2] = self.selected_target  # sets the target
-                logger.debug(f"{self.name} takes a haste attack", extra={"team": self.team_color})
+                logger.debug(f"{self} takes a haste attack", extra={"team": self.team_color})
                 return (HasteAction.HASTE_ATTACK, *attack_args)
             elif self.has_action:
-                logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
+                logger.debug(f"{self} uses the dodge action", extra={"team": self.team_color})
                 return (Action.DODGE,)
             else:
                 return (None,)
@@ -101,7 +105,7 @@ class TotemBarbarian5Lvl(Combatant):
         if self.has_reaction:
             attack_args = self.attack_args[Reaction.REACTION_ATTACK]
             attack_args[2] = moving_combatant  # sets the target
-            logger.debug(f"{self.name} taken an AoO {attack_args[0]} against {moving_combatant}",
+            logger.debug(f"{self} taken an AoO {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
             return (self.reactions[0], *attack_args)
         return (None,)

@@ -26,9 +26,7 @@ class EffectTracker:
         :param combatant:
         :return:
         """
-        for effect in self.effects:
-            if isinstance(effect[0], LimitedDurationEffect):
-                effect[0].new_round()
+        self.effects = [e for e in self.effects if not isinstance(e[0], LimitedDurationEffect) or e[0].new_round()]
 
     def get_all_affecting_combatant(self, combatant):
         """

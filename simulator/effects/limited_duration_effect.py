@@ -8,7 +8,13 @@ class LimitedDurationEffect(Effect):
 
 
     def new_round(self):
+        """
+
+        :return: False if the effect expired and can be removed, True otherwise
+        """
         self.rounds -= 1
         if self.rounds <= 0:
             logger.debug(f"{self.__class__.__name__} expires")
             self.deactivate()
+            return False
+        return True

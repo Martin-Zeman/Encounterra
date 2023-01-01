@@ -46,6 +46,8 @@ def use_resource(combatant, action_type):
         combatant.movement -= 1
     elif isinstance(action_type, HasteAction):
         combatant.has_haste_action = False
+    elif isinstance(action_type, FreeAction):
+        pass  # no resources needed
     else:
         logger.error("Unknown high level action class")
 

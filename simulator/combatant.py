@@ -51,8 +51,6 @@ class Combatant:
         self.movement_generator = None
         self.max_melee_range = 1
         self.target_position_cache = None
-        # self.has_polearm_master = False
-        # self.has_sentinel = False
         self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
         # maps saving_throw_type -> (bonus, RollModifier)
@@ -64,11 +62,11 @@ class Combatant:
         self.has_fanatical_advantage = False
         self.perception = 0
         self.condition = self.State.FINE
+        self.conditions = Conditions.NONE
         self.toughness = None
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.spellslots = None
         self.is_concentrating = False
-        self.conditions = Conditions.NONE
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
 
@@ -118,6 +116,12 @@ class Combatant:
             self.bonus_actions.append(action_type)
         elif isinstance(action_type, Reaction):
             self.reactions.append(action_type)
+        elif isinstance(action_type, FreeAction):
+            match action_type:
+                case FreeAction.RECKLESS_ATTACK:
+                    self.reckless_attack_active = False
+                case _:
+                    logger.error("Unknown free action")
         else:
             logger.error("Unknown high level action class")
 
@@ -125,13 +129,14 @@ class Combatant:
         return ability in self.passive
 
     def receive_dmg(self, dmg, dmg_type):
-        try:
-            if dmg_type in self.resistances:
-                dmg = math.floor(dmg / 2)
-                logger.debug(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
-        except TypeError:
-            logger.error("FIXME receive_dmg")
+        if dmg_type in self.resistances:
+            dmg = math.floor(dmg / 2)
+            logger.debug(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
         self.curr_hp -= dmg
+        if self.curr_hp <= self.max_hp // 3:
+            self.condition = self.State.NEAR_DEATH
+        elif self.curr_hp <= self.max_hp // 2:
+            self.condition = self.State.BLOODIED
 
     def apply_condition(self, condition):
         self.conditions |= condition
@@ -176,9 +181,13 @@ class Combatant:
             self.ac -= 5
         self.shield_spell_active = False
         self.conditions = Conditions.NONE
+        self.condition = self.State.FINE
         self.has_haste_action = False
         for st in self.saving_throws.values():
             st[1] = RollModifier.STRAIGHT
+
+    def is_bloodied_or_worse(self):
+        return self.condition.value >= self.State.BLOODIED.value
 
     def add_team(self, team_color):
         self.team_color = team_color

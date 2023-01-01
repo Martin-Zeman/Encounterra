@@ -35,6 +35,10 @@ class Movement(Enum):
     FORCED = auto()
 
 
+class FreeAction(Enum):
+    RECKLESS_ATTACK = auto()
+
+
 class HasteAction(Enum):
     HASTE_ATTACK = auto()
     HASTE_DASH = auto()

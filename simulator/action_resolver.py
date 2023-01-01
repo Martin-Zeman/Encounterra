@@ -14,6 +14,7 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
     bonus = target_combatant.saving_throws[ability.saving_throw][0]
 
+    # TODO unify this with the attack (dis)advantage
     advantage_counter = 0
     disadvantage_counter = 0
     if target_combatant.saving_throws[ability.saving_throw][1] is RollModifier.ADVANTAGE:
@@ -120,6 +121,23 @@ class ActionResolver:
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
             attack.advantage = True
 
+    def has_advantage(self, attack, attacker, target):
+        if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
+            return True
+        if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
+            return True
+        if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
+            logger.debug(f"{attacker} gains advantage since {target} attacked recklessly")
+            return True
+        return False
+
+    def has_disadvantage(self, attack, attacker, target):
+        if target.disadvantage_on_incoming_attacks:
+            return True
+        if target.is_dodging:
+            return True
+        return False
+
     def resolve_attack(self, attack):  # TODO remove combatant from attack and have it as a separate parameter
         """
 
@@ -132,13 +150,17 @@ class ActionResolver:
             logger.error("FIXME Resolve Attack")
         attacker = attack.combatant
         assert target
-        self.resolve_pack_tactics(attack, attacker, target)
+        advantage = self.has_advantage(attack, attacker, target)
+        disadvantage = self.has_disadvantage(attack, attacker, target)
 
-        if attack.advantage and not (target.disadvantage_on_incoming_attacks or target.is_dodging):
+        if attack.advantage and not disadvantage:
+            logger.debug("Rolling with advantage")
             rolled = max(random.randint(1, 20), random.randint(1, 20))
-        elif not attack.advantage and (target.disadvantage_on_incoming_attacks or target.is_dodging):
+        elif disadvantage and not advantage:
+            logger.debug("Rolling with disadvantage")
             rolled = min(random.randint(1, 20), random.randint(1, 20))
         else:
+            logger.debug("Rolling straight")
             rolled = random.randint(1, 20)
         multiplier = 1
         if rolled == 1:
@@ -233,13 +255,19 @@ class ActionResolver:
 
     def resolve_toggle_ability(self, combatant, ability):
         match ability.__class__.__name__:
-            case "TotemRage" | "Rage":
+            case "TotemRage" | "Rage" | "RecklessAttack":
                 ability.activate()
                 self.effect_tracker.add(ability, combatant)
             case _:
                 logger.error("Unknown toggle ability")
 
     def resolve_effects(self, effects, combatant):
+        """
+        Applies the aspect of effects that need to be reapplied at the beginning of a turn or would otherwise be reset by the new turn
+        :param effects:
+        :param combatant:
+        :return:
+        """
         for effect in effects:
             match effect.__class__.__name__:
                 case "Haste":
