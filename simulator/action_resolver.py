@@ -117,10 +117,6 @@ class ActionResolver:
             case _:
                 logger.error("Unknown after hit reaction")
 
-    def resolve_pack_tactics(self, attack, attacker, target):
-        if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
-            attack.advantage = True
-
     def has_advantage(self, attack, attacker, target):
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
             return True
@@ -144,23 +140,17 @@ class ActionResolver:
         :param attack:
         :return: True is hits, false if misses or is not attack
         """
-        try:
-            target = attack.get_target_combatant()
-        except AttributeError:
-            logger.error("FIXME Resolve Attack")
+        target = attack.get_target_combatant()
         attacker = attack.combatant
         assert target
         advantage = self.has_advantage(attack, attacker, target)
         disadvantage = self.has_disadvantage(attack, attacker, target)
 
-        if attack.advantage and not disadvantage:
-            logger.debug("Rolling with advantage")
+        if advantage and not disadvantage:
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         elif disadvantage and not advantage:
-            logger.debug("Rolling with disadvantage")
             rolled = min(random.randint(1, 20), random.randint(1, 20))
         else:
-            logger.debug("Rolling straight")
             rolled = random.randint(1, 20)
         multiplier = 1
         if rolled == 1:
@@ -191,10 +181,7 @@ class ActionResolver:
             aoo_candidates = self.battle_map.get_aoo_eligible_combatants(moving_combatant, movement.increment)
             if aoo_candidates:
                 for candidate in aoo_candidates:
-                    try:
-                        aoo, *args = candidate.prompt_aoo(moving_combatant)
-                    except TypeError as e:
-                        logger.error("FIXME AOO candidates", e)
+                    aoo, *args = candidate.prompt_aoo(moving_combatant)
                     if aoo and moving_combatant.is_alive():
                         self.resolve_action(aoo, args, candidate)
 
@@ -282,6 +269,6 @@ class ActionResolver:
                 case "Shield":
                     pass
                 case "TotemRage" | "Rage":
-                    pass # TODO track if the barbarian attacked or received dmg
+                    pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error("Unknown effect")

@@ -24,7 +24,7 @@ class TotemBarbarian5Lvl(Combatant):
     def attack_routine(self, battle_map):
         if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
             logger.debug("Is in range")
-            if self.curr_num_attacks == self.num_attacks and self.selected_target.is_bloodied_or_worse() and not self.reckless_attack_active:
+            if self.curr_num_attacks == self.num_attacks and not self.reckless_attack_active:
                 logger.debug(f"{self} uses Reckless Attack", extra={"team": self.team_color})
                 return (FreeAction.RECKLESS_ATTACK,)
             if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:

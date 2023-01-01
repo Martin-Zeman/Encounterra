@@ -189,6 +189,9 @@ class Combatant:
     def is_bloodied_or_worse(self):
         return self.condition.value >= self.State.BLOODIED.value
 
+    def is_near_death(self):
+        return self.condition is self.State.NEAR_DEATH
+
     def add_team(self, team_color):
         self.team_color = team_color
 

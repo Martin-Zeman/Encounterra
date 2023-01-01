@@ -112,7 +112,7 @@ class Session:
             result_acc = mp.Queue()
             # jobs = [mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations // mp.cpu_count(), result_acc)) for _ in range(self.num_simulations // mp.cpu_count())]
             jobs = []
-            for _ in range(mp.cpu_count() if self.num_simulations % mp.cpu_count() else mp.cpu_count() - 1):
+            for _ in range(mp.cpu_count() - 1 if self.num_simulations % mp.cpu_count() else mp.cpu_count()):
                 jobs.append(mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations // mp.cpu_count(), result_acc)))
             if self.num_simulations % mp.cpu_count():
                 jobs.append(mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations % mp.cpu_count(), result_acc)))
