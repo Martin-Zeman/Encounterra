@@ -25,9 +25,8 @@ class Faurung(Combatant):
 
     def get_action(self, battle_map):
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
-            nearest_enemy = battle_map.get_nearest_enemy(self)
-            dist = battle_map.get_distance(self, nearest_enemy)
-            if not dist:
+            nearest_enemy, dist = battle_map.get_nearest_enemy(self)
+            if not nearest_enemy:
                 # all enemies are dead
                 return (None,)
             if battle_map.is_enemy_adjacent(self) and self.has_bonus_action and self.spellslots.has_spellslots(

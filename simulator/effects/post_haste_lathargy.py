@@ -5,3 +5,9 @@ class PostHasteLethargy(CombatantEffect, LimitedDurationEffect):
     def __init__(self, combatant):
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=1)
+
+    def activate(self):
+        pass
+
+    def deactivate(self):
+        pass

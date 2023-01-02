@@ -8,6 +8,7 @@ class EffectTracker:
         self.effects = []
 
     def add(self, effect, originator):
+        # TODO: Do I need the originator?
         self.effects.append((effect, originator))
 
     # def new_turn(self, combatant):
@@ -37,7 +38,7 @@ class EffectTracker:
         return {e[0] for e in self.effects if e[0].is_affecting(combatant)}
 
     def create_post_haste_lethargy(self, combatant):
-        self.effects.append(PostHasteLethargy(combatant))
+        self.effects.append((PostHasteLethargy(combatant), combatant))
 
     def reset(self):
         for effect in self.effects:

@@ -15,3 +15,4 @@
 - Add special spell slots for stuff like magic initiate
 - Looks like Barbarian only attacked one after breaking through PAM attack. Should have had two attacks
 - Barbarian's ability dmg is not resetting between simulations
+- Combatant tries to use haste dash after being hit by sentinel

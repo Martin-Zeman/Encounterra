@@ -1,7 +1,7 @@
 Longer lasting AoEs and multi-target effects are to be tracked by the EffectTracker.
 It tracks the caster, location, who's currently affected as well as duration. It has a removal by broken concentration.
 It can return any of the above. It can tell if a character is entering the area with location + increment.
-it will be able to encode its state into a fixed size vector (maximum num combatants, each cell binary vector for all aoes etc.)
+it will be able to encode its state into a fixed size vector (maximum num combatants, each square binary vector for all aoes etc.)
 
 buffs should not track themselves
 

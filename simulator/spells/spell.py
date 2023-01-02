@@ -14,8 +14,11 @@ class Spell(Actoid):
         BOX = 6
         CONE_15 = 7
         CONE_30 = 8
+        CONE_60 = 9
+        CONE_90 = 10
 
     TRANSLATE_RADIUS = {Target.RADIUS_10: 2, Target.RADIUS_20: 4, Target.RADIUS_30: 6}
+    TRANSLATE_CONE = {Target.CONE_15: 3, Target.CONE_30: 6, Target.CONE_60: 12, Target.CONE_90: 18}
 
     class Range(Enum):
         SELF = -1

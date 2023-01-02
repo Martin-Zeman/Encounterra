@@ -43,13 +43,13 @@ class TotemBarbarian5Lvl(Combatant):
 
     def get_action(self, battle_map):
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
-            logger.debug(f"Has action {self.has_action}, has_bonus action {self.has_bonus_action}, movement {self.movement}")
+            # logger.debug(f"Has action {self.has_action}, has_bonus action {self.has_bonus_action}, movement {self.movement}")
             # First rage if not raging
             if not self.rage_active and self.curr_rage_uses and self.has_bonus_action:
                 logger.debug(f"{self} uses bonus action rage", extra={"team": self.team_color})
                 return (BonusAction.TOTEM_RAGE,)
 
-            nearest = battle_map.get_nearest_enemy(self)
+            nearest, _ = battle_map.get_nearest_enemy(self)
             if self.selected_target is None or not self.selected_target.is_alive() or self.selected_target is not nearest:
                 # Get new target
                 self.selected_target = nearest

@@ -97,7 +97,7 @@ class ActionResolver:
                 else:
                     logger.debug("Out of Firebolt's range")  # TODO could probably remove this. No map is gonna be that big
             case "MistyStep":
-                if self.battle_map.get_distance(caster, spell.coord) <= 6:
+                if self.battle_map.get_hop_distance(caster, spell.coord) <= 6:
                     self.battle_map.move_combatant(caster, spell.coord)
                 else:
                     logger.warning("Invalid MistyStep coordinates. Destination is too far!")

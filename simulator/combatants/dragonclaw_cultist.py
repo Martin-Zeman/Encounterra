@@ -40,17 +40,19 @@ class DragonclawCultist(Combatant):
 
     def get_action(self, battle_map):
         while self.has_action or self.movement or self.has_haste_action:
-            logger.debug(f"Has action {self.has_action}, movement {self.movement}")
+            # logger.debug(f"Has action {self.has_action}, movement {self.movement}")
 
+            dist = None
             if self.selected_target is None or not self.selected_target.is_alive():
                 # Get new target
-                self.selected_target = battle_map.get_nearest_enemy(self)
+                self.selected_target, dist = battle_map.get_nearest_enemy(self)
                 if not self.selected_target:
                     return (None,)
 
             target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(f"Target is at {target_position}")
-            dist = battle_map.get_distance(self, self.selected_target)
+            if not dist:
+                dist = battle_map.get_hop_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 1:
                 # I haven't attacked yet and I'm too far away, move into range
                 path = battle_map.get_path_to(self, self.selected_target)

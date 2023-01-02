@@ -52,6 +52,16 @@ class RollModifier(Flag):
     DISADVANTAGE = auto()
 
 
+class Size(Enum):
+    TINY = auto()
+    SMALL = auto()
+    MEDIUM = auto()
+    LARGE = auto()
+    HUGE = auto()
+    GARGANTUAN = auto()
+
+
+
 def parse_dmg_dice(dice_string):
     p = re.compile('(\d+)d(\d+)')
     m = p.match(dice_string)
