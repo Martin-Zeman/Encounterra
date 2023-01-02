@@ -7,6 +7,40 @@ def get_square_center(coord):
     return coord + np.array([0.5, 0.5])
 
 
+# def get_affected_by_cone(origin, angle_deg, radius, grid_size):
+#     """
+#     Gets coordinates of grid squares affected by a cone effect originating at the center of a square at origin coordinates.
+#     :param origin:
+#     :param angle_deg: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
+#     :param radius: radius of the cone in grid coordinates
+#     :param grid_size: size of the grid
+#     :return: affected coordinates
+#     """
+#     first_angle = angle_deg - 30
+#     first_angle_wrt_x_axis_deg = 90 - first_angle
+#     first_angle_wrt_x_axis_rad = math.radians(first_angle_wrt_x_axis_deg)
+#
+#     second_angle = angle_deg + 30
+#     second_angle_wrt_x_axis_deg = 90 - second_angle
+#     second_angle_wrt_x_axis_rad = math.radians(second_angle_wrt_x_axis_deg)
+#
+#     origin = get_square_center(origin)
+#     polarity = lambda coord, angle_rad: math.tan(angle_rad) * (coord[0] - origin[0]) + origin[1] - coord[1]
+#
+#     coords = set()
+#     for x in range(0, grid_size):
+#         for y in range(0, grid_size):
+#             curr_coord_center = get_square_center(np.array([x, y]))
+#             if np.linalg.norm(
+#                     origin - curr_coord_center) <= radius and (
+#                     np.sign(first_angle) * polarity(curr_coord_center, first_angle_wrt_x_axis_rad) * np.sign(second_angle) * polarity(
+#                 curr_coord_center, second_angle_wrt_x_axis_rad) < 0):
+#                 # if they lie on the opposite half-planes of the two lines their product is negative which means the coordinate lies in
+#                 # between the cone lines
+#                 coords.add((x, y))
+#     return coords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
+
+
 def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     """
     Gets coordinates of grid squares affected by a cone effect originating at the center of a square at origin coordinates.
@@ -16,77 +50,8 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     :param grid_size: size of the grid
     :return: affected coordinates
     """
-    first_angle = angle_deg - 30
-    first_angle_wrt_x_axis_deg = 90 - first_angle
-    first_angle_wrt_x_axis_rad = math.radians(first_angle_wrt_x_axis_deg)
-
-    second_angle = angle_deg + 30
-    second_angle_wrt_x_axis_deg = 90 - second_angle
-    second_angle_wrt_x_axis_rad = math.radians(second_angle_wrt_x_axis_deg)
-
-    origin = get_square_center(origin)
-    polarity = lambda coord, angle_rad: math.tan(angle_rad) * (coord[0] - origin[0]) + origin[1] - coord[1]
-
-    coords = set()
-    for x in range(0, grid_size):
-        for y in range(0, grid_size):
-            curr_coord_center = get_square_center(np.array([x, y]))
-            if np.linalg.norm(
-                    origin - curr_coord_center) <= radius and (
-                    np.sign(first_angle) * polarity(curr_coord_center, first_angle_wrt_x_axis_rad) * np.sign(second_angle) * polarity(
-                curr_coord_center, second_angle_wrt_x_axis_rad) < 0):
-                # if they lie on the opposite half-planes of the two lines their product is negative which means the coordinate lies in
-                # between the cone lines
-                coords.add((x, y))
-    return coords
-
-
-# def get_affected_by_cone_det(origin, angle_deg, radius, grid_size):
-#     """
-#     Gets coordinates of grid squares affected by a cone effect originating at the center of a square at origin coordinates.
-#     :param origin:
-#     :param angle_deg: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
-#     :param radius: radius of the cone in grid coordinates
-#     :param grid_size: size of the grid
-#     :return: affected coordinates
-#     """
-#     origin = get_square_center(origin)
-#     line_increment = lambda angle: np.array([origin[0] + math.sin(angle), origin[1] + math.cos(angle)])
-#     polarity = lambda line_point, query_point: (
-#             (line_point[0] - origin[0]) * (query_point[1] - origin[1]) - (line_point[1] - origin[1]) * (query_point[0] - origin[0]))
-#
-#     first_angle = angle_deg - 30
-#     first_angle_rad = math.radians(first_angle)
-#     first_line_point = line_increment(first_angle_rad)
-#
-#     second_angle = angle_deg + 30
-#     second_angle_rad = math.radians(second_angle)
-#     second_line_point = line_increment(second_angle_rad)
-#
-#     coords = set()
-#     for x in range(0, grid_size):
-#         for y in range(0, grid_size):
-#             curr_coord_center = get_square_center(np.array([x, y]))
-#             if np.linalg.norm(
-#                     origin - curr_coord_center) <= radius and (
-#                     polarity(first_line_point, curr_coord_center) * polarity(second_line_point, curr_coord_center) < 0):
-#                 # if they lie on the opposite half-planes of the two lines their product is negative which means the coordinate lies in
-#                 # between the cone lines
-#                 coords.add((x, y))
-#     return coords
-
-
-def get_affected_by_cone_det(origin, angle_deg, radius, grid_size):
-    """
-    Gets coordinates of grid squares affected by a cone effect originating at the center of a square at origin coordinates.
-    :param origin:
-    :param angle_deg: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
-    :param radius: radius of the cone in grid coordinates
-    :param grid_size: size of the grid
-    :return: affected coordinates
-    """
     origin_center = get_square_center(origin)
-    line_increment = lambda angle: np.array([origin_center[0] + math.sin(angle), origin_center[1] + math.cos(angle)])
+    line_increment = lambda angle: np.array([origin_center[0] + radius * math.sin(angle), origin_center[1] + radius * math.cos(angle)])
     # determinant of (AB, AQ) where A is origin, B is line_point and Q is query point
     polarity = lambda line_point, query_point: np.linalg.det([line_point - origin_center, query_point - origin_center])
 
@@ -103,10 +68,32 @@ def get_affected_by_cone_det(origin, angle_deg, radius, grid_size):
         for y in range(0, grid_size):
             curr_coord_center = get_square_center(np.array([x, y]))
             if np.linalg.norm(
-                    origin_center - curr_coord_center) <= radius and (
-                    polarity(first_line_point, curr_coord_center) * polarity(second_line_point, curr_coord_center) <= 0):
+                    origin_center - curr_coord_center) < radius and polarity(first_line_point, curr_coord_center) <= 0 and polarity(
+                second_line_point, curr_coord_center) >= 0:
                 # if they lie on the opposite half-planes of the two lines their product is negative which means the coordinate lies in
                 # between the cone lines
                 coords.add((x, y))
-    coords.remove((origin[0], origin[1]))
+
+    try:
+        coords.remove((origin[0], origin[1]))
+    except KeyError:
+        pass
+
+    # approximation of an  > 1/2 of area covered for the corners of the cone
+    first_corner_decimal = np.modf(first_line_point)
+    if first_corner_decimal[0][0] >= 0.5 or first_corner_decimal[0][1] <= 0.5:
+        try:
+            coords.remove((math.floor(first_line_point[0]), math.floor(first_line_point[1])))
+        except KeyError:
+            pass
+    second_corner_decimal = np.modf(second_line_point)
+    if second_corner_decimal[0][0] <= 0.5 or second_corner_decimal[0][1] <= 0.5:
+        try:
+            coords.remove((math.floor(second_line_point[0]), math.floor(second_line_point[1])))
+        except KeyError:
+            pass
     return coords
+
+
+def get_cartesian_distance(coord1, coord2):
+    return np.linalg.norm(coord1 - coord2)

@@ -394,7 +394,6 @@ class Map:
                     adjacent_coords.add((coord[0] + dx, coord[1] + dy))
         return adjacent_coords
 
-
     # def get_adjacent_coords(self, coord, size):
     #     pass  # TODO
 
@@ -405,7 +404,6 @@ class Map:
         adjacent_coords = [np.array(x) for x in adjacent_coords]
         adjacent_coords.sort(key=lambda coord: self.get_hop_distance(coord, my_location))
         return adjacent_coords[0]
-
 
     @dispatch(Combatant, Combatant)
     def get_path_to(self, combatant, target_combatant):
@@ -572,19 +570,20 @@ class Map:
             case Spell.Target.RADIUS_10 | Spell.Target.RADIUS_20 | Spell.Target.RADIUS_30:
                 for potential_target, combatant_coord in self.combatant_coordinate_cache.items():
                     if ability.type is Spell.Type.HARMFUL:
-                        if self.get_hop_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[ability.target]:
+                        if get_cartesian_distance(combatant_coord, ability.coord) < Spell.TRANSLATE_RADIUS[ability.target]:
                             affected_combatants.append(potential_target)
                     elif ability.type is Spell.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if self.get_hop_distance(combatant_coord, ability.coord) <= Spell.TRANSLATE_RADIUS[
-                            ability.target] and self.teams.are_allies(
-                            caster, potential_target):
+                        if get_cartesian_distance(combatant_coord, ability.coord) < Spell.TRANSLATE_RADIUS[
+                            ability.target] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
             case Spell.Target.CONE_15 | Spell.Target.CONE_30 | Spell.Target.CONE_60 | Spell.Target.CONE_90:
+                # Cone spells and abilities are generally only harmful
                 angle_deg = ability.angle
                 radius = Spell.TRANSLATE_CONE[ability.target]
                 origin = self.combatant_coordinate_cache[caster]
-                affected_coords = geometry.get_affected_by_cone(origin, angle_deg, radius)
+                affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
+                affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords]
             case _:
                 logger.error("Unrecognized ability target type")
         return affected_combatants
