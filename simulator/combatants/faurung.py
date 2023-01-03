@@ -71,9 +71,9 @@ class Faurung(Combatant):
                     else:
                         logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
                         return (Action.FIREBOLT, nearest_enemy)
-                # elif self.spellslots.has_spellslots(1):
-                #     logger.debug(f"{self} casts Chaosbolt on {nearest_enemy}", extra={"team": self.team_color})
-                #     return (Action.CHAOSBOLT, nearest_enemy)
+                elif self.spellslots.has_spellslots(1):
+                    logger.debug(f"{self} casts Chaosbolt on {nearest_enemy}", extra={"team": self.team_color})
+                    return (Action.CHAOSBOLT, nearest_enemy)
                 else:
                     logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
                     return (Action.FIREBOLT, nearest_enemy)
