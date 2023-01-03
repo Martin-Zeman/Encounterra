@@ -27,13 +27,13 @@ def action_factory(combatant, effect_tracker, action_type, *args):
             case Action.DASH:
                 return Dash()
             case Action.FIREBALL:
-                return Fireball(*args)
+                return Fireball(action_type, *args)
             case Action.FIREBOLT:
-                return Firebolt(combatant.spell_to_hit, combatant.level, *args)
+                return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
             case Action.CHAOSBOLT:
-                return Chaosbolt(combatant.spell_to_hit, *args)
+                return Chaosbolt(action_type, combatant.spell_to_hit, *args)
             case Action.HASTE:
-                return Haste(*args, combatant, effect_tracker)
+                return Haste(action_type, *args, combatant, effect_tracker)
             case _:
                 logger.error("Unknown action type")
                 return None
@@ -47,6 +47,14 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 return Rage(combatant)
             case BonusAction.MISTY_STEP:
                 return MistyStep(*args)
+            case BonusAction.QUICKENED_CHAOSBOLT:
+                return Chaosbolt(action_type, combatant.spell_to_hit, *args)
+            case BonusAction.QUICKENED_FIREBALL:
+                return Fireball(action_type, *args)
+            case BonusAction.QUICKENED_FIREBOLT:
+                return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
+            case BonusAction.QUICKENED_HASTE:
+                return Haste(action_type, *args, combatant, effect_tracker)
             case _:
                 logger.error("Unknown bonus action type")
                 return None
@@ -71,7 +79,6 @@ def action_factory(combatant, effect_tracker, action_type, *args):
             case HasteAction.HASTE_ATTACK:
                 return Attack(action_type, *args)
             case HasteAction.HASTE_DASH:
-                # combatant.movement += combatant.speed
                 return Dash()
             case _:
                 logger.error("Unknown haste action")

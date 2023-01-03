@@ -94,11 +94,13 @@ class Combatant:
             match action_type:
                 case Passive.MULTIATTACK:
                     try:
-                        self.num_attacks = kwargs['num_attacks']
-                        self.curr_num_attacks = kwargs['num_attacks']
+                        self.num_attacks = kwargs["num_attacks"]
+                        self.curr_num_attacks = kwargs["num_attacks"]
                     except KeyError:
                         logger.error("Arguments incompatible with action type")
                         return
+                case Passive.METAMAGIC:
+                    self.sorcery_points = kwargs["sorcery_points"]
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -107,9 +109,9 @@ class Combatant:
         elif isinstance(action_type, BonusAction):
             match action_type:
                 case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
-                    self.max_rage_uses = kwargs['uses']
-                    self.curr_rage_uses = kwargs['uses']
-                    self.rage_bonus = kwargs['rage_bonus']
+                    self.max_rage_uses = kwargs["uses"]
+                    self.curr_rage_uses = kwargs["uses"]
+                    self.rage_bonus = kwargs["rage_bonus"]
                     self.rage_active = False
                 case _:
                     pass  # no resources required
@@ -122,6 +124,10 @@ class Combatant:
                     self.reckless_attack_active = False
                 case _:
                     logger.error("Unknown free action")
+        elif isinstance(action_type, MetaAction):
+            match action_type:
+                case MetaAction.QUICKENED_SPELL | MetaAction.EMPOWERED_SPELL | MetaAction.TWINNED_SPELL:
+                    assert hasattr(self, "sorcery_points")
         else:
             logger.error("Unknown high level action class")
 

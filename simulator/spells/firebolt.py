@@ -1,13 +1,13 @@
 from simulator.spells.spell import Spell
 from simulator.misc import DamageType
-from simulator.actions import Action
+from simulator.actions import Action, BonusAction
 import logging
 
 logger = logging.getLogger(__name__)
 
 
 class Firebolt(Spell):
-    def __init__(self, to_hit, combatant_level, target):
+    def __init__(self, action_type, to_hit, combatant_level, target, **kwargs):
         super().__init__(level=0,
                          spell_range=Spell.Range.FEET_120,
                          target=Spell.Target.ONE_CREATURE,
@@ -16,7 +16,8 @@ class Firebolt(Spell):
                          type=Spell.Type.HARMFUL,
                          dc=None,
                          dmg_type=DamageType.Fire)
-        self.action_type = Action.FIREBOLT
+        self.action_type = action_type
+        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.to_hit = to_hit
         self.target = target
         match combatant_level:

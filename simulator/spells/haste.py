@@ -1,12 +1,11 @@
 from simulator.spells.spell import Spell
 from simulator.effects.effect import Effect
 from simulator.actions import HasteAction
-from simulator.actoid import Actoid
-from simulator.actions import Action
+from simulator.actions import Action, BonusAction
 
 
 class Haste(Spell, Effect):
-    def __init__(self, target, caster, effect_tracker, level=3):
+    def __init__(self, action_type, target, caster, effect_tracker, level=3, **kwargs):
         level = min(max(level, 3), 9)
         Spell.__init__(level=level,
                        spell_range=Spell.Range.FEET_30,
@@ -16,7 +15,7 @@ class Haste(Spell, Effect):
                        type=Spell.Type.HARMFUL,
                        dc=None,
                        dmg_type=None)
-        self.action_type=Action.HASTE
+        self.action_type = action_type
         self.target = target
         self.caster = caster
         self.effect_tracker = effect_tracker

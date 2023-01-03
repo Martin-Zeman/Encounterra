@@ -1,6 +1,6 @@
 from simulator.spells.spell import Spell
 from simulator.misc import DamageType
-from simulator.actions import Action
+from simulator.actions import Action, BonusAction
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,7 +11,7 @@ class Chaosbolt(Spell):
         DamageType.Acid, DamageType.Cold, DamageType.Fire, DamageType.Force, DamageType.Lightning, DamageType.Poison, DamageType.Psychic,
         DamageType.Thunder)
 
-    def __init__(self, to_hit, target):
+    def __init__(self, action_type, to_hit, target, **kwargs):
         super().__init__(level=1,
                          spell_range=Spell.Range.FEET_120,
                          target=Spell.Target.ONE_CREATURE,
@@ -20,7 +20,8 @@ class Chaosbolt(Spell):
                          type=Spell.Type.HARMFUL,
                          dc=None,
                          dmg_type=None)
-        self.action_type = Action.CHAOSBOLT
+        self.action_type = action_type
+        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.to_hit = to_hit
         self.target = target
         self.dmg_dice = "2d8"

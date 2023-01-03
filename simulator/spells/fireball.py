@@ -1,10 +1,10 @@
 from simulator.spells.spell import Spell
 from simulator.misc import SavingThrow, DamageType
-from simulator.actions import Action
+from simulator.actions import Action, BonusAction
 
 
 class Fireball(Spell):
-    def __init__(self, coord, dc, level=3, has_spell_sculpting=False):
+    def __init__(self, action_type, coord, dc, level=3, has_spell_sculpting=False, **kwargs):
         level = min(max(level, 3), 9)
         super().__init__(level=level,
                          spell_range=Spell.Range.FEET_150,
@@ -14,7 +14,8 @@ class Fireball(Spell):
                          type=Spell.Type.HARMFUL,
                          dc=dc,
                          dmg_type=DamageType.Fire)
-        self.action_type = Action.FIREBALL
+        self.action_type = action_type
+        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.saving_throw = SavingThrow.DEX
         self.coord = coord
         self.dmg_dice = "8d6"

@@ -64,6 +64,7 @@ class Spell(Actoid):
         self.saving_throw = False
         self.coord = None
         self.dmg = None
+        self.empowered = False
 
 
     def is_cantrip(self):

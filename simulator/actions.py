@@ -11,6 +11,9 @@ class Action(Enum):
     CHAOSBOLT = auto()
     HASTE = auto()
     HIDE = auto()
+    TWINNED_FIREBOLT = auto()
+    TWINNED_CHAOSBOLT = auto()
+    TWINNED_HASTE = auto()
 
 
 class BonusAction(Enum):
@@ -22,6 +25,10 @@ class BonusAction(Enum):
     CUNNING_DODGE = auto()
     CUNNING_DISENGAGE = auto()
     CUNNING_HIDE = auto()
+    QUICKENED_FIREBALL = auto()
+    QUICKENED_FIREBOLT = auto()
+    QUICKENED_CHAOSBOLT = auto()
+    QUICKENED_HASTE = auto()
 
 
 class Reaction(Enum):
@@ -51,4 +58,10 @@ class Passive(Enum):
     MULTIATTACK = auto()
     SENTINEL = auto()
     POLEARM_MASTER = auto()
-    DANGER_SENSE = auto
+    DANGER_SENSE = auto()
+    METAMAGIC = auto()
+
+class MetaAction(Enum):
+    QUICKENED_SPELL = auto()
+    TWINNED_SPELL = auto()
+    EMPOWERED_SPELL = auto()

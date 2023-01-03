@@ -85,6 +85,8 @@ class ActionResolver:
                     self.battle_map.remove_combatant(spell.target)
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
+                        if not potential_target.is_alive():
+                            continue
                         dist = self.battle_map.get_cartesian_distance(curr_target, potential_target)
                         if dist <= 6:
                             curr_target = potential_target
@@ -122,7 +124,7 @@ class ActionResolver:
 
     def resolve_spell(self, caster, spell):
         match spell.action_type:
-            case Action.FIREBALL:
+            case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell)
                 dmg = roll_spell_dmg(spell)
                 for combatant in affected:
@@ -130,10 +132,10 @@ class ActionResolver:
                     resolve_dmg_saving_throw(spell, dmg, combatant)
                     if not combatant.is_alive():
                         self.battle_map.remove_combatant(combatant)
-            case Action.HASTE:
+            case Action.HASTE | BonusAction.QUICKENED_HASTE:
                 spell.activate()
                 self.effect_tracker.add(spell, caster)
-            case Action.FIREBOLT:
+            case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
                 # if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
                 self.resolve_ranged_spell_attack(caster, spell)
                 # else:
@@ -143,7 +145,7 @@ class ActionResolver:
                 self.battle_map.move_combatant(caster, spell.coord)
                 # else:
                 #     logger.warning("Invalid MistyStep coordinates. Destination is too far!")
-            case Action.CHAOSBOLT:
+            case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
                 self.resolve_chaos_bolt(caster, spell)
             case Reaction.SHIELD:
                 assert not caster.shield_spell_active

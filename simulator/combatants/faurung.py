@@ -12,13 +12,15 @@ logger = logging.getLogger(__name__)
 class Faurung(Combatant):
 
     def __init__(self):
-        # faurung_attacks = [Attack("Staff of Defence", self, 3, "1d8", -1, Action.ActionClasses.ACTION, DamageType.Bludgeoning, 1)]
         super().__init__("Faurung", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.add_ability(Action.FIREBALL)
         self.add_ability(Action.FIREBOLT)
         self.add_ability(Action.HASTE)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Reaction.SHIELD)
+        self.add_ability(Passive.METAMAGIC, sorcery_points=5)
+        self.add_ability(MetaAction.QUICKENED_SPELL)
+        self.add_ability(MetaAction.TWINNED_SPELL)
         self.spellslots = Spellslots(Spellslots.Class.SORCERER, 5)
         self.movement_generator_cache = None
         self.nowhere_to_go = False
@@ -60,23 +62,26 @@ class Faurung(Combatant):
             if self.has_action and not self.already_cast_leveled_spell_this_turn:
                 placement, score = battle_map.find_best_placement_harmful_circular(self, 30, 4)
                 allies = battle_map.teams.get_allies(self)
-                if self.spellslots.has_spellslots(3):
+                if self.spellslots.has_spellslots(3) and score > 1:
                     if score > 1:
                         logger.debug(f"{self.name} casts Fireball", extra={"team": self.team_color})
-                        return (Action.FIREBALL, placement, self.dc)
-                    elif allies and not self.is_concentrating:
-                        target_ally = allies[random.randint(0, len(allies) - 1)]
-                        logger.debug(f"{self.name} casts Haste on {target_ally}", extra={"team": self.team_color})
-                        return (Action.HASTE, target_ally)
-                    else:
-                        logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
-                        return (Action.FIREBOLT, nearest_enemy)
+                        return (BonusAction.QUICKENED_FIREBALL if self.has_bonus_action and self.sorcery_points > 1 else Action.FIREBALL, placement, self.dc)
+                        # return (Action.FIREBALL, placement, self.dc)
+                elif self.spellslots.has_spellslots(3) and allies and not self.is_concentrating:
+                    target_ally = allies[random.randint(0, len(allies) - 1)]
+                    logger.debug(f"{self.name} casts Haste on {target_ally}", extra={"team": self.team_color})
+                    return (BonusAction.QUICKENED_HASTE if self.has_bonus_action and self.sorcery_points > 1 else Action.HASTE, target_ally)
+                    # return (Action.HASTE, target_ally)
                 elif self.spellslots.has_spellslots(1):
                     logger.debug(f"{self} casts Chaosbolt on {nearest_enemy}", extra={"team": self.team_color})
-                    return (Action.CHAOSBOLT, nearest_enemy)
+                    return (BonusAction.QUICKENED_CHAOSBOLT if self.has_bonus_action and self.sorcery_points > 1 else Action.CHAOSBOLT, nearest_enemy)
+                    # return (Action.CHAOSBOLT, nearest_enemy)
                 else:
                     logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
                     return (Action.FIREBOLT, nearest_enemy)
+            elif self.has_action:
+                logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
+                return (Action.FIREBOLT, nearest_enemy)
             else:
                 return (None,)
         return (None,)
