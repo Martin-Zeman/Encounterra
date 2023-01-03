@@ -20,6 +20,9 @@ def use_resources(combatant, action):
                 combatant.spellslots.use_spellslot(3)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.is_concentrating = True
+            case Action.CHAOSBOLT:
+                combatant.spellslots.use_spellslot(1)
+                combatant.already_cast_leveled_spell_this_turn = True
             case _:
                 logger.error("Unknown action type")
     elif isinstance(action_type, BonusAction):

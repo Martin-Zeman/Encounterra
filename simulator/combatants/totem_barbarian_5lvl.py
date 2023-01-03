@@ -3,6 +3,7 @@ from simulator.movement import MovementGenerator
 from simulator.misc import DamageType
 from simulator.action_factory import *
 from simulator.actions import *
+from simulator.misc import Side
 import numpy as np
 import logging
 
@@ -49,7 +50,7 @@ class TotemBarbarian5Lvl(Combatant):
                 logger.debug(f"{self} uses bonus action rage", extra={"team": self.team_color})
                 return (BonusAction.TOTEM_RAGE,)
 
-            nearest, _ = battle_map.get_nearest_enemy(self)
+            nearest, _ = battle_map.get_nearest(self, Side.ENEMY)
             if self.selected_target is None or not self.selected_target.is_alive() or self.selected_target is not nearest:
                 # Get new target
                 self.selected_target = nearest

@@ -61,6 +61,14 @@ class Size(Enum):
     HUGE = auto()
     GARGANTUAN = auto()
 
+class Side(Enum):
+    ENEMY = auto()
+    ALLY = auto()
+
+class DistanceMetric(Enum):
+    HOP = auto()
+    CARTESIAN = auto()
+
 
 
 def parse_dmg_dice(dice_string):
@@ -77,7 +85,21 @@ def roll_dice(num_dice, dice_size):
         dice_sum += random.randint(1, dice_size)
     return dice_sum
 
-
+def roll_dice_chaos_bolt(num_dice, dice_size):
+    dice_sum = 0
+    numbers_rolled = []
+    for i in range(num_dice):
+        rolled = random.randint(1, dice_size)
+        dice_sum += rolled
+        numbers_rolled.append(rolled)
+    return dice_sum, numbers_rolled
 def roll_spell_dmg(spell):
     num_dice, dice_size = parse_dmg_dice(spell.dmg_dice)
     return roll_dice(num_dice, dice_size)
+
+def roll_chaos_bolt_dmg(spell):
+    num_dice, dice_size = parse_dmg_dice(spell.dmg_dice)
+    primary_dmg, numbers = roll_dice_chaos_bolt(num_dice, dice_size)
+    num_dice, dice_size = parse_dmg_dice(spell.additional_dmg_dice)
+    secondary_dmg = roll_dice(num_dice, dice_size)
+    return primary_dmg + secondary_dmg, numbers

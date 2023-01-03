@@ -1,9 +1,8 @@
 from simulator.combatant import Combatant
-from simulator.attack import Attack
-from simulator.dodge import Dodge
-from simulator.movement import MovementIncrement, MovementGenerator
+from simulator.movement import MovementGenerator
 from simulator.misc import DamageType
 from simulator.action_factory import *
+from simulator.misc import Side
 import logging
 
 logger = logging.getLogger(__name__)
@@ -45,7 +44,7 @@ class DragonclawCultist(Combatant):
             dist = None
             if self.selected_target is None or not self.selected_target.is_alive():
                 # Get new target
-                self.selected_target, dist = battle_map.get_nearest_enemy(self)
+                self.selected_target, dist = battle_map.get_nearest(self, Side.ENEMY)
                 if not self.selected_target:
                     return (None,)
 

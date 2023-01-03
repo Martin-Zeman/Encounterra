@@ -2,6 +2,7 @@ from simulator.combatant import Combatant
 from simulator.action_factory import *
 from simulator.movement import MovementGenerator
 from simulator.misc import DamageType
+from simulator.misc import Side
 import logging
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,7 @@ class Cyanwrath(Combatant):
             dist = None
             if self.selected_target is None or not self.selected_target.is_alive():
                 # Get new target
-                self.selected_target, dist = battle_map.get_nearest_enemy(self)
+                self.selected_target, dist = battle_map.get_nearest(self, Side.ENEMY)
                 if not self.selected_target:
                     return (None,)
 

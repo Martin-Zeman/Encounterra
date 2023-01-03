@@ -19,8 +19,7 @@ def check_feasibility(combatant, action, battle_map):
                                                                                                               action.coord) <= action.range.value
             case Action.CHAOSBOLT:
                 return combatant.has_action and combatant.spellslots.has_spellslots(
-                    1) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant, action.targets[
-                        0]) <= action.range.value
+                    1) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant, action.target) <= action.range.value
             case Action.DASH:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                               Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED)

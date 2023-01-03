@@ -1,8 +1,8 @@
 from simulator.combatant import Combatant
-# from simulator.attack import Attack
-from simulator.movement import MovementIncrement, MovementGenerator
+from simulator.movement import MovementGenerator
 from simulator.spellslots import Spellslots
 from simulator.action_factory import *
+from simulator.misc import Side
 import logging
 import random
 
@@ -25,10 +25,12 @@ class Faurung(Combatant):
 
     def get_action(self, battle_map):
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
-            nearest_enemy, dist = battle_map.get_nearest_enemy(self)
+            nearest_enemy, dist = battle_map.get_nearest(self, Side.ENEMY)
             if not nearest_enemy:
                 # all enemies are dead
                 return (None,)
+
+            # First make sure to gain distance
             if battle_map.is_enemy_adjacent(self) and self.has_bonus_action and self.spellslots.has_spellslots(
                     2) and not self.already_cast_leveled_spell_this_turn and not self.nowhere_to_go:
                 free_coords = battle_map.get_free_coords_away_from_enemies(self, 6)
@@ -53,20 +55,28 @@ class Faurung(Combatant):
                     return (Movement.STANDARD, movement)
                 except StopIteration:
                     self.movement_generator_cache = None
-            if self.has_action and self.spellslots.has_spellslots(3) and not self.already_cast_leveled_spell_this_turn:
+
+            # Then focus on offense
+            if self.has_action and not self.already_cast_leveled_spell_this_turn:
+                placement, score = battle_map.find_best_placement_harmful_circular(self, 30, 4)
                 allies = battle_map.teams.get_allies(self)
-                if allies and not self.is_concentrating:
-                    random_roll = random.randint(1, 10)
-                    if random_roll > 7:
+                if self.spellslots.has_spellslots(3):
+                    if score > 1:
+                        logger.debug(f"{self.name} casts Fireball", extra={"team": self.team_color})
+                        return (Action.FIREBALL, placement, self.dc)
+                    elif allies and not self.is_concentrating:
                         target_ally = allies[random.randint(0, len(allies) - 1)]
                         logger.debug(f"{self.name} casts Haste on {target_ally}", extra={"team": self.team_color})
                         return (Action.HASTE, target_ally)
-                placement = battle_map.find_best_placement_harmful_circular(self, 30, 4)
-                logger.debug(f"{self.name} casts Fireball", extra={"team": self.team_color})
-                return (Action.FIREBALL, placement, self.dc)
-            elif self.has_action:
-                logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
-                return (Action.FIREBOLT, nearest_enemy)
+                    else:
+                        logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
+                        return (Action.FIREBOLT, nearest_enemy)
+                # elif self.spellslots.has_spellslots(1):
+                #     logger.debug(f"{self} casts Chaosbolt on {nearest_enemy}", extra={"team": self.team_color})
+                #     return (Action.CHAOSBOLT, nearest_enemy)
+                else:
+                    logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
+                    return (Action.FIREBOLT, nearest_enemy)
             else:
                 return (None,)
         return (None,)

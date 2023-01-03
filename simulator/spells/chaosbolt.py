@@ -4,11 +4,14 @@ from simulator.actions import Action
 import logging
 
 logger = logging.getLogger(__name__)
-class Chaosbolt(Spell):
 
-    DMG_TYPE = (DamageType.Acid, DamageType.Cold, DamageType.Fire, DamageType.Force, DamageType.Lightning, DamageType.Poison, DamageType.Psychic,
-                DamageType.Thunder)
-    def __init__(self, to_hit, targets):
+
+class Chaosbolt(Spell):
+    DMG_TYPE = (
+        DamageType.Acid, DamageType.Cold, DamageType.Fire, DamageType.Force, DamageType.Lightning, DamageType.Poison, DamageType.Psychic,
+        DamageType.Thunder)
+
+    def __init__(self, to_hit, target):
         super().__init__(level=1,
                          spell_range=Spell.Range.FEET_120,
                          target=Spell.Target.ONE_CREATURE,
@@ -19,4 +22,6 @@ class Chaosbolt(Spell):
                          dmg_type=None)
         self.action_type = Action.CHAOSBOLT
         self.to_hit = to_hit
-        self.targets = targets
+        self.target = target
+        self.dmg_dice = "2d8"
+        self.additional_dmg_dice = "1d6"

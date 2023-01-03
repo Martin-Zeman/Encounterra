@@ -8,6 +8,7 @@ from multipledispatch import dispatch
 from simulator.misc import Conditions
 from simulator.action_factory import Passive
 from simulator.geometry import *
+from simulator.misc import Side, DistanceMetric
 import time
 from enum import Enum
 
@@ -314,22 +315,25 @@ class Map:
         self.grid[coord[0]][coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = coord
 
-    def get_nearest_enemy(self, combatant):
+    def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
         """
-        Returns nearest enemy to combatant by hop distance
+        Returns nearest enemy/ally to combatant by hop distance
         :param combatant:
-        :return: the nearest enemy and distance to them in hops
+        :param side: either Side.ENEMY or Side.ALLY
+        :param dist_type: either DistanceMetric.HOP or DistanceMetric.CARTESIAN
+        :return: the nearest enemy/ally and distance to them in hops or cartesian
         """
+        team_func = self.teams.are_enemies if side is Side.ENEMY else self.teams.are_allies
+        dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
         min_dist = sys.float_info.max
-        nearest_enemy = None
+        nearest = None
         self_position = self.combatant_coordinate_cache[combatant]
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
-            dist = self.get_hop_distance(self_position, target_coord)
-            if potential_target is not combatant and potential_target.is_alive() and self.teams.are_enemies(potential_target,
-                                                                                                            combatant) and dist < min_dist:
+            dist = dist_func(self_position, target_coord)
+            if potential_target is not combatant and potential_target.is_alive() and team_func(potential_target, combatant) and dist < min_dist:
                 min_dist = dist
-                nearest_enemy = potential_target
-        return nearest_enemy, min_dist
+                nearest = potential_target
+        return nearest, min_dist
 
     def is_enemy_adjacent(self, character):
         self_coords = self.combatant_coordinate_cache[character]
@@ -369,15 +373,31 @@ class Map:
 
     def get_hop_distance(self, subject1, subject2):
         """
-        Universal distance function. Accepts both characters or coordinates
+        Universal hop distance function. Accepts both characters or coordinates
         :param subject1: either a character or a numpy array
         :param subject2: either a character or a numpy array
-        :return: distance between subjects, None if one of the subjects is dead
+        :return: distance between subjects in number of hops, None if one of the subjects is dead
         """
         subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
         subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
         try:
             res = np.max(np.abs(subject1 - subject2))
+        except TypeError as e:
+            res = None
+        return res
+
+
+    def get_cartesian_distance(self, subject1, subject2):
+        """
+        Universal cartesian distance function. Accepts both characters or coordinates
+        :param subject1: either a character or a numpy array
+        :param subject2: either a character or a numpy array
+        :return: cartesian distance between subjects, None if one of the subjects is dead
+        """
+        subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
+        subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
+        try:
+            res = get_cartesian_distance(subject1, subject2)
         except TypeError as e:
             res = None
         return res
@@ -538,6 +558,13 @@ class Map:
             self.combatant_coordinate_cache[combatant] = np.zeros(2)
 
     def find_best_placement_harmful_circular(self, caster, spell_range, radius):
+        """
+        Finds the best placement of a spherical harmful AoE effect
+        :param caster:
+        :param spell_range:
+        :param radius:
+        :return: coordinate and achieved score
+        """
         # or find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
         bb = np.array([[self.size, self.size], [0, 0]])  # top left, bottom right
         for combatant, coord in self.combatant_coordinate_cache.items():
@@ -565,7 +592,7 @@ class Map:
                         best_placement = curr_coord
         logger.debug(self)
         logger.debug(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
-        return best_placement
+        return best_placement, max_score
 
     def get_combatants_affected_by_aoe(self, caster, ability):
         # TODO potentially check for protective abilities

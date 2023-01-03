@@ -1,10 +1,12 @@
 import logging
 from simulator.misc import *
-from simulator.misc import SavingThrow, Conditions
+from simulator.misc import SavingThrow, Side, DistanceMetric
 from simulator.feasibility import check_feasibility
 from simulator.resources import use_resources
 from simulator.action_factory import *
 from simulator.actoid import Actoid
+from simulator.spells.chaosbolt import Chaosbolt
+from simulator.geometry import *
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +55,48 @@ class ActionResolver:
         self.battle_map = battle_map
         self.effect_tracker = effect_tracker
 
+    def resolve_chaos_bolt(self, caster, spell):
+        jump = True
+        curr_target = spell.target
+        potential_targets = self.teams.get_allies(curr_target)
+        while jump:
+            jump = False
+            if not (spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging):
+                rolled = max(random.randint(1, 20), random.randint(1, 20))
+            elif spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging:
+                rolled = min(random.randint(1, 20), random.randint(1, 20))
+            else:
+                rolled = random.randint(1, 20)
+            multiplier = 1
+            if rolled == 1:
+                logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
+                return False
+            elif rolled == 20:
+                multiplier = 2
+
+            if rolled + spell.to_hit >= spell.target.ac:
+                bolt_dmg, rolled_numbers = roll_chaos_bolt_dmg(spell)
+                spell.dmg_type = Chaosbolt.DMG_TYPE[rolled_numbers[random.randint(0, 1)] - 1]  # take one of the two numbers randomly
+                dmg = multiplier * bolt_dmg
+                logger.debug(f"{spell.__class__.__name__} {'CRITS' if multiplier == 2 else 'hits'} {spell.target} for {dmg} damage",
+                             extra={"team": self.teams.get_team(caster)})
+                curr_target.receive_dmg(dmg, spell.dmg_type)
+                if not curr_target.is_alive():
+                    self.battle_map.remove_combatant(spell.target)
+                if rolled_numbers[0] == rolled_numbers[1]:
+                    for i, potential_target in enumerate(potential_targets):
+                        dist = self.battle_map.get_cartesian_distance(curr_target, potential_target)
+                        if dist <= 6:
+                            curr_target = potential_target
+                            logger.debug(f"Chaos bolt jumping to {potential_target}!", extra={"team": self.teams.get_team(caster)})
+                            jump = True
+                            del potential_targets[i]
+                            break
+            else:
+                logger.debug(f"{spell.__class__.__name__} misses {spell.target}", extra={"team": self.teams.get_team(caster)})
+
     def resolve_ranged_spell_attack(self, caster, spell):
+        # TODO consolidate this
         if not (spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging):
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         elif spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging:
@@ -78,8 +121,8 @@ class ActionResolver:
             logger.debug(f"{spell.__class__.__name__} misses {spell.target}", extra={"team": self.teams.get_team(caster)})
 
     def resolve_spell(self, caster, spell):
-        match spell.__class__.__name__:
-            case "Fireball":
+        match spell.action_type:
+            case Action.FIREBALL:
                 affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell)
                 dmg = roll_spell_dmg(spell)
                 for combatant in affected:
@@ -87,36 +130,27 @@ class ActionResolver:
                     resolve_dmg_saving_throw(spell, dmg, combatant)
                     if not combatant.is_alive():
                         self.battle_map.remove_combatant(combatant)
-            case "Haste":
+            case Action.HASTE:
                 spell.activate()
                 self.effect_tracker.add(spell, caster)
-            case "Firebolt":
-                if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
-                    self.resolve_ranged_spell_attack(caster, spell)
-                else:
-                    logger.debug("Out of Firebolt's range")  # TODO could probably remove this. No map is gonna be that big
-            case "MistyStep":
-                if self.battle_map.get_hop_distance(caster, spell.coord) <= 6:
-                    self.battle_map.move_combatant(caster, spell.coord)
-                else:
-                    logger.warning("Invalid MistyStep coordinates. Destination is too far!")
-            case "Chaosbolt":
-                pass
-            case "Shield":
+            case Action.FIREBOLT:
+                # if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
+                self.resolve_ranged_spell_attack(caster, spell)
+                # else:
+                #     logger.debug("Out of Firebolt's range")  # TODO could probably remove this. No map is gonna be that big
+            case BonusAction.MISTY_STEP:
+                # if self.battle_map.get_hop_distance(caster, spell.coord) <= 6:
+                self.battle_map.move_combatant(caster, spell.coord)
+                # else:
+                #     logger.warning("Invalid MistyStep coordinates. Destination is too far!")
+            case Action.CHAOSBOLT:
+                self.resolve_chaos_bolt(caster, spell)
+            case Reaction.SHIELD:
                 assert not caster.shield_spell_active
                 caster.shield_spell_active = True
                 caster.ac += 5
             case _:
                 logger.error("Unknown spell")
-
-    def resolve_after_hit_reaction(self, attacker, target, reaction):
-        if reaction is None:
-            return
-        match reaction.__class__.__name__:
-            case "Shield":
-                self.resolve_spell(target, reaction)
-            case _:
-                logger.error("Unknown after hit reaction")
 
     def has_advantage(self, attack, attacker, target):
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):

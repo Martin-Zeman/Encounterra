@@ -3,6 +3,7 @@ from simulator.dodge import Dodge
 from simulator.dash import Dash
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
+from simulator.spells.chaosbolt import Chaosbolt
 from simulator.spells.shield import Shield
 from simulator.spells.misty_step import MistyStep
 from simulator.spells.haste import Haste
@@ -20,7 +21,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
     if isinstance(action_type, Action):
         match action_type:
             case Action.ATTACK:
-                return Attack(*args)
+                return Attack(action_type, *args)
             case Action.DODGE:
                 return Dodge(combatant)
             case Action.DASH:
@@ -29,6 +30,8 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 return Fireball(*args)
             case Action.FIREBOLT:
                 return Firebolt(combatant.spell_to_hit, combatant.level, *args)
+            case Action.CHAOSBOLT:
+                return Chaosbolt(combatant.spell_to_hit, *args)
             case Action.HASTE:
                 return Haste(*args, combatant, effect_tracker)
             case _:
@@ -37,7 +40,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
     elif isinstance(action_type, BonusAction):
         match action_type:
             case BonusAction.BONUS_ATTACK | BonusAction.PAM_BONUS_ATTACK:
-                return Attack(*args)
+                return Attack(action_type, *args)
             case BonusAction.TOTEM_RAGE:
                 return TotemRage(combatant)
             case BonusAction.RAGE:
@@ -50,7 +53,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
     elif isinstance(action_type, Reaction):
         match action_type:
             case Reaction.REACTION_ATTACK:
-                return Attack(*args)
+                return Attack(action_type, *args)
             case Reaction.SHIELD:
                 return Shield()
             case _:
@@ -66,7 +69,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
     elif isinstance(action_type, HasteAction):
         match action_type:
             case HasteAction.HASTE_ATTACK:
-                return Attack(*args)
+                return Attack(action_type, *args)
             case HasteAction.HASTE_DASH:
                 # combatant.movement += combatant.speed
                 return Dash()
