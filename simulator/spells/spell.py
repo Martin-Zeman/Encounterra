@@ -48,7 +48,7 @@ class Spell(Actoid):
 
 
     def __init__(self, level, spell_range, target, duration, concentration, type, to_hit=None, dc=None, dmg_type=None, orientation=None):
-        Actoid.__init__(self, type=Actoid.Type.IS_SPELL)
+        Actoid.__init__(self, actoid_type=Actoid.Type.IS_SPELL)
         self.level = level
         self.range = spell_range
         self.target = target

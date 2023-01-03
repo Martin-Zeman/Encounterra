@@ -1,9 +1,8 @@
 import logging
 from simulator.misc import *
 from simulator.misc import SavingThrow, Conditions
-from simulator.action_factory import Passive
 from simulator.feasibility import check_feasibility
-from simulator.resources import use_resource
+from simulator.resources import use_resources
 from simulator.action_factory import *
 from simulator.actoid import Actoid
 
@@ -101,6 +100,8 @@ class ActionResolver:
                     self.battle_map.move_combatant(caster, spell.coord)
                 else:
                     logger.warning("Invalid MistyStep coordinates. Destination is too far!")
+            case "Chaosbolt":
+                pass
             case "Shield":
                 assert not caster.shield_spell_active
                 caster.shield_spell_active = True
@@ -222,6 +223,9 @@ class ActionResolver:
                 combatant.is_dodging = True
                 combatant.saving_throws[SavingThrow.DEX][1] = RollModifier.ADVANTAGE
                 return True
+            case Actoid.Type.IS_DASH:
+                combatant.movement += combatant.speed
+                return True
             case Actoid.Type.IS_TOGGLE_ABILITY:
                 self.resolve_toggle_ability(combatant, actoid)
                 return None
@@ -233,11 +237,11 @@ class ActionResolver:
         # TODO consider turning this into a pipeline
         if action_type is None:
             return
-        if not check_feasibility(combatant, action_type):
+        action = action_factory(combatant, self.effect_tracker, action_type, *args)
+        if not check_feasibility(combatant, action, self.battle_map):
             logger.warning(f"Action of type {action_type} by {combatant} is non-feasible")
             return
-        use_resource(combatant, action_type)
-        action = action_factory(combatant, self.effect_tracker, action_type, *args)
+        use_resources(combatant, action)
         return self.resolve_by_actoid_type(action, combatant)
 
     def resolve_toggle_ability(self, combatant, ability):

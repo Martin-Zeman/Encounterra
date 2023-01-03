@@ -1,6 +1,7 @@
 from simulator.spells.spell import Spell
 from simulator.misc import SavingThrow, DamageType
-import numpy as np
+from simulator.actions import Action
+
 
 class Fireball(Spell):
     def __init__(self, coord, dc, level=3, has_spell_sculpting=False):
@@ -13,6 +14,7 @@ class Fireball(Spell):
                          type=Spell.Type.HARMFUL,
                          dc=dc,
                          dmg_type=DamageType.Fire)
+        self.action_type = Action.FIREBALL
         self.saving_throw = SavingThrow.DEX
         self.coord = coord
         self.dmg_dice = "8d6"

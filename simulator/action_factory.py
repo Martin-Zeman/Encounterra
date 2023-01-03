@@ -1,5 +1,6 @@
 from simulator.attack import Attack
 from simulator.dodge import Dodge
+from simulator.dash import Dash
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
 from simulator.spells.shield import Shield
@@ -21,14 +22,9 @@ def action_factory(combatant, effect_tracker, action_type, *args):
             case Action.ATTACK:
                 return Attack(*args)
             case Action.DODGE:
-                try:
-                    dodge = Dodge(combatant)
-                except TypeError:
-                    logger.error("FIXME Dodge Action factory")
-                return dodge
+                return Dodge(combatant)
             case Action.DASH:
-                combatant.movement += combatant.speed
-                return None
+                return Dash()
             case Action.FIREBALL:
                 return Fireball(*args)
             case Action.FIREBOLT:
@@ -72,8 +68,8 @@ def action_factory(combatant, effect_tracker, action_type, *args):
             case HasteAction.HASTE_ATTACK:
                 return Attack(*args)
             case HasteAction.HASTE_DASH:
-                combatant.movement += combatant.speed
-                return None
+                # combatant.movement += combatant.speed
+                return Dash()
             case _:
                 logger.error("Unknown haste action")
     elif isinstance(action_type, FreeAction):

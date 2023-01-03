@@ -1,10 +1,12 @@
 from simulator.actoid import Actoid
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
+from simulator.actions import FreeAction
+
 
 class RecklessAttack(Actoid, CombatantEffect, LimitedDurationEffect):
     def __init__(self, combatant):
-        Actoid.__init__(self, type=Actoid.Type.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY, action_type=FreeAction.RECKLESS_ATTACK)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=1)
 

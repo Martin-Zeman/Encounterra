@@ -8,6 +8,7 @@ class Action(Enum):
     DISENGAGE = auto()
     FIREBALL = auto()
     FIREBOLT = auto()
+    CHAOSBOLT = auto()
     HASTE = auto()
     HIDE = auto()
 

@@ -2,6 +2,7 @@ from simulator.misc import DamageType
 from simulator.actoid import Actoid
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
+from simulator.actions import BonusAction
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
 class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, combatant):
-        Actoid.__init__(self, type=Actoid.Type.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY, action_type=BonusAction.TOTEM_RAGE)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=10)
         self.rage_bonus = combatant.rage_bonus

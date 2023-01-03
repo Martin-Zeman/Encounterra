@@ -1,8 +1,5 @@
 from simulator.action_resolver import *
-from simulator.feasibility import check_feasibility
-from simulator.resources import use_resource, reset_resources
-from simulator.action_factory import action_factory
-from simulator.action_factory import Passive
+from simulator.resources import reset_resources
 from simulator.effects.effect_tracker import EffectTracker
 import logging
 

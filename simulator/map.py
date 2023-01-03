@@ -383,6 +383,11 @@ class Map:
         return res
 
     def get_adjacent_coords(self, coord):
+        """
+        Returns free and accessible squares adjacent to a given coordinate
+        :param coord: target coordinate
+        :return: free adjacent coordinates as a set of tuples (x, y)
+        """
         adjacent_coords = set()
         for dx in range(-1, 2):
             for dy in range(-1, 2):
@@ -394,9 +399,6 @@ class Map:
                     adjacent_coords.add((coord[0] + dx, coord[1] + dy))
         return adjacent_coords
 
-    # def get_adjacent_coords(self, coord, size):
-    #     pass  # TODO
-
     def get_nearest_adjacent_coord(self, my_location, target_location):
         adjacent_coords = self.get_adjacent_coords(target_location)
         if not adjacent_coords:
@@ -407,6 +409,12 @@ class Map:
 
     @dispatch(Combatant, Combatant)
     def get_path_to(self, combatant, target_combatant):
+        """
+        Calculates a path to a target combatant
+        :param combatant:Combatant who wants to move
+        :param target_combatant:
+        :return: list of np.array increments to the target combatant
+        """
         my_location = self.get_combatant_position(combatant)
         logger.debug(f"Origin {my_location}")
         enemy_location = self.get_combatant_position(target_combatant)
@@ -425,10 +433,10 @@ class Map:
     @dispatch(Combatant, np.ndarray)
     def get_path_to(self, combatant, target_coord):
         """
-        calculates a path to destination coordinates
+        Calculates a path to destination coordinates
         :param combatant:Combatant who wants to move
         :param target_coord:
-        :return:
+        :return: list of np.array increments to the target destination
         """
         # TODO: consider making a variant which doesn't provoke AOO
         my_location = self.get_combatant_position(combatant)
@@ -467,11 +475,6 @@ class Map:
                     square = self.grid[curr_coord[0]][curr_coord[1]]
                     if square.is_empty() and self.get_hop_distance(curr_coord, self_coord) == distance:
                         elligible_coords.append(curr_coord)
-
-        # for i in range(self.size):
-        #     for j in range(self.size):
-        #         if get_hop_distance(np.array([i, j]), self_coord) == distance:
-        #             elligible_coords.append(np.array([i, j]))
 
         def by_distance_to_nearest_enemy(coord):
             min_dist = sys.maxsize
@@ -550,11 +553,12 @@ class Map:
         for i in range(bb[0][0], bb[1][0]):
             for j in range(bb[0][1], bb[1][1]):
                 curr_coord = np.array([i, j])
-                if self.get_hop_distance(caster_coord, curr_coord) <= spell_range and caster_coord is not curr_coord:
+                if get_cartesian_distance(get_square_center(caster_coord), curr_coord) <= spell_range and caster_coord is not curr_coord:
                     score = 0
                     for combatant, coord in self.combatant_coordinate_cache.items():
-                        score += (1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4) if self.get_hop_distance(
-                            coord,
+                        score += (
+                            1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4) if get_cartesian_distance(
+                            get_square_center(coord),
                             curr_coord) <= radius else 0
                     if score > max_score:
                         max_score = score
@@ -570,12 +574,13 @@ class Map:
             case Spell.Target.RADIUS_10 | Spell.Target.RADIUS_20 | Spell.Target.RADIUS_30:
                 for potential_target, combatant_coord in self.combatant_coordinate_cache.items():
                     if ability.type is Spell.Type.HARMFUL:
-                        if get_cartesian_distance(combatant_coord, ability.coord) < Spell.TRANSLATE_RADIUS[ability.target]:
+                        if get_cartesian_distance(get_square_center(combatant_coord), ability.coord) <= Spell.TRANSLATE_RADIUS[
+                                ability.target]:
                             affected_combatants.append(potential_target)
                     elif ability.type is Spell.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if get_cartesian_distance(combatant_coord, ability.coord) < Spell.TRANSLATE_RADIUS[
-                            ability.target] and self.teams.are_allies(caster, potential_target):
+                        if get_cartesian_distance(get_square_center(combatant_coord), ability.coord) <= Spell.TRANSLATE_RADIUS[
+                                ability.target] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
             case Spell.Target.CONE_15 | Spell.Target.CONE_30 | Spell.Target.CONE_60 | Spell.Target.CONE_90:
                 # Cone spells and abilities are generally only harmful

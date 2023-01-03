@@ -1,12 +1,14 @@
 import logging
 from simulator.actoid import Actoid
+from simulator.actions import Movement
 
 logger = logging.getLogger(__name__)
 
 
 class MovementIncrement(Actoid):
     def __init__(self, increment, incurs_aoo):
-        Actoid.__init__(self, type=Actoid.Type.IS_MOVEMENT)
+        Actoid.__init__(self, actoid_type=Actoid.Type.IS_MOVEMENT)
+        self.action_type = Movement.STANDARD
         self.increment = increment
         self.incurs_aoo = incurs_aoo
 

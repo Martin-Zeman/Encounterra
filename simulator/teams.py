@@ -68,3 +68,8 @@ class Teams:
         except ValueError:
             logging.ERROR("FIXME")
         return team_members
+
+    def get_enemies(self, combatant):
+        self_team = self.reverse_team_book[combatant]
+        other_team = self.Color.RED if self_team is self.Color.BLUE else self.Color.BLUE
+        return self.team_book[other_team]

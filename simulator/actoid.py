@@ -1,13 +1,15 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class Actoid:
     class Type(Enum):
-        IS_ATTACK_LIKE_ACTION = 1
-        IS_MOVEMENT = 2
-        IS_SPELL = 3
-        IS_DODGE = 4
-        IS_TOGGLE_ABILITY = 5
+        IS_ATTACK_LIKE_ACTION = auto()
+        IS_MOVEMENT = auto()
+        IS_SPELL = auto()
+        IS_DODGE = auto()
+        IS_DASH = auto()
+        IS_TOGGLE_ABILITY = auto()
 
-    def __init__(self, type):
-        self.actoid_type = type
+    def __init__(self, actoid_type):
+        self.actoid_type = actoid_type
+        self.action_type = None

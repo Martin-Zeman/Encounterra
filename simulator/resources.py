@@ -4,7 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def use_resource(combatant, action_type):
+def use_resources(combatant, action):
+    action_type = action.action_type
     if isinstance(action_type, Action):
         combatant.has_action = False
         match action_type:

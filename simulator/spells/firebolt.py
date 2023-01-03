@@ -1,8 +1,11 @@
 from simulator.spells.spell import Spell
 from simulator.misc import DamageType
+from simulator.actions import Action
 import logging
 
 logger = logging.getLogger(__name__)
+
+
 class Firebolt(Spell):
     def __init__(self, to_hit, combatant_level, target):
         super().__init__(level=0,
@@ -13,6 +16,7 @@ class Firebolt(Spell):
                          type=Spell.Type.HARMFUL,
                          dc=None,
                          dmg_type=DamageType.Fire)
+        self.action_type = Action.FIREBOLT
         self.to_hit = to_hit
         self.target = target
         match combatant_level:

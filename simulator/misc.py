@@ -23,6 +23,7 @@ class DamageType(Enum):
     Necrotic = 9
     Force = 10
     Psychic = 11
+    Thunder = 12
 
     def __str__(self):
         return self.name

@@ -1,19 +1,22 @@
 from simulator.spells.spell import Spell
 from simulator.effects.effect import Effect
 from simulator.actions import HasteAction
+from simulator.actoid import Actoid
+from simulator.actions import Action
 
 
 class Haste(Spell, Effect):
     def __init__(self, target, caster, effect_tracker, level=3):
         level = min(max(level, 3), 9)
-        super().__init__(level=level,
-                         spell_range=Spell.Range.FEET_30,
-                         target=Spell.Target.ONE_CREATURE,
-                         duration=Spell.Duration.MINUTE,
-                         concentration=True,
-                         type=Spell.Type.HARMFUL,
-                         dc=None,
-                         dmg_type=None)
+        Spell.__init__(level=level,
+                       spell_range=Spell.Range.FEET_30,
+                       target=Spell.Target.ONE_CREATURE,
+                       duration=Spell.Duration.MINUTE,
+                       concentration=True,
+                       type=Spell.Type.HARMFUL,
+                       dc=None,
+                       dmg_type=None)
+        self.action_type=Action.HASTE
         self.target = target
         self.caster = caster
         self.effect_tracker = effect_tracker

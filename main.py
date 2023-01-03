@@ -11,7 +11,7 @@ from simulator.logging.log_formatter import LogFormatter
 
 if __name__ == '__main__':
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setFormatter(LogFormatter())
     logger.addHandler(stdout_handler)
@@ -22,11 +22,11 @@ if __name__ == '__main__':
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    # session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.set_num_simulations(1000)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.set_num_simulations(1)
     start_time = time.time()
-    session.simulate(parallel=True)
-    print("---Simulation took %s seconds ---" % (time.time() - start_time))
+    session.simulate(parallel=False)
+    print("---Simulation took {:.1f} seconds ---".format((time.time() - start_time)))
 
 
 
