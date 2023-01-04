@@ -15,19 +15,19 @@ def check_feasibility(combatant, action, battle_map):
         match action_type:
             case Action.FIREBALL | Action.HASTE:
                 res = combatant.has_action
-                res &= combatant.spellslots.get_spellslots(3)
+                res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_hop_distance(combatant, action.coord) <= action.range.value
                 return res
             case Action.CHAOSBOLT:
                 res = combatant.has_action
-                res &= combatant.spellslots.get_spellslots(1)
+                res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_hop_distance(combatant, action.targets[0]) <= action.range.value
                 return res
             case Action.TWINNED_CHAOSBOLT:
                 res = combatant.has_action
-                res &= combatant.spellslots.get_spellslots(1)
+                res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_hop_distance(combatant, action.targets[0]) <= action.range.value
                 res &= battle_map.get_hop_distance(combatant, action.targets[1]) <= action.range.value
@@ -44,10 +44,14 @@ def check_feasibility(combatant, action, battle_map):
                 res &= action.targets[1].is_alive()
                 return res
             case Action.TWINNED_HASTE:
-                return combatant.has_action and combatant.spellslots.get_spellslots(
-                    3) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant,
-                                                                                                              action.coord) <= action.range.value and \
-                    action.targets[0].is_alive() and action.targets[1].is_alive()
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.get_hop_distance(combatant, action.coord) <= action.range.value
+                res &= action.targets[0].is_alive()
+                res &= action.targets[1].is_alive()
+                res &= combatant.curr_sorcery_points > 2
+                return res
             case Action.DASH:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED, Conditions.STUNNED,

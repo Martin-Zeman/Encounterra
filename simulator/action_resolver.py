@@ -88,7 +88,7 @@ class ActionResolver:
                         if not potential_target.is_alive():
                             continue
                         dist = self.battle_map.get_cartesian_distance(curr_target, potential_target)
-                        if dist <= 6:
+                        if dist and dist <= 6:
                             curr_target = potential_target
                             logger.debug(f"Chaos bolt jumping to {potential_target}!", extra={"team": self.teams.get_team(caster)})
                             jump = True
@@ -280,8 +280,12 @@ class ActionResolver:
         if action_type is None:
             return
         action = action_factory(combatant, self.effect_tracker, action_type, *args)
-        if not check_feasibility(combatant, action, self.battle_map):
-            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible")
+        feasible = check_feasibility(combatant, action, self.battle_map)
+        if not feasible and combatant.has_action:
+            action = Dodge(combatant)
+            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+        elif not feasible:
+            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible.")
             return
         use_resources(combatant, action)
         return self.resolve_by_actoid_type(action, combatant)

@@ -394,8 +394,11 @@ class Map:
         :param subject2: either a character or a numpy array
         :return: cartesian distance between subjects, None if one of the subjects is dead
         """
-        subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
-        subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
+        try:
+            subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
+            subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
+        except KeyError:
+            return None
         try:
             res = get_cartesian_distance(subject1, subject2)
         except TypeError as e:
@@ -622,5 +625,7 @@ class Map:
 
     def get_enemies_within_radius(self, combatant, radius):
         enemies = [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
+        distances = [self.get_cartesian_distance(e, combatant) for e in enemies]
         enemies.sort(key=lambda e: self.get_cartesian_distance(e, combatant))
-        return enemies
+        distances.sort()
+        return enemies, distances

@@ -20,9 +20,20 @@ def use_resources(combatant, action):
                 combatant.spellslots.use_spellslot(3)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.is_concentrating = True
+            case Action.TWINNED_HASTE:
+                combatant.spellslots.use_spellslot(3)
+                combatant.already_cast_leveled_spell_this_turn = True
+                combatant.is_concentrating = True
+                combatant.curr_sorcery_points -= 3
             case Action.CHAOSBOLT:
                 combatant.spellslots.use_spellslot(1)
                 combatant.already_cast_leveled_spell_this_turn = True
+            case Action.TWINNED_CHAOSBOLT:
+                combatant.spellslots.use_spellslot(1)
+                combatant.already_cast_leveled_spell_this_turn = True
+                combatant.curr_sorcery_points -= 1
+            case Action.TWINNED_FIREBOLT:
+                combatant.curr_sorcery_points -= 1
             case _:
                 logger.error("Unknown action type")
     elif isinstance(action_type, BonusAction):
