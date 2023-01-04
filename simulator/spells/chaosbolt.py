@@ -11,7 +11,7 @@ class Chaosbolt(Spell):
         DamageType.Acid, DamageType.Cold, DamageType.Fire, DamageType.Force, DamageType.Lightning, DamageType.Poison, DamageType.Psychic,
         DamageType.Thunder)
 
-    def __init__(self, action_type, to_hit, target, **kwargs):
+    def __init__(self, action_type, to_hit, targets, **kwargs):
         super().__init__(level=1,
                          spell_range=Spell.Range.FEET_120,
                          target=Spell.Target.ONE_CREATURE,
@@ -23,6 +23,6 @@ class Chaosbolt(Spell):
         self.action_type = action_type
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.to_hit = to_hit
-        self.target = target
+        self.targets = targets
         self.dmg_dice = "2d8"
         self.additional_dmg_dice = "1d6"

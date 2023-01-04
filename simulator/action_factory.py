@@ -34,6 +34,14 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 return Chaosbolt(action_type, combatant.spell_to_hit, *args)
             case Action.HASTE:
                 return Haste(action_type, *args, combatant, effect_tracker)
+            case Action.TWINNED_FIREBOLT:
+                logger.debug("Twinned Firebolt")
+                return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
+            case Action.TWINNED_CHAOSBOLT:
+                logger.debug("Twinned Chaosbolt")
+                return Chaosbolt(action_type, combatant.spell_to_hit, *args)
+            case Action.TWINNED_HASTE:
+                return Haste(action_type, *args, combatant, effect_tracker)
             case _:
                 logger.error("Unknown action type")
                 return None
@@ -48,10 +56,13 @@ def action_factory(combatant, effect_tracker, action_type, *args):
             case BonusAction.MISTY_STEP:
                 return MistyStep(*args)
             case BonusAction.QUICKENED_CHAOSBOLT:
+                logger.debug("Quickened Chaosbolt")
                 return Chaosbolt(action_type, combatant.spell_to_hit, *args)
             case BonusAction.QUICKENED_FIREBALL:
+                logger.debug("Quickened Fireball")
                 return Fireball(action_type, *args)
             case BonusAction.QUICKENED_FIREBOLT:
+                logger.debug("Quickened Firebolt")
                 return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
             case BonusAction.QUICKENED_HASTE:
                 return Haste(action_type, *args, combatant, effect_tracker)

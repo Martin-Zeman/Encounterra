@@ -5,15 +5,18 @@ from simulator.action_factory import *
 from simulator.misc import Side
 from simulator.spells.spell import Spell
 import logging
-import random
+import pickle
+import os
 
 logger = logging.getLogger(__name__)
 
 
-class Faurung(Combatant):
+class FaurungDt(Combatant):
+    INV_MAPPING = {0: Action.FIREBOLT, 1: Action.CHAOSBOLT, 2: Action.HASTE, 3: BonusAction.QUICKENED_FIREBALL, 4: Action.TWINNED_CHAOSBOLT,
+                   5: Action.TWINNED_FIREBOLT, 6: Action.TWINNED_HASTE, 7: Action.FIREBALL}
 
     def __init__(self):
-        super().__init__("Faurung", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
+        super().__init__("FaurungDt", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.add_ability(Action.FIREBALL)
         self.add_ability(Action.FIREBOLT)
         self.add_ability(Action.HASTE)
@@ -25,6 +28,8 @@ class Faurung(Combatant):
         self.spellslots = Spellslots(Spellslots.Class.SORCERER, 5)
         self.movement_generator_cache = None
         self.nowhere_to_go = False
+        with open('simulator/decision_tree/faurung_model.pickle', 'rb') as handle:
+            self.model = pickle.load(handle)
 
     def get_action(self, battle_map):
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
@@ -60,33 +65,37 @@ class Faurung(Combatant):
                     self.movement_generator_cache = None
 
             # Then focus on offense
-            if self.has_action and not self.already_cast_leveled_spell_this_turn:
-                placement, score = battle_map.find_best_placement_harmful_circular(self, 30, 4)
+            # Model 'enemies', 'cast_leveled', 'ss1', 'ss2', 'ss3', 'enemy_adjacent', 'allies', 'is_concentrating', 'sorcery_points'
+            if self.has_action:
+                placement, _ = battle_map.find_best_placement_harmful_circular(self, 30, 4)
                 allies = battle_map.teams.get_allies(self)
                 enemies = battle_map.get_enemies_within_radius(self, Spell.Range.FEET_120.value)
-                should_twin = False
-                if len(enemies) > 1 and random.randint(1, 10) > 3:
-                    should_twin = True
-                if self.spellslots.get_spellslots(3) and score > 1 and self.curr_sorcery_points > 0:
-                    if score > 1:
-                        logger.debug(f"{self.name} casts Fireball", extra={"team": self.team_color})
-                        return (BonusAction.QUICKENED_FIREBALL if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.FIREBALL, placement, self.dc)
-                        # return (Action.FIREBALL, placement, self.dc)
-                elif self.spellslots.get_spellslots(3) and allies and not self.is_concentrating:
-                    target_ally = allies[random.randint(0, len(allies) - 1)]
-                    logger.debug(f"{self.name} casts Haste on {target_ally}", extra={"team": self.team_color})
-                    return (BonusAction.QUICKENED_HASTE if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.HASTE, [target_ally])
-                    # return (Action.HASTE, target_ally)
-                elif self.spellslots.get_spellslots(1):
-                    logger.debug(f"{self} casts Chaosbolt on {nearest_enemy}", extra={"team": self.team_color})
-                    return (Action.TWINNED_CHAOSBOLT, enemies[0:1]) if should_twin else (BonusAction.QUICKENED_CHAOSBOLT if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.CHAOSBOLT, [nearest_enemy])
-                    # return (Action.CHAOSBOLT, nearest_enemy)
-                else:
-                    logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
-                    return (Action.TWINNED_FIREBOLT, enemies[0:1]) if should_twin else (Action.FIREBOLT, [nearest_enemy])
-            elif self.has_action:
-                logger.debug(f"{self} casts Firebolt on {nearest_enemy}", extra={"team": self.team_color})
-                return (Action.TWINNED_FIREBOLT, enemies[0:1]) if should_twin else (Action.FIREBOLT, [nearest_enemy])
+
+                decision = self.INV_MAPPING[self.model.predict([[len(enemies), self.already_cast_leveled_spell_this_turn,
+                                                                 self.spellslots.get_spellslots(1), self.spellslots.get_spellslots(2),
+                                                                 self.spellslots.get_spellslots(3), False, len(allies),
+                                                                 self.is_concentrating, self.curr_sorcery_points]])[0]]
+                try:
+                    match decision:
+                        case Action.FIREBOLT | Action.CHAOSBOLT:
+                            logger.debug(f"{self} casts {decision.name} on {nearest_enemy}", extra={"team": self.team_color})
+                            return (decision, [enemies[0]])
+                        case Action.HASTE:
+                            logger.debug(f"{self.name} casts Haste on {allies[0]}", extra={"team": self.team_color})
+                            return (decision, [allies[0]])
+                        case Action.TWINNED_HASTE:
+                            logger.debug(f"{self.name} casts Twinned Haste on {allies[0]} and {allies[1]}", extra={"team": self.team_color})
+                            return (decision, allies[0:2])
+                        case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
+                            logger.debug(f"{self.name} casts {decision.name}", extra={"team": self.team_color})
+                            return (decision, placement, self.dc)
+                        case Action.TWINNED_CHAOSBOLT | Action.TWINNED_FIREBOLT:
+                            logger.debug(f"{self} casts {decision.name} on {enemies[0]} and {enemies[1]}", extra={"team": self.team_color})
+                            return (decision, enemies[0:2])
+                except:
+                    logger.error("Faurung decision tree failure. Doding...")
+                    return (Action.DODGE,)
+                return
             else:
                 return (None,)
         return (None,)

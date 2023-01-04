@@ -86,7 +86,7 @@ class RoundManager:
                     try:
                         action, *args = combatant.get_action(self.battle_map)
                     except TypeError as e:
-                        logger.error(f"FIXME {combatant} threw {e} for action {action} with {args}")
+                        logger.error(f"{combatant} threw {e} for action {action} with {args}")
                     if action is None:
                         break
                     self.action_resolver.resolve_action(action, args, combatant)

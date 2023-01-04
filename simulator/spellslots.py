@@ -968,7 +968,7 @@ class Spellslots:
     def restore_spellslot(self, class_name, level):
         pass
 
-    def has_spellslots(self, level):
+    def get_spellslots(self, level):
         return self.curr_spellslots[self.class_level][level]
 
     def use_spellslot(self, level):

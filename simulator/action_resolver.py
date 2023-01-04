@@ -55,15 +55,15 @@ class ActionResolver:
         self.battle_map = battle_map
         self.effect_tracker = effect_tracker
 
-    def resolve_chaos_bolt(self, caster, spell):
+    def resolve_chaos_bolt(self, caster, target, to_hit, dmg_dice, additional_dmg_dice, name):
         jump = True
-        curr_target = spell.target
+        curr_target = target
         potential_targets = self.teams.get_allies(curr_target)
         while jump:
             jump = False
-            if not (spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging):
+            if not (target.disadvantage_on_incoming_attacks or target.is_dodging):
                 rolled = max(random.randint(1, 20), random.randint(1, 20))
-            elif spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging:
+            elif target.disadvantage_on_incoming_attacks or target.is_dodging:
                 rolled = min(random.randint(1, 20), random.randint(1, 20))
             else:
                 rolled = random.randint(1, 20)
@@ -74,15 +74,15 @@ class ActionResolver:
             elif rolled == 20:
                 multiplier = 2
 
-            if rolled + spell.to_hit >= spell.target.ac:
-                bolt_dmg, rolled_numbers = roll_chaos_bolt_dmg(spell)
-                spell.dmg_type = Chaosbolt.DMG_TYPE[rolled_numbers[random.randint(0, 1)] - 1]  # take one of the two numbers randomly
+            if rolled + to_hit >= target.ac:
+                bolt_dmg, rolled_numbers = roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice)
+                dmg_type = Chaosbolt.DMG_TYPE[rolled_numbers[random.randint(0, 1)] - 1]  # take one of the two numbers randomly
                 dmg = multiplier * bolt_dmg
-                logger.debug(f"{spell.__class__.__name__} {'CRITS' if multiplier == 2 else 'hits'} {spell.target} for {dmg} damage",
+                logger.debug(f"{name} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                              extra={"team": self.teams.get_team(caster)})
-                curr_target.receive_dmg(dmg, spell.dmg_type)
+                curr_target.receive_dmg(dmg, dmg_type)
                 if not curr_target.is_alive():
-                    self.battle_map.remove_combatant(spell.target)
+                    self.battle_map.remove_combatant(target)
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
                         if not potential_target.is_alive():
@@ -95,13 +95,13 @@ class ActionResolver:
                             del potential_targets[i]
                             break
             else:
-                logger.debug(f"{spell.__class__.__name__} misses {spell.target}", extra={"team": self.teams.get_team(caster)})
+                logger.debug(f"{name} misses {target}", extra={"team": self.teams.get_team(caster)})
 
-    def resolve_ranged_spell_attack(self, caster, spell):
+    def resolve_ranged_spell_attack(self, caster, target, to_hit, dmg_dice, dmg_type, name):
         # TODO consolidate this
-        if not (spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging):
+        if not (target.disadvantage_on_incoming_attacks or target.is_dodging):
             rolled = max(random.randint(1, 20), random.randint(1, 20))
-        elif spell.target.disadvantage_on_incoming_attacks or spell.target.is_dodging:
+        elif target.disadvantage_on_incoming_attacks or target.is_dodging:
             rolled = min(random.randint(1, 20), random.randint(1, 20))
         else:
             rolled = random.randint(1, 20)
@@ -112,21 +112,21 @@ class ActionResolver:
         elif rolled == 20:
             multiplier = 2
 
-        if rolled + spell.to_hit >= spell.target.ac:
-            dmg = multiplier * roll_spell_dmg(spell)
-            logger.debug(f"{spell.__class__.__name__} {'CRITS' if multiplier == 2 else 'hits'} {spell.target} for {dmg} damage",
+        if rolled + to_hit >= target.ac:
+            dmg = multiplier * roll_spell_dmg(dmg_dice)
+            logger.debug(f"{name} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
-            spell.target.receive_dmg(dmg, spell.dmg_type)
-            if not spell.target.is_alive():
-                self.battle_map.remove_combatant(spell.target)
+            target.receive_dmg(dmg, dmg_type)
+            if not target.is_alive():
+                self.battle_map.remove_combatant(target)
         else:
-            logger.debug(f"{spell.__class__.__name__} misses {spell.target}", extra={"team": self.teams.get_team(caster)})
+            logger.debug(f"{name} misses {target}", extra={"team": self.teams.get_team(caster)})
 
     def resolve_spell(self, caster, spell):
         match spell.action_type:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell)
-                dmg = roll_spell_dmg(spell)
+                dmg = roll_spell_dmg(spell.dmg_dice)
                 for combatant in affected:
                     logger.debug(f"{combatant} is hit by Fireball")
                     resolve_dmg_saving_throw(spell, dmg, combatant)
@@ -137,16 +137,22 @@ class ActionResolver:
                 self.effect_tracker.add(spell, caster)
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
                 # if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
-                self.resolve_ranged_spell_attack(caster, spell)
+                self.resolve_ranged_spell_attack(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__)
                 # else:
                 #     logger.debug("Out of Firebolt's range")  # TODO could probably remove this. No map is gonna be that big
+            case Action.TWINNED_FIREBOLT:
+                self.resolve_ranged_spell_attack(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__)
+                self.resolve_ranged_spell_attack(caster, spell.targets[1], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__)
             case BonusAction.MISTY_STEP:
                 # if self.battle_map.get_hop_distance(caster, spell.coord) <= 6:
                 self.battle_map.move_combatant(caster, spell.coord)
                 # else:
                 #     logger.warning("Invalid MistyStep coordinates. Destination is too far!")
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
-                self.resolve_chaos_bolt(caster, spell)
+                self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
+            case Action.TWINNED_CHAOSBOLT:
+                self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
+                self.resolve_chaos_bolt(caster, spell.targets[1], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
             case Reaction.SHIELD:
                 assert not caster.shield_spell_active
                 caster.shield_spell_active = True

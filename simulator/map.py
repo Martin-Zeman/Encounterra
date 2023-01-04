@@ -330,7 +330,8 @@ class Map:
         self_position = self.combatant_coordinate_cache[combatant]
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
             dist = dist_func(self_position, target_coord)
-            if potential_target is not combatant and potential_target.is_alive() and team_func(potential_target, combatant) and dist < min_dist:
+            if potential_target is not combatant and potential_target.is_alive() and team_func(potential_target,
+                                                                                               combatant) and dist < min_dist:
                 min_dist = dist
                 nearest = potential_target
         return nearest, min_dist
@@ -385,7 +386,6 @@ class Map:
         except TypeError as e:
             res = None
         return res
-
 
     def get_cartesian_distance(self, subject1, subject2):
         """
@@ -619,3 +619,8 @@ class Map:
             case _:
                 logger.error("Unrecognized ability target type")
         return affected_combatants
+
+    def get_enemies_within_radius(self, combatant, radius):
+        enemies = [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
+        enemies.sort(key=lambda e: self.get_cartesian_distance(e, combatant))
+        return enemies

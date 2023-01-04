@@ -14,13 +14,40 @@ def check_feasibility(combatant, action, battle_map):
             return False
         match action_type:
             case Action.FIREBALL | Action.HASTE:
-                return combatant.has_action and combatant.spellslots.has_spellslots(
-                    3) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant,
-                                                                                                              action.coord) <= action.range.value
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(3)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.get_hop_distance(combatant, action.coord) <= action.range.value
+                return res
             case Action.CHAOSBOLT:
-                return combatant.has_action and combatant.spellslots.has_spellslots(
-                    1) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant,
-                                                                                                              action.target) <= action.range.value
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.get_hop_distance(combatant, action.targets[0]) <= action.range.value
+                return res
+            case Action.TWINNED_CHAOSBOLT:
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.get_hop_distance(combatant, action.targets[0]) <= action.range.value
+                res &= battle_map.get_hop_distance(combatant, action.targets[1]) <= action.range.value
+                res &= combatant.curr_sorcery_points > 0
+                res &= action.targets[0].is_alive()
+                res &= action.targets[1].is_alive()
+                return res
+            case Action.TWINNED_FIREBOLT:
+                res = combatant.has_action
+                res &= battle_map.get_hop_distance(combatant, action.targets[0]) <= action.range.value
+                res &= battle_map.get_hop_distance(combatant, action.targets[1]) <= action.range.value
+                res &= combatant.curr_sorcery_points > 0
+                res &= action.targets[0].is_alive()
+                res &= action.targets[1].is_alive()
+                return res
+            case Action.TWINNED_HASTE:
+                return combatant.has_action and combatant.spellslots.get_spellslots(
+                    3) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant,
+                                                                                                              action.coord) <= action.range.value and \
+                    action.targets[0].is_alive() and action.targets[1].is_alive()
             case Action.DASH:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED, Conditions.STUNNED,
@@ -40,19 +67,20 @@ def check_feasibility(combatant, action, battle_map):
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 return combatant.has_bonus_action and combatant.curr_rage_uses and not combatant.rage_active
             case BonusAction.MISTY_STEP:
-                return combatant.spellslots.has_spellslots(
+                return combatant.spellslots.get_spellslots(
                     2) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant,
                                                                                                               action.coord) <= action.range.value
             case BonusAction.QUICKENED_CHAOSBOLT:
-                return combatant.has_bonus_action and combatant.spellslots.has_spellslots(
+                return combatant.has_bonus_action and combatant.spellslots.get_spellslots(
                     1) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant,
-                                                                                                              action.target) <= action.range.value and combatant.sorcery_points > 1
+                                                                                                              action.targets[
+                                                                                                                  0]) <= action.range.value and combatant.curr_sorcery_points > 1
             case BonusAction.QUICKENED_HASTE | BonusAction.QUICKENED_FIREBALL:
-                return combatant.has_action and combatant.spellslots.has_spellslots(
+                return combatant.has_action and combatant.spellslots.get_spellslots(
                     3) and not combatant.already_cast_leveled_spell_this_turn and battle_map.get_hop_distance(combatant,
-                                                                                                              action.coord) <= action.range.value and combatant.sorcery_points > 1
+                                                                                                              action.coord) <= action.range.value and combatant.curr_sorcery_points > 1
             case BonusAction.QUICKENED_FIREBOLT:
-                return combatant.has_bonus_action and combatant.sorcery_points > 1
+                return combatant.has_bonus_action and combatant.curr_sorcery_points > 1
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
         return combatant.has_bonus_action
     elif isinstance(action_type, Reaction):

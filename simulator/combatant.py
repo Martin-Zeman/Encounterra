@@ -100,7 +100,8 @@ class Combatant:
                         logger.error("Arguments incompatible with action type")
                         return
                 case Passive.METAMAGIC:
-                    self.sorcery_points = kwargs["sorcery_points"]
+                    self.curr_sorcery_points = kwargs["sorcery_points"]
+                    self.max_sorcery_points = kwargs["sorcery_points"]
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -127,7 +128,7 @@ class Combatant:
         elif isinstance(action_type, MetaAction):
             match action_type:
                 case MetaAction.QUICKENED_SPELL | MetaAction.EMPOWERED_SPELL | MetaAction.TWINNED_SPELL:
-                    assert hasattr(self, "sorcery_points")
+                    assert hasattr(self, "curr_sorcery_points")
         else:
             logger.error("Unknown high level action class")
 

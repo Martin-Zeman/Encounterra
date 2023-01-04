@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class Firebolt(Spell):
-    def __init__(self, action_type, to_hit, combatant_level, target, **kwargs):
+    def __init__(self, action_type, to_hit, combatant_level, targets, **kwargs):
         super().__init__(level=0,
                          spell_range=Spell.Range.FEET_120,
                          target=Spell.Target.ONE_CREATURE,
@@ -19,7 +19,7 @@ class Firebolt(Spell):
         self.action_type = action_type
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.to_hit = to_hit
-        self.target = target
+        self.targets = targets
         match combatant_level:
             case lvl if 1 <= lvl <= 4:
                 self.dmg_dice = "1d10"

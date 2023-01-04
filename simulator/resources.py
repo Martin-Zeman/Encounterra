@@ -38,18 +38,18 @@ def use_resources(combatant, action):
             case BonusAction.QUICKENED_CHAOSBOLT:
                 combatant.spellslots.use_spellslot(1)
                 combatant.already_cast_leveled_spell_this_turn = True
-                combatant.sorcery_points -= 2
+                combatant.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_HASTE:
                 combatant.spellslots.use_spellslot(3)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.is_concentrating = True
-                combatant.sorcery_points -= 2
+                combatant.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_FIREBALL:
                 combatant.spellslots.use_spellslot(3)
                 combatant.already_cast_leveled_spell_this_turn = True
-                combatant.sorcery_points -= 2
+                combatant.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_FIREBOLT:
-                combatant.sorcery_points -= 2
+                combatant.curr_sorcery_points -= 2
             case _:
                 logger.error("Unknown bonus action type")
     elif isinstance(action_type, Reaction):
@@ -90,5 +90,8 @@ def reset_resources(combatant):
                 combatant.rage_active = False
             case _:
                 pass
+
+    if hasattr(combatant, "curr_sorcery_points"):
+        combatant.curr_sorcery_points = combatant.max_sorcery_points
 
 

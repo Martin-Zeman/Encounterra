@@ -1,6 +1,7 @@
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.faurung import Faurung
+from simulator.combatants.faurung_dt import FaurungDt
 from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.map import *
 from simulator.round_manager import *
@@ -27,6 +28,7 @@ class Session:
         self.statistic_collector = None
         self.character_type_counter = {
             Faurung: 1,
+            FaurungDt: 1,
             TotemBarbarian5Lvl: 1,
             DragonclawCultist: 1,
             Cyanwrath: 1
@@ -45,6 +47,8 @@ class Session:
         match combatant_type.__name__:
             case "Faurung":
                 self.combatants.append(Faurung())
+            case "FaurungDt":
+                self.combatants.append(FaurungDt())
             case "TotemBarbarian5Lvl":
                 self.combatants.append(TotemBarbarian5Lvl())
             case "Cyanwrath":
