@@ -1,6 +1,7 @@
 from enum import Enum, Flag, auto
 import random
 import re
+import math
 
 class SavingThrow(Enum):
     STR = 1
@@ -103,3 +104,7 @@ def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
     num_dice, dice_size = parse_dmg_dice(additional_dmg_dice)
     secondary_dmg = roll_dice(num_dice, dice_size)
     return primary_dmg + secondary_dmg, numbers
+
+
+def linex_loss(self, x):
+    return (math.e ** (x - 10)) + 2 * (x - 10) + 10

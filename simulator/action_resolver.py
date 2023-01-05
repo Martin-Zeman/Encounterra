@@ -7,9 +7,20 @@ from simulator.action_factory import *
 from simulator.actoid import Actoid
 from simulator.spells.chaosbolt import Chaosbolt
 from simulator.geometry import *
+from enum import Enum, auto
 
 logger = logging.getLogger(__name__)
 
+class ActionResult(Enum):
+    UNFEASIBLE = auto()
+    NOP = auto()
+    MISS = auto()
+    DMG = auto()
+    SOFT_CC = auto()
+    MEDIUM_CC = auto()
+    HARD_CC = auto()
+
+KILL_BONUS = 10
 
 def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
@@ -44,7 +55,7 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
         saved = False
     logger.debug(
         f"{type(ability).__name__} deals {dmg if not saved else dmg // 2} to {target_combatant}")
-    target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.dmg_type)
+    return target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.dmg_type)
 
 
 class ActionResolver:
@@ -127,11 +138,15 @@ class ActionResolver:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell)
                 dmg = roll_spell_dmg(spell.dmg_dice)
+                actual_total_dmg = 0
                 for combatant in affected:
                     logger.debug(f"{combatant} is hit by Fireball")
-                    resolve_dmg_saving_throw(spell, dmg, combatant)
+                    actual_total_dmg += resolve_dmg_saving_throw(spell, dmg, combatant)
                     if not combatant.is_alive():
+                        # TODO revisit if this is really needed
+                        actual_total_dmg += KILL_BONUS
                         self.battle_map.remove_combatant(combatant)
+                return ActionResult.DMG, actual_total_dmg
             case Action.HASTE | BonusAction.QUICKENED_HASTE:
                 spell.activate()
                 self.effect_tracker.add(spell, caster)
@@ -280,6 +295,21 @@ class ActionResolver:
         if action_type is None:
             return
         action = action_factory(combatant, self.effect_tracker, action_type, *args)
+        feasible = check_feasibility(combatant, action, self.battle_map)
+        if not feasible and combatant.has_action:
+            action = Dodge(combatant)
+            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+        elif not feasible:
+            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible.")
+            return
+        use_resources(combatant, action)
+        return self.resolve_by_actoid_type(action, combatant)
+
+    def resolve_action_train(self, action_type, arg1, arg2, combatant):
+        # TODO consider turning this into a pipeline
+        if action_type is None:
+            return
+        action = action_factory(combatant, self.effect_tracker, action_type, arg1, arg2)
         feasible = check_feasibility(combatant, action, self.battle_map)
         if not feasible and combatant.has_action:
             action = Dodge(combatant)

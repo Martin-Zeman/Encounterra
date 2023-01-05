@@ -8,3 +8,10 @@ buffs should not track themselves
 (Before this would be decoding) Action is first run through the FeasibilityChecker and if feasible it's passed to the ResourceManager which
 takes the resources away from the combatant. Then it's passed to the ActionFactory which creates the action itself and passes it to the
 round_manager. The round manager resolves it either directly or passing it to the combat manager or effect_tracker.
+
+
+FaurungDt vs 4 Cultists on Ubuntu:
+ --------------STATISTICS--------------
+ Team BLUE won total of 431 times
+ Team RED won total of 569 times
+---Simulation took 218.1 seconds ---

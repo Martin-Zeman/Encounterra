@@ -128,7 +128,7 @@ class Combatant:
         elif isinstance(action_type, MetaAction):
             match action_type:
                 case MetaAction.QUICKENED_SPELL | MetaAction.EMPOWERED_SPELL | MetaAction.TWINNED_SPELL:
-                    assert hasattr(self, "curr_sorcery_points")
+                    assert Passive.METAMAGIC in self.passive
         else:
             logger.error("Unknown high level action class")
 
@@ -136,6 +136,12 @@ class Combatant:
         return ability in self.passive
 
     def receive_dmg(self, dmg, dmg_type):
+        """
+        Inflicts damage to the combatant
+        :param dmg: dmg to be received
+        :param dmg_type: dmg type
+        :return: actual dmg received accounting for resistances
+        """
         if dmg_type in self.resistances:
             dmg = math.floor(dmg / 2)
             logger.debug(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
@@ -144,6 +150,7 @@ class Combatant:
             self.condition = self.State.NEAR_DEATH
         elif self.curr_hp <= self.max_hp // 2:
             self.condition = self.State.BLOODIED
+        return dmg
 
     def apply_condition(self, condition):
         self.conditions |= condition

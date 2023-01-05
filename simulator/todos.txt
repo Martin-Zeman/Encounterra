@@ -3,7 +3,8 @@
 - num of attacks should be charged to its max - 1 by taking the attack action if the combatant still has an action, otherwise it should deduct an attack
 - Implement Shield in terms of an effect
 - Add concentration mechanic
-- Feasibility checker should check spell range
+- Feasibility checker should check spell range - DONE
+- Unify the training and the simulation sessions
 - Add large+ sized creatures
 - Add a random generator of monsters which would generate random names for selected types of monsters - DONE
 - Make allies difficult terrain but make sure they can't become the destination which might be difficult maybe I could make them impassable - DONE

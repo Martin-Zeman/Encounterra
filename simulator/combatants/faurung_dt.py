@@ -6,7 +6,6 @@ from simulator.misc import Side
 from simulator.spells.spell import Spell
 import logging
 import pickle
-import os
 
 logger = logging.getLogger(__name__)
 

@@ -1,20 +1,14 @@
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.combatants.faurung import Faurung
-from simulator.combatants.faurung_dt import FaurungDt
 from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.map import *
 from simulator.round_manager import *
 from simulator.teams import Teams
 from RL.faurung_env import FaurungEnv
+from RL.trainee_faurung import TraineeFaurung
 from enum import Enum
-import logging
-import multiprocessing as mp
 
-logger = logging.getLogger(__name__)
-
-
-class Session:
+class TrainingSession:
 
     class PlacementScenario(Enum):
         TWO_HALVES = 1
@@ -28,17 +22,19 @@ class Session:
         self.map_size = 15
         self.statistic_collector = None
         self.character_type_counter = {
-            Faurung: 1,
-            FaurungDt: 1,
+            TraineeFaurung: 1,
             TotemBarbarian5Lvl: 1,
             DragonclawCultist: 1,
             Cyanwrath: 1
         }
         self.teams = Teams()
+        self.battle_map = Map(self.map_size, self.teams)
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
-        self.round_manager = None
+        self.place_combatants_on_the_map()  # TODO change this in each iteration
+        self.env = None
+        self.trainee = None
 
-    def add_combatant(self, combatant_type, team):
+    def add_combatant(self, combatant_type, team, is_trainee=False):
         try:
             curr_count = self.character_type_counter[combatant_type]
         except KeyError:
@@ -46,10 +42,8 @@ class Session:
             return
 
         match combatant_type.__name__:
-            case "Faurung":
-                self.combatants.append(Faurung())
-            case "FaurungDt":
-                self.combatants.append(FaurungDt())
+            case "TrainneFarugung":
+                self.combatants.append(TraineeFaurung())
             case "TotemBarbarian5Lvl":
                 self.combatants.append(TotemBarbarian5Lvl())
             case "Cyanwrath":
@@ -59,12 +53,11 @@ class Session:
             case _:
                 logger.error("Unknown combatant type")
                 return
+        if is_trainee:
+            self.trainee = self.combatants[-1]
         self.character_type_counter[combatant_type] += 1
         self.teams.add_combatant_to_team(self.combatants[-1], team)
 
-
-    def set_map_type(self):
-        pass
 
     def set_map_size(self, size):
         self.map_size = size
@@ -105,51 +98,40 @@ class Session:
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
 
-    def simulate(self, parallel=False, train=False):
-        self.battle_map = Map(self.map_size, self.teams)
-        self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map)
-        self.place_combatants_on_the_map()
+    def train(self):
+        assert self.trainee is not None
         for combatant in self.combatants:
             combatant.set_round_manager(self.round_manager)
         self.place_random_elements_on_the_map()
         self.battle_map.build_adjacency_matrix()
-        if parallel:
-            result_acc = mp.Queue()
-            # jobs = [mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations // mp.cpu_count(), result_acc)) for _ in range(self.num_simulations // mp.cpu_count())]
-            jobs = []
-            for _ in range(mp.cpu_count() - 1 if self.num_simulations % mp.cpu_count() else mp.cpu_count()):
-                jobs.append(mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations // mp.cpu_count(), result_acc)))
-            if self.num_simulations % mp.cpu_count():
-                jobs.append(mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations % mp.cpu_count(), result_acc)))
-            for job in jobs:
-                job.start()
-            for job in jobs:
-                job.join()
-            accumulated_tally = {}
-            while not result_acc.empty():
-                tally = result_acc.get()
-                for key, val in tally.items():
-                    try:
-                        accumulated_tally[key] += val
-                    except KeyError:
-                        accumulated_tally[key] = val
-            logger.info("--------------STATISTICS--------------")
-            for name, victories in accumulated_tally.items():
-                logger.info(f"Team {name.name} won total of {victories} times", extra={"team": name})
-        elif train:
-            env = FaurungEnv(self.combatants, self.teams, self.battle_map)
-            for combatant in self.combatants:
-                combatant.set_round_manager(self.round_manager)
-            obs = env.reset()
+        for combatant in self.combatants:
+            combatant.set_round_manager(self.env)
 
-            while True:
-                # Take a random action
-                action = env.action_space.sample()
-                obs, reward, done, info = env.step(action)
+        env = FaurungEnv(self.combatants, self.teams, self.battle_map)
+        env.set_trainee(self.trainee)
+        obs = env.reset()
 
-                if done:
-                    break
+        while self.num_simulations:
+            # Take a random action
+            action = env.action_space.sample()
+            obs, reward, done, info = env.step(action)
 
-            env.close()
-        else:
-            self.round_manager.simulate_n(self.num_simulations)
+            self.num_simulations -= 1
+            if not self.num_simulations:
+                break
+
+        # TODO save env?
+        env.close()
+
+if __name__ == '__main__':
+    session = TrainingSession()
+    # session.add_combatant(Cyanwrath, Teams.Color.RED)
+    # session.add_combatant(Faurung, Teams.Color.BLUE)
+    session.add_combatant(TraineeFaurung, Teams.Color.BLUE, is_trainee=True)
+    # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.add_combatant(DragonclawCultist, Teams.Color.RED)
+    session.set_num_simulations(100)
+    session.train()

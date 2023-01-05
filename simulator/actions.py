@@ -62,6 +62,7 @@ class Passive(Enum):
     METAMAGIC = auto()
 
 class MetaAction(Enum):
+    DONE = auto()
     QUICKENED_SPELL = auto()
     TWINNED_SPELL = auto()
     EMPOWERED_SPELL = auto()
