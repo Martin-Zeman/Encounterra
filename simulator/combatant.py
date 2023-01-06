@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 class Combatant:
     class State(Enum):
-        FINE = 1
-        BLOODIED = 2
-        NEAR_DEATH = 3
+        FINE = 0
+        BLOODIED = 1
+        NEAR_DEATH = 2
 
     class ToughnessEstimate(Enum):
         TRASH = 1

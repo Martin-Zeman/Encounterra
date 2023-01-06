@@ -17,3 +17,4 @@
 - Looks like Barbarian only attacked one after breaking through PAM attack. Should have had two attacks
 - Barbarian's ability dmg is not resetting between simulations
 - Combatant tries to use haste dash after being hit by sentinel
+- Action of type Movement.STANDARD by DragonclawCultist 1 is non-feasible. Dodging instead.

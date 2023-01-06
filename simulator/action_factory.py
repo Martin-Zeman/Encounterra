@@ -1,3 +1,5 @@
+import numpy as np
+
 from simulator.attack import Attack
 from simulator.dodge import Dodge
 from simulator.dash import Dash
@@ -27,7 +29,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
             case Action.DASH:
                 return Dash()
             case Action.FIREBALL:
-                return Fireball(action_type, *args)
+                return Fireball(action_type, *args, combatant.dc)
             case Action.FIREBOLT:
                 return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
             case Action.CHAOSBOLT:
@@ -60,7 +62,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 return Chaosbolt(action_type, combatant.spell_to_hit, *args)
             case BonusAction.QUICKENED_FIREBALL:
                 logger.debug("Quickened Fireball")
-                return Fireball(action_type, *args)
+                return Fireball(action_type, *args, combatant.dc)
             case BonusAction.QUICKENED_FIREBOLT:
                 logger.debug("Quickened Firebolt")
                 return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)

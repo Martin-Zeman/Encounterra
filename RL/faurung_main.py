@@ -6,14 +6,9 @@ from simulator.round_manager import *
 from simulator.teams import Teams
 from RL.faurung_env import FaurungEnv
 from RL.trainee_faurung import TraineeFaurung
-from enum import Enum
+from simulator.logging.log_formatter import LogFormatter
 
 class TrainingSession:
-
-    class PlacementScenario(Enum):
-        TWO_HALVES = 1
-        TOTALLY_RANDOM = 2
-        # SURROUNDED = 3
 
     def __init__(self):
         self.combatants = []
@@ -29,7 +24,6 @@ class TrainingSession:
         }
         self.teams = Teams()
         self.battle_map = Map(self.map_size, self.teams)
-        self.placement_scenario = self.PlacementScenario.TWO_HALVES
         self.env = None
         self.trainee = None
 
@@ -41,7 +35,7 @@ class TrainingSession:
             return
 
         match combatant_type.__name__:
-            case "TrainneFarugung":
+            case "TraineeFaurung":
                 self.combatants.append(TraineeFaurung())
             case "TotemBarbarian5Lvl":
                 self.combatants.append(TotemBarbarian5Lvl())
@@ -65,39 +59,6 @@ class TrainingSession:
         assert num > 0
         self.num_episodes = num
 
-    def set_placement_scenario(self, scenario):
-        assert isinstance(scenario, self.PlacementScenario)
-        self.placement_scenario = scenario
-
-    def place_combatant(self, combatant, bounds1, bounds2):
-        while True:
-            # TODO place some kind of a timeout here
-            random_coord = np.array([random.randint(*bounds1), random.randint(*bounds2)])
-            if self.battle_map.is_empty(random_coord):
-                self.battle_map.set_combatant_coordinates(combatant, random_coord)
-                break
-
-    def place_combatants_on_the_map(self):
-        match self.placement_scenario:
-            case self.PlacementScenario.TWO_HALVES:
-                for combatant in self.combatants:
-                    team_color = self.teams.get_team_color_code(combatant)
-                    right_bounds = (0, self.map_size // 2 - 1) if team_color is Teams.Color.BLUE else (self.map_size // 2 + 1, self.map_size - 1)
-                    self.place_combatant(combatant, (0, self.map_size - 1), right_bounds)
-            case self.PlacementScenario.TOTALLY_RANDOM:
-                for combatant in self.combatants:
-                    self.place_combatant(combatant, (0, self.map_size - 1), (0, self.map_size - 1))
-            case _:
-                logger.error("Unsupported placement scenario. Going with default")
-                self.placement_scenario = self.PlacementScenario.TWO_HALVES
-                self.place_combatants_on_the_map()
-
-    def place_random_elements_on_the_map(self):
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(1, 2))
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(1, 2))
-
     def train(self):
         assert self.trainee is not None
         env = FaurungEnv(self.combatants, self.teams, self.battle_map)
@@ -106,10 +67,6 @@ class TrainingSession:
         env.set_trainee(self.trainee)
 
         for episode in range(1, self.num_episodes + 1):
-            self.placement_scenario = random.choice(list(self.PlacementScenario))
-            self.place_combatants_on_the_map()
-            self.place_random_elements_on_the_map()
-            self.battle_map.build_adjacency_matrix()
             obs = env.reset()
             done = False
             score = 0
@@ -121,11 +78,15 @@ class TrainingSession:
                 score += reward
             logger.info(f"Episode: {episode} Score: {score}")
 
-
         # TODO save env?
         env.close()
 
 if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    stdout_handler = logging.StreamHandler(stream=sys.stdout)
+    stdout_handler.setFormatter(LogFormatter())
+    logger.addHandler(stdout_handler)
     session = TrainingSession()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
     # session.add_combatant(Faurung, Teams.Color.BLUE)
@@ -135,5 +96,5 @@ if __name__ == '__main__':
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.set_num_episodes(10)
+    session.set_num_episodes(100)
     session.train()

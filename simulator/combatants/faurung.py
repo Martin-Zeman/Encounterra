@@ -69,8 +69,8 @@ class Faurung(Combatant):
                 if self.spellslots.get_spellslots(3) and score > 1 and self.curr_sorcery_points > 0:
                     if score > 1:
                         logger.debug(f"{self.name} casts Fireball", extra={"team": self.team_color})
-                        return (BonusAction.QUICKENED_FIREBALL if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.FIREBALL, placement, self.dc)
-                        # return (Action.FIREBALL, placement, self.dc)
+                        return (BonusAction.QUICKENED_FIREBALL if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.FIREBALL, placement)
+                        # return (Action.FIREBALL, placement)
                 elif self.spellslots.get_spellslots(3) and allies and not self.is_concentrating:
                     target_ally = allies[random.randint(0, len(allies) - 1)]
                     logger.debug(f"{self.name} casts Haste on {target_ally}", extra={"team": self.team_color})

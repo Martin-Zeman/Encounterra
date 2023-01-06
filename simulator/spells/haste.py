@@ -7,14 +7,14 @@ from simulator.actions import Action, BonusAction
 class Haste(Spell, Effect):
     def __init__(self, action_type, targets, caster, effect_tracker, level=3):
         level = min(max(level, 3), 9)
-        Spell.__init__(level=level,
-                       spell_range=Spell.Range.FEET_30,
-                       target=Spell.Target.ONE_CREATURE,
-                       duration=Spell.Duration.MINUTE,
-                       concentration=True,
-                       type=Spell.Type.HARMFUL,
-                       dc=None,
-                       dmg_type=None)
+        super().__init__(level=level,
+                         spell_range=Spell.Range.FEET_30,
+                         target=Spell.Target.ONE_CREATURE,
+                         duration=Spell.Duration.MINUTE,
+                         concentration=True,
+                         type=Spell.Type.HARMFUL,
+                         dc=None,
+                         dmg_type=None)
         self.action_type = action_type
         self.targets = targets
         self.caster = caster
@@ -22,7 +22,10 @@ class Haste(Spell, Effect):
 
     def activate(self):
         self.caster.is_concentrating = True
-        self.target.ac += 2
+        try:
+            self.target.ac += 2
+        except AttributeError:
+            print("FIXME")
         self.target.haste_actions = [HasteAction.HASTE_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
         self.target.has_haste_action = True
 

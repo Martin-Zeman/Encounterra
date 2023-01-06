@@ -57,12 +57,12 @@ class RollModifier(Flag):
 
 
 class Size(Enum):
-    TINY = auto()
-    SMALL = auto()
-    MEDIUM = auto()
-    LARGE = auto()
-    HUGE = auto()
-    GARGANTUAN = auto()
+    TINY = 0
+    SMALL = 1
+    MEDIUM = 2
+    LARGE = 3
+    HUGE = 4
+    GARGANTUAN = 5
 
 
 class Side(Enum):
@@ -73,6 +73,11 @@ class Side(Enum):
 class DistanceMetric(Enum):
     HOP = auto()
     CARTESIAN = auto()
+
+class PlacementScenario(Enum):
+    TWO_HALVES = 1
+    TOTALLY_RANDOM = 2
+    # SURROUNDED = 3
 
 
 def parse_dmg_dice(dice_string):

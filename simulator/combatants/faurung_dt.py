@@ -87,7 +87,7 @@ class FaurungDt(Combatant):
                             return (decision, allies[0:2])
                         case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                             logger.debug(f"{self.name} casts {decision.name}", extra={"team": self.team_color})
-                            return (decision, placement, self.dc)
+                            return (decision, placement)
                         case Action.TWINNED_CHAOSBOLT | Action.TWINNED_FIREBOLT:
                             logger.debug(f"{self} casts {decision.name} on {enemies[0]} and {enemies[1]}", extra={"team": self.team_color})
                             return (decision, enemies[0:2])

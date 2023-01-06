@@ -26,4 +26,4 @@ class MovementGenerator:
                 # yield Movement(self.path.pop(0), self.movement_type, self.incurs_aoo)
                 yield self.path.pop(0)
         except GeneratorExit:
-            logger.debug("Movement generator exhausted")
+            pass

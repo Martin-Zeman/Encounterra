@@ -23,6 +23,7 @@ class ActionResult(Enum):
     WEAK_BUFF = auto()
     MEDIUM_BUFF = auto()
     STRONG_BUFF = auto()
+    TRAINEE_DEAD = auto()
 
 KILL_BONUS = 10
 
@@ -318,7 +319,7 @@ class ActionResolver:
         use_resources(combatant, action)
         return self.resolve_by_actoid_type(action, combatant)
 
-    def resolve_action_train(self, action_type, arg1, arg2, combatant):
+    def resolve_action_train(self, action_type, args, combatant):
         """
         The core of action resolution for the training mode
         @param action_type: action type
@@ -329,7 +330,7 @@ class ActionResolver:
         """
         if action_type is MetaAction.DONE:
             return ActionResult.NOP
-        action = action_factory(combatant, self.effect_tracker, action_type, arg1, arg2)
+        action = action_factory(combatant, self.effect_tracker, action_type, *args)
         feasible = check_feasibility(combatant, action, self.battle_map)
         if not feasible and combatant.has_action:
             action = Dodge(combatant)
