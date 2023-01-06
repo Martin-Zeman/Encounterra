@@ -89,6 +89,7 @@ class Map:
         self.size = size
         self.teams = teams
         self.grid = [[GridSquare() for _ in range(size)] for _ in range(size)]
+        self.terrain_encoding = np.zeros((size, size), dtype=int)
         self.base_adjacency_matrix = np.zeros((size, size))
         self.difficult_set = set()
         self.combatant_coordinate_cache = {}  # Maps combatant -> coordinate
@@ -108,12 +109,16 @@ class Map:
 
     def place_circular_element(self, coords, terrain_type, diameter=1):
         N = self.size
-        coords = (coords[0], coords[1])
+        # coords = (coords[0], coords[1])
         if diameter == 1:
+            x = max(0, min(coords[0], N - 1))
+            y = max(0, min(coords[1], N - 1))
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
-                self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].terrain = Terrain.IMPASSABLE_TERRAIN
+                self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
+                self.terrain_encoding[x][y] = Terrain.IMPASSABLE_TERRAIN.value
             elif terrain_type == Terrain.DIFFICULT_TERRAIN:
-                self.grid[max(0, min(coords[0], N - 1))][max(0, min(coords[1], N - 1))].terrain = Terrain.DIFFICULT_TERRAIN
+                self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
+                self.terrain_encoding[x][y] = Terrain.DIFFICULT_TERRAIN.value
                 self.difficult_set.add((coords[0], coords[1]))
         elif diameter > 1:
             for x in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
@@ -121,8 +126,10 @@ class Map:
                     try:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                             self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.IMPASSABLE_TERRAIN
+                            self.terrain_encoding[coords[0] + x][coords[1] + y] = Terrain.IMPASSABLE_TERRAIN.value
                         elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                             self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.DIFFICULT_TERRAIN
+                            self.terrain_encoding[coords[0] + x][coords[1] + y] = Terrain.DIFFICULT_TERRAIN.value
                             self.difficult_set.add((coords[0] + x, coords[1] + y))
                     except IndexError:
                         pass  # out of grid

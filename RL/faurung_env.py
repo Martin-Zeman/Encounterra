@@ -4,6 +4,7 @@ from simulator.resources import reset_resources
 from simulator.effects.effect_tracker import EffectTracker
 from simulator.misc import linex_loss, Size, Conditions
 from simulator.combatant import Combatant
+from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, LabelEncoder
 import numpy as np
 import logging
 
@@ -11,20 +12,6 @@ logger = logging.getLogger(__name__)
 
 """
 Input should be concatenated states of K previous rounds. Both reset and step have to return those.
-
-Encoding of Faurung self:
-[hp, has_action, has_bonus_action, has_reaction, x, y, [conditions affecting it], initiative(-4-40), attacks_left, ss1, ss2, ss3, sp]
-sizes:
-[1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1] -> 27
-
-Encoding of the characters:
-[#num, is_ally(0/1), health_condition(0-2), x, y, [conditions affecting it], initiative, has_action, has_bonus_action, has reaction, size(0-5)]
-[1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1] -> 25
-
-Encoding of the map:
-[[terrain_type(1-3)...terrain_type(1-3)], ..., [terrain_type(1-3)...terrain_type(1-3)]]
-map_size ** 2
-
 
 Encoding of actions Faurung:
 DONE
@@ -39,7 +26,20 @@ Action.TWINNED_CHAOSBOLT, char#, char#
 Action.TWINNED_FIREBOLT, char#, char#
 BonusAction.MISTY_STEP, x, y
 Reaction.SHIELD
-==> Tuple(Discrete(11), Discrete(max(map_size_,num_characters)), Discrete(max(map_size_,num_characters)))
+==> MultiDiscrete(np.array([self.actions.shape[0], max(battle_map.size, len(combatants)), max(battle_map.size, len(combatants))]))
+
+Encoding of Faurung self:
+[hp, has_action, has_bonus_action, has_reaction, x, y, [conditions affecting it], initiative(-4-40), attacks_left, ss1, ss2, ss3, sp]
+sizes:
+[1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1] -> 27
+
+Encoding of the characters:
+[#num, is_ally(0/1), health_condition(0-2), x, y, [conditions affecting it], initiative, has_action, has_bonus_action, has reaction, size(0-5)]
+[1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1] -> 25
+
+Encoding of the map:
+[[terrain_type(1-3)...terrain_type(1-3)], ..., [terrain_type(1-3)...terrain_type(1-3)]]
+map_size ** 2
 """
 
 
@@ -52,7 +52,9 @@ class FaurungEnv(Env):
              Action.HASTE, Action.TWINNED_HASTE, Action.TWINNED_CHAOSBOLT, Action.TWINNED_FIREBOLT,
              BonusAction.MISTY_STEP, Reaction.SHIELD])
         faurung_observation_space = np.array([2000, 2, 2, 2, battle_map.size, battle_map.size, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 50, 4, 3, 2, 5])
+        self.faurung_offset = faurung_observation_space.shape[0]
         combatant_observation_space = np.array([20, 2, len(Combatant.State), battle_map.size, battle_map.size, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 50, 2, 2, 2, len(Size)])
+        self.combatant_offset = combatant_observation_space.shape[0]
         map_observation_space = np.array([len(Terrain)] * battle_map.size)
         self.observation_space = spaces.MultiDiscrete(np.concatenate((faurung_observation_space, combatant_observation_space, map_observation_space)))
         self.action_space = spaces.MultiDiscrete(np.array([self.actions.shape[0], max(battle_map.size, len(combatants)), max(battle_map.size, len(combatants))]))
@@ -69,7 +71,39 @@ class FaurungEnv(Env):
         self.start_of_turn_hp = None
 
     def encode_obs(self):
-        pass
+        obs = np.zeros(self.observation_shape[0], dtype=int)
+        obs[0] = self.trainee.curr_hp + 500
+        obs[1:4] = np.array([self.trainee.has_action, self.trainee.has_bonus_action, self.trainee.has_reaction], dtype=int)
+        obs[4:6] = self.battle_map.get_combatant_position(self.trainee).astype(int)
+        ohe = OneHotEncoder()
+        cnds = np.array([c.value for c in Conditions])
+        ohe.fit(cnds.reshape(-1, 1))
+        # encode all existing conditions as one hot vector, then do a bitwise or on them column-wise (summing them up)
+        # the result will be a matrix of shape (1, #cnds) so we'll convert it into array and drop the extra dimension
+        obs[6:21] = np.squeeze(np.asarray(ohe.transform(np.array([c.value for c in self.trainee.conditions]).reshape(-1, 1)).sum(axis=0))).astype(int)
+        obs[21] = self.trainee.curr_init
+        obs[22] = self.trainee.curr_num_attacks
+        obs[23] = self.trainee.spellslots.get_spellslots(1)
+        obs[24] = self.trainee.spellslots.get_spellslots(2)
+        obs[25] = self.trainee.spellslots.get_spellslots(3)
+        obs[26] = self.trainee.curr_sorcery_points
+        offset = self.faurung_offset
+        assert offset == 27
+        assert self.combatant_offset == 25
+        for i, combatant in enumerate(self.combatants):
+            if combatant is self.trainee:
+                continue
+            obs[offset] = i  # TODO do I need this?
+            obs[offset + 1] = 1 if self.team.are_allies(combatant, self.trainee) else 0
+            obs[offset + 2] = combatant.condition.value
+            obs[offset + 3:offset + 5] = self.battle_map.get_combatant_position(combatant).astype(int)
+            obs[offset + 5:offset + 20] = np.squeeze(np.asarray(ohe.transform(np.array([c.value for c in self.trainee.conditions]).reshape(-1, 1)).sum(axis=0))).astype(int)
+            obs[offset + 20] = combatant.curr_init
+            obs[offset + 21:offset + 24] = np.array([self.trainee.has_action, self.trainee.has_bonus_action, self.trainee.has_reaction], dtype=int)
+            obs[offset + 24] = combatant.size
+            offset += self.combatant_offset
+        obs[offset:] = self.battle_map.terrain_encoding.flatten()
+        return obs
 
     def set_trainee(self, trainee):
         assert trainee is not None
@@ -94,7 +128,6 @@ class FaurungEnv(Env):
     def is_only_one_team_standing(self):
         return True if len(self.teams.get_surviving_teams()) == 1 else False
 
-
     def reset(self):
         super(FaurungEnv, self).reset()
         self.simulator_engine = self.simulator()
@@ -105,21 +138,7 @@ class FaurungEnv(Env):
         for combatant in self.combatants:
             # TODO consider making this part of map reset
             self.battle_map.set_combatant_coordinates(combatant, self.combatant_initial_positions[combatant])
-        # TODO return initial observation
-
-    # def soft_reset(self):
-    #     """
-    #     Performs a soft reset of the environment. Which means that it resets the state of the battlefield but does not
-    #     call the reset of the environment
-    #     """
-    #     for combatant in self.combatants:
-    #         reset_resources(combatant)
-    #     self.effect_tracker.reset()
-    #     self.battle_map.reset()
-    #     for combatant in self.combatants:
-    #         # TODO consider making this part of map reset
-    #         self.battle_map.set_combatant_coordinates(combatant, self.combatant_initial_positions[combatant])
-
+        return self.encode_obs()
 
     def simulator(self):
         assert self.trainee is not None
@@ -206,6 +225,6 @@ class FaurungEnv(Env):
 
         if self.is_only_one_team_standing():
             done = True
-        # TODO encode state as obs
+        obs = self.encode_obs()
         return obs, reward, done, {}
 

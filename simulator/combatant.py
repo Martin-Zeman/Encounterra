@@ -1,6 +1,6 @@
 import random
 import math
-from simulator.misc import SavingThrow, Conditions, RollModifier
+from simulator.misc import SavingThrow, Conditions, RollModifier, Size
 from simulator.action_factory import *
 from enum import Enum
 
@@ -69,6 +69,7 @@ class Combatant:
         self.is_concentrating = False
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
+        self.size = Size.MEDIUM
 
     def __str__(self):
         return self.name
