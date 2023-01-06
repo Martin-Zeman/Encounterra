@@ -1,13 +1,10 @@
-import math
-
-import gymnasium as gym
-import random
-from gym import Env, spaces
+from gymnasium import Env, spaces
 from simulator.action_resolver import *
 from simulator.resources import reset_resources
 from simulator.effects.effect_tracker import EffectTracker
-from simulator.misc import linex_loss
-from RL.trainee_faurung import TraineeFaurung
+from simulator.misc import linex_loss, Size, Conditions
+from simulator.combatant import Combatant
+import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -17,15 +14,17 @@ Input should be concatenated states of K previous rounds. Both reset and step ha
 
 Encoding of Faurung self:
 [hp, has_action, has_bonus_action, has_reaction, x, y, [conditions affecting it], initiative(-4-40), attacks_left, ss1, ss2, ss3, sp]
-
-Encoding of Barbarian self:
-[hp, has_action, has_bonus_action, has_reaction, x, y, [conditions affecting it], initiative(-4-40), size(0-5), attacks_left, num_rages, is_raging]
+sizes:
+[1, 1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1, 1] -> 27
 
 Encoding of the characters:
-[#num, is_ally(0/1), health_condition(0-2), [conditions affecting it], x, y, size(0-5), initiative, has_action, has_bonus_action, has reaction]
+[#num, is_ally(0/1), health_condition(0-2), x, y, [conditions affecting it], initiative, has_action, has_bonus_action, has reaction, size(0-5)]
+[1, 1, 1, 1, 1, 15, 1, 1, 1, 1, 1] -> 25
 
 Encoding of the map:
-[x, y, obstacle_type(0-1)...x, y, obstacle_type(0-1)]
+[[terrain_type(1-3)...terrain_type(1-3)], ..., [terrain_type(1-3)...terrain_type(1-3)]]
+map_size ** 2
+
 
 Encoding of actions Faurung:
 DONE
@@ -45,21 +44,21 @@ Reaction.SHIELD
 
 
 class FaurungEnv(Env):
-    def __init__(self, combatants, teams, battle_map, num_simulations=30):
+    def __init__(self, combatants, teams, battle_map):
         super(FaurungEnv, self).__init__()
 
         self.actions = np.array(
             [MetaAction.DONE, Movement.STANDARD, Action.FIREBALL, Action.FIREBOLT, BonusAction.QUICKENED_FIREBALL, Action.CHAOSBOLT,
              Action.HASTE, Action.TWINNED_HASTE, Action.TWINNED_CHAOSBOLT, Action.TWINNED_FIREBOLT,
              BonusAction.MISTY_STEP, Reaction.SHIELD])
-
-        self.action_space = spaces.Tuple(spaces.Discrete(self.actions.shape[0]),
-                                         spaces.Discrete(max(battle_map.size, len(combatants))),
-                                         spaces.Discrete(max(battle_map.size, len(combatants))))
+        faurung_observation_space = np.array([2000, 2, 2, 2, battle_map.size, battle_map.size, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 50, 4, 3, 2, 5])
+        combatant_observation_space = np.array([20, 2, len(Combatant.State), battle_map.size, battle_map.size, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 50, 2, 2, 2, len(Size)])
+        map_observation_space = np.array([len(Terrain)] * battle_map.size)
+        self.observation_space = spaces.MultiDiscrete(np.concatenate((faurung_observation_space, combatant_observation_space, map_observation_space)))
+        self.action_space = spaces.MultiDiscrete(np.array([self.actions.shape[0], max(battle_map.size, len(combatants)), max(battle_map.size, len(combatants))]))
 
         self.combatants = combatants
         self.teams = teams
-        self.num_simulations = num_simulations
         self.battle_map = battle_map
         self.effect_tracker = EffectTracker()
         self.action_resolver = ActionResolver(combatants, teams, battle_map, self.effect_tracker)
@@ -99,12 +98,6 @@ class FaurungEnv(Env):
     def reset(self):
         super(FaurungEnv, self).reset()
         self.simulator_engine = self.simulator()
-
-    def soft_reset(self):
-        """
-        Performs a soft reset of the environment. Which means that it resets the state of the battlefield but does not
-        call the reset of the environment
-        """
         for combatant in self.combatants:
             reset_resources(combatant)
         self.effect_tracker.reset()
@@ -112,48 +105,63 @@ class FaurungEnv(Env):
         for combatant in self.combatants:
             # TODO consider making this part of map reset
             self.battle_map.set_combatant_coordinates(combatant, self.combatant_initial_positions[combatant])
+        # TODO return initial observation
+
+    # def soft_reset(self):
+    #     """
+    #     Performs a soft reset of the environment. Which means that it resets the state of the battlefield but does not
+    #     call the reset of the environment
+    #     """
+    #     for combatant in self.combatants:
+    #         reset_resources(combatant)
+    #     self.effect_tracker.reset()
+    #     self.battle_map.reset()
+    #     for combatant in self.combatants:
+    #         # TODO consider making this part of map reset
+    #         self.battle_map.set_combatant_coordinates(combatant, self.combatant_initial_positions[combatant])
 
 
     def simulator(self):
         assert self.trainee is not None
-        while True:  # loop over multiple combat sessions
-            self.roll_initiative()
-            self.order_by_initiative()
-            logger.debug("--------------START--------------")
-            while not self.is_only_one_team_standing():  # loop of turns, represents a combat session
-                self.effect_tracker.new_turn()
-                for combatant in self.combatants:
-                    if not combatant.is_alive():
-                        if combatant is self.trainee:
-                            break  # no point in training further in this combat
-                        else:
-                            continue
-                    combatant.new_turn()
-                    self.start_of_turn_hp = {c: c.curr_hp for c in self.combatants}
-                    effects = self.effect_tracker.get_all_affecting_combatant(combatant)
-                    self.action_resolver.resolve_effects(effects, combatant)
-                    while True:  # loop of a combatant's turn
-                        try:
-                            # TODO Need to accumulate dmg done to trainee?
-                            if combatant is not self.trainee:
-                                action, *args = combatant.get_action(self.battle_map)
-                            else:
-                                action, arg1, arg1 = yield
-                        except TypeError as e:
-                            logger.error(f"{combatant} threw {e} for action {action} with {args}")
-                        if action is MetaAction.DONE:
-                            break
-                        if combatant is not self.trainee:
-                            self.action_resolver.resolve_action(action, args, combatant)
-                        else:
-                            yield self.action_resolver.resolve_action_train(action, arg1, arg2, combatant)
-                        if not combatant.is_alive():
-                            break  # could have died as a result of AoO
+        self.roll_initiative()
+        self.order_by_initiative()
+        logger.debug("--------------START--------------")
+        while True:  # loop of turns, represents a combat session, i.e. one episode
+            self.effect_tracker.new_turn()
+            for combatant in self.combatants:
+                if not combatant.is_alive():
+                    if combatant is self.trainee:
+                        break  # no point in training further in this combat
                     else:
-                        logger.debug(f"Combatant {combatant} is dead. Skipping")
-                self.trainee_hp_end_of_round = trainee.curr_hp
-                self.print_status()
-            self.soft_reset()
+                        continue
+                combatant.new_turn()
+                self.start_of_turn_hp = {c: c.curr_hp for c in self.combatants}
+                effects = self.effect_tracker.get_all_affecting_combatant(combatant)
+                self.action_resolver.resolve_effects(effects, combatant)
+                if combatant.is_affected_by_any(Conditions.STUNNED, Conditions.PARALYZED, Conditions.PETRIFIED,
+                                                Conditions.UNCONSCIOUS):
+                    logger.debug(f"{combatant} is affected by a condition which prevents any action. Skipping turn")
+                    continue
+                while True:  # loop of a combatant's turn
+                    try:
+                        if combatant is not self.trainee:
+                            action, *args = combatant.get_action(self.battle_map)
+                        else:
+                            action, arg1, arg1 = yield
+                    except TypeError as e:
+                        logger.error(f"{combatant} threw {e} for action {action} with {args}")
+                    if action is MetaAction.DONE:
+                        break
+                    if combatant is not self.trainee:
+                        self.action_resolver.resolve_action(action, args, combatant)
+                    else:
+                        yield self.action_resolver.resolve_action_train(action, arg1, arg2, combatant)
+                    if not combatant.is_alive():
+                        break  # could have died as a result of AoO
+                else:
+                    logger.debug(f"Combatant {combatant} is dead. Skipping")
+            self.trainee_hp_end_of_round = trainee.curr_hp
+            self.print_status()
 
     def print_status(self):
         for combatant in self.combatants:
@@ -196,8 +204,7 @@ class FaurungEnv(Env):
         result = next(self.simulator_engine)
         reward = self.compute_reward(result)
 
-        self.num_simulations -= 1
-        if not self.num_simulations:
+        if self.is_only_one_team_standing():
             done = True
         # TODO encode state as obs
         return obs, reward, done, {}

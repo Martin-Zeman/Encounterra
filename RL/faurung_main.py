@@ -12,12 +12,12 @@ class TrainingSession:
 
     class PlacementScenario(Enum):
         TWO_HALVES = 1
-        SURROUNDED = 2
-        TOTALLY_RANDOM = 3
+        TOTALLY_RANDOM = 2
+        # SURROUNDED = 3
 
     def __init__(self):
         self.combatants = []
-        self.num_simulations = 1
+        self.num_episodes = 1
         self.battle_map = None
         self.map_size = 15
         self.statistic_collector = None
@@ -30,7 +30,6 @@ class TrainingSession:
         self.teams = Teams()
         self.battle_map = Map(self.map_size, self.teams)
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
-        self.place_combatants_on_the_map()  # TODO change this in each iteration
         self.env = None
         self.trainee = None
 
@@ -62,9 +61,9 @@ class TrainingSession:
     def set_map_size(self, size):
         self.map_size = size
 
-    def set_num_simulations(self, num):
+    def set_num_episodes(self, num):
         assert num > 0
-        self.num_simulations = num
+        self.num_episodes = num
 
     def set_placement_scenario(self, scenario):
         assert isinstance(scenario, self.PlacementScenario)
@@ -101,25 +100,27 @@ class TrainingSession:
 
     def train(self):
         assert self.trainee is not None
-        for combatant in self.combatants:
-            combatant.set_round_manager(self.round_manager)
-        self.place_random_elements_on_the_map()
-        self.battle_map.build_adjacency_matrix()
+        env = FaurungEnv(self.combatants, self.teams, self.battle_map)
         for combatant in self.combatants:
             combatant.set_round_manager(self.env)
-
-        env = FaurungEnv(self.combatants, self.teams, self.battle_map, self.num_simulations)
         env.set_trainee(self.trainee)
-        obs = env.reset()
 
-        while self.num_simulations:
-            # Take a random action
-            action = env.action_space.sample()
-            obs, reward, done, info = env.step(action)
+        for episode in range(1, self.num_episodes + 1):
+            self.placement_scenario = random.choice(list(self.PlacementScenario))
+            self.place_combatants_on_the_map()
+            self.place_random_elements_on_the_map()
+            self.battle_map.build_adjacency_matrix()
+            obs = env.reset()
+            done = False
+            score = 0
 
-            self.num_simulations -= 1
-            if not self.num_simulations:
-                break
+            while not done:
+                # Take a random action
+                action = env.action_space.sample()
+                obs, reward, done, info = env.step(action)
+                score += reward
+            logger.info(f"Episode: {episode} Score: {score}")
+
 
         # TODO save env?
         env.close()
@@ -134,5 +135,5 @@ if __name__ == '__main__':
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.set_num_simulations(100)
+    session.set_num_episodes(10)
     session.train()

@@ -6,9 +6,6 @@ logger = logging.getLogger(__name__)
 
 
 def check_feasibility(combatant, action, battle_map):
-    if combatant.is_affected_by_any(Conditions.STUNNED, Conditions.PARALYZED, Conditions.PETRIFIED,
-                                    Conditions.UNCONSCIOUS):
-        return False
     action_type = action.action_type
     if isinstance(action_type, Action):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
@@ -71,38 +68,38 @@ def check_feasibility(combatant, action, battle_map):
                 res &= action.targets[1].is_alive()
                 res &= combatant.curr_sorcery_points > 2
                 return res
-            case Action.DASH:
+            case Action.ATTACK:
+                res = combatant.curr_num_attacks > 0
+                res &= battle_map.get_hop_distance(combatant, action.target_combatant) <= action.range
+                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                return res
+            case Action.DASH | Action.DODGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED,
                                                                                  Conditions.STUNNED,
                                                                                  Conditions.PARALYZED)
-        if combatant.has_action:
-            return True
-        elif action_type is Action.ATTACK:
-            return combatant.curr_num_attacks and battle_map.get_hop_distance(combatant,
-                                                                              action.target_combatant) <= action.range and battle_map.teams.are_enemies(
-                combatant, action.target_combatant)
+            case _:
+                logger.error("Unknown action type")
+                return False
     elif isinstance(action_type, BonusAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False
+        res = combatant.has_bonus_action
         match action_type:
             case BonusAction.PAM_BONUS_ATTACK:
-                res = combatant.has_bonus_action
                 res &= combatant.curr_num_attacks < combatant.num_attacks  # if already took the attack action
                 res &= battle_map.get_hop_distance(combatant, action.target_combatant) <= action.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
-                return combatant.has_bonus_action and combatant.curr_rage_uses and not combatant.rage_active
+                return res and combatant.curr_rage_uses and not combatant.rage_active
             case BonusAction.MISTY_STEP:
-                res = combatant.has_bonus_action
                 res &= combatant.spellslots.get_spellslots(2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.range.value
                 res &= battle_map.is_valid_coord(action.coord)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
-                res = combatant.has_bonus_action
                 res &= combatant.spellslots.get_spellslots(1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
@@ -110,7 +107,6 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
             case BonusAction.QUICKENED_HASTE:
-                res = combatant.has_bonus_action
                 res &= combatant.spellslots.get_spellslots(3)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
@@ -118,7 +114,6 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 return res
             case BonusAction.QUICKENED_FIREBALL:
-                res = combatant.has_bonus_action
                 res &= combatant.spellslots.get_spellslots(3)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.range.value
@@ -126,13 +121,14 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.is_valid_coord(action.coord)
                 return res
             case BonusAction.QUICKENED_FIREBOLT:
-                res = combatant.has_bonus_action
                 res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
-        return combatant.has_bonus_action
+            case _:
+                logger.error("Unknown bonus action")
+                return False
     elif isinstance(action_type, Reaction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False
