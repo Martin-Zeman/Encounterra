@@ -13,12 +13,16 @@ logger = logging.getLogger(__name__)
 
 class ActionResult(Enum):
     UNFEASIBLE = auto()
+    FEASIBLE = auto()
     NOP = auto()
     MISS = auto()
     DMG = auto()
     SOFT_CC = auto()
     MEDIUM_CC = auto()
     HARD_CC = auto()
+    WEAK_BUFF = auto()
+    MEDIUM_BUFF = auto()
+    STRONG_BUFF = auto()
 
 KILL_BONUS = 10
 
@@ -81,7 +85,7 @@ class ActionResolver:
             multiplier = 1
             if rolled == 1:
                 logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
-                return False
+                return ActionResult.MISS
             elif rolled == 20:
                 multiplier = 2
 
@@ -105,8 +109,10 @@ class ActionResolver:
                             jump = True
                             del potential_targets[i]
                             break
+                return ActionResult.DMG
             else:
                 logger.debug(f"{name} misses {target}", extra={"team": self.teams.get_team(caster)})
+                return ActionResult.MISS
 
     def resolve_ranged_spell_attack(self, caster, target, to_hit, dmg_dice, dmg_type, name):
         # TODO consolidate this
@@ -119,7 +125,7 @@ class ActionResolver:
         multiplier = 1
         if rolled == 1:
             logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
-            return False
+            return ActionResult.MISS
         elif rolled == 20:
             multiplier = 2
 
@@ -130,8 +136,10 @@ class ActionResolver:
             target.receive_dmg(dmg, dmg_type)
             if not target.is_alive():
                 self.battle_map.remove_combatant(target)
+            return ActionResult.DMG
         else:
             logger.debug(f"{name} misses {target}", extra={"team": self.teams.get_team(caster)})
+            return ActionResult.MISS
 
     def resolve_spell(self, caster, spell):
         match spell.action_type:
@@ -146,34 +154,34 @@ class ActionResolver:
                         # TODO revisit if this is really needed
                         actual_total_dmg += KILL_BONUS
                         self.battle_map.remove_combatant(combatant)
-                return ActionResult.DMG, actual_total_dmg
+                return ActionResult.DMG
             case Action.HASTE | BonusAction.QUICKENED_HASTE:
                 spell.activate()
                 self.effect_tracker.add(spell, caster)
+                ActionResult.MEDIUM_BUFF
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
-                # if self.battle_map.are_in_range(caster, spell.target, spell.range.value):
-                self.resolve_ranged_spell_attack(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__)
-                # else:
-                #     logger.debug("Out of Firebolt's range")  # TODO could probably remove this. No map is gonna be that big
+                return self.resolve_ranged_spell_attack(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__)
             case Action.TWINNED_FIREBOLT:
-                self.resolve_ranged_spell_attack(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__)
-                self.resolve_ranged_spell_attack(caster, spell.targets[1], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__)
+                ret = (self.resolve_ranged_spell_attack(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__),
+                       self.resolve_ranged_spell_attack(caster, spell.targets[1], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__))
+                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
-                # if self.battle_map.get_hop_distance(caster, spell.coord) <= 6:
                 self.battle_map.move_combatant(caster, spell.coord)
-                # else:
-                #     logger.warning("Invalid MistyStep coordinates. Destination is too far!")
+                return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
-                self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
+                return self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
             case Action.TWINNED_CHAOSBOLT:
-                self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
-                self.resolve_chaos_bolt(caster, spell.targets[1], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
+                ret = (self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__),
+                       self.resolve_chaos_bolt(caster, spell.targets[1], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__))
+                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case Reaction.SHIELD:
                 assert not caster.shield_spell_active
                 caster.shield_spell_active = True
                 caster.ac += 5
+                return ActionResult.FEASIBLE
             case _:
                 logger.error("Unknown spell")
+                return ActionResult.UNFEASIBLE
 
     def has_advantage(self, attack, attacker, target):
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
@@ -213,7 +221,7 @@ class ActionResolver:
         multiplier = 1
         if rolled == 1:
             logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
-            return False
+            return ActionResult.MISS
         elif rolled in attack.crit_range:
             multiplier = 2
         if rolled + attack.to_hit >= target.ac:
@@ -229,10 +237,10 @@ class ActionResolver:
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             if not target.is_alive():
                 self.battle_map.remove_combatant(target)
-            return True
+            return ActionResult.DMG
         else:
             logger.debug("Attack misses", extra={"team": self.teams.get_team(attacker)})
-            return False
+            return ActionResult.MISS
 
     def request_movement(self, moving_combatant, movement):
         if movement.incurs_aoo:
@@ -266,34 +274,39 @@ class ActionResolver:
         :return: in case of an attack returns True if the attack hit, false otherwise. Dodge always returns True, unknown parameters false.
         Other cases return None.
         """
-        if actoid is None:
-            return None
+        assert actoid is not None
         match actoid.actoid_type:
             case Actoid.Type.IS_ATTACK_LIKE_ACTION:
                 return self.resolve_attack(actoid)
             case Actoid.Type.IS_MOVEMENT:
                 if not self.request_movement(combatant, actoid):
-                    return None  # combatant didn't survive
+                    return ActionResult.UNFEASIBLE  # combatant didn't survive
             case Actoid.Type.IS_SPELL:
                 return self.resolve_spell(combatant, actoid)
             case Actoid.Type.IS_DODGE:
                 combatant.is_dodging = True
                 combatant.saving_throws[SavingThrow.DEX][1] = RollModifier.ADVANTAGE
-                return True
+                return ActionResult.FEASIBLE
             case Actoid.Type.IS_DASH:
                 combatant.movement += combatant.speed
-                return True
+                return ActionResult.FEASIBLE
             case Actoid.Type.IS_TOGGLE_ABILITY:
                 self.resolve_toggle_ability(combatant, actoid)
-                return None
+                return ActionResult.FEASIBLE
             case _:
                 logger.error("Unknown actoid type")
                 return False
 
     def resolve_action(self, action_type, args, combatant):
-        # TODO consider turning this into a pipeline
-        if action_type is None:
-            return
+        """
+        The core of action resolution
+        @param action_type: action type
+        @param args: packed arguments of the action, can take on different interpretations based on the action_type
+        @param combatant: originator of the action
+        @return: only relevant return here is DMG/MISS used for sentinel
+        """
+        if action_type is MetaAction.DONE:
+            return ActionResult.NOP
         action = action_factory(combatant, self.effect_tracker, action_type, *args)
         feasible = check_feasibility(combatant, action, self.battle_map)
         if not feasible and combatant.has_action:
@@ -301,14 +314,21 @@ class ActionResolver:
             logger.warning(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
         elif not feasible:
             logger.warning(f"Action of type {action_type} by {combatant} is non-feasible.")
-            return
+            return ActionResult.UNFEASIBLE
         use_resources(combatant, action)
         return self.resolve_by_actoid_type(action, combatant)
 
     def resolve_action_train(self, action_type, arg1, arg2, combatant):
-        # TODO consider turning this into a pipeline
-        if action_type is None:
-            return
+        """
+        The core of action resolution for the training mode
+        @param action_type: action type
+        @param arg1: can take on different interpretations based on the action_type
+        @param arg2: can take on different interpretations based on the action_type
+        @param combatant: originator of the action
+        @return: resolution of the action as ActionResult
+        """
+        if action_type is MetaAction.DONE:
+            return ActionResult.NOP
         action = action_factory(combatant, self.effect_tracker, action_type, arg1, arg2)
         feasible = check_feasibility(combatant, action, self.battle_map)
         if not feasible and combatant.has_action:
@@ -316,9 +336,10 @@ class ActionResolver:
             logger.warning(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
         elif not feasible:
             logger.warning(f"Action of type {action_type} by {combatant} is non-feasible.")
-            return
+            return ActionResult.UNFEASIBLE
         use_resources(combatant, action)
-        return self.resolve_by_actoid_type(action, combatant)
+        result = self.resolve_by_actoid_type(action, combatant)
+        return result if feasible else ActionResult.UNFEASIBLE
 
     def resolve_toggle_ability(self, combatant, ability):
         match ability.__class__.__name__:

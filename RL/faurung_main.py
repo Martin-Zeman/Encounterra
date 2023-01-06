@@ -96,7 +96,8 @@ class TrainingSession:
     def place_random_elements_on_the_map(self):
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(1, 2))
+        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(1, 2))
+        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(1, 2))
 
     def train(self):
         assert self.trainee is not None
@@ -107,7 +108,7 @@ class TrainingSession:
         for combatant in self.combatants:
             combatant.set_round_manager(self.env)
 
-        env = FaurungEnv(self.combatants, self.teams, self.battle_map)
+        env = FaurungEnv(self.combatants, self.teams, self.battle_map, self.num_simulations)
         env.set_trainee(self.trainee)
         obs = env.reset()
 

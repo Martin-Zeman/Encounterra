@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 Input should be concatenated states of K previous rounds. Both reset and step have to return those.
 
 Encoding of Faurung self:
-[hp, has_action, has_bonus_action, has_reaction, x, y, initiative(-4-40), attacks_left, ss1, ss2, ss3, sp]
+[hp, has_action, has_bonus_action, has_reaction, x, y, [conditions affecting it], initiative(-4-40), attacks_left, ss1, ss2, ss3, sp]
 
 Encoding of Barbarian self:
-[hp, has_action, has_bonus_action, has_reaction, x, y, initiative(-4-40), size(0-5), attacks_left, num_rages, is_raging]
+[hp, has_action, has_bonus_action, has_reaction, x, y, [conditions affecting it], initiative(-4-40), size(0-5), attacks_left, num_rages, is_raging]
 
 Encoding of the characters:
 [#num, is_ally(0/1), health_condition(0-2), [conditions affecting it], x, y, size(0-5), initiative, has_action, has_bonus_action, has reaction]
@@ -45,7 +45,7 @@ Reaction.SHIELD
 
 
 class FaurungEnv(Env):
-    def __init__(self, combatants, teams, battle_map, num_rounds=30):
+    def __init__(self, combatants, teams, battle_map, num_simulations=30):
         super(FaurungEnv, self).__init__()
 
         self.actions = np.array(
@@ -59,15 +59,15 @@ class FaurungEnv(Env):
 
         self.combatants = combatants
         self.teams = teams
-        self.num_rounds = num_rounds
+        self.num_simulations = num_simulations
         self.battle_map = battle_map
         self.effect_tracker = EffectTracker()
         self.action_resolver = ActionResolver(combatants, teams, battle_map, self.effect_tracker)
         self.combatant_initial_positions = {ch: self.battle_map.get_combatant_position(ch) for ch in self.combatants}
         self.trainee = None
-        self.trainee_hp_start_of_round = None
         self.trainee_hp_end_of_round = None
         self.simulator_engine = None
+        self.start_of_turn_hp = None
 
     def encode_obs(self):
         pass
@@ -121,7 +121,6 @@ class FaurungEnv(Env):
             self.order_by_initiative()
             logger.debug("--------------START--------------")
             while not self.is_only_one_team_standing():  # loop of turns, represents a combat session
-                self.trainee_hp_start_of_round = trainee.curr_hp
                 self.effect_tracker.new_turn()
                 for combatant in self.combatants:
                     if not combatant.is_alive():
@@ -130,6 +129,7 @@ class FaurungEnv(Env):
                         else:
                             continue
                     combatant.new_turn()
+                    self.start_of_turn_hp = {c: c.curr_hp for c in self.combatants}
                     effects = self.effect_tracker.get_all_affecting_combatant(combatant)
                     self.action_resolver.resolve_effects(effects, combatant)
                     while True:  # loop of a combatant's turn
@@ -165,24 +165,40 @@ class FaurungEnv(Env):
 
     def compute_reward(self, result):
         reward = 0
-        # percentage divided by ten -> (0, 10)
-        loss_of_hp = 10 * (self.trainee_hp_start_of_round - max(0, self.trainee_hp_end_of_round)) / self.trainee.max_hp
-        reward -= loss_of_hp
+        if result is ActionResult.UNFEASIBLE:
+            reward -= 100
+        elif result is ActionResult.FEASIBLE:
+            reward += 10
+
+        enemy_hp_loss = 0
+        ally_hp_loss = 0
+        for combatant in self.combatants:
+            loss = percentage_hp_loss(self.start_of_turn_hp[combatant], combatant)
+            if combatant is self.trainee:
+                trainee_loss_of_hp = loss
+            elif self.teams.are_enemies(combatant, self.trainee):
+                enemy_hp_loss += loss
+            else:
+                ally_hp_loss += loss
+        reward += enemy_hp_loss
+        reward -= ally_hp_loss / 2
+        reward -= trainee_loss_of_hp * 2
 
         # distance to nearest enemy, using linex loss function f(x)=-e^(x - 10) + 2(x -10) + 10
         _, dist = self.battle_map.get_nearest(self.trainee, Side.ENEMY)
         reward += linex_loss(dist)
+        return reward
 
-        # dmg inflicted
-        # TODO instead of evaluating the action of the trainee consider just evaluating pre and post-turn status of enemies and allies (% hp loss, CCs)
-        reward += result.total_dmg_inflicted
-
-        # TODO add any potential CCs landed
-        pass
     def step(self, trainee_action):
+        done = False
+
         self.simulator_engine.send(trainee_action)
         result = next(self.simulator_engine)
         reward = self.compute_reward(result)
+
+        self.num_simulations -= 1
+        if not self.num_simulations:
+            done = True
         # TODO encode state as obs
         return obs, reward, done, {}
 

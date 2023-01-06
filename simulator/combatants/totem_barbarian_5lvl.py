@@ -40,7 +40,7 @@ class TotemBarbarian5Lvl(Combatant):
                 self.multiattack_in_progress = False
         else:
             logger.debug("Is out of range")
-            return (None,)
+            return (MetaAction.DONE,)
 
     def get_action(self, battle_map):
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
@@ -55,7 +55,7 @@ class TotemBarbarian5Lvl(Combatant):
                 # Get new target
                 self.selected_target = nearest
                 if not self.selected_target:
-                    return (None,)
+                    return (MetaAction.DONE,)
 
             target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(
@@ -98,8 +98,8 @@ class TotemBarbarian5Lvl(Combatant):
                 logger.debug(f"{self} uses the dodge action", extra={"team": self.team_color})
                 return (Action.DODGE,)
             else:
-                return (None,)
-        return (None,)
+                return (MetaAction.DONE,)
+        return (MetaAction.DONE,)
 
 
     def prompt_aoo(self, moving_combatant):
@@ -109,4 +109,4 @@ class TotemBarbarian5Lvl(Combatant):
             logger.debug(f"{self} taken an AoO {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
             return (self.reactions[0], *attack_args)
-        return (None,)
+        return (MetaAction.DONE,)

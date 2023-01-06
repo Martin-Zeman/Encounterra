@@ -31,7 +31,7 @@ class Faurung(Combatant):
             enemies, dist = battle_map.get_enemies_within_radius(self, Spell.Range.FEET_120.value)
             if not enemies:
                 # all enemies are dead
-                return (None,)
+                return (MetaAction.DONE,)
 
             # First make sure to gain distance
             if battle_map.is_enemy_adjacent(self) and self.has_bonus_action and self.spellslots.get_spellslots(
@@ -87,8 +87,8 @@ class Faurung(Combatant):
                 logger.debug(f"{self} casts Firebolt on {enemies[0]}", extra={"team": self.team_color})
                 return (Action.TWINNED_FIREBOLT, enemies[0:2]) if should_twin else (Action.FIREBOLT, [enemies[0]])
             else:
-                return (None,)
-        return (None,)
+                return (MetaAction.DONE,)
+        return (MetaAction.DONE,)
 
     def new_turn(self):
         super().new_turn()
@@ -96,7 +96,7 @@ class Faurung(Combatant):
         self.movement_generator_cache = None
 
     def prompt_aoo(self, moving_combatant):
-        return (None,)
+        return (MetaAction.DONE,)
 
     def prompt_after_hit_reaction(self, attacking_combatant):
         if self.spellslots.get_spellslots(1) and self.has_reaction:
@@ -104,4 +104,4 @@ class Faurung(Combatant):
             return (Reaction.SHIELD,)
         elif self.has_reaction:
             logger.debug(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
-        return (None,)
+        return (MetaAction.DONE,)

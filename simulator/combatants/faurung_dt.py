@@ -35,7 +35,7 @@ class FaurungDt(Combatant):
             nearest_enemy, dist = battle_map.get_nearest(self, Side.ENEMY)
             if not nearest_enemy:
                 # all enemies are dead
-                return (None,)
+                return (MetaAction.DONE,)
 
             # First make sure to gain distance
             if battle_map.is_enemy_adjacent(self) and self.has_bonus_action and self.spellslots.get_spellslots(
@@ -96,8 +96,8 @@ class FaurungDt(Combatant):
                     return (Action.DODGE,)
                 return
             else:
-                return (None,)
-        return (None,)
+                return (MetaAction.DONE,)
+        return (MetaAction.DONE,)
 
     def new_turn(self):
         super().new_turn()
@@ -105,7 +105,7 @@ class FaurungDt(Combatant):
         self.movement_generator_cache = None
 
     def prompt_aoo(self, moving_combatant):
-        return (None,)
+        return (MetaAction.DONE,)
 
     def prompt_after_hit_reaction(self, attacking_combatant):
         if self.spellslots.get_spellslots(1) and self.has_reaction:
@@ -113,4 +113,4 @@ class FaurungDt(Combatant):
             return (Reaction.SHIELD,)
         elif self.has_reaction:
             logger.debug(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
-        return (None,)
+        return (MetaAction.DONE,)

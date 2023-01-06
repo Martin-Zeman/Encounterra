@@ -307,7 +307,14 @@ class Map:
         return eligible_combatants
 
     def is_empty(self, coord):
-        return self.grid[coord[0]][coord[1]].is_empty()
+        try:
+            empty = self.grid[coord[0]][coord[1]].is_empty()
+        except IndexError:
+            return False
+        return empty
+
+    def is_valid_coord(self, coord):
+        return False if (coord.any() < 0 or coord.any() > self.size - 1) else True
 
     def set_combatant_coordinates(self, combatant, coord):
         # TODO: redo this as np.array

@@ -3,6 +3,7 @@ import random
 import re
 import math
 
+
 class SavingThrow(Enum):
     STR = 1
     DEX = 2
@@ -10,6 +11,7 @@ class SavingThrow(Enum):
     INT = 4
     WIS = 5
     CHA = 6
+
 
 class DamageType(Enum):
     Bludgeoning = 0
@@ -62,14 +64,15 @@ class Size(Enum):
     HUGE = auto()
     GARGANTUAN = auto()
 
+
 class Side(Enum):
     ENEMY = auto()
     ALLY = auto()
 
+
 class DistanceMetric(Enum):
     HOP = auto()
     CARTESIAN = auto()
-
 
 
 def parse_dmg_dice(dice_string):
@@ -86,6 +89,7 @@ def roll_dice(num_dice, dice_size):
         dice_sum += random.randint(1, dice_size)
     return dice_sum
 
+
 def roll_dice_chaos_bolt(num_dice, dice_size):
     dice_sum = 0
     numbers_rolled = []
@@ -94,9 +98,12 @@ def roll_dice_chaos_bolt(num_dice, dice_size):
         dice_sum += rolled
         numbers_rolled.append(rolled)
     return dice_sum, numbers_rolled
+
+
 def roll_spell_dmg(dmg_dice):
     num_dice, dice_size = parse_dmg_dice(dmg_dice)
     return roll_dice(num_dice, dice_size)
+
 
 def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
     num_dice, dice_size = parse_dmg_dice(dmg_dice)
@@ -106,5 +113,9 @@ def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
     return primary_dmg + secondary_dmg, numbers
 
 
-def linex_loss(self, x):
+def linex_loss(x):
     return (math.e ** (x - 10)) + 2 * (x - 10) + 10
+
+
+def percentage_hp_loss(start_of_turn_hp, combatant):
+    return 100 * (start_of_turn_hp - max(0, combatant.curr_hp)) / combatant.max_hp

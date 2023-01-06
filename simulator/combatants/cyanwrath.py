@@ -45,7 +45,7 @@ class Cyanwrath(Combatant):
                 return (self.bonus_actions[0], *attack_args)
         else:
             logger.debug("Is out of range")
-            return (None,)
+            return (MetaAction.DONE,)
 
     def get_action(self, battle_map):
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
@@ -56,7 +56,7 @@ class Cyanwrath(Combatant):
                 # Get new target
                 self.selected_target, dist = battle_map.get_nearest(self, Side.ENEMY)
                 if not self.selected_target:
-                    return (None,)
+                    return (MetaAction.DONE,)
 
             target_position = battle_map.get_combatant_position(self.selected_target)
             logger.debug(f"Target is at {target_position}")
@@ -98,8 +98,8 @@ class Cyanwrath(Combatant):
             if self.has_action:
                 logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
                 return (Action.DODGE,)
-            return (None,)
-        return (None,)
+            return (MetaAction.DONE,)
+        return (MetaAction.DONE,)
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
@@ -109,7 +109,7 @@ class Cyanwrath(Combatant):
             logger.debug(f"{self.name} took an AoO {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
             return (self.reactions[0], *attack_args)
-        return (None,)
+        return (MetaAction.DONE,)
 
     def prompt_pam(self, moving_combatant):
         if self.has_reaction:
@@ -118,4 +118,4 @@ class Cyanwrath(Combatant):
             logger.debug(f"{self.name} uses an polearm master attack {attack_args[0]} against {moving_combatant}",
                          extra={"team": self.team_color})
             return (self.reactions[0], *attack_args)
-        return (None,)
+        return (MetaAction.DONE,)
