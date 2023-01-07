@@ -75,6 +75,9 @@ class GridSquare:
         self.combatant = None
         self.occupancy = Occupancy.FREE
 
+    def reset_terrain(self):
+        self.terrain = Terrain.NORMAL_TERRAIN
+
     def set_occupancy(self, occupancy):
         self.occupancy = occupancy
 
@@ -92,6 +95,7 @@ class Map:
         self.terrain_encoding = np.zeros((size, size), dtype=int)
         self.base_adjacency_matrix = np.zeros((size, size))
         self.difficult_set = set()
+        self.impassable_set = set()
         self.combatant_coordinate_cache = {}  # Maps combatant -> coordinate
 
     def __str__(self):
@@ -109,13 +113,13 @@ class Map:
 
     def place_circular_element(self, coords, terrain_type, diameter=1):
         N = self.size
-        # coords = (coords[0], coords[1])
         if diameter == 1:
             x = max(0, min(coords[0], N - 1))
             y = max(0, min(coords[1], N - 1))
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                 self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
                 self.terrain_encoding[x][y] = Terrain.IMPASSABLE_TERRAIN.value
+                self.impassable_set.add((coords[0], coords[1]))
             elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                 self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
                 self.terrain_encoding[x][y] = Terrain.DIFFICULT_TERRAIN.value
@@ -127,6 +131,7 @@ class Map:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                             self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.IMPASSABLE_TERRAIN
                             self.terrain_encoding[coords[0] + x][coords[1] + y] = Terrain.IMPASSABLE_TERRAIN.value
+                            self.impassable_set.add((coords[0] + x, coords[1] + y))
                         elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                             self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.DIFFICULT_TERRAIN
                             self.terrain_encoding[coords[0] + x][coords[1] + y] = Terrain.DIFFICULT_TERRAIN.value
@@ -162,6 +167,8 @@ class Map:
         adj -= np.eye(Nsq, dtype=int)
         for coord in self.difficult_set:
             adj[:, coord[0] * N + coord[1]] *= 2
+        for coord in self.impassable_set:
+            adj[:, coord[0] * N + coord[1]] = 0
         self.base_adjacency_matrix = adj
         # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
@@ -571,8 +578,12 @@ class Map:
         for row in self.grid:
             for square in row:
                 square.remove_combatant()
+                square.reset_terrain()
         for combatant in self.combatant_coordinate_cache.keys():
-            self.combatant_coordinate_cache[combatant] = np.zeros(2)
+            self.combatant_coordinate_cache[combatant].fill(0)
+        self.impassable_set.clear()
+        self.difficult_set.clear()
+        self.terrain_encoding.fill(Terrain.NORMAL_TERRAIN.value)
 
     def find_best_placement_harmful_circular(self, caster, spell_range, radius):
         """

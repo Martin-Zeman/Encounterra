@@ -93,11 +93,8 @@ class FaurungEnv(Env):
         obs[6:21] = np.array([int(b) for b in np.binary_repr(self.trainee.conditions.value, width=len(Conditions))], dtype=int)
         obs[21] = self.trainee.curr_init + 5
         obs[22] = self.trainee.curr_num_attacks
-        logger.warning(f"current num attacks {self.trainee.curr_num_attacks}")
         obs[23] = self.trainee.spellslots.get_spellslots(1)
-        logger.warning(f"current num ss1 {obs[23] }")
         obs[24] = self.trainee.spellslots.get_spellslots(2)
-        logger.warning(f"current num ss2 {obs[24]}")
         obs[25] = self.trainee.spellslots.get_spellslots(3)
         obs[26] = self.trainee.curr_sorcery_points
         offset = self.faurung_offset
@@ -201,13 +198,13 @@ class FaurungEnv(Env):
         self.effect_tracker.reset()
         self.battle_map.reset()
         self.placement_scenario = random.choice(list(PlacementScenario))
-        self.place_combatants_on_the_map()
         self.place_random_elements_on_the_map()
+        self.place_combatants_on_the_map()
         self.battle_map.build_adjacency_matrix()
         obs = self.encode_obs()  # encode obs before starting up the generator which may already make changes to the env
         if self.is_first:
             self.is_first = False
-            tmp = next(self.simulator_engine)
+            next(self.simulator_engine)
         return obs
 
     def simulator(self):

@@ -2,6 +2,7 @@ from enum import Enum, Flag, auto
 import random
 import re
 import math
+import functools
 
 
 class SavingThrow(Enum):
@@ -124,3 +125,12 @@ def linex_loss(x):
 
 def percentage_hp_loss(start_of_turn_hp, combatant):
     return 100 * (start_of_turn_hp - max(0, combatant.curr_hp)) / combatant.max_hp
+
+
+# def init_coroutine(func):
+#     @functools.wraps(func)
+#     def init(*args, **kwargs):
+#         gen = func(*args, **kwargs)
+#         next(gen)
+#         return gen
+#     return init

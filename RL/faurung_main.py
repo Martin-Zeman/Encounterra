@@ -72,12 +72,14 @@ class TrainingSession:
         env.set_trainee(self.trainee)
 
         log_path = os.path.join(os.getcwd(), 'logs')
-        saved_model_path = os.path.join(os.getcwd(), 'saved_models')
+        model_save_path = os.path.join(os.getcwd(), 'saved_models', 'faurung')
 
-        # env = DummyVecEnv([lambda: env])
-        model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_path, device='cpu')
+        env = DummyVecEnv([lambda: env])
+        model = PPO("MlpPolicy", env, verbose=2, tensorboard_log=log_path)
+        # model = PPO.load((model_save_path))
 
         model.learn(total_timesteps=1000)
+        model.save(model_save_path)
 
         # for episode in range(1, self.num_episodes + 1):
         #     obs = env.reset()
@@ -97,7 +99,7 @@ class TrainingSession:
 
 if __name__ == '__main__':
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setFormatter(LogFormatter())
     logger.addHandler(stdout_handler)
