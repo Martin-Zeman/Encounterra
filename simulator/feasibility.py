@@ -91,27 +91,27 @@ def check_feasibility(combatant, action, battle_map):
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 return res and combatant.curr_rage_uses and not combatant.rage_active
             case BonusAction.MISTY_STEP:
-                res &= combatant.spellslots.get_spellslots(2)
+                res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.range.value
                 res &= battle_map.is_valid_coord(action.coord) and battle_map.is_empty(action.coord)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
-                res &= combatant.spellslots.get_spellslots(1)
+                res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
             case BonusAction.QUICKENED_HASTE:
-                res &= combatant.spellslots.get_spellslots(3)
+                res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 return res
             case BonusAction.QUICKENED_FIREBALL:
-                res &= combatant.spellslots.get_spellslots(3)
+                res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.range.value
                 res &= combatant.curr_sorcery_points > 1
@@ -131,7 +131,7 @@ def check_feasibility(combatant, action, battle_map):
             return False
         return combatant.has_reaction
     elif isinstance(action_type, Movement):
-        return combatant.movement > 0 and battle_map.is_empty(
+        return combatant.movement > 0 and np.max(np.abs(action.increment)) < 2 and np.min(np.abs(action.increment)) > 0 and battle_map.is_empty(
             battle_map.get_combatant_position(combatant) + action.increment) and not combatant.is_affected_by_any(
             Conditions.GRAPPLED,
             Conditions.RESTRAINED)

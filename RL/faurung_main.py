@@ -76,6 +76,7 @@ class TrainingSession:
                 action = env.action_space.sample()
                 obs, reward, done, info = env.step(action)
                 score += reward
+            env.print_status()
             logger.info(f"Episode: {episode} Score: {score}")
 
         # TODO save env?

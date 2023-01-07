@@ -69,7 +69,8 @@ class FaurungEnv(Env):
         self.action_resolver = ActionResolver(combatants, teams, battle_map, self.effect_tracker)
         # self.combatant_initial_positions = {c: self.battle_map.get_combatant_position(c) for c in self.combatants}
         self.trainee = None
-        self.simulator_engine = None
+        self.simulator_engine = self.simulator()
+        self.is_first = True
         self.start_of_turn_hp = None
         self.action_mapping = {i:a for i, a in enumerate(self.actions)}
         self.index_to_combatant_mapping = {i:c for i, c in enumerate(self.combatants)}
@@ -200,9 +201,11 @@ class FaurungEnv(Env):
         self.place_combatants_on_the_map()
         self.place_random_elements_on_the_map()
         self.battle_map.build_adjacency_matrix()
-        self.simulator_engine = self.simulator()
-        next(self.simulator_engine)
-        return self.encode_obs()
+        obs = self.encode_obs()  # encode obs before starting up the generator which may already make changes to the env
+        if self.is_first:
+            self.is_first = False
+            tmp = next(self.simulator_engine)
+        return obs
 
     def simulator(self):
         assert self.trainee is not None
@@ -244,12 +247,12 @@ class FaurungEnv(Env):
                         break  # could have died as a result of AoO
                 else:
                     logger.debug(f"Combatant {combatant} is dead. Skipping")
-            self.print_status()
+            # self.print_status()
 
     def print_status(self):
         for combatant in self.combatants:
             status = f"alive with {combatant.curr_hp}" if combatant.is_alive() else "dead"
-            logger.debug(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
+            logger.info(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
         logger.debug(self.battle_map)
 
 
@@ -282,8 +285,7 @@ class FaurungEnv(Env):
 
     def step(self, trainee_action):
         done = False
-        self.simulator_engine.send(trainee_action)
-        result = next(self.simulator_engine)
+        result = self.simulator_engine.send(trainee_action)
         if result is ActionResult.TRAINEE_DEAD or self.is_only_one_team_standing():
             done = True
             reward = -100  # penalty for dying

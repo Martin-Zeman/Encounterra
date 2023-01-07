@@ -393,11 +393,8 @@ class Map:
         :param subject2: either a character or a numpy array
         :return: distance between subjects in number of hops, None if one of the subjects is dead
         """
-        try:
-            subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
-            subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
-        except KeyError:
-            logger.error("FIXME")
+        subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
+        subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
         try:
             res = np.max(np.abs(subject1 - subject2))
         except TypeError as e:
