@@ -22,19 +22,18 @@ class Haste(Spell, Effect):
 
     def activate(self):
         self.caster.is_concentrating = True
-        try:
-            self.target.ac += 2
-        except AttributeError:
-            print("FIXME")
-        self.target.haste_actions = [HasteAction.HASTE_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
-        self.target.has_haste_action = True
+        for target in self.targets:
+            target.ac += 2
+            target.haste_actions = [HasteAction.HASTE_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
+            target.has_haste_action = True
 
     def deactivate(self):
         self.caster.is_concentrating = False
-        self.target.ac -= 2
-        self.target.haste_actions.clear()
-        self.effect_tracker.create_post_haste_lethargy(self.target)
-        self.target.has_haste_action = False
+        for target in self.targets:
+            target.ac -= 2
+            target.haste_actions.clear()
+            self.effect_tracker.create_post_haste_lethargy(target)
+            target.has_haste_action = False
 
     def is_affecting(self, combatant):
         return combatant is self.target

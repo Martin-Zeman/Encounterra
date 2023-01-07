@@ -34,7 +34,7 @@ class TraineeFaurung(Combatant):
         return (MetaAction.DONE,)
 
     def prompt_after_hit_reaction(self, attacking_combatant):
-        if self.spellslots.get_spellslots(1) and self.has_reaction:
+        if self.spellslots.get_spellslots(1) > 0 and self.has_reaction:
             logger.debug(f"{self.name} casts Shield", extra={"team": self.team_color})
             return (Reaction.SHIELD,)
         elif self.has_reaction:

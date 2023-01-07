@@ -1,4 +1,4 @@
-from gymnasium import Env, spaces
+from gym import Env, spaces
 from simulator.action_resolver import *
 from simulator.resources import reset_resources
 from simulator.effects.effect_tracker import EffectTracker
@@ -53,14 +53,14 @@ class FaurungEnv(Env):
             [MetaAction.DONE, Movement.STANDARD, Action.FIREBALL, Action.FIREBOLT, BonusAction.QUICKENED_FIREBALL, Action.CHAOSBOLT,
              Action.HASTE, Action.TWINNED_HASTE, Action.TWINNED_CHAOSBOLT, Action.TWINNED_FIREBOLT,
              BonusAction.MISTY_STEP, Reaction.SHIELD])
-        faurung_observation_space = np.array([2000, 2, 2, 2, battle_map.size, battle_map.size, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 50, 2, 5, 4, 3, 6])
+        faurung_observation_space = np.array([2000, 2, 2, 2, battle_map.size, battle_map.size, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 50, 2, 5, 4, 3, 6], dtype=int)
         self.faurung_offset = faurung_observation_space.shape[0]
         # TODO Extend this to more than 4 combatants
-        combatant_observation_space = np.array([20, 2, len(Combatant.State), battle_map.size, battle_map.size, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 50, 2, 2, 2, len(Size)])
+        combatant_observation_space = np.array([20, 2, len(Combatant.State), battle_map.size, battle_map.size, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 50, 2, 2, 2, len(Size)], dtype=int)
         self.combatant_offset = combatant_observation_space.shape[0]
-        map_observation_space = np.array([len(Terrain)] * battle_map.size ** 2)
-        self.observation_space = spaces.MultiDiscrete(np.concatenate((faurung_observation_space, combatant_observation_space, combatant_observation_space, combatant_observation_space, combatant_observation_space, map_observation_space)))
-        self.action_space = spaces.MultiDiscrete(np.array([self.actions.shape[0], battle_map.size, battle_map.size, len(combatants), len(combatants)]))
+        map_observation_space = np.array([len(Terrain)] * battle_map.size ** 2, dtype=int)
+        self.observation_space = spaces.multi_discrete.MultiDiscrete(np.concatenate((faurung_observation_space, combatant_observation_space, combatant_observation_space, combatant_observation_space, combatant_observation_space, map_observation_space)))
+        self.action_space = spaces.multi_discrete.MultiDiscrete(np.array([self.actions.shape[0], battle_map.size, battle_map.size, len(combatants), len(combatants)], dtype=int).flatten())
 
         self.combatants = combatants
         self.teams = teams
@@ -93,8 +93,11 @@ class FaurungEnv(Env):
         obs[6:21] = np.array([int(b) for b in np.binary_repr(self.trainee.conditions.value, width=len(Conditions))], dtype=int)
         obs[21] = self.trainee.curr_init + 5
         obs[22] = self.trainee.curr_num_attacks
+        logger.warning(f"current num attacks {self.trainee.curr_num_attacks}")
         obs[23] = self.trainee.spellslots.get_spellslots(1)
+        logger.warning(f"current num ss1 {obs[23] }")
         obs[24] = self.trainee.spellslots.get_spellslots(2)
+        logger.warning(f"current num ss2 {obs[24]}")
         obs[25] = self.trainee.spellslots.get_spellslots(3)
         obs[26] = self.trainee.curr_sorcery_points
         offset = self.faurung_offset
@@ -190,7 +193,7 @@ class FaurungEnv(Env):
         self.battle_map.place_circular_element((random.randint(0, map_size - 1), random.randint(0, map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(1, 2))
 
     def reset(self):
-        super(FaurungEnv, self).reset()
+        # super(FaurungEnv, self).reset()
         self.roll_initiative()
         self.order_by_initiative()
         for combatant in self.combatants:
@@ -240,6 +243,7 @@ class FaurungEnv(Env):
                     if combatant is not self.trainee:
                         self.action_resolver.resolve_action(action, args, combatant)
                     else:
+                        logger.warning(f"Action {action}")
                         yield self.action_resolver.resolve_action_train(action, args, combatant)
                     if not combatant.is_alive():
                         if combatant is self.trainee:

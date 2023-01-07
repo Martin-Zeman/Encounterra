@@ -7,6 +7,11 @@ from simulator.teams import Teams
 from RL.faurung_env import FaurungEnv
 from RL.trainee_faurung import TraineeFaurung
 from simulator.logging.log_formatter import LogFormatter
+import os
+import gym
+from stable_baselines3 import PPO
+from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3.common.evaluation import evaluate_policy
 
 class TrainingSession:
 
@@ -66,21 +71,29 @@ class TrainingSession:
             combatant.set_round_manager(self.env)
         env.set_trainee(self.trainee)
 
-        for episode in range(1, self.num_episodes + 1):
-            obs = env.reset()
-            done = False
-            score = 0
+        log_path = os.path.join(os.getcwd(), 'logs')
+        saved_model_path = os.path.join(os.getcwd(), 'saved_models')
 
-            while not done:
-                # Take a random action
-                action = env.action_space.sample()
-                obs, reward, done, info = env.step(action)
-                score += reward
-            env.print_status()
-            logger.info(f"Episode: {episode} Score: {score}")
+        # env = DummyVecEnv([lambda: env])
+        model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_path, device='cpu')
 
-        # TODO save env?
-        env.close()
+        model.learn(total_timesteps=1000)
+
+        # for episode in range(1, self.num_episodes + 1):
+        #     obs = env.reset()
+        #     done = False
+        #     score = 0
+        #
+        #     while not done:
+        #         # Take a random action
+        #         action = env.action_space.sample()
+        #         obs, reward, done, info = env.step(action)
+        #         score += reward
+        #     env.print_status()
+        #     logger.info(f"Episode: {episode} Score: {score}")
+        #
+        # # TODO save env?
+        # env.close()
 
 if __name__ == '__main__':
     logger = logging.getLogger()

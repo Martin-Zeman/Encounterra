@@ -49,9 +49,9 @@ def convert_path_to_increments(path):
 
 
 class Terrain(Enum):
-    NORMAL_TERRAIN = 1
-    DIFFICULT_TERRAIN = 2
-    IMPASSABLE_TERRAIN = 3
+    NORMAL_TERRAIN = 0
+    DIFFICULT_TERRAIN = 1
+    IMPASSABLE_TERRAIN = 2
 
 
 class Occupancy(Enum):
