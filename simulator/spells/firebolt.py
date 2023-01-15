@@ -1,6 +1,6 @@
 from simulator.spells.spell import Spell
 from simulator.misc import DamageType
-from simulator.actions import Action, BonusAction
+from simulator.action_types import Action, BonusAction
 import logging
 
 logger = logging.getLogger(__name__)

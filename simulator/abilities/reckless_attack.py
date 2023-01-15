@@ -1,7 +1,7 @@
 from simulator.actoid import Actoid
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.actions import FreeAction
+from simulator.action_types import FreeAction
 
 
 class RecklessAttack(Actoid, CombatantEffect, LimitedDurationEffect):

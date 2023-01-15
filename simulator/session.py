@@ -106,7 +106,7 @@ class Session:
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(1, 2))
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(1, 2))
 
-    def simulate(self, parallel=False, train=False):
+    def simulate(self, parallel=False):
         self.battle_map = Map(self.map_size, self.teams)
         self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map)
         self.place_combatants_on_the_map()
@@ -137,20 +137,5 @@ class Session:
             logger.info("--------------STATISTICS--------------")
             for name, victories in accumulated_tally.items():
                 logger.info(f"Team {name.name} won total of {victories} times", extra={"team": name})
-        elif train:
-            env = FaurungEnv(self.combatants, self.teams, self.battle_map)
-            for combatant in self.combatants:
-                combatant.set_round_manager(self.round_manager)
-            obs = env.reset()
-
-            while True:
-                # Take a random action
-                action = env.action_space.sample()
-                obs, reward, done, info = env.step(action)
-
-                if done:
-                    break
-
-            env.close()
         else:
             self.round_manager.simulate_n(self.num_simulations)

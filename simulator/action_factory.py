@@ -1,6 +1,4 @@
-import numpy as np
-
-from simulator.attack import Attack
+from simulator.abilities.attack import Attack
 from simulator.dodge import Dodge
 from simulator.dash import Dash
 from simulator.spells.fireball import Fireball
@@ -13,7 +11,7 @@ from simulator.abilities.rage import Rage
 from simulator.abilities.totem_rage import TotemRage
 from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.movement import MovementIncrement
-from simulator.actions import *
+from simulator.action_types import *
 import logging
 
 logger = logging.getLogger(__name__)

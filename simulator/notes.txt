@@ -15,3 +15,13 @@ FaurungDt vs 4 Cultists on Ubuntu:
  Team BLUE won total of 431 times
  Team RED won total of 569 times
 ---Simulation took 218.1 seconds ---
+
+
+Trainign Faurung:
+ Feasibility rate: 0.046; Unfeasibility rate 0.078
+ Feasibility rate: 0.028; Unfeasibility rate 0.098
+ Feasibility rate: 0.02; Unfeasibility rate 0.112
+ Feasibility rate: 0.022; Unfeasibility rate 0.12
+ Feasibility rate: 0.028; Unfeasibility rate 0.092
+ Feasibility rate: 0.02; Unfeasibility rate 0.1
+ Feasibility rate: 0.038; Unfeasibility rate 0.102

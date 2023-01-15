@@ -1,5 +1,5 @@
 from simulator.spells.spell import Spell
-from simulator.actions import Reaction
+from simulator.action_types import Reaction
 import logging
 
 logger = logging.getLogger(__name__)

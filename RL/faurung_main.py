@@ -17,7 +17,6 @@ class TrainingSession:
 
     def __init__(self):
         self.combatants = []
-        self.num_episodes = 1
         self.battle_map = None
         self.map_size = 15
         self.statistic_collector = None
@@ -56,50 +55,81 @@ class TrainingSession:
         self.character_type_counter[combatant_type] += 1
         self.teams.add_combatant_to_team(self.combatants[-1], team)
 
-
-    def set_map_size(self, size):
-        self.map_size = size
-
-    def set_num_episodes(self, num):
-        assert num > 0
-        self.num_episodes = num
-
-    def train(self):
+    def init_env(self):
         assert self.trainee is not None
         env = FaurungEnv(self.combatants, self.teams, self.battle_map)
         for combatant in self.combatants:
             combatant.set_round_manager(self.env)
         env.set_trainee(self.trainee)
+        return env
+
+    def test(self, num_episodes):
+        env = self.init_env()
+
+        for episode in range(1, num_episodes + 1):
+            _ = env.reset()
+            done = False
+            score = 0
+
+            while not done:
+                # Take a random action
+                action = env.action_space.sample()
+                obs, reward, done, info = env.step(action)
+                score += reward
+            env.print_status()
+            logger.info(f"Episode: {episode} Score: {score}")
+        env.close()
+
+    def simulate(self, num_episodes):
+        env = self.init_env()
+        model_load_path = os.path.join(os.getcwd(), 'saved_models', 'faurung.zip')
+        model = PPO.load(model_load_path, env=env)
+
+        for episode in range(1, num_episodes + 1):
+            obs = env.reset()
+            done = False
+            score = 0
+
+            while not done:
+                action = model.predict(obs)
+                obs, reward, done, info = env.step(action)
+                score += reward
+            env.print_status()
+            logger.info(f"Episode: {episode} Score: {score}")
+        env.close()
+
+    def train(self, total_timesteps):
+        env = self.init_env()
 
         log_path = os.path.join(os.getcwd(), 'logs')
         model_save_path = os.path.join(os.getcwd(), 'saved_models', 'faurung')
+        model_load_path = os.path.join(os.getcwd(), 'saved_models', 'faurung.zip')
 
         env = DummyVecEnv([lambda: env])
-        model = PPO("MlpPolicy", env, verbose=2, tensorboard_log=log_path)
-        # model = PPO.load((model_save_path))
+        # model = PPO("MlpPolicy", env, verbose=2, tensorboard_log=log_path)
+        model = PPO.load(model_load_path, env=env)
 
-        model.learn(total_timesteps=1000)
+        model.learn(total_timesteps=total_timesteps)
         model.save(model_save_path)
+        env.close()
 
-        # for episode in range(1, self.num_episodes + 1):
-        #     obs = env.reset()
-        #     done = False
-        #     score = 0
-        #
-        #     while not done:
-        #         # Take a random action
-        #         action = env.action_space.sample()
-        #         obs, reward, done, info = env.step(action)
-        #         score += reward
-        #     env.print_status()
-        #     logger.info(f"Episode: {episode} Score: {score}")
-        #
-        # # TODO save env?
-        # env.close()
+    def evaluate(self):
+        assert self.trainee is not None
+        env = FaurungEnv(self.combatants, self.teams, self.battle_map)
+        for combatant in self.combatants:
+            combatant.set_round_manager(self.env)
+        env.set_trainee(self.trainee)
+        model_load_path = os.path.join(os.getcwd(), 'saved_models', 'faurung.zip')
+        env = DummyVecEnv([lambda: env])
+        model = PPO.load(model_load_path, env=env)
+        result = evaluate_policy(model, env, n_eval_episodes=10, render=False)
+        logger.info(result)
+        env.close()
+
 
 if __name__ == '__main__':
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     stdout_handler = logging.StreamHandler(stream=sys.stdout)
     stdout_handler.setFormatter(LogFormatter())
     logger.addHandler(stdout_handler)
@@ -112,5 +142,6 @@ if __name__ == '__main__':
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.set_num_episodes(100)
-    session.train()
+    session.train(90000)
+    # session.evaluate()
+    # session.simulate(1)

@@ -1,3 +1,4 @@
+- Make each action its own factory
 - AOE hit score still counts dead characters - DONE
 - Make sure allies cannot occupy the same space - DONE
 - num of attacks should be charged to its max - 1 by taking the attack action if the combatant still has an action, otherwise it should deduct an attack
@@ -8,13 +9,14 @@
 - Add large+ sized creatures
 - Add a random generator of monsters which would generate random names for selected types of monsters - DONE
 - Make allies difficult terrain but make sure they can't become the destination which might be difficult maybe I could make them impassable - DONE
-- consider geometric centers of grid for distance checking in cases such as radius etc.
+- consider geometric centers of grid for distance checking in cases such as radius etc. - DONE
 - Add a statistics engine to collect things such as avg. number of killed combatants, avg HP lost, avg. resources committed etc.
 - give disadvantage on ranged attacks when an enemy is adjacent
 - implement the "only one leveled spell" a turn to the environment checker - DONE
 - the cultist seems to be able to use dodge even after an attack - DONE?
 - Add special spell slots for stuff like magic initiate
-- Looks like Barbarian only attacked one after breaking through PAM attack. Should have had two attacks
+- Looks like Barbarian only attacked once after breaking through PAM attack. Should have had two attacks
 - Barbarian's ability dmg is not resetting between simulations
 - Combatant tries to use haste dash after being hit by sentinel
 - Action of type Movement.STANDARD by DragonclawCultist 1 is non-feasible. Dodging instead.
+- Unknown spell during training

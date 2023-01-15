@@ -3,11 +3,12 @@ import math
 from simulator.misc import SavingThrow, Conditions, RollModifier, Size
 from simulator.action_factory import *
 from enum import Enum
+from abc import ABC, abstractmethod
 
 logger = logging.getLogger(__name__)
 
 
-class Combatant:
+class Combatant(ABC):
     class State(Enum):
         FINE = 0
         BLOODIED = 1
@@ -201,6 +202,28 @@ class Combatant:
         for st in self.saving_throws.values():
             st[1] = RollModifier.STRAIGHT
 
+    @abstractmethod
+    def calculate_threat(self, battle_map):
+        """
+        Calculates the threat potential of the combatant for all their abilities
+        @param battle_map:
+        @return:
+        """
+        return 0
+
+
+    def calculate_threat_foreign(self, battle_map):
+        """
+        Calculates the threat potential of the combatant as a non-self character (i.e. being considered as a target)
+        @param battle_map:
+        @return:
+        """
+        # iterate over abilities, calculate their threat and order them and return the max
+        # or maybe just get the last calculated threat when it was combatant's turn otherwise we might end up in an endless loop
+        # (there could be some multiplier based on their HP and resource status)
+        # if the never had a turn then call the regular calculate_threat and return max (and cache the results)
+        return 0
+
     def is_bloodied_or_worse(self):
         return self.condition.value >= self.State.BLOODIED.value
 
@@ -210,6 +233,7 @@ class Combatant:
     def add_team(self, team_color):
         self.team_color = team_color
 
+    @abstractmethod
     def prompt_aoo(self, moving_combatant):
         return None,
 

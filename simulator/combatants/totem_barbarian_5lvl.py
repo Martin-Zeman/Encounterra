@@ -2,7 +2,7 @@ from simulator.combatant import Combatant
 from simulator.movement import MovementGenerator
 from simulator.misc import DamageType
 from simulator.action_factory import *
-from simulator.actions import *
+from simulator.action_types import *
 from simulator.misc import Side
 import numpy as np
 import logging

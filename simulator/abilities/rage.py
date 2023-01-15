@@ -2,7 +2,7 @@ from simulator.misc import DamageType
 from simulator.actoid import Actoid
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.actions import BonusAction
+from simulator.action_types import BonusAction
 
 
 class Rage(Actoid, CombatantEffect, LimitedDurationEffect):

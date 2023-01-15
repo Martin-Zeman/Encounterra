@@ -1,6 +1,6 @@
 import logging
 from simulator.actoid import Actoid
-from simulator.actions import Movement
+from simulator.action_types import Movement
 
 logger = logging.getLogger(__name__)
 

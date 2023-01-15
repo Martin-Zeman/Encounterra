@@ -27,6 +27,13 @@ class Faurung(Combatant):
         self.nowhere_to_go = False
 
     def get_action(self, battle_map):
+        # actions = get_feasible_actions()
+        # while len(actions > 0):
+        #     pick one with the highest threat
+        #     resolve movement
+        #     actions = get_feasible_actions()
+
+
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
             enemies, dist = battle_map.get_enemies_within_radius(self, Spell.Range.FEET_120.value)
             if not enemies:

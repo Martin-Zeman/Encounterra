@@ -1,7 +1,8 @@
 from enum import Enum, auto
+from abc import ABC, abstractmethod
 
 
-class Actoid:
+class Actoid(ABC):
     class Type(Enum):
         IS_ATTACK_LIKE_ACTION = auto()
         IS_MOVEMENT = auto()
@@ -13,3 +14,8 @@ class Actoid:
     def __init__(self, actoid_type):
         self.actoid_type = actoid_type
         self.action_type = None
+
+    @abstractmethod
+    @staticmethod
+    def calculate_threat(self, combatant, battle_map):
+        return 0

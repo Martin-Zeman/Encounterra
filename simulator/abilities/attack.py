@@ -1,5 +1,5 @@
 from simulator.actoid import Actoid
-from simulator.actions import Action
+from simulator.action_types import Action
 
 class Attack(Actoid):
     def __init__(self, action_type, name, combatant, target_combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, crit_range=[20]):

@@ -312,9 +312,9 @@ class ActionResolver:
         feasible = check_feasibility(combatant, action, self.battle_map)
         if not feasible and combatant.has_action:
             action = Dodge(combatant)
-            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+            logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
         elif not feasible:
-            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible.")
+            logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
             return ActionResult.UNFEASIBLE
         use_resources(combatant, action)
         return self.resolve_by_actoid_type(action, combatant)
@@ -334,12 +334,15 @@ class ActionResolver:
         feasible = check_feasibility(combatant, action, self.battle_map)
         if not feasible and combatant.has_action:
             action = Dodge(combatant)
-            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+            logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
         elif not feasible:
-            logger.warning(f"Action of type {action_type} by {combatant} is non-feasible.")
+            logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
             return ActionResult.UNFEASIBLE
         use_resources(combatant, action)
         result = self.resolve_by_actoid_type(action, combatant)
+        if not combatant.is_alive():
+            # could have nuked itself with an AoE...
+            return ActionResult.TRAINEE_DEAD
         return result if feasible else ActionResult.UNFEASIBLE
 
     def resolve_toggle_ability(self, combatant, ability):

@@ -2,7 +2,9 @@ from enum import Enum, Flag, auto
 import random
 import re
 import math
-import functools
+import numpy as np
+from scipy.stats import randint
+from functools import reduce, partial, cache
 
 
 class SavingThrow(Enum):
@@ -75,18 +77,115 @@ class DistanceMetric(Enum):
     HOP = auto()
     CARTESIAN = auto()
 
+
 class PlacementScenario(Enum):
     TWO_HALVES = 1
     TOTALLY_RANDOM = 2
     # SURROUNDED = 3
 
 
+@cache
 def parse_dmg_dice(dice_string):
     p = re.compile('(\d+)d(\d+)')
     m = p.match(dice_string)
     num_dice = int(m.group(1))
     dice_size = int(m.group(2))
     return num_dice, dice_size
+
+
+@cache
+def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1):
+    """
+    Calculates mean dmg of an attack-like ability
+    @param to_hit: to hit bonus
+    @param dmg_dice: damage dice in a string form
+    @param dmg_bonus: bonus to damage
+    @param ac: target's AC
+    @param crit_range: 1 - default for nat 20, 2 for [19, 20], 3 for [18..20], etc.
+    @return: mean damage not accounting for critical failures
+    """
+    rv = randint(1, 21, to_hit)
+    p_hit = 1.0 - rv.cdf(ac - 1)
+    num_dice, dice_size = parse_dmg_dice(dmg_dice)
+    avg_dmg_die_roll = num_dice * ((1.0 + dice_size) / 2.0)
+    return (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
+
+
+@cache
+def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increment):
+    """
+    Calculates the increase in mean dmg for an attack-like ability using a flat to-hit bonus
+    @param to_hit: to hit bonus
+    @param dmg_dice: damage dice in a string form
+    @param dmg_bonus: bonus to damage
+    @param ac: target's AC
+    @param to_hit_increment:
+    @return: mean damage increment not accounting for critical failures
+    """
+    return mean_dmg(to_hit + to_hit_increment, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
+
+
+@cache
+def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus):
+    """
+    Calculates the decrease in mean dmg received for an attack-like ability using a flat AC bonus
+    @param to_hit: to hit bonus
+    @param dmg_dice: damage dice in a string form
+    @param dmg_bonus: bonus to damage
+    @param ac: target's AC
+    @param ac_bonus: bonus to target's AC
+    @return: mean damage increment not accounting for critical failures
+    """
+    return mean_dmg(to_hit, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac + ac_bonus)
+
+
+@cache
+def mean_dmg_bonus_increment_for_to_hit_bonus_dice(to_hit, dmg_dice, dmg_bonus, ac, bonus_dice_size):
+    """
+    Calculates the increase in mean dmg for an attack-like ability using a to-hit bonus die
+    @param to_hit: to hit bonus
+    @param dmg_dice: damage dice in a string form
+    @param dmg_bonus: bonus to damage
+    @param ac: target's AC
+    @param bonus_dice_size:
+    @return: mean damage increment not accounting for critical failures
+    """
+    return mean_dmg(to_hit + (1.0 + bonus_dice_size) / 2.0, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
+
+
+def print_ac_dc_range(min, max, attacks, monster_name="Monster"):
+    print(monster_name + ":")
+    for i in range(min, max + 1):
+        dmg_sum = reduce((lambda a, b: a + b), [a(i) for a in attacks])
+        print("{:.2f}".format(dmg_sum))
+    print()
+
+
+def calc_attack(to_hit, dmg_dice, dmg_bonus):
+    return partial(mean_dmg, to_hit, dmg_dice, dmg_bonus)
+
+
+@cache
+def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus):
+    """
+    Calculates mean damage of a DC-based ability
+    @param dc: DC
+    @param dmg_dice: dmg dice in string form
+    @param half_on_success: True if half damage is received on a successful saving throw, False if zero
+    @param st_bonus: respective saving throw bonus
+    @return:
+    """
+    num_dice, dice_size = parse_dmg_dice(dmg_dice)
+    avg_dmg_die_roll = num_dice * ((1.0 + dice_size) / 2.0)
+    rv = randint(1, 21, st_bonus)
+    p_fail = rv.cdf(dc - 1)
+    fail_dmg = avg_dmg_die_roll * p_fail
+    final_avg_dmg = fail_dmg + avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else fail_dmg
+    return final_avg_dmg
+
+
+def calc_dc_attack(dc, dmg_dice, half_on_success):
+    return partial(mean_dmg_dc_attack, dc, dmg_dice, half_on_success)
 
 
 def roll_dice(num_dice, dice_size):
@@ -123,9 +222,17 @@ def linex_loss(x):
     return (math.e ** (x - 10)) + 2 * (x - 10) + 10
 
 
+def normal_dist(x, mean, sd):
+    prob_density = (np.pi * sd) * np.exp(-0.5 * ((x - mean) / sd) ** 2)
+    return prob_density
+
+
+def caster_distance_reward_func(dist):
+    return normal_dist(dist, 15, 8) - 13
+
+
 def percentage_hp_loss(start_of_turn_hp, combatant):
     return 100 * (start_of_turn_hp - max(0, combatant.curr_hp)) / combatant.max_hp
-
 
 # def init_coroutine(func):
 #     @functools.wraps(func)

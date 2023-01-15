@@ -75,6 +75,9 @@ class FaurungEnv(Env):
         self.action_mapping = {i:a for i, a in enumerate(self.actions)}
         self.index_to_combatant_mapping = {i:c for i, c in enumerate(self.combatants)}
         self.placement_scenario = PlacementScenario.TWO_HALVES
+        self.feasible_counter = 0
+        self.unfeasible_counter = 0
+        self.step_counter = 0
 
     def encode_obs(self):
         obs = np.zeros(self.observation_space.shape[0], dtype=int)
@@ -240,11 +243,9 @@ class FaurungEnv(Env):
                     if combatant is not self.trainee:
                         self.action_resolver.resolve_action(action, args, combatant)
                     else:
-                        logger.warning(f"Action {action}")
+                        logger.debug(f"Trainee action: {action}")
                         yield self.action_resolver.resolve_action_train(action, args, combatant)
                     if not combatant.is_alive():
-                        if combatant is self.trainee:
-                            yield ActionResult.TRAINEE_DEAD
                         break  # could have died as a result of AoO
                 else:
                     logger.debug(f"Combatant {combatant} is dead. Skipping")
@@ -261,9 +262,13 @@ class FaurungEnv(Env):
     def compute_reward(self, result):
         reward = 0
         if result is ActionResult.UNFEASIBLE:
+            self.unfeasible_counter += 1
             reward -= 100
         elif result is ActionResult.FEASIBLE:
+            self.feasible_counter += 1
             reward += 10
+        elif result is ActionResult.TRAINEE_DEAD:
+            return -200
 
         enemy_hp_loss = 0
         ally_hp_loss = 0
@@ -280,18 +285,23 @@ class FaurungEnv(Env):
         reward -= trainee_loss_of_hp * 2
 
         # distance to nearest enemy, using linex loss function f(x)=-e^(x - 10) + 2(x -10) + 10
-        _, dist = self.battle_map.get_nearest(self.trainee, Side.ENEMY)
-        reward += linex_loss(dist)
+        nearest, dist = self.battle_map.get_nearest(self.trainee, Side.ENEMY)
+        if nearest:
+            reward += caster_distance_reward_func(dist)
         return reward
 
     def step(self, trainee_action):
         done = False
         result = self.simulator_engine.send(trainee_action)
+        self.step_counter += 1
         if result is ActionResult.TRAINEE_DEAD or self.is_only_one_team_standing():
             done = True
-            reward = -100  # penalty for dying
-        else:
-            reward = self.compute_reward(result)
+        reward = self.compute_reward(result)
         obs = self.encode_obs()
+        if self.step_counter == 500:
+            logger.info(f"Feasibility rate: {self.feasible_counter / self.step_counter}; Unfeasibility rate {self.unfeasible_counter /  self.step_counter}")
+            self.feasible_counter = 0
+            self.unfeasible_counter = 0
+            self.step_counter = 0
         return obs, reward, done, {}
 

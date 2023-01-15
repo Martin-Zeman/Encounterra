@@ -1,7 +1,7 @@
 from simulator.spells.spell import Spell
 from simulator.effects.effect import Effect
-from simulator.actions import HasteAction
-from simulator.actions import Action, BonusAction
+from simulator.action_types import HasteAction
+from simulator.action_types import Action, BonusAction
 
 
 class Haste(Spell, Effect):

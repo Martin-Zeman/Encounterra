@@ -1,6 +1,6 @@
 from simulator.spells.spell import Spell
 import logging
-from simulator.actions import BonusAction
+from simulator.action_types import BonusAction
 
 logger = logging.getLogger(__name__)
 class MistyStep(Spell):
