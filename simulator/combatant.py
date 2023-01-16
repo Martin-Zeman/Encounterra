@@ -34,6 +34,7 @@ class Combatant(ABC):
         self.dc = dc
         self.init_bonus = init_bonus
         self.spell_to_hit = spell_to_hit
+        self.attacks = []
         self.ability_dmg_bonus = 0
         self.curr_init = None
         self.has_action = True
@@ -71,6 +72,7 @@ class Combatant(ABC):
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
         self.size = Size.MEDIUM
+        self.last_max_threat = None
 
     def __str__(self):
         return self.name
@@ -209,6 +211,7 @@ class Combatant(ABC):
         @param battle_map:
         @return:
         """
+        self.last_max_threat = 0
         return 0
 
 

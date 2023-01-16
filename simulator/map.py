@@ -648,9 +648,15 @@ class Map:
                 logger.error("Unrecognized ability target type")
         return affected_combatants
 
-    def get_enemies_within_radius(self, combatant, radius):
+    def get_enemies_within_radius_sorted_by_distance(self, combatant, radius):
         enemies = [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
         distances = [self.get_cartesian_distance(e, combatant) for e in enemies]
         enemies.sort(key=lambda e: self.get_cartesian_distance(e, combatant))
         distances.sort()
         return enemies, distances
+
+    def get_enemies_within_radius(self, combatant, radius):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
+
+    def get_enemies_within_hop_distance(self, combatant, distance):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]

@@ -68,7 +68,7 @@ class FaurungDt(Combatant):
             if self.has_action:
                 placement, _ = battle_map.find_best_placement_harmful_circular(self, 30, 4)
                 allies = battle_map.teams.get_allies(self)
-                enemies, _ = battle_map.get_enemies_within_radius(self, Spell.Range.FEET_120.value)
+                enemies, _ = battle_map.get_enemies_within_radius_sorted_by_distance(self, Spell.Range.FEET_120.value)
 
                 decision = self.INV_MAPPING[self.model.predict([[len(enemies), self.already_cast_leveled_spell_this_turn,
                                                                  self.spellslots.get_spellslots(1), self.spellslots.get_spellslots(2),

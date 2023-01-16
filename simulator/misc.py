@@ -86,6 +86,7 @@ class PlacementScenario(Enum):
 
 @cache
 def parse_dmg_dice(dice_string):
+    # TODO improve this to be able to parse dice equations
     p = re.compile('(\d+)d(\d+)')
     m = p.match(dice_string)
     num_dice = int(m.group(1))

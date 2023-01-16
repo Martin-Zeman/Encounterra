@@ -17,5 +17,5 @@ class Actoid(ABC):
 
     @abstractmethod
     @staticmethod
-    def calculate_threat(self, combatant, battle_map):
+    def calculate_threat(combatant, battle_map, *args, **kwargs):
         return 0

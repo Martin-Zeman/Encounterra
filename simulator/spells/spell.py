@@ -2,7 +2,7 @@ from enum import Enum
 from simulator.actoid import Actoid
 
 
-class Spell(Actoid):
+class SpellStats(Actoid):
 
     class Target(Enum):
         SELF = 0

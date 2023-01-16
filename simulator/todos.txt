@@ -1,4 +1,8 @@
-- Make each action its own factory
+- Attacks would probablyt be stored a bit differently from other abilities since you can have many different attacks with different args
+- Effects on which a combatant is concentrating should be considered in both self and foreign threat
+- Make each action its own factory as in it would find the best args for itself
+- Some Actions would only modify threat of other actions. The threat factory should probably determine that
+- Number of attacks would be considered outside the attack class. Probably also by the threat factory
 - AOE hit score still counts dead characters - DONE
 - Make sure allies cannot occupy the same space - DONE
 - num of attacks should be charged to its max - 1 by taking the attack action if the combatant still has an action, otherwise it should deduct an attack
