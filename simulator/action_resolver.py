@@ -145,7 +145,7 @@ class ActionResolver:
     def resolve_spell(self, caster, spell):
         match spell.action_type:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
-                affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell)
+                affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.stats.target, spell.stats.type, spell.coord)
                 dmg = roll_spell_dmg(spell.dmg_dice)
                 actual_total_dmg = 0
                 for combatant in affected:

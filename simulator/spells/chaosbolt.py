@@ -35,21 +35,23 @@ class Chaosbolt:
                     break
             return potential_targets[:i]
 
-    def __init__(self, targets):
+    def __init__(self, targets, stats):
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.targets = targets
-
+        self.stats = stats
 
 
     @staticmethod
-    def calculate_threat(combatant, battle_map, *args, **kwargs):
-        stats = kwargs['stats']
-        target_combatants = kwargs['target_combatants']
+    def calculate_threat_approx(combatant, battle_map, *args, **kwargs):
+        return 0 # TODO
+
+
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         acc = 0
         p_acc = 1
         P_SAME = 4 / 43  # 8/86 = 4 / 43
-        for target in target_combatants:
-            acc += mean_dmg(stats.to_hit, stats.dmg_dice, 0, target.ac) * p_acc
-            acc += mean_dmg(stats.to_hit, stats.additional_dmg_dice, 0, target.ac) * p_acc
+        for target in self.target_combatants:
+            acc += mean_dmg(self.stats.to_hit, self.stats.dmg_dice, 0, target.ac) * p_acc
+            acc += mean_dmg(self.stats.to_hit, self.stats.additional_dmg_dice, 0, target.ac) * p_acc
             p_acc += P_SAME
         return acc

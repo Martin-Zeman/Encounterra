@@ -37,7 +37,13 @@ class Attack(Actoid):
         return self.dmg_type
 
     @staticmethod
-    def calculate_threat(combatant, battle_map, *args, **kwargs):
+    def calculate_threat_approx(combatant, battle_map, *args, **kwargs):
+        # stats = kwargs['stats']
+        # target_combatant = kwargs['target_combatant']
+        # return mean_dmg(stats.to_hit, stats.dmg_dice, stats.dmg_bonus, target_combatant.ac, len(stats.crit_range))
+        return 0 # TODO
+
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         stats = kwargs['stats']
         target_combatant = kwargs['target_combatant']
-        return mean_dmg(stats.to_hit, stats.dmg_dice, stats.dmg_bonus, target_combatant.ac, len(stats.crit_range))
+        return mean_dmg(self.stats.to_hit, self.stats.dmg_dice, self.stats.dmg_bonus, target_combatant.ac, len(stats.crit_range))

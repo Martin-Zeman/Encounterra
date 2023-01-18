@@ -71,7 +71,7 @@ class Faurung(Combatant):
             if len(enemies) > 1 and random.randint(1, 10) > 3 and self.curr_sorcery_points > 0:
                 should_twin = True
             if self.has_action and not self.already_cast_leveled_spell_this_turn:
-                placement, score = battle_map.find_best_placement_harmful_circular(self, 30, 4)
+                placement, score, _ = battle_map.find_best_placement_harmful_circular(self, 30, 4)
                 allies = battle_map.teams.get_allies(self)
                 if self.spellslots.get_spellslots(3) and score > 1 and self.curr_sorcery_points > 0:
                     if score > 1:

@@ -605,6 +605,7 @@ class Map:
         max_score = -sys.maxsize - 1
         best_placement = None
         caster_coord = self.combatant_coordinate_cache[caster]
+        affected = []
         for i in range(bb[0][0], bb[1][0]):
             for j in range(bb[0][1], bb[1][1]):
                 curr_coord = np.array([i, j])
@@ -615,32 +616,33 @@ class Map:
                             1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4) if get_cartesian_distance(
                             get_square_center(coord),
                             curr_coord) <= radius else 0
+                        affected.append(combatant)
                     if score > max_score:
                         max_score = score
                         best_placement = curr_coord
         logger.debug(self)
-        logger.debug(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
-        return best_placement, max_score
+        # logger.debug(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
+        return best_placement, max_score, affected
 
-    def get_combatants_affected_by_aoe(self, caster, ability):
+    def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):
         # TODO potentially check for protective abilities
         affected_combatants = []
-        match ability.target:
+        match target_template:
             case Spell.Target.RADIUS_10 | Spell.Target.RADIUS_20 | Spell.Target.RADIUS_30:
                 for potential_target, combatant_coord in self.combatant_coordinate_cache.items():
-                    if ability.type is Spell.Type.HARMFUL:
-                        if get_cartesian_distance(get_square_center(combatant_coord), ability.coord) <= Spell.TRANSLATE_RADIUS[
-                                ability.target]:
+                    if ability_type is Spell.Type.HARMFUL:
+                        if get_cartesian_distance(get_square_center(combatant_coord), origin) <= Spell.TRANSLATE_RADIUS[
+                                target_template]:
                             affected_combatants.append(potential_target)
-                    elif ability.type is Spell.Type.BUFF:
+                    elif ability_type is Spell.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if get_cartesian_distance(get_square_center(combatant_coord), ability.coord) <= Spell.TRANSLATE_RADIUS[
-                                ability.target] and self.teams.are_allies(caster, potential_target):
+                        if get_cartesian_distance(get_square_center(combatant_coord), origin) <= Spell.TRANSLATE_RADIUS[
+                                target_template] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
             case Spell.Target.CONE_15 | Spell.Target.CONE_30 | Spell.Target.CONE_60 | Spell.Target.CONE_90:
                 # Cone spells and abilities are generally only harmful
-                angle_deg = ability.angle
-                radius = Spell.TRANSLATE_CONE[ability.target]
+                angle_deg = angle
+                radius = Spell.TRANSLATE_CONE[target_template]
                 origin = self.combatant_coordinate_cache[caster]
                 affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
                 affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords]
