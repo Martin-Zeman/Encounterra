@@ -229,8 +229,8 @@ class ActionResolver:
             reaction, *args = target.prompt_after_hit_reaction(attacker)
             self.resolve_action(reaction, args, target)
         if rolled + attack.to_hit >= target.ac:  # Potentially missing this time
-            num_dice, dice_size = parse_dmg_dice(attack.dmg_dice)
-            dmg_dice_sum = roll_dice(num_dice, dice_size)
+            dice = parse_dmg_dice(attack.dmg_dice)
+            dmg_dice_sum = roll_dice(dice)
             total_dmg = multiplier * dmg_dice_sum + attack.dmg_bonus + attacker.ability_dmg_bonus
             logger.debug(
                 f"Attack {'CRITS' if multiplier == 2 else 'hits'} for {total_dmg} of which {attacker.ability_dmg_bonus} is ability dmg",

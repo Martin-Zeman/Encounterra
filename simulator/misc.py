@@ -5,6 +5,7 @@ import math
 import numpy as np
 from scipy.stats import randint
 from functools import reduce, partial, cache
+from itertools import accumulate
 
 
 class SavingThrow(Enum):
@@ -86,12 +87,20 @@ class PlacementScenario(Enum):
 
 @cache
 def parse_dmg_dice(dice_string):
-    # TODO improve this to be able to parse dice equations
+    """
+
+    @param dice_string:
+    @return: list of tuples representing (#num dice, dice size)
+    """
+    segments = dice_string.split('+')
+    num_dice = []
+    dice_size = []
     p = re.compile('(\d+)d(\d+)')
-    m = p.match(dice_string)
-    num_dice = int(m.group(1))
-    dice_size = int(m.group(2))
-    return num_dice, dice_size
+    for seg in segments:
+        m = p.match(seg)
+        num_dice.append(int(m.group(1)))
+        dice_size.append(int(m.group(2)))
+    return zip(num_dice, dice_size)
 
 
 @cache
@@ -107,8 +116,8 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1):
     """
     rv = randint(1, 21, to_hit)
     p_hit = 1.0 - rv.cdf(ac - 1)
-    num_dice, dice_size = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = num_dice * ((1.0 + dice_size) / 2.0)
+    dice = parse_dmg_dice(dmg_dice)
+    avg_dmg_die_roll = accumulate(dice, lambda d: d[0] * ((1.0 + d[1]) / 2.0))
     return (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
 
 
@@ -176,8 +185,8 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus):
     @param st_bonus: respective saving throw bonus
     @return:
     """
-    num_dice, dice_size = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = num_dice * ((1.0 + dice_size) / 2.0)
+    dice = parse_dmg_dice(dmg_dice)
+    avg_dmg_die_roll = accumulate(dice, lambda d: d[0] * ((1.0 + d[1]) / 2.0))
     rv = randint(1, 21, st_bonus)
     p_fail = rv.cdf(dc - 1)
     fail_dmg = avg_dmg_die_roll * p_fail
@@ -189,33 +198,39 @@ def calc_dc_attack(dc, dmg_dice, half_on_success):
     return partial(mean_dmg_dc_attack, dc, dmg_dice, half_on_success)
 
 
-def roll_dice(num_dice, dice_size):
+def roll_dice(dice):
+    """
+
+    @param dice: list of tuples of (# of dice (1..inf), dice sizes (4, 6, 8, 10, 12))
+    @return:
+    """
     dice_sum = 0
-    for i in range(num_dice):
-        dice_sum += random.randint(1, dice_size)
+    for d in dice:
+        for _ in range(d[0]):
+            dice_sum += random.randint(1, d[1])
     return dice_sum
 
 
-def roll_dice_chaos_bolt(num_dice, dice_size):
+def roll_dice_chaos_bolt(dice):
     dice_sum = 0
     numbers_rolled = []
-    for i in range(num_dice):
-        rolled = random.randint(1, dice_size)
+    for i in range(dice[0]):
+        rolled = random.randint(1, dice[1])
         dice_sum += rolled
         numbers_rolled.append(rolled)
     return dice_sum, numbers_rolled
 
 
 def roll_spell_dmg(dmg_dice):
-    num_dice, dice_size = parse_dmg_dice(dmg_dice)
-    return roll_dice(num_dice, dice_size)
+    dice = parse_dmg_dice(dmg_dice)
+    return roll_dice(dice)
 
 
 def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
-    num_dice, dice_size = parse_dmg_dice(dmg_dice)
-    primary_dmg, numbers = roll_dice_chaos_bolt(num_dice, dice_size)
-    num_dice, dice_size = parse_dmg_dice(additional_dmg_dice)
-    secondary_dmg = roll_dice(num_dice, dice_size)
+    dice = parse_dmg_dice(dmg_dice)
+    primary_dmg, numbers = roll_dice_chaos_bolt(dice[0])
+    dice = parse_dmg_dice(additional_dmg_dice)
+    secondary_dmg = roll_dice(dice)
     return primary_dmg + secondary_dmg, numbers
 
 
@@ -234,6 +249,11 @@ def caster_distance_reward_func(dist):
 
 def percentage_hp_loss(start_of_turn_hp, combatant):
     return 100 * (start_of_turn_hp - max(0, combatant.curr_hp)) / combatant.max_hp
+
+def percent_of_curr_hp(combatant, dmg):
+    return dmg / (combatant.curr_hp * 0.01)
+
+def sort_targets_by_percentage_loss()
 
 # def init_coroutine(func):
 #     @functools.wraps(func)

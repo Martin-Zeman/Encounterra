@@ -1,7 +1,8 @@
 from simulator.actoid import Actoid
 from simulator.action_types import Action
 from simulator.misc import mean_dmg
-
+from itertools import accumulate
+from simulator.misc import percent_of_curr_hp
 
 class Attack(Actoid):
     class Stats:
@@ -18,9 +19,11 @@ class Attack(Actoid):
 
         def find_best_args(self, combatant, battle_map):
             # TODO consider prioritizing the ones you have a change to finish off
-            potential_targets = battle_map.get_enemies_within_hop_distance(combatant.movement + self.range - 1)
-            potential_targets.sort(key=lambda e: e.curr_hp / e.max_hp)
-            return potential_targets[0]
+            potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range - 1)
+            hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, pt.ac, len(self.crit_range))) for pt in potential_targets]
+            potential_targets = list(zip(potential_targets, hp_percentages))
+            potential_targets.sort(key=lambda e: e[1], reverse=True)
+            return potential_targets[0][0]
 
     def __init__(self, target_combatant, stats):
         Actoid.__init__(self, actoid_type=Actoid.Type.IS_ATTACK_LIKE_ACTION)
@@ -38,10 +41,14 @@ class Attack(Actoid):
 
     @staticmethod
     def calculate_threat_approx(combatant, battle_map, *args, **kwargs):
-        # stats = kwargs['stats']
-        # target_combatant = kwargs['target_combatant']
-        # return mean_dmg(stats.to_hit, stats.dmg_dice, stats.dmg_bonus, target_combatant.ac, len(stats.crit_range))
-        return 0 # TODO
+        max_threat = 0
+        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
+        ac_acc = accumulate(potential_targets, lambda pt: pt.ac)
+        ac_acc /= len(potential_targets)
+        for attack in combatant.attacks:
+            threat = mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, ac_acc, len(attack.crit_range))
+            max_threat = max(threat, max_threat)
+        return max_threat
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         stats = kwargs['stats']
