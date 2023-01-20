@@ -2,12 +2,12 @@ import numpy as np
 import math
 import sys
 import logging
-from simulator.spells.spell import Spell
+from simulator.spells.spell import SpellStats
 from simulator.combatant import Combatant
 from multipledispatch import dispatch
 from simulator.misc import Conditions
 from simulator.action_factory import Passive
-from simulator.geometry import *
+from simulator.geometry import get_affected_by_cone, get_cartesian_distance, get_square_center
 from simulator.misc import Side, DistanceMetric
 import time
 from enum import Enum
@@ -628,21 +628,21 @@ class Map:
         # TODO potentially check for protective abilities
         affected_combatants = []
         match target_template:
-            case Spell.Target.RADIUS_10 | Spell.Target.RADIUS_20 | Spell.Target.RADIUS_30:
+            case SpellStats.Target.RADIUS_10 | SpellStats.Target.RADIUS_20 | SpellStats.Target.RADIUS_30:
                 for potential_target, combatant_coord in self.combatant_coordinate_cache.items():
-                    if ability_type is Spell.Type.HARMFUL:
-                        if get_cartesian_distance(get_square_center(combatant_coord), origin) <= Spell.TRANSLATE_RADIUS[
+                    if ability_type is SpellStats.Type.HARMFUL:
+                        if get_cartesian_distance(get_square_center(combatant_coord), origin) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template]:
                             affected_combatants.append(potential_target)
-                    elif ability_type is Spell.Type.BUFF:
+                    elif ability_type is SpellStats.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if get_cartesian_distance(get_square_center(combatant_coord), origin) <= Spell.TRANSLATE_RADIUS[
+                        if get_cartesian_distance(get_square_center(combatant_coord), origin) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
-            case Spell.Target.CONE_15 | Spell.Target.CONE_30 | Spell.Target.CONE_60 | Spell.Target.CONE_90:
+            case SpellStats.Target.CONE_15 | SpellStats.Target.CONE_30 | SpellStats.Target.CONE_60 | SpellStats.Target.CONE_90:
                 # Cone spells and abilities are generally only harmful
                 angle_deg = angle
-                radius = Spell.TRANSLATE_CONE[target_template]
+                radius = SpellStats.TRANSLATE_CONE[target_template]
                 origin = self.combatant_coordinate_cache[caster]
                 affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
                 affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords]

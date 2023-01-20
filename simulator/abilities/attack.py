@@ -1,5 +1,4 @@
 from simulator.actoid import Actoid
-from simulator.action_types import Action
 from simulator.misc import mean_dmg
 from itertools import accumulate
 from simulator.misc import percent_of_curr_hp
@@ -43,14 +42,11 @@ class Attack(Actoid):
     def calculate_threat_approx(combatant, battle_map, *args, **kwargs):
         max_threat = 0
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
-        ac_acc = accumulate(potential_targets, lambda pt: pt.ac)
-        ac_acc /= len(potential_targets)
         for attack in combatant.attacks:
-            threat = mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, ac_acc, len(attack.crit_range))
-            max_threat = max(threat, max_threat)
+            dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(combatant.spell_to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, len(attack.crit_range), pt.is_resistant_to(attack.dmg_type)))
+            dmg_acc /= len(potential_targets)
+            max_threat = max(dmg_acc, max_threat)
         return max_threat
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        stats = kwargs['stats']
-        target_combatant = kwargs['target_combatant']
-        return mean_dmg(self.stats.to_hit, self.stats.dmg_dice, self.stats.dmg_bonus, target_combatant.ac, len(stats.crit_range))
+        return mean_dmg(self.stats.to_hit, self.stats.dmg_dice, self.stats.dmg_bonus, self.target_combatant.ac, len(self.stats.crit_range), self.target_combatant.is_resistant_to(self.stats.dmg_type))

@@ -156,6 +156,9 @@ class Combatant(ABC):
             self.condition = self.State.BLOODIED
         return dmg
 
+    def is_resistant_to(self, dmg_type):
+        return dmg_type in self.resistances
+
     def apply_condition(self, condition):
         self.conditions |= condition
 
@@ -215,16 +218,21 @@ class Combatant(ABC):
         return 0
 
 
-    def calculate_threat_foreign(self, battle_map):
+    def calculate_threat_approx(self, battle_map):
         """
         Calculates the threat potential of the combatant as a non-self character (i.e. being considered as a target)
         @param battle_map:
         @return:
         """
-        # iterate over abilities, calculate their threat and order them and return the max
-        # or maybe just get the last calculated threat when it was combatant's turn otherwise we might end up in an endless loop
-        # (there could be some multiplier based on their HP and resource status)
-        # if the never had a turn then call the regular calculate_threat and return max (and cache the results)
+        # iterate over abilities, calculate their approx threat and order them and return the max
+        return 0
+
+    def calculate_threat_approx_haste_action(self, battle_map):
+        """
+        Calculates the threat potential of the combatant as a non-self character that can be achieved with a haste action
+        @param battle_map:
+        @return:
+        """
         return 0
 
     def is_bloodied_or_worse(self):

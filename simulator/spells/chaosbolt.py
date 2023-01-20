@@ -4,6 +4,7 @@ from itertools import pairwise
 import logging
 from simulator.actoid import Actoid
 from simulator.misc import percent_of_curr_hp
+from functools import partial
 
 logger = logging.getLogger(__name__)
 
@@ -30,44 +31,44 @@ class Chaosbolt(Actoid):
             self.additional_dmg_dice = "1d6"
 
         @staticmethod
-        def get_sorted_chain(to_hit, combatant, battle_map):
-            pass # TODO
+        def get_sorted_chain( battle_map, potential_targets, threat_calc_func):
+            hp_percentages = [percent_of_curr_hp(pt, threat_calc_func(pt.ac)) for pt in potential_targets]
+            potential_targets = list(zip(potential_targets, hp_percentages))
+            potential_targets.sort(key=lambda e: e[1], reverse=True)
+            for i in range(1, len(potential_targets)):
+                if battle_map.get_cartesian_distance(potential_targets[i - 1][0], potential_targets[i][0]) > SpellStats.Range.FEET_30:
+                    break
+            return list(zip(*potential_targets[:i]))[0]
+
         def find_best_args(self, combatant, battle_map):
             potential_targets = battle_map.get_enemies_within_radius(combatant, super().spell_range.value)
             dmg_dice = "+".join(self.dmg_dice, self.additional_dmg_dice)
-            hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, 1)) for pt in potential_targets]
-            potential_targets = list(zip(potential_targets, hp_percentages))
-            potential_targets.sort(key=lambda e: e[1], reverse=True)
-            res = [potential_targets[0][0]]
-            for i in range(0, len(potential_targets) - 1):
-                if battle_map.get_cartesian_distance(potential_targets[i][0], potential_targets[i + 1][0]) > SpellStats.Range.FEET_30:
-                    break
-                res.append(potential_targets[i + 1][0])
-            return res
+            mean_dmg_func = partial(mean_dmg, to_hit=self.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
+            return self.get_sorted_chain(battle_map, potential_targets, mean_dmg_func)
 
-    def __init__(self, targets, stats):
+
+
+    def __init__(self, action_type, targets, stats):
+        super().__init__(Actoid.Type.IS_SPELL)
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.action_type = action_type
         self.targets = targets
         self.stats = stats
 
 
     @staticmethod
     def calculate_threat_approx(combatant, battle_map, *args, **kwargs):
-
         potential_targets = battle_map.get_enemies_within_radius(super().spell_range.value)
         dmg_dice = "+".join(super().dmg_dice, super().additional_dmg_dice)
-        hp_percentages = [percent_of_curr_hp(pt, mean_dmg(combatant.spell_to_hit, dmg_dice, 0, pt.ac, 1)) for pt in potential_targets]
-        potential_targets = list(zip(potential_targets, hp_percentages))
-        potential_targets.sort(key=lambda e: e[1], reverse=True)
-
-        max_threat = 0
-        potential_targets = find_best_args(self, combatant, battle_map)
-        ac_acc = accumulate(potential_targets, lambda pt: pt.ac)
-        ac_acc /= len(potential_targets)
-        for attack in combatant.attacks:
-            threat = mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, ac_acc, len(attack.crit_range))
-            max_threat = max(threat, max_threat)
-        return max_threat
+        mean_dmg_func = partial(mean_dmg, to_hit=combatant.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
+        sorted_targets = Chaosbolt.Stats.get_sorted_chain(battle_map, potential_targets, mean_dmg_func)
+        acc = 0
+        p_acc = 1
+        P_SAME = 4 / 43  # 8/86 = 4 / 43
+        for target in sorted_targets:
+            acc += mean_dmg(combatant.spell_to_hit, dmg_dice, 0, target.ac) * p_acc
+            p_acc *= P_SAME
+        return acc
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
@@ -77,5 +78,5 @@ class Chaosbolt(Actoid):
         dmg_dice = "+".join(self.dmg_dice, self.additional_dmg_dice)
         for target in self.target_combatants:
             acc += mean_dmg(self.stats.to_hit, dmg_dice, 0, target.ac) * p_acc
-            p_acc += P_SAME
+            p_acc *= P_SAME
         return acc

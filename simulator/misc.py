@@ -104,7 +104,7 @@ def parse_dmg_dice(dice_string):
 
 
 @cache
-def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1):
+def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
     """
     Calculates mean dmg of an attack-like ability
     @param to_hit: to hit bonus
@@ -112,13 +112,15 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1):
     @param dmg_bonus: bonus to damage
     @param ac: target's AC
     @param crit_range: 1 - default for nat 20, 2 for [19, 20], 3 for [18..20], etc.
+    @param is_resistant: True if the target is resistant to the dmg type
     @return: mean damage not accounting for critical failures
     """
     rv = randint(1, 21, to_hit)
     p_hit = 1.0 - rv.cdf(ac - 1)
     dice = parse_dmg_dice(dmg_dice)
     avg_dmg_die_roll = accumulate(dice, lambda d: d[0] * ((1.0 + d[1]) / 2.0))
-    return (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
+    res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
+    return res if not is_resistant else (res / 2)
 
 
 @cache
@@ -176,7 +178,7 @@ def calc_attack(to_hit, dmg_dice, dmg_bonus):
 
 
 @cache
-def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus):
+def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=False):
     """
     Calculates mean damage of a DC-based ability
     @param dc: DC
@@ -191,7 +193,7 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus):
     p_fail = rv.cdf(dc - 1)
     fail_dmg = avg_dmg_die_roll * p_fail
     final_avg_dmg = fail_dmg + avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else fail_dmg
-    return final_avg_dmg
+    return final_avg_dmg if not is_resistant else final_avg_dmg / 2
 
 
 def calc_dc_attack(dc, dmg_dice, half_on_success):
@@ -253,7 +255,6 @@ def percentage_hp_loss(start_of_turn_hp, combatant):
 def percent_of_curr_hp(combatant, dmg):
     return dmg / (combatant.curr_hp * 0.01)
 
-def sort_targets_by_percentage_loss()
 
 # def init_coroutine(func):
 #     @functools.wraps(func)

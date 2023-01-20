@@ -27,6 +27,7 @@ class Fireball(Actoid):
 
 
     def __init__(self, action_type, coord, stats, level=3, has_spell_sculpting=False, **kwargs):
+        super().__init__(Actoid.Type.IS_SPELL)
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.action_type = action_type
         self.coord = coord

@@ -1,20 +1,23 @@
-from simulator.spells.spell import Spell
+from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
 from simulator.action_types import Action, BonusAction
+from simulator.actoid import Actoid
 
 
-class Haste(Spell, Effect):
-    def __init__(self, action_type, targets, caster, effect_tracker, level=3):
-        level = min(max(level, 3), 9)
-        super().__init__(level=level,
-                         spell_range=Spell.Range.FEET_30,
-                         target=Spell.Target.ONE_CREATURE,
-                         duration=Spell.Duration.MINUTE,
-                         concentration=True,
-                         type=Spell.Type.HARMFUL,
-                         dc=None,
-                         dmg_type=None)
+class Haste(Actoid, Effect):
+
+    level = 3
+    spell_range = SpellStats.Range.FEET_30
+    target = SpellStats.Target.ONE_CREATURE
+    duration = SpellStats.Duration.MINUTE
+    concentration = True
+    type = SpellStats.Type.BUFF
+    dc = None
+    dmg_type = None
+
+    def __init__(self, action_type, targets, caster, effect_tracker):
+        super().__init__(Actoid.Type.IS_SPELL)
         self.action_type = action_type
         self.targets = targets
         self.caster = caster
@@ -37,3 +40,13 @@ class Haste(Spell, Effect):
 
     def is_affecting(self, combatant):
         return combatant is self.target
+
+
+    @staticmethod
+    def calculate_threat_approx(combatant, battle_map, *args, **kwargs):
+        # TODO
+        return 0
+
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+        # TODO
+        return 0

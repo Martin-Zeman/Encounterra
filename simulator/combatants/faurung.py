@@ -3,7 +3,7 @@ from simulator.movement import MovementGenerator
 from simulator.spellslots import Spellslots
 from simulator.action_factory import *
 from simulator.misc import Side
-from simulator.spells.spell import Spell
+from simulator.spells.spell import SpellStats
 import logging
 import random
 
@@ -35,7 +35,7 @@ class Faurung(Combatant):
 
 
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
-            enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, Spell.Range.FEET_120.value)
+            enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
             if not enemies:
                 # all enemies are dead
                 return (MetaAction.DONE,)
