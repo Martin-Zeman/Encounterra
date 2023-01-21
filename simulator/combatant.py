@@ -87,6 +87,7 @@ class Combatant(ABC):
         self.curr_init = random.randint(1, 20) + self.init_bonus
 
     def add_ability(self, action_type, **kwargs):
+        # TODO This should also give combatants factories now
         """
 
         :param action_type: one of Action, BonusAction, Reaction or Passive instances
@@ -114,9 +115,8 @@ class Combatant(ABC):
         elif isinstance(action_type, BonusAction):
             match action_type:
                 case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
-                    self.max_rage_uses = kwargs["uses"]
-                    self.curr_rage_uses = kwargs["uses"]
-                    self.rage_bonus = kwargs["rage_bonus"]
+                    self.max_rage_uses = RageFactory.get_rage_uses(self.level)
+                    self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.rage_active = False
                 case _:
                     pass  # no resources required

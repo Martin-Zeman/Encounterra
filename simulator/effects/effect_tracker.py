@@ -1,5 +1,5 @@
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.effects.post_haste_lathargy import PostHasteLethargy
+from simulator.effects.post_haste_lethargy import PostHasteLethargy
 class EffectTracker:
     """
     TODO: Could be the class that takes care of exceptional removal of effects (such as rage)

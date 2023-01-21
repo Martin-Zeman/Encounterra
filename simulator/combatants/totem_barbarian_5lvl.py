@@ -16,7 +16,7 @@ class TotemBarbarian5Lvl(Combatant):
         super().__init__("TotemBarbarian5Lvl", level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
         self.attack_args = {Action.ATTACK: ["Two-handed axe", self, None,  7, "1d12", 4, DamageType.Slashing, 1],
                             Reaction.REACTION_ATTACK: ["Two-handed axe", self, None, 7, "1d12", 4, DamageType.Slashing, 1]}
-        self.add_ability(BonusAction.TOTEM_RAGE, uses=3, rage_bonus=2)
+        self.add_ability(BonusAction.TOTEM_RAGE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)
         self.add_ability(FreeAction.RECKLESS_ATTACK)

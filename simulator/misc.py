@@ -136,6 +136,19 @@ def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increm
     """
     return mean_dmg(to_hit + to_hit_increment, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
 
+@cache
+def dmg_increment_for_dmg_flat(to_hit, dmg_dice, dmg_bonus, ac, dmg_increment):
+    """
+    Calculates the increase in mean dmg for an attack-like ability using a flat damage bonus
+    @param to_hit: to hit bonus
+    @param dmg_dice: damage dice in a string form
+    @param dmg_bonus: bonus to damage
+    @param ac: target's AC
+    @param dmg_increment:
+    @return: mean damage increment not accounting for critical failures
+    """
+    return mean_dmg(to_hit, dmg_dice, dmg_bonus + dmg_increment, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
+
 
 @cache
 def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus):

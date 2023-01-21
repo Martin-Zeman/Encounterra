@@ -1,3 +1,4 @@
+- Maybe the approx threat should belong to the factories and would accept a dict of the FactoryStats that are boosted by the modifying ability
 - Attacks would probablyt be stored a bit differently from other abilities since you can have many different attacks with different args
 - Effects on which a combatant is concentrating should be considered in both self and foreign threat
 - Make each action its own factory as in it would find the best args for itself

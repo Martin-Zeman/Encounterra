@@ -207,7 +207,7 @@ class ActionResolver:
         :param attack:
         :return: True is hits, false if misses or is not attack
         """
-        target = attack.get_target_combatant()
+        target = attack.target_combatant
         attacker = attack.combatant
         assert target
         advantage = self.has_advantage(attack, attacker, target)
