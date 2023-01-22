@@ -33,7 +33,7 @@ class AttackFactory:
 class Attack(Actoid, DirectThreat):
 
     def __init__(self, target_combatant, factory):
-        Actoid.__init__(self, actoid_type=Actoid.Type.IS_ATTACK_LIKE_ACTION)
+        Actoid.__init__(self, actoid_type=Actoid.Type.IS_ATTACK_LIKE_ACTION, is_direct_dmg_dealing=True)
         self.target_combatant = target_combatant
         self.factory = factory
 

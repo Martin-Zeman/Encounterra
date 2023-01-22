@@ -97,6 +97,7 @@ class Map:
         self.difficult_set = set()
         self.impassable_set = set()
         self.combatant_coordinate_cache = {}  # Maps combatant -> coordinate
+        self.effect_tracker = None
 
     def __str__(self):
         string_repr = ""
@@ -110,6 +111,9 @@ class Map:
                     row_text += "0\t"
             string_repr += row_text + "\n"
         return string_repr
+
+    def set_effect_tracker(self, effect_tracker):
+        self.effect_tracker = effect_tracker
 
     def place_circular_element(self, coords, terrain_type, diameter=1):
         N = self.size

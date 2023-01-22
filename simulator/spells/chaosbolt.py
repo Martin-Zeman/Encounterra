@@ -9,11 +9,12 @@ from functools import partial
 logger = logging.getLogger(__name__)
 
 class ChaosboltFactory(FactoryThreat):
-    def __init__(self, to_hit, action_type):
+    def __init__(self, to_hit, action_type, caster):
         self.to_hit = to_hit
         self.action_type = action_type  # CHAOSBOLT, TWINNED_CHAOSBOLT, QUICKENED_CHAOSBOLT
         self.dmg_dice = "2d8"
         self.additional_dmg_dice = "1d6"
+        self.caster = caster
 
     @staticmethod
     def get_sorted_chain(battle_map, potential_targets, threat_calc_func):
@@ -48,6 +49,7 @@ class ChaosboltFactory(FactoryThreat):
         return acc
 
     def calculate_threat_approx_mod(self, combatant, battle_map, modified_stats, *args, **kwargs):
+        # TODO implement once I have spells that do this, e.g. Bless
         return 0
 
 
@@ -67,7 +69,7 @@ class Chaosbolt(Actoid, DirectThreat):
 
 
     def __init__(self, targets, factory):
-        super().__init__(Actoid.Type.IS_SPELL)
+        super().__init__(actoid_type=Actoid.Type.IS_SPELL, is_direct_dmg_dealing=True)
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.targets = targets
         self.factory = factory

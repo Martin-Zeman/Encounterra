@@ -4,12 +4,13 @@ from simulator.actoid import Actoid
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 
 class FireballFactory(FactoryThreat):
-    def __init__(self, dc, action_type, has_spell_sculpting=False, **kwargs):
+    def __init__(self, dc, action_type, caster, has_spell_sculpting=False, **kwargs):
         self.dc = dc
         self.action_type = action_type  # FIREBALL, QUICKENED_FIREBALL
         self.saving_throw = SavingThrow.DEX
         self.dmg_dice = "8d6"
         self.additional_upcast_dmg = "1d6"
+        self.caster = caster
         self.has_spell_sculpting = has_spell_sculpting
 
     def find_best_args(self, combatant, battle_map):
@@ -19,15 +20,15 @@ class FireballFactory(FactoryThreat):
     def create_best(self, combatant, battle_map, **kwargs):
         return Fireball(self.find_best_args(combatant, battle_map), self,  **kwargs)
 
-    def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
-        placement, _, affected = battle_map.find_best_placement_harmful_circular(combatant, SpellStats.Range.FEET_150.value,
+    def calculate_threat_approx(self, battle_map, *args, **kwargs):
+        placement, _, affected = battle_map.find_best_placement_harmful_circular(self.caster, SpellStats.Range.FEET_150.value,
                                                                                  SpellStats.Target.RADIUS_20.value)
         acc = 0
         for aff in affected:
-            acc += mean_dmg_dc_attack(combatant.dc, "8d6", True, aff.saving_throws[SavingThrow.DEX][0])
+            acc += mean_dmg_dc_attack(self.caster.dc, "8d6", True, aff.saving_throws[SavingThrow.DEX][0])
         return acc
 
-    def calculate_threat_approx_mod(self, combatant, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         return 0
 
 class Fireball(Actoid, DirectThreat):
@@ -42,7 +43,7 @@ class Fireball(Actoid, DirectThreat):
 
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(Actoid.Type.IS_SPELL)
+        super().__init__(actoid_type=Actoid.Type.IS_SPELL, is_direct_dmg_dealing=True)
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.coord = coord
         self.factory = factory

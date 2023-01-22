@@ -2,15 +2,25 @@ from simulator.spells.spell import SpellStats
 from simulator.action_types import Reaction
 import logging
 from simulator.actoid import Actoid
-from simulator.threat_calculator import ReactionToThreat
+from simulator.threat_calculator import ReactionToThreat, FactoryThreat
 
 logger = logging.getLogger(__name__)
 
-class ShieldFactory:
+class ShieldFactory(FactoryThreat):
 
-    def __init__(self):
+    def __init__(self, caster):
         super().__init__(Actoid.Type.IS_SPELL)
         self.action_type = Reaction.SHIELD
+        self.caster = caster
+
+    def calculate_threat_approx(self, battle_map, *args, **kwargs):
+        """
+        The implementation of the prevention potential should probably go here
+        """
+        return 0
+
+    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
+        return 0
 
 
 

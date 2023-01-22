@@ -8,6 +8,8 @@ from functools import reduce, partial, cache
 from itertools import accumulate
 
 
+ROUND_HORIZON = 3
+
 class SavingThrow(Enum):
     STR = 1
     DEX = 2
@@ -124,7 +126,7 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
 
 
 @cache
-def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increment):
+def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increment, crit_range=1,  is_resistant=False):
     """
     Calculates the increase in mean dmg for an attack-like ability using a flat to-hit bonus
     @param to_hit: to hit bonus
@@ -134,7 +136,7 @@ def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increm
     @param to_hit_increment:
     @return: mean damage increment not accounting for critical failures
     """
-    return mean_dmg(to_hit + to_hit_increment, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
+    return mean_dmg(to_hit + to_hit_increment, dmg_dice, dmg_bonus, ac, crit_range, is_resistant) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range, is_resistant)
 
 @cache
 def dmg_increment_for_dmg_flat(to_hit, dmg_dice, dmg_bonus, ac, dmg_increment):
@@ -151,7 +153,7 @@ def dmg_increment_for_dmg_flat(to_hit, dmg_dice, dmg_bonus, ac, dmg_increment):
 
 
 @cache
-def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus):
+def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus, crit_range=1,  is_resistant=False):
     """
     Calculates the decrease in mean dmg received for an attack-like ability using a flat AC bonus
     @param to_hit: to hit bonus
@@ -161,7 +163,7 @@ def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus):
     @param ac_bonus: bonus to target's AC
     @return: mean damage increment not accounting for critical failures
     """
-    return mean_dmg(to_hit, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac + ac_bonus)
+    return mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range, is_resistant) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac + ac_bonus, crit_range, is_resistant)
 
 
 @cache

@@ -21,13 +21,14 @@ class ThreatModifier(ABC):
     #     return 0
 
     @abstractmethod
-    def calculate_threat_mod(self, combatant, battle_map, actions, *args, **kwargs):
+    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
         return 0
 
 class ReactionToThreat(ABC):
     """
     An ability that has the potential to mitigate an incoming threat
     """
+    # TODO Do I really need this?
 
     @abstractmethod
     def calculate_threat_mod(self, combatant, battle_map, incoming_action, actor, *args, **kwargs):
@@ -40,10 +41,10 @@ class FactoryThreat(ABC):
     It also mandates that a factory be able to compute a threat increment based on a dictionary of modified stats
     """
     @abstractmethod
-    def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat_approx(self, battle_map, *args, **kwargs):
         return 0
 
     @abstractmethod
-    def calculate_threat_approx_mod(self, combatant, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         return 0
 

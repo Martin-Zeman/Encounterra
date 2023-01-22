@@ -2,12 +2,12 @@ from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, mean_dmg, percent_of_curr_hp
 from simulator.actoid import Actoid
 from itertools import accumulate
-from simulator.threat_calculator import DirectThreat
+from simulator.threat_calculator import DirectThreat, FactoryThreat
 import logging
 
 logger = logging.getLogger(__name__)
 
-class TwinnedFireboltFactory:
+class TwinnedFireboltFactory(FactoryThreat):
     def __init__(self, to_hit, combatant_level, action_type):
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT
@@ -43,6 +43,13 @@ class TwinnedFireboltFactory:
     def create_best(self, combatant, battle_map):
         return TwinnedFirebolt(self.find_best_args(combatant, battle_map), self)
 
+    def calculate_threat_approx(self, battle_map, *args, **kwargs):
+        # TODO
+        return 0
+
+    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
+        return 0
+
 class TwinnedFirebolt(Actoid, DirectThreat):
 
     level = 0
@@ -56,6 +63,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
 
 
     def __init__(self, targets, factory, **kwargs):
+        super().__init__(actoid_type=Actoid.Type.IS_SPELL, is_direct_dmg_dealing=True)
         self.targets = targets
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True

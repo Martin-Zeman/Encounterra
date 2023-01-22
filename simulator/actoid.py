@@ -11,7 +11,8 @@ class Actoid:
         IS_DASH = auto()
         IS_TOGGLE_ABILITY = auto()
 
-    def __init__(self, actoid_type):
+    def __init__(self, actoid_type, is_direct_dmg_dealing=False):
         self.actoid_type = actoid_type
         self.action_type = None
+        self.is_direct_dmg_dealing = is_direct_dmg_dealing
 

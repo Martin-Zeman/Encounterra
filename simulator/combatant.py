@@ -4,6 +4,7 @@ from simulator.misc import SavingThrow, Conditions, RollModifier, Size
 from simulator.action_factory import *
 from enum import Enum
 from abc import ABC, abstractmethod
+from simulator.abilities.totem_rage import TotemRageFactory
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,10 @@ class Combatant(ABC):
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
         self.size = Size.MEDIUM
-        self.last_max_threat = None
+        self.saving_throws_flat_mod = {SavingThrow.STR: [0], SavingThrow.DEX: [0], SavingThrow.CON: [0], SavingThrow.INT: [0], SavingThrow.WIS: [0], SavingThrow.CHA: [0]}
+        self.saving_throws_dice_mod = {SavingThrow.STR: [], SavingThrow.DEX: [], SavingThrow.CON: [], SavingThrow.INT: [], SavingThrow.WIS: [], SavingThrow.CHA: []}
+        self.to_hit_flat_mod = [0]
+        self.to_hit_dice_mod = []
 
     def __str__(self):
         return self.name
@@ -115,8 +119,8 @@ class Combatant(ABC):
         elif isinstance(action_type, BonusAction):
             match action_type:
                 case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
-                    self.max_rage_uses = RageFactory.get_rage_uses(self.level)
-                    self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
+                    self.max_rage_uses = TotemRageFactory.get_rage_uses(self.level)
+                    self.curr_rage_uses = TotemRageFactory.get_rage_uses(self.level)
                     self.rage_active = False
                 case _:
                     pass  # no resources required
@@ -214,7 +218,6 @@ class Combatant(ABC):
         @param battle_map:
         @return:
         """
-        self.last_max_threat = 0
         return 0
 
 

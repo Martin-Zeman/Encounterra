@@ -8,9 +8,10 @@ logger = logging.getLogger(__name__)
 
 class MistyStepFactory:
 
-    def __init__(self, coord):
+    def __init__(self, coord, caster):
         self.action_type = BonusAction.MISTY_STEP
         self.coord = coord
+        self.caster = caster
 
     def find_best_args(self, combatant, battle_map):
         return battle_map.get_free_coords_away_from_enemies(combatant, MistyStep.spell_range.value)

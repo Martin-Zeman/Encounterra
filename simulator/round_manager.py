@@ -13,6 +13,7 @@ class RoundManager:
         self.num_rounds = num_rounds
         self.battle_map = battle_map
         self.effect_tracker = EffectTracker()
+        self.battle_map.set_effect_tracker(self.effect_tracker)
         self.action_resolver = ActionResolver(combatants, teams, battle_map, self.effect_tracker)
 
     def roll_initiative(self):
