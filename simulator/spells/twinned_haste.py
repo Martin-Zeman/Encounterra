@@ -1,32 +1,40 @@
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
-from simulator.action_types import Action, BonusAction
 from simulator.actoid import Actoid
-from simulator.threat_calculator import ThreatModifier
+from simulator.threat_calculator import ThreatModifier, FactoryThreat
+from itertools import accumulate
+from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat
+from simulator.spells.haste import HasteFactory
 
-
-class TwinnedHasteFactory:
+class TwinnedHasteFactory(FactoryThreat):
     def __init__(self, action_type, caster, effect_tracker):
         super().__init__(Actoid.Type.IS_SPELL)
-        self.action_type = action_type  # TWINNED_HASTE, QUICKENED_HASTE, HASTE
+        self.action_type = action_type # TWINNED_HASTE, QUICKENED_HASTE, HASTE
         self.caster = caster
         self.effect_tracker = effect_tracker
 
     def find_best_args(self, combatant, battle_map):
-        potential_targets = battle_map.get_allies_within_radius(combatant, TwinnedHaste.spell_range.value)
-        # TODO finish this
-        try:
-            target2 = potential_targets[1][0]
-        except IndexError:
-            target2 = None
-        return potential_targets[0][0], target2
+        return HasteFactory.get_allies_sorted_by_threat(combatant, battle_map)[0:1]
 
     def create_best(self, combatant, battle_map):
         return TwinnedHaste(self.find_best_args(combatant, battle_map), self)
 
+    def calculate_threat_approx(self, battle_map, *args, **kwargs):
+        """
+        Iterates over all allies. For each ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
+        estimated dmg prevention given by the AC bonus and by the saving throw advantage.
+        """
+        allies_w_threat = HasteFactory.get_allies_sorted_by_threat(self.caster, battle_map)
+        return allies_w_threat[0] * ROUND_HORIZON
+
+    def calculate_threat_mod_approx(self, battle_map, modified_stats, *args, **kwargs):
+        return 0  # No need
+
+
 
 class TwinnedHaste(Actoid, Effect, ThreatModifier):
+
     level = 3
     spell_range = SpellStats.Range.FEET_30
     target = SpellStats.Target.ONE_CREATURE
@@ -59,19 +67,26 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
     def is_affecting(self, combatant):
         return combatant is self.target
 
-    @staticmethod
-    def calculate_threat_mod_approx(combatant, battle_map, actions, *args, **kwargs):
-        max_threat = 0
-        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
-        best_attack
-        dmg_acc = accumulate(potential_targets,
-                             lambda pt: dmg_increment_for_dmg_flat(best_attack.to_hit, best_attack.dmg_dice, best_attack.dmg_bonus, pt.ac,
-                                                                   self.rage_bonus)
-        dmg_acc /= len(potential_targets)
-        # TODO add avg dmg prevention
-        return max_threat
 
-    def calculate_threat_mod(self, combatant, battle_map, actions, *args, **kwargs):
-        return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, self.factory.dmg_bonus, self.target_combatant.ac,
-                        len(self.factory.crit_range),
-                        self.target_combatant.is_resistant_to(self.factory.dmg_type))
+    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
+        """
+        For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
+        estimated dmg prevention given by the AC bonus and by the saving throw advantage.
+        """
+        enemies = battle_map.teams.get_enemies(combatant)
+            # This doesn't take different attack ranges into account
+        max_attack_dmg = 0
+        for attack in combatant.attacks:
+            potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + attack.range + 1)
+            dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range,  pt.is_resistant_to(attack.dmg_type)))
+            dmg_acc /= len(potential_targets)
+            max_attack_dmg = max(dmg_acc, max_attack_dmg)
+        attack_dmg_decrement_acc = 0
+        for enemy in enemies:
+            attack_dmg_decrement_acc = accumulate(enemy.attacks,
+                                 lambda at: dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, combatant.ac, 2, at.crit_range, combatant.is_resistant_to(at.dmg_type)))
+
+            attack_dmg_decrement_acc /= len(enemy.attacks)
+            # TODO include the ST-based abilities here
+        max_attack_dmg += attack_dmg_decrement_acc
+        return max_attack_dmg * ROUND_HORIZON

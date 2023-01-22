@@ -16,7 +16,6 @@ class HasteFactory(FactoryThreat):
 
     @staticmethod
     def get_allies_sorted_by_threat(combatant, battle_map):
-        max_threat = 0
         allies = battle_map.get_allies_within_radius(combatant, Haste.spell_range.value)
         enemies = battle_map.teams.get_enemies(combatant)
         threat_per_ally = 0
@@ -73,25 +72,23 @@ class Haste(Actoid, Effect, ThreatModifier):
     dc = None
     dmg_type = None
 
-    def __init__(self, targets, factory):
+    def __init__(self, target, factory):
         super().__init__(Actoid.Type.IS_SPELL)
-        self.targets = targets
+        self.target = target
         self.factory = factory
 
     def activate(self):
         self.factory.caster.is_concentrating = True
-        for target in self.targets:
-            target.ac += 2
-            target.haste_actions = [HasteAction.HASTE_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
-            target.has_haste_action = True
+        self.target.ac += 2
+        self.target.haste_actions = [HasteAction.HASTE_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
+        self.target.has_haste_action = True
 
     def deactivate(self):
         self.factory.caster.is_concentrating = False
-        for target in self.targets:
-            target.ac -= 2
-            target.haste_actions.clear()
-            self.factory.effect_tracker.create_post_haste_lethargy(target)
-            target.has_haste_action = False
+        self.target.ac -= 2
+        self.target.haste_actions.clear()
+        self.factory.effect_tracker.create_post_haste_lethargy(self.target)
+        self.target.has_haste_action = False
 
     def is_affecting(self, combatant):
         return combatant is self.target

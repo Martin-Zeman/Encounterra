@@ -23,10 +23,11 @@ class BlessFactory(FactoryThreat):
 
     def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
         #  calculate the modification for all allies and them do * 3/#num_allies. And then * ROUND_HORIZON
+        # TODO This should call the mod threat calculation of the attack factory for all the attacks
         return 0
 
     def calculate_threat_approx_mod(self, combatant, battle_map, modified_stats, *args, **kwargs):
-        return 0
+        return 0 # no need here
 
 
 

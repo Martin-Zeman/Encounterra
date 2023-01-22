@@ -14,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 class RageFactory(FactoryThreat):
 
+    def __init__(self, combatant):
+        self.combatant = combatant
+
     @staticmethod
     def get_rage_bonus(level):
         match level:
@@ -49,9 +52,10 @@ class RageFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return Rage(combatant)
 
-    def calculate_threat_mod_approx(self, combatant, battle_map, actions, *args, **kwargs):
+    @staticmethod
+    def calc_rage_threat(combatant, battle_map):
         """
-        Finds the combatant's attack that benefits from the highest mean dmg increment. Then adds the estimated damage prevention equal to
+        Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to
         half of remaining HP
         """
         rage_bonus = RageFactory.get_rage_bonus(combatant.level)
@@ -59,6 +63,7 @@ class RageFactory(FactoryThreat):
         max_threat = 0
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
         # This doesn't take different attack ranges into account
+        # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
         for attack in combatant.attacks:
             dmg_acc = accumulate(potential_targets,
                                  lambda pt: dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
@@ -70,6 +75,13 @@ class RageFactory(FactoryThreat):
         total_threat += (combatant.curr_hp / 2)
         # TODO consider improving this by looping over enemy direct dmg dealing abilities
         return total_threat * ROUND_HORIZON
+
+    def calculate_threat_mod_approx(self, combatant, battle_map, *args, **kwargs):
+        return 0 # no need
+
+    def calculate_threat_approx(self, battle_map, *args, **kwargs):
+        return RageFactory.calc_rage_threat(self.combatant, battle_map)
+
 
 class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
