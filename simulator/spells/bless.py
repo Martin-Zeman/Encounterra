@@ -1,10 +1,8 @@
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
-from simulator.action_types import HasteAction
-from simulator.action_types import Action, BonusAction
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import ThreatModifier, FactoryThreat
-from simulator.misc import SavingThrow
+
 
 class BlessFactory(FactoryThreat):
     def __init__(self, action_type, caster, effect_tracker):

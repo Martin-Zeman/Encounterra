@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 from simulator.action_types import Reaction
 import logging
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import ReactionToThreat, FactoryThreat
 
 logger = logging.getLogger(__name__)

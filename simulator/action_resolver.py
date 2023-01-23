@@ -1,10 +1,9 @@
-import logging
 from simulator.misc import *
-from simulator.misc import SavingThrow, Side, DistanceMetric
+from simulator.misc import SavingThrow
 from simulator.feasibility import check_feasibility
 from simulator.resources import use_resources
 from simulator.action_factory import *
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.spells.chaosbolt import Chaosbolt
 from simulator.geometry import *
 from enum import Enum, auto
@@ -34,9 +33,9 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO unify this with the attack (dis)advantage
     advantage_counter = 0
     disadvantage_counter = 0
-    if target_combatant.saving_throws[ability.saving_throw][1] is RollModifier.ADVANTAGE:
+    if RollModifier.ADVANTAGE in target_combatant.saving_throws[ability.saving_throw][1]:
         advantage_counter += 1
-    elif target_combatant.saving_throws[ability.saving_throw][1] is RollModifier.DISADVANTAGE:
+    elif RollModifier.DISADVANTAGE in target_combatant.saving_throws[ability.saving_throw][1]:
         disadvantage_counter += 1
     if ability.saving_throw is SavingThrow.DEX and target_combatant.has_passive(
             Passive.DANGER_SENSE) and not target_combatant.is_affected_by_any(Conditions.INCAPACITATED,
@@ -171,10 +170,6 @@ class ActionResolver:
                 return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
                 return self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
-            case Action.TWINNED_CHAOSBOLT:
-                ret = (self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__),
-                       self.resolve_chaos_bolt(caster, spell.targets[1], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__))
-                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case Reaction.SHIELD:
                 assert not caster.shield_spell_active
                 caster.shield_spell_active = True
@@ -284,10 +279,10 @@ class ActionResolver:
                     return ActionResult.UNFEASIBLE  # combatant didn't survive
             case Actoid.Type.IS_SPELL:
                 return self.resolve_spell(combatant, actoid)
-            case Actoid.Type.IS_DODGE:
-                combatant.is_dodging = True
-                combatant.saving_throws[SavingThrow.DEX][1] = RollModifier.ADVANTAGE
-                return ActionResult.FEASIBLE
+            # case Actoid.Type.IS_DODGE:
+            #     combatant.is_dodging = True
+            #     combatant.saving_throws[SavingThrow.DEX][1] = RollModifier.ADVANTAGE
+            #     return ActionResult.FEASIBLE
             case Actoid.Type.IS_DASH:
                 combatant.movement += combatant.speed
                 return ActionResult.FEASIBLE

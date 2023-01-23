@@ -1,4 +1,4 @@
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.action_types import Action
 
 class Dash(Actoid):

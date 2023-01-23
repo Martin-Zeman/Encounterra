@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, mean_dmg
 import logging
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 from simulator.misc import percent_of_curr_hp
 from functools import partial
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class ChaosboltFactory(FactoryThreat):
     def __init__(self, to_hit, action_type, caster):
         self.to_hit = to_hit
-        self.action_type = action_type  # CHAOSBOLT, TWINNED_CHAOSBOLT, QUICKENED_CHAOSBOLT
+        self.action_type = action_type  # CHAOSBOLT, QUICKENED_CHAOSBOLT
         self.dmg_dice = "2d8"
         self.additional_dmg_dice = "1d6"
         self.caster = caster

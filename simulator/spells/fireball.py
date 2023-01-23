@@ -1,6 +1,6 @@
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType, mean_dmg_dc_attack
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 
 class FireballFactory(FactoryThreat):

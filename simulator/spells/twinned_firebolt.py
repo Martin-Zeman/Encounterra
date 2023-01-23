@@ -1,6 +1,6 @@
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, mean_dmg, percent_of_curr_hp
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from itertools import accumulate
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 import logging

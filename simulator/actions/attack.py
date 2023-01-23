@@ -1,4 +1,4 @@
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.misc import mean_dmg
 from itertools import accumulate
 from simulator.misc import percent_of_curr_hp
@@ -50,6 +50,9 @@ class AttackFactory(FactoryThreat):
 
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
+        """
+        Goes over all the modified stats and accumulates the threat delta for all of them
+        """
         # TODO
         return 0
 

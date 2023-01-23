@@ -1,5 +1,5 @@
 from simulator.combatant import Combatant
-from simulator.movement import MovementGenerator
+from simulator.actions.movement import MovementGenerator
 from simulator.spellslots import Spellslots
 from simulator.action_factory import *
 from simulator.misc import Side
@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 class FaurungDt(Combatant):
-    INV_MAPPING = {0: Action.FIREBOLT, 1: Action.CHAOSBOLT, 2: Action.HASTE, 3: BonusAction.QUICKENED_FIREBALL, 4: Action.TWINNED_CHAOSBOLT,
-                   5: Action.TWINNED_FIREBOLT, 6: Action.TWINNED_HASTE, 7: Action.FIREBALL}
+    INV_MAPPING = {0: Action.FIREBOLT, 1: Action.CHAOSBOLT, 2: Action.HASTE, 3: BonusAction.QUICKENED_FIREBALL,
+                   4: Action.TWINNED_FIREBOLT, 5: Action.TWINNED_HASTE, 6: Action.FIREBALL}
 
     def __init__(self):
         super().__init__("FaurungDt", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
@@ -88,7 +88,7 @@ class FaurungDt(Combatant):
                         case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                             logger.debug(f"{self.name} casts {decision.name}", extra={"team": self.team_color})
                             return (decision, placement)
-                        case Action.TWINNED_CHAOSBOLT | Action.TWINNED_FIREBOLT:
+                        case Action.TWINNED_FIREBOLT:
                             logger.debug(f"{self} casts {decision.name} on {enemies[0]} and {enemies[1]}", extra={"team": self.team_color})
                             return (decision, enemies[0:2])
                 except:

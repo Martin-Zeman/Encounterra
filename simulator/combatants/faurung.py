@@ -1,8 +1,7 @@
 from simulator.combatant import Combatant
-from simulator.movement import MovementGenerator
+from simulator.actions.movement import MovementGenerator
 from simulator.spellslots import Spellslots
 from simulator.action_factory import *
-from simulator.misc import Side
 from simulator.spells.spell import SpellStats
 import logging
 import random
@@ -83,10 +82,6 @@ class Faurung(Combatant):
                     logger.debug(f"{self.name} casts Haste on {target_ally}", extra={"team": self.team_color})
                     return (BonusAction.QUICKENED_HASTE if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.HASTE, [target_ally])
                     # return (Action.HASTE, target_ally)
-                elif self.spellslots.get_spellslots(1):
-                    logger.debug(f"{self} casts Chaosbolt on {enemies[0]}", extra={"team": self.team_color})
-                    return (Action.TWINNED_CHAOSBOLT, enemies[0:2]) if should_twin else (BonusAction.QUICKENED_CHAOSBOLT if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.CHAOSBOLT, [enemies[0]])
-                    # return (Action.CHAOSBOLT, nearest_enemy)
                 else:
                     logger.debug(f"{self} casts Firebolt on {enemies[0]}", extra={"team": self.team_color})
                     return (Action.TWINNED_FIREBOLT, enemies[0:2]) if should_twin else (Action.FIREBOLT, [enemies[0]])

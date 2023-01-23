@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import ThreatModifier, FactoryThreat
 from itertools import accumulate
 from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat

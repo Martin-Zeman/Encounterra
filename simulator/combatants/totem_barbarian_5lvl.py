@@ -1,5 +1,5 @@
 from simulator.combatant import Combatant
-from simulator.movement import MovementGenerator
+from simulator.actions.movement import MovementGenerator
 from simulator.misc import DamageType
 from simulator.action_factory import *
 from simulator.action_types import *

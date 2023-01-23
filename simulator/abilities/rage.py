@@ -1,12 +1,11 @@
 from simulator.misc import DamageType
-from simulator.actoid import Actoid
+from simulator.actions.actoid import Actoid
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
-from simulator.misc import mean_dmg, dmg_increment_for_dmg_flat, ROUND_HORIZON
+from simulator.misc import dmg_increment_for_dmg_flat, ROUND_HORIZON
 from itertools import accumulate
 import sys
-from simulator.misc import percent_of_curr_hp
 from simulator.threat_calculator import ThreatModifier, FactoryThreat
 import logging
 

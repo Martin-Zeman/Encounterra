@@ -38,16 +38,6 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
                 return res
-            case Action.TWINNED_CHAOSBOLT:
-                res = combatant.has_action
-                res &= combatant.spellslots.get_spellslots(1) > 0
-                res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
-                res &= battle_map.teams.are_enemies(combatant, action.targets[1])
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.range.value
-                res &= combatant.curr_sorcery_points > 0
-                return res
             case Action.TWINNED_FIREBOLT:
                 res = combatant.has_action
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
@@ -175,12 +165,6 @@ def check_feasibility_light(combatant, action, battle_map):
                 return res
             case Action.FIREBOLT:
                 return combatant.has_action
-            case Action.TWINNED_CHAOSBOLT:
-                res = combatant.has_action
-                res &= combatant.spellslots.get_spellslots(1) > 0
-                res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= combatant.curr_sorcery_points > 0
-                return res
             case Action.TWINNED_FIREBOLT:
                 return combatant.has_action and combatant.curr_sorcery_points > 0
             case Action.TWINNED_HASTE:

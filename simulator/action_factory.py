@@ -1,6 +1,6 @@
-from simulator.abilities.attack import Attack
-from simulator.dodge import Dodge
-from simulator.dash import Dash
+from simulator.actions.attack import Attack
+from simulator.actions.dodge import Dodge
+from simulator.actions.dash import Dash
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
 from simulator.spells.chaosbolt import Chaosbolt
@@ -10,7 +10,7 @@ from simulator.spells.haste import Haste
 from simulator.abilities.rage import Rage
 from simulator.abilities.totem_rage import TotemRage
 from simulator.abilities.reckless_attack import RecklessAttack
-from simulator.movement import MovementIncrement
+from simulator.actions.movement import MovementIncrement
 from simulator.action_types import *
 import logging
 
@@ -37,9 +37,6 @@ def action_factory(combatant, effect_tracker, action_type, *args):
             case Action.TWINNED_FIREBOLT:
                 logger.debug("Twinned Firebolt")
                 return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
-            case Action.TWINNED_CHAOSBOLT:
-                logger.debug("Twinned Chaosbolt")
-                return Chaosbolt(action_type, combatant.spell_to_hit, *args)
             case Action.TWINNED_HASTE:
                 return Haste(action_type, *args, combatant, effect_tracker)
             case _:

@@ -51,7 +51,7 @@ class FaurungEnv(Env):
 
         self.actions = np.array(
             [MetaAction.DONE, Movement.STANDARD, Action.FIREBALL, Action.FIREBOLT, BonusAction.QUICKENED_FIREBALL, Action.CHAOSBOLT,
-             Action.HASTE, Action.TWINNED_HASTE, Action.TWINNED_CHAOSBOLT, Action.TWINNED_FIREBOLT,
+             Action.HASTE, Action.TWINNED_HASTE, Action.TWINNED_FIREBOLT,
              BonusAction.MISTY_STEP, Reaction.SHIELD])
         faurung_observation_space = np.array([2000, 2, 2, 2, battle_map.size, battle_map.size, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 50, 2, 5, 4, 3, 6], dtype=int)
         self.faurung_offset = faurung_observation_space.shape[0]
@@ -131,7 +131,7 @@ class FaurungEnv(Env):
             case Action.FIREBOLT | Action.CHAOSBOLT | Action.HASTE:
                 # the fourth and fifth are combatants
                 args = [self.index_to_combatant_mapping[action[3]]]
-            case Action.TWINNED_HASTE | Action.TWINNED_CHAOSBOLT | Action.TWINNED_FIREBOLT:
+            case Action.TWINNED_HASTE | Action.TWINNED_FIREBOLT:
                 args = [self.index_to_combatant_mapping[action[3]], self.index_to_combatant_mapping[action[4]]]
             case _:
                 return (decoded_action, )

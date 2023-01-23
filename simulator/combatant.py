@@ -5,6 +5,9 @@ from simulator.action_factory import *
 from enum import Enum
 from abc import ABC, abstractmethod
 from simulator.abilities.totem_rage import TotemRageFactory
+from simulator.actions.attack import AttackFactory
+from simulator.actions.dodge import DodgeFactory
+from simulator.action_types import TO_TWINNED, TO_QUICKENED
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +27,9 @@ class Combatant(ABC):
     def __init__(self, name, level, hp, ac, init_bonus, spell_to_hit, speed, resistances, dc):
         self.name = name
         self.level = level
-        self.actions = [Action.ATTACK, Action.DODGE]
+        self.actions = [(Action.DODGE, DodgeFactory(self))]
         self.bonus_actions = []
-        self.reactions = [Reaction.REACTION_ATTACK]
+        self.reactions = []
         self.haste_actions = []
         self.passive = []
         self.max_hp = hp
@@ -57,10 +60,10 @@ class Combatant(ABC):
         self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
         # maps saving_throw_type -> (bonus, RollModifier)
-        self.saving_throws = {SavingThrow.STR: [0, RollModifier.STRAIGHT], SavingThrow.DEX: [0, RollModifier.STRAIGHT],
-                              SavingThrow.CON: [0, RollModifier.STRAIGHT], SavingThrow.INT: [0, RollModifier.STRAIGHT],
-                              SavingThrow.WIS: [0, RollModifier.STRAIGHT],
-                              SavingThrow.CHA: [0, RollModifier.STRAIGHT]}
+        self.saving_throws = {SavingThrow.STR: [0, []], SavingThrow.DEX: [0, []],
+                              SavingThrow.CON: [0, []], SavingThrow.INT: [0, []],
+                              SavingThrow.WIS: [0, []],
+                              SavingThrow.CHA: [0, []]}
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
         self.perception = 0
@@ -77,6 +80,7 @@ class Combatant(ABC):
         self.saving_throws_dice_mod = {SavingThrow.STR: [], SavingThrow.DEX: [], SavingThrow.CON: [], SavingThrow.INT: [], SavingThrow.WIS: [], SavingThrow.CHA: []}
         self.to_hit_flat_mod = [0]
         self.to_hit_dice_mod = []
+        self.action_types_added = []
 
     def __str__(self):
         return self.name
@@ -99,6 +103,7 @@ class Combatant(ABC):
         that cannot be directly determined by the action_type (such as a level-specific modifier)
         :return: nothing
         """
+        self.action_types_added.append(action_type)
         if isinstance(action_type, Passive):
             match action_type:
                 case Passive.MULTIATTACK:
@@ -113,9 +118,9 @@ class Combatant(ABC):
                     self.max_sorcery_points = kwargs["sorcery_points"]
                 case _:
                     pass  # no resources required
-            self.passive.append(action_type)
+            # self.passive.append(action_type)
         elif isinstance(action_type, Action):
-            self.actions.append(action_type)
+            self.actions.append((action_type, TO_FACTORY[action_type]))
         elif isinstance(action_type, BonusAction):
             match action_type:
                 case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
@@ -124,21 +129,54 @@ class Combatant(ABC):
                     self.rage_active = False
                 case _:
                     pass  # no resources required
-            self.bonus_actions.append(action_type)
+            self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
         elif isinstance(action_type, Reaction):
-            self.reactions.append(action_type)
+            self.reactions.append((action_type, TO_FACTORY[action_type]))
         elif isinstance(action_type, FreeAction):
             match action_type:
                 case FreeAction.RECKLESS_ATTACK:
                     self.reckless_attack_active = False
                 case _:
                     logger.error("Unknown free action")
+                    return
         elif isinstance(action_type, MetaAction):
             match action_type:
-                case MetaAction.QUICKENED_SPELL | MetaAction.EMPOWERED_SPELL | MetaAction.TWINNED_SPELL:
+                case MetaAction.QUICKENED_SPELL:
                     assert Passive.METAMAGIC in self.passive
+                    for action in self.actions:
+                        try:
+                            quickened_action = TO_QUICKENED[action]
+                            self.bonus_actions.append((quickened_action, TO_FACTORY[quickened_action]))
+                        except IndexError:
+                            pass
+                case MetaAction.TWINNED_SPELL:
+                    assert Passive.METAMAGIC in self.passive
+                    for action in self.actions:
+                        try:
+                            twinned_action = TO_TWINNED[action]
+                            self.actions.append((twinned_action, TO_FACTORY[twinned_action]))
+                        except IndexError:
+                            pass
+                    for bonus_action in self.bonus_actions:
+                        try:
+                            twinned_action = TO_TWINNED[bonus_action]
+                            self.bonus_actions.append((twinned_action, TO_FACTORY[twinned_action]))
+                        except IndexError:
+                            pass
+                case MetaAction.EMPOWERED_SPELL:
+                    assert Passive.METAMAGIC in self.passive
+                    # TODO
+                case _:
+                    logger.error("Unknown meta action")
         else:
             logger.error("Unknown high level action class")
+
+    def commit_abilities(self):
+        """
+        Checks some sanity rules for abilites, e.g. if you have TWIN_SPELL and some spells then you also expect to have their
+        """
+        # TODO Do I need this or not?
+        pass
 
     def has_passive(self, ability):
         return ability in self.passive
@@ -181,9 +219,9 @@ class Combatant(ABC):
         self.has_reaction = True
         self.curr_num_attacks = self.num_attacks
         self.movement = self.speed
-        if self.is_dodging:
-            self.saving_throws[SavingThrow.DEX][1] = RollModifier.STRAIGHT
-        self.is_dodging = False
+        # if self.is_dodging:
+        #     self.saving_throws[SavingThrow.DEX][1] = RollModifier.STRAIGHT
+        # self.is_dodging = False # TODO make sure the effect tracker takes care of this
         self.already_cast_leveled_spell_this_turn = False
         if self.shield_spell_active:
             self.ac -= 5
@@ -209,7 +247,7 @@ class Combatant(ABC):
         self.condition = self.State.FINE
         self.has_haste_action = False
         for st in self.saving_throws.values():
-            st[1] = RollModifier.STRAIGHT
+            st[1].clear()
 
     @abstractmethod
     def calculate_threat(self, battle_map):

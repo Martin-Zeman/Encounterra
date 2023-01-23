@@ -28,10 +28,6 @@ def use_resources(combatant, action):
             case Action.CHAOSBOLT:
                 combatant.spellslots.use_spellslot(1)
                 combatant.already_cast_leveled_spell_this_turn = True
-            case Action.TWINNED_CHAOSBOLT:
-                combatant.spellslots.use_spellslot(1)
-                combatant.already_cast_leveled_spell_this_turn = True
-                combatant.curr_sorcery_points -= 1
             case Action.TWINNED_FIREBOLT:
                 combatant.curr_sorcery_points -= 1
             case _:
