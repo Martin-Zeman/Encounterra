@@ -37,6 +37,7 @@ class Session:
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
         self.round_manager = None
+        self.effect_tracker = EffectTracker()
 
     def add_combatant(self, combatant_type, team):
         try:
@@ -47,15 +48,15 @@ class Session:
 
         match combatant_type.__name__:
             case "Faurung":
-                self.combatants.append(Faurung())
+                self.combatants.append(Faurung(self.effect_tracker))
             case "FaurungDt":
-                self.combatants.append(FaurungDt())
+                self.combatants.append(FaurungDt(self.effect_tracker))
             case "TotemBarbarian5Lvl":
-                self.combatants.append(TotemBarbarian5Lvl())
+                self.combatants.append(TotemBarbarian5Lvl(self.effect_tracker))
             case "Cyanwrath":
-                self.combatants.append(Cyanwrath())
+                self.combatants.append(Cyanwrath(self.effect_tracker))
             case "DragonclawCultist":
-                self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
+                self.combatants.append(DragonclawCultist(self.effect_tracker, "DragonclawCultist " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return
@@ -108,7 +109,8 @@ class Session:
 
     def simulate(self, parallel=False):
         self.battle_map = Map(self.map_size, self.teams)
-        self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map)
+        self.battle_map.set_effect_tracker(self.effect_tracker)
+        self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map, self.effect_tracker)
         self.place_combatants_on_the_map()
         for combatant in self.combatants:
             combatant.set_round_manager(self.round_manager)

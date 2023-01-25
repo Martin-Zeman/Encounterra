@@ -147,8 +147,10 @@ def check_feasibility(combatant, action, battle_map):
         return False
 
 
-def check_feasibility_light(combatant, action, battle_map):
-    action_type = action.action_type
+def check_feasibility_light(combatant, action_type, battle_map):
+    """
+    Checks feasibility in terms of resources and combat rules. Doesn't check arguments of actions.
+    """
     if isinstance(action_type, Action):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False
@@ -242,4 +244,4 @@ def check_feasibility_light(combatant, action, battle_map):
 
 
 def get_feasible_actions(actions, combatant, battle_map):
-    return [a for a in actions if check_feasibility_light(combatant, a, battle_map)]
+    return [a for a in actions if check_feasibility_light(combatant, a[0], battle_map)]

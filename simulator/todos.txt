@@ -25,3 +25,5 @@
 - Combatant tries to use haste dash after being hit by sentinel
 - Action of type Movement.STANDARD by DragonclawCultist 1 is non-feasible. Dodging instead.
 - Unknown spell during training
+- Add support for custom action weights.
+- Add support for action combos

@@ -7,13 +7,12 @@ logger = logging.getLogger(__name__)
 
 
 class RoundManager:
-    def __init__(self, combatants, teams, battle_map, num_rounds=30):
+    def __init__(self, combatants, teams, battle_map, effect_tracker, num_rounds=30):
         self.combatants = combatants
         self.teams = teams
         self.num_rounds = num_rounds
         self.battle_map = battle_map
-        self.effect_tracker = EffectTracker()
-        self.battle_map.set_effect_tracker(self.effect_tracker)
+        self.effect_tracker = effect_tracker
         self.action_resolver = ActionResolver(combatants, teams, battle_map, self.effect_tracker)
 
     def roll_initiative(self):

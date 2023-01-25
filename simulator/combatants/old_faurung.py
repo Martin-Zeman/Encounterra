@@ -3,7 +3,6 @@ from simulator.actions.movement import MovementGenerator
 from simulator.spellslots import Spellslots
 from simulator.action_factory import *
 from simulator.spells.spell import SpellStats
-from simulator.feasibility import get_feasible_actions
 import logging
 import random
 
@@ -12,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 class Faurung(Combatant):
 
-    def __init__(self, effect_tracker):
-        super().__init__(effect_tracker, "Faurung", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
+    def __init__(self):
+        super().__init__("Faurung", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.add_ability(Action.FIREBALL)
         self.add_ability(Action.FIREBOLT)
         self.add_ability(Action.HASTE)
@@ -27,22 +26,11 @@ class Faurung(Combatant):
         self.nowhere_to_go = False
 
     def get_action(self, battle_map):
-        feasible_actions = get_feasible_actions(self.actions, self, battle_map)
-        feasible_bonus_actions = get_feasible_actions(self.bonus_actions, self, battle_map)
-        feasible_haste_actions = get_feasible_actions(self.haste_actions, self, battle_map)
-        feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
-        while len(feasible_actions > 0) or len(feasible_bonus_actions > 0) or len(feasible_haste_actions > 0) or len(feasible_free_actions > 0):
-            feasible_actions = [fa[1].create_best(self, battle_map) for fa in feasible_actions]
-            feasible_bonus_actions = [fa[1].create_best(self, battle_map)for fa in feasible_bonus_actions]
-            feasible_haste_actions = [fa[1].create_best(self, battle_map) for fa in feasible_haste_actions]
-            feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
-
-            # pick one with the highest threat
-            # resolve movement
-            feasible_actions = get_feasible_actions(self.actions, self, battle_map)
-            feasible_bonus_actions = get_feasible_actions(self.bonus_actions, self, battle_map)
-            feasible_haste_actions = get_feasible_actions(self.haste_actions, self, battle_map)
-            feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
+        # actions = get_feasible_actions()
+        # while len(actions > 0):
+        #     pick one with the highest threat
+        #     resolve movement
+        #     actions = get_feasible_actions()
 
 
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:

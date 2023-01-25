@@ -12,10 +12,10 @@ logger = logging.getLogger(__name__)
 
 class TotemBarbarian5Lvl(Combatant):
 
-    def __init__(self, battle_map, effect_tracker):
-        super().__init__(battle_map, effect_tracker, "TotemBarbarian5Lvl", level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
-        self.add_ability(Action.ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.MELEE)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.MELEE)
+    def __init__(self):
+        super().__init__("TotemBarbarian5Lvl", level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
+        self.attack_args = {Action.ATTACK: ["Two-handed axe", self, None,  7, "1d12", 4, DamageType.Slashing, 1],
+                            Reaction.REACTION_ATTACK: ["Two-handed axe", self, None, 7, "1d12", 4, DamageType.Slashing, 1]}
         self.add_ability(BonusAction.TOTEM_RAGE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)

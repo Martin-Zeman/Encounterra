@@ -24,13 +24,15 @@ class Combatant(ABC):
         MEDIUM = 3
         BOSS = 4
 
-    def __init__(self, name, level, hp, ac, init_bonus, spell_to_hit, speed, resistances, dc):
+    def __init__(self, effect_tracker, name, level, hp, ac, init_bonus, spell_to_hit, speed, resistances, dc):
+        self.effect_tracker = effect_tracker
         self.name = name
         self.level = level
         self.actions = [(Action.DODGE, DodgeFactory(self))]
         self.bonus_actions = []
         self.reactions = []
         self.haste_actions = []
+        self.free_actions = []
         self.passive = []
         self.max_hp = hp
         self.curr_hp = hp
@@ -95,7 +97,6 @@ class Combatant(ABC):
         self.curr_init = random.randint(1, 20) + self.init_bonus
 
     def add_ability(self, action_type, **kwargs):
-        # TODO This should also give combatants factories now
         """
 
         :param action_type: one of Action, BonusAction, Reaction or Passive instances
@@ -103,6 +104,7 @@ class Combatant(ABC):
         that cannot be directly determined by the action_type (such as a level-specific modifier)
         :return: nothing
         """
+        # TODO Consider removing the kwargs and derive everything from the level
         self.action_types_added.append(action_type)
         if isinstance(action_type, Passive):
             match action_type:
@@ -120,16 +122,54 @@ class Combatant(ABC):
                     pass  # no resources required
             # self.passive.append(action_type)
         elif isinstance(action_type, Action):
-            self.actions.append((action_type, TO_FACTORY[action_type]))
-        elif isinstance(action_type, BonusAction):
             match action_type:
-                case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
+                case Action.ATTACK:
+                    self.actions.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                case Action.FIREBALL:
+                    self.actions.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
+                case Action.FIREBOLT:
+                    self.actions.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
+                case Action.CHAOSBOLT:
+                    self.actions.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
+                case Action.HASTE:
+                    self.actions.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                case _:
+                    pass
+        elif isinstance(action_type, BonusAction):
+            # TODO
+            match action_type:
+                case BonusAction.BONUS_ATTACK:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.PAM_BONUS_ATTACK:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.RAGE:
                     self.max_rage_uses = TotemRageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = TotemRageFactory.get_rage_uses(self.level)
                     self.rage_active = False
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.TOTEM_RAGE:
+                    self.max_rage_uses = TotemRageFactory.get_rage_uses(self.level)
+                    self.curr_rage_uses = TotemRageFactory.get_rage_uses(self.level)
+                    self.rage_active = False
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.MISTY_STEP:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.CUNNING_DODGE:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.CUNNING_DISENGAGE:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.CUNNING_HIDE:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.QUICKENED_FIREBALL:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.QUICKENED_FIREBOLT:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.QUICKENED_CHAOSBOLT:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                case BonusAction.QUICKENED_HASTE:
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
                 case _:
                     pass  # no resources required
-            self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
         elif isinstance(action_type, Reaction):
             self.reactions.append((action_type, TO_FACTORY[action_type]))
         elif isinstance(action_type, FreeAction):
