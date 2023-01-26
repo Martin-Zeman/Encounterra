@@ -669,3 +669,6 @@ class Map:
 
     def get_enemies_within_hop_distance(self, combatant, distance):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]
+
+    def get_enemies_within_their_movement_range(self, combatant):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= e.movement + 1]

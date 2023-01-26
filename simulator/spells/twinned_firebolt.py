@@ -50,6 +50,30 @@ class TwinnedFireboltFactory(FactoryThreat):
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         return 0
 
+    def calculate_threat_approx(self, battle_map, *args, **kwargs):
+        """
+        Calculates the average dmg over all targets in range
+        """
+        potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
+        dmg_dice = FireboltFactory.get_dmg_dice(self.caster.level)
+        dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)))
+        dmg_acc /= len(potential_targets)
+        return dmg_acc * ROUND_HORIZON
+
+    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
+        """
+        Calculates the average dmg increment over all targets in range
+        """
+        try:
+            to_hit_bonus = modified_stats['to_hit']
+            potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
+            dmg_acc = accumulate(potential_targets,
+                                 lambda pt: (self.to_hit, self.dmg_dice, 0, pt.ac, to_hit_bonus, 1,   pt.is_resistant_to(Firebolt.dmg_type)))
+            dmg_acc /= len(potential_targets)
+            return dmg_acc
+        except IndexError:
+            return 0
+
 class TwinnedFirebolt(Actoid, DirectThreat):
 
     level = 0
@@ -82,4 +106,5 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         if self.targets[1] is not None:
             dmg_acc += mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.target.is_resistant_to(TwinnedFirebolt.dmg_type))
         return dmg_acc
+
 

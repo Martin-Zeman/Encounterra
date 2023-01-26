@@ -48,7 +48,7 @@ class FireboltFactory(FactoryThreat):
         dmg_dice = FireboltFactory.get_dmg_dice(self.caster.level)
         dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)))
         dmg_acc /= len(potential_targets)
-        return dmg_acc * ROUND_HORIZON
+        return dmg_acc
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
@@ -58,7 +58,7 @@ class FireboltFactory(FactoryThreat):
             to_hit_bonus = modified_stats['to_hit']
             potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
             dmg_acc = accumulate(potential_targets,
-                                 lambda pt: (self.to_hit, self.dmg_dice, 0, pt.ac, to_hit_bonus, 1,   pt.is_resistant_to(Firebolt.dmg_type)))
+                                 lambda pt: mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, to_hit_bonus, 1,   pt.is_resistant_to(Firebolt.dmg_type)))
             dmg_acc /= len(potential_targets)
             return dmg_acc
         except IndexError:

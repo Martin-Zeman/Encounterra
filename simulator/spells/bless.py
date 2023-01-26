@@ -7,7 +7,7 @@ from simulator.threat_calculator import ThreatModifier, FactoryThreat
 class BlessFactory(FactoryThreat):
     def __init__(self, action_type, caster, effect_tracker):
         super().__init__(Actoid.Type.IS_SPELL)
-        self.action_type = action_type # TWINNED_HASTE, QUICKENED_HASTE, HASTE
+        self.action_type = action_type # QUICKENED_BLESS, BLESS
         self.caster = caster
         self.effect_tracker = effect_tracker
 

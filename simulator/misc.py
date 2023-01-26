@@ -86,7 +86,7 @@ class PlacementScenario(Enum):
     TOTALLY_RANDOM = 2
     # SURROUNDED = 3
 
-
+SIGN = {"+": 1, "-": -1}
 @cache
 def parse_dmg_dice(dice_string):
     """
@@ -94,15 +94,23 @@ def parse_dmg_dice(dice_string):
     @param dice_string:
     @return: list of tuples representing (#num dice, dice size)
     """
-    segments = dice_string.split('+')
+    segments = re.split(r'([+-])', dice_string)
     num_dice = []
     dice_size = []
     p = re.compile('(\d+)d(\d+)')
+    sign = 1
     for seg in segments:
-        m = p.match(seg)
-        num_dice.append(int(m.group(1)))
-        dice_size.append(int(m.group(2)))
+        try:
+            m = p.match(seg)
+            num_dice.append(sign * int(m.group(1)))
+            dice_size.append(int(m.group(2)))
+        except AttributeError:
+            sign = SIGN[seg]
     return zip(num_dice, dice_size)
+
+def avg_roll(dice_string):
+    dice = parse_dmg_dice(dice_string)
+    return accumulate(dice, lambda d: d[0] * ((1.0 + d[1]) / 2.0))
 
 
 @cache

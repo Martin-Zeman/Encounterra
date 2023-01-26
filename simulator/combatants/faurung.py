@@ -23,6 +23,7 @@ class Faurung(Combatant):
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.spellslots = Spellslots(Spellslots.Class.SORCERER, 5)
+        self.archetype = Combatant.Archetype.RANGED
         self.movement_generator_cache = None
         self.nowhere_to_go = False
 

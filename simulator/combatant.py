@@ -24,6 +24,11 @@ class Combatant(ABC):
         MEDIUM = 3
         BOSS = 4
 
+    class Archetype(Enum):
+        MELEE = 0
+        RANGED = 1
+        HYBRID = 2
+
     def __init__(self, effect_tracker, name, level, hp, ac, init_bonus, spell_to_hit, speed, resistances, dc):
         self.effect_tracker = effect_tracker
         self.name = name
@@ -54,7 +59,8 @@ class Combatant(ABC):
         self.resistances = resistances
         self.multiattack_in_progress = False
         self.team_color = ""
-        self.selected_target = None
+        self.selected_enemy = None
+        self.selected_ally = None
         self.planned_movement = None
         self.movement_generator = None
         self.max_melee_range = 1
@@ -83,6 +89,7 @@ class Combatant(ABC):
         self.to_hit_flat_mod = [0]
         self.to_hit_dice_mod = []
         self.action_types_added = []
+        self.archetype = Combatant.Archetype.MELEE
 
     def __str__(self):
         return self.name
@@ -139,19 +146,19 @@ class Combatant(ABC):
             # TODO
             match action_type:
                 case BonusAction.BONUS_ATTACK:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                 case BonusAction.PAM_BONUS_ATTACK:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                 case BonusAction.RAGE:
                     self.max_rage_uses = TotemRageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = TotemRageFactory.get_rage_uses(self.level)
                     self.rage_active = False
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type](self)))
                 case BonusAction.TOTEM_RAGE:
                     self.max_rage_uses = TotemRageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = TotemRageFactory.get_rage_uses(self.level)
                     self.rage_active = False
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_actions.append((action_type, TO_FACTORY[action_type](self)))
                 case BonusAction.MISTY_STEP:
                     self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
                 case BonusAction.CUNNING_DODGE:

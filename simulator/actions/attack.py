@@ -1,7 +1,7 @@
 from simulator.actions.actoid import Actoid
 from simulator.misc import mean_dmg
 from itertools import accumulate
-from simulator.misc import percent_of_curr_hp
+from simulator.misc import percent_of_curr_hp, avg_roll
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 from enum import Enum, auto
 
@@ -22,6 +22,12 @@ class AttackFactory(FactoryThreat):
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.attack_type = attack_type  # MELEE or RANGED
         self.crit_range = crit_range
+        self.mod_range = 0
+        self.mod_to_hit_die = ''
+        self.mod_to_hit_flat = 0
+        self.mod_dmg_flat = 0
+        self.mod_dmg_die = ''
+        self.mod_crit_range = 0
 
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
@@ -39,14 +45,15 @@ class AttackFactory(FactoryThreat):
         return Attack(self.find_best_args(combatant, battle_map), self)
 
     def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
-        max_threat = 0
-        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
-        for attack in combatant.attacks:
-            dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(combatant.spell_to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac,
-                                                                        len(attack.crit_range), pt.is_resistant_to(attack.dmg_type)))
-            dmg_acc /= len(potential_targets)
-            max_threat = max(dmg_acc, max_threat)
-        return max_threat
+        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
+        dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die),
+                                                                    "+".join(self.dmg_dice,
+                                                                             self.mod_dmg_die) if self.mod_dmg_die else self.dmg_dice,
+                                                                    self.dmg_bonus + self.mod_dmg_flat, pt.ac,
+                                                                    len(self.crit_range) + self.mod_crit_range,
+                                                                    pt.is_resistant_to(self.dmg_type)))
+        dmg_acc /= len(potential_targets)
+        return dmg_acc
 
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
@@ -54,7 +61,44 @@ class AttackFactory(FactoryThreat):
         Goes over all the modified stats and accumulates the threat delta for all of them
         """
         # TODO
-        return 0
+        baseline = self.calculate_threat_approx(self.combatant, battle_map, *args, **kwargs)
+        try:
+            self.range_mod = modified_stats['range']
+        except KeyError:
+            self.range_mod = 0
+        try:
+            self.mod_dmg_flat = modified_stats['dmg_bonus_flat']
+        except KeyError:
+            self.mod_dmg_flat = 0
+        try:
+            self.mod_dmg_die = modified_stats['dmg_bonus_die']
+        except KeyError:
+            self.mod_dmg_die = ''
+        try:
+            self.mod_to_hit_flat = modified_stats['to_hit_flat']
+        except KeyError:
+            self.mod_to_hit_flat = 0
+        try:
+            self.mod_to_hit_die = modified_stats['to_hit_die']
+        except KeyError:
+            self.mod_to_hit_die = ''
+        try:
+            self.mod_crit_range = modified_stats['crit_range']
+        except KeyError:
+            self.mod_crit_range = 0
+
+        try:
+            modified = self.calculate_threat_approx(self.combatant, battle_map, *args, **kwargs)
+        except:
+            pass # just make sure the original stats are restored
+
+        self.mod_range = 0
+        self.mod_to_hit_die = ''
+        self.mod_to_hit_flat = 0
+        self.mod_dmg_flat = 0
+        self.mod_dmg_die = ''
+        self.mod_crit_range = 0
+        return modified - baseline
 
 
 class Attack(Actoid, DirectThreat):

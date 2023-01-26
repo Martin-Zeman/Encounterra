@@ -52,7 +52,7 @@ class Cyanwrath(Combatant):
             # logger.debug(f"Has action {self.has_action}, has_bonus action {self.has_bonus_action}, movement {self.movement}")
 
             dist = None
-            if self.selected_target is None or not self.selected_target.is_alive():
+            if self.selected_enemy is None or not self.selected_enemy.is_alive():
                 # Get new target
                 self.selected_target, dist = battle_map.get_nearest(self, Side.ENEMY)
                 if not self.selected_target:
