@@ -1,6 +1,6 @@
 from simulator.actions.actoid import Actoid
 from simulator.misc import mean_dmg
-from itertools import accumulate
+from functools import reduce
 from simulator.misc import percent_of_curr_hp, avg_roll
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 from enum import Enum, auto
@@ -44,14 +44,13 @@ class AttackFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return Attack(self.find_best_args(combatant, battle_map), self)
 
-    def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat_approx(self, combatant, battle_map):
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
-        dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die),
-                                                                    "+".join(self.dmg_dice,
-                                                                             self.mod_dmg_die) if self.mod_dmg_die else self.dmg_dice,
+        dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die),
+                                                                    "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
                                                                     self.dmg_bonus + self.mod_dmg_flat, pt.ac,
                                                                     len(self.crit_range) + self.mod_crit_range,
-                                                                    pt.is_resistant_to(self.dmg_type)))
+                                                                    pt.is_resistant_to(self.dmg_type)), potential_targets)
         dmg_acc /= len(potential_targets)
         return dmg_acc
 
@@ -61,11 +60,11 @@ class AttackFactory(FactoryThreat):
         Goes over all the modified stats and accumulates the threat delta for all of them
         """
         # TODO
-        baseline = self.calculate_threat_approx(self.combatant, battle_map, *args, **kwargs)
+        baseline = self.calculate_threat_approx(self.combatant, battle_map)
         try:
-            self.range_mod = modified_stats['range']
+            self.mod_range = modified_stats['range']
         except KeyError:
-            self.range_mod = 0
+            self.mod_range = 0
         try:
             self.mod_dmg_flat = modified_stats['dmg_bonus_flat']
         except KeyError:
@@ -87,8 +86,9 @@ class AttackFactory(FactoryThreat):
         except KeyError:
             self.mod_crit_range = 0
 
+        modified = baseline
         try:
-            modified = self.calculate_threat_approx(self.combatant, battle_map, *args, **kwargs)
+            modified = self.calculate_threat_approx(self.combatant, battle_map)
         except:
             pass # just make sure the original stats are restored
 

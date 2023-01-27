@@ -2,7 +2,7 @@ from simulator.spells.spell import SpellStats
 import logging
 from simulator.action_types import BonusAction, Action
 from simulator.actions.actoid import Actoid
-from simulator.threat_calculator import DirectThreat, FactoryThreat
+from simulator.threat_calculator import ThreatModifier, FactoryThreat
 from simulator.combatant import Combatant
 
 logger = logging.getLogger(__name__)
@@ -41,17 +41,15 @@ class MistyStepFactory(FactoryThreat):
                 if bonus_action[0] is BonusAction.BONUS_ATTACK or bonus_action[0] is BonusAction.PAM_BONUS_ATTACK:
                     max_mod = max(max_mod, bonus_action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value}, *args, **kwargs))
             return max_mod
-        elif self.caster.archetype is Combatant.Archetype.RAMGED:
+        elif self.caster.archetype is Combatant.Archetype.RANGED:
             return 0 # TODO
         return 0
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        """
-        """
         return 0 # no need
 
 
-class MistyStep(Actoid, DirectThreat):
+class MistyStep(Actoid, ThreatModifier):
 
     level = 2
     spell_range = SpellStats.Range.FEET_30
@@ -67,12 +65,7 @@ class MistyStep(Actoid, DirectThreat):
         self.coord = coord
         self.factory = factory
 
-    @staticmethod
-    def calculate_threat_approx(combatant, battle_map, *args, **kwargs):
-        # This may make sense as zero
-        return 0
-
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
         # TODO Add up all potential dmg from enemies that would normally be within their movement range
         # this can be arbitrated between other bonus action abilities
         return 0

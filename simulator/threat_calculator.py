@@ -40,9 +40,9 @@ class FactoryThreat(ABC):
     Threat calculation for factories. They compute an estimation of the threat potential based on its stats.
     It also mandates that a factory be able to compute a threat increment based on a dictionary of modified stats
     """
-    @abstractmethod
-    def calculate_threat_approx(self, battle_map, *args, **kwargs):
-        return 0
+    # @abstractmethod
+    # def calculate_threat_approx(self, battle_map, *args, **kwargs):
+    #     return 0
 
     @abstractmethod
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):

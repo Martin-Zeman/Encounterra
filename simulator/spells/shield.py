@@ -20,7 +20,7 @@ class ShieldFactory(FactoryThreat):
         return 0
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        return 0
+        return 0  # no need
 
 
 
@@ -35,10 +35,11 @@ class Shield(Actoid, ReactionToThreat):
     dc = None
     dmg_type = None
 
-    def __init__(self):
+    def __init__(self, factory):
         super().__init__(Actoid.Type.IS_SPELL)
         self.action_type = Reaction.SHIELD
+        self.factory = factory
 
 
     def calculate_threat_mod(self, combatant, battle_map, incoming_action, actor, *args, **kwargs):
-        return 0
+        return 0 # TODO Consider removing this from ReactionToThreat altogether

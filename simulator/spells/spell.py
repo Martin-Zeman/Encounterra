@@ -1,25 +1,29 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class SpellStats:
 
     class Target(Enum):
-        SELF = 0
-        ONE_CREATURE = 1
-        THREE_CREATURES = 2
-        RADIUS_10 = 3
-        RADIUS_20 = 4
-        RADIUS_30 = 5
-        BOX = 6
-        CONE_15 = 7
-        CONE_30 = 8
-        CONE_60 = 9
-        CONE_90 = 10
+        SELF = auto()
+        ONE_CREATURE = auto()
+        TWO_CREATURES = auto()
+        THREE_CREATURES = auto()
+        RADIUS_10 = auto()
+        RADIUS_20 = auto()
+        RADIUS_30 = auto()
+        BOX = auto()
+        CONE_15 = auto()
+        CONE_30 = auto()
+        CONE_60 = auto()
+        CONE_90 = auto()
 
     TRANSLATE_RADIUS = {Target.RADIUS_10: 2, Target.RADIUS_20: 4, Target.RADIUS_30: 6}
     TRANSLATE_CONE = {Target.CONE_15: 3, Target.CONE_30: 6, Target.CONE_60: 12, Target.CONE_90: 18}
 
     class Range(Enum):
+        """
+        The range values translate directly into hops of 5ft
+        """
         SELF = -1
         TOUCH = 0
         SIGHT = 1

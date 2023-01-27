@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, mean_dmg, percent_of_curr_hp, ROUND_HORIZON
 from simulator.actions.actoid import Actoid
-from itertools import accumulate
+from functools import reduce
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 import logging
 
@@ -40,15 +40,15 @@ class FireboltFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return Firebolt(self.find_best_args(combatant, battle_map), self)
 
-    def calculate_threat_approx(self, battle_map, *args, **kwargs):
-        """
-        Calculates the average dmg over all targets in range
-        """
-        potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
-        dmg_dice = FireboltFactory.get_dmg_dice(self.caster.level)
-        dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)))
-        dmg_acc /= len(potential_targets)
-        return dmg_acc
+    # def calculate_threat_approx(self, battle_map, *args, **kwargs):
+    #     """
+    #     Calculates the average dmg over all targets in range
+    #     """
+    #     potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
+    #     dmg_dice = FireboltFactory.get_dmg_dice(self.caster.level)
+    #     dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)))
+    #     dmg_acc /= len(potential_targets)
+    #     return dmg_acc
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
@@ -57,8 +57,7 @@ class FireboltFactory(FactoryThreat):
         try:
             to_hit_bonus = modified_stats['to_hit']
             potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
-            dmg_acc = accumulate(potential_targets,
-                                 lambda pt: mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, to_hit_bonus, 1,   pt.is_resistant_to(Firebolt.dmg_type)))
+            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(self.to_hit + to_hit_bonus, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)), potential_targets)
             dmg_acc /= len(potential_targets)
             return dmg_acc
         except IndexError:

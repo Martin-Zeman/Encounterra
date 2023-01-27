@@ -14,22 +14,22 @@ class FireballFactory(FactoryThreat):
         self.has_spell_sculpting = has_spell_sculpting
 
     def find_best_args(self, combatant, battle_map):
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, self.spell_range.value, self.target.value)
+        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, Fireball.spell_range.value, Fireball.target.value)
         return coord
 
     def create_best(self, combatant, battle_map, **kwargs):
         return Fireball(self.find_best_args(combatant, battle_map), self,  **kwargs)
 
-    def calculate_threat_approx(self, battle_map, *args, **kwargs):
-        placement, _, affected = battle_map.find_best_placement_harmful_circular(self.caster, SpellStats.Range.FEET_150.value,
-                                                                                 SpellStats.Target.RADIUS_20.value)
-        acc = 0
-        for aff in affected:
-            acc += mean_dmg_dc_attack(self.caster.dc, "8d6", True, aff.saving_throws[SavingThrow.DEX][0])
-        return acc
+    # def calculate_threat_approx(self, battle_map, *args, **kwargs):
+    #     placement, _, affected = battle_map.find_best_placement_harmful_circular(self.caster, SpellStats.Range.FEET_150.value,
+    #                                                                              SpellStats.Target.RADIUS_20.value)
+    #     acc = 0
+    #     for aff in affected:
+    #         acc += mean_dmg_dc_attack(self.caster.dc, "8d6", True, aff.saving_throws[SavingThrow.DEX][0])
+    #     return acc
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        return 0
+        return 0 # no need
 
 class Fireball(Actoid, DirectThreat):
 
@@ -51,7 +51,7 @@ class Fireball(Actoid, DirectThreat):
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(combatant, self.target, self.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(combatant, Fireball.target, Fireball.type, self.coord)
         acc = 0
         for aff in affected:
             acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw][0])

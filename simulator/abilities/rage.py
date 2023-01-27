@@ -4,7 +4,7 @@ from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
 from simulator.misc import dmg_increment_for_dmg_flat, ROUND_HORIZON
-from itertools import accumulate
+from functools import reduce
 import sys
 from simulator.threat_calculator import ThreatModifier, FactoryThreat
 import logging
@@ -15,6 +15,7 @@ class RageFactory(FactoryThreat):
 
     def __init__(self, combatant):
         self.combatant = combatant
+        self.action_type = BonusAction.RAGE
 
     @staticmethod
     def get_rage_bonus(level):
@@ -51,41 +52,40 @@ class RageFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return Rage(combatant)
 
-    @staticmethod
-    def calc_rage_threat(combatant, battle_map):
-        """
-        Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to
-        half of remaining HP
-        """
-        rage_bonus = RageFactory.get_rage_bonus(combatant.level)
-        total_threat = 0
-        max_threat = 0
-        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
-        # This doesn't take different attack ranges into account
-        # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
-        for attack in combatant.attacks:
-            dmg_acc = accumulate(potential_targets,
-                                 lambda pt: dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
-                                                                       pt.ac, rage_bonus))
-            dmg_acc /= len(potential_targets)
-            max_threat = max(dmg_acc, max_threat)
+    # @staticmethod
+    # def calc_rage_threat(combatant, battle_map):
+    #     """
+    #     Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to
+    #     half of remaining HP
+    #     """
+    #     rage_bonus = RageFactory.get_rage_bonus(combatant.level)
+    #     total_threat = 0
+    #     max_threat = 0
+    #     potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
+    #     # This doesn't take different attack ranges into account
+    #     # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
+    #     for attack in combatant.attacks:
+    #         dmg_acc = reduce(lambda acc, pt: acc + dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
+    #                                                                    pt.ac, rage_bonus), potential_targets)
+    #         dmg_acc /= len(potential_targets)
+    #         max_threat = max(dmg_acc, max_threat)
+    #
+    #     total_threat += max_threat
+    #     total_threat += (combatant.curr_hp / 2)
+    #     # TODO consider improving this by looping over enemy direct dmg dealing abilities
+    #     return total_threat * ROUND_HORIZON
 
-        total_threat += max_threat
-        total_threat += (combatant.curr_hp / 2)
-        # TODO consider improving this by looping over enemy direct dmg dealing abilities
-        return total_threat * ROUND_HORIZON
-
-    def calculate_threat_mod_approx(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         return 0 # no need
 
-    def calculate_threat_approx(self, battle_map, *args, **kwargs):
-        return RageFactory.calc_rage_threat(self.combatant, battle_map)
+    # def calculate_threat_approx(self, battle_map, *args, **kwargs):
+    #     return RageFactory.calc_rage_threat(self.combatant, battle_map)
 
 
 class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def __init__(self, combatant):
-        Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY, action_type=BonusAction.RAGE)
+        Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)
@@ -102,7 +102,24 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.combatants[0].resistances.remove(DamageType.Piercing)
 
 
-    def calculate_threat_mod(self, combatant, battle_map, actions, *args, **kwargs):
-        # TODO Multiply the threat increment by 3 for 3 rounds
-        # TODO
-        return 0
+    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
+        """
+        Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to
+        half of remaining HP
+        """
+        rage_bonus = RageFactory.get_rage_bonus(combatant.level)
+        total_threat = 0
+        max_threat = 0
+        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
+        # This doesn't take different attack ranges into account
+        # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
+        for attack in combatant.attacks:
+            dmg_acc = reduce(lambda acc, pt: acc + dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
+                                                                       pt.ac, rage_bonus), potential_targets)
+            dmg_acc /= len(potential_targets)
+            max_threat = max(dmg_acc, max_threat)
+
+        total_threat += max_threat
+        total_threat += (combatant.curr_hp / 2)
+        # TODO consider improving this by looping over enemy direct dmg dealing abilities
+        return total_threat * ROUND_HORIZON

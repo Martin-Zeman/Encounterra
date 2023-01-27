@@ -3,7 +3,7 @@ from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
 from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import ThreatModifier, FactoryThreat
-from itertools import accumulate
+from functools import reduce
 from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat
 from simulator.spells.haste import HasteFactory
 
@@ -20,13 +20,13 @@ class TwinnedHasteFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return TwinnedHaste(self.find_best_args(combatant, battle_map), self)
 
-    def calculate_threat_approx(self, battle_map, *args, **kwargs):
-        """
-        Iterates over all allies. For each ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
-        estimated dmg prevention given by the AC bonus and by the saving throw advantage.
-        """
-        allies_w_threat = HasteFactory.get_allies_sorted_by_threat(self.caster, battle_map)
-        return allies_w_threat[0] * ROUND_HORIZON
+    # def calculate_threat_approx(self, battle_map, *args, **kwargs):
+    #     """
+    #     Iterates over all allies. For each ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
+    #     estimated dmg prevention given by the AC bonus and by the saving throw advantage.
+    #     """
+    #     allies_w_threat = HasteFactory.get_allies_sorted_by_threat(self.caster, battle_map)
+    #     return allies_w_threat[0] * ROUND_HORIZON
 
     def calculate_threat_mod_approx(self, battle_map, modified_stats, *args, **kwargs):
         return 0  # No need
@@ -78,15 +78,14 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         max_attack_dmg = 0
         for attack in combatant.attacks:
             potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + attack.range + 1)
-            dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range,  pt.is_resistant_to(attack.dmg_type)))
+            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range,  pt.is_resistant_to(attack.dmg_type)), potential_targets)
             dmg_acc /= len(potential_targets)
             max_attack_dmg = max(dmg_acc, max_attack_dmg)
         attack_dmg_decrement_acc = 0
         for enemy in enemies:
-            attack_dmg_decrement_acc = accumulate(enemy.attacks,
-                                 lambda at: dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, combatant.ac, 2, at.crit_range, combatant.is_resistant_to(at.dmg_type)))
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, combatant.ac, 2, at.crit_range, combatant.is_resistant_to(at.dmg_type)), enemy.attacks)
 
             attack_dmg_decrement_acc /= len(enemy.attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg += attack_dmg_decrement_acc
-        return max_attack_dmg * ROUND_HORIZON
+        return max_attack_dmg * ROUND_HORIZON * 2

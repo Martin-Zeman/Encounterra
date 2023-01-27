@@ -5,7 +5,7 @@ import math
 import numpy as np
 from scipy.stats import randint
 from functools import reduce, partial, cache
-from itertools import accumulate
+from functools import reduce
 
 
 ROUND_HORIZON = 3
@@ -110,7 +110,7 @@ def parse_dmg_dice(dice_string):
 
 def avg_roll(dice_string):
     dice = parse_dmg_dice(dice_string)
-    return accumulate(dice, lambda d: d[0] * ((1.0 + d[1]) / 2.0))
+    return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice)
 
 
 @cache
@@ -128,7 +128,7 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
     rv = randint(1, 21, to_hit)
     p_hit = 1.0 - rv.cdf(ac - 1)
     dice = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = accumulate(dice, lambda d: d[0] * ((1.0 + d[1]) / 2.0))
+    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice)
     res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
     return res if not is_resistant else (res / 2)
 
@@ -211,7 +211,7 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=Fal
     @return:
     """
     dice = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = accumulate(dice, lambda d: d[0] * ((1.0 + d[1]) / 2.0))
+    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice)
     rv = randint(1, 21, st_bonus)
     p_fail = rv.cdf(dc - 1)
     fail_dmg = avg_dmg_die_roll * p_fail
