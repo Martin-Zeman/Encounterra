@@ -1,3 +1,15 @@
+Idea:
+The action selection could be formulated as a linear programming problem. The optimization criteria could differ based on the type of a
+character but in general it would maximize (threat_out - threat_in). I'd need to add a threat to a given specific combatant by a factory.
+This could help me determine the incoming threat. It could even handle threat from potential AoO.
+I think I would need to include all combinations of action + targeting + positioning which means I'd need to add a method to calculate with specific args
+and not just the "best ones".
+There would be a hard constraint that the threat_in cannot be higher or equal current hit points.
+So I'd calculate threat for all possible actions (including dash)
+
+I could improve pathfinding to give the path with the least AoO.
+
+
 Longer lasting AoEs and multi-target effects are to be tracked by the EffectTracker.
 It tracks the caster, location, who's currently affected as well as duration. It has a removal by broken concentration.
 It can return any of the above. It can tell if a character is entering the area with location + increment.
