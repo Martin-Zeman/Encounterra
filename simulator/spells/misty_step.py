@@ -48,6 +48,9 @@ class MistyStepFactory(FactoryThreat):
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         return 0 # no need
 
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        return 0
+
 
 class MistyStep(Actoid, ThreatModifier):
 

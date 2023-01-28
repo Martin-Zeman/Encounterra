@@ -31,7 +31,7 @@ class FireboltFactory(FactoryThreat):
 
     def find_best_args(self, combatant, battle_map):
         # TODO Should this include action type? Cause for a twinned version you would need multiple targets
-        potential_targets = battle_map.get_enemies_within_radius(combatant, super().spell_range.value)
+        potential_targets = battle_map.get_enemies_within_radius(combatant, Firebolt.spell_range.value)
         hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1)) for pt in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
@@ -61,6 +61,12 @@ class FireboltFactory(FactoryThreat):
             dmg_acc /= len(potential_targets)
             return dmg_acc
         except IndexError:
+            return 0
+
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        if battle_map.get_cartesian_distance(self.caster, target) <= Firebolt.spell_range.value:
+            return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(Firebolt.dmg_type))
+        else:
             return 0
 
 

@@ -20,16 +20,29 @@ class TwinnedHasteFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return TwinnedHaste(self.find_best_args(combatant, battle_map), self)
 
-    # def calculate_threat_approx(self, battle_map, *args, **kwargs):
-    #     """
-    #     Iterates over all allies. For each ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
-    #     estimated dmg prevention given by the AC bonus and by the saving throw advantage.
-    #     """
-    #     allies_w_threat = HasteFactory.get_allies_sorted_by_threat(self.caster, battle_map)
-    #     return allies_w_threat[0] * ROUND_HORIZON
-
     def calculate_threat_mod_approx(self, battle_map, modified_stats, *args, **kwargs):
         return 0  # No need
+
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        """
+        For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
+        estimated dmg prevention given by the AC bonus and by the saving throw advantage.
+        """
+        enemies = battle_map.teams.get_enemies(target)
+            # This doesn't take different attack ranges into account
+        max_attack_dmg = 0
+        for attack in target.attacks:
+            potential_targets = battle_map.get_enemies_within_hop_distance(target, target.speed + attack.range + 1)
+            dmg_acc = reduce(lambda acc, pt:acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets)
+            dmg_acc /= len(potential_targets)
+            max_attack_dmg = max(dmg_acc, max_attack_dmg)
+        attack_dmg_decrement_acc = 0
+        for enemy in enemies:
+            attack_dmg_decrement_acc = reduce(lambda acc, at:acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy.attacks)
+            attack_dmg_decrement_acc /= len(enemy.attacks)
+            # TODO include the ST-based abilities here
+        max_attack_dmg += attack_dmg_decrement_acc
+        return max_attack_dmg * ROUND_HORIZON
 
 
 
@@ -73,19 +86,6 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
-        enemies = battle_map.teams.get_enemies(combatant)
-            # This doesn't take different attack ranges into account
-        max_attack_dmg = 0
-        for attack in combatant.attacks:
-            potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + attack.range + 1)
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range,  pt.is_resistant_to(attack.dmg_type)), potential_targets)
-            dmg_acc /= len(potential_targets)
-            max_attack_dmg = max(dmg_acc, max_attack_dmg)
-        attack_dmg_decrement_acc = 0
-        for enemy in enemies:
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, combatant.ac, 2, at.crit_range, combatant.is_resistant_to(at.dmg_type)), enemy.attacks)
+        assert self.targets[0] is not None and self.targets[1] is not None, "One of the twinned haste targets is None"
+        return self.factory.calculate_threat_to_target(battle_map, self.targets[0]) + self.factory.calculate_threat_to_target(battle_map, self.targets[1])
 
-            attack_dmg_decrement_acc /= len(enemy.attacks)
-            # TODO include the ST-based abilities here
-        max_attack_dmg += attack_dmg_decrement_acc
-        return max_attack_dmg * ROUND_HORIZON * 2

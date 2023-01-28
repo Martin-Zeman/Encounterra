@@ -45,6 +45,9 @@ class AttackFactory(FactoryThreat):
         return Attack(self.find_best_args(combatant, battle_map), self)
 
     def calculate_threat_approx(self, combatant, battle_map):
+        """
+        Helper function which calculates the average potential threat over all potential targets including all possible mods
+        """
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die),
                                                                     "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
@@ -53,7 +56,6 @@ class AttackFactory(FactoryThreat):
                                                                     pt.is_resistant_to(self.dmg_type)), potential_targets)
         dmg_acc /= len(potential_targets)
         return dmg_acc
-
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
@@ -100,6 +102,9 @@ class AttackFactory(FactoryThreat):
         self.mod_crit_range = 0
         return modified - baseline
 
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        return mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, len(self.crit_range), target.is_resistant_to(self.dmg_type))
+
 
 class Attack(Actoid, DirectThreat):
 
@@ -111,7 +116,5 @@ class Attack(Actoid, DirectThreat):
     def get_dmg_type(self):
         return self.factory.dmg_type
 
-
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, self.factory.dmg_bonus, self.target_combatant.ac, len(self.factory.crit_range),
-                        self.target_combatant.is_resistant_to(self.factory.dmg_type))
+        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant)

@@ -1,11 +1,20 @@
 Idea:
-The action selection could be formulated as a linear programming problem. The optimization criteria could differ based on the type of a
+The action selection could be formulated as an integer linear programming problem. The optimization criteria could differ based on the type of a
 character but in general it would maximize (threat_out - threat_in). I'd need to add a threat to a given specific combatant by a factory.
 This could help me determine the incoming threat. It could even handle threat from potential AoO.
 I think I would need to include all combinations of action + targeting + positioning which means I'd need to add a method to calculate with specific args
 and not just the "best ones".
 There would be a hard constraint that the threat_in cannot be higher or equal current hit points.
 So I'd calculate threat for all possible actions (including dash)
+    - I have a variable D_a,e how much dmg an attack "a" does to an enemy "n"
+    - Variable which selects an action A
+    - Variable which selects the i-th target T_i,a for action "a". Most actions have only one target.
+    - each action would define its own constraints, e.g. for attacks you have to be adjacent
+    - the constraints would be activated based on the selected action
+    - There would be areas of threat projected by enemies determined by their range and calculated directly against the combatant
+    - max (threat_out - threat_in)
+    - stuff like reckless attack could be activated by a variable and add to both threat_out and threat_in...here the optimization becomes interesting
+    - For each target the best route to the adjacent square would be calculated and AoO dmg added as an extra threat for that option
 
 I could improve pathfinding to give the path with the least AoO.
 

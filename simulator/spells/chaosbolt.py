@@ -29,7 +29,7 @@ class ChaosboltFactory(FactoryThreat):
 
     def find_best_args(self, combatant, battle_map):
         potential_targets = battle_map.get_enemies_within_radius(combatant, Chaosbolt.spell_range.value)
-        dmg_dice = "+".join([ChaosboltFactory.dmg_dice, ChaosboltFactory.additional_dmg_dice])
+        dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
         mean_dmg_func = partial(mean_dmg, to_hit=self.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
         return self.get_sorted_chain(battle_map, potential_targets, mean_dmg_func)
 
@@ -50,6 +50,10 @@ class ChaosboltFactory(FactoryThreat):
     #     return acc
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat diff based on provided stat modifications. Relevant bonuses are:
+        - to_hit
+        """
         # TODO implement once I have spells that do this, e.g. Bless
         try:
             to_hit_bonus = modified_stats['to_hit']
@@ -66,6 +70,16 @@ class ChaosboltFactory(FactoryThreat):
                 p_acc *= P_SAME
             return acc
         except IndexError:
+            return 0
+
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        """
+        Calculates threat to a specific target
+        """
+        if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
+            dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
+            return mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
+        else:
             return 0
 
 
@@ -100,3 +114,4 @@ class Chaosbolt(Actoid, DirectThreat):
             acc += mean_dmg(self.factory.to_hit, dmg_dice, 0, target.ac) * p_acc
             p_acc *= P_SAME
         return acc
+

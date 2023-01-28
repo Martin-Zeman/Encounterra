@@ -13,15 +13,11 @@ class ShieldFactory(FactoryThreat):
         self.action_type = Reaction.SHIELD
         self.caster = caster
 
-    def calculate_threat_approx(self, battle_map, *args, **kwargs):
-        """
-        The implementation of the prevention potential should probably go here
-        """
-        return 0
-
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         return 0  # no need
 
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        return 0
 
 
 class Shield(Actoid, ReactionToThreat):
