@@ -40,6 +40,29 @@ class FireballFactory(FactoryThreat):
         else:
             return 0
 
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications
+        """
+        try:
+            to_hit_bonus = modified_stats['to_hit']
+        except KeyError:
+            to_hit_bonus = 0
+
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+        if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
+            to_hit_total = self.to_hit + to_hit_bonus
+            to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+
+            dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
+            return mean_dmg(to_hit_total, dmg_dice, 0, target.ac) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
+        else:
+            return 0
+
 class Fireball(Actoid, DirectThreat):
 
     level = 3
@@ -57,6 +80,7 @@ class Fireball(Actoid, DirectThreat):
         self.coord = coord
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.heightened = False if "heightened " not in kwargs or not kwargs["heightened "] else True
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

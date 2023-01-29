@@ -24,31 +24,41 @@ class ActionResult(Enum):
     STRONG_BUFF = auto()
     TRAINEE_DEAD = auto()
 
-KILL_BONUS = 10
+def has_advantage_saving_throw(ability, target):
+    if RollModifier.ADVANTAGE in target.saving_throws[ability.saving_throw][1]:
+        return True
+    if ability.saving_throw is SavingThrow.DEX and target.has_passive(
+            Passive.DANGER_SENSE) and not target.is_affected_by_any(Conditions.INCAPACITATED,
+                                                                              Conditions.BLINDED,
+                                                                              Conditions.DEAFENED):
+        return True
+    if ability.saving_throw is SavingThrow.DEX and target.is_dodging:
+        return True
+    return False
+
+def has_disadvantage_saving_throw(ability, target):
+    if RollModifier.DISADVANTAGE in target.saving_throws[ability.saving_throw][1]:
+        return True
+    if ability.saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
+        return True
+    return False
+
 
 def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
+    # TODO Conditions
     bonus = target_combatant.saving_throws[ability.saving_throw][0]
 
-    # TODO unify this with the attack (dis)advantage
-    advantage_counter = 0
-    disadvantage_counter = 0
-    if RollModifier.ADVANTAGE in target_combatant.saving_throws[ability.saving_throw][1]:
-        advantage_counter += 1
-    elif RollModifier.DISADVANTAGE in target_combatant.saving_throws[ability.saving_throw][1]:
-        disadvantage_counter += 1
-    if ability.saving_throw is SavingThrow.DEX and target_combatant.has_passive(
-            Passive.DANGER_SENSE) and not target_combatant.is_affected_by_any(Conditions.INCAPACITATED,
-                                                                              Conditions.BLINDED,
-                                                                              Conditions.DEAFENED):
-        advantage_counter += 1
+    has_advantage = has_advantage_saving_throw(ability, target_combatant)
+    has_disadvantage = has_disadvantage_saving_throw(ability, target_combatant)
 
-    if advantage_counter > 0 and disadvantage_counter == 0:
-        rolled = max(random.randint(1, 20), random.randint(1, 20))
-    elif disadvantage_counter > 0 and advantage_counter == 0:
-        rolled = min(random.randint(1, 20), random.randint(1, 20))
-    else:
+    if has_advantage == has_disadvantage:
         rolled = random.randint(1, 20)
+    elif has_advantage:
+        rolled = max(random.randint(1, 20), random.randint(1, 20))
+    else:
+        rolled = min(random.randint(1, 20), random.randint(1, 20))
+
     if rolled == 1:
         saved = False
     elif rolled == 20:
@@ -59,7 +69,7 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
         saved = False
     logger.debug(
         f"{type(ability).__name__} deals {dmg if not saved else dmg // 2} to {target_combatant}")
-    return target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.dmg_type)
+    target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.dmg_type)
 
 
 class ActionResolver:
@@ -70,18 +80,39 @@ class ActionResolver:
         self.battle_map = battle_map
         self.effect_tracker = effect_tracker
 
-    def resolve_chaos_bolt(self, caster, target, to_hit, dmg_dice, additional_dmg_dice, name):
+    def has_advantage_ranged(self, attack, attacker, target):
+        if attack.roll_modifier is RollModifier.ADVANTAGE:
+            return True
+        if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
+            logger.debug(f"{attacker} gains advantage since {target} attacked recklessly")
+            return True
+        return False
+
+    def has_disadvantage_ranged(self, attack, attacker, target):
+        if attack.roll_modifier is RollModifier.DISADVANTAGE:
+            return True
+        if target.disadvantage_on_incoming_attacks:
+            return True
+        if target.is_dodging:
+            return True
+        return False
+
+    def resolve_chaos_bolt(self, caster, spell):
+        # TODO Conditions
         jump = True
-        curr_target = target
+        curr_target = spell.targets[0]
         potential_targets = self.teams.get_allies(curr_target)
         while jump:
             jump = False
-            if not (target.disadvantage_on_incoming_attacks or target.is_dodging):
-                rolled = max(random.randint(1, 20), random.randint(1, 20))
-            elif target.disadvantage_on_incoming_attacks or target.is_dodging:
-                rolled = min(random.randint(1, 20), random.randint(1, 20))
-            else:
+            has_advantage = self.has_advantage_ranged(spell, caster, curr_target)
+            has_disadvantage = self.has_disadvantage_ranged(spell, caster, curr_target)
+            if has_advantage == has_disadvantage:
                 rolled = random.randint(1, 20)
+            elif has_advantage:
+                rolled = max(random.randint(1, 20), random.randint(1, 20))
+            else:
+                rolled = min(random.randint(1, 20), random.randint(1, 20))
+
             multiplier = 1
             if rolled == 1:
                 logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
@@ -89,15 +120,15 @@ class ActionResolver:
             elif rolled == 20:
                 multiplier = 2
 
-            if rolled + to_hit >= target.ac:
-                bolt_dmg, rolled_numbers = roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice)
+            if rolled + spell.to_hit >= curr_target.ac:
+                bolt_dmg, rolled_numbers = roll_chaos_bolt_dmg(spell.dmg_dice, spell.additional_dmg_dice)
                 dmg_type = Chaosbolt.DMG_TYPE[rolled_numbers[random.randint(0, 1)] - 1]  # take one of the two numbers randomly
                 dmg = multiplier * bolt_dmg
-                logger.debug(f"{name} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
+                logger.debug(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
                              extra={"team": self.teams.get_team(caster)})
                 curr_target.receive_dmg(dmg, dmg_type)
                 if not curr_target.is_alive():
-                    self.battle_map.remove_combatant(target)
+                    self.battle_map.remove_combatant(curr_target)
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
                         if not potential_target.is_alive():
@@ -111,17 +142,20 @@ class ActionResolver:
                             break
                 return ActionResult.DMG
             else:
-                logger.debug(f"{name} misses {target}", extra={"team": self.teams.get_team(caster)})
+                logger.debug(f"Chaosbolt misses {curr_target}", extra={"team": self.teams.get_team(caster)})
                 return ActionResult.MISS
 
-    def resolve_ranged_spell_attack(self, caster, target, to_hit, dmg_dice, dmg_type, name):
-        # TODO consolidate this
-        if not (target.disadvantage_on_incoming_attacks or target.is_dodging):
-            rolled = max(random.randint(1, 20), random.randint(1, 20))
-        elif target.disadvantage_on_incoming_attacks or target.is_dodging:
-            rolled = min(random.randint(1, 20), random.randint(1, 20))
-        else:
+    def resolve_ranged_spell_attack(self, caster, spell, target):
+        # TODO Conditions
+        has_advantage = self.has_advantage_ranged(spell, caster, target)
+        has_disadvantage = self.has_disadvantage_ranged(spell, caster, target)
+        if has_advantage == has_disadvantage:
             rolled = random.randint(1, 20)
+        elif has_advantage:
+            rolled = max(random.randint(1, 20), random.randint(1, 20))
+        else:
+            rolled = min(random.randint(1, 20), random.randint(1, 20))
+
         multiplier = 1
         if rolled == 1:
             logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
@@ -129,16 +163,16 @@ class ActionResolver:
         elif rolled == 20:
             multiplier = 2
 
-        if rolled + to_hit >= target.ac:
-            dmg = multiplier * roll_spell_dmg(dmg_dice)
-            logger.debug(f"{name} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
+        if rolled + spell.to_hit >= target.ac:
+            dmg = multiplier * roll_spell_dmg(spell.dmg_dice)
+            logger.debug(f"{spell.name} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
-            target.receive_dmg(dmg, dmg_type)
-            if not target.is_alive():
+            spell.target.receive_dmg(dmg, spell.dmg_type)
+            if not spell.target.is_alive():
                 self.battle_map.remove_combatant(target)
             return ActionResult.DMG
         else:
-            logger.debug(f"{name} misses {target}", extra={"team": self.teams.get_team(caster)})
+            logger.debug(f"{spell.name} misses {target}", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
 
     def resolve_spell(self, caster, spell):
@@ -146,30 +180,28 @@ class ActionResolver:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.stats.target, spell.stats.type, spell.coord)
                 dmg = roll_spell_dmg(spell.dmg_dice)
-                actual_total_dmg = 0
                 for combatant in affected:
                     logger.debug(f"{combatant} is hit by Fireball")
-                    actual_total_dmg += resolve_dmg_saving_throw(spell, dmg, combatant)
+                    resolve_dmg_saving_throw(spell, dmg, combatant)
                     if not combatant.is_alive():
                         # TODO revisit if this is really needed
-                        actual_total_dmg += KILL_BONUS
                         self.battle_map.remove_combatant(combatant)
                 return ActionResult.DMG
             case Action.HASTE | BonusAction.QUICKENED_HASTE:
                 spell.activate()
                 self.effect_tracker.add(spell, caster)
-                ActionResult.MEDIUM_BUFF
+                return ActionResult.MEDIUM_BUFF
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
-                return self.resolve_ranged_spell_attack(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__)
+                return self.resolve_ranged_spell_attack(caster, spell, spell.targets[0])
             case Action.TWINNED_FIREBOLT:
-                ret = (self.resolve_ranged_spell_attack(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__),
-                       self.resolve_ranged_spell_attack(caster, spell.targets[1], spell.to_hit, spell.dmg_dice, spell.dmg_type, spell.__class__.__name__))
+                ret = (self.resolve_ranged_spell_attack(caster, spell, spell.targets[0]),
+                       self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]))
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
                 self.battle_map.move_combatant(caster, spell.coord)
                 return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
-                return self.resolve_chaos_bolt(caster, spell.targets[0], spell.to_hit, spell.dmg_dice, spell.additional_dmg_dice, spell.__class__.__name__)
+                return self.resolve_chaos_bolt(caster, spell)
             case Reaction.SHIELD:
                 assert not caster.shield_spell_active
                 caster.shield_spell_active = True
@@ -179,7 +211,9 @@ class ActionResolver:
                 logger.error("Unknown spell")
                 return ActionResult.UNFEASIBLE
 
-    def has_advantage(self, attack, attacker, target):
+    def has_advantage_melee(self, attack, attacker, target):
+        if attack.roll_modifier is RollModifier.ADVANTAGE:
+            return True
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
             return True
         if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
@@ -189,7 +223,9 @@ class ActionResolver:
             return True
         return False
 
-    def has_disadvantage(self, attack, attacker, target):
+    def has_disadvantage_melee(self, attack, attacker, target):
+        if attack.roll_modifier is RollModifier.DISADVANTAGE:
+            return True
         if target.disadvantage_on_incoming_attacks:
             return True
         if target.is_dodging:
@@ -202,18 +238,20 @@ class ActionResolver:
         :param attack:
         :return: True is hits, false if misses or is not attack
         """
+        # TODO Conditions
         target = attack.target_combatant
         attacker = attack.combatant
         assert target
-        advantage = self.has_advantage(attack, attacker, target)
-        disadvantage = self.has_disadvantage(attack, attacker, target)
+        has_advantage = self.has_advantage_melee(attack, attacker, target)
+        has_disadvantage = self.has_disadvantage_melee(attack, attacker, target)
 
-        if advantage and not disadvantage:
-            rolled = max(random.randint(1, 20), random.randint(1, 20))
-        elif disadvantage and not advantage:
-            rolled = min(random.randint(1, 20), random.randint(1, 20))
-        else:
+        if has_advantage == has_disadvantage:
             rolled = random.randint(1, 20)
+        elif has_advantage:
+            rolled = max(random.randint(1, 20), random.randint(1, 20))
+        else:
+            rolled = min(random.randint(1, 20), random.randint(1, 20))
+
         multiplier = 1
         if rolled == 1:
             logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})

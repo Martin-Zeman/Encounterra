@@ -1,7 +1,7 @@
 from simulator.actions.actoid import Actoid
 from simulator.misc import mean_dmg
 from functools import reduce
-from simulator.misc import percent_of_curr_hp, avg_roll
+from simulator.misc import percent_of_curr_hp, avg_roll, RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 from enum import Enum, auto
 
@@ -22,12 +22,15 @@ class AttackFactory(FactoryThreat):
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.attack_type = attack_type  # MELEE or RANGED
         self.crit_range = crit_range
+
+        # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0
         self.mod_to_hit_die = ''
         self.mod_to_hit_flat = 0
         self.mod_dmg_flat = 0
         self.mod_dmg_die = ''
         self.mod_crit_range = 0
+        self.roll_modifier = RollModifier.STRAIGHT
 
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
@@ -49,11 +52,14 @@ class AttackFactory(FactoryThreat):
         Helper function which calculates the average potential threat over all potential targets including all possible mods
         """
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
-        dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die),
-                                                                    "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
-                                                                    self.dmg_bonus + self.mod_dmg_flat, pt.ac,
-                                                                    len(self.crit_range) + self.mod_crit_range,
-                                                                    pt.is_resistant_to(self.dmg_type)), potential_targets)
+        def mean_dmg_mod(acc, pt):
+            to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
+            to_hit_total += ROLL_MODIFIER[self.roll_modifier][pt.ac - to_hit_total]
+            total_crit = len(self.crit_range) + self.mod_crit_range
+            total_crit *= ROLL_MODIFIER_CRIT[self.roll_modifier]
+            return acc + mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
+                                  self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
+        dmg_acc = reduce(mean_dmg_mod)
         dmg_acc /= len(potential_targets)
         return dmg_acc
 
@@ -87,6 +93,10 @@ class AttackFactory(FactoryThreat):
             self.mod_crit_range = modified_stats['crit_range']
         except KeyError:
             self.mod_crit_range = 0
+        try:
+            self.roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            self.roll_modifier = RollModifier.STRAIGHT
 
         modified = baseline
         try:
@@ -100,6 +110,7 @@ class AttackFactory(FactoryThreat):
         self.mod_dmg_flat = 0
         self.mod_dmg_die = ''
         self.mod_crit_range = 0
+        self.roll_modifier = RollModifier.STRAIGHT
         return modified - baseline
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):

@@ -43,14 +43,26 @@ class FactoryThreat(ABC):
     @abstractmethod
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
-        Calculates the threat delta of the factory given stat modifications
+        Calculates the threat delta of the factory given stat modifications. This is a general estimation with no specific target.
+        This is useful for evaluation the threat_out of (de)buff abilities. It's meant to be called from the threat calculation methods
+        of (de)buff abilities.
         """
         return 0
 
     @abstractmethod
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
-        Calculates the threat the factory is capable of dealing to a specific target
+        Calculates the threat the factory is capable of dealing to a specific target.
+        This is useful for calculating threat_in from the abilities of enemies
+        """
+        return 0
+
+    @abstractmethod
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications.
+        This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
+        against fireball or bane on attack rolls etc.
         """
         return 0
 

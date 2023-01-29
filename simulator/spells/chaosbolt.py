@@ -1,5 +1,5 @@
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, mean_dmg
+from simulator.misc import DamageType, mean_dmg, RollModifier, ROLL_MODIFIER
 import logging
 from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import DirectThreat, FactoryThreat
@@ -36,19 +36,6 @@ class ChaosboltFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return Chaosbolt(self.find_best_args(combatant, battle_map), self)
 
-    # def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
-    #     potential_targets = battle_map.get_enemies_within_radius(Chaosbolt.spell_range.value)
-    #     dmg_dice = "+".join(Chaosbolt.dmg_dice, Chaosbolt.additional_dmg_dice)
-    #     mean_dmg_func = partial(mean_dmg, to_hit=combatant.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
-    #     sorted_targets = ChaosboltFactory.get_sorted_chain(battle_map, potential_targets, mean_dmg_func)
-    #     acc = 0
-    #     p_acc = 1
-    #     P_SAME = 4 / 43  # 8/86 = 4 / 43
-    #     for target in sorted_targets:
-    #         acc += mean_dmg(combatant.spell_to_hit, dmg_dice, 0, target.ac) * p_acc
-    #         p_acc *= P_SAME
-    #     return acc
-
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
         Calculates the threat diff based on provided stat modifications. Relevant bonuses are:
@@ -82,6 +69,29 @@ class ChaosboltFactory(FactoryThreat):
         else:
             return 0
 
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications
+        """
+        try:
+            to_hit_bonus = modified_stats['to_hit']
+        except KeyError:
+            to_hit_bonus = 0
+
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+        if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
+            to_hit_total = self.to_hit + to_hit_bonus
+            to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+
+            dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
+            return mean_dmg(to_hit_total, dmg_dice, 0, target.ac) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
+        else:
+            return 0
+
 
 class Chaosbolt(Actoid, DirectThreat):
     DMG_TYPE = (
@@ -98,11 +108,12 @@ class Chaosbolt(Actoid, DirectThreat):
     dmg_type = None
 
 
-    def __init__(self, targets, factory):
+    def __init__(self, targets, factory, **kwargs):
         super().__init__(actoid_type=Actoid.Type.IS_SPELL, is_direct_dmg_dealing=True)
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.targets = targets
         self.factory = factory
+        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
