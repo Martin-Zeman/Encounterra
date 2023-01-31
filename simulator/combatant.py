@@ -33,11 +33,11 @@ class Combatant(ABC):
         self.effect_tracker = effect_tracker
         self.name = name
         self.level = level
-        self.actions = [(Action.DODGE, DodgeFactory(self))]
-        self.bonus_actions = []
-        self.reactions = []
-        self.haste_actions = []
-        self.free_actions = []
+        self.action_factories = [(Action.DODGE, DodgeFactory(self))]
+        self.bonus_action_factories = []
+        self.reaction_factories = []
+        self.haste_action_factories = []
+        # self.free_actions = []
         self.passive = []
         self.max_hp = hp
         self.curr_hp = hp
@@ -131,54 +131,54 @@ class Combatant(ABC):
         elif isinstance(action_type, Action):
             match action_type:
                 case Action.ATTACK:
-                    self.actions.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                 case Action.FIREBALL:
-                    self.actions.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
                 case Action.FIREBOLT:
-                    self.actions.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
                 case Action.CHAOSBOLT:
-                    self.actions.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
                 case Action.HASTE:
-                    self.actions.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
                 case _:
                     pass
         elif isinstance(action_type, BonusAction):
             # TODO
             match action_type:
                 case BonusAction.BONUS_ATTACK:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                 case BonusAction.PAM_BONUS_ATTACK:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                 case BonusAction.RAGE:
-                    self.max_rage_uses = TotemRageFactory.get_rage_uses(self.level)
-                    self.curr_rage_uses = TotemRageFactory.get_rage_uses(self.level)
+                    self.max_rage_uses = RageFactory.get_rage_uses(self.level)
+                    self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.rage_active = False
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type](self)))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                 case BonusAction.TOTEM_RAGE:
-                    self.max_rage_uses = TotemRageFactory.get_rage_uses(self.level)
-                    self.curr_rage_uses = TotemRageFactory.get_rage_uses(self.level)
+                    self.max_rage_uses = RageFactory.get_rage_uses(self.level)
+                    self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.rage_active = False
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type](self)))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                 case BonusAction.MISTY_STEP:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
                 case BonusAction.CUNNING_DODGE:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
                 case BonusAction.CUNNING_DISENGAGE:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
                 case BonusAction.CUNNING_HIDE:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
                 case BonusAction.QUICKENED_FIREBALL:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
                 case BonusAction.QUICKENED_FIREBOLT:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
                 case BonusAction.QUICKENED_CHAOSBOLT:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
                 case BonusAction.QUICKENED_HASTE:
-                    self.bonus_actions.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
                 case _:
                     pass  # no resources required
         elif isinstance(action_type, Reaction):
-            self.reactions.append((action_type, TO_FACTORY[action_type]))
+            self.reaction_factories.append((action_type, TO_FACTORY[action_type]))
         elif isinstance(action_type, FreeAction):
             match action_type:
                 case FreeAction.RECKLESS_ATTACK:
@@ -190,24 +190,24 @@ class Combatant(ABC):
             match action_type:
                 case MetaAction.QUICKENED_SPELL:
                     assert Passive.METAMAGIC in self.passive
-                    for action in self.actions:
+                    for action in self.action_factories:
                         try:
                             quickened_action = TO_QUICKENED[action]
-                            self.bonus_actions.append((quickened_action, TO_FACTORY[quickened_action]))
+                            self.bonus_action_factories.append((quickened_action, TO_FACTORY[quickened_action]))
                         except IndexError:
                             pass
                 case MetaAction.TWINNED_SPELL:
                     assert Passive.METAMAGIC in self.passive
-                    for action in self.actions:
+                    for action in self.action_factories:
                         try:
                             twinned_action = TO_TWINNED[action]
-                            self.actions.append((twinned_action, TO_FACTORY[twinned_action]))
+                            self.action_factories.append((twinned_action, TO_FACTORY[twinned_action]))
                         except IndexError:
                             pass
-                    for bonus_action in self.bonus_actions:
+                    for bonus_action in self.bonus_action_factories:
                         try:
                             twinned_action = TO_TWINNED[bonus_action]
-                            self.bonus_actions.append((twinned_action, TO_FACTORY[twinned_action]))
+                            self.bonus_action_factories.append((twinned_action, TO_FACTORY[twinned_action]))
                         except IndexError:
                             pass
                 case MetaAction.EMPOWERED_SPELL:

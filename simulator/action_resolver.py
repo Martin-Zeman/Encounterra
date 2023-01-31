@@ -331,7 +331,29 @@ class ActionResolver:
                 logger.error("Unknown actoid type")
                 return False
 
-    def resolve_action(self, action_type, args, combatant):
+    # def resolve_action(self, action_type, args, combatant):
+    #     """
+    #     The core of action resolution
+    #     @param action_type: action type
+    #     @param args: packed arguments of the action, can take on different interpretations based on the action_type
+    #     @param combatant: originator of the action
+    #     @return: only relevant return here is DMG/MISS used for sentinel
+    #     """
+    #     if action_type is MetaAction.DONE:
+    #         return ActionResult.NOP
+    #     action = action_factory(combatant, self.effect_tracker, action_type, *args)
+    #     feasible = check_feasibility(combatant, action, self.battle_map)
+    #     if not feasible and combatant.has_action:
+    #         action = Dodge(combatant)
+    #         logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+    #     elif not feasible:
+    #         logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
+    #         return ActionResult.UNFEASIBLE
+    #     use_resources(combatant, action)
+    #     return self.resolve_by_actoid_type(action, combatant)
+
+
+    def resolve_action(self, action, combatant):
         """
         The core of action resolution
         @param action_type: action type
@@ -339,16 +361,16 @@ class ActionResolver:
         @param combatant: originator of the action
         @return: only relevant return here is DMG/MISS used for sentinel
         """
-        if action_type is MetaAction.DONE:
-            return ActionResult.NOP
-        action = action_factory(combatant, self.effect_tracker, action_type, *args)
+        if action.action_type is MetaAction.DONE:
+            return None
+        # action = action_factory(combatant, self.effect_tracker, action_type, *args)
         feasible = check_feasibility(combatant, action, self.battle_map)
-        if not feasible and combatant.has_action:
-            action = Dodge(combatant)
-            logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
-        elif not feasible:
-            logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
-            return ActionResult.UNFEASIBLE
+        # if not feasible and combatant.has_action:
+        #     action = Dodge(combatant)
+        #     logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+        # elif not feasible:
+        #     logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
+        #     return ActionResult.UNFEASIBLE
         use_resources(combatant, action)
         return self.resolve_by_actoid_type(action, combatant)
 

@@ -1,11 +1,12 @@
 Idea:
 The action selection could be formulated as an integer linear programming problem. The optimization criteria could differ based on the type of a
-character but in general it would maximize (threat_out - threat_in). I'd need to add a threat to a given specific combatant by a factory.
+character but in general it would maximize (threat_out - threat_in). I'd need to add a threat to a given specific combatant by a factory (already WIP).
 This could help me determine the incoming threat. It could even handle threat from potential AoO.
-I think I would need to include all combinations of action + targeting + positioning which means I'd need to add a method to calculate with specific args
-and not just the "best ones".
-There would be a hard constraint that the threat_in cannot be higher or equal current hit points.
-So I'd calculate threat for all possible actions (including dash)
+I think I would need to include all combinations of action + targeting. For each such pair a all feasible required positioning would be calculated.
+There would be Threat_in as a function of the positioning would be selected along with the positioning. I'd calculate both action and bonus
+action and their positionings separately at first. Then pick one which I want to do first and then potentially recalculate the other.
+(There would be a hard constraint that the threat_in cannot be higher or equal current hit points -> may not work)
+So I'd calculate threat for all possible action and target combination (including dash)
     - I have a variable D_a,e how much dmg an attack "a" does to an enemy "n"
     - Variable which selects an action A
     - Variable which selects the i-th target T_i,a for action "a". Most actions have only one target.
@@ -15,6 +16,11 @@ So I'd calculate threat for all possible actions (including dash)
     - max (threat_out - threat_in)
     - stuff like reckless attack could be activated by a variable and add to both threat_out and threat_in...here the optimization becomes interesting
     - For each target the best route to the adjacent square would be calculated and AoO dmg added as an extra threat for that option
+    Potential issues constraints:
+        - I need to take conditions into account, both existing ones and ones potentially inflicted by one action
+        - Need to deal with the order of action and bonus action. Some could have the constraints expressed as equations (like PaM bonus attack)
+        - Would have to recalculate in case the
+        - in case of hex the threat_out would only be activated if the other selected action was an attack-like action
 
 I could improve pathfinding to give the path with the least AoO.
 
