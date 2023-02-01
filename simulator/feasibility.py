@@ -61,6 +61,11 @@ def check_feasibility(combatant, action, battle_map):
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
+            case Action.RECKLESS_ATTACK:
+                res = (combatant.curr_num_attacks == combatant.num_attacks)
+                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.range
+                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                return res
             case Action.DASH | Action.DODGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED,
@@ -135,13 +140,13 @@ def check_feasibility(combatant, action, battle_map):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False
         return combatant.has_haste_action
-    elif isinstance(action_type, FreeAction):
-        match action_type:
-            case FreeAction.RECKLESS_ATTACK:
-                return combatant.curr_num_attacks == combatant.num_attacks and not combatant.reckless_attack_active  # not attacked yet
-            case _:
-                logger.error("Unknown free action")
-                return False
+    # elif isinstance(action_type, FreeAction):
+    #     match action_type:
+    #         case FreeAction.RECKLESS_ATTACK:
+    #             return combatant.curr_num_attacks == combatant.num_attacks and not combatant.reckless_attack_active  # not attacked yet
+    #         case _:
+    #             logger.error("Unknown free action")
+    #             return False
     else:
         logger.error("Unknown action type")
         return False
@@ -177,6 +182,8 @@ def check_feasibility_light(combatant, action_type, battle_map):
                 return res
             case Action.ATTACK:
                 return combatant.curr_num_attacks > 0
+            case Action.RECKLESS_ATTACK:
+                return combatant.curr_num_attacks == combatant.num_attacks
             case Action.DASH | Action.DODGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED,
@@ -231,13 +238,13 @@ def check_feasibility_light(combatant, action_type, battle_map):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False
         return combatant.has_haste_action
-    elif isinstance(action_type, FreeAction):
-        match action_type:
-            case FreeAction.RECKLESS_ATTACK:
-                return combatant.curr_num_attacks == combatant.num_attacks and not combatant.reckless_attack_active  # not attacked yet
-            case _:
-                logger.error("Unknown free action")
-                return False
+    # elif isinstance(action_type, FreeAction):
+    #     match action_type:
+    #         case FreeAction.RECKLESS_ATTACK:
+    #             return combatant.curr_num_attacks == combatant.num_attacks and not combatant.reckless_attack_active  # not attacked yet
+    #         case _:
+    #             logger.error("Unknown free action")
+    #             return False
     else:
         logger.error("Unknown action type")
         return False

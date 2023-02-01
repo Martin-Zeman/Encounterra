@@ -3,7 +3,7 @@ import logging
 from simulator.action_types import BonusAction, Action
 from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import ThreatModifier, FactoryThreat
-from simulator.combatant import Combatant
+from simulator.misc import CombatantArchetype
 
 logger = logging.getLogger(__name__)
 
@@ -14,12 +14,12 @@ class MistyStepFactory(FactoryThreat):
         self.caster = caster
 
     def find_best_args(self, combatant, battle_map):
-        if self.caster.archetype is Combatant.Archetype.MELEE:
+        if self.caster.archetype is CombatantArchetype.MELEE:
             # TODO Improve this
             if self.caster.selected_enemy:
                 free_coords = battle_map.get_free_coords_at_distance(self.caster.selected_enemy, 1, self.caster)
             return free_coords[0] if free_coords else 0
-        elif self.caster.archetype is Combatant.Archetype.RAMGED:
+        elif self.caster.archetype is CombatantArchetype.RANGED:
             return battle_map.get_free_coords_away_from_enemies(combatant, MistyStep.spell_range.value)
         return 0
 
@@ -32,7 +32,7 @@ class MistyStepFactory(FactoryThreat):
         can make.
         For a ranged character it estimates the potential dmg prevention from gaining distance.
         """
-        if self.caster.archetype is Combatant.Archetype.MELEE:
+        if self.caster.archetype is CombatantArchetype.MELEE:
             max_mod = 0
             for action in self.caster.actions:
                 if action[0] is Action.ATTACK:
@@ -41,7 +41,7 @@ class MistyStepFactory(FactoryThreat):
                 if bonus_action[0] is BonusAction.BONUS_ATTACK or bonus_action[0] is BonusAction.PAM_BONUS_ATTACK:
                     max_mod = max(max_mod, bonus_action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value}, *args, **kwargs))
             return max_mod
-        elif self.caster.archetype is Combatant.Archetype.RANGED:
+        elif self.caster.archetype is CombatantArchetype.RANGED:
             return 0 # TODO
         return 0
 

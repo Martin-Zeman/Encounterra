@@ -87,6 +87,11 @@ class PlacementScenario(Enum):
     TOTALLY_RANDOM = 2
     # SURROUNDED = 3
 
+class CombatantArchetype(Enum):
+    MELEE = 0
+    RANGED = 1
+    HYBRID = 2
+
 
 SIGN = {"+": 1, "-": -1}
 

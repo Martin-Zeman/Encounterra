@@ -1,13 +1,13 @@
 import random
 import math
-from simulator.misc import SavingThrow, Conditions, RollModifier, Size
+from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype
 from simulator.action_factory import *
 from enum import Enum
 from abc import ABC, abstractmethod
 from simulator.abilities.totem_rage import TotemRageFactory
 from simulator.actions.attack import AttackFactory
 from simulator.actions.dodge import DodgeFactory
-from simulator.action_types import TO_TWINNED, TO_QUICKENED
+from simulator.action_factory import TO_TWINNED, TO_QUICKENED
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +24,6 @@ class Combatant(ABC):
         MEDIUM = 3
         BOSS = 4
 
-    class Archetype(Enum):
-        MELEE = 0
-        RANGED = 1
-        HYBRID = 2
 
     def __init__(self, effect_tracker, name, level, hp, ac, init_bonus, spell_to_hit, speed, resistances, dc):
         self.effect_tracker = effect_tracker
@@ -89,7 +85,7 @@ class Combatant(ABC):
         self.to_hit_flat_mod = [0]
         self.to_hit_dice_mod = []
         self.action_types_added = []
-        self.archetype = Combatant.Archetype.MELEE
+        self.archetype = CombatantArchetype.MELEE
 
     def __str__(self):
         return self.name
@@ -130,7 +126,7 @@ class Combatant(ABC):
             # self.passive.append(action_type)
         elif isinstance(action_type, Action):
             match action_type:
-                case Action.ATTACK:
+                case Action.ATTACK | Action.RECKLESS_ATTACK:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                 case Action.FIREBALL:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
@@ -179,13 +175,13 @@ class Combatant(ABC):
                     pass  # no resources required
         elif isinstance(action_type, Reaction):
             self.reaction_factories.append((action_type, TO_FACTORY[action_type]))
-        elif isinstance(action_type, FreeAction):
-            match action_type:
-                case FreeAction.RECKLESS_ATTACK:
-                    self.reckless_attack_active = False
-                case _:
-                    logger.error("Unknown free action")
-                    return
+        # elif isinstance(action_type, FreeAction):
+        #     match action_type:
+        #         case FreeAction.RECKLESS_ATTACK:
+        #             self.reckless_attack_active = False
+        #         case _:
+        #             logger.error("Unknown free action")
+        #             return
         elif isinstance(action_type, MetaAction):
             match action_type:
                 case MetaAction.QUICKENED_SPELL:
@@ -296,32 +292,32 @@ class Combatant(ABC):
         for st in self.saving_throws.values():
             st[1].clear()
 
-    @abstractmethod
-    def calculate_threat(self, battle_map):
-        """
-        Calculates the threat potential of the combatant for all their abilities
-        @param battle_map:
-        @return:
-        """
-        return 0
-
-
-    def calculate_threat_approx(self, battle_map):
-        """
-        Calculates the threat potential of the combatant as a non-self character (i.e. being considered as a target)
-        @param battle_map:
-        @return:
-        """
-        # iterate over abilities, calculate their approx threat and order them and return the max
-        return 0
-
-    def calculate_threat_approx_haste_action(self, battle_map):
-        """
-        Calculates the threat potential of the combatant as a non-self character that can be achieved with a haste action
-        @param battle_map:
-        @return:
-        """
-        return 0
+    # @abstractmethod
+    # def calculate_threat(self, battle_map):
+    #     """
+    #     Calculates the threat potential of the combatant for all their abilities
+    #     @param battle_map:
+    #     @return:
+    #     """
+    #     return 0
+    #
+    #
+    # def calculate_threat_approx(self, battle_map):
+    #     """
+    #     Calculates the threat potential of the combatant as a non-self character (i.e. being considered as a target)
+    #     @param battle_map:
+    #     @return:
+    #     """
+    #     # iterate over abilities, calculate their approx threat and order them and return the max
+    #     return 0
+    #
+    # def calculate_threat_approx_haste_action(self, battle_map):
+    #     """
+    #     Calculates the threat potential of the combatant as a non-self character that can be achieved with a haste action
+    #     @param battle_map:
+    #     @return:
+    #     """
+    #     return 0
 
     def is_bloodied_or_worse(self):
         return self.condition.value >= self.State.BLOODIED.value

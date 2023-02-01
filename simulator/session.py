@@ -6,7 +6,7 @@ from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.map import *
 from simulator.round_manager import *
 from simulator.teams import Teams
-from RL.faurung_env import FaurungEnv
+# from RL.faurung_env import FaurungEnv
 from enum import Enum
 import logging
 import multiprocessing as mp

@@ -12,10 +12,53 @@ from simulator.abilities.totem_rage import TotemRage
 from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.actions.movement import MovementIncrement
 from simulator.action_types import *
+from simulator.actions.attack import AttackFactory
+from simulator.actions.dodge import DodgeFactory
+from simulator.spells.haste import HasteFactory
+from simulator.spells.bless import BlessFactory
+from simulator.spells.shield import ShieldFactory
+from simulator.spells.fireball import FireballFactory
+from simulator.spells.misty_step import MistyStepFactory
+from simulator.spells.firebolt import FireboltFactory
+from simulator.spells.twinned_firebolt import TwinnedFireboltFactory
+from simulator.spells.twinned_haste import TwinnedHasteFactory
+from simulator.spells.chaosbolt import ChaosboltFactory
+from simulator.abilities.totem_rage import TotemRageFactory
+from simulator.abilities.rage import RageFactory
+from simulator.abilities.reckless_attack import RecklessAttackFactory
 import logging
 
 logger = logging.getLogger(__name__)
 
+TO_FACTORY = {
+    Action.ATTACK: AttackFactory,
+    Action.RECKLESS_ATTACK: RecklessAttackFactory,
+    Action.DODGE: DodgeFactory,
+    Action.DASH: None,
+    Action.DISENGAGE: None,
+    Action.FIREBALL: FireballFactory,
+    Action.FIREBOLT: FireboltFactory,
+    Action.CHAOSBOLT: ChaosboltFactory,
+    Action.HASTE: HasteFactory,
+    Action.HIDE: None,
+    Action.TWINNED_FIREBOLT: TwinnedFireboltFactory,
+    Action.TWINNED_HASTE: TwinnedHasteFactory,
+
+    BonusAction.BONUS_ATTACK: AttackFactory,
+    BonusAction.PAM_BONUS_ATTACK: AttackFactory,
+    BonusAction.RAGE: RageFactory,
+    BonusAction.TOTEM_RAGE: TotemRageFactory,
+    BonusAction.MISTY_STEP: MistyStepFactory,
+    BonusAction.CUNNING_DODGE: DodgeFactory,
+    BonusAction.CUNNING_DISENGAGE: None,
+    BonusAction.CUNNING_HIDE: None,
+    BonusAction.QUICKENED_FIREBALL: FireballFactory,
+    BonusAction.QUICKENED_FIREBOLT: FireboltFactory,
+    BonusAction.QUICKENED_CHAOSBOLT: ChaosboltFactory,
+    BonusAction.QUICKENED_HASTE: HasteFactory,
+}
+TO_QUICKENED = { Action.FIREBALL: BonusAction.QUICKENED_FIREBALL, Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT, Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT, Action.HASTE: BonusAction.QUICKENED_HASTE}
+TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}
 
 def action_factory(combatant, effect_tracker, action_type, *args):
     if isinstance(action_type, Action):
@@ -90,12 +133,12 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 return Dash()
             case _:
                 logger.error("Unknown haste action")
-    elif isinstance(action_type, FreeAction):
-        match action_type:
-            case FreeAction.RECKLESS_ATTACK:
-                return RecklessAttack(combatant)
-            case _:
-                logger.error("Unknown free action")
+    # elif isinstance(action_type, FreeAction):
+    #     match action_type:
+    #         case FreeAction.RECKLESS_ATTACK:
+    #             return RecklessAttack(combatant)
+    #         case _:
+    #             logger.error("Unknown free action")
     else:
         logger.error("Unknown high level action class")
         return None

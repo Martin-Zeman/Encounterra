@@ -1,6 +1,7 @@
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator
 from simulator.spellslots import Spellslots
+from simulator.misc import CombatantArchetype
 from simulator.action_factory import *
 from simulator.spells.spell import SpellStats
 from simulator.feasibility import get_feasible_actions
@@ -23,7 +24,7 @@ class Faurung(Combatant):
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.spellslots = Spellslots(Spellslots.Class.SORCERER, 5)
-        self.archetype = Combatant.Archetype.RANGED
+        self.archetype = CombatantArchetype.RANGED
         self.movement_generator_cache = None
         self.nowhere_to_go = False
 
