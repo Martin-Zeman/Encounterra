@@ -123,7 +123,7 @@ class Combatant(ABC):
                     self.max_sorcery_points = kwargs["sorcery_points"]
                 case _:
                     pass  # no resources required
-            # self.passive.append(action_type)
+            self.passive.append(action_type)
         elif isinstance(action_type, Action):
             match action_type:
                 case Action.ATTACK | Action.RECKLESS_ATTACK:
@@ -156,21 +156,21 @@ class Combatant(ABC):
                     self.rage_active = False
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                 case BonusAction.MISTY_STEP:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                 case BonusAction.CUNNING_DODGE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
                 case BonusAction.CUNNING_DISENGAGE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
                 case BonusAction.CUNNING_HIDE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
                 case BonusAction.QUICKENED_FIREBALL:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
                 case BonusAction.QUICKENED_FIREBOLT:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
                 case BonusAction.QUICKENED_CHAOSBOLT:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
                 case BonusAction.QUICKENED_HASTE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
                 case _:
                     pass  # no resources required
         elif isinstance(action_type, Reaction):
@@ -190,7 +190,7 @@ class Combatant(ABC):
                         try:
                             quickened_action = TO_QUICKENED[action]
                             self.bonus_action_factories.append((quickened_action, TO_FACTORY[quickened_action]))
-                        except IndexError:
+                        except KeyError:
                             pass
                 case MetaAction.TWINNED_SPELL:
                     assert Passive.METAMAGIC in self.passive
@@ -198,13 +198,13 @@ class Combatant(ABC):
                         try:
                             twinned_action = TO_TWINNED[action]
                             self.action_factories.append((twinned_action, TO_FACTORY[twinned_action]))
-                        except IndexError:
+                        except KeyError:
                             pass
                     for bonus_action in self.bonus_action_factories:
                         try:
                             twinned_action = TO_TWINNED[bonus_action]
                             self.bonus_action_factories.append((twinned_action, TO_FACTORY[twinned_action]))
-                        except IndexError:
+                        except KeyError:
                             pass
                 case MetaAction.EMPOWERED_SPELL:
                     assert Passive.METAMAGIC in self.passive

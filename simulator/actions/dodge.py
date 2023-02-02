@@ -26,10 +26,19 @@ class DodgeFactory(FactoryThreat):
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
-        Calculates the threat the factory is capable of dealing to a specific target.
-        This is useful for calculating threat_in from the abilities of enemies
+        Calculates the maximum threat reduction the factory can cause by imposing disadvantage on the target enemy
         """
-        return 0 # TODO
+        max_threat = 0
+        for af in target.action_factories:
+            threat_mod = af.calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
+            max_threat = max(max_threat, threat_mod)
+        for af in target.bonus_action_factories:
+            threat_mod = af.calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
+            max_threat = max(max_threat, threat_mod)
+        for af in target.haste_action_factories:
+            threat_mod = af.calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
+            max_threat = max(max_threat, threat_mod)
+        return max_threat
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """

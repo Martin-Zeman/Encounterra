@@ -19,6 +19,9 @@ class ShieldFactory(FactoryThreat):
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         return 0
 
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        return 0
+
 
 class Shield(Actoid, ReactionToThreat):
 

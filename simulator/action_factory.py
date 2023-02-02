@@ -56,6 +56,8 @@ TO_FACTORY = {
     BonusAction.QUICKENED_FIREBOLT: FireboltFactory,
     BonusAction.QUICKENED_CHAOSBOLT: ChaosboltFactory,
     BonusAction.QUICKENED_HASTE: HasteFactory,
+
+    Reaction.SHIELD: ShieldFactory,
 }
 TO_QUICKENED = { Action.FIREBALL: BonusAction.QUICKENED_FIREBALL, Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT, Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT, Action.HASTE: BonusAction.QUICKENED_HASTE}
 TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}

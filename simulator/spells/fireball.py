@@ -1,5 +1,5 @@
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, DamageType, mean_dmg_dc_attack
+from simulator.misc import SavingThrow, DamageType, mean_dmg_dc_attack, RollModifier, ROLL_MODIFIER, mean_dmg
 from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 
@@ -54,7 +54,7 @@ class FireballFactory(FactoryThreat):
         except KeyError:
             roll_modifier = RollModifier.STRAIGHT
 
-        if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
+        if battle_map.get_cartesian_distance(self.caster, target) <= Fireball.spell_range.value:
             to_hit_total = self.to_hit + to_hit_bonus
             to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
 

@@ -127,18 +127,16 @@ def parse_dmg_dice(dice_string):
     @return: list of tuples representing (#num dice, dice size)
     """
     segments = re.split(r'([+-])', dice_string)
-    num_dice = []
-    dice_size = []
+    res = []
     p = re.compile('(\d+)d(\d+)')
     sign = 1
     for seg in segments:
         try:
             m = p.match(seg)
-            num_dice.append(sign * int(m.group(1)))
-            dice_size.append(int(m.group(2)))
+            res.append((sign * int(m.group(1)), int(m.group(2))))
         except AttributeError:
             sign = SIGN[seg]
-    return zip(num_dice, dice_size)
+    return res
 
 def avg_roll(dice_string):
     dice = parse_dmg_dice(dice_string)
@@ -160,7 +158,7 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
     rv = randint(1, 21, to_hit)
     p_hit = 1.0 - rv.cdf(ac - 1)
     dice = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice)
+    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
     res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
     return res if not is_resistant else (res / 2)
 

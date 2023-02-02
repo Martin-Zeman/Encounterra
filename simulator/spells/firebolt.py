@@ -1,5 +1,6 @@
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, mean_dmg, percent_of_curr_hp, ROUND_HORIZON
+from simulator.misc import DamageType, mean_dmg, percent_of_curr_hp, ROUND_HORIZON, RollModifier, avg_roll, ROLL_MODIFIER, \
+    ROLL_MODIFIER_CRIT
 from simulator.actions.actoid import Actoid
 from functools import reduce
 from simulator.threat_calculator import DirectThreat, FactoryThreat
@@ -55,12 +56,26 @@ class FireboltFactory(FactoryThreat):
         Calculates the average dmg increment over all targets in range
         """
         try:
-            to_hit_bonus = modified_stats['to_hit']
+            mod_to_hit_flat = modified_stats['to_hit_flat']
+        except KeyError:
+            mod_to_hit_flat = 0
+        try:
+            mod_to_hit_die = modified_stats['to_hit_die']
+        except KeyError:
+            mod_to_hit_die = ''
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+            to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+            total_crit = len(self.crit_range) * ROLL_MODIFIER_CRIT[roll_modifier]
+
             potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(self.to_hit + to_hit_bonus, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)), potential_targets)
+            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total], self.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(Firebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)), potential_targets)
             dmg_acc /= len(potential_targets)
             return dmg_acc
-        except IndexError:
+        except KeyError:
             return 0
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
@@ -68,6 +83,32 @@ class FireboltFactory(FactoryThreat):
             return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(Firebolt.dmg_type))
         else:
             return 0
+
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications.
+        This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
+        against fireball or bane on attack rolls etc.
+        """
+        try:
+            mod_to_hit_flat = modified_stats['to_hit_flat']
+        except KeyError:
+            mod_to_hit_flat = 0
+        try:
+            mod_to_hit_die = modified_stats['to_hit_die']
+        except KeyError:
+            mod_to_hit_die = ''
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+        total_crit = len(self.crit_range) * ROLL_MODIFIER_CRIT[roll_modifier]
+
+        return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(Firebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
+                    Firebolt.dmg_type))
 
 
 class Firebolt(Actoid, DirectThreat):

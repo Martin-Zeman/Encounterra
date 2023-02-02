@@ -23,7 +23,7 @@ class MistyStepFactory(FactoryThreat):
             return battle_map.get_free_coords_away_from_enemies(combatant, MistyStep.spell_range.value)
         return 0
 
-    def create_best(self, combatant, battle_map, **kwargs):
+    def create_best(self, combatant, battle_map):
         return MistyStep(self.find_best_args(combatant, battle_map), self)
 
     def calculate_threat_approx(self, battle_map, *args, **kwargs):
@@ -36,10 +36,10 @@ class MistyStepFactory(FactoryThreat):
             max_mod = 0
             for action in self.caster.actions:
                 if action[0] is Action.ATTACK:
-                    max_mod = max(max_mod, action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value}, *args, **kwargs))
+                    max_mod = max(max_mod, action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value + self.caster.movement}, *args, **kwargs))
             for bonus_action in self.caster.bonus_actions:
                 if bonus_action[0] is BonusAction.BONUS_ATTACK or bonus_action[0] is BonusAction.PAM_BONUS_ATTACK:
-                    max_mod = max(max_mod, bonus_action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value}, *args, **kwargs))
+                    max_mod = max(max_mod, bonus_action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value + self.caster.movement}, *args, **kwargs))
             return max_mod
         elif self.caster.archetype is CombatantArchetype.RANGED:
             return 0 # TODO
@@ -49,6 +49,9 @@ class MistyStepFactory(FactoryThreat):
         return 0 # no need
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        return 0 # TODO could calculate the dmg different if we get out of range or the possibility of getting into range
+
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         return 0
 
 

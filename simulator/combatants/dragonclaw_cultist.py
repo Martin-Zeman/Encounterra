@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 class DragonclawCultist(Combatant):
 
-    def __init__(self, name="Dragonclaw"):
-        super().__init__(name, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+    def __init__(self, effect_tracker, name="Dragonclaw"):
+        super().__init__(effect_tracker, name, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.attack_args = {Action.ATTACK: ["Scimitar", self, None, 5, "1d6", 3, DamageType.Slashing, 1, [20]],
                             Reaction.REACTION_ATTACK: ["Scimitar", self, None, 5, "1d6", 3, DamageType.Slashing, 1, [20]]}
 

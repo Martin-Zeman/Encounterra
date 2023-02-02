@@ -23,7 +23,7 @@ class MovementGenerator:
     def get_generator(self):
         try:
             while self.path and self.combatant.movement:
-                # yield Movement(self.path.pop(0), self.movement_type, self.incurs_aoo)
-                yield self.path.pop(0)
+                yield MovementIncrement(self.path.pop(0), self.incurs_aoo)
+                # yield self.path.pop(0)
         except GeneratorExit:
             pass

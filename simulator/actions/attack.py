@@ -4,6 +4,9 @@ from functools import reduce
 from simulator.misc import percent_of_curr_hp, avg_roll, RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
 from simulator.threat_calculator import DirectThreat, FactoryThreat
 from enum import Enum, auto
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AttackFactory(FactoryThreat):
 
@@ -115,6 +118,47 @@ class AttackFactory(FactoryThreat):
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         return mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, len(self.crit_range), target.is_resistant_to(self.dmg_type))
+
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications
+        """
+        baseline = mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, len(self.crit_range), target.is_resistant_to(self.dmg_type))
+        try:
+            mod_dmg_flat = modified_stats['dmg_bonus_flat']
+        except KeyError:
+            mod_dmg_flat = 0
+        try:
+            mod_dmg_die = modified_stats['dmg_bonus_die']
+        except KeyError:
+            mod_dmg_die = ''
+        try:
+            mod_to_hit_flat = modified_stats['to_hit_flat']
+        except KeyError:
+            mod_to_hit_flat = 0
+        try:
+            mod_to_hit_die = modified_stats['to_hit_die']
+        except KeyError:
+            mod_to_hit_die = ''
+        try:
+            mod_crit_range = modified_stats['crit_range']
+        except KeyError:
+            mod_crit_range = 0
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+        total_crit = len(self.crit_range) + mod_crit_range
+        total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
+        try:
+            modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
+        except:
+            logger.error("Error in mean_dmg of calculate_threat_to_target_mod of AttackFactory")
+            modified = baseline
+        return modified - baseline
 
 
 class Attack(Actoid, DirectThreat):

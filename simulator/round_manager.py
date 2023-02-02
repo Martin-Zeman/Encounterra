@@ -88,12 +88,12 @@ class RoundManager:
                     continue
                 while True:
                     try:
-                        action, *args = combatant.get_action(self.battle_map)
+                        action = combatant.get_action(self.battle_map)
                     except TypeError as e:
                         logger.error(f"{combatant} threw {e} for action {action} with {args}")
                     if action is None:
                         break
-                    self.action_resolver.resolve_action(action, args, combatant)
+                    self.action_resolver.resolve_action(action, combatant)
                     if not combatant.is_alive():
                         break  # could have died as a result of AoO
                 else:

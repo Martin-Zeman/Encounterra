@@ -160,10 +160,16 @@ def check_feasibility_light(combatant, action_type, battle_map):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False
         match action_type:
-            case Action.FIREBALL | Action.HASTE:
+            case Action.FIREBALL:
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
+                return res
+            case Action.HASTE:
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.CHAOSBOLT:
                 res = combatant.has_action
