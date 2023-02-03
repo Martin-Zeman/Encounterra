@@ -45,10 +45,16 @@ class AttackFactory(FactoryThreat):
                           in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
-        return potential_targets[0][0]
+        return potential_targets[0][0] if potential_targets else None
 
     def create_best(self, combatant, battle_map):
-        return Attack(self.find_best_args(combatant, battle_map), self)
+        best_args = self.find_best_args(combatant, battle_map)
+        if best_args is None:
+            return None
+        return Attack(best_args, self)
+
+    def create(self, target_combatant):
+        return Attack(target_combatant, self)
 
     def calculate_threat_approx(self, combatant, battle_map):
         """

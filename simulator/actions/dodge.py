@@ -66,7 +66,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.combatant.saving_throws[SavingThrow.DEX][1].remove(RollModifier.ADVANTAGE)
 
 
-    def calculate_threat_mod(self, combatant, battle_map, actions, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         Calculate how much dmg would the dodge potentially mitigate. This will be the same as the one for the factory.
         """

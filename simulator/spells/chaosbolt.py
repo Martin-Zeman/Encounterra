@@ -36,6 +36,9 @@ class ChaosboltFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return Chaosbolt(self.find_best_args(combatant, battle_map), self)
 
+    def create(self, target_combatant):
+        return Chaosbolt([target_combatant], self)
+
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
         Calculates the threat diff based on provided stat modifications. Relevant bonuses are:
@@ -110,10 +113,13 @@ class Chaosbolt(Actoid, DirectThreat):
 
     def __init__(self, targets, factory, **kwargs):
         super().__init__(actoid_type=Actoid.Type.IS_SPELL, is_direct_dmg_dealing=True)
-        # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.targets = targets
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.roll_modifier = RollModifier.STRAIGHT
+
+    def __str__(self):
+        return "Chaosbolt"
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

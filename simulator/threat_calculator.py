@@ -21,7 +21,7 @@ class ThreatModifier(ABC):
     #     return 0
 
     @abstractmethod
-    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return 0
 
 class ReactionToThreat(ABC):

@@ -308,6 +308,12 @@ def percentage_hp_loss(start_of_turn_hp, combatant):
 def percent_of_curr_hp(combatant, dmg):
     return dmg / (combatant.curr_hp * 0.01)
 
+def get_factory_of_type(factories, type):
+    for f in factories:
+        if f.action_type is type:
+            return f
+    return None
+
 
 # def init_coroutine(func):
 #     @functools.wraps(func)

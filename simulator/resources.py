@@ -4,8 +4,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+
+
 def use_resources(combatant, action):
-    action_type = action.action_type
+    action_type = action.factory.action_type
     if isinstance(action_type, Action):
         combatant.has_action = False
         match action_type:
@@ -72,8 +74,8 @@ def use_resources(combatant, action):
         combatant.movement -= 1
     elif isinstance(action_type, HasteAction):
         combatant.has_haste_action = False
-    elif isinstance(action_type, FreeAction):
-        pass  # no resources needed
+    # elif isinstance(action_type, FreeAction):
+    #     pass  # no resources needed
     else:
         logger.error("Unknown high level action class")
 

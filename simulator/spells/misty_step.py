@@ -18,13 +18,20 @@ class MistyStepFactory(FactoryThreat):
             # TODO Improve this
             if self.caster.selected_enemy:
                 free_coords = battle_map.get_free_coords_at_distance(self.caster.selected_enemy, 1, self.caster)
-            return free_coords[0] if free_coords else 0
+            return free_coords[0] if free_coords else None
         elif self.caster.archetype is CombatantArchetype.RANGED:
-            return battle_map.get_free_coords_away_from_enemies(combatant, MistyStep.spell_range.value)
-        return 0
+            free_coords = battle_map.get_free_coords_away_from_enemies(combatant, MistyStep.spell_range.value)
+            return free_coords[0] if free_coords else None
+        return None
 
     def create_best(self, combatant, battle_map):
-        return MistyStep(self.find_best_args(combatant, battle_map), self)
+        best_args = self.find_best_args(combatant, battle_map)
+        if best_args is None:
+            return None
+        return MistyStep(best_args, self)
+
+    def create(self, coord):
+        return MistyStep(coord, self)
 
     def calculate_threat_approx(self, battle_map, *args, **kwargs):
         """
@@ -71,7 +78,10 @@ class MistyStep(Actoid, ThreatModifier):
         self.coord = coord
         self.factory = factory
 
-    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
+    def __str__(self):
+        return "Misty Step"
+
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         # TODO Add up all potential dmg from enemies that would normally be within their movement range
         # this can be arbitrated between other bonus action abilities
         return 0

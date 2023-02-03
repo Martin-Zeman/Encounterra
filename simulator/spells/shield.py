@@ -9,7 +9,6 @@ logger = logging.getLogger(__name__)
 class ShieldFactory(FactoryThreat):
 
     def __init__(self, caster):
-        super().__init__(Actoid.Type.IS_SPELL)
         self.action_type = Reaction.SHIELD
         self.caster = caster
 
@@ -21,6 +20,9 @@ class ShieldFactory(FactoryThreat):
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         return 0
+
+    def create(self):
+        return Shield(self)
 
 
 class Shield(Actoid, ReactionToThreat):
@@ -39,6 +41,8 @@ class Shield(Actoid, ReactionToThreat):
         self.action_type = Reaction.SHIELD
         self.factory = factory
 
+    def __str__(self):
+        return "Shield"
 
     def calculate_threat_mod(self, combatant, battle_map, incoming_action, actor, *args, **kwargs):
         return 0 # TODO Consider removing this from ReactionToThreat altogether

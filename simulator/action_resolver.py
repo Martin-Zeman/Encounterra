@@ -163,20 +163,20 @@ class ActionResolver:
         elif rolled == 20:
             multiplier = 2
 
-        if rolled + spell.to_hit >= target.ac:
-            dmg = multiplier * roll_spell_dmg(spell.dmg_dice)
-            logger.debug(f"{spell.name} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
+        if rolled + spell.factory.to_hit >= target.ac:
+            dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
+            logger.debug(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
             spell.target.receive_dmg(dmg, spell.dmg_type)
             if not spell.target.is_alive():
                 self.battle_map.remove_combatant(target)
             return ActionResult.DMG
         else:
-            logger.debug(f"{spell.name} misses {target}", extra={"team": self.teams.get_team(caster)})
+            logger.debug(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
 
     def resolve_spell(self, caster, spell):
-        match spell.action_type:
+        match spell.factory.action_type:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.stats.target, spell.stats.type, spell.coord)
                 dmg = roll_spell_dmg(spell.dmg_dice)
@@ -192,7 +192,7 @@ class ActionResolver:
                 self.effect_tracker.add(spell, caster)
                 return ActionResult.MEDIUM_BUFF
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
-                return self.resolve_ranged_spell_attack(caster, spell, spell.targets[0])
+                return self.resolve_ranged_spell_attack(caster, spell, spell.target)
             case Action.TWINNED_FIREBOLT:
                 ret = (self.resolve_ranged_spell_attack(caster, spell, spell.targets[0]),
                        self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]))
@@ -281,16 +281,16 @@ class ActionResolver:
             aoo_candidates = self.battle_map.get_aoo_eligible_combatants(moving_combatant, movement.increment)
             if aoo_candidates:
                 for candidate in aoo_candidates:
-                    aoo, *args = candidate.prompt_aoo(moving_combatant)
+                    aoo = candidate.prompt_aoo(moving_combatant)
                     if aoo and moving_combatant.is_alive():
-                        self.resolve_action(aoo, args, candidate)
+                        self.resolve_action(aoo, candidate)
 
             pam_candidates = self.battle_map.get_pam_eligible_combatants(moving_combatant, movement.increment)
             if pam_candidates:
                 for candidate in pam_candidates:
-                    pam_attack, *args = candidate.prompt_pam(moving_combatant)
+                    pam_attack = candidate.prompt_pam(moving_combatant)
                     if pam_attack and moving_combatant.is_alive():
-                        did_attack_hit = self.resolve_action(pam_attack, args, candidate)
+                        did_attack_hit = self.resolve_action(pam_attack, candidate)
                         if did_attack_hit and candidate.has_passive(Passive.SENTINEL):
                             moving_combatant.movement = 0
                             logger.debug(f"Combatant {moving_combatant} was stopped by sentinel")
@@ -361,7 +361,7 @@ class ActionResolver:
         @param combatant: originator of the action
         @return: only relevant return here is DMG/MISS used for sentinel
         """
-        if action.action_type is MetaAction.DONE:
+        if action.factory.action_type is MetaAction.DONE:
             return None
         # action = action_factory(combatant, self.effect_tracker, action_type, *args)
         feasible = check_feasibility(combatant, action, self.battle_map)

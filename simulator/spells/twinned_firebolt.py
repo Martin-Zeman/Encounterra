@@ -30,6 +30,9 @@ class TwinnedFireboltFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return TwinnedFirebolt(self.find_best_args(combatant, battle_map), self)
 
+    def create(self, targets):
+        return TwinnedFirebolt(targets, self)
+
     # def calculate_threat_approx(self, battle_map, *args, **kwargs):
     #     """
     #     Calculates the average dmg over all targets in range
@@ -76,6 +79,9 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         self.targets = targets
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+
+    def __str__(self):
+        return "Twinned Firebolt"
 
     # @staticmethod
     # def calculate_threat_approx(combatant, battle_map, *args, **kwargs):

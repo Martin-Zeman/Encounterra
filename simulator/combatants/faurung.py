@@ -1,7 +1,7 @@
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator
 from simulator.spellslots import Spellslots
-from simulator.misc import CombatantArchetype
+from simulator.misc import CombatantArchetype, DamageType, get_factory_of_type
 from simulator.action_factory import *
 from simulator.spells.spell import SpellStats
 from simulator.feasibility import get_feasible_actions
@@ -15,6 +15,10 @@ class Faurung(Combatant):
 
     def __init__(self, effect_tracker):
         super().__init__(effect_tracker, "Faurung", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
+        self.add_ability(Action.ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
+                         dmg_type=DamageType.Bludgeoning, attack_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
+                         dmg_type=DamageType.Bludgeoning, attack_range=1, attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Action.FIREBALL)
         self.add_ability(Action.FIREBOLT)
         self.add_ability(Action.HASTE)
@@ -53,19 +57,21 @@ class Faurung(Combatant):
         feasible_haste_actions = get_feasible_actions(self.haste_action_factories, self, battle_map)
         # feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
         if len(feasible_actions) > 0 or len(feasible_bonus_actions) > 0 or len(feasible_haste_actions) > 0:# or len(feasible_free_actions > 0):
-            feasible_actions = [fa[1].create_best(self, battle_map) for fa in feasible_actions]
-            feasible_bonus_actions = [fa[1].create_best(self, battle_map) for fa in feasible_bonus_actions]
-            feasible_haste_actions = [fa[1].create_best(self, battle_map) for fa in feasible_haste_actions]
+            feasible_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_actions]))
+            feasible_bonus_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_bonus_actions]))
+            feasible_haste_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_haste_actions]))
             # feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
 
             action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]
             bonus_action_threats = [(fba.calculate_threat(self, battle_map), fba) for fba in feasible_bonus_actions]
             haste_action_threats = [(fha.calculate_threat(self, battle_map), fha) for fha in feasible_haste_actions]
 
-            action_threats.sort(key=lambda a: a[0], reverse=True)
-            bonus_action_threats.sort(key=lambda a: a[0], reverse=True)
-            haste_action_threats.sort(key=lambda a: a[0], reverse=True)
-            all_actions = [action_threats[0], bonus_action_threats[0], haste_action_threats[0]]
+            # action_threats.sort(key=lambda a: a[0], reverse=True)
+            # bonus_action_threats.sort(key=lambda a: a[0], reverse=True)
+            # haste_action_threats.sort(key=lambda a: a[0], reverse=True)
+            all_actions = action_threats
+            all_actions.extend(bonus_action_threats)
+            all_actions.extend(haste_action_threats)
             all_actions.sort(key=lambda a: a[0], reverse=True)
             return all_actions[0][1]
         else:
@@ -138,12 +144,13 @@ class Faurung(Combatant):
         self.movement_generator_cache = None
 
     def prompt_aoo(self, moving_combatant):
-        return (MetaAction.DONE,)
+        return None
 
     def prompt_after_hit_reaction(self, attacking_combatant):
         if self.spellslots.get_spellslots(1) and self.has_reaction:
+            shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
             logger.debug(f"{self.name} casts Shield", extra={"team": self.team_color})
-            return (Reaction.SHIELD,)
+            return shield_factory.create() if shield_factory else None
         elif self.has_reaction:
             logger.debug(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
-        return (MetaAction.DONE,)
+        return None

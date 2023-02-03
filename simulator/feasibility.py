@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 def check_feasibility(combatant, action, battle_map):
-    action_type = action.action_type
+    action_type = action.factory.action_type
     if isinstance(action_type, Action):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False
@@ -17,13 +17,13 @@ def check_feasibility(combatant, action, battle_map):
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.is_valid_coord(action.coord)
-                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.range.value
+                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.spell_range.value
                 return res
             case Action.HASTE:
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 return res
             case Action.CHAOSBOLT:
@@ -31,27 +31,27 @@ def check_feasibility(combatant, action, battle_map):
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
                 return res
             case Action.FIREBOLT:
                 res = combatant.has_action
-                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
+                res &= battle_map.teams.are_enemies(combatant, action.target)
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.spell_range.value
                 return res
             case Action.TWINNED_FIREBOLT:
                 res = combatant.has_action
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
-                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.range.value
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
+                res &= battle_map.teams.are_enemies(combatant, action.targets[1])
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.spell_range.value
                 res &= combatant.curr_sorcery_points > 0
                 return res
             case Action.TWINNED_HASTE:
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.range.value
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.spell_range.value
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 res &= combatant.curr_sorcery_points > 2
@@ -89,32 +89,32 @@ def check_feasibility(combatant, action, battle_map):
             case BonusAction.MISTY_STEP:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.range.value
+                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.spell_range.value
                 res &= battle_map.is_valid_coord(action.coord) and battle_map.is_empty(action.coord)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
             case BonusAction.QUICKENED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
+                res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 return res
             case BonusAction.QUICKENED_FIREBALL:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.range.value
+                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.spell_range.value
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.is_valid_coord(action.coord)
                 return res
             case BonusAction.QUICKENED_FIREBOLT:
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.range.value
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res

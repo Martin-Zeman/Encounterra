@@ -69,7 +69,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
     #     # TODO add avg dmg prevention
     #     return max_threat
 
-    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to
         all remaining HP (better than regular rage)

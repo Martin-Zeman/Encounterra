@@ -14,12 +14,12 @@ class TotemBarbarian5Lvl(Combatant):
 
     def __init__(self, battle_map, effect_tracker):
         super().__init__(battle_map, effect_tracker, "TotemBarbarian5Lvl", level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
-        self.add_ability(Action.ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.MELEE)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.MELEE)
+        self.add_ability(Action.ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE)
         self.add_ability(BonusAction.TOTEM_RAGE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)
-        self.add_ability(Action.RECKLESS_ATTACK)
+        self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE)
 
 
     def attack_routine(self, battle_map):
@@ -104,9 +104,8 @@ class TotemBarbarian5Lvl(Combatant):
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
-            attack_args = self.attack_args[Reaction.REACTION_ATTACK]
-            attack_args[2] = moving_combatant  # sets the target
-            logger.debug(f"{self} taken an AoO {attack_args[0]} against {moving_combatant}",
+            aoo = self.aoo_factory(moving_combatant)
+            logger.debug(f"{self} taken an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
-            return (self.reactions[0], *attack_args)
-        return (MetaAction.DONE,)
+            return aoo
+        return None

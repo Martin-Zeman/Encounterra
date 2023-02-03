@@ -42,6 +42,8 @@ class Combatant(ABC):
         self.init_bonus = init_bonus
         self.spell_to_hit = spell_to_hit
         self.attacks = []
+        self.aoo_factory = None
+        self.pam_factory = None
         self.ability_dmg_bonus = 0
         self.curr_init = None
         self.has_action = True
@@ -145,6 +147,7 @@ class Combatant(ABC):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                 case BonusAction.PAM_BONUS_ATTACK:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    self.pam_factory = self.bonus_action_factories[-1]
                 case BonusAction.RAGE:
                     self.max_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
@@ -174,7 +177,14 @@ class Combatant(ABC):
                 case _:
                     pass  # no resources required
         elif isinstance(action_type, Reaction):
-            self.reaction_factories.append((action_type, TO_FACTORY[action_type]))
+            match action_type:
+                case Reaction.REACTION_ATTACK:
+                    self.reaction_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    self.aoo_factory = self.reaction_factories[-1]
+                case Reaction.SHIELD:
+                    self.reaction_factories.append((action_type, TO_FACTORY[action_type](self)))
+                case _:
+                    logger.error("Unknown reaction")
         # elif isinstance(action_type, FreeAction):
         #     match action_type:
         #         case FreeAction.RECKLESS_ATTACK:
@@ -330,16 +340,16 @@ class Combatant(ABC):
 
     @abstractmethod
     def prompt_aoo(self, moving_combatant):
-        return None,
+        return None
 
     def prompt_pam(self, moving_combatant):
-        return None,
+        return None
 
     def prompt_attack_reaction(self, attacking_combatant, attack_roll):
-        return None,
+        return None
 
     def prompt_dmg_reaction(self, attacking_combatant, dmg, dmg_type):
-        return None,
+        return None
 
     def prompt_after_hit_reaction(self, attacking_combatant):
-        return None,
+        return None

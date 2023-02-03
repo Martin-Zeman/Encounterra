@@ -46,6 +46,8 @@ class HasteFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return Haste(self.find_best_args(combatant, battle_map), self)
 
+    def create(self, target_combatant):
+        return Haste(target_combatant, self)
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         return 0  # No need
@@ -92,6 +94,9 @@ class Haste(Actoid, Effect, ThreatModifier):
         self.target = target
         self.factory = factory
 
+    def __str__(self):
+        return "Haste"
+
     def activate(self):
         self.factory.caster.is_concentrating = True
         self.target.ac += 2
@@ -109,7 +114,7 @@ class Haste(Actoid, Effect, ThreatModifier):
         return combatant is self.target
 
 
-    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         It's the same as the single target version of the factory
         """

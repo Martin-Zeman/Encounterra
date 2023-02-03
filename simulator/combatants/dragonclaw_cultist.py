@@ -12,9 +12,8 @@ class DragonclawCultist(Combatant):
 
     def __init__(self, effect_tracker, name="Dragonclaw"):
         super().__init__(effect_tracker, name, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.attack_args = {Action.ATTACK: ["Scimitar", self, None, 5, "1d6", 3, DamageType.Slashing, 1, [20]],
-                            Reaction.REACTION_ATTACK: ["Scimitar", self, None, 5, "1d6", 3, DamageType.Slashing, 1, [20]]}
-
+        self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.max_melee_range = 1  # TODO: maybe add a lookup here
         self.has_pack_tactics = True
@@ -79,9 +78,8 @@ class DragonclawCultist(Combatant):
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction:
-            attack_args = self.attack_args[Reaction.REACTION_ATTACK]
-            attack_args[2] = moving_combatant  # sets the target
-            logger.debug(f"{self.name} took an AoO {attack_args[0]} against {moving_combatant}",
+            aoo = self.aoo_factory(moving_combatant)
+            logger.debug(f"{self.name} took an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
-            return (self.reactions[0], *attack_args)
-        return (MetaAction.DONE,)
+            return aoo
+        return None

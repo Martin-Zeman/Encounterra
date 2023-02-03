@@ -41,6 +41,9 @@ class FireboltFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return Firebolt(self.find_best_args(combatant, battle_map), self)
 
+    def create(self, target_combatant):
+        return Firebolt(target_combatant, self)
+
     # def calculate_threat_approx(self, battle_map, *args, **kwargs):
     #     """
     #     Calculates the average dmg over all targets in range
@@ -128,6 +131,10 @@ class Firebolt(Actoid, DirectThreat):
         self.target = target
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.roll_modifier = RollModifier.STRAIGHT
+
+    def __str__(self):
+        return "Firebolt"
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(Firebolt.dmg_type))

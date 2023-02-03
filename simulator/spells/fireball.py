@@ -20,6 +20,9 @@ class FireballFactory(FactoryThreat):
     def create_best(self, combatant, battle_map, **kwargs):
         return Fireball(self.find_best_args(combatant, battle_map), self,  **kwargs)
 
+    def create(self, coord):
+        return Fireball(coord, self)
+
     # def calculate_threat_approx(self, battle_map, *args, **kwargs):
     #     placement, _, affected = battle_map.find_best_placement_harmful_circular(self.caster, SpellStats.Range.FEET_150.value,
     #                                                                              SpellStats.Target.RADIUS_20.value)
@@ -81,6 +84,9 @@ class Fireball(Actoid, DirectThreat):
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.heightened = False if "heightened " not in kwargs or not kwargs["heightened "] else True
+
+    def __str__(self):
+        return "Fireball"
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

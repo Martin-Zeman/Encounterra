@@ -20,6 +20,9 @@ class TwinnedHasteFactory(FactoryThreat):
     def create_best(self, combatant, battle_map):
         return TwinnedHaste(self.find_best_args(combatant, battle_map), self)
 
+    def create(self, targets):
+        return TwinnedHaste(targets, self)
+
     def calculate_threat_mod_approx(self, battle_map, modified_stats, *args, **kwargs):
         return 0  # No need
 
@@ -62,6 +65,9 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         self.targets = targets
         self.factory = factory
 
+    def __str__(self):
+        return "Twinned Haste"
+
     def activate(self):
         self.factory.caster.is_concentrating = True
         for target in self.targets:
@@ -81,7 +87,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         return combatant is self.target
 
 
-    def calculate_threat_mod(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
