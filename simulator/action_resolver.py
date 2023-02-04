@@ -25,21 +25,21 @@ class ActionResult(Enum):
     TRAINEE_DEAD = auto()
 
 def has_advantage_saving_throw(ability, target):
-    if RollModifier.ADVANTAGE in target.saving_throws[ability.saving_throw][1]:
+    if RollModifier.ADVANTAGE in target.saving_throws[ability.factory.saving_throw][1]:
         return True
-    if ability.saving_throw is SavingThrow.DEX and target.has_passive(
+    if ability.factory.saving_throw is SavingThrow.DEX and target.has_passive(
             Passive.DANGER_SENSE) and not target.is_affected_by_any(Conditions.INCAPACITATED,
                                                                               Conditions.BLINDED,
                                                                               Conditions.DEAFENED):
         return True
-    if ability.saving_throw is SavingThrow.DEX and target.is_dodging:
+    if ability.factory.saving_throw is SavingThrow.DEX and target.is_dodging:
         return True
     return False
 
 def has_disadvantage_saving_throw(ability, target):
-    if RollModifier.DISADVANTAGE in target.saving_throws[ability.saving_throw][1]:
+    if RollModifier.DISADVANTAGE in target.saving_throws[ability.factory.saving_throw][1]:
         return True
-    if ability.saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
+    if ability.factory.saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
         return True
     return False
 
@@ -47,7 +47,7 @@ def has_disadvantage_saving_throw(ability, target):
 def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
     # TODO Conditions
-    bonus = target_combatant.saving_throws[ability.saving_throw][0]
+    bonus = target_combatant.saving_throws[ability.factory.saving_throw][0]
 
     has_advantage = has_advantage_saving_throw(ability, target_combatant)
     has_disadvantage = has_disadvantage_saving_throw(ability, target_combatant)
@@ -63,7 +63,7 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
         saved = False
     elif rolled == 20:
         saved = True
-    elif rolled + bonus >= ability.dc:
+    elif rolled + bonus >= ability.factory.dc:
         saved = True
     else:
         saved = False
@@ -121,7 +121,7 @@ class ActionResolver:
                 multiplier = 2
 
             if rolled + spell.to_hit >= curr_target.ac:
-                bolt_dmg, rolled_numbers = roll_chaos_bolt_dmg(spell.dmg_dice, spell.additional_dmg_dice)
+                bolt_dmg, rolled_numbers = roll_chaos_bolt_dmg(spell.factory.dmg_dice, spell.additional_dmg_dice)
                 dmg_type = Chaosbolt.DMG_TYPE[rolled_numbers[random.randint(0, 1)] - 1]  # take one of the two numbers randomly
                 dmg = multiplier * bolt_dmg
                 logger.debug(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
@@ -178,8 +178,8 @@ class ActionResolver:
     def resolve_spell(self, caster, spell):
         match spell.factory.action_type:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
-                affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.stats.target, spell.stats.type, spell.coord)
-                dmg = roll_spell_dmg(spell.dmg_dice)
+                affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.target, spell.type, spell.coord)
+                dmg = roll_spell_dmg(spell.factory.dmg_dice)
                 for combatant in affected:
                     logger.debug(f"{combatant} is hit by Fireball")
                     resolve_dmg_saving_throw(spell, dmg, combatant)
@@ -212,7 +212,7 @@ class ActionResolver:
                 return ActionResult.UNFEASIBLE
 
     def has_advantage_melee(self, attack, attacker, target):
-        if attack.roll_modifier is RollModifier.ADVANTAGE:
+        if attack.factory.roll_modifier is RollModifier.ADVANTAGE:
             return True
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
             return True
@@ -224,7 +224,7 @@ class ActionResolver:
         return False
 
     def has_disadvantage_melee(self, attack, attacker, target):
-        if attack.roll_modifier is RollModifier.DISADVANTAGE:
+        if attack.factory.roll_modifier is RollModifier.DISADVANTAGE:
             return True
         if target.disadvantage_on_incoming_attacks:
             return True
@@ -232,7 +232,7 @@ class ActionResolver:
             return True
         return False
 
-    def resolve_attack(self, attack):  # TODO remove combatant from attack and have it as a separate parameter
+    def resolve_attack(self, attack, attacker):  # TODO remove combatant from attack and have it as a separate parameter
         """
 
         :param attack:
@@ -240,7 +240,6 @@ class ActionResolver:
         """
         # TODO Conditions
         target = attack.target_combatant
-        attacker = attack.combatant
         assert target
         has_advantage = self.has_advantage_melee(attack, attacker, target)
         has_disadvantage = self.has_disadvantage_melee(attack, attacker, target)
@@ -256,12 +255,12 @@ class ActionResolver:
         if rolled == 1:
             logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
             return ActionResult.MISS
-        elif rolled in attack.crit_range:
+        elif rolled in attack.factory.crit_range:
             multiplier = 2
-        if rolled + attack.to_hit >= target.ac:
+        if rolled + attack.factory.to_hit >= target.ac:
             reaction, *args = target.prompt_after_hit_reaction(attacker)
             self.resolve_action(reaction, args, target)
-        if rolled + attack.to_hit >= target.ac:  # Potentially missing this time
+        if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
             dice = parse_dmg_dice(attack.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
             total_dmg = multiplier * dmg_dice_sum + attack.dmg_bonus + attacker.ability_dmg_bonus
@@ -311,7 +310,7 @@ class ActionResolver:
         assert actoid is not None
         match actoid.actoid_type:
             case Actoid.Type.IS_ATTACK_LIKE_ACTION:
-                return self.resolve_attack(actoid)
+                return self.resolve_attack(actoid, combatant)
             case Actoid.Type.IS_MOVEMENT:
                 if not self.request_movement(combatant, actoid):
                     return ActionResult.UNFEASIBLE  # combatant didn't survive

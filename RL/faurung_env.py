@@ -4,7 +4,7 @@ from simulator.resources import reset_resources
 from simulator.effects.effect_tracker import EffectTracker
 from simulator.misc import linex_loss, Size, Conditions, PlacementScenario
 from simulator.combatant import Combatant
-from simulator.map import Terrain
+from simulator.battle_map import Terrain
 from simulator.teams import Teams
 from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, LabelEncoder
 import numpy as np

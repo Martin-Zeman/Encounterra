@@ -58,12 +58,12 @@ def check_feasibility(combatant, action, battle_map):
                 return res
             case Action.ATTACK:
                 res = combatant.curr_num_attacks > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.range
+                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
             case Action.RECKLESS_ATTACK:
                 res = (combatant.curr_num_attacks == combatant.num_attacks)
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.range
+                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
             case Action.DASH | Action.DODGE:
@@ -187,7 +187,7 @@ def check_feasibility_light(combatant, action_type, battle_map):
                 res &= combatant.curr_sorcery_points > 2
                 return res
             case Action.ATTACK:
-                return combatant.curr_num_attacks > 0
+                return combatant.has_action and combatant.curr_num_attacks > 0
             case Action.RECKLESS_ATTACK:
                 return combatant.curr_num_attacks == combatant.num_attacks
             case Action.DASH | Action.DODGE:

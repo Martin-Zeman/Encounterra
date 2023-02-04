@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 class Faurung(Combatant):
 
-    def __init__(self, effect_tracker):
-        super().__init__(effect_tracker, "Faurung", level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
+    def __init__(self, effect_tracker, name="Faurung"):
+        super().__init__(effect_tracker, name, level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.add_ability(Action.ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1, attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
@@ -36,9 +36,9 @@ class Faurung(Combatant):
         enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
 
         while self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
-            free_coords = battle_map.get_free_coords_at_distance(enemies[0], int(self.movement + dist[0]), self)
+            free_coords = battle_map.get_free_coords_at_distance(enemies[0], self, int(self.movement + dist[0]))
             if not free_coords:
-                logger.debug(f"{self.name} has nowhere to go to")
+                # logger.debug(f"{self.name} has nowhere to go to")
                 self.nowhere_to_go = True
                 break
             path = battle_map.get_path_to(self, free_coords[0])
@@ -73,7 +73,13 @@ class Faurung(Combatant):
             all_actions.extend(bonus_action_threats)
             all_actions.extend(haste_action_threats)
             all_actions.sort(key=lambda a: a[0], reverse=True)
-            return all_actions[0][1]
+            ret = None
+            try:
+                ret = all_actions[0][1]
+                logger.debug(f"{self} uses {ret}")
+            except IndexError:
+                pass
+            return ret
         else:
             return None
 

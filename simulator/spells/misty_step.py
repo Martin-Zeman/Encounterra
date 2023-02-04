@@ -17,7 +17,7 @@ class MistyStepFactory(FactoryThreat):
         if self.caster.archetype is CombatantArchetype.MELEE:
             # TODO Improve this
             if self.caster.selected_enemy:
-                free_coords = battle_map.get_free_coords_at_distance(self.caster.selected_enemy, 1, self.caster)
+                free_coords = battle_map.get_free_coords_at_distance(self.caster.selected_enemy, self.caster, 1)
             return free_coords[0] if free_coords else None
         elif self.caster.archetype is CombatantArchetype.RANGED:
             free_coords = battle_map.get_free_coords_away_from_enemies(combatant, MistyStep.spell_range.value)

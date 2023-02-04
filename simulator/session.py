@@ -3,7 +3,7 @@ from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.faurung_dt import FaurungDt
 from simulator.combatants.cyanwrath import Cyanwrath
-from simulator.map import *
+from simulator.battle_map import *
 from simulator.round_manager import *
 from simulator.teams import Teams
 # from RL.faurung_env import FaurungEnv
@@ -48,7 +48,7 @@ class Session:
 
         match combatant_type.__name__:
             case "Faurung":
-                self.combatants.append(Faurung(self.effect_tracker))
+                self.combatants.append(Faurung(self.effect_tracker, "Faurung" + str(curr_count)))
             case "FaurungDt":
                 self.combatants.append(FaurungDt(self.effect_tracker))
             case "TotemBarbarian5Lvl":

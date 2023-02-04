@@ -92,8 +92,8 @@ def reset_resources(combatant):
     # for action in combatant.actions:
     #     pass
 
-    for bonus_action in combatant.bonus_actions:
-        match bonus_action:
+    for bonus_action in combatant.bonus_action_factories:
+        match bonus_action[0]:
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 combatant.curr_rage_uses = combatant.max_rage_uses
                 combatant.rage_active = False

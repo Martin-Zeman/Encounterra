@@ -140,7 +140,7 @@ def parse_dmg_dice(dice_string):
 
 def avg_roll(dice_string):
     dice = parse_dmg_dice(dice_string)
-    return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice)
+    return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
 
 
 @cache
@@ -241,7 +241,7 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=Fal
     @return:
     """
     dice = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice)
+    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
     rv = randint(1, 21, st_bonus)
     p_fail = rv.cdf(dc - 1)
     fail_dmg = avg_dmg_die_roll * p_fail
@@ -310,8 +310,8 @@ def percent_of_curr_hp(combatant, dmg):
 
 def get_factory_of_type(factories, type):
     for f in factories:
-        if f.action_type is type:
-            return f
+        if f[0] is type:
+            return f[1]
     return None
 
 

@@ -38,10 +38,8 @@ class RoundManager:
         for combatant in self.combatants:
             reset_resources(combatant)
         self.effect_tracker.reset()
-        self.battle_map.reset()
-        for combatant in self.combatants:
-            # TODO consider making this part of map reset
-            self.battle_map.set_combatant_coordinates(combatant, combatant_initial_positions[combatant])
+        self.battle_map.reset(combatant_initial_positions)
+
 
     def simulate_n(self, n=1, result_queue=None):
         if n > 0:

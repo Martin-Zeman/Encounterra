@@ -1,5 +1,5 @@
 import math
-from simulator.map import *
+from simulator.battle_map import *
 import numpy as np
 
 

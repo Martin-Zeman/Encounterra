@@ -14,7 +14,7 @@ class FireballFactory(FactoryThreat):
         self.has_spell_sculpting = has_spell_sculpting
 
     def find_best_args(self, combatant, battle_map):
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, Fireball.spell_range.value, Fireball.target.value)
+        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, Fireball.spell_range.value, SpellStats.TRANSLATE_RADIUS[Fireball.target])
         return coord
 
     def create_best(self, combatant, battle_map, **kwargs):
@@ -90,7 +90,7 @@ class Fireball(Actoid, DirectThreat):
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(combatant, Fireball.target, Fireball.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, Fireball.target, Fireball.type, self.coord)
         acc = 0
         for aff in affected:
             acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw][0])

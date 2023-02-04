@@ -48,7 +48,7 @@ class FaurungDt(Combatant):
                 logger.debug(f"{self.name} casts Misty Step to location {free_coords[0]}", extra={"team": self.team_color})
                 return (BonusAction.MISTY_STEP, free_coords[0])
             elif self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
-                free_coords = battle_map.get_free_coords_at_distance(nearest_enemy, int(self.movement + dist), self)
+                free_coords = battle_map.get_free_coords_at_distance(nearest_enemy, self, int(self.movement + dist))
                 if not free_coords:
                     logger.debug(f"{self.name} has nowhere to go to")
                     self.nowhere_to_go = True

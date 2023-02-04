@@ -67,7 +67,7 @@ class GridSquare:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        assert self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN and not self.combatant
+        assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
@@ -468,11 +468,11 @@ class Map:
         enemy_location = self.get_combatant_position(target_combatant)
         logger.debug(f"Destination {enemy_location}")
         mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_path = self.dijkstra(my_location, mask)
+        distances, shortest_paths = self.dijkstra(my_location, mask)
         enemy_adjacent_location = self.get_nearest_adjacent_coord(my_location, enemy_location)
         if enemy_adjacent_location is None:
             return None
-        reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, enemy_adjacent_location)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, enemy_adjacent_location)
         if reconstructed_path is None:
             return None
         self.printDijkstra(distances, my_location, enemy_location, reconstructed_path['tuples'])
@@ -491,8 +491,8 @@ class Map:
         logger.debug(f"Origin {my_location}")
         logger.debug(f"Destination {target_coord}")
         mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_path = self.dijkstra(my_location, mask)
-        reconstructed_path = reconstruct_from_shortest_path(shortest_path, my_location, target_coord)
+        distances, shortest_paths = self.dijkstra(my_location, mask)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, target_coord)
         if reconstructed_path is None:
             return None
         self.printDijkstra(distances, my_location, target_coord, reconstructed_path['tuples'])
@@ -536,33 +536,47 @@ class Map:
         elligible_coords.sort(key=by_distance_to_nearest_enemy, reverse=True)
         return elligible_coords
 
-    def get_free_coords_at_distance(self, target_combatant, distance, combatant):
+    def get_free_coords_at_distance(self, target_combatant, combatant, min_dist, max_dist=sys.maxsize):
         """
-        Returns a list of coordinates that are unoccupied and at a given distance from a target, sorted by proximity to a
+        Returns a list of coordinates that are unoccupied and at a given distance from a target, sorted by ascending proximity to the target
         combatant
         :param target_combatant: target to which the distance is measured
-        :param distance: desired distance
         :param combatant: sorted by ascending proximity to this combatant
+        :param min_dist: minimum desired distance
+        :param max_dist: maximum desired distance
         :return: list of numpy.array coordinates
         """
-        if distance <= 0:
-            return []
+        assert min_dist > 0
+        # mask_self = self.build_combatant_adjacency_mask(combatant)
+        # distances_self, _ = self.dijkstra(self.combatant_coordinate_cache[combatant], mask_self)
+        mask_target = self.build_combatant_adjacency_mask(target_combatant)
+        distances_target, _ = self.dijkstra(self.combatant_coordinate_cache[target_combatant], mask_target)
         free_positions = []
-        target_coords = self.combatant_coordinate_cache[target_combatant]
-        for x in range(-distance, distance + 1):
-            for y in range(-distance, distance + 1):
-                if (target_coords[0] + x) < 0 or (target_coords[1] + y) < 0 or (target_coords[0] + x) >= self.size or (
-                        target_coords[1] + y) >= self.size:
-                    continue
-                is_empty = self.grid[target_coords[0] + x][target_coords[1] + y].is_empty()
-                curr_coord = target_coords + np.array([x, y])
-                if is_empty and self.get_hop_distance(target_coords, curr_coord) == distance:
-                    free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
+        # target_coords = self.combatant_coordinate_cache[target_combatant]
 
-        combatant_coord = self.combatant_coordinate_cache[combatant]
+
+        coords = []
+        for i, dist in enumerate(distances_target):
+            curr_coord = np.array([i // self.size, i % self.size])
+            is_empty = self.grid[curr_coord[0]][curr_coord[1]].is_empty()
+            if is_empty and min_dist <= dist <= max_dist:
+                coords.append(curr_coord)
+        # for x in range(-distance, distance + 1):
+        #     for y in range(-distance, distance + 1):
+        #         if (target_coords[0] + x) < 0 or (target_coords[1] + y) < 0 or (target_coords[0] + x) >= self.size or (
+        #                 target_coords[1] + y) >= self.size:
+        #             continue
+        #         curr_coord = target_coords + np.array([x, y])
+        #         is_empty = self.grid[curr_coord[0]][curr_coord[1]].is_empty()
+        #         hop_distance = self.get_hop_distance(target_coords, curr_coord)
+        #         if is_empty and min_dist <= hop_distance <= max_dist:
+        #             free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
+
+        # combatant_coord = self.combatant_coordinate_cache[combatant]
         # sort them by cartesian distance to get the most direct one
-        free_positions.sort(key=lambda coord: np.linalg.norm(coord - combatant_coord))
-        return free_positions
+        # coords.sort(key=lambda coord: np.linalg.norm(coord - combatant_coord))
+        coords.sort(key=lambda coord: distances_target[coord[0] * self.size + coord[1]])
+        return coords
 
     def remove_combatant(self, combatant):
         """
@@ -578,16 +592,24 @@ class Map:
         self.grid[old_coord[0]][old_coord[1]].remove_combatant()
         del self.combatant_coordinate_cache[combatant]
 
-    def reset(self):
+    def clear(self):
         for row in self.grid:
             for square in row:
                 square.remove_combatant()
                 square.reset_terrain()
-        for combatant in self.combatant_coordinate_cache.keys():
-            self.combatant_coordinate_cache[combatant].fill(0)
+        for coord in self.combatant_coordinate_cache.values():
+            coord.fill(0)
         self.impassable_set.clear()
         self.difficult_set.clear()
         self.terrain_encoding.fill(Terrain.NORMAL_TERRAIN.value)
+
+
+    def reset(self, combatant_initial_positions):
+        for row in self.grid:
+            for square in row:
+                square.remove_combatant()
+        for combatant, coord in combatant_initial_positions.items():
+            self.set_combatant_coordinates(combatant, coord)
 
     def find_best_placement_harmful_circular(self, caster, spell_range, radius):
         """
@@ -601,32 +623,32 @@ class Map:
         bb = np.array([[self.size, self.size], [0, 0]])  # top left, bottom right
         for combatant, coord in self.combatant_coordinate_cache.items():
             if self.teams.are_enemies(caster, combatant):
-                bb[0] = np.minimum(bb[0], self.combatant_coordinate_cache[combatant])
-                bb[1] = np.maximum(bb[1], self.combatant_coordinate_cache[combatant])
+                bb[0] = np.minimum(bb[0], coord)
+                bb[1] = np.maximum(bb[1], coord)
         # inflate the BB
         bb[0] = np.maximum(bb[0] - radius, np.array([0, 0]))
         bb[1] = np.minimum(bb[1] + radius, np.array([self.size - 1, self.size - 1]))
         max_score = -sys.maxsize - 1
         best_placement = None
+        best_affected = None
         caster_coord = self.combatant_coordinate_cache[caster]
-        affected = []
         for i in range(bb[0][0], bb[1][0]):
             for j in range(bb[0][1], bb[1][1]):
                 curr_coord = np.array([i, j])
+                affected = []
                 if get_cartesian_distance(get_square_center(caster_coord), curr_coord) <= spell_range and caster_coord is not curr_coord:
                     score = 0
                     for combatant, coord in self.combatant_coordinate_cache.items():
-                        score += (
-                            1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4) if get_cartesian_distance(
-                            get_square_center(coord),
-                            curr_coord) <= radius else 0
-                        affected.append(combatant)
+                        if get_cartesian_distance(get_square_center(coord), curr_coord) <= radius:
+                            score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
+                            affected.append(combatant)
                     if score > max_score:
                         max_score = score
                         best_placement = curr_coord
+                        best_affected = affected
         logger.debug(self)
         # logger.debug(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
-        return best_placement, max_score, affected
+        return best_placement, max_score, best_affected
 
     def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):
         # TODO potentially check for protective abilities
