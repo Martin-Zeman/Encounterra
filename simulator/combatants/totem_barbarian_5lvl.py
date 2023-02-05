@@ -104,7 +104,7 @@ class TotemBarbarian5Lvl(Combatant):
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
-            aoo = self.aoo_factory(moving_combatant)
+            aoo = self.aoo_factory[1].create(moving_combatant)
             logger.debug(f"{self} taken an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo

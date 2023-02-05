@@ -353,13 +353,15 @@ class Map:
         min_dist = sys.float_info.max
         nearest = None
         self_position = self.combatant_coordinate_cache[combatant]
+        nearest_coord = None
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
             dist = dist_func(self_position, target_coord)
             if potential_target is not combatant and potential_target.is_alive() and team_func(potential_target,
                                                                                                combatant) and dist < min_dist:
                 min_dist = dist
                 nearest = potential_target
-        return nearest, min_dist
+                nearest_coord = target_coord
+        return nearest, min_dist, target_coord
 
     def is_enemy_adjacent(self, character):
         self_coords = self.combatant_coordinate_cache[character]
@@ -683,6 +685,8 @@ class Map:
         distances.sort()
         return enemies, distances
 
+    def get_adjacent_enemies(self, combatant):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) == 1]
     def get_enemies_within_radius(self, combatant, radius):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
 

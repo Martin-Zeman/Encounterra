@@ -1,4 +1,5 @@
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.combatants.goblin import Goblin
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.faurung_dt import FaurungDt
@@ -32,7 +33,8 @@ class Session:
             FaurungDt: 1,
             TotemBarbarian5Lvl: 1,
             DragonclawCultist: 1,
-            Cyanwrath: 1
+            Cyanwrath: 1,
+            Goblin: 1,
         }
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
@@ -48,7 +50,7 @@ class Session:
 
         match combatant_type.__name__:
             case "Faurung":
-                self.combatants.append(Faurung(self.effect_tracker, "Faurung" + str(curr_count)))
+                self.combatants.append(Faurung(self.effect_tracker, "Faurung " + str(curr_count)))
             case "FaurungDt":
                 self.combatants.append(FaurungDt(self.effect_tracker))
             case "TotemBarbarian5Lvl":
@@ -57,6 +59,8 @@ class Session:
                 self.combatants.append(Cyanwrath(self.effect_tracker))
             case "DragonclawCultist":
                 self.combatants.append(DragonclawCultist(self.effect_tracker, "DragonclawCultist " + str(curr_count)))
+            case "Goblin":
+                self.combatants.append(Goblin(self.effect_tracker, "Goblin " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return

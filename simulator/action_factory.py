@@ -14,6 +14,7 @@ from simulator.actions.movement import MovementIncrement
 from simulator.action_types import *
 from simulator.actions.attack import AttackFactory
 from simulator.actions.dodge import DodgeFactory
+from simulator.actions.disengage import DisengageFactory
 from simulator.spells.haste import HasteFactory
 from simulator.spells.bless import BlessFactory
 from simulator.spells.shield import ShieldFactory
@@ -35,7 +36,7 @@ TO_FACTORY = {
     Action.RECKLESS_ATTACK: RecklessAttackFactory,
     Action.DODGE: DodgeFactory,
     Action.DASH: None,
-    Action.DISENGAGE: None,
+    Action.DISENGAGE: DisengageFactory,
     Action.FIREBALL: FireballFactory,
     Action.FIREBOLT: FireboltFactory,
     Action.CHAOSBOLT: ChaosboltFactory,
@@ -58,10 +59,16 @@ TO_FACTORY = {
     BonusAction.QUICKENED_HASTE: HasteFactory,
 
     Reaction.SHIELD: ShieldFactory,
-    Reaction.REACTION_ATTACK: AttackFactory
+    Reaction.REACTION_ATTACK: AttackFactory,
+
+    HasteAction.HASTE_ATTACK: AttackFactory,
+    HasteAction.HASTE_DISENGAGE: DisengageFactory,
+    HasteAction.HASTE_HIDE: None,
+    HasteAction.HASTE_DASH: None
 }
-TO_QUICKENED = { Action.FIREBALL: BonusAction.QUICKENED_FIREBALL, Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT, Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT, Action.HASTE: BonusAction.QUICKENED_HASTE}
+TO_QUICKENED = {Action.FIREBALL: BonusAction.QUICKENED_FIREBALL, Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT, Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT, Action.HASTE: BonusAction.QUICKENED_HASTE}
 TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}
+TO_HASTED = {Action.ATTACK: HasteAction.HASTE_ATTACK, Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE}
 
 def action_factory(combatant, effect_tracker, action_type, *args):
     if isinstance(action_type, Action):

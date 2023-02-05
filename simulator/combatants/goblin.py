@@ -1,0 +1,81 @@
+from simulator.combatant import Combatant
+from simulator.actions.movement import MovementGenerator
+from simulator.misc import DamageType
+from simulator.action_factory import *
+from simulator.misc import Side
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+class Goblin(Combatant):
+
+    def __init__(self, effect_tracker, name="Goblin"):
+        super().__init__(effect_tracker, name, level=1, hp=7, ac=15, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+        self.scimitar_attack = self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
+        self.shortbow_attack = self.add_ability(Action.ATTACK,  name="Shortbow", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=16, crit_range=[20], attack_type=AttackFactory.Type.RANGED)
+        self.nimble_disengage = self.add_ability(BonusAction.CUNNING_DISENGAGE)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
+        # TODO Nimble Escape
+        self.max_melee_range = 1  # TODO: maybe add a lookup here
+        self.selected_target = None
+
+    def plan_path(self, battle_map):
+        free_coords = battle_map.get_free_coords_at_distance(self.selected_target, self, 8, 16)
+        if not free_coords:
+            logger.debug(f"There are no free coords for the {self} to disengage to. Using dodge action", extra={"team": self.team_color})
+            raise RuntimeError
+        path = battle_map.get_path_to(self, free_coords[0])
+        if not path:
+            logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
+            raise RuntimeError
+        self.movement_generator = MovementGenerator(self, path).get_generator()
+
+    def get_action(self, battle_map):
+        while self.has_action or self.movement or self.has_haste_action:
+            self.selected_target, dist_to_nearest, target_position = battle_map.get_nearest(self, Side.ENEMY)
+            if not self.selected_target:
+                return None
+
+            if (self.has_action or self.has_haste_action) and 8 <= dist_to_nearest <= 16:
+                # If I'm in position, just shoot
+                if self.has_action:
+                    return self.shortbow_attack.create(self.selected_target)
+                else:
+                    for ha in self.haste_action_factories:
+                        if ha.name == "Shortbow":
+                            return ha.create(self.selected_target)
+            elif 1 < dist_to_nearest < 8 and not self.movement_generator:
+                # If I'm not in position but also not adjacent to anyone
+                try:
+                    self.plan_path(battle_map)
+                except RuntimeError:
+                    return self.dodge_factory.create_best(self, battle_map)
+            elif dist_to_nearest == 1 and self.movement and self.has_bonus_action and not self.has_disengaged:
+                # I'f I'm adjacent to an enemy I first need to disengage
+                return self.nimble_disengage.create_best(self, battle_map)
+            elif dist_to_nearest == 1 and self.movement and not self.movement_generator:
+                # Once I've disengaged, plan escape path
+                try:
+                    self.plan_path(battle_map)
+                except RuntimeError:
+                    return self.dodge_factory.create_best(self, battle_map)
+            elif self.movement_generator:
+                # Move
+                try:
+                    movement = next(self.movement_generator)
+                    logger.debug("Moving")
+                    return movement
+                except StopIteration:
+                    self.movement_generator = None
+            return None
+
+
+    def prompt_aoo(self, moving_combatant):
+        # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
+        if self.has_reaction:
+            aoo = self.aoo_factory[1].create(moving_combatant)
+            logger.debug(f"{self} took an AoO {aoo} against {moving_combatant}",
+                         extra={"team": self.team_color})
+            return aoo
+        return None

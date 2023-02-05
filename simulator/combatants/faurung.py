@@ -35,7 +35,7 @@ class Faurung(Combatant):
     def get_action(self, battle_map):
         enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
 
-        while self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
+        while enemies and self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
             free_coords = battle_map.get_free_coords_at_distance(enemies[0], self, int(self.movement + dist[0]))
             if not free_coords:
                 # logger.debug(f"{self.name} has nowhere to go to")

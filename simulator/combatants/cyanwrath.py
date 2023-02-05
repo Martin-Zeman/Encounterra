@@ -103,7 +103,7 @@ class Cyanwrath(Combatant):
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction and (self.selected_target is None or self.round_manager.goes_before_in_initiative(self, self.selected_target)):
-            aoo = self.aoo_factory(moving_combatant)
+            aoo = self.aoo_factory.create(moving_combatant)
             logger.debug(f"{self.name} took an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo
@@ -111,7 +111,7 @@ class Cyanwrath(Combatant):
 
     def prompt_pam(self, moving_combatant):
         if self.has_reaction:
-            aoo = self.aoo_factory(moving_combatant)
+            aoo = self.aoo_factory[1].create(moving_combatant)
             logger.debug(f"{self.name} uses an polearm master attack {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo

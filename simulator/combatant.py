@@ -1,3 +1,4 @@
+import copy
 import random
 import math
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype
@@ -30,6 +31,7 @@ class Combatant(ABC):
         self.name = name
         self.level = level
         self.action_factories = [(Action.DODGE, DodgeFactory(self))]
+        self.dodge_factory = self.action_factories[-1]
         self.bonus_action_factories = []
         self.reaction_factories = []
         self.haste_action_factories = []
@@ -77,6 +79,7 @@ class Combatant(ABC):
         self.conditions = Conditions.NONE
         self.toughness = None
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
+        self.has_disengaged = False
         self.spellslots = None
         self.is_concentrating = False
         self.already_cast_leveled_spell_this_turn = False
@@ -107,7 +110,7 @@ class Combatant(ABC):
         :param action_type: one of Action, BonusAction, Reaction or Passive instances
         :param kwargs: holds the resources that the action_type needs. They are to be stored in this instance. It also holds any information
         that cannot be directly determined by the action_type (such as a level-specific modifier)
-        :return: nothing
+        :return: The factory that has been added or None if case of passive actions factories, AoO or errors
         """
         # TODO Consider removing the kwargs and derive everything from the level
         self.action_types_added.append(action_type)
@@ -126,54 +129,72 @@ class Combatant(ABC):
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
+            return None
         elif isinstance(action_type, Action):
             match action_type:
                 case Action.ATTACK | Action.RECKLESS_ATTACK:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    return self.action_factories[-1]
                 case Action.FIREBALL:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
+                    return self.action_factories[-1]
                 case Action.FIREBOLT:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
+                    return self.action_factories[-1]
                 case Action.CHAOSBOLT:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
+                    return self.action_factories[-1]
                 case Action.HASTE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                    return self.action_factories[-1]
                 case _:
-                    pass
+                    return None
         elif isinstance(action_type, BonusAction):
             # TODO
             match action_type:
                 case BonusAction.BONUS_ATTACK:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    return self.bonus_action_factories[-1]
                 case BonusAction.PAM_BONUS_ATTACK:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                     self.pam_factory = self.bonus_action_factories[-1]
+                    return self.bonus_action_factories[-1]
                 case BonusAction.RAGE:
                     self.max_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.rage_active = False
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    return self.bonus_action_factories[-1]
                 case BonusAction.TOTEM_RAGE:
                     self.max_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.rage_active = False
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    return self.bonus_action_factories[-1]
                 case BonusAction.MISTY_STEP:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_DODGE:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
+                    return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_DISENGAGE:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
+                    return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_HIDE:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
+                    return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBALL:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
+                    return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBOLT:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
+                    return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_CHAOSBOLT:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
+                    return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_HASTE:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                    return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required
         elif isinstance(action_type, Reaction):
@@ -181,10 +202,24 @@ class Combatant(ABC):
                 case Reaction.REACTION_ATTACK:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                     self.aoo_factory = self.reaction_factories[-1]
+                    return None
                 case Reaction.SHIELD:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    return self.reaction_factories[-1]
                 case _:
                     logger.error("Unknown reaction")
+                    return None
+        elif isinstance(action_type, HasteAction):
+            for action in self.action_factories:
+                try:
+                    # A combatant can have multiple attacks, we need a hastened version of all of them
+                    hasted_action = TO_HASTED[action]
+                    self.haste_action_factories.append((hasted_action, copy.deepcopy(action))) # Need a copy to change the action_type
+                    self.haste_action_factories[-1].action_type = action_type
+                    return None
+                except KeyError:
+                    pass
+            return None
         # elif isinstance(action_type, FreeAction):
         #     match action_type:
         #         case FreeAction.RECKLESS_ATTACK:
@@ -200,6 +235,7 @@ class Combatant(ABC):
                         try:
                             quickened_action = TO_QUICKENED[action]
                             self.bonus_action_factories.append((quickened_action, TO_FACTORY[quickened_action]))
+                            return self.bonus_action_factories[-1]
                         except KeyError:
                             pass
                 case MetaAction.TWINNED_SPELL:
@@ -208,21 +244,26 @@ class Combatant(ABC):
                         try:
                             twinned_action = TO_TWINNED[action]
                             self.action_factories.append((twinned_action, TO_FACTORY[twinned_action]))
+                            return self.action_factories[-1]
                         except KeyError:
                             pass
                     for bonus_action in self.bonus_action_factories:
                         try:
                             twinned_action = TO_TWINNED[bonus_action]
                             self.bonus_action_factories.append((twinned_action, TO_FACTORY[twinned_action]))
+                            return self.bonus_action_factories[-1]
                         except KeyError:
                             pass
                 case MetaAction.EMPOWERED_SPELL:
                     assert Passive.METAMAGIC in self.passive
+                    return None
                     # TODO
                 case _:
                     logger.error("Unknown meta action")
+                    return None
         else:
             logger.error("Unknown high level action class")
+            return None
 
     def commit_abilities(self):
         """

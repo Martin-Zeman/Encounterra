@@ -100,6 +100,7 @@ class Haste(Actoid, Effect, ThreatModifier):
     def activate(self):
         self.factory.caster.is_concentrating = True
         self.target.ac += 2
+        # TODO rework this in the new way
         self.target.haste_actions = [HasteAction.HASTE_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
         self.target.has_haste_action = True
 

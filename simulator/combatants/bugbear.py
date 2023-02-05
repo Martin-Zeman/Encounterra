@@ -8,16 +8,14 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class DragonclawCultist(Combatant):
+class Bugbear(Combatant):
 
-    def __init__(self, effect_tracker, name="Dragonclaw"):
-        super().__init__(effect_tracker, name, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(Passive.MULTIATTACK, num_attacks=2)
+    def __init__(self, effect_tracker, name="Bugbear"):
+        super().__init__(effect_tracker, name, level=1, hp=27, ac=16, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+        morningstar_attack = self.add_ability(Action.ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
+        javelin_attack = self.add_ability(Action.ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=6, crit_range=[20], attack_type=AttackFactory.Type.RANGED)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
         self.max_melee_range = 1  # TODO: maybe add a lookup here
-        self.has_pack_tactics = True
-        self.has_fanatical_advantage = True
 
     def attack_routine(self, battle_map):
         if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
@@ -78,7 +76,7 @@ class DragonclawCultist(Combatant):
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction:
-            aoo = self.aoo_factory[1].create(moving_combatant)
+            aoo = self.aoo_factory[1](moving_combatant)
             logger.debug(f"{self.name} took an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo

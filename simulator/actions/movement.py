@@ -15,16 +15,15 @@ class MovementIncrement(Actoid):
 
 class MovementGenerator:
 
-    def __init__(self, combatant, path, incurs_aoo=True, action_type=Movement.STANDARD):
+    def __init__(self, combatant, path, action_type=Movement.STANDARD):
         self.combatant = combatant
         self.path = path
-        self.incurs_aoo = incurs_aoo
         self.action_type = action_type
 
     def get_generator(self):
         try:
             while self.path and self.combatant.movement:
-                yield MovementIncrement(self.path.pop(0), self.incurs_aoo, self)
+                yield MovementIncrement(self.path.pop(0), not self.combatant.has_disengaged, self)
                 # yield self.path.pop(0)
         except GeneratorExit:
             pass
