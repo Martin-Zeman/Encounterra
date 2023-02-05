@@ -128,14 +128,14 @@ def check_feasibility(combatant, action, battle_map):
         match action_type:
             case Reaction.SHIELD:
                 return combatant.has_reaction and combatant.spellslots.get_spellslots(1) > 0
+            case Reaction.REACTION_ATTACK:
+                return combatant.has_reaction
             case _:
                 logger.error("Unknown reaction")
         return combatant.has_reaction
     elif isinstance(action_type, Movement):
-        return combatant.movement > 0 and np.max(np.abs(action.increment)) < 2 and not np.array_equal(action.increment, np.array([0, 0])) and battle_map.is_empty(
-            battle_map.get_combatant_position(combatant) + action.increment) and not combatant.is_affected_by_any(
-            Conditions.GRAPPLED,
-            Conditions.RESTRAINED)
+        return combatant.movement > 0 and battle_map.is_empty(battle_map.get_combatant_position(combatant) + action.increment)\
+            and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
     elif isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False

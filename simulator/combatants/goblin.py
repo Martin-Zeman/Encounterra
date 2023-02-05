@@ -53,7 +53,7 @@ class Goblin(Combatant):
                     return self.dodge_factory.create_best(self, battle_map)
             elif dist_to_nearest == 1 and self.movement and self.has_bonus_action and not self.has_disengaged:
                 # I'f I'm adjacent to an enemy I first need to disengage
-                return self.nimble_disengage.create_best(self, battle_map)
+                return self.nimble_disengage[1].create_best(self, battle_map)
             elif dist_to_nearest == 1 and self.movement and not self.movement_generator:
                 # Once I've disengaged, plan escape path
                 try:

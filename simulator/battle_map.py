@@ -586,7 +586,7 @@ class Map:
         :param combatant:
         :return:
         """
-        logger.debug(f"Removing combatant {combatant}")
+        logger.debug(f"{combatant} died")
         try:
             old_coord = self.combatant_coordinate_cache[combatant]
         except KeyError:

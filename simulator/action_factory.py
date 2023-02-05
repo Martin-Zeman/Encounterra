@@ -51,7 +51,7 @@ TO_FACTORY = {
     BonusAction.TOTEM_RAGE: TotemRageFactory,
     BonusAction.MISTY_STEP: MistyStepFactory,
     BonusAction.CUNNING_DODGE: DodgeFactory,
-    BonusAction.CUNNING_DISENGAGE: None,
+    BonusAction.CUNNING_DISENGAGE: DisengageFactory,
     BonusAction.CUNNING_HIDE: None,
     BonusAction.QUICKENED_FIREBALL: FireballFactory,
     BonusAction.QUICKENED_FIREBOLT: FireboltFactory,

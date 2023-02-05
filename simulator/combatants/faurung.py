@@ -42,7 +42,7 @@ class Faurung(Combatant):
                 self.nowhere_to_go = True
                 break
             path = battle_map.get_path_to(self, free_coords[0])
-            self.movement_generator_cache = MovementGenerator(self, path, True).get_generator()
+            self.movement_generator_cache = MovementGenerator(self, path).get_generator()
 
         if self.movement and self.movement_generator_cache:
             try:

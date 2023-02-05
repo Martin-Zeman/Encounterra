@@ -258,12 +258,12 @@ class ActionResolver:
         elif rolled in attack.factory.crit_range:
             multiplier = 2
         if rolled + attack.factory.to_hit >= target.ac:
-            reaction, *args = target.prompt_after_hit_reaction(attacker)
-            self.resolve_action(reaction, args, target)
+            reaction = target.prompt_after_hit_reaction(attacker)
+            self.resolve_action(reaction, target)
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
-            dice = parse_dmg_dice(attack.dmg_dice)
+            dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
-            total_dmg = multiplier * dmg_dice_sum + attack.dmg_bonus + attacker.ability_dmg_bonus
+            total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
             logger.debug(
                 f"Attack {'CRITS' if multiplier == 2 else 'hits'} for {total_dmg} of which {attacker.ability_dmg_bonus} is ability dmg",
                 extra={"team": self.teams.get_team(attacker)})
@@ -360,7 +360,7 @@ class ActionResolver:
         @param combatant: originator of the action
         @return: only relevant return here is DMG/MISS used for sentinel
         """
-        if action.factory.action_type is MetaAction.DONE:
+        if action is None:
             return None
         # action = action_factory(combatant, self.effect_tracker, action_type, *args)
         feasible = check_feasibility(combatant, action, self.battle_map)
