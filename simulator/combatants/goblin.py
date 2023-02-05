@@ -40,11 +40,11 @@ class Goblin(Combatant):
             if (self.has_action or self.has_haste_action) and 8 <= dist_to_nearest <= 16:
                 # If I'm in position, just shoot
                 if self.has_action:
-                    return self.shortbow_attack.create(self.selected_target)
+                    return self.shortbow_attack[1].create(self.selected_target)
                 else:
                     for ha in self.haste_action_factories:
-                        if ha.name == "Shortbow":
-                            return ha.create(self.selected_target)
+                        if ha[1].name == "Shortbow":
+                            return ha[1].create(self.selected_target)
             elif 1 < dist_to_nearest < 8 and not self.movement_generator:
                 # If I'm not in position but also not adjacent to anyone
                 try:

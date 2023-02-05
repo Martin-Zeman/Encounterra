@@ -174,6 +174,9 @@ class Attack(Actoid, DirectThreat):
         self.target_combatant = target_combatant
         self.factory = factory
 
+    def __str__(self):
+        return self.factory.name
+
     def get_dmg_type(self):
         return self.factory.dmg_type
 
