@@ -115,10 +115,10 @@ class Session:
         self.battle_map = Map(self.map_size, self.teams)
         self.battle_map.set_effect_tracker(self.effect_tracker)
         self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map, self.effect_tracker)
+        self.place_random_elements_on_the_map()
         self.place_combatants_on_the_map()
         for combatant in self.combatants:
             combatant.set_round_manager(self.round_manager)
-        self.place_random_elements_on_the_map()
         self.battle_map.build_adjacency_matrix()
         if parallel:
             result_acc = mp.Queue()

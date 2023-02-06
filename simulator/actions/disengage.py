@@ -12,10 +12,12 @@ logger = logging.getLogger(__name__)
 
 class DisengageFactory(FactoryThreat):
 
-    def __init__(self, combatant):
+    def __init__(self, combatant, action_type):
         self.combatant = combatant
+        self.action_type = action_type  # DISENGAGE, CUNNING DISENGAGE
+
     def create_best(self, combatant, battle_map):
-        return Disengage(combatant)
+        return Disengage(combatant, self)
 
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
@@ -43,10 +45,11 @@ class DisengageFactory(FactoryThreat):
 
 class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
-    def __init__(self, combatant):
+    def __init__(self, combatant, factory):
         Actoid.__init__(self, actoid_type=Actoid.Type.IS_DISENGAGE)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=1)
+        self.factory = factory
 
     def activate(self):
         self.combatant.has_disengaged = True

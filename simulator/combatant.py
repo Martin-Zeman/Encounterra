@@ -147,6 +147,9 @@ class Combatant(ABC):
                 case Action.HASTE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
                     return self.action_factories[-1]
+                case Action.DISENGAGE:
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
+                    return self.action_factories[-1]
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):
@@ -178,7 +181,7 @@ class Combatant(ABC):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_DISENGAGE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type))) # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_HIDE:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO

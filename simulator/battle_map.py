@@ -67,7 +67,10 @@ class GridSquare:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
+        try:
+            assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
+        except AssertionError:
+            print("FIXME")
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
@@ -82,8 +85,7 @@ class GridSquare:
         self.occupancy = occupancy
 
     def is_empty(self):
-        # TODO only the first two parts of the condition should suffice
-        return self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN and self.combatant is None
+        return self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN
 
 
 class Map:
@@ -101,12 +103,17 @@ class Map:
 
     def __str__(self):
         string_repr = ""
-        for row in self.grid:
+        for y in range(self.size - 1, -1, -1):
             row_text = ""
-            for square in row:
+            for x in range(self.size):
+                square = self.grid[x][y]
                 combatant = square.combatant
                 if combatant:
-                    row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + "\x1b[0m\t"
+                    row_text += self.teams.get_team_color_code(combatant) + str(combatant)[-1] + "\x1b[0m\t"
+                elif square.terrain is Terrain.DIFFICULT_TERRAIN:
+                    row_text += "\x1b[38;5;226m0\x1b[0m\t"
+                elif square.terrain is Terrain.IMPASSABLE_TERRAIN:
+                    row_text += "\x1b[38;5;196m-\x1b[0m\t"
                 else:
                     row_text += "0\t"
             string_repr += row_text + "\n"
@@ -194,7 +201,13 @@ class Map:
 
     def printDijkstra(self, distances, my_location, enemy_location, reconstructed_path):
         """
-        Prints the distances to all locations on the map from my_location and highlights the reconstructed path to enemy_location
+        Prints the distances to all locations on the map from my_location and highlights the reconstructed path to enemy_location.
+        It prints it as standard cartesian coordinate system.
+        ^ y
+        |
+        |
+        _________> x
+        0
         :param distances: list of distances to all coords (flattened)
         :param my_location: coordinates of the source
         :param enemy_location: coordinates of the destination
@@ -203,9 +216,9 @@ class Map:
         """
         my_coord = my_location[0] * self.size + my_location[1]
         enemy_coord = enemy_location[0] * self.size + enemy_location[1]
-        for x in range(self.size):
+        for y in range(self.size - 1, -1, -1):
             row = ""
-            for y in range(self.size):
+            for x in range(self.size):
                 coord = x * self.size + y
                 dist = str(distances[coord]) if distances[coord] < sys.maxsize else "-"
                 if coord == my_coord:
