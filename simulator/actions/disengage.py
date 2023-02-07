@@ -46,17 +46,17 @@ class DisengageFactory(FactoryThreat):
 class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def __init__(self, combatant, factory):
-        Actoid.__init__(self, actoid_type=Actoid.Type.IS_DISENGAGE)
+        Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=1)
         self.factory = factory
 
     def activate(self):
-        self.combatant.has_disengaged = True
+        self.factory.combatant.has_disengaged = True
 
     def deactivate(self):
         logger.debug(f"{self.combatants[0]}'s disengage fades")
-        self.combatant.has_disengaged = False
+        self.factory.combatant.has_disengaged = False
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

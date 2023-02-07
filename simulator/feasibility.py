@@ -119,6 +119,8 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
+            case BonusAction.CUNNING_DISENGAGE:
+                return res
             case _:
                 logger.error("Unknown bonus action")
                 return False
@@ -134,8 +136,10 @@ def check_feasibility(combatant, action, battle_map):
                 logger.error("Unknown reaction")
         return combatant.has_reaction
     elif isinstance(action_type, Movement):
-        return combatant.movement > 0 and battle_map.is_empty(battle_map.get_combatant_position(combatant) + action.increment)\
-            and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
+        target_position = battle_map.get_combatant_position(combatant) + action.increment
+        res = combatant.movement > 0 and battle_map.is_valid_coord(target_position) and battle_map.is_empty(target_position)
+        res &= not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
+        return res
     elif isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False

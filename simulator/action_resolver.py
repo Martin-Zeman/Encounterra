@@ -363,7 +363,9 @@ class ActionResolver:
         if action is None:
             return None
         # action = action_factory(combatant, self.effect_tracker, action_type, *args)
-        feasible = check_feasibility(combatant, action, self.battle_map)
+        if not check_feasibility(combatant, action, self.battle_map):
+            logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
+            return None
         # if not feasible and combatant.has_action:
         #     action = Dodge(combatant)
         #     logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
@@ -400,12 +402,12 @@ class ActionResolver:
         return result if feasible else ActionResult.UNFEASIBLE
 
     def resolve_toggle_ability(self, combatant, ability):
-        match ability.__class__.__name__:
-            case "TotemRage" | "Rage" | "RecklessAttack":
-                ability.activate()
-                self.effect_tracker.add(ability, combatant)
-            case _:
-                logger.error("Unknown toggle ability")
+        # match ability.__class__.__name__:
+        #     case "TotemRage" | "Rage" | "RecklessAttack":
+        ability.activate()
+        self.effect_tracker.add(ability, combatant)
+            # case _:
+            #     logger.error("Unknown toggle ability")
 
     def resolve_effects(self, effects, combatant):
         """

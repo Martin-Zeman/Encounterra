@@ -3,7 +3,7 @@ import logging
 from simulator.action_types import BonusAction, Action
 from simulator.actions.actoid import Actoid
 from simulator.threat_calculator import ThreatModifier, FactoryThreat
-from simulator.misc import CombatantArchetype
+from simulator.misc import CombatantArchetype, DistanceMetric
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class MistyStepFactory(FactoryThreat):
                 free_coords = battle_map.get_free_coords_at_distance(self.caster.selected_enemy, self.caster, 1)
             return free_coords[0] if free_coords else None
         elif self.caster.archetype is CombatantArchetype.RANGED:
-            free_coords = battle_map.get_free_coords_away_from_enemies(combatant, MistyStep.spell_range.value)
+            free_coords = battle_map.get_free_coords_away_from_enemies(combatant, MistyStep.spell_range.value,  DistanceMetric.CARTESIAN)
             return free_coords[0] if free_coords else None
         return None
 

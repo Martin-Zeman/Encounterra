@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 from simulator.actions.actoid import Actoid
 from simulator.action_types import Movement
 
@@ -11,6 +12,9 @@ class MovementIncrement(Actoid):
         self.increment = increment
         self.incurs_aoo = incurs_aoo
         self.factory = factory
+
+    def __str__(self):
+        return np.array2string(self.increment)
 
 
 class MovementGenerator:

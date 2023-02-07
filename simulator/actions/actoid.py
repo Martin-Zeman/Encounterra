@@ -7,8 +7,6 @@ class Actoid:
         IS_ATTACK_LIKE_ACTION = auto()
         IS_MOVEMENT = auto()
         IS_SPELL = auto()
-        IS_DODGE = auto()
-        IS_DISENGAGE = auto()
         IS_DASH = auto()
         IS_TOGGLE_ABILITY = auto()
 

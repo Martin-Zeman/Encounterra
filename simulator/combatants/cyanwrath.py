@@ -70,7 +70,7 @@ class Cyanwrath(Combatant):
                 self.movement_generator = MovementGenerator(self, path, True).get_generator()
                 try:
                     movement = next(self.movement_generator)
-                    logger.debug("Moving")
+                    logger.debug(f"Moving by {movement}")
                     # logger.debug(f"Retuning {Movement.STANDARD, movement}")
                     return (Movement.STANDARD, movement)
                 except StopIteration:
@@ -89,7 +89,7 @@ class Cyanwrath(Combatant):
                     self.movement_generator = MovementGenerator(self, path, True).get_generator()
                     try:
                         movement = next(self.movement_generator)
-                        logger.debug("Moving")
+                        logger.debug(f"Moving by {movement}")
                         return (Movement.STANDARD, movement)
                     except StopIteration:
                         pass  # can't go any farther
