@@ -241,6 +241,7 @@ class ActionResolver:
         # TODO Conditions
         target = attack.target_combatant
         assert target
+        logger.debug(f"{attacker} attacks {target} with {attack}", extra={"team": self.teams.get_team(attacker)})
         has_advantage = self.has_advantage_melee(attack, attacker, target)
         has_disadvantage = self.has_disadvantage_melee(attack, attacker, target)
 
@@ -258,21 +259,21 @@ class ActionResolver:
         elif rolled in attack.factory.crit_range:
             multiplier = 2
         if rolled + attack.factory.to_hit >= target.ac:
-            reaction = target.prompt_after_hit_reaction(attacker)
+            reaction = target.prompt_after_hit_reaction(attacker, rolled + attack.factory.to_hit)
             self.resolve_action(reaction, target)
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
             total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
             logger.debug(
-                f"Attack {'CRITS' if multiplier == 2 else 'hits'} for {total_dmg} of which {attacker.ability_dmg_bonus} is ability dmg",
+                f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {total_dmg} of which {attacker.ability_dmg_bonus} is ability dmg",
                 extra={"team": self.teams.get_team(attacker)})
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             if not target.is_alive():
                 self.battle_map.remove_combatant(target)
             return ActionResult.DMG
         else:
-            logger.debug("Attack misses", extra={"team": self.teams.get_team(attacker)})
+            logger.debug(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
             return ActionResult.MISS
 
     def request_movement(self, moving_combatant, movement):

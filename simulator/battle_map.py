@@ -67,10 +67,7 @@ class GridSquare:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        try:
-            assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
-        except AssertionError:
-            print("FIXME")
+        assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
@@ -109,13 +106,13 @@ class Map:
                 square = self.grid[x][y]
                 combatant = square.combatant
                 if combatant:
-                    row_text += self.teams.get_team_color_code(combatant) + str(combatant)[-1] + "\x1b[0m\t"
+                    row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + str(combatant)[-1] + "\x1b[0m\t"
                 elif square.terrain is Terrain.DIFFICULT_TERRAIN:
-                    row_text += "\x1b[38;5;226m0\x1b[0m\t"
+                    row_text += "\x1b[38;5;226m00\x1b[0m\t"
                 elif square.terrain is Terrain.IMPASSABLE_TERRAIN:
-                    row_text += "\x1b[38;5;196m-\x1b[0m\t"
+                    row_text += "\x1b[38;5;196m--\x1b[0m\t"
                 else:
-                    row_text += "0\t"
+                    row_text += "00\t"
             string_repr += row_text + "\n"
         return string_repr
 

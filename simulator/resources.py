@@ -59,6 +59,8 @@ def use_resources(combatant, action):
                 combatant.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_FIREBOLT:
                 combatant.curr_sorcery_points -= 2
+            case BonusAction.CUNNING_DISENGAGE:
+                pass  # sufficiently tracked by not having a bonus action anymore
             case _:
                 logger.error("Unknown bonus action type")
     elif isinstance(action_type, Reaction):

@@ -107,7 +107,7 @@ class FaurungDt(Combatant):
     def prompt_aoo(self, moving_combatant):
         return (MetaAction.DONE,)
 
-    def prompt_after_hit_reaction(self, attacking_combatant):
+    def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
         if self.spellslots.get_spellslots(1) and self.has_reaction:
             logger.debug(f"{self.name} casts Shield", extra={"team": self.team_color})
             return (Reaction.SHIELD,)

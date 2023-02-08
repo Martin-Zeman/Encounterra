@@ -152,11 +152,13 @@ class Faurung(Combatant):
     def prompt_aoo(self, moving_combatant):
         return None
 
-    def prompt_after_hit_reaction(self, attacking_combatant):
-        if self.spellslots.get_spellslots(1) and self.has_reaction:
+    def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
+        if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll <= self.dc + 5:
             shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
             logger.debug(f"{self.name} casts Shield", extra={"team": self.team_color})
             return shield_factory.create() if shield_factory else None
+        elif attack_roll > self.dc + 5:
+            logger.debug("Shield would not suffice")
         elif self.has_reaction:
             logger.debug(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
         return None

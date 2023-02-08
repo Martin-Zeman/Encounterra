@@ -395,5 +395,5 @@ class Combatant(ABC):
     def prompt_dmg_reaction(self, attacking_combatant, dmg, dmg_type):
         return None
 
-    def prompt_after_hit_reaction(self, attacking_combatant):
+    def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
         return None
