@@ -30,13 +30,13 @@ class DodgeFactory(FactoryThreat):
         """
         max_threat = 0
         for af in target.action_factories:
-            threat_mod = af.calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
+            threat_mod = af[1].calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
             max_threat = max(max_threat, threat_mod)
         for af in target.bonus_action_factories:
-            threat_mod = af.calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
+            threat_mod = af[1].calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
             max_threat = max(max_threat, threat_mod)
         for af in target.haste_action_factories:
-            threat_mod = af.calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
+            threat_mod = af[1].calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.DISADVANTAGE})
             max_threat = max(max_threat, threat_mod)
         return max_threat
 

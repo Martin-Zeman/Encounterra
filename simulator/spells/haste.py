@@ -16,7 +16,7 @@ class HasteFactory(FactoryThreat):
     @staticmethod
     def get_allies_sorted_by_threat(combatant, battle_map):
         allies = battle_map.get_allies_within_radius(combatant, Haste.spell_range.value)
-        enemies = battle_map.teams.get_enemies(combatant)
+        enemies = battle_map.get_enemies(combatant)
         threat_per_ally = 0
         ret = []
         for ally in allies:
@@ -57,7 +57,7 @@ class HasteFactory(FactoryThreat):
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
-        enemies = battle_map.teams.get_enemies(target)
+        enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
         for attack in target.attacks:

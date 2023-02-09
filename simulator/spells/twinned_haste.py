@@ -31,7 +31,7 @@ class TwinnedHasteFactory(FactoryThreat):
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
-        enemies = battle_map.teams.get_enemies(target)
+        enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
         for attack in target.attacks:

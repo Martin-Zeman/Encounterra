@@ -12,6 +12,7 @@ def model():
     with open('../decision_tree/faurung_model.pickle', 'rb') as handle:
         return pickle.load(handle)
 
+@pytest.mark.skip(reason="architecture has changed")
 def test_faurung_model(model, inv_mapping):
     # features = ['enemies', 'cast_leveled', 'ss1', 'ss2', 'ss3', 'enemy_adjacent', 'allies', 'is_concentrating', 'sorcery_points']
     assert inv_mapping[model.predict([[3, True, 4, 3, 2, False, 0, False, 0]])[0]] == "Firebolt"

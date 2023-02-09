@@ -137,7 +137,7 @@ class AttackFactory(FactoryThreat):
         try:
             mod_dmg_die = modified_stats['dmg_bonus_die']
         except KeyError:
-            mod_dmg_die = ''
+            mod_dmg_die = '0d0'
         try:
             mod_to_hit_flat = modified_stats['to_hit_flat']
         except KeyError:
@@ -145,7 +145,7 @@ class AttackFactory(FactoryThreat):
         try:
             mod_to_hit_die = modified_stats['to_hit_die']
         except KeyError:
-            mod_to_hit_die = ''
+            mod_to_hit_die = '0d0'
         try:
             mod_crit_range = modified_stats['crit_range']
         except KeyError:

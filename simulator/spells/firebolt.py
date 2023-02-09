@@ -72,7 +72,7 @@ class FireboltFactory(FactoryThreat):
             roll_modifier = RollModifier.STRAIGHT
 
             to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-            total_crit = len(self.crit_range) * ROLL_MODIFIER_CRIT[roll_modifier]
+            total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
             potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total], self.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(Firebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)), potential_targets)
@@ -100,7 +100,7 @@ class FireboltFactory(FactoryThreat):
         try:
             mod_to_hit_die = modified_stats['to_hit_die']
         except KeyError:
-            mod_to_hit_die = ''
+            mod_to_hit_die = '0d0'
         try:
             roll_modifier = modified_stats['roll_modifier']
         except KeyError:
@@ -108,7 +108,7 @@ class FireboltFactory(FactoryThreat):
 
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
         to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
-        total_crit = len(self.crit_range) * ROLL_MODIFIER_CRIT[roll_modifier]
+        total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
         return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(Firebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     Firebolt.dmg_type))

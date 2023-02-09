@@ -9,6 +9,7 @@ from simulator.misc import Conditions
 from simulator.action_factory import Passive
 from simulator.geometry import get_affected_by_cone, get_cartesian_distance, get_square_center
 from simulator.misc import Side, DistanceMetric
+from contextlib import contextmanager
 import time
 from enum import Enum
 
@@ -115,6 +116,59 @@ class Map:
                     row_text += "00\t"
             string_repr += row_text + "\n"
         return string_repr
+
+    @contextmanager
+    def as_if_combatant_position(self, combatant, coord):
+        original_coord = self.combatant_coordinate_cache[combatant]
+        self.set_combatant_coordinates(combatant, coord)
+        try:
+            yield self
+        finally:
+            self.set_combatant_coordinates(combatant, original_coord)
+
+    @contextmanager
+    def as_if_dist_from_combatant(self, combatant1, combatant2, dist, dist_type=DistanceMetric.HOP):
+        orig_dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
+        def monkeypatch_dist(subject1, subject2):
+            if subject1 is combatant1 and subject2 is combatant2:
+                return dist
+            else:
+                return orig_dist_func(subject1, subject2)
+        if dist_type is DistanceMetric.HOP:
+            self.get_hop_distance = monkeypatch_dist
+        else:
+            self.get_cartesian_distance = monkeypatch_dist
+        try:
+            yield self
+        finally:
+            if dist_type is DistanceMetric.HOP:
+                self.get_hop_distance = orig_dist_func
+            else:
+                self.get_cartesian_distance = orig_dist_func
+
+    @contextmanager
+    def as_if_dist_farther_from_combatant(self, combatant1, combatant2, dist):
+        orig_dist_hop_func = self.get_hop_distance
+        orig_dist_cartesian_func = self.get_cartesian_distance
+
+        def monkeypatch_hop_dist(subject1, subject2):
+            if subject1 is combatant1 and subject2 is combatant2:
+                return max(1, orig_dist_hop_func(subject1, subject2) + dist)
+            else:
+                return orig_dist_hop_func(subject1, subject2)
+        def monkeypatch_cartesian_dist(subject1, subject2):
+            if subject1 is combatant1 and subject2 is combatant2:
+                return max(1.0, orig_dist_cartesian_func(subject1, subject2) + dist)
+            else:
+                return orig_dist_cartesian_func(subject1, subject2)
+
+        self.get_hop_distance = monkeypatch_hop_dist
+        self.get_cartesian_distance = monkeypatch_cartesian_dist
+        try:
+            yield self
+        finally:
+            self.get_hop_distance = orig_dist_hop_func
+            self.get_cartesian_distance = orig_dist_cartesian_func
 
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
@@ -705,6 +759,12 @@ class Map:
 
     def get_allies_within_radius(self, combatant, radius):
         return [e for e in self.teams.get_allies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
+
+    def get_enemies(self, combatant):
+        return self.teams.get_enemies(combatant)
+
+    def get_allies(self, combatant):
+        return self.teams.get_allies(combatant)
 
     def get_enemies_within_hop_distance(self, combatant, distance):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]
