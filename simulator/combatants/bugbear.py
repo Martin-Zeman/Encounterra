@@ -3,6 +3,7 @@ from simulator.actions.movement import MovementGenerator
 from simulator.misc import DamageType
 from simulator.action_factory import *
 from simulator.misc import Side
+import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -12,71 +13,87 @@ class Bugbear(Combatant):
 
     def __init__(self, effect_tracker, name="Bugbear"):
         super().__init__(effect_tracker, name, level=1, hp=27, ac=16, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        morningstar_attack = self.add_ability(Action.ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
-        javelin_attack = self.add_ability(Action.ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=6, crit_range=[20], attack_type=AttackFactory.Type.RANGED)
+        self.morningstar_attack = self.add_ability(Action.ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
+        self.javelin_attack = self.add_ability(Action.ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=24, crit_range=[20], attack_type=AttackFactory.Type.RANGED)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
-        self.max_melee_range = 1  # TODO: maybe add a lookup here
+        self.movement_generator = None
+        self.selected_target = None
+        self.path = None
 
-    def attack_routine(self, battle_map):
-        if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
-            logger.debug("Is in range")
-            if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:
-                self.multiattack_in_progress = True
-            if self.curr_num_attacks and self.multiattack_in_progress:
-                attack_args = self.attack_args[Action.ATTACK]
-                attack_args[2] = self.selected_target  # sets the target
-                logger.debug(f"{self.name} uses action {attack_args[0]} against {self.selected_target}",
-                             extra={"team": self.team_color})
-                return (self.actions[0], *attack_args)
-            else:
-                self.multiattack_in_progress = False
-        else:
-            logger.debug("Is out of range")
-            return (MetaAction.DONE,)
+    def plan_path(self, battle_map, target_position):
+        self.path = battle_map.get_path_to(self,self.selected_target)
+        if not self.path:
+            logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
+            raise RuntimeError
+        logger.debug(f"Planned path: {self.path}")
+        self.movement_generator = MovementGenerator(self, self.path).get_generator()
+        self.target_position_cache = target_position
+
 
     def get_action(self, battle_map):
-        while self.has_action or self.movement or self.has_haste_action:
-            # logger.debug(f"Has action {self.has_action}, movement {self.movement}")
+        logger.debug("Bugbear get_action 1")
+        if self.selected_target is None or not self.selected_target.is_alive():
+            # Get new target
+            logger.debug("Bugbear get_action 2")
+            self.selected_target, _, target_position = battle_map.get_nearest(self, Side.ENEMY)
+        if not self.selected_target:
+            return None
+        logger.debug("Bugbear get_action 3")
 
-            dist = None
-            if self.selected_enemy is None or not self.selected_enemy.is_alive():
-                # Get new target
-                self.selected_target, dist = battle_map.get_nearest(self, Side.ENEMY)
-                if not self.selected_target:
-                    return (MetaAction.DONE,)
+        target_position = battle_map.get_combatant_position(self.selected_target)
+        if not np.array_equal(self.target_position_cache, target_position):
+            # if the target moved, recalculate path
+            try:
+                logger.debug("Bugbear get_action 4")
+                self.plan_path(battle_map, target_position)
+            except RuntimeError:
+                logger.debug("Bugbear get_action 5")
+                return None
+        else:
+            self.movement_generator = MovementGenerator(self, self.path).get_generator()
 
-            target_position = battle_map.get_combatant_position(self.selected_target)
-            logger.debug(f"Target is at {target_position}")
-            if not dist:
-                dist = battle_map.get_hop_distance(self, self.selected_target)
-            if self.movement and self.has_action and dist > 1:
-                # I haven't attacked yet and I'm too far away, move into range
-                path = battle_map.get_path_to(self, self.selected_target)
-                if not path:
-                    logger.debug(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
-                    return (Action.DODGE,)
-                self.movement_generator = MovementGenerator(self, path, True).get_generator()
-                try:
-                    movement = next(self.movement_generator)
-                    logger.debug(f"Moving by {movement}")
-                    return (Movement.STANDARD, movement)
-                except StopIteration:
-                    pass  # can't go any farther
-            elif (self.has_action or self.multiattack_in_progress) and dist <= 1:
-                # if I'm in range and I still have an action then attack
-                attack = self.attack_routine(battle_map)
-                if attack:
-                    return attack
-            if self.has_action:
-                logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
-                return (Action.DODGE,)
-            return (MetaAction.DONE,)
-        return (MetaAction.DONE,)
+        if not battle_map.are_in_range(self, self.selected_target, 1):
+            logger.debug("Bugbear get_action 6")
+            try:
+                logger.debug("Bugbear get_action 6a")
+                movement = next(self.movement_generator)
+                logger.debug("Bugbear get_action 6b")
+                logger.debug(f"Moving by {movement}")
+                return movement
+            except StopIteration:
+                logger.debug("Bugbear get_action 7")
+                # this means that either the path has been exhausted or combatant ran out of movement
+                self.movement_generator = None
+                if self.has_action:
+                    logger.debug("Bugbear get_action 8")
+                    self.morningstar_attack[1].action_type = Action.ATTACK
+                    self.javelin_attack[1].action_type = Action.ATTACK
+                elif self.has_haste_action:
+                    logger.debug("Bugbear get_action 9")
+                    self.morningstar_attack[1].action_type = HasteAction.HASTE_ATTACK
+                    self.javelin_attack[1].action_type = HasteAction.HASTE_ATTACK
+                else:
+                    logger.debug("Bugbear get_action 10")
+                    return None
+
+                if battle_map.are_in_range(self, self.selected_target, 1):
+                    logger.debug("Bugbear get_action 11")
+                    return self.morningstar_attack[1].create(self.selected_target)
+                else:
+                    logger.debug("Bugbear get_action 12")
+                    return self.javelin_attack[1].create(self.selected_target)
+
+
+
+    def new_turn(self):
+        super().new_turn()
+        self.movement_generator = None
+        # self.selected_target = None
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction:
-            aoo = self.aoo_factory[1](moving_combatant)
+            aoo = self.aoo_factory[1].create(moving_combatant)
             logger.debug(f"{self.name} took an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo

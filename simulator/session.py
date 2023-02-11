@@ -1,3 +1,4 @@
+from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
@@ -35,6 +36,7 @@ class Session:
             DragonclawCultist: 1,
             Cyanwrath: 1,
             Goblin: 1,
+            Bugbear: 1,
         }
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
@@ -61,6 +63,8 @@ class Session:
                 self.combatants.append(DragonclawCultist(self.effect_tracker, "DragonclawCultist " + str(curr_count)))
             case "Goblin":
                 self.combatants.append(Goblin(self.effect_tracker, "Goblin " + str(curr_count)))
+            case "Bugbear":
+                self.combatants.append(Bugbear(self.effect_tracker, "Bugbear " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return

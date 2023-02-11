@@ -1,3 +1,4 @@
+from simulator.combatants.bugbear import Bugbear
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.cyanwrath import Cyanwrath
@@ -20,12 +21,8 @@ if __name__ == '__main__':
     session = Session()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
     session.add_combatant(Faurung, Teams.Color.BLUE)
-    session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
+    session.add_combatant(Bugbear, Teams.Color.RED)
+    session.add_combatant(Bugbear, Teams.Color.RED)
     session.add_combatant(Goblin, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
     # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)

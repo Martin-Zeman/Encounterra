@@ -88,12 +88,23 @@ class ActionResolver:
             return True
         return False
 
+    def has_disadvantage_spell_ranged(self, attack, attacker, target):
+        if attack.roll_modifier is RollModifier.DISADVANTAGE:
+            return True
+        if target.disadvantage_on_incoming_attacks:
+            return True
+        if target.is_dodging:
+            return True
+        return False
+
     def has_disadvantage_ranged(self, attack, attacker, target):
         if attack.roll_modifier is RollModifier.DISADVANTAGE:
             return True
         if target.disadvantage_on_incoming_attacks:
             return True
         if target.is_dodging:
+            return True
+        if self.battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
             return True
         return False
 
@@ -105,7 +116,7 @@ class ActionResolver:
         while jump:
             jump = False
             has_advantage = self.has_advantage_ranged(spell, caster, curr_target)
-            has_disadvantage = self.has_disadvantage_ranged(spell, caster, curr_target)
+            has_disadvantage = self.has_disadvantage_spell_ranged(spell, caster, curr_target)
             if has_advantage == has_disadvantage:
                 rolled = random.randint(1, 20)
             elif has_advantage:
@@ -148,7 +159,7 @@ class ActionResolver:
     def resolve_ranged_spell_attack(self, caster, spell, target):
         # TODO Conditions
         has_advantage = self.has_advantage_ranged(spell, caster, target)
-        has_disadvantage = self.has_disadvantage_ranged(spell, caster, target)
+        has_disadvantage = self.has_disadvantage_spell_ranged(spell, caster, target)
         if has_advantage == has_disadvantage:
             rolled = random.randint(1, 20)
         elif has_advantage:
@@ -212,11 +223,12 @@ class ActionResolver:
                 return ActionResult.UNFEASIBLE
 
     def has_advantage_melee(self, attack, attacker, target):
-        if attack.factory.roll_modifier is RollModifier.ADVANTAGE:
+        if attack.roll_modifier is RollModifier.ADVANTAGE:
             return True
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
             return True
         if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
+            # TODO Consider moving this to the attack factory
             return True
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.debug(f"{attacker} gains advantage since {target} attacked recklessly")
@@ -224,7 +236,7 @@ class ActionResolver:
         return False
 
     def has_disadvantage_melee(self, attack, attacker, target):
-        if attack.factory.roll_modifier is RollModifier.DISADVANTAGE:
+        if attack.roll_modifier is RollModifier.DISADVANTAGE:
             return True
         if target.disadvantage_on_incoming_attacks:
             return True
@@ -242,8 +254,12 @@ class ActionResolver:
         target = attack.target_combatant
         assert target
         logger.debug(f"{attacker} attacks {target} with {attack}", extra={"team": self.teams.get_team(attacker)})
-        has_advantage = self.has_advantage_melee(attack, attacker, target)
-        has_disadvantage = self.has_disadvantage_melee(attack, attacker, target)
+        if attack.factory.attack_type is AttackFactory.Type.MELEE:
+            has_advantage = self.has_advantage_melee(attack, attacker, target)
+            has_disadvantage = self.has_disadvantage_melee(attack, attacker, target)
+        else:
+            has_advantage = self.has_advantage_ranged(attack, attacker, target)
+            has_disadvantage = self.has_disadvantage_ranged(attack, attacker, target)
 
         if has_advantage == has_disadvantage:
             rolled = random.randint(1, 20)

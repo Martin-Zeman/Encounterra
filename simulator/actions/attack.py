@@ -22,6 +22,7 @@ class AttackFactory(FactoryThreat):
         self.dmg_bonus = dmg_bonus
         self.dmg_type = dmg_type
         self.range = attack_range
+        self.short_range = attack_range // 4
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.attack_type = attack_type  # MELEE or RANGED
         self.crit_range = crit_range
@@ -33,7 +34,7 @@ class AttackFactory(FactoryThreat):
         self.mod_dmg_flat = 0
         self.mod_dmg_die = ''
         self.mod_crit_range = 0
-        self.roll_modifier = RollModifier.STRAIGHT
+        self.roll_modifier = RollModifier.STRAIGHT # this is only a helper so that I don't have to keep passing it to calculate_threat_approx
 
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
@@ -173,6 +174,7 @@ class Attack(Actoid, DirectThreat):
         Actoid.__init__(self, actoid_type=Actoid.Type.IS_ATTACK_LIKE_ACTION, is_direct_dmg_dealing=True)
         self.target_combatant = target_combatant
         self.factory = factory
+        self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
         return self.factory.name
