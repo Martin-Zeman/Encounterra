@@ -41,6 +41,20 @@ class ReactionToThreat(ABC):
         return 0
 
 
+class FactoryThreatModifier(ABC):
+    """
+    Threat calculation for factories that modify threat of other abilities (buffs and debuffs). This kind of factory doesn't support
+    the calculation of modification by other FactoryThreatModifier to avoid endless loops.
+    """
+
+    @abstractmethod
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        """
+        Calculates the threat the factory is capable of dealing to a specific target.
+        This is useful for calculating threat_in from the abilities of enemies
+        """
+        return 0
+
 class FactoryThreat(ABC):
     """
     Threat calculation for factories. They compute an estimation of the threat potential based on its stats.

@@ -120,11 +120,11 @@ class Map:
     @contextmanager
     def as_if_combatant_position(self, combatant, coord):
         original_coord = self.combatant_coordinate_cache[combatant]
-        self.set_combatant_coordinates(combatant, coord)
+        self.move_combatant(combatant, coord)
         try:
             yield self
         finally:
-            self.set_combatant_coordinates(combatant, original_coord)
+            self.move_combatant(combatant, original_coord)
 
     @contextmanager
     def as_if_dist_from_combatant(self, combatant1, combatant2, dist, dist_type=DistanceMetric.HOP):
@@ -400,9 +400,13 @@ class Map:
 
     def set_combatant_coordinates(self, combatant, coord):
         # TODO: redo this as np.array
-        logger.debug(f"Setting coordinates {coord} for combatant {combatant}")
         self.grid[coord[0]][coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = coord
+
+    def move_combatant(self, combatant, coord):
+        old_coord = self.combatant_coordinate_cache[combatant]
+        self.grid[old_coord[0]][old_coord[1]].remove_combatant()
+        self.set_combatant_coordinates(combatant, coord)
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
         """
@@ -449,8 +453,7 @@ class Map:
         target_coord = self.combatant_coordinate_cache[target]
         for dx in range(-1, 2):
             for dy in range(-1, 2):
-                if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[
-                    1] + dy >= self.size:
+                if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[1] + dy >= self.size:
                     continue
                 cmbt = self.grid[target_coord[0] + dx][target_coord[1] + dy].combatant
                 if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_affected_by_any(

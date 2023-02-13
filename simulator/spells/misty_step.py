@@ -14,6 +14,7 @@ class MistyStepFactory(FactoryThreat):
         self.caster = caster
 
     def find_best_args(self, combatant, battle_map):
+        free_coords = None
         if self.caster.archetype is CombatantArchetype.MELEE:
             # TODO Improve this
             if self.caster.selected_enemy:

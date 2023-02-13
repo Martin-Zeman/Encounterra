@@ -21,67 +21,56 @@ class Bugbear(Combatant):
         self.path = None
 
     def plan_path(self, battle_map, target_position):
-        self.path = battle_map.get_path_to(self,self.selected_target)
+        self.path = battle_map.get_path_to(self, self.selected_target)
         if not self.path:
             logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
-        logger.debug(f"Planned path: {self.path}")
+        # logger.debug(f"Planned path: {self.path}")
         self.movement_generator = MovementGenerator(self, self.path).get_generator()
         self.target_position_cache = target_position
 
 
     def get_action(self, battle_map):
-        logger.debug("Bugbear get_action 1")
         if self.selected_target is None or not self.selected_target.is_alive():
             # Get new target
-            logger.debug("Bugbear get_action 2")
             self.selected_target, _, target_position = battle_map.get_nearest(self, Side.ENEMY)
         if not self.selected_target:
             return None
-        logger.debug("Bugbear get_action 3")
 
         target_position = battle_map.get_combatant_position(self.selected_target)
         if not np.array_equal(self.target_position_cache, target_position):
             # if the target moved, recalculate path
             try:
-                logger.debug("Bugbear get_action 4")
                 self.plan_path(battle_map, target_position)
             except RuntimeError:
-                logger.debug("Bugbear get_action 5")
                 return None
         else:
             self.movement_generator = MovementGenerator(self, self.path).get_generator()
 
         if not battle_map.are_in_range(self, self.selected_target, 1):
-            logger.debug("Bugbear get_action 6")
             try:
-                logger.debug("Bugbear get_action 6a")
                 movement = next(self.movement_generator)
-                logger.debug("Bugbear get_action 6b")
                 logger.debug(f"Moving by {movement}")
                 return movement
             except StopIteration:
-                logger.debug("Bugbear get_action 7")
-                # this means that either the path has been exhausted or combatant ran out of movement
+                # this means that either the path has been exhausted and we're still not in range => ranged attack
                 self.movement_generator = None
                 if self.has_action:
-                    logger.debug("Bugbear get_action 8")
-                    self.morningstar_attack[1].action_type = Action.ATTACK
                     self.javelin_attack[1].action_type = Action.ATTACK
                 elif self.has_haste_action:
-                    logger.debug("Bugbear get_action 9")
-                    self.morningstar_attack[1].action_type = HasteAction.HASTE_ATTACK
                     self.javelin_attack[1].action_type = HasteAction.HASTE_ATTACK
                 else:
-                    logger.debug("Bugbear get_action 10")
                     return None
-
-                if battle_map.are_in_range(self, self.selected_target, 1):
-                    logger.debug("Bugbear get_action 11")
-                    return self.morningstar_attack[1].create(self.selected_target)
-                else:
-                    logger.debug("Bugbear get_action 12")
-                    return self.javelin_attack[1].create(self.selected_target)
+                return self.javelin_attack[1].create(self.selected_target)
+        else:
+            # Melee attack
+            if self.has_action:
+                self.morningstar_attack[1].action_type = Action.ATTACK
+            elif self.has_haste_action:
+                self.morningstar_attack[1].action_type = HasteAction.HASTE_ATTACK
+            else:
+                return None
+            return self.morningstar_attack[1].create(self.selected_target)
 
 
 

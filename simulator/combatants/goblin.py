@@ -32,20 +32,17 @@ class Goblin(Combatant):
         if not path:
             logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
-        logger.debug(f"Planned path: {path}")
+        # logger.debug(f"Planned path: {path}")
         self.movement_generator = MovementGenerator(self, path).get_generator()
 
     def get_action(self, battle_map):
-        # logger.debug("Goblin get_action 1")
+        # TODO he doesn't shoot after moving into position
         if not self.selected_target:
             self.selected_target, self.dist_to_nearest, target_position = battle_map.get_nearest(self, Side.ENEMY)
-            # logger.debug(f"Goblin get_action 1b {self.dist_to_nearest}")
         if not self.selected_target:
-            # logger.debug("Goblin get_action 2")
             return None
         while True:
             if (self.has_action or self.has_haste_action) and 8 <= self.dist_to_nearest <= 16:
-                # logger.debug("Goblin get_action 3")
                 # If I'm in position, just shoot
                 if self.has_action:
                     return self.shortbow_attack[1].create(self.selected_target)
@@ -54,27 +51,21 @@ class Goblin(Combatant):
                         if ha[1].name == "Shortbow":
                             return ha[1].create(self.selected_target)
             elif 1 < self.dist_to_nearest < 8 and not self.movement_generator:
-                # logger.debug("Goblin get_action 4")
                 # If I'm not in position but also not adjacent to anyone
                 try:
                     self.plan_path(battle_map)
-                    # logger.debug("Goblin get_action 4a")
                 except RuntimeError:
-                    # logger.debug("Goblin get_action 4b")
                     return self.dodge_factory.create_best(self, battle_map)
             elif self.dist_to_nearest == 1 and self.movement and self.has_bonus_action and not self.has_disengaged:
-                # logger.debug("Goblin get_action 5")
                 # I'f I'm adjacent to an enemy I first need to disengage
                 return self.nimble_disengage[1].create_best(self, battle_map)
             elif self.dist_to_nearest == 1 and self.movement and not self.movement_generator:
-                # logger.debug("Goblin get_action 6")
                 # Once I've disengaged, plan escape path
                 try:
                     self.plan_path(battle_map)
                 except RuntimeError:
                     return self.dodge_factory.create_best(self, battle_map)
             elif self.movement_generator and self.movement > 0:
-                # logger.debug("Goblin get_action 7")
                 # Move
                 try:
                     movement = next(self.movement_generator)
@@ -83,7 +74,6 @@ class Goblin(Combatant):
                 except StopIteration:
                     self.movement_generator = None
             else:
-                # logger.debug("Goblin get_action 8 DONE")
                 return None
 
 

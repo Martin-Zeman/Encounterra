@@ -77,7 +77,7 @@ class RoundManager:
             for combatant in self.combatants:
                 if not combatant.is_alive():
                     continue
-                logger.info(f"It's {combatant}'s turn")
+                logger.debug(f"It's {combatant}'s turn")
                 combatant.new_turn()
                 effects = self.effect_tracker.get_all_affecting_combatant(combatant)
                 self.action_resolver.resolve_effects(effects, combatant)
@@ -95,8 +95,6 @@ class RoundManager:
                     self.action_resolver.resolve_action(action, combatant)
                     if not combatant.is_alive():
                         break  # could have died as a result of AoO
-                else:
-                    logger.debug(f"Combatant {combatant} is dead. Skipping")
             self.print_status()
 
     def print_status(self):

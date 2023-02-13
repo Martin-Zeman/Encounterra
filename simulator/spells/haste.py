@@ -2,11 +2,11 @@ from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
 from simulator.actions.actoid import Actoid
-from simulator.threat_calculator import ThreatModifier, FactoryThreat
+from simulator.threat_calculator import ThreatModifier, FactoryThreatModifier
 from functools import reduce
 from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat
 
-class HasteFactory(FactoryThreat):
+class HasteFactory(FactoryThreatModifier):
     def __init__(self, action_type, caster, effect_tracker):
         self.action_type = action_type # TWINNED_HASTE, QUICKENED_HASTE, HASTE
         self.caster = caster
@@ -49,9 +49,6 @@ class HasteFactory(FactoryThreat):
     def create(self, target_combatant):
         return Haste(target_combatant, self)
 
-    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        return 0  # No need
-
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
@@ -72,10 +69,6 @@ class HasteFactory(FactoryThreat):
             # TODO include the ST-based abilities here
         max_attack_dmg += attack_dmg_decrement_acc
         return max_attack_dmg * ROUND_HORIZON
-
-    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
-        return 0
-
 
 
 class Haste(Actoid, Effect, ThreatModifier):
