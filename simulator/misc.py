@@ -118,6 +118,24 @@ ROLL_MODIFIER_CRIT = {
     RollModifier.DISADVANTAGE: 0.5
 }
 
+def reconcile_roll_modifiers(modifiers):
+    """
+
+    @param modifiers: set of modifiers
+    @return: resulting modifier
+    """
+    modifiers.remove(RollModifier.STRAIGHT)
+    if modifiers.count() > 1:
+        return RollModifier.STRAIGHT
+    try:
+        ret = modifiers.pop()
+    except:  # TODO Find the exact one
+        ret = RollModifier.STRAIGHT
+    return ret
+
+
+
+
 
 @cache
 def parse_dmg_dice(dice_string):

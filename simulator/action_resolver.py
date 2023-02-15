@@ -31,10 +31,10 @@ def has_advantage_saving_throw(ability, target):
             Passive.DANGER_SENSE) and not target.is_affected_by_any(Conditions.INCAPACITATED,
                                                                               Conditions.BLINDED,
                                                                               Conditions.DEAFENED):
-        return True
+        return RollModifier.ADVANTAGE
     if ability.factory.saving_throw is SavingThrow.DEX and target.is_dodging:
-        return True
-    return False
+        return RollModifier.ADVANTAGE
+    return RollModifier.STRAIGHT
 
 def has_disadvantage_saving_throw(ability, target):
     if RollModifier.DISADVANTAGE in target.saving_throws[ability.factory.saving_throw][1]:
@@ -82,31 +82,31 @@ class ActionResolver:
 
     def has_advantage_ranged(self, attack, attacker, target):
         if attack.roll_modifier is RollModifier.ADVANTAGE:
-            return True
+            return RollModifier.ADVANTAGE
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.debug(f"{attacker} gains advantage since {target} attacked recklessly")
-            return True
-        return False
+            return RollModifier.ADVANTAGE
+        return RollModifier.STRAIGHT
 
     def has_disadvantage_spell_ranged(self, attack, attacker, target):
         if attack.roll_modifier is RollModifier.DISADVANTAGE:
-            return True
+            return RollModifier.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
-            return True
+            return RollModifier.DISADVANTAGE
         if target.is_dodging:
-            return True
-        return False
+            return RollModifier.DISADVANTAGE
+        return RollModifier.STRAIGHT
 
     def has_disadvantage_ranged(self, attack, attacker, target):
         if attack.roll_modifier is RollModifier.DISADVANTAGE:
-            return True
+            return RollModifier.ADVANTAGE
         if target.disadvantage_on_incoming_attacks:
-            return True
+            return RollModifier.ADVANTAGE
         if target.is_dodging:
-            return True
+            return RollModifier.ADVANTAGE
         if self.battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
-            return True
-        return False
+            return RollModifier.ADVANTAGE
+        return RollModifier.STRAIGHT
 
     def resolve_chaos_bolt(self, caster, spell):
         # TODO Conditions
@@ -224,25 +224,25 @@ class ActionResolver:
 
     def has_advantage_melee(self, attack, attacker, target):
         if attack.roll_modifier is RollModifier.ADVANTAGE:
-            return True
+            return RollModifier.ADVANTAGE
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
-            return True
+            return RollModifier.ADVANTAGE
         if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
             # TODO Consider moving this to the attack factory
-            return True
+            return RollModifier.ADVANTAGE
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.debug(f"{attacker} gains advantage since {target} attacked recklessly")
-            return True
-        return False
+            return RollModifier.ADVANTAGE
+        return RollModifier.STRAIGHT
 
     def has_disadvantage_melee(self, attack, attacker, target):
         if attack.roll_modifier is RollModifier.DISADVANTAGE:
-            return True
+            return RollModifier.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
-            return True
+            return RollModifier.DISADVANTAGE
         if target.is_dodging:
-            return True
-        return False
+            return RollModifier.DISADVANTAGE
+        return RollModifier.STRAIGHT
 
     def resolve_attack(self, attack, attacker):  # TODO remove combatant from attack and have it as a separate parameter
         """
@@ -255,15 +255,14 @@ class ActionResolver:
         assert target
         logger.debug(f"{attacker} attacks {target} with {attack}", extra={"team": self.teams.get_team(attacker)})
         if attack.factory.attack_type is AttackFactory.Type.MELEE:
-            has_advantage = self.has_advantage_melee(attack, attacker, target)
-            has_disadvantage = self.has_disadvantage_melee(attack, attacker, target)
+            modifiers = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
         else:
-            has_advantage = self.has_advantage_ranged(attack, attacker, target)
-            has_disadvantage = self.has_disadvantage_ranged(attack, attacker, target)
+            modifiers = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
 
-        if has_advantage == has_disadvantage:
+        final_modifier = reconcile_roll_modifiers(modifiers)
+        if final_modifier is RollModifier.STRAIGHT:
             rolled = random.randint(1, 20)
-        elif has_advantage:
+        elif final_modifier is RollModifier.ADVANTAGE:
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
             rolled = min(random.randint(1, 20), random.randint(1, 20))

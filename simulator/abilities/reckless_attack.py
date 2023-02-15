@@ -118,6 +118,59 @@ class RecklessAttackFactory(FactoryThreat):
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         return mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, len(self.crit_range), target.is_resistant_to(self.dmg_type))
 
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications.
+        This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
+        against fireball or bane on attack rolls etc.
+        """
+        baseline = 0
+        if battle_map.are_in_range(self.combatant, target, self.range):
+            baseline = mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, len(self.crit_range), target.is_resistant_to(self.dmg_type))
+        try:
+            mod_range = modified_stats['range']
+        except KeyError:
+            mod_range = 0
+        try:
+            mod_dmg_flat = modified_stats['dmg_bonus_flat']
+        except KeyError:
+            mod_dmg_flat = 0
+        try:
+            mod_dmg_die = modified_stats['dmg_bonus_die']
+        except KeyError:
+            mod_dmg_die = ''
+        try:
+            mod_to_hit_flat = modified_stats['to_hit_flat']
+        except KeyError:
+            mod_to_hit_flat = 0
+        try:
+            mod_to_hit_die = modified_stats['to_hit_die']
+        except KeyError:
+            mod_to_hit_die = ''
+        try:
+            mod_crit_range = modified_stats['crit_range']
+        except KeyError:
+            mod_crit_range = 0
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+        modified = baseline
+        try:
+            modified = self.calculate_threat_approx(self.combatant, battle_map)
+        except:
+            pass  # just make sure the original stats are restored
+
+        self.mod_range = 0
+        self.mod_to_hit_die = ''
+        self.mod_to_hit_flat = 0
+        self.mod_dmg_flat = 0
+        self.mod_dmg_die = ''
+        self.mod_crit_range = 0
+        self.roll_modifier = RollModifier.STRAIGHT
+        return modified - baseline
+
 
 class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
 

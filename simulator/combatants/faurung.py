@@ -34,7 +34,6 @@ class Faurung(Combatant):
 
     def get_action(self, battle_map):
         enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
-
         while enemies and self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
             free_coords = battle_map.get_free_coords_at_distance(enemies[0], self, int(self.movement + dist[0]))
             if not free_coords:
@@ -51,6 +50,7 @@ class Faurung(Combatant):
                 return movement
             except StopIteration:
                 self.movement_generator_cache = None
+
 
         feasible_actions = get_feasible_actions(self.action_factories, self, battle_map)
         feasible_bonus_actions = get_feasible_actions(self.bonus_action_factories, self, battle_map)
@@ -83,66 +83,6 @@ class Faurung(Combatant):
         else:
             return None
 
-
-
-        # while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
-        #     enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
-        #     if not enemies:
-        #         # all enemies are dead
-        #         return (MetaAction.DONE,)
-        #
-        #     # First make sure to gain distance
-        #     if battle_map.is_enemy_adjacent(self) and self.has_bonus_action and self.spellslots.get_spellslots(
-        #             2) and not self.already_cast_leveled_spell_this_turn and not self.nowhere_to_go:
-        #         free_coords = battle_map.get_free_coords_away_from_enemies(self, 6)
-        #         if not free_coords:
-        #             logger.debug(f"{self.name} has nowhere to Misty Step to")
-        #             self.nowhere_to_go = True
-        #             continue
-        #         logger.debug(f"{self.name} casts Misty Step to location {free_coords[0]}", extra={"team": self.team_color})
-        #         return (BonusAction.MISTY_STEP, free_coords[0])
-        #     elif self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
-        #         free_coords = battle_map.get_free_coords_at_distance(enemies[0], int(self.movement + dist[0]), self)
-        #         if not free_coords:
-        #             logger.debug(f"{self.name} has nowhere to go to")
-        #             self.nowhere_to_go = True
-        #             continue
-        #         path = battle_map.get_path_to(self, free_coords[0])
-        #         self.movement_generator_cache = MovementGenerator(self, path, True).get_generator()
-        #     elif self.movement and self.movement_generator_cache:
-        #         try:
-        #             movement = next(self.movement_generator_cache)
-        #             logger.debug("Trying to get distance")
-        #             return (Movement.STANDARD, movement)
-        #         except StopIteration:
-        #             self.movement_generator_cache = None
-        #
-        #     # Then focus on offense
-        #     should_twin = False
-        #     if len(enemies) > 1 and random.randint(1, 10) > 3 and self.curr_sorcery_points > 0:
-        #         should_twin = True
-        #     if self.has_action and not self.already_cast_leveled_spell_this_turn:
-        #         placement, score, _ = battle_map.find_best_placement_harmful_circular(self, 30, 4)
-        #         allies = battle_map.teams.get_allies(self)
-        #         if self.spellslots.get_spellslots(3) and score > 1 and self.curr_sorcery_points > 0:
-        #             if score > 1:
-        #                 logger.debug(f"{self.name} casts Fireball", extra={"team": self.team_color})
-        #                 return (BonusAction.QUICKENED_FIREBALL if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.FIREBALL, placement)
-        #                 # return (Action.FIREBALL, placement)
-        #         elif self.spellslots.get_spellslots(3) and allies and not self.is_concentrating:
-        #             target_ally = allies[random.randint(0, len(allies) - 1)]
-        #             logger.debug(f"{self.name} casts Haste on {target_ally}", extra={"team": self.team_color})
-        #             return (BonusAction.QUICKENED_HASTE if self.has_bonus_action and self.curr_sorcery_points > 1 else Action.HASTE, [target_ally])
-        #             # return (Action.HASTE, target_ally)
-        #         else:
-        #             logger.debug(f"{self} casts Firebolt on {enemies[0]}", extra={"team": self.team_color})
-        #             return (Action.TWINNED_FIREBOLT, enemies[0:2]) if should_twin else (Action.FIREBOLT, [enemies[0]])
-        #     elif self.has_action:
-        #         logger.debug(f"{self} casts Firebolt on {enemies[0]}", extra={"team": self.team_color})
-        #         return (Action.TWINNED_FIREBOLT, enemies[0:2]) if should_twin else (Action.FIREBOLT, [enemies[0]])
-        #     else:
-        #         return (MetaAction.DONE,)
-        # return (MetaAction.DONE,)
 
     def new_turn(self):
         super().new_turn()
