@@ -78,7 +78,7 @@ def test_as_if_dist_from_combatant(teams, effect_tracker, battle_map, combatant1
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == pytest.approx(1.41, 0.01)
 
 
-def test_as_if_dist_farther_from_combatant(teams, effect_tracker, battle_map, combatant1, combatant2):
+def test_as_if_dist_mod_from_combatant(teams, effect_tracker, battle_map, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
     combatant3 = Goblin(effect_tracker, "Goblin 2")
@@ -91,7 +91,7 @@ def test_as_if_dist_farther_from_combatant(teams, effect_tracker, battle_map, co
     assert battle_map.get_hop_distance(combatant1, combatant2) == 5
     assert battle_map.get_hop_distance(combatant1, combatant3) == 1
     # now test that new distance applies only to combatant 1 and 2 but 1 and 3 are unchanged
-    with battle_map.as_if_dist_farther_from_combatant(combatant1, combatant2, 2):
+    with battle_map.as_if_dist_mod_from_combatant(combatant1, combatant2, 2):
         assert battle_map.get_hop_distance(combatant1, combatant2) == 7
         assert battle_map.get_cartesian_distance(combatant1, combatant2) == 7
         assert battle_map.get_hop_distance(combatant1, combatant3) == 1
@@ -100,7 +100,7 @@ def test_as_if_dist_farther_from_combatant(teams, effect_tracker, battle_map, co
     assert battle_map.get_hop_distance(combatant1, combatant2) == 5
     assert battle_map.get_hop_distance(combatant1, combatant3) == 1
     # now test the combatant 1 and 3
-    with battle_map.as_if_dist_farther_from_combatant(combatant1, combatant3, -1):
+    with battle_map.as_if_dist_mod_from_combatant(combatant1, combatant3, -1):  # This closer
         assert battle_map.get_hop_distance(combatant1, combatant2) == 5
         assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5
         assert battle_map.get_hop_distance(combatant1, combatant3) == 1 # 1 is min
@@ -108,7 +108,7 @@ def test_as_if_dist_farther_from_combatant(teams, effect_tracker, battle_map, co
     # test return to previous state
     assert battle_map.get_hop_distance(combatant1, combatant2) == 5
     assert battle_map.get_hop_distance(combatant1, combatant3) == 1
-    with battle_map.as_if_dist_farther_from_combatant(combatant1, combatant3, 3):
+    with battle_map.as_if_dist_mod_from_combatant(combatant1, combatant3, 3):
         assert battle_map.get_hop_distance(combatant1, combatant2) == 5
         assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5
         assert battle_map.get_hop_distance(combatant1, combatant3) == 4 # 1 is min

@@ -1,16 +1,18 @@
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, mean_dmg, RollModifier, ROLL_MODIFIER
+from simulator.misc import DamageType, mean_dmg, RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
 import logging
-from simulator.actions.actoid import Actoid
-from simulator.threat_calculator import DirectThreat, FactoryThreat
+from simulator.actions.actoid import Actoid, FactoryFlags
+from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 from simulator.misc import percent_of_curr_hp
 from functools import partial
 from functools import reduce
 
 logger = logging.getLogger(__name__)
 
-class ChaosboltFactory(FactoryThreat):
+class ChaosboltFactory(DirectThreatFactory):
     def __init__(self, to_hit, action_type, caster):
+        super().__init__()
+        self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # CHAOSBOLT, QUICKENED_CHAOSBOLT
         self.dmg_dice = "2d8"
@@ -89,9 +91,10 @@ class ChaosboltFactory(FactoryThreat):
         if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
             to_hit_total = self.to_hit + to_hit_bonus
             to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+            total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
-            return mean_dmg(to_hit_total, dmg_dice, 0, target.ac) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
+            return mean_dmg(to_hit_total, dmg_dice, 0, target.ac, total_crit) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
         else:
             return 0
 

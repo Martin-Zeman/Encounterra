@@ -1,6 +1,13 @@
 from enum import Enum, auto
 from abc import ABC, abstractmethod
 
+from simulator.actions.actoid import FactoryFlags
+
+
+class Factory:
+    def __init__(self):
+        self.flags = FactoryFlags.DEFAULT
+
 class DirectThreat(ABC):
     """
     Direct dmg causing ability, directly healing ability or an ability that directly prevents dmg
@@ -41,10 +48,10 @@ class ReactionToThreat(ABC):
         return 0
 
 
-class FactoryThreatModifier(ABC):
+class ThreatModifierFactory(ABC, Factory):
     """
     Threat calculation for factories that modify threat of other abilities (buffs and debuffs). This kind of factory doesn't support
-    the calculation of modification by other FactoryThreatModifier to avoid endless loops.
+    the calculation of modification by other ThreatModifierFactory to avoid endless loops.
     """
 
     @abstractmethod
@@ -55,7 +62,12 @@ class FactoryThreatModifier(ABC):
         """
         return 0
 
-class FactoryThreat(ABC):
+class DirectThreatFactory(ABC, Factory):
+
+    def __init__(self):
+        Factory.__init__(self)
+        self.flags |= FactoryFlags.IS_DIRECT_THREAT
+
     """
     Threat calculation for factories. They compute an estimation of the threat potential based on its stats.
     It also mandates that a factory be able to compute a threat increment based on a dictionary of modified stats

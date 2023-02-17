@@ -55,7 +55,7 @@ class Goblin(Combatant):
                 try:
                     self.plan_path(battle_map)
                 except RuntimeError:
-                    return self.dodge_factory.create_best(self, battle_map)
+                    return self.dodge_factory[1].create_best(self, battle_map)
             elif self.dist_to_nearest == 1 and self.movement and self.has_bonus_action and not self.has_disengaged:
                 # I'f I'm adjacent to an enemy I first need to disengage
                 return self.nimble_disengage[1].create_best(self, battle_map)
@@ -64,7 +64,7 @@ class Goblin(Combatant):
                 try:
                     self.plan_path(battle_map)
                 except RuntimeError:
-                    return self.dodge_factory.create_best(self, battle_map)
+                    return self.dodge_factory[1].create_best(self, battle_map)
             elif self.movement_generator and self.movement > 0:
                 # Move
                 try:

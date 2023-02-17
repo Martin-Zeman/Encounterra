@@ -1,9 +1,9 @@
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, DamageType, mean_dmg_dc_attack, RollModifier, ROLL_MODIFIER, mean_dmg
+from simulator.misc import SavingThrow, DamageType, mean_dmg_dc_attack
 from simulator.actions.actoid import Actoid
-from simulator.threat_calculator import DirectThreat, FactoryThreat
+from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 
-class FireballFactory(FactoryThreat):
+class FireballFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, has_spell_sculpting=False, **kwargs):
         self.dc = dc
         self.action_type = action_type  # FIREBALL, QUICKENED_FIREBALL
@@ -47,23 +47,7 @@ class FireballFactory(FactoryThreat):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        try:
-            to_hit_bonus = modified_stats['to_hit']
-        except KeyError:
-            to_hit_bonus = 0
-
-        try:
-            roll_modifier = modified_stats['roll_modifier']
-        except KeyError:
-            roll_modifier = RollModifier.STRAIGHT
-
-        if battle_map.get_cartesian_distance(self.caster, target) <= Fireball.spell_range.value:
-            to_hit_total = self.caster.spell_to_hit + to_hit_bonus
-            to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
-
-            return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac) - mean_dmg(self.caster.spell_to_hit, self.dmg_dice, 0, target.ac)
-        else:
-            return 0
+        return 0 # No need
 
 class Fireball(Actoid, DirectThreat):
 

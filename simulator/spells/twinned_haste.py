@@ -2,12 +2,12 @@ from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
 from simulator.actions.actoid import Actoid
-from simulator.threat_calculator import ThreatModifier, FactoryThreat
+from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 from functools import reduce
 from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat
 from simulator.spells.haste import HasteFactory
 
-class TwinnedHasteFactory(FactoryThreat):
+class TwinnedHasteFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, effect_tracker):
         super().__init__(Actoid.Type.IS_SPELL)
         self.action_type = action_type # TWINNED_HASTE, QUICKENED_HASTE, HASTE

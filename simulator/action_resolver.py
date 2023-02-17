@@ -49,12 +49,12 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO Conditions
     bonus = target_combatant.saving_throws[ability.factory.saving_throw][0]
 
-    has_advantage = has_advantage_saving_throw(ability, target_combatant)
-    has_disadvantage = has_disadvantage_saving_throw(ability, target_combatant)
+    modifiers = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
+    final_modifier = reconcile_roll_modifiers(modifiers)
 
-    if has_advantage == has_disadvantage:
+    if final_modifier == RollModifier.STRAIGHT:
         rolled = random.randint(1, 20)
-    elif has_advantage:
+    elif final_modifier == RollModifier.ADVANTAGE:
         rolled = max(random.randint(1, 20), random.randint(1, 20))
     else:
         rolled = min(random.randint(1, 20), random.randint(1, 20))
@@ -115,11 +115,12 @@ class ActionResolver:
         potential_targets = self.teams.get_allies(curr_target)
         while jump:
             jump = False
-            has_advantage = self.has_advantage_ranged(spell, caster, curr_target)
-            has_disadvantage = self.has_disadvantage_spell_ranged(spell, caster, curr_target)
-            if has_advantage == has_disadvantage:
+            modifiers = {self.has_advantage_ranged(spell, caster, curr_target), self.has_disadvantage_spell_ranged(spell, caster, curr_target)}
+            final_modifier = reconcile_roll_modifiers(modifiers)
+
+            if final_modifier == RollModifier.STRAIGHT:
                 rolled = random.randint(1, 20)
-            elif has_advantage:
+            elif final_modifier == RollModifier.ADVANTAGE:
                 rolled = max(random.randint(1, 20), random.randint(1, 20))
             else:
                 rolled = min(random.randint(1, 20), random.randint(1, 20))
@@ -158,11 +159,12 @@ class ActionResolver:
 
     def resolve_ranged_spell_attack(self, caster, spell, target):
         # TODO Conditions
-        has_advantage = self.has_advantage_ranged(spell, caster, target)
-        has_disadvantage = self.has_disadvantage_spell_ranged(spell, caster, target)
-        if has_advantage == has_disadvantage:
+        modifiers = {self.has_advantage_ranged(spell, caster, target), self.has_disadvantage_spell_ranged(spell, caster, target)}
+        final_modifier = reconcile_roll_modifiers(modifiers)
+
+        if final_modifier == RollModifier.STRAIGHT:
             rolled = random.randint(1, 20)
-        elif has_advantage:
+        elif final_modifier.ADVANTAGE:
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
             rolled = min(random.randint(1, 20), random.randint(1, 20))

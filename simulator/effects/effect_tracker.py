@@ -37,6 +37,18 @@ class EffectTracker:
         """
         return {e[0] for e in self.effects if e[0].is_affecting(combatant)}
 
+    def is_affecting_combatant(self, combatant, effect_type):
+        """
+        Determines whether a combatant is affected by an effect of a certain type
+        :param combatant:
+        :param effect_type: class of the effect
+        :return: True if the combatant is affected, False otherwise
+        """
+        for e in self.effects:
+            if type(e) is effect_type and e[0].is_affecting(combatant):
+                return True
+        return False
+
     def create_post_haste_lethargy(self, combatant):
         self.effects.append((PostHasteLethargy(combatant), combatant))
 

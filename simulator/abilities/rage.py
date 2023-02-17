@@ -6,12 +6,12 @@ from simulator.action_types import BonusAction
 from simulator.misc import dmg_increment_for_dmg_flat, ROUND_HORIZON
 from functools import reduce
 import sys
-from simulator.threat_calculator import ThreatModifier, FactoryThreat
+from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 import logging
 
 logger = logging.getLogger(__name__)
 
-class RageFactory(FactoryThreat):
+class RageFactory(DirectThreatFactory):
 
     def __init__(self, combatant):
         self.combatant = combatant

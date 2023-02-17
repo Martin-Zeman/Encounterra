@@ -4,15 +4,16 @@ from simulator.actions.actoid import Actoid
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
-from simulator.threat_calculator import ThreatModifier, FactoryThreatModifier
+from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 from simulator.misc import SavingThrow, RollModifier
 import logging
 
 logger = logging.getLogger(__name__)
 
-class DisengageFactory(FactoryThreatModifier):
+class DisengageFactory(ThreatModifierFactory):
 
     def __init__(self, combatant, action_type):
+        super().__init__()
         self.combatant = combatant
         self.action_type = action_type  # DISENGAGE, CUNNING DISENGAGE
 

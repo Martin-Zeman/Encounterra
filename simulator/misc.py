@@ -124,8 +124,8 @@ def reconcile_roll_modifiers(modifiers):
     @param modifiers: set of modifiers
     @return: resulting modifier
     """
-    modifiers.remove(RollModifier.STRAIGHT)
-    if modifiers.count() > 1:
+    modifiers.remove(RollModifier.STRAIGHT)  # TODO Do I need this?
+    if len(modifiers) > 1:
         return RollModifier.STRAIGHT
     try:
         ret = modifiers.pop()

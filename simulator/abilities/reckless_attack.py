@@ -1,19 +1,19 @@
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.actions.actoid import Actoid
-from simulator.misc import mean_dmg
+from simulator.actions.actoid import Actoid, FactoryFlags
+from simulator.misc import mean_dmg, reconcile_roll_modifiers
 from functools import reduce
 from simulator.misc import percent_of_curr_hp, avg_roll, RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
-from simulator.threat_calculator import DirectThreat, FactoryThreat
+from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
 
-class RecklessAttackFactory(FactoryThreat):
+class RecklessAttackFactory(DirectThreatFactory):
 
     class Type(Enum):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20]):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20], max_num=1):
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -24,6 +24,7 @@ class RecklessAttackFactory(FactoryThreat):
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.attack_type = attack_type  # MELEE or RANGED
         self.crit_range = crit_range
+        self.max_num = max_num  # the maximum number of an attack of this type, may differ from total num attacks
 
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0
@@ -32,7 +33,7 @@ class RecklessAttackFactory(FactoryThreat):
         self.mod_dmg_flat = 0
         self.mod_dmg_die = ''
         self.mod_crit_range = 0
-        self.roll_modifier = RollModifier.STRAIGHT
+        self.roll_modifier = RollModifier.ADVANTAGE
 
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
@@ -54,12 +55,13 @@ class RecklessAttackFactory(FactoryThreat):
         Helper function which calculates the average potential threat over all potential targets including all possible mods
         """
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
+        num = min(self.max_num, self.combatant.curr_num_attacks)
         def mean_dmg_mod(acc, pt):
             to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
             to_hit_total += ROLL_MODIFIER[self.roll_modifier][pt.ac - to_hit_total]
             total_crit = len(self.crit_range) + self.mod_crit_range
             total_crit *= ROLL_MODIFIER_CRIT[self.roll_modifier]
-            return acc + mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
+            return acc + num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
                                   self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
         dmg_acc = reduce(mean_dmg_mod)
         dmg_acc /= len(potential_targets)
@@ -96,9 +98,9 @@ class RecklessAttackFactory(FactoryThreat):
         except KeyError:
             self.mod_crit_range = 0
         try:
-            self.roll_modifier = modified_stats['roll_modifier']
+            self.roll_modifier = reconcile_roll_modifiers(self.roll_modifier, modified_stats['roll_modifier'])
         except KeyError:
-            self.roll_modifier = RollModifier.STRAIGHT
+            self.roll_modifier = RollModifier.ADVANTAGE
 
         modified = baseline
         try:
@@ -112,11 +114,28 @@ class RecklessAttackFactory(FactoryThreat):
         self.mod_dmg_flat = 0
         self.mod_dmg_die = ''
         self.mod_crit_range = 0
-        self.roll_modifier = RollModifier.STRAIGHT
+        self.roll_modifier = RollModifier.ADVANTAGE
         return modified - baseline
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
-        return mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, len(self.crit_range), target.is_resistant_to(self.dmg_type))
+        num = min(self.max_num, self.combatant.curr_num_attacks)
+        dmg = num * mean_dmg(self.to_hit + ROLL_MODIFIER[self.roll_modifier][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus, target.ac, len(self.crit_range) * ROLL_MODIFIER_CRIT[self.roll_modifier], target.is_resistant_to(self.dmg_type))
+        factories = target.action_factories
+        factories.extend(target.bonus_action_factories)
+        # Haste factories wouldn't change the result here, so we're omitting them
+        total_threat = dmg
+        max_incoming_threat = 0
+        for f in target.action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.ADVANTAGE}))
+        total_threat += max_incoming_threat
+
+        max_incoming_threat = 0
+        for f in target.bonus_action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.ADVANTAGE}))
+        total_threat += max_incoming_threat
+        return total_threat
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """
@@ -124,9 +143,11 @@ class RecklessAttackFactory(FactoryThreat):
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
+        num = min(self.max_num, self.combatant.curr_num_attacks)
         baseline = 0
         if battle_map.are_in_range(self.combatant, target, self.range):
-            baseline = mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, len(self.crit_range), target.is_resistant_to(self.dmg_type))
+            baseline = num * mean_dmg(self.to_hit + ROLL_MODIFIER[self.roll_modifier][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus,
+                                target.ac, len(self.crit_range) * ROLL_MODIFIER_CRIT[self.roll_modifier], target.is_resistant_to(self.dmg_type))
         try:
             mod_range = modified_stats['range']
         except KeyError:
@@ -152,23 +173,19 @@ class RecklessAttackFactory(FactoryThreat):
         except KeyError:
             mod_crit_range = 0
         try:
-            roll_modifier = modified_stats['roll_modifier']
+            roll_modifier = reconcile_roll_modifiers(self.roll_modifier, modified_stats['roll_modifier'])
         except KeyError:
-            roll_modifier = RollModifier.STRAIGHT
+            roll_modifier = RollModifier.ADVANTAGE
 
         modified = baseline
-        try:
-            modified = self.calculate_threat_approx(self.combatant, battle_map)
-        except:
-            pass  # just make sure the original stats are restored
+        with battle_map.as_if_dist_mod_from_combatant(self.combatant, target, -mod_range):
+            if battle_map.are_in_range(self.combatant, target, self.range):
+                to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+                to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+                total_crit = len(self.crit_range) + mod_crit_range
+                total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
+                modified = num * mean_dmg(self.to_hit + to_hit_total, self.dmg_dice + mod_dmg_die, self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
-        self.mod_range = 0
-        self.mod_to_hit_die = ''
-        self.mod_to_hit_flat = 0
-        self.mod_dmg_flat = 0
-        self.mod_dmg_die = ''
-        self.mod_crit_range = 0
-        self.roll_modifier = RollModifier.STRAIGHT
         return modified - baseline
 
 

@@ -2,12 +2,12 @@ from simulator.spells.spell import SpellStats
 import logging
 from simulator.action_types import BonusAction, Action
 from simulator.actions.actoid import Actoid
-from simulator.threat_calculator import ThreatModifier, FactoryThreat
+from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 from simulator.misc import CombatantArchetype, DistanceMetric
 
 logger = logging.getLogger(__name__)
 
-class MistyStepFactory(FactoryThreat):
+class MistyStepFactory(DirectThreatFactory):
 
     def __init__(self, caster):
         self.action_type = BonusAction.MISTY_STEP
@@ -57,7 +57,7 @@ class MistyStepFactory(FactoryThreat):
             for enemy in enemies:
                 factories = enemy.action_factories.extend(enemy.bonus_action_factories).extend(enemy.haste_action_factories)
                 max_threat_before = max([f.calculate_threat_to_target(battle_map, self.caster) for f in factories])
-                with battle_map.as_if_dist_farther_from_combatant(self.caster, enemy, self.caster.movement + MistyStep.spell_range.value):
+                with battle_map.as_if_dist_mod_from_combatant(self.caster, enemy, self.caster.movement + MistyStep.spell_range.value):
                     max_threat_after = max([f.calculate_threat_to_target(battle_map, self.caster) for f in factories])
             return max_threat_after - max_threat_before
         return 0

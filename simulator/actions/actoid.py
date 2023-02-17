@@ -1,4 +1,4 @@
-from enum import Enum, auto
+from enum import Enum, auto, Flag
 
 
 class Actoid:
@@ -14,4 +14,9 @@ class Actoid:
         self.actoid_type = actoid_type
         self.action_type = None
         self.is_direct_dmg_dealing = is_direct_dmg_dealing
+
+class FactoryFlags(Flag):
+    DEFAULT = auto()
+    IS_ATTACK_LIKE = auto()
+    IS_DIRECT_THREAT = auto()
 

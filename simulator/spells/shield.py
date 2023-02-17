@@ -2,11 +2,11 @@ from simulator.spells.spell import SpellStats
 from simulator.action_types import Reaction
 import logging
 from simulator.actions.actoid import Actoid
-from simulator.threat_calculator import ReactionToThreat, FactoryThreat
+from simulator.threat_calculator import ReactionToThreat, DirectThreatFactory
 
 logger = logging.getLogger(__name__)
 
-class ShieldFactory(FactoryThreat):
+class ShieldFactory(DirectThreatFactory):
 
     def __init__(self, caster):
         self.action_type = Reaction.SHIELD

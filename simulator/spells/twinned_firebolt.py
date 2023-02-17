@@ -1,16 +1,18 @@
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, mean_dmg, percent_of_curr_hp
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, FactoryFlags
 from functools import reduce
-from simulator.threat_calculator import DirectThreat, FactoryThreat
+from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 from simulator.spells.firebolt import FireboltFactory
 from simulator.misc import ROUND_HORIZON
 import logging
 
 logger = logging.getLogger(__name__)
 
-class TwinnedFireboltFactory(FactoryThreat):
+class TwinnedFireboltFactory(DirectThreatFactory):
     def __init__(self, to_hit, combatant_level, action_type):
+        super().__init__()
+        self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT
         self.dmg_dice = self.get_dmg_dice(combatant_level)

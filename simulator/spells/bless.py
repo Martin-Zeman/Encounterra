@@ -1,12 +1,11 @@
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.actions.actoid import Actoid
-from simulator.threat_calculator import ThreatModifier, FactoryThreat
+from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 
 
-class BlessFactory(FactoryThreat):
+class BlessFactory(ThreatModifierFactory):
     def __init__(self, action_type, caster, effect_tracker):
-        super().__init__(Actoid.Type.IS_SPELL)
         self.action_type = action_type # QUICKENED_BLESS, BLESS
         self.caster = caster
         self.effect_tracker = effect_tracker
@@ -24,8 +23,12 @@ class BlessFactory(FactoryThreat):
     #     # TODO This should call the mod threat calculation of the attack factory for all the attacks
     #     return 0
 
-    def calculate_threat_approx_mod(self, combatant, battle_map, modified_stats, *args, **kwargs):
-        return 0 # no need here
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        """
+        Calculates the threat the factory is capable of dealing to a specific target.
+        This is useful for calculating threat_in from the abilities of enemies
+        """
+        return 0
 
 
 

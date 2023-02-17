@@ -1,5 +1,5 @@
 from simulator.misc import DamageType
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
@@ -7,27 +7,63 @@ from simulator.misc import dmg_increment_for_dmg_flat
 from functools import reduce
 from simulator.misc import ROUND_HORIZON
 from simulator.abilities.rage import RageFactory
-from simulator.threat_calculator import ThreatModifier
+from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory, DirectThreatFactory
 import logging
 
 logger = logging.getLogger(__name__)
 
-class TotemRageFactory:
+class TotemRageFactory(ThreatModifierFactory):
 
     def __init__(self, combatant):
         self.combatant = combatant
         self.action_type = BonusAction.TOTEM_RAGE
 
     def create_best(self, combatant, battle_map):
-        return TotemRage(combatant)
+        return TotemRage(combatant, self)
+
+    def create(self, target_combatant):
+        return TotemRage(target_combatant, self)
+
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        """
+        Calculates the threat the factory is capable of dealing to a specific target.
+        This is useful for calculating threat_in from the abilities of enemies
+        """
+        rage_bonus = RageFactory.get_rage_bonus(self.combatant.level)
+        total_threat = 0
+        max_threat = 0
+        # This doesn't take different attack ranges into account
+        # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
+        for attack in self.combatant.attacks:
+            dmg_inc = dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, target.ac, rage_bonus)
+            max_threat = max(dmg_inc, max_threat)
+
+        total_threat += max_threat
+        # Haste factories wouldn't change the result here so we're omitting them
+        max_incoming_threat = 0
+        for f in target.action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target(battle_map, self.combatant))
+        total_threat += max_incoming_threat / 2
+
+        max_incoming_threat = 0
+        for f in target.bonus_action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target(battle_map, self.combatant))
+        total_threat += max_incoming_threat / 2
+        return total_threat * ROUND_HORIZON
 
 class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
-    def __init__(self, combatant):
+    def __init__(self, combatant, factory):
         Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)
+        self.factory = factory
+
+    def __str__(self):
+        return "TotemRage"
 
     def activate(self):
         self.combatants[0].ability_dmg_bonus += self.rage_bonus

@@ -84,8 +84,10 @@ def check_feasibility(combatant, action, battle_map):
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
-            case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
-                return res and combatant.curr_rage_uses and not combatant.rage_active
+            case BonusAction.RAGE:
+                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, Rage)
+            case BonusAction.TOTEM_RAGE:
+                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, TotemRage)
             case BonusAction.MISTY_STEP:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
