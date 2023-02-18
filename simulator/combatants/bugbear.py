@@ -31,6 +31,7 @@ class Bugbear(Combatant):
 
 
     def get_action(self, battle_map):
+        # TODO investigate non-feasible movements
         if self.selected_target is None or not self.selected_target.is_alive():
             # Get new target
             self.selected_target, _, target_position = battle_map.get_nearest(self, Side.ENEMY)

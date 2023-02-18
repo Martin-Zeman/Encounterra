@@ -11,6 +11,7 @@ from enum import Enum, auto
 logger = logging.getLogger(__name__)
 
 class ActionResult(Enum):
+    # TODO get rid of this
     UNFEASIBLE = auto()
     FEASIBLE = auto()
     NOP = auto()
@@ -225,11 +226,8 @@ class ActionResolver:
                 return ActionResult.UNFEASIBLE
 
     def has_advantage_melee(self, attack, attacker, target):
-        try:
-            if attack.roll_modifier is RollModifier.ADVANTAGE:
-                return RollModifier.ADVANTAGE
-        except AttributeError:
-            print("FIXME")
+        if attack.roll_modifier is RollModifier.ADVANTAGE:
+            return RollModifier.ADVANTAGE
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
             return RollModifier.ADVANTAGE
         if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
@@ -329,12 +327,16 @@ class ActionResolver:
         Other cases return None.
         """
         assert actoid is not None
+        if ActoidFlags.IS_TOGGLE_ABILITY in actoid.actoid_type:
+            # This type can combine with others
+            self.resolve_toggle_ability(combatant, actoid)
+
         # TODO Rework this using the new Actoid concept
         if ActoidFlags.IS_ATTACK_LIKE in actoid.actoid_type:
             return self.resolve_attack(actoid, combatant)
         elif ActoidFlags.IS_MOVEMENT in actoid.actoid_type:
             if not self.request_movement(combatant, actoid):
-                return ActionResult.UNFEASIBLE  # combatant didn't survive
+                return False
         elif ActoidFlags.IS_SPELL in actoid.actoid_type:
             return self.resolve_spell(combatant, actoid)
         # elif ActoidFlags.IS_DODGE:
@@ -343,13 +345,8 @@ class ActionResolver:
         #     return ActionResult.FEASIBLE
         elif ActoidFlags.IS_DASH in actoid.actoid_type:
             combatant.movement += combatant.speed
-            return ActionResult.FEASIBLE
-        elif ActoidFlags.IS_TOGGLE_ABILITY in actoid.actoid_type:
-            self.resolve_toggle_ability(combatant, actoid)
-            return ActionResult.FEASIBLE
-        else:
-            logger.error("Unknown actoid type")
             return False
+        return False
 
     # def resolve_action(self, action_type, args, combatant):
     #     """
@@ -423,12 +420,17 @@ class ActionResolver:
         return result if feasible else ActionResult.UNFEASIBLE
 
     def resolve_toggle_ability(self, combatant, ability):
-        # match ability.__class__.__name__:
-        #     case "TotemRage" | "Rage" | "RecklessAttack":
-        ability.activate()
-        self.effect_tracker.add(ability, combatant)
-            # case _:
-            #     logger.error("Unknown toggle ability")
+        match ability.__class__.__name__:
+            case "TotemRage" | "Rage" | "Disengage":
+                ability.activate()
+                self.effect_tracker.add(ability, combatant)
+            case "RecklessAttack":
+                if not self.effect_tracker.is_affecting_combatant(combatant, RecklessAttack):
+                    # don't need to add it again in case of a multiattack
+                    ability.activate()
+                    self.effect_tracker.add(ability, combatant)
+            case _:
+                logger.error(f"Unknown toggle ability {ability.__class__.__name__}")
 
     def resolve_effects(self, effects, combatant):
         """

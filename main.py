@@ -11,7 +11,7 @@ from simulator.teams import Teams
 import time
 
 if __name__ == '__main__':
-    CustomLogger(LogLevel.DEBUG)
+    CustomLogger(LogLevel.INFO, False)
     session = Session()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
     # session.add_combatant(Faurung, Teams.Color.BLUE)
@@ -26,9 +26,9 @@ if __name__ == '__main__':
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.set_num_simulations(1)
+    session.set_num_simulations(100)
     start_time = time.time()
-    session.simulate(parallel=False)
+    session.simulate(parallel=True)
     print("---Simulation took {:.1f} seconds ---".format((time.time() - start_time)))
 
 

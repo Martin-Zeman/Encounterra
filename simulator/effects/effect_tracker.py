@@ -1,5 +1,10 @@
+import logging
+
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.effects.post_haste_lethargy import PostHasteLethargy
+
+logger = logging.getLogger(__name__)
+
 class EffectTracker:
     """
     TODO: Could be the class that takes care of exceptional removal of effects (such as rage)
@@ -24,10 +29,9 @@ class EffectTracker:
     def new_turn(self):
         """
         All effects with a fixed duration measurable in rounds end just before the beginning of one of your turns.
-        :param combatant:
         :return:
         """
-        self.effects = [e for e in self.effects if not isinstance(e[0], LimitedDurationEffect) or e[0].new_round()]
+        self.effects = [e for e in self.effects if not isinstance(e[0], LimitedDurationEffect) or e[0].new_turn()]
 
     def get_all_affecting_combatant(self, combatant):
         """
@@ -45,7 +49,7 @@ class EffectTracker:
         :return: True if the combatant is affected, False otherwise
         """
         for e in self.effects:
-            if type(e) is effect_type and e[0].is_affecting(combatant):
+            if type(e[0]) is effect_type and e[0].is_affecting(combatant):
                 return True
         return False
 
@@ -53,6 +57,7 @@ class EffectTracker:
         self.effects.append((PostHasteLethargy(combatant), combatant))
 
     def reset(self):
+        logger.verbose("Resetting effect tracker")
         for effect in self.effects:
             effect[0].deactivate()
         self.effects.clear()

@@ -51,8 +51,9 @@ class CustomLogger:
         LogLevel.ERROR: logging.ERROR,
     }
 
-    def __init__(self, level):
-        addLoggingLevel('VERBOSE', self.VERBOSE_VALUE)
+    def __init__(self, level, add_verbose=True):
+        if add_verbose:
+            addLoggingLevel('VERBOSE', self.VERBOSE_VALUE)
         logger = logging.getLogger()
         logger.setLevel(self.LEVEL_MAPPING[level])
         stdout_handler = logging.StreamHandler(stream=sys.stdout)

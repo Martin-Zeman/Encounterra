@@ -3,17 +3,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 class LimitedDurationEffect(Effect):
-    def __init__(self, rounds):
-       self.rounds = rounds
+    def __init__(self, turns):
+       self.turns = turns
 
 
-    def new_round(self):
+    def new_turn(self):
         """
 
         :return: False if the effect expired and can be removed, True otherwise
         """
-        self.rounds -= 1
-        if self.rounds <= 0:
+        self.turns -= 1
+        if self.turns <= 0:
             logger.debug(f"{self.__class__.__name__} expires")
             self.deactivate()
             return False
