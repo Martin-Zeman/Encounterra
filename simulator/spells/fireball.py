@@ -1,6 +1,6 @@
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType, mean_dmg_dc_attack
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 
 class FireballFactory(DirectThreatFactory):
@@ -61,7 +61,7 @@ class Fireball(Actoid, DirectThreat):
 
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_type=Actoid.Type.IS_SPELL, is_direct_dmg_dealing=True)
+        super().__init__(actoid_type=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.coord = coord
         self.factory = factory

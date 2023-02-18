@@ -11,7 +11,7 @@ def use_resources(combatant, action):
     if isinstance(action_type, Action):
         combatant.has_action = False
         match action_type:
-            case Action.ATTACK:
+            case Action.ATTACK | Action.RECKLESS_ATTACK:
                 combatant.curr_num_attacks -= 1
             case Action.DODGE | Action.DASH | Action.FIREBOLT:
                 pass  # sufficiently tracked by not having an action anymore
@@ -98,7 +98,6 @@ def reset_resources(combatant):
         match bonus_action[0]:
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 combatant.curr_rage_uses = combatant.max_rage_uses
-                combatant.rage_active = False
             case _:
                 pass
 

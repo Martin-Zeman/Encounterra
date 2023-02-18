@@ -165,13 +165,11 @@ class Combatant(ABC):
                 case BonusAction.RAGE:
                     self.max_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
-                    self.rage_active = False
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.TOTEM_RAGE:
                     self.max_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
-                    self.rage_active = False
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.MISTY_STEP:

@@ -1,5 +1,5 @@
 from simulator.misc import DamageType
-from simulator.actions.actoid import Actoid, FactoryFlags
+from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
@@ -7,7 +7,7 @@ from simulator.misc import dmg_increment_for_dmg_flat
 from functools import reduce
 from simulator.misc import ROUND_HORIZON
 from simulator.abilities.rage import RageFactory
-from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory, DirectThreatFactory
+from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 import logging
 
 logger = logging.getLogger(__name__)
@@ -56,7 +56,7 @@ class TotemRageFactory(ThreatModifierFactory):
 class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def __init__(self, combatant, factory):
-        Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_type=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)

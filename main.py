@@ -1,4 +1,5 @@
 from simulator.combatants.bugbear import Bugbear
+from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.cyanwrath import Cyanwrath
@@ -7,17 +8,10 @@ from simulator.combatants.goblin import Goblin
 from simulator.combatants.faurung_dt import FaurungDt
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams
-import logging
-import sys
 import time
-from simulator.logging.log_formatter import LogFormatter
 
 if __name__ == '__main__':
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    stdout_handler = logging.StreamHandler(stream=sys.stdout)
-    stdout_handler.setFormatter(LogFormatter())
-    logger.addHandler(stdout_handler)
+    CustomLogger(LogLevel.DEBUG)
     session = Session()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
     # session.add_combatant(Faurung, Teams.Color.BLUE)

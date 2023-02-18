@@ -1,6 +1,6 @@
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 
 
@@ -44,7 +44,7 @@ class Bless(Actoid, Effect, ThreatModifier):
     dmg_type = None
 
     def __init__(self, targets, factory):
-        super().__init__(Actoid.Type.IS_SPELL)
+        super().__init__(ActoidFlags.IS_SPELL)
         self.targets = targets
         self.factory = factory
 

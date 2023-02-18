@@ -35,31 +35,35 @@ class Goblin(Combatant):
         # logger.debug(f"Planned path: {path}")
         self.movement_generator = MovementGenerator(self, path).get_generator()
 
+    def attack_routine(self):
+        if self.has_action:
+            return self.shortbow_attack[1].create(self.selected_target)
+        else:
+            for ha in self.haste_action_factories:
+                if ha[1].name == "Shortbow":
+                    return ha[1].create(self.selected_target)
+
     def get_action(self, battle_map):
         # TODO he doesn't shoot after moving into position
         if not self.selected_target:
             self.selected_target, self.dist_to_nearest, target_position = battle_map.get_nearest(self, Side.ENEMY)
         if not self.selected_target:
             return None
-        while True:
-            if (self.has_action or self.has_haste_action) and 8 <= self.dist_to_nearest <= 16:
+        while self.has_action or self.has_haste_action:
+            dist = battle_map.get_hop_distance(self, self.selected_target)
+            if 8 <= dist <= 16:
                 # If I'm in position, just shoot
-                if self.has_action:
-                    return self.shortbow_attack[1].create(self.selected_target)
-                else:
-                    for ha in self.haste_action_factories:
-                        if ha[1].name == "Shortbow":
-                            return ha[1].create(self.selected_target)
-            elif 1 < self.dist_to_nearest < 8 and not self.movement_generator:
+                return self.attack_routine()
+            elif 1 < dist < 8 and not self.movement_generator:
                 # If I'm not in position but also not adjacent to anyone
                 try:
                     self.plan_path(battle_map)
                 except RuntimeError:
                     return self.dodge_factory[1].create_best(self, battle_map)
-            elif self.dist_to_nearest == 1 and self.movement and self.has_bonus_action and not self.has_disengaged:
+            elif dist == 1 and self.movement and self.has_bonus_action and not self.has_disengaged:
                 # I'f I'm adjacent to an enemy I first need to disengage
                 return self.nimble_disengage[1].create_best(self, battle_map)
-            elif self.dist_to_nearest == 1 and self.movement and not self.movement_generator:
+            elif dist == 1 and self.movement and not self.movement_generator:
                 # Once I've disengaged, plan escape path
                 try:
                     self.plan_path(battle_map)
@@ -69,12 +73,12 @@ class Goblin(Combatant):
                 # Move
                 try:
                     movement = next(self.movement_generator)
-                    logger.debug(f"Moving by {movement}")
+                    logger.verbose(f"Moving by {movement}")
                     return movement
                 except StopIteration:
                     self.movement_generator = None
             else:
-                return None
+                return self.attack_routine()
 
 
     def new_turn(self):

@@ -1,4 +1,4 @@
-from simulator.actions.actoid import Actoid, FactoryFlags
+from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
@@ -40,7 +40,7 @@ class DodgeFactory(ThreatModifierFactory):
 class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def __init__(self, combatant):
-        Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_type=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=1)
 

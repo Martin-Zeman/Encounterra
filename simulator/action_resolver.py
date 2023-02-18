@@ -3,7 +3,7 @@ from simulator.misc import SavingThrow
 from simulator.feasibility import check_feasibility
 from simulator.resources import use_resources
 from simulator.action_factory import *
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.spells.chaosbolt import Chaosbolt
 from simulator.geometry import *
 from enum import Enum, auto
@@ -225,8 +225,11 @@ class ActionResolver:
                 return ActionResult.UNFEASIBLE
 
     def has_advantage_melee(self, attack, attacker, target):
-        if attack.roll_modifier is RollModifier.ADVANTAGE:
-            return RollModifier.ADVANTAGE
+        try:
+            if attack.roll_modifier is RollModifier.ADVANTAGE:
+                return RollModifier.ADVANTAGE
+        except AttributeError:
+            print("FIXME")
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
             return RollModifier.ADVANTAGE
         if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
@@ -326,27 +329,27 @@ class ActionResolver:
         Other cases return None.
         """
         assert actoid is not None
-        match actoid.actoid_type:
-            case Actoid.Type.IS_ATTACK_LIKE_ACTION:
-                return self.resolve_attack(actoid, combatant)
-            case Actoid.Type.IS_MOVEMENT:
-                if not self.request_movement(combatant, actoid):
-                    return ActionResult.UNFEASIBLE  # combatant didn't survive
-            case Actoid.Type.IS_SPELL:
-                return self.resolve_spell(combatant, actoid)
-            # case Actoid.Type.IS_DODGE:
-            #     combatant.is_dodging = True
-            #     combatant.saving_throws[SavingThrow.DEX][1] = RollModifier.ADVANTAGE
-            #     return ActionResult.FEASIBLE
-            case Actoid.Type.IS_DASH:
-                combatant.movement += combatant.speed
-                return ActionResult.FEASIBLE
-            case Actoid.Type.IS_TOGGLE_ABILITY:
-                self.resolve_toggle_ability(combatant, actoid)
-                return ActionResult.FEASIBLE
-            case _:
-                logger.error("Unknown actoid type")
-                return False
+        # TODO Rework this using the new Actoid concept
+        if ActoidFlags.IS_ATTACK_LIKE in actoid.actoid_type:
+            return self.resolve_attack(actoid, combatant)
+        elif ActoidFlags.IS_MOVEMENT in actoid.actoid_type:
+            if not self.request_movement(combatant, actoid):
+                return ActionResult.UNFEASIBLE  # combatant didn't survive
+        elif ActoidFlags.IS_SPELL in actoid.actoid_type:
+            return self.resolve_spell(combatant, actoid)
+        # elif ActoidFlags.IS_DODGE:
+        #     combatant.is_dodging = True
+        #     combatant.saving_throws[SavingThrow.DEX][1] = RollModifier.ADVANTAGE
+        #     return ActionResult.FEASIBLE
+        elif ActoidFlags.IS_DASH in actoid.actoid_type:
+            combatant.movement += combatant.speed
+            return ActionResult.FEASIBLE
+        elif ActoidFlags.IS_TOGGLE_ABILITY in actoid.actoid_type:
+            self.resolve_toggle_ability(combatant, actoid)
+            return ActionResult.FEASIBLE
+        else:
+            logger.error("Unknown actoid type")
+            return False
 
     # def resolve_action(self, action_type, args, combatant):
     #     """

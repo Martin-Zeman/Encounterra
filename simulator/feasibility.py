@@ -57,12 +57,12 @@ def check_feasibility(combatant, action, battle_map):
                 res &= combatant.curr_sorcery_points > 2
                 return res
             case Action.ATTACK:
-                res = combatant.curr_num_attacks > 0
+                res = (combatant.has_action or (combatant.num_attacks > combatant.curr_num_attacks > 0)) and not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
             case Action.RECKLESS_ATTACK:
-                res = (combatant.curr_num_attacks == combatant.num_attacks)
+                res = combatant.has_action or (combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack))
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
@@ -193,9 +193,11 @@ def check_feasibility_light(combatant, action_type, battle_map):
                 res &= combatant.curr_sorcery_points > 2
                 return res
             case Action.ATTACK:
-                return combatant.has_action and combatant.curr_num_attacks > 0
+                # Either not attacked yet, or already attacked but still has attacks left. In both cases cannot be used once attacked recklessly
+                return (combatant.has_action or (combatant.num_attacks > combatant.curr_num_attacks > 0)) and not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
             case Action.RECKLESS_ATTACK:
-                return combatant.curr_num_attacks == combatant.num_attacks
+                # Either not attacked yet or already attacked recklessly and still has attacks left
+                return combatant.has_action or (combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack))
             case Action.DASH | Action.DODGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED,
@@ -211,8 +213,10 @@ def check_feasibility_light(combatant, action_type, battle_map):
         match action_type:
             case BonusAction.PAM_BONUS_ATTACK:
                 return res and combatant.curr_num_attacks < combatant.num_attacks  # if already took the attack action
-            case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
-                return res and combatant.curr_rage_uses and not combatant.rage_active
+            case BonusAction.RAGE:
+                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, Rage)
+            case BonusAction.TOTEM_RAGE:
+                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, TotemRage)
             case BonusAction.MISTY_STEP:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn

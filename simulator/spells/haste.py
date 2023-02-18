@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 from functools import reduce
 from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat
@@ -83,7 +83,7 @@ class Haste(Actoid, Effect, ThreatModifier):
     dmg_type = None
 
     def __init__(self, target, factory):
-        super().__init__(Actoid.Type.IS_SPELL)
+        super().__init__(ActoidFlags.IS_SPELL)
         self.target = target
         self.factory = factory
 

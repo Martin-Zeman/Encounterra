@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, mean_dmg, percent_of_curr_hp, ROUND_HORIZON, RollModifier, avg_roll, ROLL_MODIFIER, \
     ROLL_MODIFIER_CRIT
-from simulator.actions.actoid import Actoid, FactoryFlags
+from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 import logging
@@ -129,7 +129,7 @@ class Firebolt(Actoid, DirectThreat):
 
 
     def __init__(self, target, factory, **kwargs):
-        super().__init__(actoid_type=Actoid.Type.IS_SPELL, is_direct_dmg_dealing=True)
+        super().__init__(actoid_type=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.target = target
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True

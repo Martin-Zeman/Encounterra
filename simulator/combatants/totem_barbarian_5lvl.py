@@ -4,7 +4,7 @@ from simulator.feasibility import get_feasible_actions
 from simulator.misc import DamageType
 from simulator.action_factory import *
 from simulator.action_types import *
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.misc import Side
 import numpy as np
 import logging
@@ -48,9 +48,9 @@ class TotemBarbarian5Lvl(Combatant):
     #         logger.debug("Is out of range")
     #         return (MetaAction.DONE,)
 
-    def plan_path(self, battle_map, target_position):
+    def plan_path(self, battle_map, target_copmbatant, target_position):
         logger.debug(f"{self} plan_path 1")
-        self.path = battle_map.get_path_to(self,target_position)
+        self.path = battle_map.get_path_to(self, target_copmbatant)
         logger.debug(f"{self} plan_path 2")
         if not self.path:
             logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
@@ -65,13 +65,17 @@ class TotemBarbarian5Lvl(Combatant):
         logger.debug(f"{self} get_action 1")
         feasible_actions = get_feasible_actions(self.action_factories, self, battle_map)
         feasible_bonus_actions = get_feasible_actions(self.bonus_action_factories, self, battle_map)
+        logger.debug(f"{self} get_action 1a feasible_bonus_actions = {feasible_bonus_actions}")
         feasible_haste_actions = get_feasible_actions(self.haste_action_factories, self, battle_map)
         # feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
         if len(feasible_actions) > 0 or len(feasible_bonus_actions) > 0 or len(feasible_haste_actions) > 0:# or len(feasible_free_actions > 0):
             logger.debug(f"{self} get_action 2")
-            feasible_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_actions]))
-            feasible_bonus_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_bonus_actions]))
-            feasible_haste_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_haste_actions]))
+            try:
+                feasible_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_actions]))
+                feasible_bonus_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_bonus_actions]))
+                feasible_haste_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_haste_actions]))
+            except:
+                print("FIXME")
             # feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
 
             logger.debug(f"{self} get_action 3")
@@ -95,7 +99,7 @@ class TotemBarbarian5Lvl(Combatant):
             except IndexError:
                 logger.debug(f"{self} get_action 7 DONE")
                 return None
-            if selected_action.actoid_type is Actoid.Type.IS_ATTACK_LIKE_ACTION:
+            if ActoidFlags.IS_ATTACK_LIKE in selected_action.actoid_type:
                 logger.debug(f"{self} get_action 8")
                 target_position = battle_map.get_combatant_position(selected_action.target_combatant)
                 if not np.array_equal(self.target_position_cache, target_position):
@@ -103,7 +107,7 @@ class TotemBarbarian5Lvl(Combatant):
                     # if the target moved, recalculate path
                     try:
                         logger.debug(f"{self} get_action 10 {target_position}")
-                        self.plan_path(battle_map, target_position)
+                        self.plan_path(battle_map, selected_action.target_combatant, target_position)
                         logger.debug(f"{self} get_action 11")
                     except RuntimeError:
                         logger.debug(f"{self} get_action 12 DONE")
@@ -117,7 +121,7 @@ class TotemBarbarian5Lvl(Combatant):
                     logger.debug(f"{self} get_action 15")
                     try:
                         movement = next(self.movement_generator)
-                        logger.debug(f"Moving by {movement}")
+                        logger.verbose(f"Moving by {movement}")
                         return movement
                     except StopIteration:
                         # this means that either the path has been exhausted and we're still not in range => ranged attack

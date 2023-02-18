@@ -1,22 +1,26 @@
-from enum import Enum, auto, Flag
+from enum import auto, Flag
 
+class ActoidFlags(Flag):
+    IS_ATTACK_LIKE = auto()
+    IS_DIRECT_THREAT = auto()
+    IS_ATTACK_MODIFIER = auto()
+    IS_MOVEMENT = auto()
+    IS_SPELL = auto()
+    IS_DASH = auto()
+    IS_TOGGLE_ABILITY = auto()
 
 class Actoid:
-    # TODO get rid of this class
-    class Type(Enum):
-        IS_ATTACK_LIKE_ACTION = auto()
-        IS_MOVEMENT = auto()
-        IS_SPELL = auto()
-        IS_DASH = auto()
-        IS_TOGGLE_ABILITY = auto()
-
-    def __init__(self, actoid_type, is_direct_dmg_dealing=False):
+    """
+    Proto-action base class. It doesn't map onto an 'action' directly as an Actoid can represent even a partial action such as one attack
+    which is part of a multiattack or a movement increment.
+    """
+    def __init__(self, actoid_type):
         self.actoid_type = actoid_type
         self.action_type = None
-        self.is_direct_dmg_dealing = is_direct_dmg_dealing
 
 class FactoryFlags(Flag):
     DEFAULT = auto()
     IS_ATTACK_LIKE = auto()
     IS_DIRECT_THREAT = auto()
+    IS_ATTACK_MODIFIER = auto()
 

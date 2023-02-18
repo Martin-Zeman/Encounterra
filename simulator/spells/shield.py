@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 from simulator.action_types import Reaction
 import logging
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_calculator import ReactionToThreat, DirectThreatFactory
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ class Shield(Actoid, ReactionToThreat):
     dmg_type = None
 
     def __init__(self, factory):
-        super().__init__(Actoid.Type.IS_SPELL)
+        super().__init__(actoid_type=ActoidFlags.IS_SPELL)
         self.action_type = Reaction.SHIELD
         self.factory = factory
 

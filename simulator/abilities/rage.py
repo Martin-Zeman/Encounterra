@@ -1,5 +1,5 @@
 from simulator.misc import DamageType
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
@@ -85,7 +85,7 @@ class RageFactory(DirectThreatFactory):
 class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def __init__(self, combatant):
-        Actoid.__init__(self, actoid_type=Actoid.Type.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_type=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, rounds=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)

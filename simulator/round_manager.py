@@ -78,6 +78,7 @@ class RoundManager:
                 if not combatant.is_alive():
                     continue
                 logger.debug(f"It's {combatant}'s turn")
+                logger.debug(self.battle_map)
                 combatant.new_turn()
                 effects = self.effect_tracker.get_all_affecting_combatant(combatant)
                 self.action_resolver.resolve_effects(effects, combatant)

@@ -1,6 +1,6 @@
 import logging
 import numpy as np
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.action_types import Movement
 
 logger = logging.getLogger(__name__)
@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class MovementIncrement(Actoid):
     def __init__(self, increment, incurs_aoo, factory):
-        Actoid.__init__(self, actoid_type=Actoid.Type.IS_MOVEMENT)
+        Actoid.__init__(self, actoid_type=ActoidFlags.IS_MOVEMENT)
         self.increment = increment
         self.incurs_aoo = incurs_aoo
         self.factory = factory

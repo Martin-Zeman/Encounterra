@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 import logging
 from simulator.action_types import BonusAction, Action
-from simulator.actions.actoid import Actoid
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 from simulator.misc import CombatantArchetype, DistanceMetric
 
@@ -78,7 +78,7 @@ class MistyStep(Actoid, ThreatModifier):
     dmg_type = None
 
     def __init__(self, coord, factory):
-        super().__init__(Actoid.Type.IS_SPELL)
+        super().__init__(ActoidFlags.IS_SPELL)
         self.coord = coord
         self.factory = factory
 
