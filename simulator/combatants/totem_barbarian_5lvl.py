@@ -37,15 +37,18 @@ class TotemBarbarian5Lvl(Combatant):
         self.target_position_cache = target_position
 
     def get_action(self, battle_map):
-        # TODO Why are there two regular attacks in feasible actions?
-        feasible_actions = get_feasible_actions(self.action_factories, self, battle_map)
-        feasible_bonus_actions = get_feasible_actions(self.bonus_action_factories, self, battle_map)
-        feasible_haste_actions = get_feasible_actions(self.haste_action_factories, self, battle_map)
+        # TODO if it gets surrounded it will not attack and just dodge
+        # TODO Figure out how to avoid recalculating this all the time. Maybe I could separate plan_turn and get action. plan_turn would be
+        #  called once and get_action multiple times like now
+        # TODO Reckless attack still seems to pay off even against many enemies, this is suspicious
+        feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)
+        feasible_bonus_action_factories = get_feasible_actions(self.bonus_action_factories, self, battle_map)
+        feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
         # feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
-        if len(feasible_actions) > 0 or len(feasible_bonus_actions) > 0 or len(feasible_haste_actions) > 0:# or len(feasible_free_actions > 0):
-            feasible_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_actions]))
-            feasible_bonus_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_bonus_actions]))
-            feasible_haste_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_haste_actions]))
+        if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:# or len(feasible_free_actions > 0):
+            feasible_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_action_factories]))
+            feasible_bonus_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_bonus_action_factories]))
+            feasible_haste_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_haste_action_factories]))
             # feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
 
             action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]

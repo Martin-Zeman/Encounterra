@@ -19,8 +19,10 @@ class Actoid:
         self.action_type = None
 
 class FactoryFlags(Flag):
+    # TODO Consider merging actoid flags and factory flags
     DEFAULT = auto()
     IS_ATTACK_LIKE = auto()
     IS_DIRECT_THREAT = auto()
     IS_ATTACK_MODIFIER = auto()
+    DEX_SAVE_APPLIES = auto()
 

@@ -314,6 +314,7 @@ class Combatant(ABC):
         self.has_reaction = True
         self.curr_num_attacks = self.num_attacks
         self.movement = self.speed
+        self.target_position_cache = None  # I believe this should also reset every turn as the path can be blocked by other combatants
         # if self.is_dodging:
         #     self.saving_throws[SavingThrow.DEX][1] = RollModifier.STRAIGHT
         # self.is_dodging = False # TODO make sure the effect tracker takes care of this

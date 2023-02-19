@@ -1,7 +1,7 @@
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from simulator.misc import mean_dmg, reconcile_roll_modifiers
+from simulator.misc import mean_dmg, reconcile_roll_modifiers, calculate_threat_in_mod
 from functools import reduce
 from simulator.misc import percent_of_curr_hp, avg_roll, RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
@@ -44,14 +44,17 @@ class RecklessAttackFactory(DirectThreatFactory):
                           in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
-        return potential_targets[0][0]
+        return potential_targets[0][0] if potential_targets else None
 
     def create_best(self, combatant, battle_map):
-        return RecklessAttack(self.find_best_args(combatant, battle_map), self)
+        best_args = self.find_best_args(combatant, battle_map)
+        if best_args is None:
+            return None
+        return RecklessAttack(best_args, self)
 
-    def calculate_threat_approx(self, combatant, battle_map, roll_modifier=RollModifier.ADVANTAGE):
+    def calculate_threat_out_approx(self, combatant, battle_map, roll_modifier=RollModifier.ADVANTAGE):
         """
-        Helper function which calculates the average potential threat over all potential targets including all possible mods
+        Helper function which calculates the average potential threat_out over all potential targets including all possible mods
         """
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         num = min(self.max_num, self.combatant.curr_num_attacks)
@@ -66,32 +69,13 @@ class RecklessAttackFactory(DirectThreatFactory):
         dmg_acc /= len(potential_targets)
         return dmg_acc
 
-    def calculate_threat_in_mod(self, battle_map):
-        potential_attackers = battle_map.get_enemies_within_hop_distance(self.combatant, 6)
-        incoming_threat_mod_acc = 0
-        for pa in potential_attackers:
-            max_incoming_threat = 0
-            for f in pa.action_factories:
-                if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                    max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, self.combatant, {
-                        "roll_modifier": RollModifier.ADVANTAGE}))
-            incoming_threat_mod_acc += max_incoming_threat
-
-            max_incoming_threat = 0
-            for f in pa.bonus_action_factories:
-                if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                    max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, self.combatant, {
-                        "roll_modifier": RollModifier.ADVANTAGE}))
-            incoming_threat_mod_acc += max_incoming_threat
-        incoming_threat_mod_acc /= 2  # Heuristic
-        return incoming_threat_mod_acc
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
         Goes over all the modified stats and accumulates the threat delta for all of them
         """
         # TODO
-        baseline = self.calculate_threat_approx(self.combatant, battle_map)
+        baseline = self.calculate_threat_out_approx(self.combatant, battle_map)
         try:
             self.mod_range = modified_stats['range']
         except KeyError:
@@ -123,7 +107,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 
         modified = baseline
         try:
-            modified = self.calculate_threat_approx(self.combatant, battle_map, roll_modifier)
+            modified = self.calculate_threat_out_approx(self.combatant, battle_map, roll_modifier)
         except:
             pass # just make sure the original stats are restored
 
@@ -133,7 +117,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.mod_dmg_flat = 0
         self.mod_dmg_die = ''
         self.mod_crit_range = 0
-        incoming_threat_mod_acc = self.calculate_threat_in_mod(battle_map)
+        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
@@ -143,18 +127,9 @@ class RecklessAttackFactory(DirectThreatFactory):
         factories.extend(target.bonus_action_factories)
         # Haste factories wouldn't change the result here, so we're omitting them
         total_threat = dmg
-        max_incoming_threat = 0
-        for f in target.action_factories:
-            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.ADVANTAGE}))
-        total_threat += max_incoming_threat
-
-        max_incoming_threat = 0
-        for f in target.bonus_action_factories:
-            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, self.combatant, {"roll_modifier": RollModifier.ADVANTAGE}))
-        total_threat += max_incoming_threat
-        return total_threat
+        # even the single target calculation the combatant is still more vulnerable to all potential attackers
+        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
+        return total_threat - incoming_threat_mod_acc
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """
@@ -205,14 +180,14 @@ class RecklessAttackFactory(DirectThreatFactory):
                 total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
                 modified = num * mean_dmg(self.to_hit + to_hit_total, self.dmg_dice + mod_dmg_die, self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
-        incoming_threat_mod_acc = self.calculate_threat_in_mod(battle_map)
+        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc
 
 
 class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, target_combatant, factory):
-        Actoid.__init__(self, actoid_type=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, actoid_type=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT | ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[factory.combatant])
         LimitedDurationEffect.__init__(self, turns=1)
         self.target_combatant = target_combatant

@@ -1,10 +1,12 @@
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType, mean_dmg_dc_attack
-from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 
 class FireballFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, has_spell_sculpting=False, **kwargs):
+        super().__init__()
+        self.flags |= FactoryFlags.DEX_SAVE_APPLIES
         self.dc = dc
         self.action_type = action_type  # FIREBALL, QUICKENED_FIREBALL
         self.saving_throw = SavingThrow.DEX

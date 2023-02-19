@@ -8,6 +8,7 @@ from scipy.stats import randint
 from functools import reduce, partial, cache
 from functools import reduce
 
+from simulator.actions.actoid import FactoryFlags
 
 ROUND_HORIZON = 3
 
@@ -95,7 +96,8 @@ class CombatantArchetype(Enum):
 
 SIGN = {"+": 1, "-": -1}
 
-# Calculated by find_disadvantage_eq_penalty and find_advantage_eq_bonus
+# Calculated by find_disadvantage_eq_penalty and find_advantage_eq_bonus. Gives the statistic approximation of advantage/disadvantage in
+# terms of a flat bonus/penalty. This is dependent on the AC/DC threshold.
 ROLL_MODIFIER = {
     RollModifier.STRAIGHT: {
         1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0, 17: 0, 18: 0, 19: 0, 20: 0
@@ -124,7 +126,10 @@ def reconcile_roll_modifiers(modifiers):
     @param modifiers: set of modifiers
     @return: resulting modifier
     """
-    modifiers.remove(RollModifier.STRAIGHT)  # TODO Do I need this?
+    try:
+        modifiers.remove(RollModifier.STRAIGHT)  # TODO Do I need this?
+    except KeyError:
+        pass
     if len(modifiers) > 1:
         return RollModifier.STRAIGHT
     try:
@@ -132,10 +137,6 @@ def reconcile_roll_modifiers(modifiers):
     except:  # TODO Find the exact one
         ret = RollModifier.STRAIGHT
     return ret
-
-
-
-
 
 @cache
 def parse_dmg_dice(dice_string):
@@ -235,6 +236,46 @@ def mean_dmg_bonus_increment_for_to_hit_bonus_dice(to_hit, dmg_dice, dmg_bonus, 
     """
     return mean_dmg(to_hit + (1.0 + bonus_dice_size) / 2.0, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
 
+
+def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier, factory_flags):
+    """
+    Estimates the change in mean dmg from enemies within radius given a roll modifier assuming they'd all attack the combatant
+    @param combatant: the potential receiver of the dmg
+    @param threat_radius: radius within which enemies are to be considered
+    @param battle_map:
+    @param roll_modifier: the roll modifier to be considered (advantage or disadvantage)
+    @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
+    @return: estimated change in dmg, negative for advantage, positive for disadvantage
+    """
+    potential_attackers = battle_map.get_enemies_within_hop_distance(combatant, threat_radius)
+    incoming_threat_mod_acc = 0
+    min_or_max = max if roll_modifier is RollModifier.ADVANTAGE else min
+    for pa in potential_attackers:
+        max_incoming_threat = 0
+        for f in pa.action_factories:
+            if factory_flags & f[1].flags:  # Checks for any overlap in flags
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                    "roll_modifier": roll_modifier}))
+        incoming_threat_mod_acc += max_incoming_threat
+
+        max_incoming_threat = 0
+        for f in pa.bonus_action_factories:
+            if factory_flags & f[1].flags:  # Checks for any overlap in flags
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                    "roll_modifier": roll_modifier}))
+        incoming_threat_mod_acc += max_incoming_threat
+
+        max_incoming_threat = 0
+        for f in pa.haste_action_factories:
+            if factory_flags & f[1].flags:  # Checks for any overlap in flags
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                    "roll_modifier": roll_modifier}))
+        incoming_threat_mod_acc += max_incoming_threat
+    if roll_modifier is RollModifier.ADVANTAGE:
+        assert incoming_threat_mod_acc >= 0
+    else:
+        assert incoming_threat_mod_acc <= 0
+    return incoming_threat_mod_acc
 
 def print_ac_dc_range(min, max, attacks, monster_name="Monster"):
     print(monster_name + ":")

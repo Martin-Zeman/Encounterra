@@ -8,6 +8,7 @@ from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat
 
 class HasteFactory(ThreatModifierFactory):
     def __init__(self, action_type, caster, effect_tracker):
+        super().__init__()
         self.action_type = action_type # TWINNED_HASTE, QUICKENED_HASTE, HASTE
         self.caster = caster
         self.effect_tracker = effect_tracker

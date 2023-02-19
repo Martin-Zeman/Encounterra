@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class MistyStepFactory(DirectThreatFactory):
 
     def __init__(self, caster):
+        super().__init__()
         self.action_type = BonusAction.MISTY_STEP
         self.caster = caster
 

@@ -21,14 +21,15 @@ class Bugbear(Combatant):
         self.path = None
 
     def plan_path(self, battle_map, target_position):
+        logger.debug(f"Planning path to {self.selected_target} at position {target_position}")
         self.path = battle_map.get_path_to(self, self.selected_target)
+        logger.debug(f"Planned path {self.path}")
         if not self.path:
             logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
         # logger.debug(f"Planned path: {self.path}")
         self.movement_generator = MovementGenerator(self, self.path).get_generator()
         self.target_position_cache = target_position
-
 
     def get_action(self, battle_map):
         # TODO investigate non-feasible movements

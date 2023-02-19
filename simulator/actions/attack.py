@@ -38,6 +38,9 @@ class AttackFactory(DirectThreatFactory):
         self.mod_dmg_die = ''
         self.mod_crit_range = 0
 
+    def __str__(self):
+        return self.name + " AttackFactory"
+
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
         if self.attack_type is AttackFactory.Type.MELEE:
