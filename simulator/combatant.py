@@ -94,6 +94,7 @@ class Combatant(ABC):
         self.to_hit_dice_mod = []
         self.action_types_added = []
         self.archetype = CombatantArchetype.MELEE
+        self.last_attack_factory_name = None
 
     def __str__(self):
         return self.name
@@ -123,6 +124,7 @@ class Combatant(ABC):
                     try:
                         self.num_attacks = kwargs["num_attacks"]
                         self.curr_num_attacks = kwargs["num_attacks"]
+                        self.attack_groups = kwargs["attack_groups"]  # groups of multiattacks that can be combined, order sensitive
                     except KeyError:
                         logger.error("Arguments incompatible with action type")
                         return
@@ -330,6 +332,7 @@ class Combatant(ABC):
             self.ac -= 5
         self.shield_spell_active = False
         self.has_haste_action = False
+        self.last_attack_factory_name = None
 
     def reset(self):
         self.has_action = True
@@ -357,6 +360,7 @@ class Combatant(ABC):
         for f in self.bonus_action_factories:
             if FactoryFlags.IS_ATTACK_LIKE in f[1].flags:
                 self.ammo[type(f[1])] = f[1].ammo
+        self.last_attack_factory_name = None
 
 
     # @abstractmethod

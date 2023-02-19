@@ -421,7 +421,7 @@ class ActionResolver:
 
     def resolve_toggle_ability(self, combatant, ability):
         match ability.__class__.__name__:
-            case "TotemRage" | "Rage" | "Disengage":
+            case "TotemRage" | "Rage" | "Disengage" | "Dodge":
                 ability.activate()
                 self.effect_tracker.add(ability, combatant)
             case "RecklessAttack":

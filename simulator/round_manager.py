@@ -73,12 +73,12 @@ class RoundManager:
             if self.is_only_one_team_standing():
                 logger.debug("EARLY END")
                 break
-            self.effect_tracker.new_turn()
             for combatant in self.combatants:
                 if not combatant.is_alive():
                     continue
                 logger.debug(f"It's {combatant}'s turn")
                 logger.debug(self.battle_map)
+                self.effect_tracker.new_turn(combatant)
                 combatant.new_turn()
                 effects = self.effect_tracker.get_all_affecting_combatant(combatant)
                 self.action_resolver.resolve_effects(effects, combatant)

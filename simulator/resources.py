@@ -14,6 +14,7 @@ def use_resources(combatant, action):
             case Action.ATTACK | Action.RECKLESS_ATTACK:
                 combatant.curr_num_attacks -= 1
                 combatant.ammo[type(action.factory)] -= 1
+                combatant.last_attack_factory_name = action.factory.name
             case Action.DODGE | Action.DASH | Action.FIREBOLT:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL:

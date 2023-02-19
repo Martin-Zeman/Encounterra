@@ -161,6 +161,10 @@ def check_feasibility(combatant, action, battle_map):
 def check_feasibility_light(combatant, action, battle_map):
     """
     Checks feasibility in terms of resources and combat rules. Doesn't check arguments of actions.
+    :param combatant: initiator of the action
+    :param action: action to be considered in form of a tuple (action_type, action_factory)
+    :param battle_map:
+    :return: True if feasible, false otherwise
     """
     action_type = action[0]
     if isinstance(action_type, Action):
@@ -195,15 +199,21 @@ def check_feasibility_light(combatant, action, battle_map):
                 return res
             case Action.ATTACK:
                 # Either not attacked yet, or already attacked but still has attacks left. In both cases cannot be used once attacked recklessly
-                return (combatant.has_action or (
-                            combatant.num_attacks > combatant.curr_num_attacks > 0)) and not battle_map.effect_tracker.is_affecting_combatant(
-                    combatant, RecklessAttack) and combatant.ammo[type(action[1])] > 0
+                res = combatant.has_action
+                if Passive.MULTIATTACK in combatant.passive:
+                    res |= (combatant.num_attacks > combatant.curr_num_attacks > 0) and combatant.last_attack_factory_name is action[1].name
+                    # for ag in combatant.attack_groups:
+                    #     if combatant.last_attack_factory_name in ag:
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= combatant.ammo[type(action[1])] > 0
+                return res
             case Action.RECKLESS_ATTACK:
                 # Either not attacked yet or already attacked recklessly and still has attacks left
-                return combatant.has_action or (
-                            combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant,
-                                                                                                                RecklessAttack)) and \
-                    combatant.ammo[type(action[1])] > 0
+                res = combatant.has_action
+                if Passive.MULTIATTACK in combatant.passive:
+                    res |= combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack) and combatant.last_attack_factory_name is action[1].name
+                res &= combatant.ammo[type(action[1])] > 0
+                return res
             case Action.DASH | Action.DODGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED,

@@ -26,12 +26,19 @@ class EffectTracker:
     #         if isinstance(effect[0], LimitedDurationEffect) and effect[1] is combatant:
     #             effect[0].new_round()
 
-    def new_turn(self):
+    def new_turn(self, combatant):
         """
         All effects with a fixed duration measurable in rounds end just before the beginning of one of your turns.
         :return:
         """
-        self.effects = [e for e in self.effects if not isinstance(e[0], LimitedDurationEffect) or e[0].new_turn()]
+        self.effects = [e for e in self.effects if not isinstance(e[0], LimitedDurationEffect) or e[1] is not combatant or e[0].new_turn()]
+
+    # def new_turn(self):
+    #     """
+    #     All effects with a fixed duration measurable in rounds end just before the beginning of one of your turns.
+    #     :return:
+    #     """
+    #     self.effects = [e for e in self.effects if not isinstance(e[0], LimitedDurationEffect) or e[0].new_turn()]
 
     def get_all_affecting_combatant(self, combatant):
         """

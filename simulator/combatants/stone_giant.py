@@ -16,10 +16,10 @@ class StoneGiant(Combatant):
 
     def __init__(self, effect_tracker, name="Stone Giant"):
         super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
-        self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
+        club = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
         self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=[20], attack_type=AttackFactory.Type.RANGED, ammo=2)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15, attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(Passive.MULTIATTACK, num_attacks=2)
+        self.add_ability(Passive.MULTIATTACK, num_attacks=2, attack_groups=[[club.name]])
         self.movement_generator = None
         self.selected_target = None
         self.path = None
