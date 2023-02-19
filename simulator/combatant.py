@@ -1,6 +1,8 @@
 import copy
 import random
 import math
+
+from simulator.actions.actoid import FactoryFlags
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype
 from simulator.action_factory import *
 from enum import Enum
@@ -56,6 +58,7 @@ class Combatant(ABC):
         self.curr_num_attacks = 1
         self.speed = speed / 5
         self.movement = speed / 5
+        self.ammo = {}  # Dict of type AttackType -> current ammo
         self.resistances = resistances
         self.multiattack_in_progress = False
         self.team_color = ""
@@ -133,7 +136,9 @@ class Combatant(ABC):
         elif isinstance(action_type, Action):
             match action_type:
                 case Action.ATTACK | Action.RECKLESS_ATTACK:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    factory = TO_FACTORY[action_type]
+                    self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
+                    self.ammo[factory] = self.action_factories[-1][1].ammo
                     return self.action_factories[-1]
                 case Action.FIREBALL:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
@@ -156,7 +161,9 @@ class Combatant(ABC):
             # TODO
             match action_type:
                 case BonusAction.BONUS_ATTACK:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    factory = TO_FACTORY[action_type]
+                    self.bonus_action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
+                    self.ammo[factory] = self.bonus_action_factories[-1][1].ammo
                     return self.bonus_action_factories[-1]
                 case BonusAction.PAM_BONUS_ATTACK:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
@@ -344,6 +351,13 @@ class Combatant(ABC):
         self.has_haste_action = False
         for st in self.saving_throws.values():
             st[1].clear()
+        for f in self.action_factories:
+            if FactoryFlags.IS_ATTACK_LIKE in f[1].flags:
+                self.ammo[type(f[1])] = f[1].ammo
+        for f in self.bonus_action_factories:
+            if FactoryFlags.IS_ATTACK_LIKE in f[1].flags:
+                self.ammo[type(f[1])] = f[1].ammo
+
 
     # @abstractmethod
     # def calculate_threat(self, battle_map):

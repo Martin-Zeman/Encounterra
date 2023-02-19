@@ -13,6 +13,7 @@ def use_resources(combatant, action):
         match action_type:
             case Action.ATTACK | Action.RECKLESS_ATTACK:
                 combatant.curr_num_attacks -= 1
+                combatant.ammo[type(action.factory)] -= 1
             case Action.DODGE | Action.DASH | Action.FIREBOLT:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL:
@@ -38,7 +39,7 @@ def use_resources(combatant, action):
         combatant.has_bonus_action = False
         match action_type:
             case BonusAction.BONUS_ATTACK | BonusAction.PAM_BONUS_ATTACK:
-                pass  # sufficiently tracked by not having a bonus action anymore
+                combatant.ammo[type(action.factory)] -= 1
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 combatant.curr_rage_uses -= 1
             case BonusAction.MISTY_STEP:

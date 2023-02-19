@@ -1,3 +1,4 @@
+from simulator.action_types import Action
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -12,6 +13,7 @@ class DodgeFactory(ThreatModifierFactory):
     def __init__(self, combatant):
         super().__init__()
         self.combatant = combatant
+        self.action_type = Action.DODGE
 
     def create_best(self, combatant, battle_map):
         return Dodge(combatant, self)

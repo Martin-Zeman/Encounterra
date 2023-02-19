@@ -1,3 +1,5 @@
+import math
+
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -13,7 +15,9 @@ class RecklessAttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20], max_num=1):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20], max_num=1, ammo=math.inf):
+        super().__init__()
+        self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -23,15 +27,19 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.range = attack_range
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.attack_type = attack_type  # MELEE or RANGED
+        if self.action_type is self.Type.MELEE:
+            self.ammo = math.inf
+        else:
+            self.ammo = ammo
         self.crit_range = crit_range
         self.max_num = max_num  # the maximum number of an attack of this type, may differ from total num attacks
 
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0
-        self.mod_to_hit_die = ''
+        self.mod_to_hit_die = '0d0'
         self.mod_to_hit_flat = 0
         self.mod_dmg_flat = 0
-        self.mod_dmg_die = ''
+        self.mod_dmg_die = '0d0'
         self.mod_crit_range = 0
 
     def find_best_args(self, combatant, battle_map):
@@ -87,7 +95,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         try:
             self.mod_dmg_die = modified_stats['dmg_bonus_die']
         except KeyError:
-            self.mod_dmg_die = ''
+            self.mod_dmg_die = '0d0'
         try:
             self.mod_to_hit_flat = modified_stats['to_hit_flat']
         except KeyError:
@@ -95,7 +103,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         try:
             self.mod_to_hit_die = modified_stats['to_hit_die']
         except KeyError:
-            self.mod_to_hit_die = ''
+            self.mod_to_hit_die = '0d0'
         try:
             self.mod_crit_range = modified_stats['crit_range']
         except KeyError:
@@ -112,10 +120,10 @@ class RecklessAttackFactory(DirectThreatFactory):
             pass # just make sure the original stats are restored
 
         self.mod_range = 0
-        self.mod_to_hit_die = ''
+        self.mod_to_hit_die = '0d0'
         self.mod_to_hit_flat = 0
         self.mod_dmg_flat = 0
-        self.mod_dmg_die = ''
+        self.mod_dmg_die = '0d0'
         self.mod_crit_range = 0
         incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc
@@ -140,8 +148,8 @@ class RecklessAttackFactory(DirectThreatFactory):
         num = min(self.max_num, self.combatant.curr_num_attacks)
         baseline = 0
         if battle_map.are_in_range(self.combatant, target, self.range):
-            baseline = num * mean_dmg(self.to_hit + ROLL_MODIFIER[self.roll_modifier][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus,
-                                target.ac, len(self.crit_range) * ROLL_MODIFIER_CRIT[self.roll_modifier], target.is_resistant_to(self.dmg_type))
+            baseline = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus,
+                                target.ac, len(self.crit_range) * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         try:
             mod_range = modified_stats['range']
         except KeyError:
@@ -153,7 +161,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         try:
             mod_dmg_die = modified_stats['dmg_bonus_die']
         except KeyError:
-            mod_dmg_die = ''
+            mod_dmg_die = '0d0'
         try:
             mod_to_hit_flat = modified_stats['to_hit_flat']
         except KeyError:
@@ -161,7 +169,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         try:
             mod_to_hit_die = modified_stats['to_hit_die']
         except KeyError:
-            mod_to_hit_die = ''
+            mod_to_hit_die = '0d0'
         try:
             mod_crit_range = modified_stats['crit_range']
         except KeyError:

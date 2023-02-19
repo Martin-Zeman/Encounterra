@@ -1,6 +1,8 @@
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.goblin import Goblin
+from simulator.combatants.ogre import Ogre
+from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.faurung_dt import FaurungDt
@@ -37,6 +39,8 @@ class Session:
             Cyanwrath: 1,
             Goblin: 1,
             Bugbear: 1,
+            Ogre: 1,
+            StoneGiant: 1,
         }
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
@@ -65,6 +69,10 @@ class Session:
                 self.combatants.append(Goblin(self.effect_tracker, "Goblin " + str(curr_count)))
             case "Bugbear":
                 self.combatants.append(Bugbear(self.effect_tracker, "Bugbear " + str(curr_count)))
+            case "Ogre":
+                self.combatants.append(Ogre(self.effect_tracker, "Ogre " + str(curr_count)))
+            case "StoneGiant":
+                self.combatants.append(StoneGiant(self.effect_tracker, "StoneGiant " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return

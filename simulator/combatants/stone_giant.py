@@ -1,7 +1,7 @@
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator
 from simulator.feasibility import get_feasible_actions
-from simulator.misc import DamageType
+from simulator.misc import DamageType, SavingThrow
 from simulator.action_factory import *
 from simulator.action_types import *
 from simulator.actions.actoid import Actoid, ActoidFlags
@@ -12,21 +12,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class TotemBarbarian5Lvl(Combatant):
+class StoneGiant(Combatant):
 
-    def __init__(self, effect_tracker, name="TotemBarbarian5Lvl"):
-        super().__init__(effect_tracker, name, level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
-        self.add_ability(Action.ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE, max_num=2)
-        self.javelin_attack = self.add_ability(Action.ATTACK, name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=[20], attack_type=AttackFactory.Type.RANGED)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(BonusAction.TOTEM_RAGE)
+    def __init__(self, effect_tracker, name="Stone Giant"):
+        super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
+        self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
+        self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=[20], attack_type=AttackFactory.Type.RANGED, ammo=2)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15, attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
-        self.add_ability(Passive.DANGER_SENSE)
-        self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE, max_num=2)
         self.movement_generator = None
         self.selected_target = None
         self.path = None
-        # TODO Add saving throws
+        self.saving_throws[SavingThrow.DEX][0] = 5
+        self.saving_throws[SavingThrow.CON][0] = 8
+        self.saving_throws[SavingThrow.WIS][0] = 4
 
 
     def plan_path(self, battle_map, target_copmbatant, target_position):
@@ -38,10 +37,8 @@ class TotemBarbarian5Lvl(Combatant):
         self.target_position_cache = target_position
 
     def get_action(self, battle_map):
-        # TODO if it gets surrounded it will not attack and just dodge
-        # TODO Figure out how to avoid recalculating this all the time. Maybe I could separate plan_turn and get action. plan_turn would be
-        #  called once and get_action multiple times like now
-        # TODO Reckless attack still seems to pay off even against many enemies, this is suspicious
+        # TODO add the knock prone effect to the rock
+        # TODO prevent it from throwing a rock once it's used a club
         feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)
         feasible_bonus_action_factories = get_feasible_actions(self.bonus_action_factories, self, battle_map)
         feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
@@ -88,12 +85,12 @@ class TotemBarbarian5Lvl(Combatant):
                         # this means that either the path has been exhausted and we're still not in range => ranged attack
                         self.movement_generator = None
                         if self.has_action:
-                            self.javelin_attack[1].action_type = Action.ATTACK
+                            self.rock_attack[1].action_type = Action.ATTACK
                         elif self.has_haste_action:
-                            self.javelin_attack[1].action_type = HasteAction.HASTE_ATTACK
+                            self.rock_attack[1].action_type = HasteAction.HASTE_ATTACK
                         else:
                             return None
-                        return self.javelin_attack[1].create(self.selected_target)
+                        return self.rock_attack[1].create(self.selected_target)
             return selected_action
 
         else:

@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 class TotemRageFactory(ThreatModifierFactory):
 
     def __init__(self, combatant):
+        super().__init__()
+        self.flags |= FactoryFlags.IS_ATTACK_MODIFIER
         self.combatant = combatant
         self.action_type = BonusAction.TOTEM_RAGE
 

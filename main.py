@@ -1,4 +1,6 @@
 from simulator.combatants.bugbear import Bugbear
+from simulator.combatants.ogre import Ogre
+from simulator.combatants.stone_giant import StoneGiant
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
@@ -15,11 +17,9 @@ if __name__ == '__main__':
     session = Session()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
     # session.add_combatant(Faurung, Teams.Color.BLUE)
-    session.add_combatant(Bugbear, Teams.Color.RED)
-    session.add_combatant(Bugbear, Teams.Color.RED)
-    session.add_combatant(Bugbear, Teams.Color.RED)
-    session.add_combatant(Bugbear, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
+    session.add_combatant(StoneGiant, Teams.Color.RED)
+    # session.add_combatant(Ogre, Teams.Color.RED)
+    # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
     session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)

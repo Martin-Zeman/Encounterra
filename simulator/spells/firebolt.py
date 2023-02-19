@@ -67,7 +67,7 @@ class FireboltFactory(DirectThreatFactory):
         try:
             mod_to_hit_die = modified_stats['to_hit_die']
         except KeyError:
-            mod_to_hit_die = ''
+            mod_to_hit_die = '0d0'
         try:
             roll_modifier = modified_stats['roll_modifier']
         except KeyError:

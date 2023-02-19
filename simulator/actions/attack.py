@@ -4,6 +4,7 @@ from functools import reduce
 from simulator.misc import percent_of_curr_hp, avg_roll, RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
+import math
 import logging
 
 logger = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ class AttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20], max_num=1):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20], max_num=1, ammo=math.inf):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.name = name
@@ -27,15 +28,19 @@ class AttackFactory(DirectThreatFactory):
         self.short_range = attack_range // 4
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.attack_type = attack_type  # MELEE or RANGED
+        if self.action_type is self.Type.MELEE:
+            self.ammo = math.inf
+        else:
+            self.ammo = ammo
         self.crit_range = crit_range
         self.max_num = max_num  # the maximum number of an attack of this type, may differ from total num attacks
 
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0
-        self.mod_to_hit_die = ''
+        self.mod_to_hit_die = '0d0'
         self.mod_to_hit_flat = 0
         self.mod_dmg_flat = 0
-        self.mod_dmg_die = ''
+        self.mod_dmg_die = '0d0'
         self.mod_crit_range = 0
 
     def __str__(self):
@@ -95,7 +100,7 @@ class AttackFactory(DirectThreatFactory):
         try:
             self.mod_dmg_die = modified_stats['dmg_bonus_die']
         except KeyError:
-            self.mod_dmg_die = ''
+            self.mod_dmg_die = '0d0'
         try:
             self.mod_to_hit_flat = modified_stats['to_hit_flat']
         except KeyError:
@@ -103,7 +108,7 @@ class AttackFactory(DirectThreatFactory):
         try:
             self.mod_to_hit_die = modified_stats['to_hit_die']
         except KeyError:
-            self.mod_to_hit_die = ''
+            self.mod_to_hit_die = '0d0'
         try:
             self.mod_crit_range = modified_stats['crit_range']
         except KeyError:
@@ -120,10 +125,10 @@ class AttackFactory(DirectThreatFactory):
             pass # just make sure the original stats are restored
 
         self.mod_range = 0
-        self.mod_to_hit_die = ''
+        self.mod_to_hit_die = '0d0'
         self.mod_to_hit_flat = 0
         self.mod_dmg_flat = 0
-        self.mod_dmg_die = ''
+        self.mod_dmg_die = '0d0'
         self.mod_crit_range = 0
         return modified - baseline
 
