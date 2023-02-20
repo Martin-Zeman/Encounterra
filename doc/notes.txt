@@ -52,3 +52,28 @@ Trainign Faurung:
  Feasibility rate: 0.028; Unfeasibility rate 0.092
  Feasibility rate: 0.02; Unfeasibility rate 0.1
  Feasibility rate: 0.038; Unfeasibility rate 0.102
+
+ Kinds of multiattacks:
+ Horned Devil: The devil makes three melee attacks: two with its fork and one with its tails. It can use Hurl Flame in place of any melee
+ attack
+ Bone Devil: The devil makes three attacks: two with its claws and one with its sting
+ Bearded Devil: the devil makes three melee attacks: one with its tail and two with its claws. Alternatively, it can use Hurl Flame twice
+ Nalfeshnee: The nalfeshnee uses Horror Nimbus if it can. It then makes three attacks: one with its bite and two with its claws.
+ Glabrezu: the glabrezu makes fours attacks: two with its pincers and two with its fists. Alternatively, it makes two attacks with its pincers
+ and casts one spell.
+ Chuul: the chuul makes two pincer attacks. If the chuul is grappling a creature, the chuul can also use its tentacles once
+ Spined devil: The debil makes two attacks: one with its bite and one with its fork or two with its tail spines
+ T-rex: the t-rex makes two attacks: one with its bite and one with its tail. It can't make both attacks against the same target ( restriction implemented in the t-rex itself)
+ Adult Black Dragon: The dragon can use its Frightful presence. It then makes three attacks. One with its bite and two with its claws.
+ Dragon turtle: The dragon turtle makes three attacks. One with its bite and two with its claws. It can make one tail attack in place of its
+ two claw attacks.
+ Drider: The drider makes three attacks, either with its longsword or its longbow. It can replace one of those attacks with a bite attack.
+ Fomorian: the fomorian attacks twice with its greatclub or make one greatclub attack and uses Evil Eye once.
+ Violet fungus: the fungus makes 1d4 rotting touch attacks
+ Dao: the dao makes two fists attacks or two maul attacks.
+ Gibbering Mouther: The gibbering mouther makes one bite attack and if it can, uses its blinding spittle
+ Grick alpha: The grick makes two attacks, one with its tail and one with its tentacles. If it hits with its tentacles, the grick can
+ make one beak attack against the same target
+ Manticore: The manticore makes three attacks: one with its bite and two with its claws or three with its tail spikes.
+
+ -> make a special category for these conditional attacks (like the gricks). They may have a target restriction.
