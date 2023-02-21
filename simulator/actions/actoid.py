@@ -8,6 +8,7 @@ class ActoidFlags(Flag):
     IS_SPELL = auto()
     IS_DASH = auto()
     IS_TOGGLE_ABILITY = auto()
+    IS_GET_UP_FROM_PRONE = auto()
 
 class Actoid:
     """

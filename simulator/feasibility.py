@@ -205,14 +205,14 @@ def check_feasibility_light(combatant, action, battle_map):
                     # for ag in combatant.attack_groups:
                     #     if combatant.last_attack_factory_name in ag:
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
-                res &= combatant.ammo[type(action[1])] > 0
+                res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.RECKLESS_ATTACK:
                 # Either not attacked yet or already attacked recklessly and still has attacks left
                 res = combatant.has_action
                 if Passive.MULTIATTACK in combatant.passive:
                     res |= combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack) and combatant.last_attack_factory_name is action[1].name
-                res &= combatant.ammo[type(action[1])] > 0
+                res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.DASH | Action.DODGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,

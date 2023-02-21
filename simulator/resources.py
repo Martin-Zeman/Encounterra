@@ -1,19 +1,20 @@
 from simulator.action_factory import *
 import logging
+from simulator.misc import Conditions
 
 logger = logging.getLogger(__name__)
 
 
 
 
-def use_resources(combatant, action):
+def use_resources(combatant, action, battle_map):
     action_type = action.factory.action_type
     if isinstance(action_type, Action):
         combatant.has_action = False
         match action_type:
             case Action.ATTACK | Action.RECKLESS_ATTACK:
                 combatant.curr_num_attacks -= 1
-                combatant.ammo[type(action.factory)] -= 1
+                combatant.ammo[action.factory.name] -= 1
                 combatant.last_attack_factory_name = action.factory.name
             case Action.DODGE | Action.DASH | Action.FIREBOLT:
                 pass  # sufficiently tracked by not having an action anymore
@@ -40,7 +41,7 @@ def use_resources(combatant, action):
         combatant.has_bonus_action = False
         match action_type:
             case BonusAction.BONUS_ATTACK | BonusAction.PAM_BONUS_ATTACK:
-                combatant.ammo[type(action.factory)] -= 1
+                combatant.ammo[action.factory.name] -= 1
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 combatant.curr_rage_uses -= 1
             case BonusAction.MISTY_STEP:
@@ -75,7 +76,13 @@ def use_resources(combatant, action):
             case _:
                 logger.error("Unknown reaction type")
     elif isinstance(action_type, Movement):
-        combatant.movement -= 1
+        target_position = battle_map.get_combatant_position(combatant) + action.increment
+        decrement = -1
+        if combatant.is_affected_by(Conditions.PRONE):
+            decrement -= 1
+        if battle_map.is_difficult_terrain_at(target_position):
+            decrement -= 1
+        combatant.movement -= decrement
     elif isinstance(action_type, HasteAction):
         combatant.has_haste_action = False
     # elif isinstance(action_type, FreeAction):

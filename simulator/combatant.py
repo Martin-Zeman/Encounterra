@@ -58,7 +58,7 @@ class Combatant(ABC):
         self.curr_num_attacks = 1
         self.speed = speed / 5
         self.movement = speed / 5
-        self.ammo = {}  # Dict of type AttackType -> current ammo
+        self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
         self.resistances = resistances
         self.multiattack_in_progress = False
         self.team_color = ""
@@ -71,10 +71,10 @@ class Combatant(ABC):
         self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
         # maps saving_throw_type -> (bonus, RollModifier)
-        self.saving_throws = {SavingThrow.STR: [0, []], SavingThrow.DEX: [0, []],
-                              SavingThrow.CON: [0, []], SavingThrow.INT: [0, []],
-                              SavingThrow.WIS: [0, []],
-                              SavingThrow.CHA: [0, []]}
+        self.saving_throws = {SavingThrow.STR: [0, {}], SavingThrow.DEX: [0, {}],
+                              SavingThrow.CON: [0, {}], SavingThrow.INT: [0, {}],
+                              SavingThrow.WIS: [0, {}],
+                              SavingThrow.CHA: [0, {}]}
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
         self.perception = 0
@@ -124,7 +124,6 @@ class Combatant(ABC):
                     try:
                         self.num_attacks = kwargs["num_attacks"]
                         self.curr_num_attacks = kwargs["num_attacks"]
-                        self.attack_groups = kwargs["attack_groups"]  # groups of multiattacks that can be combined, order sensitive
                     except KeyError:
                         logger.error("Arguments incompatible with action type")
                         return
@@ -140,8 +139,9 @@ class Combatant(ABC):
                 case Action.ATTACK | Action.RECKLESS_ATTACK:
                     factory = TO_FACTORY[action_type]
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
-                    self.ammo[factory] = self.action_factories[-1][1].ammo
-                    return self.action_factories[-1]
+                    just_added = self.action_factories[-1]
+                    self.ammo[just_added[1].name] = just_added[1].ammo
+                    return just_added
                 case Action.FIREBALL:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
                     return self.action_factories[-1]
@@ -165,8 +165,9 @@ class Combatant(ABC):
                 case BonusAction.BONUS_ATTACK:
                     factory = TO_FACTORY[action_type]
                     self.bonus_action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
-                    self.ammo[factory] = self.bonus_action_factories[-1][1].ammo
-                    return self.bonus_action_factories[-1]
+                    just_added = self.bonus_action_factories[-1]
+                    self.ammo[just_added[1].name] = just_added[1].ammo
+                    return just_added
                 case BonusAction.PAM_BONUS_ATTACK:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                     self.pam_factory = self.bonus_action_factories[-1]
@@ -311,6 +312,9 @@ class Combatant(ABC):
     def remove_condition(self, condition):
         self.conditions ^= condition
 
+    def is_affected_by(self, condition):
+        return condition in self.conditions
+
     def is_affected_by_any(self, *args):
         for condition in args:
             if condition in self.conditions:
@@ -356,10 +360,10 @@ class Combatant(ABC):
             st[1].clear()
         for f in self.action_factories:
             if FactoryFlags.IS_ATTACK_LIKE in f[1].flags:
-                self.ammo[type(f[1])] = f[1].ammo
+                self.ammo[f[1].name] = f[1].ammo
         for f in self.bonus_action_factories:
             if FactoryFlags.IS_ATTACK_LIKE in f[1].flags:
-                self.ammo[type(f[1])] = f[1].ammo
+                self.ammo[f[1].name] = f[1].ammo
         self.last_attack_factory_name = None
 
 

@@ -15,7 +15,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20], max_num=1, ammo=math.inf):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20], max_num=1, ammo=math.inf, on_hit=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.name = name
@@ -33,6 +33,7 @@ class RecklessAttackFactory(DirectThreatFactory):
             self.ammo = ammo
         self.crit_range = crit_range
         self.max_num = max_num  # the maximum number of an attack of this type, may differ from total num attacks
+        self.on_hit = on_hit
 
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0

@@ -236,6 +236,8 @@ class ActionResolver:
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.debug(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollModifier.ADVANTAGE
+        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) == 1:
+            return RollModifier.ADVANTAGE
         return RollModifier.STRAIGHT
 
     def has_disadvantage_melee(self, attack, attacker, target):
@@ -244,6 +246,10 @@ class ActionResolver:
         if target.disadvantage_on_incoming_attacks:
             return RollModifier.DISADVANTAGE
         if target.is_dodging:
+            return RollModifier.DISADVANTAGE
+        if attacker.is_affected_by(Conditions.PRONE):
+            return RollModifier.DISADVANTAGE
+        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
             return RollModifier.DISADVANTAGE
         return RollModifier.STRAIGHT
 
@@ -289,6 +295,9 @@ class ActionResolver:
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             if not target.is_alive():
                 self.battle_map.remove_combatant(target)
+            elif attack.factory.on_hit is not None:
+                attack.factory.on_hit(attacker, attack, target, self.effect_tracker)
+
             return ActionResult.DMG
         else:
             logger.debug(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
@@ -390,7 +399,7 @@ class ActionResolver:
         # elif not feasible:
         #     logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
         #     return ActionResult.UNFEASIBLE
-        use_resources(combatant, action)
+        use_resources(combatant, action, self.battle_map)
         return self.resolve_by_actoid_type(action, combatant)
 
     def resolve_action_train(self, action_type, args, combatant):

@@ -324,6 +324,14 @@ def roll_dice(dice):
             dice_sum += random.randint(1, d[1])
     return dice_sum
 
+def roll_saving_throw(bonus, dc, roll_modifier):
+    if roll_modifier is RollModifier.STRAIGHT:
+        return roll_dice('1d20') + bonus >= dc
+    elif roll_modifier is RollModifier.ADVANTAGE:
+        return max(roll_dice('1d20'), roll_dice('1d20')) + bonus >= dc
+    else:
+        return min(roll_dice('1d20'), roll_dice('1d20')) + bonus >= dc
+
 
 def roll_dice_chaos_bolt(dice):
     dice_sum = 0

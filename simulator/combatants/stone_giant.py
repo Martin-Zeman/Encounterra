@@ -1,7 +1,8 @@
+from simulator.abilities.on_hit_prone import OnHitProne
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator
+from simulator.actions.movement import MovementGenerator, GetUpFromProne
 from simulator.feasibility import get_feasible_actions
-from simulator.misc import DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.action_types import *
 from simulator.actions.actoid import Actoid, ActoidFlags
@@ -17,15 +18,20 @@ class StoneGiant(Combatant):
     def __init__(self, effect_tracker, name="Stone Giant"):
         super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
         club = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
-        self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=[20], attack_type=AttackFactory.Type.RANGED, ammo=2)
+        self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
+                                            dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=[20],
+                                            attack_type=AttackFactory.Type.RANGED, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15, attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(Passive.MULTIATTACK, num_attacks=2, attack_groups=[[club.name]])
+        self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.movement_generator = None
         self.selected_target = None
         self.path = None
+        self.saving_throws[SavingThrow.STR][0] = 6
         self.saving_throws[SavingThrow.DEX][0] = 5
         self.saving_throws[SavingThrow.CON][0] = 8
+        self.saving_throws[SavingThrow.INT][0] = 0
         self.saving_throws[SavingThrow.WIS][0] = 4
+        self.saving_throws[SavingThrow.CHA][0] = -1
 
 
     def plan_path(self, battle_map, target_copmbatant, target_position):
@@ -37,6 +43,9 @@ class StoneGiant(Combatant):
         self.target_position_cache = target_position
 
     def get_action(self, battle_map):
+        if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
+            return GetUpFromProne()
+
         # TODO add the knock prone effect to the rock
         # TODO prevent it from throwing a rock once it's used a club
         feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)

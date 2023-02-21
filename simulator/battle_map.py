@@ -85,6 +85,8 @@ class GridSquare:
     def is_empty(self):
         return self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN
 
+    def is_difficult_terrain(self):
+        return self.terrain is Terrain.DIFFICULT_TERRAIN
 
 class Map:
 
@@ -778,3 +780,6 @@ class Map:
 
     def get_enemies_within_their_movement_range(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= e.movement + 1]
+
+    def is_difficult_terrain_at(self, coord):
+        return self.grid[coord[0]][coord[1]].is_difficult_terrain()

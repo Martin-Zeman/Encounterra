@@ -1,7 +1,7 @@
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator
 from simulator.feasibility import get_feasible_actions
-from simulator.misc import DamageType
+from simulator.misc import DamageType, SavingThrow
 from simulator.action_factory import *
 from simulator.action_types import *
 from simulator.actions.actoid import Actoid, ActoidFlags
@@ -26,7 +26,12 @@ class TotemBarbarian5Lvl(Combatant):
         self.movement_generator = None
         self.selected_target = None
         self.path = None
-        # TODO Add saving throws
+        self.saving_throws[SavingThrow.STR][0] = 7
+        self.saving_throws[SavingThrow.DEX][0] = 1
+        self.saving_throws[SavingThrow.CON][0] = 7
+        self.saving_throws[SavingThrow.INT][0] = 0
+        self.saving_throws[SavingThrow.WIS][0] = 0
+        self.saving_throws[SavingThrow.CHA][0] = 1
 
 
     def plan_path(self, battle_map, target_copmbatant, target_position):

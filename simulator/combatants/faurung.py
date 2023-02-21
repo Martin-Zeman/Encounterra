@@ -1,7 +1,7 @@
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator
+from simulator.actions.movement import MovementGenerator, GetUpFromProne
 from simulator.spellslots import Spellslots
-from simulator.misc import CombatantArchetype, DamageType, get_factory_of_type
+from simulator.misc import CombatantArchetype, DamageType, get_factory_of_type, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.spells.spell import SpellStats
 from simulator.feasibility import get_feasible_actions
@@ -31,8 +31,17 @@ class Faurung(Combatant):
         self.archetype = CombatantArchetype.RANGED
         self.movement_generator_cache = None
         self.nowhere_to_go = False
+        self.saving_throws[SavingThrow.STR][0] = -1
+        self.saving_throws[SavingThrow.DEX][0] = 2
+        self.saving_throws[SavingThrow.CON][0] = 6
+        self.saving_throws[SavingThrow.INT][0] = 1
+        self.saving_throws[SavingThrow.WIS][0] = 1
+        self.saving_throws[SavingThrow.CHA][0] = 7
 
     def get_action(self, battle_map):
+        if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
+            return GetUpFromProne()
+
         enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
         while enemies and self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
             free_coords = battle_map.get_free_coords_at_distance(enemies[0], self, int(self.movement + dist[0]))

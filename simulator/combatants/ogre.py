@@ -1,6 +1,6 @@
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator
-from simulator.misc import DamageType
+from simulator.actions.movement import MovementGenerator, GetUpFromProne
+from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.misc import Side
 import numpy as np
@@ -19,6 +19,12 @@ class Ogre(Combatant):
         self.movement_generator = None
         self.selected_target = None
         self.path = None
+        self.saving_throws[SavingThrow.STR][0] = 4
+        self.saving_throws[SavingThrow.DEX][0] = -1
+        self.saving_throws[SavingThrow.CON][0] = 3
+        self.saving_throws[SavingThrow.INT][0] = -3
+        self.saving_throws[SavingThrow.WIS][0] = -2
+        self.saving_throws[SavingThrow.CHA][0] = -2
 
     def plan_path(self, battle_map, target_position):
         logger.debug(f"Planning path to {self.selected_target} at position {target_position}")
@@ -32,6 +38,9 @@ class Ogre(Combatant):
         self.target_position_cache = target_position
 
     def get_action(self, battle_map):
+        if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
+            return GetUpFromProne()
+
         # TODO investigate non-feasible movements
         if self.selected_target is None or not self.selected_target.is_alive():
             # Get new target

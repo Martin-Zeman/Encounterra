@@ -17,6 +17,14 @@ class MovementIncrement(Actoid):
         return np.array2string(self.increment)
 
 
+class GetUpFromProne(Actoid):
+    def __init__(self):
+        Actoid.__init__(self, actoid_type=ActoidFlags.IS_GET_UP_FROM_PRONE)
+
+    def __str__(self):
+        return "get up from prone"
+
+
 class MovementGenerator:
 
     def __init__(self, combatant, path, action_type=Movement.STANDARD):

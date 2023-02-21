@@ -1,6 +1,6 @@
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator
-from simulator.misc import DamageType
+from simulator.misc import DamageType, SavingThrow
 from simulator.action_factory import *
 from simulator.misc import Side
 import logging
@@ -18,6 +18,12 @@ class DragonclawCultist(Combatant):
         self.max_melee_range = 1  # TODO: maybe add a lookup here
         self.has_pack_tactics = True
         self.has_fanatical_advantage = True
+        self.saving_throws[SavingThrow.STR][0] = -1
+        self.saving_throws[SavingThrow.DEX][0] = 3
+        self.saving_throws[SavingThrow.CON][0] = 1
+        self.saving_throws[SavingThrow.INT][0] = 0
+        self.saving_throws[SavingThrow.WIS][0] = 2
+        self.saving_throws[SavingThrow.CHA][0] = 1
 
     def attack_routine(self, battle_map):
         if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):

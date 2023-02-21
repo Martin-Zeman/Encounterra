@@ -60,7 +60,7 @@ Trainign Faurung:
  Bearded Devil: the devil makes three melee attacks: one with its tail and two with its claws. Alternatively, it can use Hurl Flame twice
  Nalfeshnee: The nalfeshnee uses Horror Nimbus if it can. It then makes three attacks: one with its bite and two with its claws.
  Glabrezu: the glabrezu makes fours attacks: two with its pincers and two with its fists. Alternatively, it makes two attacks with its pincers
- and casts one spell.
+ and casts one spell.  -> this can be done by having two lists which we'd both check. When an action is selected, remove it from both lists. Remaining are still feasible.
  Chuul: the chuul makes two pincer attacks. If the chuul is grappling a creature, the chuul can also use its tentacles once
  Spined devil: The debil makes two attacks: one with its bite and one with its fork or two with its tail spines
  T-rex: the t-rex makes two attacks: one with its bite and one with its tail. It can't make both attacks against the same target ( restriction implemented in the t-rex itself)
