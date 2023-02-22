@@ -26,7 +26,7 @@ class ActionResult(Enum):
     TRAINEE_DEAD = auto()
 
 def has_advantage_saving_throw(ability, target):
-    if RollModifier.ADVANTAGE in target.saving_throws[ability.factory.saving_throw][1]:
+    if RollModifier.ADVANTAGE in target.saving_throws_roll_mod[ability.factory.saving_throw]:
         return True
     if ability.factory.saving_throw is SavingThrow.DEX and target.has_passive(
             Passive.DANGER_SENSE) and not target.is_affected_by_any(Conditions.INCAPACITATED,
@@ -38,7 +38,7 @@ def has_advantage_saving_throw(ability, target):
     return RollModifier.STRAIGHT
 
 def has_disadvantage_saving_throw(ability, target):
-    if RollModifier.DISADVANTAGE in target.saving_throws[ability.factory.saving_throw][1]:
+    if RollModifier.DISADVANTAGE in target.saving_throws_roll_mod[ability.factory.saving_throw]:
         return True
     if ability.factory.saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
         return True
@@ -48,7 +48,7 @@ def has_disadvantage_saving_throw(ability, target):
 def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     # TODO prompt reaction
     # TODO Conditions
-    bonus = target_combatant.saving_throws[ability.factory.saving_throw][0]
+    bonus = target_combatant.saving_throws[ability.factory.saving_throw]
 
     modifiers = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
     final_modifier = reconcile_roll_modifiers(modifiers)
@@ -296,7 +296,7 @@ class ActionResolver:
             if not target.is_alive():
                 self.battle_map.remove_combatant(target)
             elif attack.factory.on_hit is not None:
-                attack.factory.on_hit(attacker, attack, target, self.effect_tracker)
+                attack.factory.on_hit.hit(attacker, attack, target, self.effect_tracker)
 
             return ActionResult.DMG
         else:
@@ -341,16 +341,16 @@ class ActionResolver:
             self.resolve_toggle_ability(combatant, actoid)
 
         # TODO Rework this using the new Actoid concept
-        if ActoidFlags.IS_ATTACK_LIKE in actoid.actoid_type:
+        if ActoidFlags.IS_SPELL in actoid.actoid_type:
+            return self.resolve_spell(combatant, actoid)
+        elif ActoidFlags.IS_ATTACK_LIKE in actoid.actoid_type:
             return self.resolve_attack(actoid, combatant)
         elif ActoidFlags.IS_MOVEMENT in actoid.actoid_type:
             if not self.request_movement(combatant, actoid):
                 return False
-        elif ActoidFlags.IS_SPELL in actoid.actoid_type:
-            return self.resolve_spell(combatant, actoid)
         # elif ActoidFlags.IS_DODGE:
         #     combatant.is_dodging = True
-        #     combatant.saving_throws[SavingThrow.DEX][1] = RollModifier.ADVANTAGE
+        #     combatant.saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.ADVANTAGE)
         #     return ActionResult.FEASIBLE
         elif ActoidFlags.IS_DASH in actoid.actoid_type:
             combatant.movement += combatant.speed

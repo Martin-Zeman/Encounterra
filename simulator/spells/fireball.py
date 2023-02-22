@@ -30,7 +30,7 @@ class FireballFactory(DirectThreatFactory):
     #                                                                              SpellStats.Target.RADIUS_20.value)
     #     acc = 0
     #     for aff in affected:
-    #         acc += mean_dmg_dc_attack(self.caster.dc, "8d6", True, aff.saving_throws[SavingThrow.DEX][0])
+    #         acc += mean_dmg_dc_attack(self.caster.dc, "8d6", True, aff.saving_throws[SavingThrow.DEX])
     #     return acc
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
@@ -41,7 +41,7 @@ class FireballFactory(DirectThreatFactory):
         Calculates threat to one specific target
         """
         if battle_map.get_cartesian_distance(self.caster, target) <= Fireball.spell_range.value + SpellStats.TRANSLATE_RADIUS[Fireball.target]:
-            return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw][0])
+            return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
         else:
             return 0
 
@@ -78,5 +78,5 @@ class Fireball(Actoid, DirectThreat):
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, Fireball.target, Fireball.type, self.coord)
         acc = 0
         for aff in affected:
-            acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw][0])
+            acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
         return acc

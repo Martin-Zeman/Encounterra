@@ -19,12 +19,12 @@ class Ogre(Combatant):
         self.movement_generator = None
         self.selected_target = None
         self.path = None
-        self.saving_throws[SavingThrow.STR][0] = 4
-        self.saving_throws[SavingThrow.DEX][0] = -1
-        self.saving_throws[SavingThrow.CON][0] = 3
-        self.saving_throws[SavingThrow.INT][0] = -3
-        self.saving_throws[SavingThrow.WIS][0] = -2
-        self.saving_throws[SavingThrow.CHA][0] = -2
+        self.saving_throws[SavingThrow.STR] = 4
+        self.saving_throws[SavingThrow.DEX] = -1
+        self.saving_throws[SavingThrow.CON] = 3
+        self.saving_throws[SavingThrow.INT] = -3
+        self.saving_throws[SavingThrow.WIS] = -2
+        self.saving_throws[SavingThrow.CHA] = -2
 
     def plan_path(self, battle_map, target_position):
         logger.debug(f"Planning path to {self.selected_target} at position {target_position}")

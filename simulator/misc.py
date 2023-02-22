@@ -130,6 +130,8 @@ def reconcile_roll_modifiers(modifiers):
         modifiers.remove(RollModifier.STRAIGHT)  # TODO Do I need this?
     except KeyError:
         pass
+    except AttributeError:
+        print("FIXME")
     if len(modifiers) > 1:
         return RollModifier.STRAIGHT
     try:
@@ -174,12 +176,16 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
     @param is_resistant: True if the target is resistant to the dmg type
     @return: mean damage not accounting for critical failures
     """
-    rv = randint(1, 21, to_hit)
-    p_hit = 1.0 - rv.cdf(ac - 1)
-    dice = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
-    res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
-    return res if not is_resistant else (res / 2)
+    try:
+        rv = randint(1, 21, to_hit)
+        p_hit = 1.0 - rv.cdf(ac - 1)
+        dice = parse_dmg_dice(dmg_dice)
+        avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
+        res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
+        return res if not is_resistant else (res / 2)
+    except:
+        print("FIXME mean_dmg")
+        return 0
 
 
 @cache
@@ -238,6 +244,46 @@ def mean_dmg_bonus_increment_for_to_hit_bonus_dice(to_hit, dmg_dice, dmg_bonus, 
 
 
 def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier, factory_flags):
+    """
+    Estimates the change in mean dmg from enemies within radius given a roll modifier assuming they'd all attack the combatant
+    @param combatant: the potential receiver of the dmg
+    @param threat_radius: radius within which enemies are to be considered
+    @param battle_map:
+    @param roll_modifier: the roll modifier to be considered (advantage or disadvantage)
+    @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
+    @return: estimated change in dmg, negative for advantage, positive for disadvantage
+    """
+    potential_attackers = battle_map.get_enemies_within_hop_distance(combatant, threat_radius)
+    incoming_threat_mod_acc = 0
+    min_or_max = max if roll_modifier is RollModifier.ADVANTAGE else min
+    for pa in potential_attackers:
+        max_incoming_threat = 0
+        for f in pa.action_factories:
+            if factory_flags & f[1].flags:  # Checks for any overlap in flags
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                    "roll_modifier": roll_modifier}))
+        incoming_threat_mod_acc += max_incoming_threat
+
+        max_incoming_threat = 0
+        for f in pa.bonus_action_factories:
+            if factory_flags & f[1].flags:  # Checks for any overlap in flags
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                    "roll_modifier": roll_modifier}))
+        incoming_threat_mod_acc += max_incoming_threat
+
+        max_incoming_threat = 0
+        for f in pa.haste_action_factories:
+            if factory_flags & f[1].flags:  # Checks for any overlap in flags
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                    "roll_modifier": roll_modifier}))
+        incoming_threat_mod_acc += max_incoming_threat
+    if roll_modifier is RollModifier.ADVANTAGE:
+        assert incoming_threat_mod_acc >= 0
+    else:
+        assert incoming_threat_mod_acc <= 0
+    return incoming_threat_mod_acc
+
+def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags):
     """
     Estimates the change in mean dmg from enemies within radius given a roll modifier assuming they'd all attack the combatant
     @param combatant: the potential receiver of the dmg

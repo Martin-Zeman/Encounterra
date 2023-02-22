@@ -376,7 +376,7 @@ class Map:
             if curr_combatant is not combatant and curr_combatant.is_alive() and self.teams.are_enemies(curr_combatant, combatant):
                 pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
                 post_increment_dist = self.get_hop_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
-                if pre_increment_dist == curr_combatant.max_melee_range and post_increment_dist > curr_combatant.max_melee_range and curr_combatant.has_reaction:
+                if pre_increment_dist == curr_combatant.melee_reaction_range and post_increment_dist > curr_combatant.melee_reaction_range and curr_combatant.has_reaction:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
@@ -390,7 +390,7 @@ class Map:
                 except KeyError:
                     continue
                 if curr_combatant.has_passive(
-                        Passive.POLEARM_MASTER) and pre_increment_dist > curr_combatant.max_melee_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction:
+                        Passive.POLEARM_MASTER) and pre_increment_dist > curr_combatant.melee_reaction_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 

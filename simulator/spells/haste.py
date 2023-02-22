@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
-from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 from functools import reduce
 from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat
@@ -31,21 +31,44 @@ class HasteFactory(ThreatModifierFactory):
             threat_per_ally += max_attack_dmg
             attack_dmg_decrement_acc = 0
             for enemy in enemies:
-                attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, ally.ac, 2, at.crit_range,
-                                          ally.is_resistant_to(at.dmg_type)), enemy.attacks)
+                attacks = [af[1] for af in enemy.action_factories if FactoryFlags.IS_ATTACK_LIKE in af[1].flags]
+                attacks.extend([baf[1] for baf in enemy.bonus_action_factories if FactoryFlags.IS_ATTACK_LIKE in baf[1].flags])
+                acc = 0
+                for at in attacks:
+                    try:
+                        acc += dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, ally.ac, 2, at.crit_range, ally.is_resistant_to(at.dmg_type))
+                    except TypeError:
+                        print(f"FIXME attacks {attacks}")
+                        print(f"FIXME at {at}")
+                        print(f"FIXME acc {acc}")
+                        print(f"FIXME ally.ac {ally.ac}")
+                        print(f"FIXME at.to_hit {at.to_hit}")
+                        print(f"FIXME at.dmg_dice {at.dmg_dice}")
+                        print(f"FIXME at.crit_range { at.crit_range}")
+                        print(f"FIXME ally.is_resistant_to(at.dmg_type) {ally.is_resistant_to(at.dmg_type)}")
+                # attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, ally.ac, 2, at.crit_range,
+                #                           ally.is_resistant_to(at.dmg_type)), attacks, 0)
 
-                attack_dmg_decrement_acc /= len(enemy.attacks)
+                acc /= len(enemy.attacks)
+                # attack_dmg_decrement_acc /= len(enemy.attacks)
                 # TODO include the ST-based abilities here
-            threat_per_ally += attack_dmg_decrement_acc
+            threat_per_ally += acc
+            # threat_per_ally += attack_dmg_decrement_acc
             ret.append([ally, threat_per_ally])
         ret.sort(key=lambda e: e[1], reverse=True)
         return ret
 
     def find_best_args(self, combatant, battle_map):
-        return HasteFactory.get_allies_sorted_by_threat(combatant, battle_map)[0]
+        try:
+            return HasteFactory.get_allies_sorted_by_threat(combatant, battle_map)[0]
+        except IndexError:
+            return None
 
     def create_best(self, combatant, battle_map):
-        return Haste(self.find_best_args(combatant, battle_map), self)
+        ally = self.find_best_args(combatant, battle_map)
+        if ally is None:
+            return None
+        return Haste(ally, self)
 
     def create(self, target_combatant):
         return Haste(target_combatant, self)

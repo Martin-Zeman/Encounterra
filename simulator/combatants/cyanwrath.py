@@ -20,10 +20,10 @@ class Cyanwrath(Combatant):
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.POLEARM_MASTER)
         self.add_ability(Passive.SENTINEL)
-        self.max_melee_range = 2  # TODO: maybe add a lookup here
+        self.melee_reaction_range = 2  # TODO: maybe add a lookup here
 
     def attack_routine(self, battle_map):
-        if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
+        if battle_map.are_in_range(self, self.selected_target, self.melee_reaction_range):
             logger.debug("Is in range")
             if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:
                 self.multiattack_in_progress = True

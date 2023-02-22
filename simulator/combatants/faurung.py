@@ -31,19 +31,22 @@ class Faurung(Combatant):
         self.archetype = CombatantArchetype.RANGED
         self.movement_generator_cache = None
         self.nowhere_to_go = False
-        self.saving_throws[SavingThrow.STR][0] = -1
-        self.saving_throws[SavingThrow.DEX][0] = 2
-        self.saving_throws[SavingThrow.CON][0] = 6
-        self.saving_throws[SavingThrow.INT][0] = 1
-        self.saving_throws[SavingThrow.WIS][0] = 1
-        self.saving_throws[SavingThrow.CHA][0] = 7
+        self.saving_throws[SavingThrow.STR] = -1
+        self.saving_throws[SavingThrow.DEX] = 2
+        self.saving_throws[SavingThrow.CON] = 6
+        self.saving_throws[SavingThrow.INT] = 1
+        self.saving_throws[SavingThrow.WIS] = 1
+        self.saving_throws[SavingThrow.CHA] = 7
 
     def get_action(self, battle_map):
+        logger.debug(f"get_action 1")
         if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
             return GetUpFromProne()
 
         enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
+        logger.debug(f"get_action 2")
         while enemies and self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
+            logger.debug(f"get_action 3")
             free_coords = battle_map.get_free_coords_at_distance(enemies[0], self, int(self.movement + dist[0]))
             if not free_coords:
                 # logger.debug(f"{self.name} has nowhere to go to")
@@ -52,28 +55,40 @@ class Faurung(Combatant):
             path = battle_map.get_path_to(self, free_coords[0])
             self.movement_generator_cache = MovementGenerator(self, path).get_generator()
 
+        logger.debug(f"get_action 4")
         if self.movement and self.movement_generator_cache:
             try:
                 movement = next(self.movement_generator_cache)
                 logger.debug("Trying to get distance")
                 return movement
             except StopIteration:
+                logger.debug(f"get_action 5")
                 self.movement_generator_cache = None
 
-
-        feasible_actions = get_feasible_actions(self.action_factories, self, battle_map)
-        feasible_bonus_actions = get_feasible_actions(self.bonus_action_factories, self, battle_map)
-        feasible_haste_actions = get_feasible_actions(self.haste_action_factories, self, battle_map)
+        logger.debug(f"get_action 6")
+        feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)
+        logger.debug(f"get_action feasible_action_factories = {feasible_action_factories}")
+        feasible_bonus_action_factories = get_feasible_actions(self.bonus_action_factories, self, battle_map)
+        logger.debug(f"get_action feasible_bonus_action_factories = {feasible_bonus_action_factories}")
+        feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
+        logger.debug(f"get_action feasible_haste_action_factories = {feasible_haste_action_factories}")
+        logger.debug(f"get_action 7")
         # feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
-        if len(feasible_actions) > 0 or len(feasible_bonus_actions) > 0 or len(feasible_haste_actions) > 0:# or len(feasible_free_actions > 0):
-            feasible_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_actions]))
-            feasible_bonus_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_bonus_actions]))
-            feasible_haste_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_haste_actions]))
+        if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:# or len(feasible_free_actions > 0):
+            logger.debug(f"get_action 8")
+            feasible_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_action_factories]))
+            logger.debug(f"get_action feasible_actions = {feasible_actions}")
+            feasible_bonus_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_bonus_action_factories]))
+            logger.debug(f"get_action feasible_bonus_actions = {feasible_bonus_actions}")
+            feasible_haste_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_haste_action_factories]))
+            logger.debug(f"get_action feasible_haste_actions = {feasible_haste_actions}")
+            logger.debug(f"get_action 9")
             # feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
 
             action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]
             bonus_action_threats = [(fba.calculate_threat(self, battle_map), fba) for fba in feasible_bonus_actions]
             haste_action_threats = [(fha.calculate_threat(self, battle_map), fha) for fha in feasible_haste_actions]
+            logger.debug(f"get_action 10")
 
             # action_threats.sort(key=lambda a: a[0], reverse=True)
             # bonus_action_threats.sort(key=lambda a: a[0], reverse=True)
@@ -82,6 +97,7 @@ class Faurung(Combatant):
             all_actions.extend(bonus_action_threats)
             all_actions.extend(haste_action_threats)
             all_actions.sort(key=lambda a: a[0], reverse=True)
+            logger.debug(f"get_action 11")
             ret = None
             try:
                 ret = all_actions[0][1]

@@ -26,12 +26,12 @@ class TotemBarbarian5Lvl(Combatant):
         self.movement_generator = None
         self.selected_target = None
         self.path = None
-        self.saving_throws[SavingThrow.STR][0] = 7
-        self.saving_throws[SavingThrow.DEX][0] = 1
-        self.saving_throws[SavingThrow.CON][0] = 7
-        self.saving_throws[SavingThrow.INT][0] = 0
-        self.saving_throws[SavingThrow.WIS][0] = 0
-        self.saving_throws[SavingThrow.CHA][0] = 1
+        self.saving_throws[SavingThrow.STR] = 7
+        self.saving_throws[SavingThrow.DEX] = 1
+        self.saving_throws[SavingThrow.CON] = 7
+        self.saving_throws[SavingThrow.INT] = 0
+        self.saving_throws[SavingThrow.WIS] = 0
+        self.saving_throws[SavingThrow.CHA] = 1
 
 
     def plan_path(self, battle_map, target_copmbatant, target_position):

@@ -26,4 +26,5 @@ class FactoryFlags(Flag):
     IS_DIRECT_THREAT = auto()
     IS_ATTACK_MODIFIER = auto()
     DEX_SAVE_APPLIES = auto()
+    HAS_AMMO = auto()
 

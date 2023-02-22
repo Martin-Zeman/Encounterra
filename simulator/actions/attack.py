@@ -18,6 +18,7 @@ class AttackFactory(DirectThreatFactory):
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=[20], max_num=1, ammo=math.inf, on_hit=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
+        self.flags |= FactoryFlags.HAS_AMMO
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit

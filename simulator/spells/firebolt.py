@@ -38,10 +38,16 @@ class FireboltFactory(DirectThreatFactory):
         hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1)) for pt in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
-        return potential_targets[0][0]
+        try:
+            return potential_targets[0][0]
+        except IndexError:
+            return None
 
     def create_best(self, combatant, battle_map):
-        return Firebolt(self.find_best_args(combatant, battle_map), self)
+        best = self.find_best_args(combatant, battle_map)
+        if best is None:
+            return None
+        return Firebolt(best, self)
 
     def create(self, target_combatant):
         return Firebolt(target_combatant, self)

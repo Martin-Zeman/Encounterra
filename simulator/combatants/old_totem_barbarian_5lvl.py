@@ -23,7 +23,7 @@ class TotemBarbarian5Lvl(Combatant):
 
 
     def attack_routine(self, battle_map):
-        if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
+        if battle_map.are_in_range(self, self.selected_target, self.melee_reaction_range):
             logger.debug("Is in range")
             # if self.curr_num_attacks == self.num_attacks and not self.reckless_attack_active:
             #     logger.debug(f"{self} uses Reckless Attack", extra={"team": self.team_color})
@@ -68,12 +68,12 @@ class TotemBarbarian5Lvl(Combatant):
                 self.movement_generator = MovementGenerator(self, path, True).get_generator()
                 self.target_position_cache = target_position
 
-            if not battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
+            if not battle_map.are_in_range(self, self.selected_target, self.melee_reaction_range):
                 try:
                     movement = next(self.movement_generator)
                     return (Movement.STANDARD, movement)
                 except StopIteration:
-                    if self.has_haste_action and not battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
+                    if self.has_haste_action and not battle_map.are_in_range(self, self.selected_target, self.melee_reaction_range):
                         logger.debug(f"{self} uses haste dash", extra={"team": self.team_color})
                         return (HasteAction.HASTE_DASH,)
                     elif self.has_haste_action:

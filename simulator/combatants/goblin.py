@@ -19,12 +19,12 @@ class Goblin(Combatant):
         # TODO Nimble Escape
         self.selected_target = None
         self.dist_to_nearest = None
-        self.saving_throws[SavingThrow.STR][0] = -1
-        self.saving_throws[SavingThrow.DEX][0] = 2
-        self.saving_throws[SavingThrow.CON][0] = 0
-        self.saving_throws[SavingThrow.INT][0] = 0
-        self.saving_throws[SavingThrow.WIS][0] = -1
-        self.saving_throws[SavingThrow.CHA][0] = -1
+        self.saving_throws[SavingThrow.STR] = -1
+        self.saving_throws[SavingThrow.DEX] = 2
+        self.saving_throws[SavingThrow.CON] = 0
+        self.saving_throws[SavingThrow.INT] = 0
+        self.saving_throws[SavingThrow.WIS] = -1
+        self.saving_throws[SavingThrow.CHA] = -1
 
     def plan_path(self, battle_map):
         free_coords = battle_map.get_free_coords_at_distance(self.selected_target, self, 8, 16)

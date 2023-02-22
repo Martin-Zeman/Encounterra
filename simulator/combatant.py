@@ -66,15 +66,15 @@ class Combatant(ABC):
         self.selected_ally = None
         self.planned_movement = None
         self.movement_generator = None
-        self.max_melee_range = 1
+        self.melee_reaction_range = 1
         self.target_position_cache = None
         self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
         # maps saving_throw_type -> (bonus, RollModifier)
-        self.saving_throws = {SavingThrow.STR: [0, {}], SavingThrow.DEX: [0, {}],
-                              SavingThrow.CON: [0, {}], SavingThrow.INT: [0, {}],
-                              SavingThrow.WIS: [0, {}],
-                              SavingThrow.CHA: [0, {}]}
+        self.saving_throws = {SavingThrow.STR: 0, SavingThrow.DEX: 0,
+                              SavingThrow.CON: 0, SavingThrow.INT: 0,
+                              SavingThrow.WIS: 0,
+                              SavingThrow.CHA: 0}
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
         self.perception = 0
@@ -90,6 +90,7 @@ class Combatant(ABC):
         self.size = Size.MEDIUM
         self.saving_throws_flat_mod = {SavingThrow.STR: [0], SavingThrow.DEX: [0], SavingThrow.CON: [0], SavingThrow.INT: [0], SavingThrow.WIS: [0], SavingThrow.CHA: [0]}
         self.saving_throws_dice_mod = {SavingThrow.STR: [], SavingThrow.DEX: [], SavingThrow.CON: [], SavingThrow.INT: [], SavingThrow.WIS: [], SavingThrow.CHA: []}
+        self.saving_throws_roll_mod = {SavingThrow.STR: set(), SavingThrow.DEX: set(), SavingThrow.CON: set(), SavingThrow.INT: set(), SavingThrow.WIS: set(), SavingThrow.CHA: set()}
         self.to_hit_flat_mod = [0]
         self.to_hit_dice_mod = []
         self.action_types_added = []
@@ -329,7 +330,7 @@ class Combatant(ABC):
         self.movement = self.speed
         self.target_position_cache = None  # I believe this should also reset every turn as the path can be blocked by other combatants
         # if self.is_dodging:
-        #     self.saving_throws[SavingThrow.DEX][1] = RollModifier.STRAIGHT
+        #     self.saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.STRAIGHT)
         # self.is_dodging = False # TODO make sure the effect tracker takes care of this
         self.already_cast_leveled_spell_this_turn = False
         if self.shield_spell_active:
@@ -359,10 +360,10 @@ class Combatant(ABC):
         for st in self.saving_throws.values():
             st[1].clear()
         for f in self.action_factories:
-            if FactoryFlags.IS_ATTACK_LIKE in f[1].flags:
+            if FactoryFlags.HAS_AMMO in f[1].flags:
                 self.ammo[f[1].name] = f[1].ammo
         for f in self.bonus_action_factories:
-            if FactoryFlags.IS_ATTACK_LIKE in f[1].flags:
+            if FactoryFlags.HAS_AMMO in f[1].flags:
                 self.ammo[f[1].name] = f[1].ammo
         self.last_attack_factory_name = None
 

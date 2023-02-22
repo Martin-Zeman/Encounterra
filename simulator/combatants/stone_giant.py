@@ -23,15 +23,16 @@ class StoneGiant(Combatant):
                                             attack_type=AttackFactory.Type.RANGED, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15, attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
+        self.melee_reaction_range = 3
         self.movement_generator = None
         self.selected_target = None
         self.path = None
-        self.saving_throws[SavingThrow.STR][0] = 6
-        self.saving_throws[SavingThrow.DEX][0] = 5
-        self.saving_throws[SavingThrow.CON][0] = 8
-        self.saving_throws[SavingThrow.INT][0] = 0
-        self.saving_throws[SavingThrow.WIS][0] = 4
-        self.saving_throws[SavingThrow.CHA][0] = -1
+        self.saving_throws[SavingThrow.STR] = 6
+        self.saving_throws[SavingThrow.DEX] = 5
+        self.saving_throws[SavingThrow.CON] = 8
+        self.saving_throws[SavingThrow.INT] = 0
+        self.saving_throws[SavingThrow.WIS] = 4
+        self.saving_throws[SavingThrow.CHA] = -1
 
 
     def plan_path(self, battle_map, target_copmbatant, target_position):

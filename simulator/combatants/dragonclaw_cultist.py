@@ -15,18 +15,18 @@ class DragonclawCultist(Combatant):
         self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
-        self.max_melee_range = 1  # TODO: maybe add a lookup here
+        self.melee_reaction_range = 1  # TODO: maybe add a lookup here
         self.has_pack_tactics = True
         self.has_fanatical_advantage = True
-        self.saving_throws[SavingThrow.STR][0] = -1
-        self.saving_throws[SavingThrow.DEX][0] = 3
-        self.saving_throws[SavingThrow.CON][0] = 1
-        self.saving_throws[SavingThrow.INT][0] = 0
-        self.saving_throws[SavingThrow.WIS][0] = 2
-        self.saving_throws[SavingThrow.CHA][0] = 1
+        self.saving_throws[SavingThrow.STR] = -1
+        self.saving_throws[SavingThrow.DEX] = 3
+        self.saving_throws[SavingThrow.CON] = 1
+        self.saving_throws[SavingThrow.INT] = 0
+        self.saving_throws[SavingThrow.WIS] = 2
+        self.saving_throws[SavingThrow.CHA] = 1
 
     def attack_routine(self, battle_map):
-        if battle_map.are_in_range(self, self.selected_target, self.max_melee_range):
+        if battle_map.are_in_range(self, self.selected_target, self.melee_reaction_range):
             logger.debug("Is in range")
             if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:
                 self.multiattack_in_progress = True

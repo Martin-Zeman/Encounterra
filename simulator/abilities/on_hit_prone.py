@@ -8,6 +8,6 @@ class OnHitProne(OnHit):
         self.dc = dc
 
     def hit(self, attacker, attack, target, effect_tracker):
-        saved = roll_saving_throw(target.saving_throws[self.st][0], self.dc, reconcile_roll_modifiers(target.saving_throws[self.st][0]))
+        saved = roll_saving_throw(target.saving_throws[self.st], self.dc, reconcile_roll_modifiers(target.saving_throws[self.st]))
         if not saved:
             target.apply_condition(Conditions.PRONE)

@@ -36,12 +36,15 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def activate(self):
         self.combatants[0].is_dodging = True
-        self.combatants[0].saving_throws[SavingThrow.DEX][1].append(RollModifier.ADVANTAGE)
+        try:
+            self.combatants[0].saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.ADVANTAGE)
+        except AttributeError:
+            print("FIXME")
 
     def deactivate(self):
         logger.debug(f"{self.combatants[0]}'s dodge fades")
         self.combatants[0].is_dodging = False
-        self.combatants[0].saving_throws[SavingThrow.DEX][1].remove(RollModifier.ADVANTAGE)
+        self.combatants[0].saving_throws_roll_mod[SavingThrow.DEX].remove(RollModifier.ADVANTAGE)
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

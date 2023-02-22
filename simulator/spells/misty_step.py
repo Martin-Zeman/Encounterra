@@ -1,7 +1,7 @@
 from simulator.spells.spell import SpellStats
 import logging
 from simulator.action_types import BonusAction, Action
-from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 from simulator.misc import CombatantArchetype, DistanceMetric
 
@@ -107,8 +107,8 @@ class MistyStep(Actoid, ThreatModifier):
                 factories = enemy.action_factories
                 factories.extend(enemy.bonus_action_factories)
                 factories.extend(enemy.haste_action_factories)
-                max_threat_before = max([f[1].calculate_threat_to_target(battle_map, self.factory.caster) for f in factories])
+                max_threat_before = max([f[1].calculate_threat_to_target(battle_map, self.factory.caster) for f in factories if FactoryFlags.IS_DIRECT_THREAT in f[1].flags])
                 with battle_map.as_if_combatant_position(self.factory.caster, self.coord):
-                    max_threat_after = max([f[1].calculate_threat_to_target(battle_map, self.factory.caster) for f in factories])
+                    max_threat_after = max([f[1].calculate_threat_to_target(battle_map, self.factory.caster) for f in factories if FactoryFlags.IS_DIRECT_THREAT in f[1].flags])
             return max_threat_after - max_threat_before
         return 0
