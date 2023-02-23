@@ -45,7 +45,7 @@ def convert_path_to_increments(path):
     increments = []
     for i in range(len(path) - 1):
         increments.append(path[i + 1] - path[i])
-    logger.verbose(increments)
+    logger.debug(increments)
     return increments
 
 
@@ -286,7 +286,7 @@ class Map:
                     row += "\u001b[36m%s\x1b[0m\t" % dist
                 else:
                     row += "%s\t" % dist if (x, y) not in self.difficult_set else "\x1b[38;5;226m%s\x1b[0m\t" % dist
-            logger.verbose(row)
+            logger.debug(row)
 
     def minDistance(self, dist, open_set):
         """
@@ -539,9 +539,9 @@ class Map:
         :return: list of np.array increments to the target combatant
         """
         my_location = self.get_combatant_position(combatant)
-        logger.verbose(f"Origin {my_location}")
+        logger.debug(f"Origin {my_location}")
         enemy_location = self.get_combatant_position(target_combatant)
-        logger.verbose(f"Destination {enemy_location}")
+        logger.debug(f"Destination {enemy_location}")
         mask = self.build_combatant_adjacency_mask(combatant)
         distances, shortest_paths = self.dijkstra(my_location, mask)
         enemy_adjacent_location = self.get_nearest_adjacent_coord(my_location, enemy_location)
@@ -563,8 +563,8 @@ class Map:
         """
         # TODO: consider making a variant which doesn't provoke AOO
         my_location = self.get_combatant_position(combatant)
-        logger.verbose(f"Origin {my_location}")
-        logger.verbose(f"Destination {target_coord}")
+        logger.debug(f"Origin {my_location}")
+        logger.debug(f"Destination {target_coord}")
         mask = self.build_combatant_adjacency_mask(combatant)
         distances, shortest_paths = self.dijkstra(my_location, mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, target_coord)

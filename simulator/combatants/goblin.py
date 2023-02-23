@@ -1,5 +1,5 @@
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator, GetUpFromProne
+from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.misc import Side
@@ -12,10 +12,10 @@ class Goblin(Combatant):
 
     def __init__(self, effect_tracker, name="Goblin"):
         super().__init__(effect_tracker, name, level=1, hp=7, ac=15, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.scimitar_attack = self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
-        self.shortbow_attack = self.add_ability(Action.ATTACK,  name="Shortbow", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=16, crit_range=[20], attack_type=AttackFactory.Type.RANGED)
+        self.scimitar_attack = self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.shortbow_attack = self.add_ability(Action.ATTACK,  name="Shortbow", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=16, crit_range=1, attack_type=AttackFactory.Type.RANGED)
         self.nimble_disengage = self.add_ability(BonusAction.CUNNING_DISENGAGE)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
         # TODO Nimble Escape
         self.selected_target = None
         self.dist_to_nearest = None
@@ -51,7 +51,7 @@ class Goblin(Combatant):
 
     def get_action(self, battle_map):
         if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
-            return GetUpFromProne()
+            return GetUpFactory().create()
 
         # TODO he doesn't shoot after moving into position
         if not self.selected_target:
@@ -82,7 +82,7 @@ class Goblin(Combatant):
                 # Move
                 try:
                     movement = next(self.movement_generator)
-                    logger.verbose(f"Moving by {movement}")
+                    logger.debug(f"Moving by {movement}")
                     return movement
                 except StopIteration:
                     self.movement_generator = None

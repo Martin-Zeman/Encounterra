@@ -1,5 +1,5 @@
-from simulator.misc import DamageType
-from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.misc import DamageType, get_attacks
+from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
@@ -111,9 +111,13 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         total_threat = 0
         max_threat = 0
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
+        if not potential_targets:
+            return 0
         # This doesn't take different attack ranges into account
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
-        for attack in combatant.attacks:
+        attacks = get_attacks(combatant)
+        for attack in attacks:
+            print(f"FIXME reduce rage calculate_threat {potential_targets}")
             dmg_acc = reduce(lambda acc, pt: acc + dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
                                                                        pt.ac, rage_bonus), potential_targets)
             dmg_acc /= len(potential_targets)

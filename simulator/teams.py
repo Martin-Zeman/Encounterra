@@ -66,7 +66,7 @@ class Teams:
         try:
             team_members.remove(combatant)
         except ValueError:
-            logging.ERROR("FIXME")
+            logging.ERROR("FIXME get_allies")
         return team_members
 
     def get_enemies(self, combatant):

@@ -1,6 +1,6 @@
 from simulator.abilities.on_hit_prone import OnHitProne
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator, GetUpFromProne
+from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_actions
 from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
@@ -19,7 +19,7 @@ class StoneGiant(Combatant):
         super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
         club = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
         self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
-                                            dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=[20],
+                                            dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1,
                                             attack_type=AttackFactory.Type.RANGED, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15, attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
@@ -45,7 +45,7 @@ class StoneGiant(Combatant):
 
     def get_action(self, battle_map):
         if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
-            return GetUpFromProne()
+            return GetUpFactory().create()
 
         # TODO add the knock prone effect to the rock
         # TODO prevent it from throwing a rock once it's used a club
@@ -89,7 +89,7 @@ class StoneGiant(Combatant):
                 if not battle_map.are_in_range(self, selected_action.target_combatant, selected_action.factory.range):
                     try:
                         movement = next(self.movement_generator)
-                        logger.verbose(f"Moving by {movement}")
+                        logger.debug(f"Moving by {movement}")
                         return movement
                     except StopIteration:
                         # this means that either the path has been exhausted and we're still not in range => ranged attack

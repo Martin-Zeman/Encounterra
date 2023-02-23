@@ -52,6 +52,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         try:
             to_hit_bonus = modified_stats['to_hit']
             potential_targets = battle_map.get_enemies_within_radius(TwinnedFirebolt.spell_range.value)
+            print(f"FIXME reduce calculate_threat_approx_mod twinned firebolt {potential_targets}")
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(self.to_hit + to_hit_bonus, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFirebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFirebolt.dmg_type)), potential_targets)
             dmg_acc /= len(potential_targets)
             return dmg_acc * 2

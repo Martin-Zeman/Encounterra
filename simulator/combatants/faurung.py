@@ -1,5 +1,5 @@
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator, GetUpFromProne
+from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.spellslots import Spellslots
 from simulator.misc import CombatantArchetype, DamageType, get_factory_of_type, SavingThrow, Conditions
 from simulator.action_factory import *
@@ -41,7 +41,7 @@ class Faurung(Combatant):
     def get_action(self, battle_map):
         logger.debug(f"get_action 1")
         if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
-            return GetUpFromProne()
+            return GetUpFactory().create()
 
         enemies, dist = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
         logger.debug(f"get_action 2")
@@ -86,8 +86,11 @@ class Faurung(Combatant):
             # feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
 
             action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]
+            logger.debug(f"get_action action_threats = {action_threats}")
             bonus_action_threats = [(fba.calculate_threat(self, battle_map), fba) for fba in feasible_bonus_actions]
+            logger.debug(f"get_action bonus_action_threats = {bonus_action_threats}")
             haste_action_threats = [(fha.calculate_threat(self, battle_map), fha) for fha in feasible_haste_actions]
+            logger.debug(f"get_action haste_action_threats = {haste_action_threats}")
             logger.debug(f"get_action 10")
 
             # action_threats.sort(key=lambda a: a[0], reverse=True)

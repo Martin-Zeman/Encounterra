@@ -23,8 +23,8 @@ def check_feasibility(combatant, action, battle_map):
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
-                res &= battle_map.teams.are_allies(combatant, action.targets[0])
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.spell_range.value
+                res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
             case Action.CHAOSBOLT:
                 res = combatant.has_action
@@ -138,10 +138,16 @@ def check_feasibility(combatant, action, battle_map):
                 logger.error("Unknown reaction")
         return combatant.has_reaction
     elif isinstance(action_type, Movement):
-        target_position = battle_map.get_combatant_position(combatant) + action.increment
-        res = combatant.movement > 0 and battle_map.is_valid_coord(target_position) and battle_map.is_empty(target_position)
-        res &= not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
-        return res
+        match action_type:
+            case Movement.STANDARD:
+                target_position = battle_map.get_combatant_position(combatant) + action.increment
+                res = combatant.movement > 0 and battle_map.is_valid_coord(target_position) and battle_map.is_empty(target_position)
+                res &= not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
+                return res
+            case Movement.GET_UP_FROM_PRONE:
+                return combatant.movement >= (combatant.speed / 2)
+            case _:
+                logger.error("Unknown movement")
     elif isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
             return False

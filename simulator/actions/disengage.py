@@ -49,4 +49,5 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         Calculate how much dmg would the disengage potentially mitigate. This will be the same as the one for the factory.
         """
         adjacent_enemies = battle_map.get_adjacent_enemies(combatant)
+        print(f"FIXME reduce calculate_threat {adjacent_enemies}")
         return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(battle_map, self.combatant), adjacent_enemies)

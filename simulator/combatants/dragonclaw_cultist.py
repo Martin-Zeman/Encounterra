@@ -12,8 +12,8 @@ class DragonclawCultist(Combatant):
 
     def __init__(self, effect_tracker, name="Dragonclaw"):
         super().__init__(effect_tracker, name, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
+        self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.melee_reaction_range = 1  # TODO: maybe add a lookup here
         self.has_pack_tactics = True
@@ -66,7 +66,7 @@ class DragonclawCultist(Combatant):
                 self.movement_generator = MovementGenerator(self, path, True).get_generator()
                 try:
                     movement = next(self.movement_generator)
-                    logger.verbose(f"Moving by {movement}")
+                    logger.debug(f"Moving by {movement}")
                     return (Movement.STANDARD, movement)
                 except StopIteration:
                     pass  # can't go any farther

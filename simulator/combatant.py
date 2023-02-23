@@ -45,7 +45,6 @@ class Combatant(ABC):
         self.dc = dc
         self.init_bonus = init_bonus
         self.spell_to_hit = spell_to_hit
-        self.attacks = []
         self.aoo_factory = None
         self.pam_factory = None
         self.ability_dmg_bonus = 0
@@ -357,8 +356,9 @@ class Combatant(ABC):
         self.conditions = Conditions.NONE
         self.condition = self.State.FINE
         self.has_haste_action = False
-        for st in self.saving_throws.values():
-            st[1].clear()
+        self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)
+        self.saving_throws_dice_mod = dict.fromkeys(self.saving_throws_dice_mod.keys(), [])
+        self.saving_throws_roll_mod = dict.fromkeys(self.saving_throws_roll_mod.keys(), set())
         for f in self.action_factories:
             if FactoryFlags.HAS_AMMO in f[1].flags:
                 self.ammo[f[1].name] = f[1].ammo

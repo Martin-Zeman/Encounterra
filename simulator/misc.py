@@ -1,4 +1,3 @@
-import sys
 from enum import Enum, Flag, auto
 import random
 import re
@@ -6,9 +5,10 @@ import math
 import numpy as np
 from scipy.stats import randint
 from functools import reduce, partial, cache
-from functools import reduce
-
 from simulator.actions.actoid import FactoryFlags
+import logging
+
+logger = logging.getLogger(__name__)
 
 ROUND_HORIZON = 3
 
@@ -131,7 +131,7 @@ def reconcile_roll_modifiers(modifiers):
     except KeyError:
         pass
     except AttributeError:
-        print("FIXME")
+        print("FIXME reconcile_roll_modifiers")
     if len(modifiers) > 1:
         return RollModifier.STRAIGHT
     try:
@@ -161,6 +161,7 @@ def parse_dmg_dice(dice_string):
 
 def avg_roll(dice_string):
     dice = parse_dmg_dice(dice_string)
+    print(f"FIXME reduce avg_roll {dice}")
     return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
 
 
@@ -176,16 +177,13 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
     @param is_resistant: True if the target is resistant to the dmg type
     @return: mean damage not accounting for critical failures
     """
-    try:
-        rv = randint(1, 21, to_hit)
-        p_hit = 1.0 - rv.cdf(ac - 1)
-        dice = parse_dmg_dice(dmg_dice)
-        avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
-        res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
-        return res if not is_resistant else (res / 2)
-    except:
-        print("FIXME mean_dmg")
-        return 0
+    rv = randint(1, 21, to_hit)
+    p_hit = 1.0 - rv.cdf(ac - 1)
+    dice = parse_dmg_dice(dmg_dice)
+    print(f"FIXME reduce mean_dmg {dice}")
+    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
+    res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
+    return res if not is_resistant else (res / 2)
 
 
 @cache
@@ -285,43 +283,33 @@ def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier,
 
 def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags):
     """
-    Estimates the change in mean dmg from enemies within radius given a roll modifier assuming they'd all attack the combatant
+    Estimates the mean dmg from enemies within radius they'd all attack the combatant
     @param combatant: the potential receiver of the dmg
     @param threat_radius: radius within which enemies are to be considered
     @param battle_map:
-    @param roll_modifier: the roll modifier to be considered (advantage or disadvantage)
     @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
     @return: estimated change in dmg, negative for advantage, positive for disadvantage
     """
     potential_attackers = battle_map.get_enemies_within_hop_distance(combatant, threat_radius)
-    incoming_threat_mod_acc = 0
-    min_or_max = max if roll_modifier is RollModifier.ADVANTAGE else min
+    incoming_threat_acc = 0
+    counter = 0
     for pa in potential_attackers:
-        max_incoming_threat = 0
         for f in pa.action_factories:
             if factory_flags & f[1].flags:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
-                    "roll_modifier": roll_modifier}))
-        incoming_threat_mod_acc += max_incoming_threat
+                incoming_threat_acc += f[1].calculate_threat_to_target(battle_map, combatant)
+                counter += 1
 
-        max_incoming_threat = 0
         for f in pa.bonus_action_factories:
             if factory_flags & f[1].flags:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
-                    "roll_modifier": roll_modifier}))
-        incoming_threat_mod_acc += max_incoming_threat
+                incoming_threat_acc += f[1].calculate_threat_to_target(battle_map, combatant)
+                counter += 1
 
-        max_incoming_threat = 0
         for f in pa.haste_action_factories:
             if factory_flags & f[1].flags:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
-                    "roll_modifier": roll_modifier}))
-        incoming_threat_mod_acc += max_incoming_threat
-    if roll_modifier is RollModifier.ADVANTAGE:
-        assert incoming_threat_mod_acc >= 0
-    else:
-        assert incoming_threat_mod_acc <= 0
-    return incoming_threat_mod_acc
+                incoming_threat_acc += f[1].calculate_threat_to_target(battle_map, combatant)
+                counter += 1
+    incoming_threat_acc /= counter
+    return incoming_threat_acc
 
 def print_ac_dc_range(min, max, attacks, monster_name="Monster"):
     print(monster_name + ":")
@@ -371,12 +359,13 @@ def roll_dice(dice):
     return dice_sum
 
 def roll_saving_throw(bonus, dc, roll_modifier):
+    d20 = parse_dmg_dice('1d20')
     if roll_modifier is RollModifier.STRAIGHT:
-        return roll_dice('1d20') + bonus >= dc
+        return roll_dice(d20) + bonus >= dc
     elif roll_modifier is RollModifier.ADVANTAGE:
-        return max(roll_dice('1d20'), roll_dice('1d20')) + bonus >= dc
+        return max(roll_dice(d20), roll_dice(d20)) + bonus >= dc
     else:
-        return min(roll_dice('1d20'), roll_dice('1d20')) + bonus >= dc
+        return min(roll_dice(d20), roll_dice(d20)) + bonus >= dc
 
 
 def roll_dice_chaos_bolt(dice):
@@ -426,6 +415,12 @@ def get_factory_of_type(factories, type):
         if f[0] is type:
             return f[1]
     return None
+
+
+def get_attacks(combatant):
+    attacks = [af[1] for af in combatant.action_factories if FactoryFlags.IS_ATTACK_LIKE in af[1].flags]
+    attacks.extend([baf[1] for baf in combatant.bonus_action_factories if FactoryFlags.IS_ATTACK_LIKE in baf[1].flags])
+    return attacks
 
 
 # def init_coroutine(func):

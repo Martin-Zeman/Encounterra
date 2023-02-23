@@ -1,4 +1,4 @@
-from simulator.misc import DamageType
+from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -36,7 +36,8 @@ class TotemRageFactory(ThreatModifierFactory):
         max_threat = 0
         # This doesn't take different attack ranges into account
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
-        for attack in self.combatant.attacks:
+        attacks = get_attacks(self.combatant)
+        for attack in attacks:
             dmg_inc = dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, target.ac, rage_bonus)
             max_threat = max(dmg_inc, max_threat)
 
@@ -116,11 +117,15 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         total_threat = 0
         max_threat = 0
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
+        if not potential_targets:
+            return 0
         # This doesn't take different attack ranges into account
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
-        for attack in combatant.attacks:
+        attacks = get_attacks(combatant)
+        for attack in attacks:
+            print(f"FIXME totem rage reduce calculate_threat {potential_targets}")
             dmg_acc = reduce(lambda acc, pt: acc + dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
-                                                                       pt.ac, rage_bonus), potential_targets)
+                                                                       pt.ac, rage_bonus), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_threat = max(dmg_acc, max_threat)
 

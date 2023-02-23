@@ -40,6 +40,7 @@ class Movement(Enum):
     DISENGAGE = auto()
     CUNNING_DISENGAGE = auto()
     FORCED = auto()
+    GET_UP_FROM_PRONE = auto()
 
 #
 # class FreeAction(Enum):

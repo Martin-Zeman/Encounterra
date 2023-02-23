@@ -280,7 +280,7 @@ class ActionResolver:
         if rolled == 1:
             logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
             return ActionResult.MISS
-        elif rolled in attack.factory.crit_range:
+        elif rolled >= 21 - attack.factory.crit_range:
             multiplier = 2
         if rolled + attack.factory.to_hit >= target.ac:
             reaction = target.prompt_after_hit_reaction(attacker, rolled + attack.factory.to_hit)

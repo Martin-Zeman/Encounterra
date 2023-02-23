@@ -76,13 +76,19 @@ def use_resources(combatant, action, battle_map):
             case _:
                 logger.error("Unknown reaction type")
     elif isinstance(action_type, Movement):
-        target_position = battle_map.get_combatant_position(combatant) + action.increment
-        decrement = -1
-        if combatant.is_affected_by(Conditions.PRONE):
-            decrement -= 1
-        if battle_map.is_difficult_terrain_at(target_position):
-            decrement -= 1
-        combatant.movement -= decrement
+        match action_type:
+            case Movement.STANDARD:
+                target_position = battle_map.get_combatant_position(combatant) + action.increment
+                decrement = -1
+                if combatant.is_affected_by(Conditions.PRONE):
+                    decrement -= 1
+                if battle_map.is_difficult_terrain_at(target_position):
+                    decrement -= 1
+                combatant.movement -= decrement
+            case Movement.GET_UP_FROM_PRONE:
+                combatant.movement -= combatant.speed / 2
+            case _:
+                logger.error("Unknown movement type")
     elif isinstance(action_type, HasteAction):
         combatant.has_haste_action = False
     # elif isinstance(action_type, FreeAction):

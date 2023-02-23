@@ -1,5 +1,5 @@
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator, GetUpFromProne
+from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.misc import Side
@@ -13,9 +13,9 @@ class Bugbear(Combatant):
 
     def __init__(self, effect_tracker, name="Bugbear"):
         super().__init__(effect_tracker, name, level=1, hp=27, ac=16, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.morningstar_attack = self.add_ability(Action.ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
-        self.javelin_attack = self.add_ability(Action.ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=24, crit_range=[20], attack_type=AttackFactory.Type.RANGED)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=[20], attack_type=AttackFactory.Type.MELEE)
+        self.morningstar_attack = self.add_ability(Action.ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.javelin_attack = self.add_ability(Action.ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, attack_type=AttackFactory.Type.RANGED)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
         self.movement_generator = None
         self.selected_target = None
         self.path = None
@@ -39,7 +39,7 @@ class Bugbear(Combatant):
 
     def get_action(self, battle_map):
         if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
-            return GetUpFromProne()
+            return GetUpFactory().create()
 
         # TODO investigate non-feasible movements
         if self.selected_target is None or not self.selected_target.is_alive():
@@ -61,7 +61,7 @@ class Bugbear(Combatant):
         if not battle_map.are_in_range(self, self.selected_target, 1):
             try:
                 movement = next(self.movement_generator)
-                logger.verbose(f"Moving by {movement}")
+                logger.debug(f"Moving by {movement}")
                 return movement
             except StopIteration:
                 # this means that either the path has been exhausted and we're still not in range => ranged attack

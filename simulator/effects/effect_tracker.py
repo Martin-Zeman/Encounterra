@@ -64,7 +64,7 @@ class EffectTracker:
         self.effects.append((PostHasteLethargy(combatant), combatant))
 
     def reset(self):
-        logger.verbose("Resetting effect tracker")
+        logger.debug("Resetting effect tracker")
         for effect in self.effects:
             effect[0].deactivate()
         self.effects.clear()
