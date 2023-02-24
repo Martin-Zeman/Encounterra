@@ -27,24 +27,24 @@ class DragonclawCultist(Combatant):
 
     def attack_routine(self, battle_map):
         if battle_map.are_in_range(self, self.selected_target, self.melee_reaction_range):
-            logger.debug("Is in range")
+            logger.info("Is in range")
             if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:
                 self.multiattack_in_progress = True
             if self.curr_num_attacks and self.multiattack_in_progress:
                 attack_args = self.attack_args[Action.ATTACK]
                 attack_args[2] = self.selected_target  # sets the target
-                logger.debug(f"{self.name} uses action {attack_args[0]} against {self.selected_target}",
+                logger.info(f"{self.name} uses action {attack_args[0]} against {self.selected_target}",
                              extra={"team": self.team_color})
                 return (self.actions[0], *attack_args)
             else:
                 self.multiattack_in_progress = False
         else:
-            logger.debug("Is out of range")
+            logger.info("Is out of range")
             return (MetaAction.DONE,)
 
     def get_action(self, battle_map):
         while self.has_action or self.movement or self.has_haste_action:
-            # logger.debug(f"Has action {self.has_action}, movement {self.movement}")
+            # logger.info(f"Has action {self.has_action}, movement {self.movement}")
 
             dist = None
             if self.selected_enemy is None or not self.selected_enemy.is_alive():
@@ -54,19 +54,19 @@ class DragonclawCultist(Combatant):
                     return (MetaAction.DONE,)
 
             target_position = battle_map.get_combatant_position(self.selected_target)
-            logger.debug(f"Target is at {target_position}")
+            logger.info(f"Target is at {target_position}")
             if not dist:
                 dist = battle_map.get_hop_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 1:
                 # I haven't attacked yet and I'm too far away, move into range
                 path = battle_map.get_path_to(self, self.selected_target)
                 if not path:
-                    logger.debug(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
+                    logger.info(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
                     return (Action.DODGE,)
                 self.movement_generator = MovementGenerator(self, path, True).get_generator()
                 try:
                     movement = next(self.movement_generator)
-                    logger.debug(f"Moving by {movement}")
+                    logger.info(f"Moving by {movement}")
                     return (Movement.STANDARD, movement)
                 except StopIteration:
                     pass  # can't go any farther
@@ -76,7 +76,7 @@ class DragonclawCultist(Combatant):
                 if attack:
                     return attack
             if self.has_action:
-                logger.debug(f"{self.name} uses the dodge action", extra={"team": self.team_color})
+                logger.info(f"{self.name} uses the dodge action", extra={"team": self.team_color})
                 return (Action.DODGE,)
             return (MetaAction.DONE,)
         return (MetaAction.DONE,)
@@ -85,7 +85,7 @@ class DragonclawCultist(Combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)
-            logger.debug(f"{self.name} took an AoO {aoo} against {moving_combatant}",
+            logger.info(f"{self.name} took an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo
         return None

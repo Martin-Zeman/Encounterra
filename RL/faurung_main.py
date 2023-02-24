@@ -77,7 +77,7 @@ class TrainingSession:
                 obs, reward, done, info = env.step(action)
                 score += reward
             env.print_status()
-            logger.info(f"Episode: {episode} Score: {score}")
+            logger.warning(f"Episode: {episode} Score: {score}")
         env.close()
 
     def simulate(self, num_episodes):
@@ -95,7 +95,7 @@ class TrainingSession:
                 obs, reward, done, info = env.step(action)
                 score += reward
             env.print_status()
-            logger.info(f"Episode: {episode} Score: {score}")
+            logger.warning(f"Episode: {episode} Score: {score}")
         env.close()
 
     def train(self, total_timesteps):
@@ -123,7 +123,7 @@ class TrainingSession:
         env = DummyVecEnv([lambda: env])
         model = PPO.load(model_load_path, env=env)
         result = evaluate_policy(model, env, n_eval_episodes=10, render=False)
-        logger.info(result)
+        logger.warning(result)
         env.close()
 
 

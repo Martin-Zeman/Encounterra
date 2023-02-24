@@ -1,10 +1,10 @@
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, mean_dmg, percent_of_curr_hp
+from simulator.misc import DamageType, percent_of_curr_hp
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce
+
+from simulator.threat import mean_dmg
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
-from simulator.spells.firebolt import FireboltFactory
-from simulator.misc import ROUND_HORIZON
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,7 +52,6 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         try:
             to_hit_bonus = modified_stats['to_hit']
             potential_targets = battle_map.get_enemies_within_radius(TwinnedFirebolt.spell_range.value)
-            print(f"FIXME reduce calculate_threat_approx_mod twinned firebolt {potential_targets}")
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(self.to_hit + to_hit_bonus, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFirebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFirebolt.dmg_type)), potential_targets)
             dmg_acc /= len(potential_targets)
             return dmg_acc * 2

@@ -6,22 +6,32 @@ from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.action_types import *
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.misc import Side
+from statemachine import State, StateMachine
 import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
 
 
+class TwoMeleeOneRanged(StateMachine):
+    A = State("A", value=(1, 2), initial=True)  # not attacked yet
+    B = State("B", value=(1,))  # attacked with club
+    nop = State("nop", value=(),final=True)
+
+    melee = A.to(B) | B.to(nop)
+    ranged = A.to(nop)
+
 class StoneGiant(Combatant):
 
     def __init__(self, effect_tracker, name="Stone Giant"):
         super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
-        club = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
-        self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
+        self.club = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
+        self.rock = self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
                                             dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1,
                                             attack_type=AttackFactory.Type.RANGED, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15, attack_type=AttackFactory.Type.MELEE)
+        # self.attack_fsm = TwoMeleeOneRanged()
+        # self.attack_mapping = {club[1]: (1, TwoMeleeOneRanged.melee), rock[1]: (2, TwoMeleeOneRanged.ranged)}
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.melee_reaction_range = 3
         self.movement_generator = None
@@ -38,7 +48,7 @@ class StoneGiant(Combatant):
     def plan_path(self, battle_map, target_copmbatant, target_position):
         self.path = battle_map.get_path_to(self, target_copmbatant)
         if not self.path:
-            logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
+            logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
         self.movement_generator = MovementGenerator(self, self.path).get_generator()
         self.target_position_cache = target_position
@@ -72,24 +82,22 @@ class StoneGiant(Combatant):
             all_actions.sort(key=lambda a: a[0], reverse=True)
             try:
                 selected_action = all_actions[0][1]
-                # logger.debug(f"{self} uses {selected_action}")
+                # logger.info(f"{self} uses {selected_action}")
             except IndexError:
                 return None
             if ActoidFlags.IS_ATTACK_LIKE in selected_action.actoid_type:
                 target_position = battle_map.get_combatant_position(selected_action.target_combatant)
                 if not np.array_equal(self.target_position_cache, target_position):
-                    # if the target moved, recalculate path
+                    # if the target moved or new turn recalculate path
                     try:
                         self.plan_path(battle_map, selected_action.target_combatant, target_position)
                     except RuntimeError:
                         return None
-                else:
-                    self.movement_generator = MovementGenerator(self, self.path).get_generator()
 
                 if not battle_map.are_in_range(self, selected_action.target_combatant, selected_action.factory.range):
                     try:
                         movement = next(self.movement_generator)
-                        logger.debug(f"Moving by {movement}")
+                        logger.info(f"Moving by {movement}")
                         return movement
                     except StopIteration:
                         # this means that either the path has been exhausted and we're still not in range => ranged attack
@@ -100,17 +108,22 @@ class StoneGiant(Combatant):
                             self.rock_attack[1].action_type = HasteAction.HASTE_ATTACK
                         else:
                             return None
-                        return self.rock_attack[1].create(self.selected_target)
+                        return self.rock_attack[1].create_best(self, battle_map)
             return selected_action
 
         else:
             return None
 
+    def new_turn(self):
+        super().new_turn()
+        self.movement_generator = None
+        self.attack_fsm = TwoMeleeOneRanged()
+        self.attack_mapping = {self.club[1]: (1, TwoMeleeOneRanged.melee), self.rock[1]: (2, TwoMeleeOneRanged.ranged)}
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)
-            logger.debug(f"{self} taken an AoO {aoo} against {moving_combatant}",
+            logger.info(f"{self} taken an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo
         return None

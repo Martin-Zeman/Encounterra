@@ -355,7 +355,7 @@ class Map:
         new_coord = old_coord + increment
         self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coord
-        logger.debug(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
+        logger.info(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
     def move_combatant(self, combatant, new_coord):
         """
@@ -368,7 +368,7 @@ class Map:
         self.grid[old_coord[0]][old_coord[1]].remove_combatant()
         self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coord
-        logger.debug(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
+        logger.info(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
     def get_aoo_eligible_combatants(self, combatant, increment):
         eligible_combatants = []
@@ -550,7 +550,8 @@ class Map:
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, enemy_adjacent_location)
         if reconstructed_path is None:
             return None
-        self.printDijkstra(distances, my_location, enemy_location, reconstructed_path['tuples'])
+        if logger.root.level >= logging.DEBUG:
+            self.printDijkstra(distances, my_location, enemy_location, reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
     @dispatch(Combatant, np.ndarray)
@@ -570,7 +571,8 @@ class Map:
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, target_coord)
         if reconstructed_path is None:
             return None
-        self.printDijkstra(distances, my_location, target_coord, reconstructed_path['tuples'])
+        if logger.root.level >= logging.DEBUG:
+            self.printDijkstra(distances, my_location, target_coord, reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
     def get_combatant_position(self, combatant):
@@ -623,8 +625,9 @@ class Map:
         :return: list of numpy.array coordinates
         """
         assert min_dist > 0
-        # mask_self = self.build_combatant_adjacency_mask(combatant)
-        # distances_self, _ = self.dijkstra(self.combatant_coordinate_cache[combatant], mask_self)
+        mask_self = self.build_combatant_adjacency_mask(combatant)
+        distances_self, _ = self.dijkstra(self.combatant_coordinate_cache[combatant], mask_self)
+
         mask_target = self.build_combatant_adjacency_mask(target_combatant)
         distances_from_target, _ = self.dijkstra(self.combatant_coordinate_cache[target_combatant], mask_target)
         free_positions = []
@@ -632,7 +635,7 @@ class Map:
 
 
         coords = []
-        for i, dist in enumerate(distances_from_target):
+        for i, dist in enumerate(distances_self):
             curr_coord = np.array([i // self.size, i % self.size])
             is_empty = self.grid[curr_coord[0]][curr_coord[1]].is_empty()
             if is_empty and min_dist <= dist <= max_dist:
@@ -651,7 +654,7 @@ class Map:
         # combatant_coord = self.combatant_coordinate_cache[combatant]
         # sort them by cartesian distance to get the most direct one
         # coords.sort(key=lambda coord: np.linalg.norm(coord - combatant_coord))
-        coords.sort(key=lambda coord: distances_from_target[coord[0] * self.size + coord[1]])
+        coords.sort(key=lambda coord: distances_from_target[coord[0] * self.size + coord[1]], reverse=True)
         for coord in coords:
             assert self.is_valid_coord(coord), "INVALID COORD"
         return coords
@@ -662,7 +665,7 @@ class Map:
         :param combatant:
         :return:
         """
-        logger.debug(f"{combatant} died")
+        logger.info(f"{combatant} died")
         try:
             old_coord = self.combatant_coordinate_cache[combatant]
         except KeyError:
@@ -724,8 +727,8 @@ class Map:
                         max_score = score
                         best_placement = curr_coord
                         best_affected = affected
-        logger.debug(self)
-        # logger.debug(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
+        logger.info(self)
+        # logger.info(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
         return best_placement, max_score, best_affected
 
     def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):

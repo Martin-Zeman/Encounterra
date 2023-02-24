@@ -35,8 +35,8 @@ class TraineeFaurung(Combatant):
 
     def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
         if self.spellslots.get_spellslots(1) > 0 and self.has_reaction:
-            logger.debug(f"{self.name} casts Shield", extra={"team": self.team_color})
+            logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})
             return (Reaction.SHIELD,)
         elif self.has_reaction:
-            logger.debug(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
+            logger.info(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
         return (MetaAction.DONE,)

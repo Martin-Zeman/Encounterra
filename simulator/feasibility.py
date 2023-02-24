@@ -206,18 +206,23 @@ def check_feasibility_light(combatant, action, battle_map):
             case Action.ATTACK:
                 # Either not attacked yet, or already attacked but still has attacks left. In both cases cannot be used once attacked recklessly
                 res = combatant.has_action
-                if Passive.MULTIATTACK in combatant.passive:
-                    res |= (combatant.num_attacks > combatant.curr_num_attacks > 0) and combatant.last_attack_factory_name is action[1].name
+                # if Passive.MULTIATTACK in combatant.passive:
+                #     res |= (combatant.num_attacks > combatant.curr_num_attacks > 0) and combatant.last_attack_factory_name is action[1].name
                     # for ag in combatant.attack_groups:
                     #     if combatant.last_attack_factory_name in ag:
+                try:
+                    res |= not combatant.attack_fsm.current_state.initial and combatant.attack_mapping[action[1]][0] in combatant.attack_fsm.current_state.value
+                except TypeError:
+                    print("FIXME")
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.RECKLESS_ATTACK:
                 # Either not attacked yet or already attacked recklessly and still has attacks left
                 res = combatant.has_action
-                if Passive.MULTIATTACK in combatant.passive:
-                    res |= combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack) and combatant.last_attack_factory_name is action[1].name
+                # if Passive.MULTIATTACK in combatant.passive:
+                #     res |= combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack) and combatant.last_attack_factory_name is action[1].name
+                res |= not combatant.attack_fsm.current_state.initial and combatant.attack_mapping[action[1]][0] in combatant.attack_fsm.current_state.value
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.DASH | Action.DODGE:

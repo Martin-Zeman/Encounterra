@@ -1,28 +1,41 @@
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator
+from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_actions
-from simulator.misc import DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.action_types import *
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.misc import Side
+from statemachine import State, StateMachine
 import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
 
 
+class TwoMeleeOneRangedWithReckless(StateMachine):
+    A = State("A", (1, 2, 3), initial=True)  # not attacked yet
+    B = State("B", (1,))  # attacked with melee
+    C = State("C", (2,))  # attacked with melee recklessly
+    nop = State("nop", value=(), final=True)
+
+    melee = A.to(B) | B.to(nop)
+    melee_recklessly = A.to(C) | C.to(nop)
+    ranged = A.to(nop)
+
 class TotemBarbarian5Lvl(Combatant):
 
     def __init__(self, effect_tracker, name="TotemBarbarian5Lvl"):
         super().__init__(effect_tracker, name, level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
-        self.add_ability(Action.ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE, max_num=2)
+        self.axe = self.add_ability(Action.ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE, max_num=2)
         self.javelin_attack = self.add_ability(Action.ATTACK, name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, attack_type=AttackFactory.Type.RANGED)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE)
         self.add_ability(BonusAction.TOTEM_RAGE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)
-        self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE, max_num=2)
+        self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, attack_type=AttackFactory.Type.MELEE, max_num=2)
+        # self.attack_fsm = TwoMeleeOneRangedWithReckless()
+        # self.attack_mapping = {axe[1]: (1, TwoMeleeOneRangedWithReckless.melee), axe_recklessly[1]: (2, TwoMeleeOneRangedWithReckless.melee_recklessly), self.javelin_attack[1]: (3,TwoMeleeOneRangedWithReckless.ranged)}
         self.movement_generator = None
         self.selected_target = None
         self.path = None
@@ -37,12 +50,14 @@ class TotemBarbarian5Lvl(Combatant):
     def plan_path(self, battle_map, target_copmbatant, target_position):
         self.path = battle_map.get_path_to(self, target_copmbatant)
         if not self.path:
-            logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
+            logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
         self.movement_generator = MovementGenerator(self, self.path).get_generator()
         self.target_position_cache = target_position
 
     def get_action(self, battle_map):
+        if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
+            return GetUpFactory().create()
         # TODO if it gets surrounded it will not attack and just dodge
         # TODO Figure out how to avoid recalculating this all the time. Maybe I could separate plan_turn and get action. plan_turn would be
         #  called once and get_action multiple times like now
@@ -70,7 +85,7 @@ class TotemBarbarian5Lvl(Combatant):
             all_actions.sort(key=lambda a: a[0], reverse=True)
             try:
                 selected_action = all_actions[0][1]
-                # logger.debug(f"{self} uses {selected_action}")
+                # logger.info(f"{self} uses {selected_action}")
             except IndexError:
                 return None
             if ActoidFlags.IS_ATTACK_LIKE in selected_action.actoid_type:
@@ -81,13 +96,11 @@ class TotemBarbarian5Lvl(Combatant):
                         self.plan_path(battle_map, selected_action.target_combatant, target_position)
                     except RuntimeError:
                         return None
-                else:
-                    self.movement_generator = MovementGenerator(self, self.path).get_generator()
 
                 if not battle_map.are_in_range(self, selected_action.target_combatant, selected_action.factory.range):
                     try:
                         movement = next(self.movement_generator)
-                        logger.debug(f"Moving by {movement}")
+                        logger.info(f"Moving by {movement}")
                         return movement
                     except StopIteration:
                         # this means that either the path has been exhausted and we're still not in range => ranged attack
@@ -98,17 +111,25 @@ class TotemBarbarian5Lvl(Combatant):
                             self.javelin_attack[1].action_type = HasteAction.HASTE_ATTACK
                         else:
                             return None
-                        return self.javelin_attack[1].create(self.selected_target)
+                        return self.javelin_attack[1].create_best(self, battle_map)
             return selected_action
 
         else:
             return None
 
+    def new_turn(self):
+        super().new_turn()
+        self.movement_generator = None
+        self.attack_fsm = TwoMeleeOneRangedWithReckless()
+        self.attack_mapping = {self.axe[1]: (1, TwoMeleeOneRangedWithReckless.melee),
+                               self.axe_recklessly[1]: (2, TwoMeleeOneRangedWithReckless.melee_recklessly),
+                               self.javelin_attack[1]: (3, TwoMeleeOneRangedWithReckless.ranged)}
+
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)
-            logger.debug(f"{self} taken an AoO {aoo} against {moving_combatant}",
+            logger.info(f"{self} taken an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo
         return None

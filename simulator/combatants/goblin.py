@@ -32,13 +32,13 @@ class Goblin(Combatant):
             assert battle_map.is_empty(coord), "COORD IS NOT FREE"
             assert battle_map.is_valid_coord(coord), "COORD IS NOT VALID"
         if not free_coords:
-            logger.debug(f"There are no free coords for the {self} to disengage to. Using dodge action", extra={"team": self.team_color})
+            logger.info(f"There are no free coords for the {self} to disengage to. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
         path = battle_map.get_path_to(self, free_coords[0])
         if not path:
-            logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
+            logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
-        # logger.debug(f"Planned path: {path}")
+        # logger.info(f"Planned path: {path}")
         self.movement_generator = MovementGenerator(self, path).get_generator()
 
     def attack_routine(self):
@@ -82,7 +82,7 @@ class Goblin(Combatant):
                 # Move
                 try:
                     movement = next(self.movement_generator)
-                    logger.debug(f"Moving by {movement}")
+                    logger.info(f"Moving by {movement}")
                     return movement
                 except StopIteration:
                     self.movement_generator = None
@@ -100,7 +100,7 @@ class Goblin(Combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)
-            logger.debug(f"{self} took an AoO {aoo} against {moving_combatant}",
+            logger.info(f"{self} took an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo
         return None

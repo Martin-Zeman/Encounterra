@@ -15,7 +15,8 @@ def use_resources(combatant, action, battle_map):
             case Action.ATTACK | Action.RECKLESS_ATTACK:
                 combatant.curr_num_attacks -= 1
                 combatant.ammo[action.factory.name] -= 1
-                combatant.last_attack_factory_name = action.factory.name
+                # combatant.last_attack_factory_name = action.factory.name
+                combatant.attack_mapping[action.factory][1](combatant.attack_fsm)  # trigger event on the FSM, done this way to avoid multiprocessing pickling error
             case Action.DODGE | Action.DASH | Action.FIREBOLT:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL:
@@ -79,11 +80,11 @@ def use_resources(combatant, action, battle_map):
         match action_type:
             case Movement.STANDARD:
                 target_position = battle_map.get_combatant_position(combatant) + action.increment
-                decrement = -1
+                decrement = 1
                 if combatant.is_affected_by(Conditions.PRONE):
-                    decrement -= 1
+                    decrement += 1
                 if battle_map.is_difficult_terrain_at(target_position):
-                    decrement -= 1
+                    decrement += 1
                 combatant.movement -= decrement
             case Movement.GET_UP_FROM_PRONE:
                 combatant.movement -= combatant.speed / 2

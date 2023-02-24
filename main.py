@@ -7,13 +7,12 @@ from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.goblin import Goblin
-from simulator.combatants.faurung_dt import FaurungDt
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams
 import time
 
 if __name__ == '__main__':
-    CustomLogger(LogLevel.DEBUG)
+    CustomLogger(LogLevel.WARNING)
     session = Session()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
     session.add_combatant(Faurung, Teams.Color.BLUE)
@@ -30,7 +29,7 @@ if __name__ == '__main__':
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.set_num_simulations(100)
     start_time = time.time()
-    session.simulate(parallel=False)
+    session.simulate(parallel=True)
     print("---Simulation took {:.1f} seconds ---".format((time.time() - start_time)))
 
 

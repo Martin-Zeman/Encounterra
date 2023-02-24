@@ -27,13 +27,13 @@ class Ogre(Combatant):
         self.saving_throws[SavingThrow.CHA] = -2
 
     def plan_path(self, battle_map, target_position):
-        logger.debug(f"Planning path to {self.selected_target} at position {target_position}")
+        logger.info(f"Planning path to {self.selected_target} at position {target_position}")
         self.path = battle_map.get_path_to(self, self.selected_target)
-        logger.debug(f"Planned path {self.path}")
+        logger.info(f"Planned path {self.path}")
         if not self.path:
-            logger.debug(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
+            logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
-        # logger.debug(f"Planned path: {self.path}")
+        # logger.info(f"Planned path: {self.path}")
         self.movement_generator = MovementGenerator(self, self.path).get_generator()
         self.target_position_cache = target_position
 
@@ -61,7 +61,7 @@ class Ogre(Combatant):
         if not battle_map.are_in_range(self, self.selected_target, 1):
             try:
                 movement = next(self.movement_generator)
-                logger.debug(f"Moving by {movement}")
+                logger.info(f"Moving by {movement}")
                 return movement
             except StopIteration:
                 # this means that either the path has been exhausted and we're still not in range => ranged attack
@@ -94,7 +94,7 @@ class Ogre(Combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)
-            logger.debug(f"{self.name} took an AoO {aoo} against {moving_combatant}",
+            logger.info(f"{self.name} took an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})
             return aoo
         return None

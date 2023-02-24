@@ -1,10 +1,11 @@
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.threat import mean_dmg, dmg_decrement_for_ac_flat
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 from functools import reduce
-from simulator.misc import mean_dmg, ROUND_HORIZON, dmg_decrement_for_ac_flat, get_attacks
+from simulator.misc import ROUND_HORIZON, get_attacks
 import logging
 
 logger = logging.getLogger(__name__)
@@ -31,7 +32,6 @@ class HasteFactory(ThreatModifierFactory):
                 potential_targets = battle_map.get_enemies_within_hop_distance(ally, ally.speed + attack.range + 1)
                 if not potential_targets:
                     continue
-                print(f"FIXME reduce get_allies_sorted_by_threat haste {potential_targets}")
                 dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets, 0)
                 dmg_acc /= len(potential_targets)
                 max_attack_dmg = max(dmg_acc, max_attack_dmg)
@@ -71,7 +71,7 @@ class HasteFactory(ThreatModifierFactory):
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
-        logger.debug(f"calculate_threat_to_target 1 target {target}")
+        logger.info(f"calculate_threat_to_target 1 target {target}")
         enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
@@ -80,7 +80,6 @@ class HasteFactory(ThreatModifierFactory):
             potential_targets = battle_map.get_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:
                 continue
-            print(f"FIXME reduce calculate_threat_to_target haste 1 {potential_targets}")
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_attack_dmg = max(dmg_acc, max_attack_dmg)
@@ -90,12 +89,11 @@ class HasteFactory(ThreatModifierFactory):
             enemy_attacks = get_attacks(enemy)
             if not enemy_attacks:
                 continue
-            print(f"FIXME reduce calculate_threat_to_target haste 2 {enemy_attacks}")
             attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg += attack_dmg_decrement_acc
-        logger.debug(f"calculate_threat_to_target 2")
+        logger.info(f"calculate_threat_to_target 2")
         return max_attack_dmg * ROUND_HORIZON
 
 

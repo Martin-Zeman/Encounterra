@@ -24,9 +24,9 @@ class RoundManager:
             return e.curr_init
 
         self.combatants.sort(key=by_initiative, reverse=True)
-        logger.debug("--------------INITIATIVE ORDER--------------")
+        logger.info("--------------INITIATIVE ORDER--------------")
         for combatant in self.combatants:
-            logger.debug(f"{combatant} with {combatant.curr_init}")
+            logger.info(f"{combatant} with {combatant.curr_init}")
 
     def goes_before_in_initiative(self, combatant1, combatant2):
         return True if self.combatants.index(combatant1) < self.combatants.index(combatant2) else False
@@ -46,7 +46,7 @@ class RoundManager:
             team_tally = {color: 0 for color in self.teams.get_team_colors()}
             combatant_initial_positions = {c: self.battle_map.get_combatant_position(c) for c in self.combatants}
             for i in range(n):
-                logger.info(f"{i}. Iteration")
+                logger.warning(f"{i}. Iteration")
                 self.simulate()
                 surviving_teams = self.teams.get_surviving_teams()
                 if len(surviving_teams) > 1:
@@ -54,46 +54,53 @@ class RoundManager:
                 elif len(surviving_teams) == 0:
                     logger.warning("Everyone's dead. No winners!")
                 else:
+                    logger.warning(f"Team {surviving_teams[0].name} wins")
                     team_tally[surviving_teams[0]] += 1
                 self.reset(combatant_initial_positions)
             if result_queue:
                 result_queue.put(team_tally)
-            logger.info("--------------STATISTICS--------------")
+            logger.warning("--------------STATISTICS--------------")
             for name, victories in team_tally.items():
-                logger.info(f"Team {name.name} won total of {victories} times", extra={"team": name})
+                logger.warning(f"Team {name.name} won total of {victories} times", extra={"team": name})
         else:
             logger.error("Wrong input. n has to be 1 or higher!")
 
     def simulate(self):
         self.roll_initiative()
         self.order_by_initiative()
-        logger.debug("--------------START--------------")
+        done = False
+        logger.info("--------------START--------------")
         for r in range(self.num_rounds):
-            logger.debug(f"Round {r + 1}:")
-            if self.is_only_one_team_standing():
-                logger.debug("EARLY END")
+            logger.info(f"Round {r + 1}:")
+            if done:
+                logger.info("EARLY END")
                 break
             for combatant in self.combatants:
+                if done:
+                    break
                 if not combatant.is_alive():
                     continue
-                logger.debug(f"It's {combatant}'s turn")
-                logger.debug(self.battle_map)
+                logger.info(f"It's {combatant}'s turn")
+                logger.info(self.battle_map)
                 self.effect_tracker.new_turn(combatant)
                 combatant.new_turn()
                 effects = self.effect_tracker.get_all_affecting_combatant(combatant)
                 self.action_resolver.resolve_effects(effects, combatant)
                 if combatant.is_affected_by_any(Conditions.STUNNED, Conditions.PARALYZED, Conditions.PETRIFIED,
                                                 Conditions.UNCONSCIOUS):
-                    logger.debug(f"{combatant} is affected by a condition which prevents any action. Skipping turn")
+                    logger.info(f"{combatant} is affected by a condition which prevents any action. Skipping turn")
                     continue
                 while True:
-                    try:
-                        action = combatant.get_action(self.battle_map)
-                    except TypeError as e:
-                        logger.error(f"{combatant} threw {e} for action {action}")
+                    # try:
+                    action = combatant.get_action(self.battle_map)
+                    # except TypeError as e:
+                        # logger.error(f"{combatant} threw {e} for action {action}")
                     if action is None:
                         break
                     self.action_resolver.resolve_action(action, combatant)
+                    if self.is_only_one_team_standing():
+                        done = True
+                        break
                     if not combatant.is_alive():
                         break  # could have died as a result of AoO
             self.print_status()
@@ -101,9 +108,9 @@ class RoundManager:
     def print_status(self):
         for combatant in self.combatants:
             status = f"alive with {combatant.curr_hp}" if combatant.is_alive() else "dead"
-            logger.debug(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
-        logger.debug(self.battle_map)
+            logger.info(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
+        logger.info(self.battle_map)
 
     def print_results(self):
-        logger.debug("--------------RESULT--------------")
+        logger.info("--------------RESULT--------------")
         self.print_status()

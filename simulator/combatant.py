@@ -60,6 +60,8 @@ class Combatant(ABC):
         self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
         self.resistances = resistances
         self.multiattack_in_progress = False
+        self.attack_fsm = None
+        self.attack_mapping = None
         self.team_color = ""
         self.selected_enemy = None
         self.selected_ally = None
@@ -295,7 +297,7 @@ class Combatant(ABC):
         """
         if dmg_type in self.resistances:
             dmg = math.floor(dmg / 2)
-            logger.debug(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
+            logger.info(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
         self.curr_hp -= dmg
         if self.curr_hp <= self.max_hp // 3:
             self.condition = self.State.NEAR_DEATH

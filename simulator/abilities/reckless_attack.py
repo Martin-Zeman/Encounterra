@@ -3,11 +3,15 @@ import math
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from simulator.misc import mean_dmg, reconcile_roll_modifiers, calculate_threat_in_mod
+from simulator.misc import reconcile_roll_modifiers
 from functools import reduce
-from simulator.misc import percent_of_curr_hp, avg_roll, RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
+from simulator.misc import percent_of_curr_hp, avg_roll
+from simulator.threat import mean_dmg, calculate_threat_in_mod
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
+
+from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
+
 
 class RecklessAttackFactory(DirectThreatFactory):
 
@@ -78,7 +82,6 @@ class RecklessAttackFactory(DirectThreatFactory):
             return acc + num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
                                   self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
 
-        print(f"FIXME reduce calculate_threat_out_approx {mean_dmg_mod}")
         dmg_acc = reduce(mean_dmg_mod, potential_targets)
         dmg_acc /= len(potential_targets)
         return dmg_acc

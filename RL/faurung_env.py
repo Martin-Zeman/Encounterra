@@ -151,9 +151,9 @@ class FaurungEnv(Env):
             return e.curr_init
 
         self.combatants.sort(key=by_initiative, reverse=True)
-        logger.debug("--------------INITIATIVE ORDER--------------")
+        logger.info("--------------INITIATIVE ORDER--------------")
         for combatant in self.combatants:
-            logger.debug(f"{combatant} with {combatant.curr_init}")
+            logger.info(f"{combatant} with {combatant.curr_init}")
 
     def goes_before_in_initiative(self, combatant1, combatant2):
         return True if self.combatants.index(combatant1) < self.combatants.index(combatant2) else False
@@ -212,7 +212,7 @@ class FaurungEnv(Env):
 
     def simulator(self):
         assert self.trainee is not None
-        logger.debug("--------------START--------------")
+        logger.info("--------------START--------------")
         while True:  # loop of turns, represents a combat session, i.e. one episode
             self.effect_tracker.new_turn()
             for combatant in self.combatants:
@@ -227,7 +227,7 @@ class FaurungEnv(Env):
                 self.action_resolver.resolve_effects(effects, combatant)
                 if combatant.is_affected_by_any(Conditions.STUNNED, Conditions.PARALYZED, Conditions.PETRIFIED,
                                                 Conditions.UNCONSCIOUS):
-                    logger.debug(f"{combatant} is affected by a condition which prevents any action. Skipping turn")
+                    logger.info(f"{combatant} is affected by a condition which prevents any action. Skipping turn")
                     continue
                 while True:  # loop of a combatant's turn
                     try:
@@ -243,19 +243,19 @@ class FaurungEnv(Env):
                     if combatant is not self.trainee:
                         self.action_resolver.resolve_action(action, args, combatant)
                     else:
-                        logger.debug(f"Trainee action: {action}")
+                        logger.info(f"Trainee action: {action}")
                         yield self.action_resolver.resolve_action_train(action, args, combatant)
                     if not combatant.is_alive():
                         break  # could have died as a result of AoO
                 else:
-                    logger.debug(f"Combatant {combatant} is dead. Skipping")
+                    logger.info(f"Combatant {combatant} is dead. Skipping")
             # self.print_status()
 
     def print_status(self):
         for combatant in self.combatants:
             status = f"alive with {combatant.curr_hp}" if combatant.is_alive() else "dead"
-            logger.info(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
-        logger.debug(self.battle_map)
+            logger.warning(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
+        logger.info(self.battle_map)
 
 
 
@@ -299,7 +299,7 @@ class FaurungEnv(Env):
         reward = self.compute_reward(result)
         obs = self.encode_obs()
         if self.step_counter == 500:
-            logger.info(f"Feasibility rate: {self.feasible_counter / self.step_counter}; Unfeasibility rate {self.unfeasible_counter /  self.step_counter}")
+            logger.warning(f"Feasibility rate: {self.feasible_counter / self.step_counter}; Unfeasibility rate {self.unfeasible_counter /  self.step_counter}")
             self.feasible_counter = 0
             self.unfeasible_counter = 0
             self.step_counter = 0

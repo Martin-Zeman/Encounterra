@@ -1,11 +1,14 @@
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, mean_dmg, RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
+from simulator.misc import DamageType
 import logging
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
+from simulator.threat import mean_dmg
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 from simulator.misc import percent_of_curr_hp
 from functools import partial
 from functools import reduce
+
+from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
 
 logger = logging.getLogger(__name__)
 

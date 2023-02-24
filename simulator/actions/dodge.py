@@ -2,9 +2,12 @@ from simulator.action_types import Action
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
+from simulator.threat import calculate_threat_in_mod
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
-from simulator.misc import SavingThrow, RollModifier, calculate_threat_in_mod
+from simulator.misc import SavingThrow
 import logging
+
+from simulator.utils.roll_modifiers import RollModifier
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +39,10 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def activate(self):
         self.combatants[0].is_dodging = True
-        try:
-            self.combatants[0].saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.ADVANTAGE)
-        except AttributeError:
-            print("FIXME activate")
+        self.combatants[0].saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.ADVANTAGE)
 
     def deactivate(self):
-        logger.debug(f"{self.combatants[0]}'s dodge fades")
+        logger.info(f"{self.combatants[0]}'s dodge fades")
         self.combatants[0].is_dodging = False
         try:
             self.combatants[0].saving_throws_roll_mod[SavingThrow.DEX].remove(RollModifier.ADVANTAGE)

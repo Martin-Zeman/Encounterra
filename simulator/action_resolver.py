@@ -68,7 +68,7 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
         saved = True
     else:
         saved = False
-    logger.debug(
+    logger.info(
         f"{type(ability).__name__} deals {dmg if not saved else dmg // 2} to {target_combatant}")
     target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.dmg_type)
 
@@ -85,7 +85,7 @@ class ActionResolver:
         if attack.roll_modifier is RollModifier.ADVANTAGE:
             return RollModifier.ADVANTAGE
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
-            logger.debug(f"{attacker} gains advantage since {target} attacked recklessly")
+            logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollModifier.ADVANTAGE
         return RollModifier.STRAIGHT
 
@@ -128,7 +128,7 @@ class ActionResolver:
 
             multiplier = 1
             if rolled == 1:
-                logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
+                logger.info("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
                 return ActionResult.MISS
             elif rolled == 20:
                 multiplier = 2
@@ -137,7 +137,7 @@ class ActionResolver:
                 bolt_dmg, rolled_numbers = roll_chaos_bolt_dmg(spell.factory.dmg_dice, spell.additional_dmg_dice)
                 dmg_type = Chaosbolt.DMG_TYPE[rolled_numbers[random.randint(0, 1)] - 1]  # take one of the two numbers randomly
                 dmg = multiplier * bolt_dmg
-                logger.debug(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
+                logger.info(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
                              extra={"team": self.teams.get_team(caster)})
                 curr_target.receive_dmg(dmg, dmg_type)
                 if not curr_target.is_alive():
@@ -149,13 +149,13 @@ class ActionResolver:
                         dist = self.battle_map.get_cartesian_distance(curr_target, potential_target)
                         if dist and dist <= 6:
                             curr_target = potential_target
-                            logger.debug(f"Chaos bolt jumping to {potential_target}!", extra={"team": self.teams.get_team(caster)})
+                            logger.info(f"Chaos bolt jumping to {potential_target}!", extra={"team": self.teams.get_team(caster)})
                             jump = True
                             del potential_targets[i]
                             break
                 return ActionResult.DMG
             else:
-                logger.debug(f"Chaosbolt misses {curr_target}", extra={"team": self.teams.get_team(caster)})
+                logger.info(f"Chaosbolt misses {curr_target}", extra={"team": self.teams.get_team(caster)})
                 return ActionResult.MISS
 
     def resolve_ranged_spell_attack(self, caster, spell, target):
@@ -172,21 +172,21 @@ class ActionResolver:
 
         multiplier = 1
         if rolled == 1:
-            logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
+            logger.info("Natural 1 rolled!", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
         elif rolled == 20:
             multiplier = 2
 
         if rolled + spell.factory.to_hit >= target.ac:
             dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
-            logger.debug(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
+            logger.info(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
             spell.target.receive_dmg(dmg, spell.dmg_type)
             if not spell.target.is_alive():
                 self.battle_map.remove_combatant(target)
             return ActionResult.DMG
         else:
-            logger.debug(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
+            logger.info(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
 
     def resolve_spell(self, caster, spell):
@@ -195,7 +195,7 @@ class ActionResolver:
                 affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.target, spell.type, spell.coord)
                 dmg = roll_spell_dmg(spell.factory.dmg_dice)
                 for combatant in affected:
-                    logger.debug(f"{combatant} is hit by Fireball")
+                    logger.info(f"{combatant} is hit by Fireball")
                     resolve_dmg_saving_throw(spell, dmg, combatant)
                     if not combatant.is_alive():
                         # TODO revisit if this is really needed
@@ -234,7 +234,7 @@ class ActionResolver:
             # TODO Consider moving this to the attack factory
             return RollModifier.ADVANTAGE
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
-            logger.debug(f"{attacker} gains advantage since {target} attacked recklessly")
+            logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollModifier.ADVANTAGE
         if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) == 1:
             return RollModifier.ADVANTAGE
@@ -262,7 +262,7 @@ class ActionResolver:
         # TODO Conditions
         target = attack.target_combatant
         assert target
-        logger.debug(f"{attacker} attacks {target} with {attack}", extra={"team": self.teams.get_team(attacker)})
+        logger.info(f"{attacker} attacks {target} with {attack}", extra={"team": self.teams.get_team(attacker)})
         if attack.factory.attack_type is AttackFactory.Type.MELEE:
             modifiers = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
         else:
@@ -278,7 +278,7 @@ class ActionResolver:
 
         multiplier = 1
         if rolled == 1:
-            logger.debug("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
+            logger.info("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
             return ActionResult.MISS
         elif rolled >= 21 - attack.factory.crit_range:
             multiplier = 2
@@ -289,7 +289,7 @@ class ActionResolver:
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
             total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
-            logger.debug(
+            logger.info(
                 f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {total_dmg} of which {attacker.ability_dmg_bonus} is ability dmg",
                 extra={"team": self.teams.get_team(attacker)})
             target.receive_dmg(total_dmg, attack.get_dmg_type())
@@ -300,7 +300,7 @@ class ActionResolver:
 
             return ActionResult.DMG
         else:
-            logger.debug(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
+            logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
             return ActionResult.MISS
 
     def request_movement(self, moving_combatant, movement):
@@ -320,7 +320,7 @@ class ActionResolver:
                         did_attack_hit = self.resolve_action(pam_attack, candidate)
                         if did_attack_hit and candidate.has_passive(Passive.SENTINEL):
                             moving_combatant.movement = 0
-                            logger.debug(f"Combatant {moving_combatant} was stopped by sentinel")
+                            logger.info(f"Combatant {moving_combatant} was stopped by sentinel")
 
         if moving_combatant.is_alive():
             self.battle_map.move_combatant_by_increment(moving_combatant, movement.increment)
@@ -355,6 +355,8 @@ class ActionResolver:
         elif ActoidFlags.IS_DASH in actoid.actoid_type:
             combatant.movement += combatant.speed
             return False
+        elif actoid.actoid_type is ActoidFlags.IS_GET_UP_FROM_PRONE:
+            combatant.remove_condition(Conditions.PRONE)  # resources already taken
         return False
 
     # def resolve_action(self, action_type, args, combatant):
@@ -371,9 +373,9 @@ class ActionResolver:
     #     feasible = check_feasibility(combatant, action, self.battle_map)
     #     if not feasible and combatant.has_action:
     #         action = Dodge(combatant)
-    #         logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+    #         logger.info(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
     #     elif not feasible:
-    #         logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
+    #         logger.info(f"Action of type {action_type} by {combatant} is non-feasible.")
     #         return ActionResult.UNFEASIBLE
     #     use_resources(combatant, action)
     #     return self.resolve_by_actoid_type(action, combatant)
@@ -395,9 +397,9 @@ class ActionResolver:
             return None
         # if not feasible and combatant.has_action:
         #     action = Dodge(combatant)
-        #     logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+        #     logger.info(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
         # elif not feasible:
-        #     logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
+        #     logger.info(f"Action of type {action_type} by {combatant} is non-feasible.")
         #     return ActionResult.UNFEASIBLE
         use_resources(combatant, action, self.battle_map)
         return self.resolve_by_actoid_type(action, combatant)
@@ -417,9 +419,9 @@ class ActionResolver:
         feasible = check_feasibility(combatant, action, self.battle_map)
         if not feasible and combatant.has_action:
             action = Dodge(combatant)
-            logger.debug(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
+            logger.info(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
         elif not feasible:
-            logger.debug(f"Action of type {action_type} by {combatant} is non-feasible.")
+            logger.info(f"Action of type {action_type} by {combatant} is non-feasible.")
             return ActionResult.UNFEASIBLE
         use_resources(combatant, action)
         result = self.resolve_by_actoid_type(action, combatant)

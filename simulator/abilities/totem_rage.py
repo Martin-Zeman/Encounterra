@@ -3,10 +3,10 @@ from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
-from simulator.misc import dmg_increment_for_dmg_flat
 from functools import reduce
 from simulator.misc import ROUND_HORIZON
 from simulator.abilities.rage import RageFactory
+from simulator.threat import dmg_increment_for_dmg_flat
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 import logging
 
@@ -75,7 +75,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
              DamageType.Force, DamageType.Necrotic, DamageType.Poison, DamageType.Radiant, DamageType.Piercing])
 
     def deactivate(self):
-        logger.debug(f"{self.combatants[0]}'s rage fades")
+        logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         self.combatants[0].resistances.remove(DamageType.Slashing)
         self.combatants[0].resistances.remove(DamageType.Bludgeoning)
@@ -123,7 +123,6 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
         attacks = get_attacks(combatant)
         for attack in attacks:
-            print(f"FIXME totem rage reduce calculate_threat {potential_targets}")
             dmg_acc = reduce(lambda acc, pt: acc + dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
                                                                        pt.ac, rage_bonus), potential_targets, 0)
             dmg_acc /= len(potential_targets)

@@ -5,7 +5,6 @@ from simulator.combatants.ogre import Ogre
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.faurung import Faurung
-from simulator.combatants.faurung_dt import FaurungDt
 from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.battle_map import *
 from simulator.round_manager import *
@@ -33,7 +32,6 @@ class Session:
         self.statistic_collector = None
         self.character_type_counter = {
             Faurung: 1,
-            FaurungDt: 1,
             TotemBarbarian5Lvl: 1,
             DragonclawCultist: 1,
             Cyanwrath: 1,
@@ -57,8 +55,6 @@ class Session:
         match combatant_type.__name__:
             case "Faurung":
                 self.combatants.append(Faurung(self.effect_tracker, "Faurung " + str(curr_count)))
-            case "FaurungDt":
-                self.combatants.append(FaurungDt(self.effect_tracker))
             case "TotemBarbarian5Lvl":
                 self.combatants.append(TotemBarbarian5Lvl(self.effect_tracker))
             case "Cyanwrath":
@@ -132,11 +128,12 @@ class Session:
         for combatant in self.combatants:
             combatant.set_round_manager(self.round_manager)
         self.battle_map.build_adjacency_matrix()
-        if parallel:
+        if parallel and self.num_simulations >= mp.cpu_count():
+            # mp.set_start_method('spawn')
             result_acc = mp.Queue()
             # jobs = [mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations // mp.cpu_count(), result_acc)) for _ in range(self.num_simulations // mp.cpu_count())]
             jobs = []
-            for _ in range(mp.cpu_count() - 1 if self.num_simulations % mp.cpu_count() else mp.cpu_count()):
+            for _ in range(mp.cpu_count()):
                 jobs.append(mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations // mp.cpu_count(), result_acc)))
             if self.num_simulations % mp.cpu_count():
                 jobs.append(mp.Process(target=self.round_manager.simulate_n, args=(self.num_simulations % mp.cpu_count(), result_acc)))
@@ -152,8 +149,8 @@ class Session:
                         accumulated_tally[key] += val
                     except KeyError:
                         accumulated_tally[key] = val
-            logger.info("--------------STATISTICS--------------")
+            logger.warning("--------------STATISTICS--------------")
             for name, victories in accumulated_tally.items():
-                logger.info(f"Team {name.name} won total of {victories} times", extra={"team": name})
+                logger.warning(f"Team {name.name} won total of {victories} times", extra={"team": name})
         else:
             self.round_manager.simulate_n(self.num_simulations)

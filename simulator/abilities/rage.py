@@ -1,11 +1,13 @@
 from simulator.misc import DamageType, get_attacks
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
-from simulator.misc import dmg_increment_for_dmg_flat, ROUND_HORIZON
+from simulator.misc import ROUND_HORIZON
 from functools import reduce
 import sys
+
+from simulator.threat import dmg_increment_for_dmg_flat
 from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 import logging
 
@@ -95,7 +97,7 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.combatants[0].resistances.update([DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing])
 
     def deactivate(self):
-        logger.debug(f"{self.combatants[0]}'s rage fades")
+        logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         self.combatants[0].resistances.remove(DamageType.Slashing)
         self.combatants[0].resistances.remove(DamageType.Bludgeoning)
@@ -117,7 +119,6 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
         attacks = get_attacks(combatant)
         for attack in attacks:
-            print(f"FIXME reduce rage calculate_threat {potential_targets}")
             dmg_acc = reduce(lambda acc, pt: acc + dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
                                                                        pt.ac, rage_bonus), potential_targets)
             dmg_acc /= len(potential_targets)
