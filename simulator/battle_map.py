@@ -10,6 +10,7 @@ from simulator.action_factory import Passive
 from simulator.geometry import get_affected_by_cone, get_cartesian_distance, get_square_center
 from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
+from scipy.spatial import distance_matrix
 import time
 from enum import Enum
 
@@ -63,7 +64,12 @@ class CombatantCoords:
     """
     Represents a set of coordinates taken up by a combatant
     """
-    def __init__(self, coords):
+    def __init__(self, coords: np.array):
+        """
+        Removes the combatant from the old coordinate and moves them to a new one by a given increment
+        :param coords: n x 2 matrix where one row represents one coordinate
+        :return: None
+        """
         self.coords = coords
 
 
@@ -352,11 +358,12 @@ class Map:
 
     def get_pam_eligible_combatants(self, combatant, increment):
         eligible_combatants = []
-        for curr_combatant, pos in self.combatant_coordinate_cache.items():
+        combatant_coords = self.combatant_coordinate_cache[combatant]
+        for curr_combatant, coords in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
                 try:
                     pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
-                    post_increment_dist = self.get_hop_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
+                    post_increment_dist = self.get_hop_distance(combatant_coords + increment, coords)
                 except KeyError:
                     continue
                 if curr_combatant.has_passive(
@@ -382,7 +389,7 @@ class Map:
         :param increment:
         :return:
         """
-        old_coord = self.combatant_coordinate_cache[combatant]
+        old_coords = self.combatant_coordinate_cache[combatant]
         self.grid[old_coord[0]][old_coord[1]].remove_combatant()
         new_coord = old_coord + increment
         self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
@@ -412,10 +419,11 @@ class Map:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
-    def set_combatant_coordinates(self, combatant, coord):
+    def set_combatant_coordinates(self, combatant, coords):
         # TODO: redo this as np.array
-        self.grid[coord[0]][coord[1]].set_combatant(combatant)
-        self.combatant_coordinate_cache[combatant] = coord
+        for coord in coords:
+            self.grid[coord[0]][coord[1]].set_combatant(combatant)
+        self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
         """
@@ -485,7 +493,11 @@ class Map:
         subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
         subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
         try:
-            res = np.max(np.abs(subject1 - subject2))
+            dist_mat = distance_matrix(subject1, subject2)
+            min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
+            sub1_closest_coord = subject1[min_dist_index // subject1.shape[0], :]
+            sub2_closest_coord = subject2[min_dist_index % subject2.shape[0], :]
+            res = np.max(np.abs(sub1_closest_coord - sub2_closest_coord))
         except TypeError as e:
             res = None
         return res
@@ -503,10 +515,12 @@ class Map:
         except KeyError:
             return None
         try:
-            res = get_cartesian_distance(subject1, subject2)
-        except TypeError as e:
+            new_res = np.amin(distance_matrix(subject1, subject2))
+            res = get_cartesian_distance(subject1, subject2)  # TODO REMOVE THIS
+        except TypeError:
             res = None
-        return res
+        assert res == new_res
+        return new_res
 
     def get_adjacent_coords(self, coord):
         """
@@ -670,10 +684,11 @@ class Map:
         """
         logger.info(f"{combatant} died")
         try:
-            old_coord = self.combatant_coordinate_cache[combatant]
+            old_coords = self.combatant_coordinate_cache[combatant]
         except KeyError:
             return  # already removed
-        self.grid[old_coord[0]][old_coord[1]].remove_combatant()
+        for coord in old_coords:
+            self.grid[coord[0]][coord[1]].remove_combatant()
         del self.combatant_coordinate_cache[combatant]
 
     def clear(self):
@@ -681,8 +696,8 @@ class Map:
             for square in row:
                 square.remove_combatant()
                 square.reset_terrain()
-        for coord in self.combatant_coordinate_cache.values():
-            coord.fill(0)
+        for coords in self.combatant_coordinate_cache.values():
+            coords.fill(0)
         self.impassable_set.clear()
         self.difficult_set.clear()
         self.terrain_encoding.fill(Terrain.NORMAL_TERRAIN.value)
