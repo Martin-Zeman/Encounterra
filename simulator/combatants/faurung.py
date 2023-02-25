@@ -1,4 +1,4 @@
-from statemachine import StateMachine, State
+from simulator.actions.attack_fsms import OneAttack
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.spellslots import Spellslots
@@ -7,16 +7,8 @@ from simulator.action_factory import *
 from simulator.spells.spell import SpellStats
 from simulator.feasibility import get_feasible_actions
 import logging
-import random
 
 logger = logging.getLogger(__name__)
-
-
-class OneMelee(StateMachine):
-    A = State("A", value=(1,), initial=True)  # not attacked yet
-    nop = State("nop", value=(), final=True)
-
-    melee = A.to(nop)
 
 
 class Faurung(Combatant):
@@ -107,8 +99,8 @@ class Faurung(Combatant):
         super().new_turn()
         self.nowhere_to_go = False
         self.movement_generator_cache = None
-        self.attack_fsm = OneMelee()
-        self.attack_mapping = {self.staff[1]: (1, OneMelee.melee)}
+        self.attack_fsm = OneAttack()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_mapping = {self.staff[1]: (1, OneAttack.attack)}
 
     def prompt_aoo(self, moving_combatant):
         return None

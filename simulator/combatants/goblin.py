@@ -1,3 +1,4 @@
+from simulator.actions.attack_fsms import OneMeleeOrOneRanged
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions
@@ -16,7 +17,6 @@ class Goblin(Combatant):
         self.shortbow_attack = self.add_ability(Action.ATTACK,  name="Shortbow", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=16, crit_range=1, attack_type=AttackFactory.Type.RANGED)
         self.nimble_disengage = self.add_ability(BonusAction.CUNNING_DISENGAGE)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
-        # TODO Nimble Escape
         self.selected_target = None
         self.dist_to_nearest = None
         self.saving_throws[SavingThrow.STR] = -1
@@ -95,6 +95,8 @@ class Goblin(Combatant):
         self.movement_generator = None
         self.selected_target = None
         self.dist_to_nearest = None
+        self.attack_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_mapping = {self.scimitar_attack[1]: (1, OneMeleeOrOneRanged.melee), self.shortbow_attack[1]: (2, OneMeleeOrOneRanged.ranged)}
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam

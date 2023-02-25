@@ -1,27 +1,18 @@
+from simulator.actions.attack_fsms import TwoMeleeOneRangedWithReckless
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_actions
 from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.action_types import *
-from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.misc import Side
-from statemachine import State, StateMachine
+from simulator.actions.actoid import ActoidFlags
 import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class TwoMeleeOneRangedWithReckless(StateMachine):
-    A = State("A", (1, 2, 3), initial=True)  # not attacked yet
-    B = State("B", (1,))  # attacked with melee
-    C = State("C", (2,))  # attacked with melee recklessly
-    nop = State("nop", value=(), final=True)
 
-    melee = A.to(B) | B.to(nop)
-    melee_recklessly = A.to(C) | C.to(nop)
-    ranged = A.to(nop)
 
 class TotemBarbarian5Lvl(Combatant):
 
@@ -120,7 +111,7 @@ class TotemBarbarian5Lvl(Combatant):
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        self.attack_fsm = TwoMeleeOneRangedWithReckless()
+        self.attack_fsm = TwoMeleeOneRangedWithReckless()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_mapping = {self.axe[1]: (1, TwoMeleeOneRangedWithReckless.melee),
                                self.axe_recklessly[1]: (2, TwoMeleeOneRangedWithReckless.melee_recklessly),
                                self.javelin_attack[1]: (3, TwoMeleeOneRangedWithReckless.ranged)}

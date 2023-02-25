@@ -1,25 +1,19 @@
 from simulator.abilities.on_hit_prone import OnHitProne
+from simulator.actions.attack_fsms import TwoMeleeOneRanged
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_actions
 from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.action_types import *
-from simulator.actions.actoid import Actoid, ActoidFlags
-from statemachine import State, StateMachine
+from simulator.actions.actoid import ActoidFlags
 import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class TwoMeleeOneRanged(StateMachine):
-    A = State("A", value=(1, 2), initial=True)  # not attacked yet
-    B = State("B", value=(1,))  # attacked with club
-    nop = State("nop", value=(),final=True)
 
-    melee = A.to(B) | B.to(nop)
-    ranged = A.to(nop)
 
 class StoneGiant(Combatant):
 
@@ -117,7 +111,7 @@ class StoneGiant(Combatant):
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        self.attack_fsm = TwoMeleeOneRanged()
+        self.attack_fsm = TwoMeleeOneRanged()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_mapping = {self.club[1]: (1, TwoMeleeOneRanged.melee), self.rock[1]: (2, TwoMeleeOneRanged.ranged)}
 
     def prompt_aoo(self, moving_combatant):

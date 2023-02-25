@@ -59,6 +59,13 @@ class Occupancy(Enum):
     FREE = 1
     OCCUPIED_BY_COMBATANT = 2
 
+class CombatantCoords:
+    """
+    Represents a set of coordinates taken up by a combatant
+    """
+    def __init__(self, coords):
+        self.coords = coords
+
 
 class GridSquare:
     def __init__(self):
@@ -343,6 +350,31 @@ class Map:
 
         return dist, shortest_paths
 
+    def get_pam_eligible_combatants(self, combatant, increment):
+        eligible_combatants = []
+        for curr_combatant, pos in self.combatant_coordinate_cache.items():
+            if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
+                try:
+                    pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
+                    post_increment_dist = self.get_hop_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
+                except KeyError:
+                    continue
+                if curr_combatant.has_passive(
+                        Passive.POLEARM_MASTER) and pre_increment_dist > curr_combatant.melee_reaction_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction:
+                    eligible_combatants.append(curr_combatant)
+        return eligible_combatants
+
+    def is_empty(self, coord):
+        try:
+            empty = self.grid[coord[0]][coord[1]].is_empty()
+        except IndexError:
+            return False
+        return empty
+
+    def is_valid_coord(self, coord):
+        return False if (coord.any() < 0 or coord.any() > self.size - 1) else True
+
+
     def move_combatant_by_increment(self, combatant, increment):
         """
         Removes the combatant from the old coordinate and moves them to a new one by a given increment
@@ -380,39 +412,10 @@ class Map:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
-    def get_pam_eligible_combatants(self, combatant, increment):
-        eligible_combatants = []
-        for curr_combatant, pos in self.combatant_coordinate_cache.items():
-            if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
-                try:
-                    pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
-                    post_increment_dist = self.get_hop_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
-                except KeyError:
-                    continue
-                if curr_combatant.has_passive(
-                        Passive.POLEARM_MASTER) and pre_increment_dist > curr_combatant.melee_reaction_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction:
-                    eligible_combatants.append(curr_combatant)
-        return eligible_combatants
-
-    def is_empty(self, coord):
-        try:
-            empty = self.grid[coord[0]][coord[1]].is_empty()
-        except IndexError:
-            return False
-        return empty
-
-    def is_valid_coord(self, coord):
-        return False if (coord.any() < 0 or coord.any() > self.size - 1) else True
-
     def set_combatant_coordinates(self, combatant, coord):
         # TODO: redo this as np.array
         self.grid[coord[0]][coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = coord
-
-    def move_combatant(self, combatant, coord):
-        old_coord = self.combatant_coordinate_cache[combatant]
-        self.grid[old_coord[0]][old_coord[1]].remove_combatant()
-        self.set_combatant_coordinates(combatant, coord)
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
         """

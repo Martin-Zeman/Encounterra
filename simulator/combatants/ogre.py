@@ -1,3 +1,4 @@
+from simulator.actions.attack_fsms import OneMeleeOrOneRanged
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions
@@ -13,7 +14,7 @@ class Ogre(Combatant):
 
     def __init__(self, effect_tracker, name="Ogre"):
         super().__init__(effect_tracker, name, level=1, hp=59, ac=11, init_bonus=-1, spell_to_hit=0, speed=40, resistances=set(), dc=0)
-        self.morningstar_attack = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.greatclub_attack = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
         self.javelin_attack = self.add_ability(Action.ATTACK,  name="Javelin", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, attack_type=AttackFactory.Type.RANGED)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
         self.movement_generator = None
@@ -76,12 +77,12 @@ class Ogre(Combatant):
         else:
             # Melee attack
             if self.has_action:
-                self.morningstar_attack[1].action_type = Action.ATTACK
+                self.greatclub_attack[1].action_type = Action.ATTACK
             elif self.has_haste_action:
-                self.morningstar_attack[1].action_type = HasteAction.HASTE_ATTACK
+                self.greatclub_attack[1].action_type = HasteAction.HASTE_ATTACK
             else:
                 return None
-            return self.morningstar_attack[1].create(self.selected_target)
+            return self.greatclub_attack[1].create(self.selected_target)
 
 
 
@@ -89,6 +90,8 @@ class Ogre(Combatant):
         super().new_turn()
         self.movement_generator = None
         # self.selected_target = None
+        self.attack_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_mapping = {self.greatclub_attack[1]: (1, OneMeleeOrOneRanged.melee), self.javelin_attack[1]: (2, OneMeleeOrOneRanged.ranged)}
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
