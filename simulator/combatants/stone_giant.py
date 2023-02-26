@@ -3,7 +3,7 @@ from simulator.actions.attack_fsms import TwoMeleeOneRanged
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_actions
-from simulator.misc import DamageType, SavingThrow, Conditions
+from simulator.misc import DamageType, SavingThrow, Conditions, Size
 from simulator.action_factory import *
 from simulator.action_types import *
 from simulator.actions.actoid import ActoidFlags
@@ -19,6 +19,7 @@ class StoneGiant(Combatant):
 
     def __init__(self, effect_tracker, name="Stone Giant"):
         super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
+        self.size = Size.HUGE
         self.club = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
         self.rock = self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
                                             dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1,

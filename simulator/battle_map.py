@@ -64,17 +64,37 @@ class CombatantCoords:
     """
     Represents a set of coordinates taken up by a combatant
     """
-    def __init__(self, coords: np.array):
+    def __init__(self, coord: np.array, size=Size.MEDIUM):
         """
-        Removes the combatant from the old coordinate and moves them to a new one by a given increment
-        :param coords: n x 2 matrix where one row represents one coordinate
+        Initializes the combatant coords with a root coordinate
+        :param coord: the root coord of the combatant, it gets turned into n x 2 matrix where one row represents one coordinate
         :return: None
         """
-        self.coords = coords
+        match size:
+            case Size.TINY | Size.SMALL | Size.MEDIUM:
+                self.coords = np.array([coord])
+            case Size.LARGE:
+                self.coords = np.array([coord, coord + (0, 1), coord + (1, 0), coord + 1])
+            case Size.HUGE:
+                self.coords = np.array([coord, coord + (0, 1), coord + (0, 2),
+                                        coord + (1, 0), coord + (1, 1), coord + (1, 2),
+                                        coord + (2, 0), coord + (2, 1), coord + (2, 2)])
+            case Size.GARGANTUAN:
+                self.coords = np.array([coord, coord + (0, 1), coord + (0, 2), coord + (0, 3),
+                                        coord + (1, 0), coord + (1, 1), coord + (1, 2), coord + (1, 3),
+                                        coord + (2, 0), coord + (2, 1), coord + (2, 2), coord + (2, 3),
+                                        coord + (3, 0), coord + (3, 1), coord + (3, 2), coord + (3, 3)])
+            case _:
+                logger.error("Unknown combatant size")
 
 
 class GridSquare:
-    def __init__(self):
+    def __init__(self, dummy):
+        """
+        GridSquare constructor
+        :param dummy: dummy arguments only needed for the vectorized construction of grid
+        :return: None
+        """
         self.combatant = None
         self.terrain = Terrain.NORMAL_TERRAIN
         self.is_opaque = False
@@ -106,12 +126,15 @@ class Map:
     def __init__(self, size, teams):
         self.size = size
         self.teams = teams
-        self.grid = [[GridSquare() for _ in range(size)] for _ in range(size)]
+        vGridSquare = np.vectorize(GridSquare)
+        init_grid = np.arange(size**2).reshape((size, size))
+        self.grid = np.empty((size, size), dtype=object)
+        self.grid[:, :] = vGridSquare(init_grid)
         self.terrain_encoding = np.zeros((size, size), dtype=int)
         self.base_adjacency_matrix = np.zeros((size, size))
         self.difficult_set = set()
         self.impassable_set = set()
-        self.combatant_coordinate_cache = {}  # Maps combatant -> coordinate
+        self.combatant_coordinate_cache = map()  # Maps combatant -> coordinate
         self.effect_tracker = None
 
     def __str__(self):
@@ -119,7 +142,7 @@ class Map:
         for y in range(self.size - 1, -1, -1):
             row_text = ""
             for x in range(self.size):
-                square = self.grid[x][y]
+                square = self.grid[x, y]
                 combatant = square.combatant
                 if combatant:
                     row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + str(combatant)[-1] + "\x1b[0m\t"
@@ -133,13 +156,13 @@ class Map:
         return string_repr
 
     @contextmanager
-    def as_if_combatant_position(self, combatant, coord):
-        original_coord = self.combatant_coordinate_cache[combatant]
-        self.move_combatant(combatant, coord)
+    def as_if_combatant_position(self, combatant, coords: CombatantCoords):
+        original_coords = self.combatant_coordinate_cache[combatant]
+        self.move_combatant(combatant, coords)
         try:
             yield self
         finally:
-            self.move_combatant(combatant, original_coord)
+            self.move_combatant(combatant, original_coords)
 
     @contextmanager
     def as_if_dist_from_combatant(self, combatant1, combatant2, dist, dist_type=DistanceMetric.HOP):
@@ -192,31 +215,31 @@ class Map:
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
 
-    def place_circular_element(self, coords, terrain_type, diameter=1):
+    def place_circular_element(self, coord, terrain_type, diameter=1):
         N = self.size
         if diameter == 1:
-            x = max(0, min(coords[0], N - 1))
-            y = max(0, min(coords[1], N - 1))
+            x = max(0, min(coord[0], N - 1))
+            y = max(0, min(coord[1], N - 1))
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                 self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
                 self.terrain_encoding[x][y] = Terrain.IMPASSABLE_TERRAIN.value
-                self.impassable_set.add((coords[0], coords[1]))
+                self.impassable_set.add((coord[0], coord[1]))
             elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                 self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
                 self.terrain_encoding[x][y] = Terrain.DIFFICULT_TERRAIN.value
-                self.difficult_set.add((coords[0], coords[1]))
+                self.difficult_set.add((coord[0], coord[1]))
         elif diameter > 1:
             for x in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
                 for y in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
                     try:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
-                            self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.IMPASSABLE_TERRAIN
-                            self.terrain_encoding[coords[0] + x][coords[1] + y] = Terrain.IMPASSABLE_TERRAIN.value
-                            self.impassable_set.add((coords[0] + x, coords[1] + y))
+                            self.grid[coord[0] + x][coord[1] + y].terrain = Terrain.IMPASSABLE_TERRAIN
+                            self.terrain_encoding[coord[0] + x][coord[1] + y] = Terrain.IMPASSABLE_TERRAIN.value
+                            self.impassable_set.add((coord[0] + x, coord[1] + y))
                         elif terrain_type == Terrain.DIFFICULT_TERRAIN:
-                            self.grid[coords[0] + x][coords[1] + y].terrain = Terrain.DIFFICULT_TERRAIN
-                            self.terrain_encoding[coords[0] + x][coords[1] + y] = Terrain.DIFFICULT_TERRAIN.value
-                            self.difficult_set.add((coords[0] + x, coords[1] + y))
+                            self.grid[coord[0] + x][coord[1] + y].terrain = Terrain.DIFFICULT_TERRAIN
+                            self.terrain_encoding[coord[0] + x][coord[1] + y] = Terrain.DIFFICULT_TERRAIN.value
+                            self.difficult_set.add((coord[0] + x, coord[1] + y))
                     except IndexError:
                         pass  # out of grid
 
@@ -229,6 +252,7 @@ class Map:
         # Let's now connect the nodes
         for i in range(N):
             for j in range(N):
+                # TODO I don't think the min is needed
                 adj[i, j, max((i - 1), 0), max((j - 1), 0)] = 1
                 adj[i, j, max((i - 1), 0), j] = 1
                 adj[i, j, max((i - 1), 0), min(j + 1, N - 1)] = 1
@@ -267,23 +291,22 @@ class Map:
         x_offset = 0
         y_offset = 0
         if combatant.size.value > Size.MEDIUM.value:
-            x_offset = -combatant.size.value
-            y_offset = -combatant.size.value
+            x_offset = combatant.size.value
+            y_offset = combatant.size.value
 
         mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
         for curr_combatant, coord in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and curr_combatant.is_alive():
                 # TODO even allies are now impassable, try and figure out of a way to improve this
-                # mask[:, coord[0] * N + coord[1]] = 0  # if self.teams.are_enemies(curr_combatant, combatant) else 2
-                mv = mask[:, coord[0] * N + coord[1]].view().reshape(N, N)
-                mv[(coord[0] + x_offset):(coord[0] + 1), (coord[1] + y_offset):(coord[1] + 1)].fill(0)
+                mv_reshaped = mask.view().reshape(N, N, N, N)
+                mv_reshaped[:, :, max(0, (coord[0] - x_offset)):(coord[0] + 1), max(0, (coord[1] - y_offset)):(coord[1] + 1)].fill(0)
         for coord in self.impassable_set:
-            mv = mask[:, coord[0] * N + coord[1]].view().reshape(N, N)
-            mv[(coord[0] + x_offset):(coord[0] + 1), (coord[1] + y_offset):(coord[1] + 1)].fill(0)
+            mv_reshaped = mask.view().reshape(N, N, N, N)
+            mv_reshaped[:, :, max(0, (coord[0] - x_offset)):(coord[0] + 1), max(0, (coord[1] - y_offset)):(coord[1] + 1)].fill(0)
 
         return mask
 
-    def printDijkstra(self, distances, my_location, enemy_location, reconstructed_path):
+    def printDijkstra(self, distances, my_coord: CombatantCoords, enemy_coord: CombatantCoords, reconstructed_path):
         """
         Prints the distances to all locations on the map from my_location and highlights the reconstructed path to enemy_location.
         It prints it as standard cartesian coordinate system.
@@ -293,21 +316,19 @@ class Map:
         _________> x
         0
         :param distances: list of distances to all coords (flattened)
-        :param my_location: coordinates of the source
-        :param enemy_location: coordinates of the destination
+        :param my_coord: coordinates of the source
+        :param enemy_coord: coordinates of the destination
         :param reconstructed_path: list of coordinates from my_location to enemy_location
         :return: void
         """
-        my_coord = my_location[0] * self.size + my_location[1]
-        enemy_coord = enemy_location[0] * self.size + enemy_location[1]
         for y in range(self.size - 1, -1, -1):
             row = ""
             for x in range(self.size):
-                coord = x * self.size + y
+                coord = np.array([x, y])
                 dist = str(distances[coord]) if distances[coord] < sys.maxsize else "-"
-                if coord == my_coord:
+                if any((my_coord.coords[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of my_coord'
                     row += "\x1b[38;5;39m%s\x1b[0m\t" % dist
-                elif coord == enemy_coord:
+                elif any((enemy_coord.coords[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of enemy_coords'
                     row += "\x1b[38;5;196m%s\x1b[0m\t" % dist
                 elif (x, y) in reconstructed_path:
                     row += "\u001b[36m%s\x1b[0m\t" % dist
@@ -387,7 +408,7 @@ class Map:
 
     def is_empty(self, coord):
         try:
-            empty = self.grid[coord[0]][coord[1]].is_empty()
+            empty = self.grid[coord[0], coord[1]].is_empty()
         except IndexError:
             return False
         return empty
@@ -404,9 +425,11 @@ class Map:
         :return:
         """
         old_coords = self.combatant_coordinate_cache[combatant]
-        self.grid[old_coord[0]][old_coord[1]].remove_combatant()
-        new_coord = old_coord + increment
-        self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
+        for old_coords in old_coords:
+            self.grid[old_coord[0], old_coord[1]].remove_combatant()
+        new_coords = old_coords + increment
+        for new_coord in new_coords:
+            self.grid[new_coord[0], new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coord
         logger.info(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
 
@@ -433,10 +456,10 @@ class Map:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
-    def set_combatant_coordinates(self, combatant, coords):
-        # TODO: redo this as np.array
-        for coord in coords:
-            self.grid[coord[0]][coord[1]].set_combatant(combatant)
+    def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
+        # grid_view = self.grid.view()
+        # grid_view[coords.coords[:, 0], coords.coords[:, 1]].set_combatant(combatant)
+        self.grid[coords.coords[:, 0], coords.coords[:, 1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
@@ -452,14 +475,12 @@ class Map:
         min_dist = sys.float_info.max
         nearest = None
         self_position = self.combatant_coordinate_cache[combatant]
-        nearest_coord = None
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
             dist = dist_func(self_position, target_coord)
             if potential_target is not combatant and potential_target.is_alive() and team_func(potential_target,
                                                                                                combatant) and dist < min_dist:
                 min_dist = dist
                 nearest = potential_target
-                nearest_coord = target_coord
         return nearest, min_dist, target_coord
 
     def is_enemy_adjacent(self, character):
