@@ -59,12 +59,12 @@ class Conditions(Flag):
 
 
 class Size(Enum):
-    TINY = 0
-    SMALL = 1
-    MEDIUM = 2
-    LARGE = 3
-    HUGE = 4
-    GARGANTUAN = 5
+    TINY = -2
+    SMALL = -1
+    MEDIUM = 0
+    LARGE = 1
+    HUGE = 2
+    GARGANTUAN = 3
 
 
 class Side(Enum):

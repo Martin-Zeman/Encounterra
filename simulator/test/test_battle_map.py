@@ -1,8 +1,8 @@
-from simulator.battle_map import Map
+from simulator.battle_map import Map, Terrain
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.goblin import Goblin
 from simulator.effects.effect_tracker import EffectTracker
-from simulator.misc import DistanceMetric
+from simulator.misc import DistanceMetric, Size
 from simulator.teams import Teams
 import numpy as np
 import pytest
@@ -116,35 +116,6 @@ def test_as_if_dist_mod_from_combatant(teams, effect_tracker, battle_map, combat
     assert battle_map.get_hop_distance(combatant1, combatant2) == 5
     assert battle_map.get_hop_distance(combatant1, combatant3) == 1
     
-    
-    
-# def get_hop_distance(self, subject1, subject2):
-#     subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
-#     subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
-#     try:
-#         dist_mat = np.amin(distance_matrix(subject1, subject2))
-#         min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
-#         sub1_closest_coord = subject1[min_dist_index // subject1.shape[0], :]
-#         sub2_closest_coord = subject2[min_dist_index % subject2.shape[0], :]
-#         res = np.max(np.abs(sub1_closest_coord - sub2_closest_coord))
-#     except TypeError as e:
-#         res = None
-#     return res
-# 
-# def get_cartesian_distance(self, subject1, subject2):
-#     try:
-#         subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
-#         subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
-#     except KeyError:
-#         return None
-#     try:
-#         new_res = np.amin(distance_matrix(subject1, subject2))
-#         res = get_cartesian_distance(subject1, subject2)  # TODO REMOVE THIS
-#     except TypeError:
-#         res = None
-#     assert res == new_res
-#     return new_res
-
 
 def test_hop_distance_diagonal(battle_map, combatant1, combatant2):
     # Two large combatants
@@ -156,6 +127,7 @@ def test_hop_distance_diagonal(battle_map, combatant1, combatant2):
     assert battle_map.get_hop_distance(combatant1_coords, combatant2) == 3, "Incorrect distance between two large combatants"
     assert battle_map.get_hop_distance(combatant1, combatant2_coords) == 3, "Incorrect distance between two large combatants"
 
+
 def test_hop_distance_same_y(battle_map, combatant1, combatant2):
     combatant1_coords = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
     combatant2_coords = np.array([[6, 0], [7, 0], [6, 1], [7, 1]])
@@ -164,6 +136,7 @@ def test_hop_distance_same_y(battle_map, combatant1, combatant2):
     assert battle_map.get_hop_distance(combatant1, combatant2) == 5, "Incorrect distance between two large combatants"
     assert battle_map.get_hop_distance(combatant1_coords, combatant2) == 5, "Incorrect distance between two large combatants"
     assert battle_map.get_hop_distance(combatant1, combatant2_coords) == 5, "Incorrect distance between two large combatants"
+
 
 def test_hop_distance_same_x(battle_map, combatant1, combatant2):
     combatant1_coords = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
@@ -174,6 +147,7 @@ def test_hop_distance_same_x(battle_map, combatant1, combatant2):
     assert battle_map.get_hop_distance(combatant1_coords, combatant2) == 3, "Incorrect distance between two large combatants"
     assert battle_map.get_hop_distance(combatant1, combatant2_coords) == 3, "Incorrect distance between two large combatants"
 
+
 def test_hop_distance_random(battle_map, combatant1, combatant2):
     combatant1_coords = np.array([[0, 0], [1, 0], [0, 1], [1, 1]])
     combatant2_coords = np.array([[3, 5], [4, 5], [3, 6], [4, 6]])
@@ -182,3 +156,16 @@ def test_hop_distance_random(battle_map, combatant1, combatant2):
     assert battle_map.get_hop_distance(combatant1, combatant2) == 4, "Incorrect distance between two large combatants"
     assert battle_map.get_hop_distance(combatant1_coords, combatant2) == 4, "Incorrect distance between two large combatants"
     assert battle_map.get_hop_distance(combatant1, combatant2_coords) == 4, "Incorrect distance between two large combatants"
+
+
+def test_build_combatant_adjacency_mask_large(battle_map, combatant1):
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, np.array([[5, 12], [6, 12], [5, 13], [6, 13]]))
+
+    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    adj_mat = battle_map.build_combatant_adjacency_mask(combatant1)
+    print(adj_mat)
+    assert adj_mat[:, 8 * battle_map.size + 13] == 0
+    assert adj_mat[:, 8 * battle_map.size + 12] == 0
+    assert adj_mat[:, 9 * battle_map.size + 12] == 0
+    assert adj_mat[:, 9 * battle_map.size + 13] == 0

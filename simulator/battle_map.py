@@ -5,7 +5,7 @@ import logging
 from simulator.spells.spell import SpellStats
 from simulator.combatant import Combatant
 from multipledispatch import dispatch
-from simulator.misc import Conditions
+from simulator.misc import Conditions, Size
 from simulator.action_factory import Passive
 from simulator.geometry import get_affected_by_cone, get_cartesian_distance, get_square_center
 from simulator.misc import Side, DistanceMetric
@@ -256,17 +256,31 @@ class Map:
     def build_combatant_adjacency_mask(self, combatant):
         """
         Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
-        Allies are considered difficult terrain (potentially on top of already difficult terrain)
+        Allies are considered difficult terrain (potentially on top of already difficult terrain).
+        For combatants larger than MEDIUM obstacles are also inflated accordingly
         :param combatant: for whom the mask is to be constructed
         :return: adjacency matrix mask
         """
         N = self.size
         # TODO consider preallocating this for all combatants and only resetting it to ones
+
+        x_offset = 0
+        y_offset = 0
+        if combatant.size.value > Size.MEDIUM.value:
+            x_offset = -combatant.size.value
+            y_offset = -combatant.size.value
+
         mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
         for curr_combatant, coord in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and curr_combatant.is_alive():
                 # TODO even allies are now impassable, try and figure out of a way to improve this
-                mask[:, coord[0] * N + coord[1]] = 0  # if self.teams.are_enemies(curr_combatant, combatant) else 2
+                # mask[:, coord[0] * N + coord[1]] = 0  # if self.teams.are_enemies(curr_combatant, combatant) else 2
+                mv = mask[:, coord[0] * N + coord[1]].view().reshape(N, N)
+                mv[(coord[0] + x_offset):(coord[0] + 1), (coord[1] + y_offset):(coord[1] + 1)].fill(0)
+        for coord in self.impassable_set:
+            mv = mask[:, coord[0] * N + coord[1]].view().reshape(N, N)
+            mv[(coord[0] + x_offset):(coord[0] + 1), (coord[1] + y_offset):(coord[1] + 1)].fill(0)
+
         return mask
 
     def printDijkstra(self, distances, my_location, enemy_location, reconstructed_path):
