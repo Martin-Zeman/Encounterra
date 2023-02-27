@@ -77,8 +77,8 @@ class CombatantCoords:
                 self.coords = np.array([coord, coord + (0, 1), coord + (1, 0), coord + 1])
             case Size.HUGE:
                 self.coords = np.array([coord, coord + (0, 1), coord + (0, 2),
-                                        coord + (1, 0), coord + (1, 1), coord + (1, 2),
-                                        coord + (2, 0), coord + (2, 1), coord + (2, 2)])
+                                       coord + (1, 0), coord + (1, 1), coord + (1, 2),
+                                       coord + (2, 0), coord + (2, 1), coord + (2, 2)])
             case Size.GARGANTUAN:
                 self.coords = np.array([coord, coord + (0, 1), coord + (0, 2), coord + (0, 3),
                                         coord + (1, 0), coord + (1, 1), coord + (1, 2), coord + (1, 3),
@@ -134,7 +134,7 @@ class Map:
         self.base_adjacency_matrix = np.zeros((size, size))
         self.difficult_set = set()
         self.impassable_set = set()
-        self.combatant_coordinate_cache = map()  # Maps combatant -> coordinate
+        self.combatant_coordinate_cache = dict()  # Maps combatant -> coordinate
         self.effect_tracker = None
 
     def __str__(self):
@@ -398,11 +398,11 @@ class Map:
             if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
                 try:
                     pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
-                    post_increment_dist = self.get_hop_distance(combatant_coords + increment, coords)
+                    post_increment_dist = self.get_hop_distance(combatant_coords.coords + increment, coords.coords)
                 except KeyError:
                     continue
                 if curr_combatant.has_passive(
-                        Passive.POLEARM_MASTER) and pre_increment_dist > curr_combatant.melee_reaction_range and post_increment_dist == curr_combatant.max_melee_range and curr_combatant.has_reaction:
+                        Passive.POLEARM_MASTER) and pre_increment_dist > curr_combatant.melee_reaction_range and post_increment_dist == curr_combatant.melee_reaction_range and curr_combatant.has_reaction:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
@@ -459,7 +459,11 @@ class Map:
     def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
         # grid_view = self.grid.view()
         # grid_view[coords.coords[:, 0], coords.coords[:, 1]].set_combatant(combatant)
-        self.grid[coords.coords[:, 0], coords.coords[:, 1]].set_combatant(combatant)
+        def set_comb(square):
+            square.set_combatant(combatant)
+            return square
+        vec_set_comb = np.vectorize(set_comb)
+        self.grid[coords.coords[:, 0], coords.coords[:, 1]] = vec_set_comb(self.grid[coords.coords[:, 0], coords.coords[:, 1]])
         self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
@@ -521,12 +525,12 @@ class Map:
     def get_hop_distance(self, subject1, subject2):
         """
         Universal hop distance function. Accepts both characters or coordinates
-        :param subject1: either a character or a numpy array
-        :param subject2: either a character or a numpy array
+        :param subject1: either a character or a CombatantCoords type
+        :param subject2: either a character or a CombatantCoords type
         :return: distance between subjects in number of hops, None if one of the subjects is dead
         """
-        subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
-        subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
+        subject1 = self.combatant_coordinate_cache[subject1].coords if issubclass(type(subject1), Combatant) else subject1
+        subject2 = self.combatant_coordinate_cache[subject2].coords if issubclass(type(subject2), Combatant) else subject2
         try:
             dist_mat = distance_matrix(subject1, subject2)
             min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
@@ -545,8 +549,8 @@ class Map:
         :return: cartesian distance between subjects, None if one of the subjects is dead
         """
         try:
-            subject1 = self.combatant_coordinate_cache[subject1] if issubclass(type(subject1), Combatant) else subject1
-            subject2 = self.combatant_coordinate_cache[subject2] if issubclass(type(subject2), Combatant) else subject2
+            subject1 = self.combatant_coordinate_cache[subject1].coords if issubclass(type(subject1), Combatant) else subject1
+            subject2 = self.combatant_coordinate_cache[subject2].coords if issubclass(type(subject2), Combatant) else subject2
         except KeyError:
             return None
         try:

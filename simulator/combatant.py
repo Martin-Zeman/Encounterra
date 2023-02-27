@@ -215,6 +215,7 @@ class Combatant(ABC):
                 case Reaction.REACTION_ATTACK:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                     self.aoo_factory = self.reaction_factories[-1]
+                    self.melee_reaction_range = self.aoo_factory[1].range
                     return None
                 case Reaction.SHIELD:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](self)))
