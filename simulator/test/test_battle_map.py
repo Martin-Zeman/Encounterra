@@ -170,6 +170,55 @@ def test_hop_distance_random(battle_map, combatant1, combatant2):
     assert battle_map.get_hop_distance(combatant1, combatant2_coords.coords) == 4, "Incorrect distance between two large combatants"
 
 
+def test_cartesian_distance_diagonal(battle_map, combatant1, combatant2):
+    # Two large combatants
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.LARGE
+    combatant1_coords = CombatantCoords(np.array([0, 0]), combatant1.size)
+    combatant2_coords = CombatantCoords(np.array([4, 4]), combatant2.size)
+    battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
+    battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
+    assert battle_map.get_cartesian_distance(combatant1, combatant2) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1_coords.coords, combatant2) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.coords) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
+
+
+def test_cartesian_distance_same_y(battle_map, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.LARGE
+    combatant1_coords = CombatantCoords(np.array([0, 0]), combatant1.size)
+    combatant2_coords = CombatantCoords(np.array([6, 0]), combatant2.size)
+    battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
+    battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
+    assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5, "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1_coords.coords, combatant2) == 5, "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.coords) == 5, "Incorrect distance between two large combatants"
+
+
+def test_cartesian_distance_same_x(battle_map, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.LARGE
+    combatant1_coords = CombatantCoords(np.array([0, 0]), combatant1.size)
+    combatant2_coords = CombatantCoords(np.array([0, 4]), combatant2.size)
+    battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
+    battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
+    assert battle_map.get_cartesian_distance(combatant1, combatant2) == 3, "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1_coords.coords, combatant2) == 3, "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.coords) == 3, "Incorrect distance between two large combatants"
+
+
+def test_cartesian_distance_random(battle_map, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.LARGE
+    combatant1_coords = CombatantCoords(np.array([0, 0]), combatant1.size)
+    combatant2_coords = CombatantCoords(np.array([3, 5]), combatant2.size)
+    battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
+    battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
+    assert battle_map.get_cartesian_distance(combatant1, combatant2) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1_coords.coords, combatant2) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.coords) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
+
+
 def test_build_combatant_adjacency_mask_medium(battle_map, combatant1):
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 12])))
 
@@ -251,36 +300,41 @@ def test_get_pam_eligible_combatants_medium_medium(battle_map, combatant1, comba
     assert eligible_combatants[0] is combatant1
 
 def test_get_pam_eligible_combatants_medium_large(battle_map, combatant1, combatant2, teams):
+    combatant1.add_ability(Passive.POLEARM_MASTER)
     combatant2.size = Size.LARGE
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([7, 7]), combatant2.size))
     # we're moving the large one from the attack range of the medium one
-    eligible_combatants = battle_map.get_pam_eligible_combatants(combatant2, np.array([1, 0]))
+    eligible_combatants = battle_map.get_pam_eligible_combatants(combatant2, np.array([-1, 0]))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is combatant1
 
 def test_get_pam_eligible_combatants_large_medium(battle_map, combatant1, combatant2, teams):
+    combatant1.add_ability(Passive.POLEARM_MASTER)
     combatant1.size = Size.LARGE
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
-    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([6, 7])))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([8, 7])))
     # we're moving the medium one from the attack range of the large one
-    eligible_combatants = battle_map.get_pam_eligible_combatants(combatant2, np.array([1, 0]))
+    eligible_combatants = battle_map.get_pam_eligible_combatants(combatant2, np.array([-1, 0]))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is combatant1
 
 def test_get_pam_eligible_combatants_large_large(battle_map, combatant1, combatant2, teams):
+    combatant1.add_ability(Passive.POLEARM_MASTER)
     combatant1.size = Size.LARGE
     combatant2.size = Size.LARGE
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
-    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([7, 7]), combatant2.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([8, 7]), combatant2.size))
     # we're moving the large one from the attack range of the other large one
-    eligible_combatants = battle_map.get_pam_eligible_combatants(combatant2, np.array([1, 0]))
+    eligible_combatants = battle_map.get_pam_eligible_combatants(combatant2, np.array([-1, 0]))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is combatant1
+
+
 

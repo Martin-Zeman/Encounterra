@@ -534,8 +534,8 @@ class Map:
         try:
             dist_mat = distance_matrix(subject1, subject2)
             min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
-            sub1_closest_coord = subject1[min_dist_index // subject1.shape[0], :]
-            sub2_closest_coord = subject2[min_dist_index % subject2.shape[0], :]
+            sub1_closest_coord = subject1[min_dist_index // dist_mat.shape[1], :]
+            sub2_closest_coord = subject2[min_dist_index % dist_mat.shape[1], :]
             res = np.max(np.abs(sub1_closest_coord - sub2_closest_coord))
         except TypeError as e:
             res = None
@@ -554,12 +554,10 @@ class Map:
         except KeyError:
             return None
         try:
-            new_res = np.amin(distance_matrix(subject1, subject2))
-            res = get_cartesian_distance(subject1, subject2)  # TODO REMOVE THIS
+            res = np.amin(distance_matrix(subject1, subject2))
         except TypeError:
             res = None
-        assert res == new_res
-        return new_res
+        return res
 
     def get_adjacent_coords(self, coord):
         """
