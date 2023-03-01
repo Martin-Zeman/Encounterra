@@ -525,8 +525,8 @@ class Map:
     def get_hop_distance(self, subject1, subject2):
         """
         Universal hop distance function. Accepts both characters or coordinates
-        :param subject1: either a character or a CombatantCoords type
-        :param subject2: either a character or a CombatantCoords type
+        :param subject1: either a numpy.array or a CombatantCoords type
+        :param subject2: either a numpy.array or a CombatantCoords type
         :return: distance between subjects in number of hops, None if one of the subjects is dead
         """
         subject1 = self.combatant_coordinate_cache[subject1].coords if issubclass(type(subject1), Combatant) else subject1
@@ -544,8 +544,8 @@ class Map:
     def get_cartesian_distance(self, subject1, subject2):
         """
         Universal cartesian distance function. Accepts both characters or coordinates
-        :param subject1: either a character or a numpy array
-        :param subject2: either a character or a numpy array
+        :param subject1: either a CombatantCoords type or a numpy array
+        :param subject2: either a CombatantCoords type or a numpy array
         :return: cartesian distance between subjects, None if one of the subjects is dead
         """
         try:
@@ -559,30 +559,30 @@ class Map:
             res = None
         return res
 
-    def get_adjacent_coords(self, coord):
+    def get_adjacent_coords(self, coords: CombatantCoords):
         """
         Returns free and accessible squares adjacent to a given coordinate
         :param coord: target coordinate
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         adjacent_coords = set()
-        for dx in range(-1, 2):
-            for dy in range(-1, 2):
-                if coord[0] + dx < 0 or coord[0] + dx >= self.size or coord[1] + dy < 0 or coord[1] + dy >= self.size:
+        for coord in coords.coords:
+            for x, y in [(coord[0] + i, coord[1] + j) for i in (-1, 0, 1) for j in (-1, 0, 1) if i != 0 or j != 0]:
+                if x < 0 or x >= self.size or y < 0 or y >= self.size:
                     continue
-                square = self.grid[coord[0] + dx][coord[1] + dy]
+                square = self.grid[x, y]
                 if square.occupancy is Occupancy.FREE and square.terrain is not Terrain.IMPASSABLE_TERRAIN:
                     # have to use tuples since np.array is unhashable
-                    adjacent_coords.add((coord[0] + dx, coord[1] + dy))
+                    adjacent_coords.add((x, y))
         return adjacent_coords
 
     def get_nearest_adjacent_coord(self, my_location, target_location):
         adjacent_coords = self.get_adjacent_coords(target_location)
         if not adjacent_coords:
             return None
-        adjacent_coords = [np.array(x) for x in adjacent_coords]
-        adjacent_coords.sort(key=lambda coord: self.get_hop_distance(coord, my_location))
-        return adjacent_coords[0]
+        adjacent_coords = [np.array([x]) for x in adjacent_coords]
+        adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.coords))
+        return adjacent_coords[0][0]
 
     @dispatch(Combatant, Combatant)
     def get_path_to(self, combatant, target_combatant):
@@ -604,7 +604,7 @@ class Map:
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, enemy_adjacent_location)
         if reconstructed_path is None:
             return None
-        if logger.root.level >= logging.DEBUG:
+        if logger.root.level >= logging.INFO:
             self.printDijkstra(distances, my_location, enemy_location, reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
@@ -625,7 +625,7 @@ class Map:
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, target_coord)
         if reconstructed_path is None:
             return None
-        if logger.root.level >= logging.DEBUG:
+        if logger.root.level >= logging.INFO:
             self.printDijkstra(distances, my_location, target_coord, reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 

@@ -337,4 +337,40 @@ def test_get_pam_eligible_combatants_large_large(battle_map, combatant1, combata
     assert eligible_combatants[0] is combatant1
 
 
+def test_get_adjacent_coords_medium(battle_map, combatant1):
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
+    coords = battle_map.get_combatant_position(combatant1)
+    adj = battle_map.get_adjacent_coords(coords)
+    assert adj == {(4, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (5, 6), (6, 6)}
+
+def test_get_adjacent_coords_large(battle_map, combatant1):
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
+    coords = battle_map.get_combatant_position(combatant1)
+    adj = battle_map.get_adjacent_coords(coords)
+    assert adj == {(4, 6), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
+
+def test_get_adjacent_coords_large_corner(battle_map, combatant1):
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
+    coords = battle_map.get_combatant_position(combatant1)
+    adj = battle_map.get_adjacent_coords(coords)
+    assert adj == {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (0, 3), (1, 3), (2, 3)}
+
+def test_get_adjacent_coords_huge_with_terrain(battle_map, combatant1):
+    combatant1.size = Size.HUGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([8, 2]), combatant1.size))
+    coords = battle_map.get_combatant_position(combatant1)
+    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    adj = battle_map.get_adjacent_coords(coords)
+    assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
+
+
+def test_get_nearest_adjacent_coord(battle_map, combatant1):
+    my_coords = CombatantCoords(np.array([1, 7]))
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
+    target_coords = battle_map.get_combatant_position(combatant1)
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
+    assert np.array_equal(nearest, np.array([4, 7]), equal_nan=False)
 
