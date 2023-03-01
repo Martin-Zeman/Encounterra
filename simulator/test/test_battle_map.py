@@ -130,8 +130,8 @@ def test_hop_distance_diagonal(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
     battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
     assert battle_map.get_hop_distance(combatant1, combatant2) == 3, "Incorrect distance between two large combatants"
-    assert battle_map.get_hop_distance(combatant1_coords.coords, combatant2) == 3, "Incorrect distance between two large combatants"
-    assert battle_map.get_hop_distance(combatant1, combatant2_coords.coords) == 3, "Incorrect distance between two large combatants"
+    assert battle_map.get_hop_distance(combatant1_coords.get(), combatant2) == 3, "Incorrect distance between two large combatants"
+    assert battle_map.get_hop_distance(combatant1, combatant2_coords.get()) == 3, "Incorrect distance between two large combatants"
 
 
 def test_hop_distance_same_y(battle_map, combatant1, combatant2):
@@ -142,8 +142,8 @@ def test_hop_distance_same_y(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
     battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
     assert battle_map.get_hop_distance(combatant1, combatant2) == 5, "Incorrect distance between two large combatants"
-    assert battle_map.get_hop_distance(combatant1_coords.coords, combatant2) == 5, "Incorrect distance between two large combatants"
-    assert battle_map.get_hop_distance(combatant1, combatant2_coords.coords) == 5, "Incorrect distance between two large combatants"
+    assert battle_map.get_hop_distance(combatant1_coords.get(), combatant2) == 5, "Incorrect distance between two large combatants"
+    assert battle_map.get_hop_distance(combatant1, combatant2_coords.get()) == 5, "Incorrect distance between two large combatants"
 
 
 def test_hop_distance_same_x(battle_map, combatant1, combatant2):
@@ -154,8 +154,8 @@ def test_hop_distance_same_x(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
     battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
     assert battle_map.get_hop_distance(combatant1, combatant2) == 3, "Incorrect distance between two large combatants"
-    assert battle_map.get_hop_distance(combatant1_coords.coords, combatant2) == 3, "Incorrect distance between two large combatants"
-    assert battle_map.get_hop_distance(combatant1, combatant2_coords.coords) == 3, "Incorrect distance between two large combatants"
+    assert battle_map.get_hop_distance(combatant1_coords.get(), combatant2) == 3, "Incorrect distance between two large combatants"
+    assert battle_map.get_hop_distance(combatant1, combatant2_coords.get()) == 3, "Incorrect distance between two large combatants"
 
 
 def test_hop_distance_random(battle_map, combatant1, combatant2):
@@ -166,8 +166,8 @@ def test_hop_distance_random(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
     battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
     assert battle_map.get_hop_distance(combatant1, combatant2) == 4, "Incorrect distance between two large combatants"
-    assert battle_map.get_hop_distance(combatant1_coords.coords, combatant2) == 4, "Incorrect distance between two large combatants"
-    assert battle_map.get_hop_distance(combatant1, combatant2_coords.coords) == 4, "Incorrect distance between two large combatants"
+    assert battle_map.get_hop_distance(combatant1_coords.get(), combatant2) == 4, "Incorrect distance between two large combatants"
+    assert battle_map.get_hop_distance(combatant1, combatant2_coords.get()) == 4, "Incorrect distance between two large combatants"
 
 
 def test_cartesian_distance_diagonal(battle_map, combatant1, combatant2):
@@ -179,8 +179,8 @@ def test_cartesian_distance_diagonal(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
     battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
-    assert battle_map.get_cartesian_distance(combatant1_coords.coords, combatant2) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
-    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.coords) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1_coords.get(), combatant2) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.get()) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
 
 
 def test_cartesian_distance_same_y(battle_map, combatant1, combatant2):
@@ -191,8 +191,8 @@ def test_cartesian_distance_same_y(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
     battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5, "Incorrect distance between two large combatants"
-    assert battle_map.get_cartesian_distance(combatant1_coords.coords, combatant2) == 5, "Incorrect distance between two large combatants"
-    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.coords) == 5, "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1_coords.get(), combatant2) == 5, "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.get()) == 5, "Incorrect distance between two large combatants"
 
 
 def test_cartesian_distance_same_x(battle_map, combatant1, combatant2):
@@ -203,8 +203,8 @@ def test_cartesian_distance_same_x(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
     battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == 3, "Incorrect distance between two large combatants"
-    assert battle_map.get_cartesian_distance(combatant1_coords.coords, combatant2) == 3, "Incorrect distance between two large combatants"
-    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.coords) == 3, "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1_coords.get(), combatant2) == 3, "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.get()) == 3, "Incorrect distance between two large combatants"
 
 
 def test_cartesian_distance_random(battle_map, combatant1, combatant2):
@@ -215,8 +215,8 @@ def test_cartesian_distance_random(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
     battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
-    assert battle_map.get_cartesian_distance(combatant1_coords.coords, combatant2) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
-    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.coords) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1_coords.get(), combatant2) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
+    assert battle_map.get_cartesian_distance(combatant1, combatant2_coords.get()) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
 
 
 def test_build_combatant_adjacency_mask_medium(battle_map, combatant1):
@@ -374,3 +374,24 @@ def test_get_nearest_adjacent_coord(battle_map, combatant1):
     nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
     assert np.array_equal(nearest, np.array([4, 7]), equal_nan=False)
 
+    my_coords = CombatantCoords(np.array([3, 9]))
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
+    assert np.array_equal(nearest, np.array([4, 9]), equal_nan=False)
+
+    my_coords = CombatantCoords(np.array([8, 6]))
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
+    assert np.array_equal(nearest, np.array([7, 6]), equal_nan=False)
+
+    my_coords = CombatantCoords(np.array([7, 11]))
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
+    assert np.array_equal(nearest, np.array([7, 9]), equal_nan=False)
+
+
+def test_get_path_to(battle_map, combatant1, combatant2):
+    battle_map.build_adjacency_matrix()
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
+    path = battle_map.get_path_to(combatant1, combatant2)
+    assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([0, 1])])

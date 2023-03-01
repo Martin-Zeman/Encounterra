@@ -21,7 +21,7 @@ def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
     current_position = target_location
     # The square of the enemy itself is inaccessible, have to take the closest free adjacent one
     path = {'tuples': [], 'numpy': []}
-    while not np.array_equal(current_position, my_location):
+    while not np.array_equal(current_position, my_location[0]):
         path['numpy'].append(current_position)
         path['tuples'].append(tuple(current_position))
         # have to convert to tuple cause numpy array is non-hashable
@@ -31,8 +31,8 @@ def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
             # logger.error(e)  # TODO remove this once fixed
             return None
     else:
-        path['numpy'].append(my_location)
-        path['tuples'].append(tuple(my_location))
+        path['numpy'].append(my_location[0])
+        path['tuples'].append(tuple(my_location[0]))
     path['numpy'].reverse()
     path['tuples'].reverse()
     return path
@@ -70,6 +70,7 @@ class CombatantCoords:
         :param coord: the root coord of the combatant, it gets turned into n x 2 matrix where one row represents one coordinate
         :return: None
         """
+        self.size = size
         match size:
             case Size.TINY | Size.SMALL | Size.MEDIUM:
                 self.coords = np.array([coord])
@@ -86,6 +87,29 @@ class CombatantCoords:
                                         coord + (3, 0), coord + (3, 1), coord + (3, 2), coord + (3, 3)])
             case _:
                 logger.error("Unknown combatant size")
+
+    def get(self):
+        return self.coords
+
+    # def inflate(self, size: Size):
+    #     """
+    #     This function is utility which further inflates the coordinates further for the purposes of finding path to an adjacent coordinate.
+    #     :param size: size of the combatant which wants to navigate adjacent to these coordinates
+    #     :return: inflated coordinates
+    #     """
+    #     root_coord = self.coords[0]
+    #     match size:
+    #         case Size.LARGE:
+    #             return np.concatenate(self.coords, root_coord + (-1, -1), root_coord + (-1, 0), root_coord + (0, -1), root_coord + (-1, 1),
+    #                                   root_coord + (1, -1))
+    #         case Size.HUGE:
+    #             return np.concatenate(self.coords, root_coord + (-1, -1), root_coord + (-1, 0), root_coord + (0, -1), root_coord + (-1, 1),
+    #                                   root_coord + (1, -1), root_coord + (-1, 2), root_coord + (2, -1))
+    #         case Size.GARGANTUAN:
+    #             return np.concatenate(self.coords, root_coord + (-1, -1), root_coord + (-1, 0), root_coord + (0, -1), root_coord + (-1, 1),
+    #                                   root_coord + (1, -1), root_coord + (-1, 2), root_coord + (2, -1))
+    #         case _:
+    #             pass
 
 
 class GridSquare:
@@ -295,18 +319,21 @@ class Map:
             y_offset = combatant.size.value
 
         mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
-        for curr_combatant, coord in self.combatant_coordinate_cache.items():
+        for curr_combatant, coords in self.combatant_coordinate_cache.items():
+            coord = coords.get()[0]  # Take the root coordinate
             if curr_combatant is not combatant and curr_combatant.is_alive():
                 # TODO even allies are now impassable, try and figure out of a way to improve this
-                mv_reshaped = mask.view().reshape(N, N, N, N)
+                mv_reshaped = mask.view().reshape(N, N, N, N)  # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
+                # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
                 mv_reshaped[:, :, max(0, (coord[0] - x_offset)):(coord[0] + 1), max(0, (coord[1] - y_offset)):(coord[1] + 1)].fill(0)
         for coord in self.impassable_set:
-            mv_reshaped = mask.view().reshape(N, N, N, N)
+            mv_reshaped = mask.view().reshape(N, N, N, N) # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
+            # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
             mv_reshaped[:, :, max(0, (coord[0] - x_offset)):(coord[0] + 1), max(0, (coord[1] - y_offset)):(coord[1] + 1)].fill(0)
 
         return mask
 
-    def printDijkstra(self, distances, my_coord: CombatantCoords, enemy_coord: CombatantCoords, reconstructed_path):
+    def printDijkstra(self, distances, my_coords: CombatantCoords, enemy_coords: CombatantCoords, reconstructed_path):
         """
         Prints the distances to all locations on the map from my_location and highlights the reconstructed path to enemy_location.
         It prints it as standard cartesian coordinate system.
@@ -316,8 +343,8 @@ class Map:
         _________> x
         0
         :param distances: list of distances to all coords (flattened)
-        :param my_coord: coordinates of the source
-        :param enemy_coord: coordinates of the destination
+        :param my_coords: coordinates of the source
+        :param enemy_coords: coordinates of the destination
         :param reconstructed_path: list of coordinates from my_location to enemy_location
         :return: void
         """
@@ -326,9 +353,9 @@ class Map:
             for x in range(self.size):
                 coord = np.array([x, y])
                 dist = str(distances[coord]) if distances[coord] < sys.maxsize else "-"
-                if any((my_coord.coords[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of my_coord'
+                if any((my_coords.get()[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of my_coord'
                     row += "\x1b[38;5;39m%s\x1b[0m\t" % dist
-                elif any((enemy_coord.coords[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of enemy_coords'
+                elif any((enemy_coords.get()[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of enemy_coords'
                     row += "\x1b[38;5;196m%s\x1b[0m\t" % dist
                 elif (x, y) in reconstructed_path:
                     row += "\u001b[36m%s\x1b[0m\t" % dist
@@ -398,7 +425,7 @@ class Map:
             if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
                 try:
                     pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
-                    post_increment_dist = self.get_hop_distance(combatant_coords.coords + increment, coords.coords)
+                    post_increment_dist = self.get_hop_distance(combatant_coords.get() + increment, coords.get())
                 except KeyError:
                     continue
                 if curr_combatant.has_passive(
@@ -458,12 +485,12 @@ class Map:
 
     def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
         # grid_view = self.grid.view()
-        # grid_view[coords.coords[:, 0], coords.coords[:, 1]].set_combatant(combatant)
+        # grid_view[coords.get()[:, 0], coords.get()[:, 1]].set_combatant(combatant)
         def set_comb(square):
             square.set_combatant(combatant)
             return square
         vec_set_comb = np.vectorize(set_comb)
-        self.grid[coords.coords[:, 0], coords.coords[:, 1]] = vec_set_comb(self.grid[coords.coords[:, 0], coords.coords[:, 1]])
+        self.grid[coords.get()[:, 0], coords.get()[:, 1]] = vec_set_comb(self.grid[coords.get()[:, 0], coords.get()[:, 1]])
         self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
@@ -529,8 +556,8 @@ class Map:
         :param subject2: either a numpy.array or a CombatantCoords type
         :return: distance between subjects in number of hops, None if one of the subjects is dead
         """
-        subject1 = self.combatant_coordinate_cache[subject1].coords if issubclass(type(subject1), Combatant) else subject1
-        subject2 = self.combatant_coordinate_cache[subject2].coords if issubclass(type(subject2), Combatant) else subject2
+        subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), Combatant) else subject1
+        subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), Combatant) else subject2
         try:
             dist_mat = distance_matrix(subject1, subject2)
             min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
@@ -549,8 +576,8 @@ class Map:
         :return: cartesian distance between subjects, None if one of the subjects is dead
         """
         try:
-            subject1 = self.combatant_coordinate_cache[subject1].coords if issubclass(type(subject1), Combatant) else subject1
-            subject2 = self.combatant_coordinate_cache[subject2].coords if issubclass(type(subject2), Combatant) else subject2
+            subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), Combatant) else subject1
+            subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), Combatant) else subject2
         except KeyError:
             return None
         try:
@@ -559,29 +586,43 @@ class Map:
             res = None
         return res
 
-    def get_adjacent_coords(self, coords: CombatantCoords):
+    def get_adjacent_coords(self, coords: CombatantCoords, inflate_to_size=Size.MEDIUM):
         """
         Returns free and accessible squares adjacent to a given coordinate
-        :param coord: target coordinate
+        :param coords: target combatant coordinates
+        :param inflate_to_size: inflate for the sake of pathfinding by larger combatants
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
+
+        # First inflate it by the size of the combatant looking for the path
+        x_offset = 0
+        y_offset = 0
+        if inflate_to_size.value > Size.MEDIUM.value:
+            x_offset = inflate_to_size.value
+            y_offset = inflate_to_size.value
+
+        inflated = set()
+        for coord in coords.get():
+            for x, y in [(x, y) for x in range(coord[0] - x_offset, coord[0] + 1) for y in range(coord[1] - y_offset, coord[1] + 1)]:
+                inflated.add((max(0, x), max(0, y)))
+
         adjacent_coords = set()
-        for coord in coords.coords:
+        for coord in inflated:
             for x, y in [(coord[0] + i, coord[1] + j) for i in (-1, 0, 1) for j in (-1, 0, 1) if i != 0 or j != 0]:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size:
                     continue
                 square = self.grid[x, y]
-                if square.occupancy is Occupancy.FREE and square.terrain is not Terrain.IMPASSABLE_TERRAIN:
+                if square.occupancy is Occupancy.FREE and square.terrain is not Terrain.IMPASSABLE_TERRAIN and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
-    def get_nearest_adjacent_coord(self, my_location, target_location):
-        adjacent_coords = self.get_adjacent_coords(target_location)
+    def get_nearest_adjacent_coord(self, my_location: CombatantCoords, target_location: CombatantCoords):
+        adjacent_coords = self.get_adjacent_coords(target_location, my_location.size)
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]
-        adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.coords))
+        adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
         return adjacent_coords[0][0]
 
     @dispatch(Combatant, Combatant)
@@ -597,15 +638,15 @@ class Map:
         enemy_location = self.get_combatant_position(target_combatant)
         logger.debug(f"Destination {enemy_location}")
         mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_paths = self.dijkstra(my_location, mask)
+        distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         enemy_adjacent_location = self.get_nearest_adjacent_coord(my_location, enemy_location)
         if enemy_adjacent_location is None:
             return None
-        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, enemy_adjacent_location)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)
         if reconstructed_path is None:
             return None
-        if logger.root.level >= logging.INFO:
-            self.printDijkstra(distances, my_location, enemy_location, reconstructed_path['tuples'])
+        # if logger.root.level >= logging.INFO:
+        #     self.printDijkstra(distances, my_location, enemy_location, reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
     @dispatch(Combatant, np.ndarray)
@@ -621,8 +662,8 @@ class Map:
         logger.debug(f"Origin {my_location}")
         logger.debug(f"Destination {target_coord}")
         mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_paths = self.dijkstra(my_location, mask)
-        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location, target_coord)
+        distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), target_coord)
         if reconstructed_path is None:
             return None
         if logger.root.level >= logging.INFO:
