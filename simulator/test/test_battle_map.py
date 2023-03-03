@@ -1,5 +1,6 @@
 from simulator.action_types import Passive
 from simulator.battle_map import Map, Terrain, CombatantCoords
+from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.goblin import Goblin
 from simulator.effects.effect_tracker import EffectTracker
@@ -27,6 +28,10 @@ def combatant1(effect_tracker):
 @pytest.fixture()
 def combatant2(effect_tracker):
     return Goblin(effect_tracker, "Goblin")
+
+@pytest.fixture()
+def combatant3(effect_tracker):
+    return Bugbear(effect_tracker, "Bugbear")
 
 @pytest.mark.skip(reason="enable this after combatant coord refactoring")
 def test_as_if_combatant_position(teams, effect_tracker, battle_map, combatant1, combatant2):
@@ -337,6 +342,58 @@ def test_get_pam_eligible_combatants_large_large(battle_map, combatant1, combata
     assert eligible_combatants[0] is combatant1
 
 
+def test_get_aoo_eligible_combatants_medium_medium_medium(battle_map, combatant1, combatant2, combatant3, teams):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([6, 7])))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([5, 6])))
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(combatant2, np.array([1, 0]))
+    assert len(eligible_combatants) == 2
+    assert set(eligible_combatants) == {combatant1, combatant3}
+
+def test_get_aoo_eligible_combatants_medium_large_medium(battle_map, combatant1, combatant2, combatant3, teams):
+    combatant2.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([6, 7]), combatant2.size))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([5, 8])))
+    # we're moving the large one from the attack range of the medium one
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(combatant2, np.array([1, 0]))
+    assert len(eligible_combatants) == 2
+    assert set(eligible_combatants) == {combatant1, combatant3}
+
+def test_get_aoo_eligible_combatants_large_medium_medium(battle_map, combatant1, combatant2, combatant3, teams):
+    combatant1.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([7, 7])))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([7, 9])))
+    # we're moving the medium one from the attack range of the large one
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(combatant2, np.array([1, 0]))
+    assert len(eligible_combatants) == 1
+    assert eligible_combatants[0] is combatant1
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(combatant3, np.array([1, 1]))
+    assert len(eligible_combatants) == 1
+    assert eligible_combatants[0] is combatant1
+
+def test_get_aoo_eligible_combatants_large_large(battle_map, combatant1, combatant2, teams):
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([7, 9]), combatant2.size))
+    # we're moving the large one from the attack range of the other large one
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(combatant2, np.array([1, 1]))
+    assert len(eligible_combatants) == 1
+    assert eligible_combatants[0] is combatant1
+
 def test_get_adjacent_coords_medium(battle_map, combatant1):
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
     coords = battle_map.get_combatant_position(combatant1)
@@ -386,8 +443,15 @@ def test_get_nearest_adjacent_coord(battle_map, combatant1):
     nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
     assert np.array_equal(nearest, np.array([7, 9]), equal_nan=False)
 
+def test_get_path_to_medium_to_medium(battle_map, combatant1, combatant2):
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([11, 3])))
+    path = battle_map.get_path_to(combatant1, combatant2)
+    assert np.array_equal(path, [np.array([1, 1]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]),
+                                 np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0])])
 
-def test_get_path_to(battle_map, combatant1, combatant2):
+def test_get_path_to_large_to_large(battle_map, combatant1, combatant2):
     battle_map.build_adjacency_matrix()
     combatant1.size = Size.LARGE
     combatant2.size = Size.LARGE
@@ -395,3 +459,77 @@ def test_get_path_to(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
     path = battle_map.get_path_to(combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([0, 1])])
+
+def test_get_path_to_medium_to_large(battle_map, combatant1, combatant2):
+    battle_map.build_adjacency_matrix()
+    combatant2.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
+    path = battle_map.get_path_to(combatant1, combatant2)
+    assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([0, 1])]) or\
+           np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([1, 1])])
+
+def test_get_path_to_large_to_medium(battle_map, combatant1, combatant2):
+    battle_map.build_adjacency_matrix()
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7])))
+    path = battle_map.get_path_to(combatant1, combatant2)
+    assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([0, 1])])
+
+def test_get_path_to_huge_to_huge(battle_map, combatant1, combatant2):
+    battle_map.build_adjacency_matrix()
+    combatant1.size = Size.HUGE
+    combatant2.size = Size.HUGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
+    path = battle_map.get_path_to(combatant1, combatant2)
+    assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([0, 1])])
+
+
+def test_move_combatant_by_increment_medium(teams, battle_map, combatant1):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[0, 1]]))
+    battle_map.move_combatant_by_increment(combatant1, np.array([1, 1]))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[1, 2]]))
+
+
+def test_move_combatant_by_increment_medium_invalid(teams, battle_map, combatant1):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[0, 1]]))
+    with pytest.raises(AssertionError):
+        battle_map.move_combatant_by_increment(combatant1, np.array([-1, 0]))
+
+
+def test_move_combatant_by_increment_large(teams, battle_map, combatant1):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[0, 1], [0, 2], [1, 1], [1, 2]]))
+    battle_map.move_combatant_by_increment(combatant1, np.array([1, 1]))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[1, 2], [1, 3], [2, 2], [2, 3]]))
+
+
+def test_move_combatant_medium(teams, battle_map, combatant1):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[0, 1]]))
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([14, 14])))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[14, 14]]))
+
+def test_move_combatant_medium_invalid(teams, battle_map, combatant1):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[0, 1]]))
+    with pytest.raises(AssertionError):
+        battle_map.move_combatant(combatant1, CombatantCoords(np.array([15, 15])))
+
+def test_move_combatant_large(teams, battle_map, combatant1):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[0, 1], [0, 2], [1, 1], [1, 2]]))
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([9, 9]), combatant1.size))
+    assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[9, 9], [9, 10], [10, 9], [10, 10]]))

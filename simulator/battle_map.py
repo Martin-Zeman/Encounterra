@@ -91,25 +91,8 @@ class CombatantCoords:
     def get(self):
         return self.coords
 
-    # def inflate(self, size: Size):
-    #     """
-    #     This function is utility which further inflates the coordinates further for the purposes of finding path to an adjacent coordinate.
-    #     :param size: size of the combatant which wants to navigate adjacent to these coordinates
-    #     :return: inflated coordinates
-    #     """
-    #     root_coord = self.coords[0]
-    #     match size:
-    #         case Size.LARGE:
-    #             return np.concatenate(self.coords, root_coord + (-1, -1), root_coord + (-1, 0), root_coord + (0, -1), root_coord + (-1, 1),
-    #                                   root_coord + (1, -1))
-    #         case Size.HUGE:
-    #             return np.concatenate(self.coords, root_coord + (-1, -1), root_coord + (-1, 0), root_coord + (0, -1), root_coord + (-1, 1),
-    #                                   root_coord + (1, -1), root_coord + (-1, 2), root_coord + (2, -1))
-    #         case Size.GARGANTUAN:
-    #             return np.concatenate(self.coords, root_coord + (-1, -1), root_coord + (-1, 0), root_coord + (0, -1), root_coord + (-1, 1),
-    #                                   root_coord + (1, -1), root_coord + (-1, 2), root_coord + (2, -1))
-    #         case _:
-    #             pass
+    def set(self, coords):
+        self.coords = coords
 
 
 class GridSquare:
@@ -312,25 +295,25 @@ class Map:
         N = self.size
         # TODO consider preallocating this for all combatants and only resetting it to ones
 
-        x_offset = 0
-        y_offset = 0
+        offset = 0
         if combatant.size.value > Size.MEDIUM.value:
-            x_offset = combatant.size.value
-            y_offset = combatant.size.value
+            offset = combatant.size.value
 
         mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
+        mv_reshaped = mask.view().reshape(N, N, N, N)  # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
         for curr_combatant, coords in self.combatant_coordinate_cache.items():
             coord = coords.get()[0]  # Take the root coordinate
             if curr_combatant is not combatant and curr_combatant.is_alive():
                 # TODO even allies are now impassable, try and figure out of a way to improve this
-                mv_reshaped = mask.view().reshape(N, N, N, N)  # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
                 # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
-                mv_reshaped[:, :, max(0, (coord[0] - x_offset)):(coord[0] + 1), max(0, (coord[1] - y_offset)):(coord[1] + 1)].fill(0)
+                mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
         for coord in self.impassable_set:
-            mv_reshaped = mask.view().reshape(N, N, N, N) # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
             # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
-            mv_reshaped[:, :, max(0, (coord[0] - x_offset)):(coord[0] + 1), max(0, (coord[1] - y_offset)):(coord[1] + 1)].fill(0)
+            mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
 
+        # Inflate the edges of the map. Prevent larger combatants from stepping out of the map
+        mv_reshaped[:, :, (N - 1 - offset):(N - 1), :].fill(0)
+        mv_reshaped[:, :, :, (N - 1 - offset):(N - 1)].fill(0)
         return mask
 
     def printDijkstra(self, distances, my_coords: CombatantCoords, enemy_coords: CombatantCoords, reconstructed_path):
@@ -433,6 +416,16 @@ class Map:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
+    def get_aoo_eligible_combatants(self, combatant, increment):
+        eligible_combatants = []
+        for curr_combatant, pos in self.combatant_coordinate_cache.items():
+            if curr_combatant is not combatant and curr_combatant.is_alive() and self.teams.are_enemies(curr_combatant, combatant):
+                pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
+                post_increment_dist = self.get_hop_distance(self.combatant_coordinate_cache[combatant].get() + increment, pos.get())
+                if pre_increment_dist == curr_combatant.melee_reaction_range and post_increment_dist > curr_combatant.melee_reaction_range and curr_combatant.has_reaction:
+                    eligible_combatants.append(curr_combatant)
+        return eligible_combatants
+
     def is_empty(self, coord):
         try:
             empty = self.grid[coord[0], coord[1]].is_empty()
@@ -451,37 +444,33 @@ class Map:
         :param increment:
         :return:
         """
-        old_coords = self.combatant_coordinate_cache[combatant]
-        for old_coords in old_coords:
+        old_coords = self.combatant_coordinate_cache[combatant].get()
+        for old_coord in old_coords:
             self.grid[old_coord[0], old_coord[1]].remove_combatant()
         new_coords = old_coords + increment
+        assert self.size > np.amax(new_coords) and np.amin(new_coords) > -1, f"Invalid coord {new_coords}"
         for new_coord in new_coords:
             self.grid[new_coord[0], new_coord[1]].set_combatant(combatant)
-        self.combatant_coordinate_cache[combatant] = new_coord
-        logger.info(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
+        self.combatant_coordinate_cache[combatant].set(new_coords)
+        logger.info(f"{combatant} moved to {new_coords[0][0]}", extra={"team": self.teams.get_team(combatant)})
 
-    def move_combatant(self, combatant, new_coord):
+    def move_combatant(self, combatant, new_coords: CombatantCoords):
         """
         Removes the combatant from the old coordinate and moves them to a new one
         :param combatant:
-        :param new_coord:
+        :param new_coords:
         :return:
         """
-        old_coord = self.combatant_coordinate_cache[combatant]
-        self.grid[old_coord[0]][old_coord[1]].remove_combatant()
-        self.grid[new_coord[0]][new_coord[1]].set_combatant(combatant)
-        self.combatant_coordinate_cache[combatant] = new_coord
-        logger.info(f"{combatant} moved to {new_coord}", extra={"team": self.teams.get_team(combatant)})
+        old_coords = self.combatant_coordinate_cache[combatant].get()
+        for old_coord in old_coords:
+            self.grid[old_coord[0], old_coord[1]].remove_combatant()
+        new_coords_data = new_coords.get()
+        assert self.size > np.amax(new_coords_data) and np.amin(new_coords_data) > -1, f"Invalid coord {new_coords_data}"
+        for new_coord in new_coords_data:
+            self.grid[new_coord[0], new_coord[1]].set_combatant(combatant)
+        self.combatant_coordinate_cache[combatant] = new_coords
+        logger.info(f"{combatant} moved to {new_coords_data[0][0]}", extra={"team": self.teams.get_team(combatant)})
 
-    def get_aoo_eligible_combatants(self, combatant, increment):
-        eligible_combatants = []
-        for curr_combatant, pos in self.combatant_coordinate_cache.items():
-            if curr_combatant is not combatant and curr_combatant.is_alive() and self.teams.are_enemies(curr_combatant, combatant):
-                pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
-                post_increment_dist = self.get_hop_distance(self.combatant_coordinate_cache[combatant] + increment, pos)
-                if pre_increment_dist == curr_combatant.melee_reaction_range and post_increment_dist > curr_combatant.melee_reaction_range and curr_combatant.has_reaction:
-                    eligible_combatants.append(curr_combatant)
-        return eligible_combatants
 
     def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
         # grid_view = self.grid.view()
