@@ -473,8 +473,6 @@ class Map:
 
 
     def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
-        # grid_view = self.grid.view()
-        # grid_view[coords.get()[:, 0], coords.get()[:, 1]].set_combatant(combatant)
         def set_comb(square):
             square.set_combatant(combatant)
             return square
@@ -494,44 +492,57 @@ class Map:
         dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
         min_dist = sys.float_info.max
         nearest = None
+        target_coord = None
         self_position = self.combatant_coordinate_cache[combatant]
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
-            dist = dist_func(self_position, target_coord)
+            dist = dist_func(self_position.get(), target_coord.get())
             if potential_target is not combatant and potential_target.is_alive() and team_func(potential_target,
                                                                                                combatant) and dist < min_dist:
                 min_dist = dist
                 nearest = potential_target
         return nearest, min_dist, target_coord
 
-    def is_enemy_adjacent(self, character):
-        self_coords = self.combatant_coordinate_cache[character]
-        for dx in range(-1, 2):
-            for dy in range(-1, 2):
-                if self_coords[0] + dx < 0 or self_coords[0] + dx >= self.size or self_coords[1] + dy < 0 or self_coords[
-                    1] + dy >= self.size:
-                    continue
-                cmbt = self.grid[self_coords[0] + dx][self_coords[1] + dy].combatant
-                if cmbt and self.teams.are_enemies(character, cmbt):
-                    return True
+    def is_enemy_adjacent(self, combatant):
+        nearest, dist, _ = self.get_nearest(combatant)
+        if nearest and dist == 1:
+            return True
         return False
 
-    def is_ally_adjacent(self, character, target):
+        # self_coords = self.combatant_coordinate_cache[character].get()
+        # for dx in range(-1, 2):
+        #     for dy in range(-1, 2):
+        #         if self_coords[0] + dx < 0 or self_coords[0] + dx >= self.size or self_coords[1] + dy < 0 or self_coords[
+        #             1] + dy >= self.size:
+        #             continue
+        #         cmbt = self.grid[self_coords[0] + dx][self_coords[1] + dy].combatant
+        #         if cmbt and self.teams.are_enemies(character, cmbt):
+        #             return True
+        # return False
+
+    def is_ally_adjacent_to_target(self, combatant, target_combatant):
         """
-        Used for pack tactics to determine if an ally that is not incapacitated is adjacent to my target
-        :param target: the target combatant
-        :param coord:
-        :return:
+        Used for pack tactics to determine if an ally that is not incapacitated is adjacent to a combatant
+        :param combatant: the combatant to test if they benefit from pack tactics
+        :param target_combatant: the target combatant
+        :return: True if there's a non-incapacited ally adjacent
         """
-        target_coord = self.combatant_coordinate_cache[target]
-        for dx in range(-1, 2):
-            for dy in range(-1, 2):
-                if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[1] + dy >= self.size:
-                    continue
-                cmbt = self.grid[target_coord[0] + dx][target_coord[1] + dy].combatant
-                if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_affected_by_any(
-                        Conditions.INCAPACITATED):
-                    return True
+        target_coords = self.combatant_coordinate_cache[target_combatant]
+        adjacent_coords = self.get_adjacent_coords(target_coords)
+        for adjacent_coord in adjacent_coords:
+            potential_ally = self.grid[adjacent_coord[0], adjacent_coord[1]].combatant
+            if potential_ally and potential_ally is not combatant and self.teams.are_allies(combatant, potential_ally) and not potential_ally.is_affected_by_any(Conditions.INCAPACITATED):
+                return True
         return False
+        # target_coord = self.combatant_coordinate_cache[combatant]
+        # for dx in range(-1, 2):
+        #     for dy in range(-1, 2):
+        #         if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[1] + dy >= self.size:
+        #             continue
+        #         cmbt = self.grid[target_coord[0] + dx][target_coord[1] + dy].combatant
+        #         if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_affected_by_any(
+        #                 Conditions.INCAPACITATED):
+        #             return True
+        # return False
 
     def are_in_range(self, combatant1, combatant2, distance):
         combatant1_position = np.array(self.combatant_coordinate_cache[combatant1])
@@ -575,7 +586,7 @@ class Map:
             res = None
         return res
 
-    def get_adjacent_coords(self, coords: CombatantCoords, inflate_to_size=Size.MEDIUM):
+    def get_free_adjacent_coords(self, coords: CombatantCoords, inflate_to_size=Size.MEDIUM):
         """
         Returns free and accessible squares adjacent to a given coordinate
         :param coords: target combatant coordinates
@@ -584,15 +595,13 @@ class Map:
         """
 
         # First inflate it by the size of the combatant looking for the path
-        x_offset = 0
-        y_offset = 0
+        offset = 0
         if inflate_to_size.value > Size.MEDIUM.value:
-            x_offset = inflate_to_size.value
-            y_offset = inflate_to_size.value
+            offset = inflate_to_size.value
 
         inflated = set()
         for coord in coords.get():
-            for x, y in [(x, y) for x in range(coord[0] - x_offset, coord[0] + 1) for y in range(coord[1] - y_offset, coord[1] + 1)]:
+            for x, y in [(x, y) for x in range(coord[0] - offset, coord[0] + 1) for y in range(coord[1] - offset, coord[1] + 1)]:
                 inflated.add((max(0, x), max(0, y)))
 
         adjacent_coords = set()
@@ -606,8 +615,26 @@ class Map:
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
+
+    def get_adjacent_coords(self, coords: CombatantCoords):
+        """
+        Returns accessible squares adjacent to a given coordinate
+        :param coords: target combatant coordinates
+        :return: adjacent coordinates as a set of tuples (x, y)
+        """
+        adjacent_coords = set()
+        for coord in coords.get():
+            for x, y in [(coord[0] + i, coord[1] + j) for i in (-1, 0, 1) for j in (-1, 0, 1) if i != 0 or j != 0]:
+                if x < 0 or x >= self.size or y < 0 or y >= self.size:
+                    continue
+                square = self.grid[x, y]
+                if square.terrain is not Terrain.IMPASSABLE_TERRAIN:
+                    # have to use tuples since np.array is unhashable
+                    adjacent_coords.add((x, y))
+        return adjacent_coords
+
     def get_nearest_adjacent_coord(self, my_location: CombatantCoords, target_location: CombatantCoords):
-        adjacent_coords = self.get_adjacent_coords(target_location, my_location.size)
+        adjacent_coords = self.get_free_adjacent_coords(target_location, my_location.size)
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]

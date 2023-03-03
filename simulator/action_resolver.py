@@ -228,7 +228,7 @@ class ActionResolver:
     def has_advantage_melee(self, attack, attacker, target):
         if attack.roll_modifier is RollModifier.ADVANTAGE:
             return RollModifier.ADVANTAGE
-        if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent(attacker, target):
+        if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent_to_target(attacker, target):
             return RollModifier.ADVANTAGE
         if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
             # TODO Consider moving this to the attack factory

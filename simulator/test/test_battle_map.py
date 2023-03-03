@@ -4,7 +4,7 @@ from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.goblin import Goblin
 from simulator.effects.effect_tracker import EffectTracker
-from simulator.misc import DistanceMetric, Size
+from simulator.misc import DistanceMetric, Size, Side, Conditions
 from simulator.teams import Teams
 import numpy as np
 import pytest
@@ -397,21 +397,21 @@ def test_get_aoo_eligible_combatants_large_large(battle_map, combatant1, combata
 def test_get_adjacent_coords_medium(battle_map, combatant1):
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
     coords = battle_map.get_combatant_position(combatant1)
-    adj = battle_map.get_adjacent_coords(coords)
+    adj = battle_map.get_free_adjacent_coords(coords)
     assert adj == {(4, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (5, 6), (6, 6)}
 
 def test_get_adjacent_coords_large(battle_map, combatant1):
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
     coords = battle_map.get_combatant_position(combatant1)
-    adj = battle_map.get_adjacent_coords(coords)
+    adj = battle_map.get_free_adjacent_coords(coords)
     assert adj == {(4, 6), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
 
 def test_get_adjacent_coords_large_corner(battle_map, combatant1):
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
     coords = battle_map.get_combatant_position(combatant1)
-    adj = battle_map.get_adjacent_coords(coords)
+    adj = battle_map.get_free_adjacent_coords(coords)
     assert adj == {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (0, 3), (1, 3), (2, 3)}
 
 def test_get_adjacent_coords_huge_with_terrain(battle_map, combatant1):
@@ -419,7 +419,7 @@ def test_get_adjacent_coords_huge_with_terrain(battle_map, combatant1):
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([8, 2]), combatant1.size))
     coords = battle_map.get_combatant_position(combatant1)
     battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
-    adj = battle_map.get_adjacent_coords(coords)
+    adj = battle_map.get_free_adjacent_coords(coords)
     assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
 
 
@@ -533,3 +533,61 @@ def test_move_combatant_large(teams, battle_map, combatant1):
     assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[0, 1], [0, 2], [1, 1], [1, 2]]))
     battle_map.move_combatant(combatant1, CombatantCoords(np.array([9, 9]), combatant1.size))
     assert np.array_equal(battle_map.get_combatant_position(combatant1).get(), np.array([[9, 9], [9, 10], [10, 9], [10, 10]]))
+
+
+def test_get_nearest_hop(battle_map, teams, combatant1, combatant2,combatant3):
+    combatant1.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 2]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([1, 5])))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([4, 5])))
+    nearest, dist, _ = battle_map.get_nearest(combatant3, side=Side.ENEMY, dist_type=DistanceMetric.HOP)
+    assert nearest is combatant1
+    assert dist == 2
+    nearest, dist, _ = battle_map.get_nearest(combatant1, side=Side.ALLY, dist_type=DistanceMetric.HOP)
+    assert nearest is combatant2
+    assert dist == 2
+
+def test_get_nearest_cartesian(battle_map, teams, combatant1, combatant2,combatant3):
+    combatant1.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 2]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([1, 5])))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([4, 5])))
+    nearest, dist, _ = battle_map.get_nearest(combatant3, side=Side.ENEMY, dist_type=DistanceMetric.CARTESIAN)
+    assert nearest is combatant1
+    assert dist == pytest.approx(2.828, 0.001)
+    nearest, dist, _ = battle_map.get_nearest(combatant1, side=Side.ALLY, dist_type=DistanceMetric.CARTESIAN)
+    assert nearest is combatant2
+    assert dist == pytest.approx(2.000, 0.001)
+
+
+def test_is_enemy_adjacent(battle_map, teams, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 2]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([3, 4])))
+    assert battle_map.is_enemy_adjacent(combatant1)
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([4, 5])))
+    assert not battle_map.is_enemy_adjacent(combatant1)
+
+
+def test_is_ally_adjacent_to_target(battle_map, teams, combatant1, combatant2, combatant3):
+    combatant1.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 2]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([1, 5])))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([1, 4])))
+    assert battle_map.is_ally_adjacent_to_target(combatant1, combatant3)
+    combatant2.apply_condition(Conditions.INCAPACITATED)
+    assert not battle_map.is_ally_adjacent_to_target(combatant1, combatant3)
+    combatant2.remove_condition(Conditions.INCAPACITATED)
+    battle_map.move_combatant(combatant2, CombatantCoords(np.array([1, 6])))
+    assert not battle_map.is_ally_adjacent_to_target(combatant1, combatant3)
