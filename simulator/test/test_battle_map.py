@@ -175,6 +175,37 @@ def test_hop_distance_random(battle_map, combatant1, combatant2):
     assert battle_map.get_hop_distance(combatant1, combatant2_coords.get()) == 4, "Incorrect distance between two large combatants"
 
 
+def test_are_in_hop_range_medium_medium(battle_map, combatant1, combatant2):
+    combatant1_coords = CombatantCoords(np.array([0, 0]), combatant1.size)
+    combatant2_coords = CombatantCoords(np.array([3, 5]), combatant2.size)
+    battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
+    battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
+    assert battle_map.are_in_hop_range(combatant1, combatant2, 5)
+    assert not battle_map.are_in_hop_range(combatant1, combatant2, 4)
+    assert battle_map.are_in_hop_range(combatant1, combatant2, 6)
+
+def test_are_in_hop_range_medium_large(battle_map, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    combatant1_coords = CombatantCoords(np.array([0, 0]), combatant1.size)
+    combatant2_coords = CombatantCoords(np.array([3, 5]), combatant2.size)
+    battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
+    battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
+    assert battle_map.are_in_hop_range(combatant1, combatant2, 4)
+    assert not battle_map.are_in_hop_range(combatant1, combatant2, 3)
+    assert battle_map.are_in_hop_range(combatant1, combatant2, 5)
+
+
+def test_are_in_hop_range_medium_large(battle_map, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.LARGE
+    combatant1_coords = CombatantCoords(np.array([0, 0]), combatant1.size)
+    combatant2_coords = CombatantCoords(np.array([3, 5]), combatant2.size)
+    battle_map.set_combatant_coordinates(combatant1, combatant1_coords)
+    battle_map.set_combatant_coordinates(combatant2, combatant2_coords)
+    assert battle_map.are_in_hop_range(combatant1, combatant2, 4)
+    assert not battle_map.are_in_hop_range(combatant1, combatant2, 3)
+    assert battle_map.are_in_hop_range(combatant1, combatant2, 5)
+
 def test_cartesian_distance_diagonal(battle_map, combatant1, combatant2):
     # Two large combatants
     combatant1.size = Size.LARGE
@@ -394,27 +425,27 @@ def test_get_aoo_eligible_combatants_large_large(battle_map, combatant1, combata
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is combatant1
 
-def test_get_adjacent_coords_medium(battle_map, combatant1):
+def test_get_free_adjacent_coords_medium(battle_map, combatant1):
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
     coords = battle_map.get_combatant_position(combatant1)
     adj = battle_map.get_free_adjacent_coords(coords)
     assert adj == {(4, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (5, 6), (6, 6)}
 
-def test_get_adjacent_coords_large(battle_map, combatant1):
+def test_get_free_adjacent_coords_large(battle_map, combatant1):
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
     coords = battle_map.get_combatant_position(combatant1)
     adj = battle_map.get_free_adjacent_coords(coords)
     assert adj == {(4, 6), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
 
-def test_get_adjacent_coords_large_corner(battle_map, combatant1):
+def test_get_free_adjacent_coords_large_corner(battle_map, combatant1):
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
     coords = battle_map.get_combatant_position(combatant1)
     adj = battle_map.get_free_adjacent_coords(coords)
     assert adj == {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (0, 3), (1, 3), (2, 3)}
 
-def test_get_adjacent_coords_huge_with_terrain(battle_map, combatant1):
+def test_get_free_adjacent_coords_huge_with_terrain(battle_map, combatant1):
     combatant1.size = Size.HUGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([8, 2]), combatant1.size))
     coords = battle_map.get_combatant_position(combatant1)
@@ -423,6 +454,42 @@ def test_get_adjacent_coords_huge_with_terrain(battle_map, combatant1):
     assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
 
 
+def test_get_adjacent_coords_medium(battle_map, combatant1, combatant2):
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([6, 7])))
+    coords = battle_map.get_combatant_position(combatant1)
+    battle_map.place_circular_element(np.array([5, 6]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    adj = battle_map.get_adjacent_coords(coords)
+    assert adj == {(4, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (6, 6)}
+
+def test_get_adjacent_coords_large(battle_map, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 9]), combatant1.size))
+    coords = battle_map.get_combatant_position(combatant1)
+    adj = battle_map.get_adjacent_coords(coords)
+    assert adj == {(4, 6), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
+
+def test_get_adjacent_coords_large_corner(battle_map, combatant1):
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
+    coords = battle_map.get_combatant_position(combatant1)
+    battle_map.place_circular_element(np.array([2, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    adj = battle_map.get_adjacent_coords(coords)
+    assert adj == {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (0, 3), (1, 3)}
+
+def test_get_adjacent_coords_huge_with_terrain(battle_map, combatant1, combatant2):
+    combatant1.size = Size.HUGE
+    combatant2.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([8, 2]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([11, 2]), combatant1.size))
+    coords = battle_map.get_combatant_position(combatant1)
+    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([8, 5]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    adj = battle_map.get_adjacent_coords(coords)
+    assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4),
+                   (11, 5)}
 def test_get_nearest_adjacent_coord(battle_map, combatant1):
     my_coords = CombatantCoords(np.array([1, 7]))
     combatant1.size = Size.LARGE
@@ -591,3 +658,18 @@ def test_is_ally_adjacent_to_target(battle_map, teams, combatant1, combatant2, c
     combatant2.remove_condition(Conditions.INCAPACITATED)
     battle_map.move_combatant(combatant2, CombatantCoords(np.array([1, 6])))
     assert not battle_map.is_ally_adjacent_to_target(combatant1, combatant3)
+
+
+def test_get_free_coords_away_from_enemies(battle_map, teams, combatant1, combatant2, combatant3):
+
+    combatant1.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 5]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([8, 9])))
+    coords = battle_map.get_free_coords_away_from_enemies(combatant1, 3, dist_type=DistanceMetric.HOP)
+    assert np.array_equal(coords[0], np.array([1, 2]))
+
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([8, 1])))
+    assert np.array_equal(coords[0], np.array([1, 5]))

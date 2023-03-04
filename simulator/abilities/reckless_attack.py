@@ -156,7 +156,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         """
         num = min(self.max_num, self.combatant.curr_num_attacks)
         baseline = 0
-        if battle_map.are_in_range(self.combatant, target, self.range):
+        if battle_map.are_in_hop_range(self.combatant, target, self.range):
             baseline = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus,
                                 target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         try:
@@ -190,7 +190,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 
         modified = baseline
         with battle_map.as_if_dist_mod_from_combatant(self.combatant, target, -mod_range):
-            if battle_map.are_in_range(self.combatant, target, self.range):
+            if battle_map.are_in_hop_range(self.combatant, target, self.range):
                 to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
                 to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
                 total_crit = self.crit_range + mod_crit_range

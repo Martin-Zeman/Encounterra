@@ -59,7 +59,7 @@ class Bugbear(Combatant):
         else:
             self.movement_generator = MovementGenerator(self, self.path).get_generator()
 
-        if not battle_map.are_in_range(self, self.selected_target, 1):
+        if not battle_map.are_in_hop_range(self, self.selected_target, 1):
             try:
                 movement = next(self.movement_generator)
                 logger.info(f"Moving by {movement}")

@@ -471,7 +471,6 @@ class Map:
         self.combatant_coordinate_cache[combatant] = new_coords
         logger.info(f"{combatant} moved to {new_coords_data[0][0]}", extra={"team": self.teams.get_team(combatant)})
 
-
     def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
         def set_comb(square):
             square.set_combatant(combatant)
@@ -508,16 +507,6 @@ class Map:
             return True
         return False
 
-        # self_coords = self.combatant_coordinate_cache[character].get()
-        # for dx in range(-1, 2):
-        #     for dy in range(-1, 2):
-        #         if self_coords[0] + dx < 0 or self_coords[0] + dx >= self.size or self_coords[1] + dy < 0 or self_coords[
-        #             1] + dy >= self.size:
-        #             continue
-        #         cmbt = self.grid[self_coords[0] + dx][self_coords[1] + dy].combatant
-        #         if cmbt and self.teams.are_enemies(character, cmbt):
-        #             return True
-        # return False
 
     def is_ally_adjacent_to_target(self, combatant, target_combatant):
         """
@@ -533,21 +522,9 @@ class Map:
             if potential_ally and potential_ally is not combatant and self.teams.are_allies(combatant, potential_ally) and not potential_ally.is_affected_by_any(Conditions.INCAPACITATED):
                 return True
         return False
-        # target_coord = self.combatant_coordinate_cache[combatant]
-        # for dx in range(-1, 2):
-        #     for dy in range(-1, 2):
-        #         if target_coord[0] + dx < 0 or target_coord[0] + dx >= self.size or target_coord[1] + dy < 0 or target_coord[1] + dy >= self.size:
-        #             continue
-        #         cmbt = self.grid[target_coord[0] + dx][target_coord[1] + dy].combatant
-        #         if cmbt and cmbt is not character and self.teams.are_allies(character, cmbt) and not cmbt.is_affected_by_any(
-        #                 Conditions.INCAPACITATED):
-        #             return True
-        # return False
 
-    def are_in_range(self, combatant1, combatant2, distance):
-        combatant1_position = np.array(self.combatant_coordinate_cache[combatant1])
-        combatant2_position = np.array(self.combatant_coordinate_cache[combatant2])
-        return np.max(np.abs(combatant1_position - combatant2_position)) <= distance
+    def are_in_hop_range(self, combatant1, combatant2, distance):
+        return self.get_hop_distance(combatant1, combatant2) <= distance
 
     def get_hop_distance(self, subject1, subject2):
         """
@@ -623,9 +600,10 @@ class Map:
         :return: adjacent coordinates as a set of tuples (x, y)
         """
         adjacent_coords = set()
-        for coord in coords.get():
+        self_coords = coords.get()
+        for coord in self_coords:
             for x, y in [(coord[0] + i, coord[1] + j) for i in (-1, 0, 1) for j in (-1, 0, 1) if i != 0 or j != 0]:
-                if x < 0 or x >= self.size or y < 0 or y >= self.size:
+                if any((self_coords[:] == [x, y]).all(1)) or x < 0 or x >= self.size or y < 0 or y >= self.size:
                     continue
                 square = self.grid[x, y]
                 if square.terrain is not Terrain.IMPASSABLE_TERRAIN:
@@ -693,31 +671,29 @@ class Map:
             logger.error(e)
             return None
 
-    def get_free_coords_away_from_enemies(self, character, distance, dist_type=DistanceMetric.HOP):
+    def get_free_coords_away_from_enemies(self, moving_combatant, distance, dist_type=DistanceMetric.HOP):
         """
         Returns a list of coordinates that are at a certain distance from character. Sorted by distance to the nearest enemy
-        :param character: combatant who wants to get away
+        :param moving_combatant: combatant who wants to get away
         :param distance: how far the combatant can go
         :return: sorted by the minimum distance to any enemy in ascending order
         """
         elligible_coords = []
-        self_coord = self.combatant_coordinate_cache[character]
+        root_coord = self.combatant_coordinate_cache[moving_combatant].get()[0, :]
         dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
         # optimization - narrowing search down to a bounding box
         for i in range(-distance, distance + 1):
             for j in range(-distance, distance + 1):
-                curr_coord = self_coord + np.array([i, j])
+                curr_coord = root_coord + np.array([i, j])
                 if curr_coord[0] in range(0, self.size) and curr_coord[1] in range(0, self.size):
-                    # TODO modify and use is_empty
-                    square = self.grid[curr_coord[0]][curr_coord[1]]
-                    if square.is_empty() and dist_func(curr_coord, self_coord) == distance:
+                    square = self.grid[curr_coord[0], curr_coord[1]]
+                    if square.is_empty() and dist_func(curr_coord, root_coord) == distance:
                         elligible_coords.append(curr_coord)
 
         def by_distance_to_nearest_enemy(coord):
             min_dist = sys.maxsize
-            min_dist_coord = coord
             for combatant, cmbt_coord in self.combatant_coordinate_cache.items():
-                if combatant.is_alive() and self.teams.are_enemies(character, combatant):
+                if combatant.is_alive() and self.teams.are_enemies(moving_combatant, combatant):
                     dist = self.get_hop_distance(coord, cmbt_coord)
                     min_dist = min(dist, min_dist)
             return min_dist

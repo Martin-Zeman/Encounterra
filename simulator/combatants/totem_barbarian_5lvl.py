@@ -88,7 +88,7 @@ class TotemBarbarian5Lvl(Combatant):
                     except RuntimeError:
                         return None
 
-                if not battle_map.are_in_range(self, selected_action.target_combatant, selected_action.factory.range):
+                if not battle_map.are_in_hop_range(self, selected_action.target_combatant, selected_action.factory.range):
                     try:
                         movement = next(self.movement_generator)
                         logger.info(f"Moving by {movement}")
