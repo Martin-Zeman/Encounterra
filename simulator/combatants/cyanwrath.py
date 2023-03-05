@@ -83,7 +83,7 @@ class Cyanwrath(Combatant):
             elif self.movement and not self.has_action and dist <= 2:
                 # If I'm in range but no longer have an action then I want to step away
                 logger.info(f"{self.name} wants to gain distance", extra={"team": self.team_color})
-                free_coords = battle_map.get_free_coords_at_distance(self.selected_target, self, 3)
+                free_coords = battle_map.get_free_coords_at_distance_from_target(self.selected_target, self, 3)
                 if free_coords:
                     path = battle_map.get_path_to(self, free_coords[0])
                     self.movement_generator = MovementGenerator(self, path, True).get_generator()

@@ -47,7 +47,7 @@ class Faurung(Combatant):
         enemies, _ = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
         while enemies and self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
             curr_hop_dist = battle_map.get_hop_distance(self, enemies[0])
-            free_coords = battle_map.get_free_coords_at_distance(enemies[0], self, curr_hop_dist, curr_hop_dist + self.movement)
+            free_coords = battle_map.get_free_coords_at_distance_from_target(enemies[0], self, curr_hop_dist, curr_hop_dist + self.movement)
             if not free_coords:
                 logger.info(f"{self.name} has nowhere to go to")
                 self.nowhere_to_go = True

@@ -667,9 +667,20 @@ def test_get_free_coords_away_from_enemies(battle_map, teams, combatant1, combat
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 5]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([8, 9])))
-    coords = battle_map.get_free_coords_away_from_enemies(combatant1, 3, dist_type=DistanceMetric.HOP)
-    assert np.array_equal(coords[0], np.array([1, 2]))
+    coords = battle_map.get_free_coords_at_distance_sorted_by_dist_to_enemies(combatant1, 3, dist_type=DistanceMetric.HOP)
+    assert np.array_equal(coords[0][0], np.array([1, 2]))
 
     teams.add_combatant_to_team(combatant3, Teams.Color.RED)
     battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([8, 1])))
-    assert np.array_equal(coords[0], np.array([1, 5]))
+    coords = battle_map.get_free_coords_at_distance_sorted_by_dist_to_enemies(combatant1, 3, dist_type=DistanceMetric.CARTESIAN)
+    assert np.array_equal(coords[0][0], np.array([1, 5]))
+
+
+def test_get_free_coords_at_distance_from_target_medium_medium(battle_map, teams, combatant1, combatant2):
+    battle_map.build_adjacency_matrix()
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 5])))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([8, 9])))
+    coords = battle_map.get_free_coords_at_distance_from_target(combatant1, combatant2, 2)
+    assert np.array_equal(np.array(coords[0:8]), np.array([[7, 8], [7, 9], [7, 10], [8, 8], [8, 10], [9, 8], [9, 9], [9, 10]]))

@@ -671,22 +671,22 @@ class Map:
             logger.error(e)
             return None
 
-    def get_free_coords_away_from_enemies(self, moving_combatant, distance, dist_type=DistanceMetric.HOP):
+    def get_free_coords_at_distance_sorted_by_dist_to_enemies(self, moving_combatant, distance, dist_type=DistanceMetric.HOP):
         """
-        Returns a list of coordinates that are at a certain distance from character. Sorted by distance to the nearest enemy
+        Returns a list of coordinates that are at a certain distance from the moving combatant. Sorted by distance to the nearest enemy
         :param moving_combatant: combatant who wants to get away
         :param distance: how far the combatant can go
         :return: sorted by the minimum distance to any enemy in ascending order
         """
         elligible_coords = []
-        root_coord = self.combatant_coordinate_cache[moving_combatant].get()[0, :]
+        root_coord = np.array([self.combatant_coordinate_cache[moving_combatant].get()[0, :]])
         dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
         # optimization - narrowing search down to a bounding box
         for i in range(-distance, distance + 1):
             for j in range(-distance, distance + 1):
                 curr_coord = root_coord + np.array([i, j])
-                if curr_coord[0] in range(0, self.size) and curr_coord[1] in range(0, self.size):
-                    square = self.grid[curr_coord[0], curr_coord[1]]
+                if curr_coord[0][0] in range(0, self.size) and curr_coord[0][1] in range(0, self.size):
+                    square = self.grid[curr_coord[0][0], curr_coord[0][1]]
                     if square.is_empty() and dist_func(curr_coord, root_coord) == distance:
                         elligible_coords.append(curr_coord)
 
@@ -694,17 +694,16 @@ class Map:
             min_dist = sys.maxsize
             for combatant, cmbt_coord in self.combatant_coordinate_cache.items():
                 if combatant.is_alive() and self.teams.are_enemies(moving_combatant, combatant):
-                    dist = self.get_hop_distance(coord, cmbt_coord)
+                    dist = self.get_hop_distance(coord, cmbt_coord.get())
                     min_dist = min(dist, min_dist)
             return min_dist
 
         elligible_coords.sort(key=by_distance_to_nearest_enemy, reverse=True)
         return elligible_coords
 
-    def get_free_coords_at_distance(self, target_combatant, combatant, min_dist, max_dist=sys.maxsize):
+    def get_free_coords_at_distance_from_target(self, target_combatant, combatant, min_dist, max_dist=sys.maxsize):
         """
-        Returns a list of coordinates that are unoccupied and at a given distance from a target, sorted by ascending proximity to the target
-        combatant
+        Returns a list of coordinates that are unoccupied and at a given distance range from a target, sorted by ascending proximity to self
         :param target_combatant: target to which the distance is measured
         :param combatant: sorted by ascending proximity to this combatant
         :param min_dist: minimum desired distance
@@ -713,35 +712,18 @@ class Map:
         """
         assert min_dist > 0
         mask_self = self.build_combatant_adjacency_mask(combatant)
-        distances_self, _ = self.dijkstra(self.combatant_coordinate_cache[combatant], mask_self)
+        distances_from_self, _ = self.dijkstra(self.combatant_coordinate_cache[combatant].get()[0], mask_self)
 
         mask_target = self.build_combatant_adjacency_mask(target_combatant)
-        distances_from_target, _ = self.dijkstra(self.combatant_coordinate_cache[target_combatant], mask_target)
-        free_positions = []
-        # target_coords = self.combatant_coordinate_cache[target_combatant]
-
+        distances_from_target, _ = self.dijkstra(self.combatant_coordinate_cache[target_combatant].get()[0], mask_target)
 
         coords = []
-        for i, dist in enumerate(distances_self):
+        for i, dist in enumerate(distances_from_target):
             curr_coord = np.array([i // self.size, i % self.size])
-            is_empty = self.grid[curr_coord[0]][curr_coord[1]].is_empty()
+            is_empty = self.grid[curr_coord[0], curr_coord[1]].is_empty()
             if is_empty and min_dist <= dist <= max_dist:
                 coords.append(curr_coord)
-        # for x in range(-distance, distance + 1):
-        #     for y in range(-distance, distance + 1):
-        #         if (target_coords[0] + x) < 0 or (target_coords[1] + y) < 0 or (target_coords[0] + x) >= self.size or (
-        #                 target_coords[1] + y) >= self.size:
-        #             continue
-        #         curr_coord = target_coords + np.array([x, y])
-        #         is_empty = self.grid[curr_coord[0]][curr_coord[1]].is_empty()
-        #         hop_distance = self.get_hop_distance(target_coords, curr_coord)
-        #         if is_empty and min_dist <= hop_distance <= max_dist:
-        #             free_positions.append(np.array([target_coords[0] + x, target_coords[1] + y]))
-
-        # combatant_coord = self.combatant_coordinate_cache[combatant]
-        # sort them by cartesian distance to get the most direct one
-        # coords.sort(key=lambda coord: np.linalg.norm(coord - combatant_coord))
-        coords.sort(key=lambda coord: distances_from_target[coord[0] * self.size + coord[1]], reverse=True)
+        coords.sort(key=lambda coord: distances_from_self[coord[0] * self.size + coord[1]])
         for coord in coords:
             assert self.is_valid_coord(coord), "INVALID COORD"
         return coords
@@ -754,11 +736,11 @@ class Map:
         """
         logger.info(f"{combatant} died")
         try:
-            old_coords = self.combatant_coordinate_cache[combatant]
+            old_coords = self.combatant_coordinate_cache[combatant].get()
         except KeyError:
             return  # already removed
         for coord in old_coords:
-            self.grid[coord[0]][coord[1]].remove_combatant()
+            self.grid[coord[0], coord[1]].remove_combatant()
         del self.combatant_coordinate_cache[combatant]
 
     def clear(self):
@@ -767,7 +749,7 @@ class Map:
                 square.remove_combatant()
                 square.reset_terrain()
         for coords in self.combatant_coordinate_cache.values():
-            coords.fill(0)
+            coords.get().fill(0)
         self.impassable_set.clear()
         self.difficult_set.clear()
         self.terrain_encoding.fill(Terrain.NORMAL_TERRAIN.value)

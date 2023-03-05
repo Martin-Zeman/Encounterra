@@ -27,7 +27,7 @@ class Goblin(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
 
     def plan_path(self, battle_map):
-        free_coords = battle_map.get_free_coords_at_distance(self.selected_target, self, 8, 16)
+        free_coords = battle_map.get_free_coords_at_distance_from_target(self.selected_target, self, 8, 16)
         for coord in free_coords:
             assert battle_map.is_empty(coord), "COORD IS NOT FREE"
             assert battle_map.is_valid_coord(coord), "COORD IS NOT VALID"
