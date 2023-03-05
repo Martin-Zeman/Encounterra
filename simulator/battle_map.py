@@ -38,9 +38,6 @@ def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
     return path
 
 
-# def get_hop_distance(coord1, coord2):
-#     return np.max(np.abs(coord1 - coord2))
-
 
 def convert_path_to_increments(path):
     increments = []
@@ -314,6 +311,25 @@ class Map:
         # Inflate the edges of the map. Prevent larger combatants from stepping out of the map
         mv_reshaped[:, :, (N - 1 - offset):(N - 1), :].fill(0)
         mv_reshaped[:, :, :, (N - 1 - offset):(N - 1)].fill(0)
+        return mask
+
+
+    def build_combatant_adjacency_mask_no_inflation(self, combatant):
+        """
+        Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
+        Allies are considered difficult terrain (potentially on top of already difficult terrain).
+        :param combatant: for whom the mask is to be constructed
+        :return: adjacency matrix mask
+        """
+        N = self.size
+        # TODO consider preallocating this for all combatants and only resetting it to ones
+
+        mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
+        for curr_combatant, coords in self.combatant_coordinate_cache.items():
+            coord = coords.get()[0]  # Take the root coordinate
+            if curr_combatant is not combatant and curr_combatant.is_alive():
+                # TODO even allies are now impassable, try and figure out of a way to improve this
+                mask[:, coord[0] * N + coord[1]] = 0
         return mask
 
     def printDijkstra(self, distances, my_coords: CombatantCoords, enemy_coords: CombatantCoords, reconstructed_path):
@@ -711,21 +727,17 @@ class Map:
         :return: list of numpy.array coordinates
         """
         assert min_dist > 0
-        mask_self = self.build_combatant_adjacency_mask(combatant)
-        distances_from_self, _ = self.dijkstra(self.combatant_coordinate_cache[combatant].get()[0], mask_self)
-
-        mask_target = self.build_combatant_adjacency_mask(target_combatant)
-        distances_from_target, _ = self.dijkstra(self.combatant_coordinate_cache[target_combatant].get()[0], mask_target)
-
+        self_coord = self.combatant_coordinate_cache[combatant]
+        target_coord = self.combatant_coordinate_cache[target_combatant]
         coords = []
-        for i, dist in enumerate(distances_from_target):
-            curr_coord = np.array([i // self.size, i % self.size])
-            is_empty = self.grid[curr_coord[0], curr_coord[1]].is_empty()
+        for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
+            potential_self_coord = CombatantCoords(np.array([x, y]), combatant.size)
+            dist = self.get_hop_distance(target_coord.get(), potential_self_coord.get())
+            is_empty = self.grid[x, y].is_empty()
             if is_empty and min_dist <= dist <= max_dist:
-                coords.append(curr_coord)
-        coords.sort(key=lambda coord: distances_from_self[coord[0] * self.size + coord[1]])
-        for coord in coords:
-            assert self.is_valid_coord(coord), "INVALID COORD"
+                coords.append(potential_self_coord.get()[0])
+
+        coords.sort(key=lambda coord: self.get_hop_distance(self_coord.get(), np.array([coord])))
         return coords
 
     def remove_combatant(self, combatant):
@@ -743,16 +755,16 @@ class Map:
             self.grid[coord[0], coord[1]].remove_combatant()
         del self.combatant_coordinate_cache[combatant]
 
-    def clear(self):
-        for row in self.grid:
-            for square in row:
-                square.remove_combatant()
-                square.reset_terrain()
-        for coords in self.combatant_coordinate_cache.values():
-            coords.get().fill(0)
-        self.impassable_set.clear()
-        self.difficult_set.clear()
-        self.terrain_encoding.fill(Terrain.NORMAL_TERRAIN.value)
+    # def clear(self):
+    #     for row in self.grid:
+    #         for square in row:
+    #             square.remove_combatant()
+    #             square.reset_terrain()
+    #     for coords in self.combatant_coordinate_cache.values():
+    #         coords.get().fill(0)
+    #     self.impassable_set.clear()
+    #     self.difficult_set.clear()
+    #     self.terrain_encoding.fill(Terrain.NORMAL_TERRAIN.value)
 
 
     def reset(self, combatant_initial_positions):

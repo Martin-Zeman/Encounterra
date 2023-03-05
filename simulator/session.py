@@ -95,7 +95,7 @@ class Session:
             # TODO place some kind of a timeout here
             random_coord = np.array([random.randint(*bounds1), random.randint(*bounds2)])
             if self.battle_map.is_empty(random_coord):
-                self.battle_map.set_combatant_coordinates(combatant, random_coord)
+                self.battle_map.set_combatant_coordinates(combatant, CombatantCoords(random_coord, combatant.size))
                 break
 
     def place_combatants_on_the_map(self):

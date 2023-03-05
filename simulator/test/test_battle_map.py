@@ -661,7 +661,6 @@ def test_is_ally_adjacent_to_target(battle_map, teams, combatant1, combatant2, c
 
 
 def test_get_free_coords_away_from_enemies(battle_map, teams, combatant1, combatant2, combatant3):
-
     combatant1.size = Size.LARGE
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
@@ -684,3 +683,73 @@ def test_get_free_coords_at_distance_from_target_medium_medium(battle_map, teams
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([8, 9])))
     coords = battle_map.get_free_coords_at_distance_from_target(combatant1, combatant2, 2)
     assert np.array_equal(np.array(coords[0:8]), np.array([[7, 8], [7, 9], [7, 10], [8, 8], [8, 10], [9, 8], [9, 9], [9, 10]]))
+
+    battle_map.move_combatant(combatant2, CombatantCoords(np.array([13, 9])))
+    # now test the range between 2 and 3
+    coords = battle_map.get_free_coords_at_distance_from_target(combatant1, combatant2, 2, 3)
+    assert np.array_equal(np.array(coords[0:6]), np.array([[7, 3], [7, 4], [7, 5], [7, 6], [7, 7], [7, 8]]))
+
+    battle_map.move_combatant(combatant2, CombatantCoords(np.array([5, 5])))
+    # now test adjacent initial position
+    coords = battle_map.get_free_coords_at_distance_from_target(combatant1, combatant2, 3, 3)
+    assert np.array_equal(np.array(coords[0:5]), np.array([[7, 3], [7, 4], [7, 5], [7, 6], [7, 7]]))
+
+
+def test_get_free_coords_at_distance_from_target_large_medium(battle_map, teams, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    battle_map.build_adjacency_matrix()
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 5]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([4, 7])))
+    coords = battle_map.get_free_coords_at_distance_from_target(combatant1, combatant2, 3)
+    assert np.array_equal(np.array(coords[0:5]), np.array([[2, 9], [3, 9], [4, 9], [5, 9], [6, 9]]))
+
+
+def test_get_free_coords_at_distance_from_target_large_huge(battle_map, teams, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.HUGE
+    battle_map.build_adjacency_matrix()
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 5]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([1, 7]), combatant2.size))
+    coords = battle_map.get_free_coords_at_distance_from_target(combatant1, combatant2, 2, 2)
+    assert np.array_equal(np.array(coords[0:3]), np.array([[0, 6], [0, 7], [0, 8]]))
+
+
+def test_remove_combatant(battle_map, combatant1):
+    combatant1.size = Size.LARGE
+    initial_position = CombatantCoords(np.array([4, 5]), combatant1.size)
+    battle_map.set_combatant_coordinates(combatant1, initial_position)
+    coords = battle_map.get_combatant_position(combatant1)
+    assert np.array_equal(initial_position.get(), coords.get())
+    battle_map.remove_combatant(combatant1)
+    assert battle_map.get_combatant_position(combatant1) is None
+    assert battle_map.grid[4, 5].combatant is None
+    assert battle_map.grid[5, 5].combatant is None
+    assert battle_map.grid[4, 6].combatant is None
+    assert battle_map.grid[5, 6].combatant is None
+
+
+def test_reset(battle_map, teams, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    combatant2.size = Size.HUGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    combatant1_initial_position = CombatantCoords(np.array([4, 5]), combatant1.size)
+    combatant2_initial_position = CombatantCoords(np.array([1, 7]), combatant2.size)
+    initial_positions = {combatant1: combatant1_initial_position, combatant2: combatant2_initial_position}
+    battle_map.set_combatant_coordinates(combatant1, combatant1_initial_position)
+    battle_map.set_combatant_coordinates(combatant2, combatant2_initial_position)
+    assert np.array_equal(combatant1_initial_position.get(), battle_map.get_combatant_position(combatant1).get())
+    assert np.array_equal(combatant2_initial_position.get(), battle_map.get_combatant_position(combatant2).get())
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([5, 6]), combatant1.size))
+    battle_map.move_combatant(combatant2, CombatantCoords(np.array([2, 8]), combatant2.size))
+    assert np.array_equal(CombatantCoords(np.array([5, 6]), combatant1.size).get(), battle_map.get_combatant_position(combatant1).get())
+    assert np.array_equal(CombatantCoords(np.array([2, 8]), combatant2.size).get(), battle_map.get_combatant_position(combatant2).get())
+    battle_map.reset(initial_positions)
+    assert np.array_equal(combatant1_initial_position.get(), battle_map.get_combatant_position(combatant1).get())
+    assert np.array_equal(combatant2_initial_position.get(), battle_map.get_combatant_position(combatant2).get())
+    assert battle_map.grid[6, 7].combatant is None
+    assert battle_map.grid[4, 12].combatant is None
