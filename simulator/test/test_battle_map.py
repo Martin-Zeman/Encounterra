@@ -3,8 +3,11 @@ from simulator.battle_map import Map, Terrain, CombatantCoords
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.goblin import Goblin
+from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.effects.effect_tracker import EffectTracker
 from simulator.misc import DistanceMetric, Size, Side, Conditions
+from simulator.spells.fireball import Fireball
+from simulator.spells.spell import SpellStats
 from simulator.teams import Teams
 import numpy as np
 import pytest
@@ -32,6 +35,10 @@ def combatant2(effect_tracker):
 @pytest.fixture()
 def combatant3(effect_tracker):
     return Bugbear(effect_tracker, "Bugbear")
+
+@pytest.fixture()
+def combatant4(effect_tracker):
+    return TotemBarbarian5Lvl(effect_tracker, "TotemBarbarian5Lvl")
 
 @pytest.mark.skip(reason="enable this after combatant coord refactoring")
 def test_as_if_combatant_position(teams, effect_tracker, battle_map, combatant1, combatant2):
@@ -753,3 +760,59 @@ def test_reset(battle_map, teams, combatant1, combatant2):
     assert np.array_equal(combatant2_initial_position.get(), battle_map.get_combatant_position(combatant2).get())
     assert battle_map.grid[6, 7].combatant is None
     assert battle_map.grid[4, 12].combatant is None
+
+
+def test_find_best_placement_harmful_circular(battle_map, teams, combatant1, combatant2, combatant3, combatant4):
+    combatant2.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant4, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 1]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([4, 4]), combatant2.size))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([10, 5]), combatant3.size))
+    battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([6, 7]), combatant4.size))
+    # Fireball-like
+    coord, score, affected = battle_map.find_best_placement_harmful_circular(combatant1, Fireball.spell_range.value, 4)
+    assert np.array_equal(coord, np.array([[7, 3]]))
+    assert score == 2
+    assert combatant2 in affected
+    assert combatant3 in affected
+    assert combatant4 not in affected
+
+    #Now move the ally in between the targets so that only one can be hit
+    battle_map.move_combatant(combatant4,  CombatantCoords(np.array([6, 4]), combatant4.size))
+    coord, score, affected = battle_map.find_best_placement_harmful_circular(combatant1, Fireball.spell_range.value, 4)
+    assert score == 1
+    assert (combatant2 in affected) != (combatant3 in affected)
+    assert combatant4 not in affected
+
+
+def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, combatant1, combatant2, combatant3, combatant4):
+    combatant2.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant4, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 1]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([4, 4]), combatant2.size))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([10, 5]), combatant3.size))
+    battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([6, 7]), combatant4.size))
+    combatants = battle_map.get_combatants_affected_by_aoe(combatant1, SpellStats.Target.RADIUS_20, SpellStats.Type.HARMFUL, np.array([[7, 3]]))
+    assert combatant1 not in combatants
+    assert combatant2 in combatants
+    assert combatant3 in combatants
+    assert combatant4 not in combatants
+
+def test_get_enemies_within_radius_sorted_by_distance(battle_map, teams, combatant1, combatant2, combatant3, combatant4):
+    combatant2.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant4, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([7, 3]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([4, 4]), combatant2.size))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([10, 5]), combatant3.size))
+    battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([6, 7]), combatant4.size))
+    enemies, _ = battle_map.get_enemies_within_radius_sorted_by_distance(combatant1, 4)
+    assert enemies == [combatant2, combatant3]

@@ -7,7 +7,7 @@ from simulator.combatant import Combatant
 from multipledispatch import dispatch
 from simulator.misc import Conditions, Size
 from simulator.action_factory import Passive
-from simulator.geometry import get_affected_by_cone, get_cartesian_distance, get_square_center
+from simulator.geometry import get_affected_by_cone
 from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
@@ -16,6 +16,7 @@ from enum import Enum
 
 logger = logging.getLogger(__name__)
 
+SQRT_OF_TWO = 1.41421
 
 def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
     current_position = target_location
@@ -777,58 +778,68 @@ class Map:
     def find_best_placement_harmful_circular(self, caster, spell_range, radius):
         """
         Finds the best placement of a spherical harmful AoE effect
-        :param caster:
-        :param spell_range:
-        :param radius:
-        :return: coordinate and achieved score
+        :param caster: the caster
+        :param spell_range: range of the spell/ability
+        :param radius: radius of the harmful AoE effect
+        :return: best coordinate,achieved score and set of affected combatants
         """
         # or find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
-        bb = np.array([[self.size, self.size], [0, 0]])  # top left, bottom right
-        for combatant, coord in self.combatant_coordinate_cache.items():
+        bb = np.array([[self.size, self.size], [0, 0]])  # bottom left, top right
+        for combatant, coords in self.combatant_coordinate_cache.items():
             if self.teams.are_enemies(caster, combatant):
-                bb[0] = np.minimum(bb[0], coord)
-                bb[1] = np.maximum(bb[1], coord)
+                coords = coords.get()
+                bb[0] = np.minimum(bb[0], coords.min(axis=0))
+                bb[1] = np.maximum(bb[1], coords.max(axis=0))
         # inflate the BB
         bb[0] = np.maximum(bb[0] - radius, np.array([0, 0]))
         bb[1] = np.minimum(bb[1] + radius, np.array([self.size - 1, self.size - 1]))
         max_score = -sys.maxsize - 1
         best_placement = None
         best_affected = None
-        caster_coord = self.combatant_coordinate_cache[caster]
-        for i in range(bb[0][0], bb[1][0]):
-            for j in range(bb[0][1], bb[1][1]):
-                curr_coord = np.array([i, j])
-                affected = []
-                if get_cartesian_distance(get_square_center(caster_coord), curr_coord) <= spell_range and caster_coord is not curr_coord:
-                    score = 0
-                    for combatant, coord in self.combatant_coordinate_cache.items():
-                        if get_cartesian_distance(get_square_center(coord), curr_coord) <= radius:
-                            score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
-                            affected.append(combatant)
-                    if score > max_score:
-                        max_score = score
-                        best_placement = curr_coord
-                        best_affected = affected
+        caster_coords = self.combatant_coordinate_cache[caster].get()
+        for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
+            curr_coord = np.array([[x, y]])
+            affected = []
+            if self.get_cartesian_distance(caster_coords, curr_coord) <= spell_range and not any((caster_coords[:] == curr_coord).all(1)):
+                score = 0
+                for combatant, coords in self.combatant_coordinate_cache.items():
+                    if self.get_cartesian_distance(coords.get(), curr_coord) <= radius:
+                        score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
+                        affected.append(combatant)
+                if score > max_score:
+                    max_score = score
+                    best_placement = curr_coord
+                    best_affected = affected
         logger.info(self)
         # logger.info(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
         return best_placement, max_score, best_affected
 
     def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):
+        """
+        Gets combatants affected by an AoE effect
+        :param caster: the caster of the AoE
+        :param target_template: RADIUS_X or CONE_Y
+        :param ability_type: SpellStats.Type.HARMFUL or SpellStats.Type.BUFF
+        :param origin: origin of the AoE
+        :param angle: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
+        :return: affected combatants
+        """
         # TODO potentially check for protective abilities
         affected_combatants = []
         match target_template:
             case SpellStats.Target.RADIUS_10 | SpellStats.Target.RADIUS_20 | SpellStats.Target.RADIUS_30:
-                for potential_target, combatant_coord in self.combatant_coordinate_cache.items():
+                for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
                     if ability_type is SpellStats.Type.HARMFUL:
-                        if get_cartesian_distance(get_square_center(combatant_coord), origin) <= SpellStats.TRANSLATE_RADIUS[
+                        if self.get_cartesian_distance(combatant_coords.get(), origin) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template]:
                             affected_combatants.append(potential_target)
                     elif ability_type is SpellStats.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if get_cartesian_distance(get_square_center(combatant_coord), origin) <= SpellStats.TRANSLATE_RADIUS[
+                        if self.get_cartesian_distance(combatant_coords.get(), origin) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
             case SpellStats.Target.CONE_15 | SpellStats.Target.CONE_30 | SpellStats.Target.CONE_60 | SpellStats.Target.CONE_90:
+                # TODO make this work with larger combatants
                 # Cone spells and abilities are generally only harmful
                 angle_deg = angle
                 radius = SpellStats.TRANSLATE_CONE[target_template]
@@ -848,6 +859,7 @@ class Map:
 
     def get_adjacent_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) == 1]
+
     def get_enemies_within_radius(self, combatant, radius):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
 
@@ -867,4 +879,4 @@ class Map:
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= e.movement + 1]
 
     def is_difficult_terrain_at(self, coord):
-        return self.grid[coord[0]][coord[1]].is_difficult_terrain()
+        return self.grid[coord[0], coord[1]].is_difficult_terrain()

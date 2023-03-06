@@ -61,5 +61,5 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     return coords
 
 
-def get_cartesian_distance(coord1, coord2):
-    return np.linalg.norm(coord1 - coord2)
+# def get_cartesian_distance(coord1, coord2):
+#     return np.linalg.norm(coord1 - coord2)
