@@ -16,7 +16,7 @@ def check_feasibility(combatant, action, battle_map):
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.is_valid_coord(action.coord)
+                res &= battle_map.are_valid_coords(action.coord)
                 res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.spell_range.value
                 return res
             case Action.HASTE:
@@ -92,7 +92,7 @@ def check_feasibility(combatant, action, battle_map):
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.spell_range.value
-                res &= battle_map.is_valid_coord(action.coord) and battle_map.is_empty(action.coord)
+                res &= battle_map.are_valid_coords(action.coord) and battle_map.is_empty(action.coord)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
                 res &= combatant.spellslots.get_spellslots(1) > 0
@@ -113,7 +113,7 @@ def check_feasibility(combatant, action, battle_map):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.spell_range.value
                 res &= combatant.curr_sorcery_points > 1
-                res &= battle_map.is_valid_coord(action.coord)
+                res &= battle_map.are_valid_coords(action.coord)
                 return res
             case BonusAction.QUICKENED_FIREBOLT:
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.spell_range.value
@@ -141,7 +141,7 @@ def check_feasibility(combatant, action, battle_map):
         match action_type:
             case Movement.STANDARD:
                 target_position = battle_map.get_combatant_position(combatant) + action.increment
-                res = combatant.movement > 0 and battle_map.is_valid_coord(target_position) and battle_map.is_empty(target_position)
+                res = combatant.movement > 0 and battle_map.are_valid_coords(target_position.get()) and battle_map.are_empty(target_position)
                 res &= not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
                 return res
             case Movement.GET_UP_FROM_PRONE:

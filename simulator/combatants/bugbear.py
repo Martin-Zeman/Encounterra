@@ -28,7 +28,7 @@ class Bugbear(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
 
     def plan_path(self, battle_map, target_position):
-        logger.info(f"Planning path to {self.selected_target} at position {target_position}")
+        logger.info(f"Planning path to {self.selected_target} at position {target_position.get()}")
         self.path = battle_map.get_path_to(self, self.selected_target)
         logger.info(f"Planned path {self.path}")
         if not self.path:

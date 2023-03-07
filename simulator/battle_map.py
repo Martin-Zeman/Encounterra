@@ -92,6 +92,9 @@ class CombatantCoords:
     def set(self, coords):
         self.coords = coords
 
+    def __add__(self, other):
+        return CombatantCoords(self.coords[0] + other, self.size)
+
 
 class GridSquare:
     def __init__(self, dummy):
@@ -333,7 +336,7 @@ class Map:
                 mask[:, coord[0] * N + coord[1]] = 0
         return mask
 
-    def printDijkstra(self, distances, my_coords: CombatantCoords, enemy_coords: CombatantCoords, reconstructed_path):
+    def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array, reconstructed_path):
         """
         Prints the distances to all locations on the map from my_location and highlights the reconstructed path to enemy_location.
         It prints it as standard cartesian coordinate system.
@@ -352,10 +355,11 @@ class Map:
             row = ""
             for x in range(self.size):
                 coord = np.array([x, y])
-                dist = str(distances[coord]) if distances[coord] < sys.maxsize else "-"
-                if any((my_coords.get()[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of my_coord'
+                index = x * self.size + y
+                dist = str(distances[index]) if distances[index] < sys.maxsize else "-"
+                if any((my_coords[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of my_coord'
                     row += "\x1b[38;5;39m%s\x1b[0m\t" % dist
-                elif any((enemy_coords.get()[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of enemy_coords'
+                elif any((enemy_coords[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of enemy_coords'
                     row += "\x1b[38;5;196m%s\x1b[0m\t" % dist
                 elif (x, y) in reconstructed_path:
                     row += "\u001b[36m%s\x1b[0m\t" % dist
@@ -443,6 +447,7 @@ class Map:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
 
+    # @dispatch(np.array)
     def is_empty(self, coord):
         try:
             empty = self.grid[coord[0], coord[1]].is_empty()
@@ -450,8 +455,13 @@ class Map:
             return False
         return empty
 
-    def is_valid_coord(self, coord):
-        return False if (coord.any() < 0 or coord.any() > self.size - 1) else True
+    # @dispatch(CombatantCoords)
+    def are_empty(self, coords: CombatantCoords):
+        vec_is_empty = np.vectorize(GridSquare.is_empty)
+        return np.all(vec_is_empty(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
+
+    def are_valid_coords(self, coords):
+        return False if ((coords < 0).any() or (coords > self.size - 1).any()) else True
 
 
     def move_combatant_by_increment(self, combatant, increment):
@@ -656,8 +666,8 @@ class Map:
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)
         if reconstructed_path is None:
             return None
-        # if logger.root.level >= logging.INFO:
-        #     self.printDijkstra(distances, my_location, enemy_location, reconstructed_path['tuples'])
+        if logger.root.level >= logging.INFO:
+            self.printDijkstra(distances, my_location.get(), enemy_location.get(), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
     @dispatch(Combatant, np.ndarray)
@@ -678,7 +688,7 @@ class Map:
         if reconstructed_path is None:
             return None
         if logger.root.level >= logging.INFO:
-            self.printDijkstra(distances, my_location, target_coord, reconstructed_path['tuples'])
+            self.printDijkstra(distances, my_location.get(), np.array([target_coord]), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
     def get_combatant_position(self, combatant):
@@ -878,5 +888,6 @@ class Map:
     def get_enemies_within_their_movement_range(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= e.movement + 1]
 
-    def is_difficult_terrain_at(self, coord):
-        return self.grid[coord[0], coord[1]].is_difficult_terrain()
+    def is_difficult_terrain_at(self, coords: CombatantCoords):
+        vec_is_difficult_terrain = np.vectorize(GridSquare.is_difficult_terrain)
+        return np.any(vec_is_difficult_terrain(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))

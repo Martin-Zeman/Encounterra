@@ -91,11 +91,18 @@ class Session:
         self.placement_scenario = scenario
 
     def place_combatant(self, combatant, bounds1, bounds2):
+        # Make sure larger combatants fit
+        offset = 0
+        if combatant.size.value > Size.MEDIUM.value:
+            offset = combatant.size.value
+        bounds1[1] -= offset
+        bounds2[1] -= offset
         while True:
             # TODO place some kind of a timeout here
             random_coord = np.array([random.randint(*bounds1), random.randint(*bounds2)])
-            if self.battle_map.is_empty(random_coord):
-                self.battle_map.set_combatant_coordinates(combatant, CombatantCoords(random_coord, combatant.size))
+            random_coords = CombatantCoords(random_coord, combatant.size)
+            if self.battle_map.are_empty(random_coords):
+                self.battle_map.set_combatant_coordinates(combatant, random_coords)
                 break
 
     def place_combatants_on_the_map(self):
@@ -103,11 +110,11 @@ class Session:
             case self.PlacementScenario.TWO_HALVES:
                 for combatant in self.combatants:
                     team_color = self.teams.get_team_color_code(combatant)
-                    right_bounds = (0, self.map_size // 2 - 1) if team_color is Teams.Color.BLUE else (self.map_size // 2 + 1, self.map_size - 1)
-                    self.place_combatant(combatant, (0, self.map_size - 1), right_bounds)
+                    right_bounds = [0, self.map_size // 2 - 1] if team_color is Teams.Color.BLUE else [self.map_size // 2 + 1, self.map_size - 1]
+                    self.place_combatant(combatant, [0, self.map_size - 1], right_bounds)
             case self.PlacementScenario.TOTALLY_RANDOM:
                 for combatant in self.combatants:
-                    self.place_combatant(combatant, (0, self.map_size - 1), (0, self.map_size - 1))
+                    self.place_combatant(combatant, [0, self.map_size - 1], [0, self.map_size - 1])
             case _:
                 logger.error("Unsupported placement scenario. Going with default")
                 self.placement_scenario = self.PlacementScenario.TWO_HALVES

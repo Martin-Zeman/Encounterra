@@ -176,10 +176,10 @@ class FaurungEnv(Env):
                 for combatant in self.combatants:
                     team_color = self.teams.get_team_color_code(combatant)
                     right_bounds = (0, map_size // 2 - 1) if team_color is Teams.Color.BLUE else (map_size // 2 + 1, map_size - 1)
-                    self.place_combatant(combatant, (0, map_size - 1), right_bounds)
+                    self.place_combatant(combatant, [0, map_size - 1], right_bounds)
             case PlacementScenario.TOTALLY_RANDOM:
                 for combatant in self.combatants:
-                    self.place_combatant(combatant, (0, map_size - 1), (0, map_size - 1))
+                    self.place_combatant(combatant, [0, map_size - 1], [0, map_size - 1])
             case _:
                 logger.error("Unsupported placement scenario. Going with default")
                 self.placement_scenario = PlacementScenario.TWO_HALVES

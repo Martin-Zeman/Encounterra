@@ -30,7 +30,7 @@ class Goblin(Combatant):
         free_coords = battle_map.get_free_coords_at_distance_from_target(self.selected_target, self, 8, 16)
         for coord in free_coords:
             assert battle_map.is_empty(coord), "COORD IS NOT FREE"
-            assert battle_map.is_valid_coord(coord), "COORD IS NOT VALID"
+            assert battle_map.are_valid_coords(coord), "COORD IS NOT VALID"
         if not free_coords:
             logger.info(f"There are no free coords for the {self} to disengage to. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError

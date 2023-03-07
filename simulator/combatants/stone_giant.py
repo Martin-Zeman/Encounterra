@@ -40,8 +40,8 @@ class StoneGiant(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
 
 
-    def plan_path(self, battle_map, target_copmbatant, target_position):
-        self.path = battle_map.get_path_to(self, target_copmbatant)
+    def plan_path(self, battle_map, target_combatant, target_position):
+        self.path = battle_map.get_path_to(self, target_combatant)
         if not self.path:
             logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
