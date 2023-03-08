@@ -590,7 +590,7 @@ class Map:
             res = None
         return res
 
-    def get_free_adjacent_coords(self, coords: CombatantCoords, inflate_to_size=Size.MEDIUM):
+    def get_free_adjacent_coords(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM):
         """
         Returns free and accessible squares adjacent to a given coordinate
         :param coords: target combatant coordinates
@@ -614,7 +614,8 @@ class Map:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size:
                     continue
                 square = self.grid[x, y]
-                if square.occupancy is Occupancy.FREE and square.terrain is not Terrain.IMPASSABLE_TERRAIN and (x, y) not in inflated:
+                consider_shortest_paths = (x, y) in shortest_paths.keys() if shortest_paths is not None else True
+                if square.occupancy is Occupancy.FREE and consider_shortest_paths and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((x, y))
         return adjacent_coords
@@ -638,16 +639,22 @@ class Map:
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
-    def get_nearest_adjacent_coord(self, my_location: CombatantCoords, target_location: CombatantCoords):
-        adjacent_coords = self.get_free_adjacent_coords(target_location, my_location.size)
+    def get_nearest_adjacent_coord(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths):
+        adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size)
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]
         adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
         return adjacent_coords[0][0]
 
+    def calc_dijkstra(self, combatant):
+        my_location = self.get_combatant_position(combatant)
+        mask = self.build_combatant_adjacency_mask(combatant)
+        distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
+        return distances, shortest_paths
+
     @dispatch(Combatant, Combatant)
-    def get_path_to(self, combatant, target_combatant):
+    def get_path_to(self, combatant, target_combatant, distances=None, shortest_paths=None):
         """
         Calculates a path to a target combatant
         :param combatant:Combatant who wants to move
@@ -658,9 +665,10 @@ class Map:
         logger.debug(f"Origin {my_location}")
         enemy_location = self.get_combatant_position(target_combatant)
         logger.debug(f"Destination {enemy_location}")
-        mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
-        enemy_adjacent_location = self.get_nearest_adjacent_coord(my_location, enemy_location)
+        if not distances or not shortest_paths:
+            mask = self.build_combatant_adjacency_mask(combatant)
+            distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
+        enemy_adjacent_location = self.get_nearest_adjacent_coord(my_location, enemy_location, shortest_paths)
         if enemy_adjacent_location is None:
             return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)
@@ -671,7 +679,7 @@ class Map:
         return convert_path_to_increments(reconstructed_path['numpy'])
 
     @dispatch(Combatant, np.ndarray)
-    def get_path_to(self, combatant, target_coord):
+    def get_path_to(self, combatant, target_coord, distances=None, shortest_paths=None):
         """
         Calculates a path to destination coordinates
         :param combatant:Combatant who wants to move
@@ -682,8 +690,9 @@ class Map:
         my_location = self.get_combatant_position(combatant)
         logger.debug(f"Origin {my_location}")
         logger.debug(f"Destination {target_coord}")
-        mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
+        if not distances or not shortest_paths:
+            mask = self.build_combatant_adjacency_mask(combatant)
+            distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), target_coord)
         if reconstructed_path is None:
             return None

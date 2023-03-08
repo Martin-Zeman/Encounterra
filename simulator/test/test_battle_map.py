@@ -497,25 +497,47 @@ def test_get_adjacent_coords_huge_with_terrain(battle_map, combatant1, combatant
     adj = battle_map.get_adjacent_coords(coords)
     assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4),
                    (11, 5)}
-def test_get_nearest_adjacent_coord(battle_map, combatant1):
-    my_coords = CombatantCoords(np.array([1, 7]))
-    combatant1.size = Size.LARGE
-    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
-    target_coords = battle_map.get_combatant_position(combatant1)
-    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
+def test_get_nearest_adjacent_coord(battle_map, combatant1, combatant2):
+    battle_map.build_adjacency_matrix()
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    combatant2.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 7]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
+    _, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    my_coords = battle_map.get_combatant_position(combatant1)
+    target_coords = battle_map.get_combatant_position(combatant2)
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords, shortest_paths)
     assert np.array_equal(nearest, np.array([4, 7]), equal_nan=False)
 
-    my_coords = CombatantCoords(np.array([3, 9]))
-    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([3, 9])))
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords, shortest_paths)
     assert np.array_equal(nearest, np.array([4, 9]), equal_nan=False)
 
-    my_coords = CombatantCoords(np.array([8, 6]))
-    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([8, 6])))
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords, shortest_paths)
     assert np.array_equal(nearest, np.array([7, 6]), equal_nan=False)
 
-    my_coords = CombatantCoords(np.array([7, 11]))
-    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords)
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([7, 11])))
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords, shortest_paths)
     assert np.array_equal(nearest, np.array([7, 9]), equal_nan=False)
+
+def test_get_nearest_adjacent_coord_large_huge(battle_map, teams, combatant1, combatant2, combatant3):
+    battle_map.build_adjacency_matrix()
+    combatant1.size = Size.HUGE
+    combatant2.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 10]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([9, 10]), combatant2.size))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([9, 13]), combatant3.size))
+    _, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    my_coords = battle_map.get_combatant_position(combatant1)
+    target_coords = battle_map.get_combatant_position(combatant3)
+    nearest = battle_map.get_nearest_adjacent_coord(my_coords, target_coords, shortest_paths)
+    assert not np.array_equal(nearest, np.array([7, 10]), equal_nan=False)
+
 
 def test_get_path_to_medium_to_medium(battle_map, combatant1, combatant2):
     battle_map.build_adjacency_matrix()
