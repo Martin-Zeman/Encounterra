@@ -93,6 +93,7 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)
 
     def activate(self):
+        logger.info(f"{self.combatants[0]} enters into a rage")
         self.combatants[0].ability_dmg_bonus += self.rage_bonus
         self.combatants[0].resistances.update([DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing])
 

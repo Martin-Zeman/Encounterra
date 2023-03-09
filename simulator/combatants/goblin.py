@@ -38,7 +38,7 @@ class Goblin(Combatant):
         if not path:
             logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
-        # logger.info(f"Planned path: {path}")
+        logger.info(f"Planned path: {path}")
         self.movement_generator = MovementGenerator(self, path).get_generator()
 
     def attack_routine(self):

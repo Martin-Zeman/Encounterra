@@ -69,6 +69,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         return "TotemRage"
 
     def activate(self):
+        logger.info(f"{self.combatants[0]} enters into a totem rage")
         self.combatants[0].ability_dmg_bonus += self.rage_bonus
         self.combatants[0].resistances.update(
             [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Fire, DamageType.Lightning, DamageType.Acid, DamageType.Cold,

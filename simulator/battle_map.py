@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import math
 import sys
@@ -114,6 +115,8 @@ class GridSquare:
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
     def remove_combatant(self):
+        if self.combatant:
+            logger.info(f"Removing {self.combatant}")
         self.combatant = None
         self.occupancy = Occupancy.FREE
 
@@ -125,6 +128,9 @@ class GridSquare:
 
     def is_empty(self):
         return self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN
+
+    def is_empty_or_self(self, combatant):
+        return (self.occupancy is Occupancy.FREE) or (self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
 
     def is_difficult_terrain(self):
         return self.terrain is Terrain.DIFFICULT_TERRAIN
@@ -303,11 +309,12 @@ class Map:
         mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
         mv_reshaped = mask.view().reshape(N, N, N, N)  # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
         for curr_combatant, coords in self.combatant_coordinate_cache.items():
-            coord = coords.get()[0]  # Take the root coordinate
             if curr_combatant is not combatant and curr_combatant.is_alive():
-                # TODO even allies are now impassable, try and figure out of a way to improve this
-                # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
-                mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
+                for coord in coords.get():
+                    # TODO try to do this more efficiently
+                    # TODO even allies are now impassable, try and figure out of a way to improve this
+                    # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
+                    mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
         for coord in self.impassable_set:
             # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
             mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
@@ -424,7 +431,11 @@ class Map:
 
     def get_pam_eligible_combatants(self, combatant, increment):
         eligible_combatants = []
-        combatant_coords = self.combatant_coordinate_cache[combatant]
+        try:
+            combatant_coords = self.combatant_coordinate_cache[combatant]
+        except KeyError:
+            # Follows after AoO, so the moving combatant might be dead
+            return eligible_combatants
         for curr_combatant, coords in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
                 try:
@@ -455,9 +466,16 @@ class Map:
             return False
         return empty
 
-    # @dispatch(CombatantCoords)
     def are_empty(self, coords: CombatantCoords):
         vec_is_empty = np.vectorize(GridSquare.is_empty)
+        return np.all(vec_is_empty(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
+
+    # @dispatch(CombatantCoords)
+    def are_empty_or_self(self, coords: CombatantCoords, combatant):
+        """
+        The version of are_empty for larger combatants since when they're moving some squares are still going to be taken up by themselves
+        """
+        vec_is_empty = np.vectorize(lambda square: square.is_empty_or_self(combatant))
         return np.all(vec_is_empty(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
 
     def are_valid_coords(self, coords):
@@ -479,7 +497,7 @@ class Map:
         for new_coord in new_coords:
             self.grid[new_coord[0], new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant].set(new_coords)
-        logger.info(f"{combatant} moved to {new_coords[0][0]}", extra={"team": self.teams.get_team(combatant)})
+        logger.info(f"{combatant} moved to {new_coords[0]}", extra={"team": self.teams.get_team(combatant)})
 
     def move_combatant(self, combatant, new_coords: CombatantCoords):
         """
@@ -496,14 +514,17 @@ class Map:
         for new_coord in new_coords_data:
             self.grid[new_coord[0], new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coords
-        logger.info(f"{combatant} moved to {new_coords_data[0][0]}", extra={"team": self.teams.get_team(combatant)})
+        logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
 
     def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
         def set_comb(square):
             square.set_combatant(combatant)
             return square
         vec_set_comb = np.vectorize(set_comb)
-        self.grid[coords.get()[:, 0], coords.get()[:, 1]] = vec_set_comb(self.grid[coords.get()[:, 0], coords.get()[:, 1]])
+        try:
+            self.grid[coords.get()[:, 0], coords.get()[:, 1]] = vec_set_comb(self.grid[coords.get()[:, 0], coords.get()[:, 1]])
+        except Exception as e:
+            print("FIXME", e)
         self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
@@ -594,6 +615,7 @@ class Map:
         """
         Returns free and accessible squares adjacent to a given coordinate
         :param coords: target combatant coordinates
+        :param shortest_paths: shortest paths to all squares (result of Dijkstra) to be able to recognize inflated terrain and map edges
         :param inflate_to_size: inflate for the sake of pathfinding by larger combatants
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
@@ -615,7 +637,7 @@ class Map:
                     continue
                 square = self.grid[x, y]
                 consider_shortest_paths = (x, y) in shortest_paths.keys() if shortest_paths is not None else True
-                if square.occupancy is Occupancy.FREE and consider_shortest_paths and (x, y) not in inflated:
+                if square.is_empty() and consider_shortest_paths and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((x, y))
         return adjacent_coords
@@ -662,9 +684,9 @@ class Map:
         :return: list of np.array increments to the target combatant
         """
         my_location = self.get_combatant_position(combatant)
-        logger.debug(f"Origin {my_location}")
+        logger.debug(f"Origin {my_location.get()[0]}")
         enemy_location = self.get_combatant_position(target_combatant)
-        logger.debug(f"Destination {enemy_location}")
+        logger.debug(f"Destination {enemy_location.get()[0]}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
@@ -688,7 +710,7 @@ class Map:
         """
         # TODO: consider making a variant which doesn't provoke AOO
         my_location = self.get_combatant_position(combatant)
-        logger.debug(f"Origin {my_location}")
+        logger.debug(f"Origin {my_location.get()[0]}")
         logger.debug(f"Destination {target_coord}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant)
@@ -703,6 +725,13 @@ class Map:
     def get_combatant_position(self, combatant):
         try:
             return self.combatant_coordinate_cache[combatant]
+        except KeyError as e:
+            logger.error(e)
+            return None
+
+    def get_combatant_position_copy(self, combatant):
+        try:
+            return copy.deepcopy(self.combatant_coordinate_cache[combatant])
         except KeyError as e:
             logger.error(e)
             return None
@@ -788,8 +817,10 @@ class Map:
 
 
     def reset(self, combatant_initial_positions):
+        logger.debug("Resetting the battle map")
         for row in self.grid:
             for square in row:
+                logger.debug("Resetting square")
                 square.remove_combatant()
         for combatant, coord in combatant_initial_positions.items():
             self.set_combatant_coordinates(combatant, coord)

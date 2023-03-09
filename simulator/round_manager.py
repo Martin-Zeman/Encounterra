@@ -2,6 +2,7 @@ from simulator.action_resolver import *
 from simulator.resources import reset_resources
 from simulator.effects.effect_tracker import EffectTracker
 import logging
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +45,7 @@ class RoundManager:
     def simulate_n(self, n=1, result_queue=None):
         if n > 0:
             team_tally = {color: 0 for color in self.teams.get_team_colors()}
-            combatant_initial_positions = {c: self.battle_map.get_combatant_position(c) for c in self.combatants}
+            combatant_initial_positions = {c: self.battle_map.get_combatant_position_copy(c) for c in self.combatants} # FIXME, this isn't working
             for i in range(n):
                 logger.warning(f"{i}. Iteration")
                 self.simulate()
