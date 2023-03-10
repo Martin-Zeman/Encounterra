@@ -393,7 +393,10 @@ class ActionResolver:
             return None
         # action = action_factory(combatant, self.effect_tracker, action_type, *args)
         if not check_feasibility(combatant, action, self.battle_map):
-            logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
+            if action.factory.action_type is Movement.STANDARD:
+                pass  # This can be caused by difficult terrain which is ok
+            else:
+                logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
             return None
         # if not feasible and combatant.has_action:
         #     action = Dodge(combatant)

@@ -320,8 +320,8 @@ class Map:
             mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
 
         # Inflate the edges of the map. Prevent larger combatants from stepping out of the map
-        mv_reshaped[:, :, (N - 1 - offset):(N - 1), :].fill(0)
-        mv_reshaped[:, :, :, (N - 1 - offset):(N - 1)].fill(0)
+        mv_reshaped[:, :, (N - offset):N, :].fill(0)
+        mv_reshaped[:, :, :, (N - offset):N].fill(0)
         return mask
 
 
@@ -729,13 +729,6 @@ class Map:
             logger.error(e)
             return None
 
-    def get_combatant_position_copy(self, combatant):
-        try:
-            return copy.deepcopy(self.combatant_coordinate_cache[combatant])
-        except KeyError as e:
-            logger.error(e)
-            return None
-
     def get_free_coords_at_distance_sorted_by_dist_to_enemies(self, moving_combatant, distance, dist_type=DistanceMetric.HOP):
         """
         Returns a list of coordinates that are at a certain distance from the moving combatant. Sorted by distance to the nearest enemy
@@ -823,7 +816,7 @@ class Map:
                 logger.debug("Resetting square")
                 square.remove_combatant()
         for combatant, coord in combatant_initial_positions.items():
-            self.set_combatant_coordinates(combatant, coord)
+            self.set_combatant_coordinates(combatant, copy.deepcopy(coord))
 
     def find_best_placement_harmful_circular(self, caster, spell_range, radius):
         """

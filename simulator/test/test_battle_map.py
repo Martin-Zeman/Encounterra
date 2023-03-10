@@ -526,6 +526,9 @@ def test_get_nearest_adjacent_coord(battle_map, teams, combatant1, combatant2):
     assert np.array_equal(nearest, np.array([7, 9]), equal_nan=False)
 
 def test_get_nearest_adjacent_coord_large_huge(battle_map, teams, combatant1, combatant2, combatant3):
+    """
+    Test resulting from debugging a specific scenario
+    """
     battle_map.build_adjacency_matrix()
     combatant1.size = Size.HUGE
     combatant2.size = Size.LARGE
@@ -575,6 +578,16 @@ def test_get_path_to_large_to_medium(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7])))
     path = battle_map.get_path_to(combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([0, 1])])
+
+def test_get_path_to_large_to_medium2(battle_map, combatant1, combatant2):
+    battle_map.place_circular_element(np.array([7, 14]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([9, 14]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.build_adjacency_matrix()
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 13]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([8, 14])))
+    path = battle_map.get_path_to(combatant1, combatant2)
+    assert np.array_equal(path, [np.array([1, 0]), np.array([1, 0])])
 
 def test_get_path_to_huge_to_huge(battle_map, combatant1, combatant2):
     battle_map.build_adjacency_matrix()

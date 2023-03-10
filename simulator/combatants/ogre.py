@@ -29,13 +29,11 @@ class Ogre(Combatant):
         self.saving_throws[SavingThrow.CHA] = -2
 
     def plan_path(self, battle_map, target_position):
-        logger.info(f"Planning path to {self.selected_target} at position {target_position.get()}")
+        logger.debug(f"Planning path to {self.selected_target} at position {target_position.get()}")
         self.path = battle_map.get_path_to(self, self.selected_target)
-        logger.info(f"Planned path {self.path}")
         if not self.path:
             logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
-        # logger.info(f"Planned path: {self.path}")
         self.movement_generator = MovementGenerator(self, self.path).get_generator()
         self.target_position_cache = target_position
 

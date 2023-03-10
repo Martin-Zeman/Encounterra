@@ -144,8 +144,6 @@ def check_feasibility(combatant, action, battle_map):
                 movement_needed = 1 if not battle_map.is_difficult_terrain_at(target_position) else 2
                 res = combatant.movement >= movement_needed and battle_map.are_valid_coords(target_position.get()) and battle_map.are_empty_or_self(target_position, combatant)
                 res &= not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
-                if not res:
-                    print("FIXME need to fix difficult terrain")
                 return res
             case Movement.GET_UP_FROM_PRONE:
                 return combatant.movement >= (combatant.speed / 2)
