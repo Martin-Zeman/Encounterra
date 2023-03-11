@@ -66,7 +66,7 @@ class DragonclawCultist(Combatant):
                 self.movement_generator = MovementGenerator(self, path, True).get_generator()
                 try:
                     movement = next(self.movement_generator)
-                    logger.info(f"Moving by {movement}")
+                    logger.debug(f"Moving by {movement}")
                     return (Movement.STANDARD, movement)
                 except StopIteration:
                     pass  # can't go any farther

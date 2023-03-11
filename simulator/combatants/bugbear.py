@@ -60,7 +60,7 @@ class Bugbear(Combatant):
         if not battle_map.are_in_hop_range(self, self.selected_target, 1):
             try:
                 movement = next(self.movement_generator)
-                logger.info(f"Moving by {movement}")
+                logger.debug(f"Moving by {movement}")
                 return movement
             except StopIteration:
                 # this means that either the path has been exhausted and we're still not in range => ranged attack

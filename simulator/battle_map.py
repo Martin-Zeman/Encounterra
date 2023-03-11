@@ -115,8 +115,6 @@ class GridSquare:
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
     def remove_combatant(self):
-        if self.combatant:
-            logger.info(f"Removing {self.combatant}")
         self.combatant = None
         self.occupancy = Occupancy.FREE
 
@@ -170,9 +168,9 @@ class Map:
         return string_repr
 
     @contextmanager
-    def as_if_combatant_position(self, combatant, coords: CombatantCoords):
+    def as_if_combatant_position(self, combatant, coords: np.array):
         original_coords = self.combatant_coordinate_cache[combatant]
-        self.move_combatant(combatant, coords)
+        self.move_combatant(combatant, CombatantCoords(coords, combatant.size))
         try:
             yield self
         finally:

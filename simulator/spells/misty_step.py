@@ -20,10 +20,10 @@ class MistyStepFactory(DirectThreatFactory):
             # TODO Improve this
             if self.caster.selected_enemy:
                 free_coords = battle_map.get_free_coords_at_distance_from_target(self.caster.selected_enemy, self.caster, 1)
-            return free_coords[0] if free_coords else None
+            return free_coords[0][0] if free_coords else None
         elif self.caster.archetype is CombatantArchetype.RANGED:
             free_coords = battle_map.get_free_coords_at_distance_sorted_by_dist_to_enemies(combatant, MistyStep.spell_range.value, DistanceMetric.CARTESIAN)
-            return free_coords[0] if free_coords else None
+            return free_coords[0][0] if free_coords else None
         return None
 
     def create_best(self, combatant, battle_map):

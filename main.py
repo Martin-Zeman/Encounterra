@@ -15,12 +15,12 @@ if __name__ == '__main__':
     CustomLogger(LogLevel.WARNING)
     session = Session()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
-    # session.add_combatant(Faurung, Teams.Color.BLUE)
+    session.add_combatant(Faurung, Teams.Color.BLUE)
     session.add_combatant(StoneGiant, Teams.Color.RED)
     session.add_combatant(Ogre, Teams.Color.RED)
     session.add_combatant(Bugbear, Teams.Color.BLUE)
     session.add_combatant(Goblin, Teams.Color.BLUE)
-    # session.add_combatant(Bugbear, Teams.Color.RED)
+    # session.add_combatant(Bugbear, Teams.Color.BLUE)
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
     session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     session.set_num_simulations(100)
     start_time = time.time()
-    session.simulate(parallel=False)
+    session.simulate(parallel=True)
     print("---Simulation took {:.1f} seconds ---".format((time.time() - start_time)))
 
 

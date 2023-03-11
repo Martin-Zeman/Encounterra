@@ -6,6 +6,7 @@ from simulator.action_factory import *
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.spells.chaosbolt import Chaosbolt
 from simulator.geometry import *
+from simulator.battle_map import CombatantCoords
 from enum import Enum, auto
 
 logger = logging.getLogger(__name__)
@@ -212,7 +213,7 @@ class ActionResolver:
                        self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]))
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
-                self.battle_map.move_combatant(caster, spell.coord)
+                self.battle_map.move_combatant(caster, CombatantCoords(spell.coord, caster.size))
                 return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
                 return self.resolve_chaos_bolt(caster, spell)

@@ -49,10 +49,10 @@ def test_as_if_combatant_position(teams, effect_tracker, battle_map, combatant1,
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([10, 7])))
 
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5
-    with battle_map.as_if_combatant_position(combatant1, CombatantCoords(np.array([9, 7]))):
+    with battle_map.as_if_combatant_position(combatant1, np.array([9, 7])):
         assert battle_map.get_cartesian_distance(combatant1, combatant2) == 1
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5
-    with battle_map.as_if_combatant_position(combatant1, CombatantCoords(np.array([0, 7]))):
+    with battle_map.as_if_combatant_position(combatant1, np.array([0, 7])):
         assert battle_map.get_cartesian_distance(combatant1, combatant2) == 10
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5
 

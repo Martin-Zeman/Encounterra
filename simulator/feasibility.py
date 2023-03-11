@@ -1,4 +1,5 @@
 from simulator.action_factory import *
+from simulator.battle_map import CombatantCoords
 from simulator.misc import Conditions
 import logging
 import numpy as np
@@ -91,8 +92,8 @@ def check_feasibility(combatant, action, battle_map):
             case BonusAction.MISTY_STEP:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.spell_range.value
-                res &= battle_map.are_valid_coords(action.coord) and battle_map.is_empty(action.coord)
+                res &= battle_map.get_cartesian_distance(combatant, np.array([action.coord])) <= action.spell_range.value
+                res &= battle_map.are_valid_coords(action.coord) and battle_map.are_empty_or_self(CombatantCoords(action.coord, combatant.size), combatant)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
                 res &= combatant.spellslots.get_spellslots(1) > 0

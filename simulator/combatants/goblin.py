@@ -81,7 +81,7 @@ class Goblin(Combatant):
                 # Move
                 try:
                     movement = next(self.movement_generator)
-                    logger.info(f"Moving by {movement}")
+                    logger.debug(f"Moving by {movement}")
                     return movement
                 except StopIteration:
                     self.movement_generator = None
