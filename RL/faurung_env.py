@@ -65,7 +65,7 @@ class FaurungEnv(Env):
         self.combatants = combatants
         self.teams = teams
         self.battle_map = battle_map
-        self.effect_tracker = EffectTracker()
+        self.effect_tracker = EffectTracker(battle_map)
         self.action_resolver = ActionResolver(combatants, teams, battle_map, self.effect_tracker)
         # self.combatant_initial_positions = {c: self.battle_map.get_combatant_position(c) for c in self.combatants}
         self.trainee = None

@@ -86,7 +86,11 @@ class Faurung(Combatant):
             all_actions.sort(key=lambda a: a[0], reverse=True)
             ret = None
             try:
-                ret = all_actions[0][1]
+                if len(all_actions) > 1 and isinstance(all_actions[1][1], MistyStep):
+                    # In case misty step ranks second, give preference to it
+                    ret = all_actions[1][1]
+                else:
+                    ret = all_actions[0][1]
                 logger.info(f"{self} uses {ret}")
             except IndexError:
                 pass

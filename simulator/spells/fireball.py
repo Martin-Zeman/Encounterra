@@ -72,7 +72,7 @@ class Fireball(Actoid, DirectThreat):
         self.heightened = False if "heightened " not in kwargs or not kwargs["heightened "] else True
 
     def __str__(self):
-        return "Fireball"
+        return f"Fireball at {self.coord}"
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

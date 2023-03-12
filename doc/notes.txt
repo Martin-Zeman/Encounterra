@@ -1,4 +1,15 @@
 Idea:
+Positioning:
+- For each action factory:
+    - I calculate threat for each possible target
+    - I find all admissible positionings of the actor (range of ability, impassable terrain etc.)
+    - Compute dijkstra with the current combatant mask
+    - Formulate it as a maximum flow problem where I connect all the positionings to a fake terminal node
+    #- Each positioning is marked as a sink with the computed threat and solve Minimum-cost flow problem where the costs are represented by AoOs and AoE effects
+-
+
+
+
 The action selection could be formulated as an integer linear programming problem. The optimization criteria could differ based on the type of a
 character but in general it would maximize (threat_out - threat_in). I'd need to add a threat to a given specific combatant by a factory (already WIP).
 This could help me determine the incoming threat. It could even handle threat from potential AoO.

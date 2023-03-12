@@ -145,7 +145,7 @@ class Firebolt(Actoid, DirectThreat):
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return "Firebolt"
+        return f"Firebolt {self.target}"
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(Firebolt.dmg_type))

@@ -130,6 +130,7 @@ class Session:
     def simulate(self, parallel=False):
         self.battle_map = Map(self.map_size, self.teams)
         self.battle_map.set_effect_tracker(self.effect_tracker)
+        self.effect_tracker.set_battle_map(self.battle_map)
         self.round_manager = RoundManager(self.combatants, self.teams, self.battle_map, self.effect_tracker)
         self.place_random_elements_on_the_map()
         self.place_combatants_on_the_map()

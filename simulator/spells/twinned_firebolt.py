@@ -83,7 +83,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
 
     def __str__(self):
-        return "Twinned Firebolt"
+        return f"Twinned Firebolt on {self.targets[0]} and {self.targets[1]}"
 
     # @staticmethod
     # def calculate_threat_approx(combatant, battle_map, *args, **kwargs):

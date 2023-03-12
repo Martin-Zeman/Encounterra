@@ -1,7 +1,12 @@
 import logging
+import numpy as np
 
+from simulator.battle_map import CombatantCoords
+from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.effects.post_haste_lethargy import PostHasteLethargy
+from simulator.effects.spheric_effect import SphericEffect
+from simulator.geometry import do_squares_overlap
 
 logger = logging.getLogger(__name__)
 
@@ -11,34 +16,40 @@ class EffectTracker:
     """
     def __init__(self):
         self.effects = []
+        self.battle_map = None
+
+    def set_battle_map(self, battle_map):
+        self.battle_map = battle_map
 
     def add(self, effect, originator):
         # TODO: Do I need the originator?
         self.effects.append((effect, originator))
 
-    # def new_turn(self, combatant):
-    #     """
-    #     All effects with a fixed duration measurable in rounds end just before the beginning of one of your turns.
-    #     :param combatant:
-    #     :return:
-    #     """
-    #     for effect in self.effects:
-    #         if isinstance(effect[0], LimitedDurationEffect) and effect[1] is combatant:
-    #             effect[0].new_round()
-
     def new_turn(self, combatant):
         """
-        All effects with a fixed duration measurable in rounds end just before the beginning of one of your turns.
+        Manages all effects with a fixed duration measurable in rounds which end just before the beginning of one of your turns.
+        Also manages effects which can be saved against at the beginning of a combatant's turn.
         :return:
         """
-        self.effects = [e for e in self.effects if not isinstance(e[0], LimitedDurationEffect) or e[1] is not combatant or e[0].new_turn()]
+        effects = []
+        for e in self.effects:
+            if getattr(e[0], "new_turn", False) and e[1] is combatant:
+                if not e[0].new_turn():
+                    continue
+            if getattr(e[0], "start_of_turn", False) and e[1] is combatant:
+                if not e[0].start_of_turn():
+                    continue
+            effects.append(e)
+        self.effects = effects
 
-    # def new_turn(self):
-    #     """
-    #     All effects with a fixed duration measurable in rounds end just before the beginning of one of your turns.
-    #     :return:
-    #     """
-    #     self.effects = [e for e in self.effects if not isinstance(e[0], LimitedDurationEffect) or e[0].new_turn()]
+    def end_of_turn(self, combatant):
+        effects = []
+        for e in self.effects:
+            if getattr(e[0], "end_of_turn", False) and e[1] is combatant:
+                if not e[0].end_of_turn():
+                    continue
+            effects.append(e)
+        self.effects = effects
 
     def get_all_affecting_combatant(self, combatant):
         """
@@ -59,6 +70,24 @@ class EffectTracker:
             if type(e[0]) is effect_type and e[0].is_affecting(combatant):
                 return True
         return False
+
+    def get_all_affecting_coords(self, coords: CombatantCoords):
+        """
+        Returns all effects affecting a given coordinate
+        :param coord: coordinate in question
+        :return: set of all effects affecting a combatant
+        """
+        assert self.battle_map
+        affecting = []
+        for e in self.effects:
+            if isinstance(e[0], AoeSquareEffect) and do_squares_overlap(e[0].origin, e[0].length, coords.get()[0], coords.size.value + 1):
+                affecting.append(e)
+            elif isinstance(e[0], SphericEffect) and self.battle_map.get_cartesian_distance(coords, np.array([e[0].coord])) <= e[0].radius:
+                affecting.append(e)
+        return affecting
+
+    def combatant_died(self, combatant):
+        self.effects = [e for e in self.effects if e[1] is not combatant]
 
     def create_post_haste_lethargy(self, combatant):
         self.effects.append((PostHasteLethargy(combatant), combatant))

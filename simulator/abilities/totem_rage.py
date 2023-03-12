@@ -38,7 +38,7 @@ class TotemRageFactory(ThreatModifierFactory):
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
         attacks = get_attacks(self.combatant)
         for attack in attacks:
-            dmg_inc = dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, target.ac, rage_bonus)
+            dmg_inc = attack.calculate_threat_to_target_mod(battle_map, self, {"dmg_bonus_flat": rage_bonus})
             max_threat = max(dmg_inc, max_threat)
 
         total_threat += max_threat
@@ -91,24 +91,6 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.combatants[0].resistances.remove(DamageType.Radiant)
 
 
-    # @staticmethod
-    # def calculate_threat_mod_approx(combatant, battle_map, actions, *args, **kwargs):
-    #     # TODO Multiply the threat increment by 3 for 3 rounds
-    #     max_threat = 0
-    #     potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed)
-    #     best_attack = None
-    #     # This doesn't take different attack ranges into account
-    #     for attack in combatant.attacks:
-    #         dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac,
-    #                                                         len(attack.crit_range), pt.is_resistant_to(attack.dmg_type)), potential_targets)
-    #         dmg_acc /= len(potential_targets)
-    #         max_threat = max(dmg_acc, max_threat)
-    #
-    #     dmg_acc = reduce(lambda acc, pt: acc + dmg_increment_for_dmg_flat(best_attack.to_hit, best_attack.dmg_dice, best_attack.dmg_bonus, pt.ac, self.rage_bonus), potential_targets)
-    #     dmg_acc /= len(potential_targets)
-    #     # TODO add avg dmg prevention
-    #     return max_threat
-
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to
@@ -124,8 +106,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
         attacks = get_attacks(combatant)
         for attack in attacks:
-            dmg_acc = reduce(lambda acc, pt: acc + dmg_increment_for_dmg_flat(attack.to_hit, attack.dmg_dice, attack.dmg_bonus,
-                                                                       pt.ac, rage_bonus), potential_targets, 0)
+            dmg_acc = reduce(lambda acc, pt: acc + attack.calculate_threat_to_target_mod(battle_map, pt, {"dmg_bonus_flat": rage_bonus}), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_threat = max(dmg_acc, max_threat)
 

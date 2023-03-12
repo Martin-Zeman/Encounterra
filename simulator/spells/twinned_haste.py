@@ -73,7 +73,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         self.factory = factory
 
     def __str__(self):
-        return "Twinned Haste"
+        return f"Twinned Haste on {self.targets[0]} and {self.targets[1]}"
 
     def activate(self):
         self.factory.caster.is_concentrating = True

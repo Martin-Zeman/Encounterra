@@ -125,7 +125,7 @@ class Chaosbolt(Actoid, DirectThreat):
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return "Chaosbolt"
+        return f"Chaosbolt on {self.targets[0]}"
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

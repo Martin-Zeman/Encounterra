@@ -61,5 +61,16 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     return coords
 
 
+def do_squares_overlap(origin1, length1, origin2, length2):
+    """
+    Given two squares represented by their origin (bottom-left corner) and their length, return if they overlap
+    :param origin1: origin of the first square
+    :param length1: side length of the first square
+    :param origin2: origin of the second square
+    :param length2: side length of the second square
+    :return: True if they overlap, false otherwise
+    """
+    return (origin1[0] < (origin2[0] + length2) and (origin1[0] + length1) > origin2[0]) and (origin1[1] < (origin2[1] + length2) and (origin1[1] + length1) > origin2[1])
+
 # def get_cartesian_distance(coord1, coord2):
 #     return np.linalg.norm(coord1 - coord2)

@@ -1,3 +1,4 @@
+from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
@@ -97,7 +98,7 @@ class HasteFactory(ThreatModifierFactory):
         return max_attack_dmg * ROUND_HORIZON
 
 
-class Haste(Actoid, Effect, ThreatModifier):
+class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
 
     level = 3
     spell_range = SpellStats.Range.FEET_30
@@ -110,11 +111,12 @@ class Haste(Actoid, Effect, ThreatModifier):
 
     def __init__(self, target, factory):
         super().__init__(ActoidFlags.IS_SPELL)
+        LimitedDurationEffect.__init__(self, turns=10)
         self.target = target
         self.factory = factory
 
     def __str__(self):
-        return "Haste"
+        return f"Haste on {self.target}"
 
     def activate(self):
         self.factory.caster.is_concentrating = True

@@ -84,7 +84,7 @@ class MistyStep(Actoid, ThreatModifier):
         self.factory = factory
 
     def __str__(self):
-        return "Misty Step"
+        return f"Misty Step to {self.coord}"
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         # TODO Add up all potential dmg from enemies that would normally be within their movement range

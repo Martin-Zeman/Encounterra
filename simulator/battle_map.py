@@ -277,8 +277,6 @@ class Map:
                 adj[i, j, min(i + 1, N - 1), j] = 1
                 adj[i, j, min(i + 1, N - 1), min(j + 1, N - 1)] = 1
 
-                # max is used to avoid negative slicing, and +2 is used because
-                # slicing does not include last element.
         adj = adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
         # Remove self-connections (optional)
         adj -= np.eye(Nsq, dtype=int)
@@ -321,6 +319,18 @@ class Map:
         mv_reshaped[:, :, (N - offset):N, :].fill(0)
         mv_reshaped[:, :, :, (N - offset):N].fill(0)
         return mask
+
+    def get_threat_adjacency_matrix(self, adj):
+        """
+        Transforms a standard adjacency matrix to one based on incoming threat associated with traversing edges
+        :param adj: standard distance-based adjacency matrix, already masked for a specific combatant
+        :return: adjacency matrix based on threat associated with traversing the edges
+        """
+        # threat_adj = copy.copy(adj)
+        dist_to_threat = np.vectorize(lambda d: 0 if d > 0 else sys.maxsize)  # Using maxsize to avoid impassable edges
+        threat_adj = dist_to_threat(adj)
+        # TODO include AoE and AoO
+        return threat_adj
 
 
     def build_combatant_adjacency_mask_no_inflation(self, combatant):
@@ -374,7 +384,7 @@ class Map:
 
     def minDistance(self, dist, open_set):
         """
-        Helper function for the Dijkstra algorithm. Finds the index (coodinate) of an unexplored vertices with the lowest distance
+        Helper function for the Dijkstra algorithm. Finds the index (coordinate) of an unexplored vertex with the lowest distance
         :param dist: list of distances to vertices
         :param open_set: list of vertices, True = explored, False = unexplored
         :return: index to min distance unexplored vertex
@@ -413,6 +423,43 @@ class Map:
             open_set[x] = True
             for y in range(Nsq):
                 if adj[x][y] > 0 and open_set[y] is False:
+                    coord_to = (y // N, y % N)
+                    coord_to_np = np.array([coord_to[0], coord_to[1]])
+                    coord_from = np.array([x // N, x % N])
+                    if dist[y] > dist[x] + adj[x][y]:
+                        dist[y] = dist[x] + adj[x][y]
+                        shortest_paths[coord_to] = coord_from
+                    elif dist[y] >= dist[x] + adj[x][y] and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(
+                            np.abs(coord_to_np - coord_from)):
+                        # TODO this should also work with ==, try that
+                        # prefer the path with the least coordinate diff, i.e. the less zig-zaggy path
+                        shortest_paths[coord_to] = coord_from
+
+        return dist, shortest_paths
+
+    def threat_dijkstra(self, src, adj):
+        """
+        A modification of the Dijkstra algorithm with a preference for the least zig-zaggy path to use threat instead of distance
+        :param src:
+        :param mask:
+        :return: list of threat to all vertices, list of predecessors for every vertex
+        """
+        src = np.array(src)
+        N = self.size
+        Nsq = self.size ** 2
+        dist = [sys.maxsize] * Nsq
+        dist[src[0] * self.size + src[1]] = 0
+        open_set = [False] * Nsq
+        shortest_paths = {}
+
+        for _ in range(Nsq):
+            x = self.minDistance(dist, open_set)
+            if x is None:
+                # enemy-occupied squares are unreachable
+                continue
+            open_set[x] = True
+            for y in range(Nsq):
+                if adj[x][y] < sys.maxsize and open_set[y] is False:
                     coord_to = (y // N, y % N)
                     coord_to_np = np.array([coord_to[0], coord_to[1]])
                     coord_from = np.array([x // N, x % N])
@@ -575,8 +622,8 @@ class Map:
     def get_hop_distance(self, subject1, subject2):
         """
         Universal hop distance function. Accepts both characters or coordinates
-        :param subject1: either a numpy.array or a CombatantCoords type
-        :param subject2: either a numpy.array or a CombatantCoords type
+        :param subject1: either a numpy.array or a Combatant type
+        :param subject2: either a numpy.array or a Combatant type
         :return: distance between subjects in number of hops, None if one of the subjects is dead
         """
         subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), Combatant) else subject1
@@ -594,8 +641,8 @@ class Map:
     def get_cartesian_distance(self, subject1, subject2):
         """
         Universal cartesian distance function. Accepts both characters or coordinates
-        :param subject1: either a CombatantCoords type or a numpy array
-        :param subject2: either a CombatantCoords type or a numpy array
+        :param subject1: either a Combatant type or a numpy array
+        :param subject2: either a Combatant type or a numpy array
         :return: cartesian distance between subjects, None if one of the subjects is dead
         """
         try:
@@ -609,15 +656,16 @@ class Map:
             res = None
         return res
 
-    def get_free_adjacent_coords(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM):
+    def get_free_adjacent_coords(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1):
         """
-        Returns free and accessible squares adjacent to a given coordinate
+        Returns free and accessible squares adjacent (up to the range distance) to a given coordinate
         :param coords: target combatant coordinates
         :param shortest_paths: shortest paths to all squares (result of Dijkstra) to be able to recognize inflated terrain and map edges
         :param inflate_to_size: inflate for the sake of pathfinding by larger combatants
+        :param rng: maximum range of what is considered 'adjacent'
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
-
+        assert rng > 0
         # First inflate it by the size of the combatant looking for the path
         offset = 0
         if inflate_to_size.value > Size.MEDIUM.value:
@@ -630,7 +678,7 @@ class Map:
 
         adjacent_coords = set()
         for coord in inflated:
-            for x, y in [(coord[0] + i, coord[1] + j) for i in (-1, 0, 1) for j in (-1, 0, 1) if i != 0 or j != 0]:
+            for x, y in [(coord[0] + i, coord[1] + j) for i in (-rng, 0, rng) for j in (-rng, 0, rng) if i != 0 or j != 0]:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size:
                     continue
                 square = self.grid[x, y]
@@ -659,7 +707,24 @@ class Map:
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
-    def get_nearest_adjacent_coord(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths):
+    def get_nearest_free_adjacent_coords(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths):
+        adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size)
+        if not adjacent_coords:
+            return None
+        adjacent_coords = [np.array([x]) for x in adjacent_coords]
+        adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
+        return adjacent_coords[0][0]
+
+    def get_free_adjacent_coords_within_distance(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths, distances, max_dist):
+        """
+        Get all free and accessible coords withing distance from my_location and max range distance from target location.
+        :param my_location: the origin location
+        :param target_location: the target location distance
+        :param target_location: the array of distances for each square from the PoV of the combatant
+        :param distances: the array of distances for each square from the PoV of the combatant
+        :param max_dist: the maximum hop distance from my_location
+        :return:
+        """
         adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size)
         if not adjacent_coords:
             return None
@@ -688,7 +753,7 @@ class Map:
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
-        enemy_adjacent_location = self.get_nearest_adjacent_coord(my_location, enemy_location, shortest_paths)
+        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, shortest_paths)
         if enemy_adjacent_location is None:
             return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)
@@ -915,6 +980,16 @@ class Map:
 
     def get_enemies_within_hop_distance(self, combatant, distance):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]
+
+    # def get_enemies_within_hop_distance(self, combatant, distance, distances):
+    #     """
+    #     Get all enemenies from combatant within hop distance using distances computed by Dijkstra
+    #     :param combatant: the combatant used as origin
+    #     :param distance: the maximum distance
+    #     :param distances: the array of distances for each square from the PoV of the combatant
+    #     :return:
+    #     """
+    #     return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]
 
     def get_enemies_within_their_movement_range(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= e.movement + 1]

@@ -90,6 +90,7 @@ class RoundManager:
                 if combatant.is_affected_by_any(Conditions.STUNNED, Conditions.PARALYZED, Conditions.PETRIFIED,
                                                 Conditions.UNCONSCIOUS):
                     logger.info(f"{combatant} is affected by a condition which prevents any action. Skipping turn")
+                    self.effect_tracker.new_turn(combatant)
                     continue
                 while True:
                     # try:
@@ -104,6 +105,10 @@ class RoundManager:
                         break
                     if not combatant.is_alive():
                         break  # could have died as a result of AoO
+                if combatant.is_alive():
+                    self.effect_tracker.new_turn(combatant)
+                else:
+                    self.effect_tracker.combatant_died(combatant)
             self.print_status()
 
     def print_status(self):
