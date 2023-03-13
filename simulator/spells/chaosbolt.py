@@ -74,8 +74,7 @@ class ChaosboltFactory(DirectThreatFactory):
         if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
             return mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
-        else:
-            return 0
+        return 0
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """

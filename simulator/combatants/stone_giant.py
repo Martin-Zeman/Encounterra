@@ -58,12 +58,10 @@ class StoneGiant(Combatant):
         feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)
         feasible_bonus_action_factories = get_feasible_actions(self.bonus_action_factories, self, battle_map)
         feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
-        # feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
         if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:# or len(feasible_free_actions > 0):
             feasible_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_action_factories]))
             feasible_bonus_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_bonus_action_factories]))
             feasible_haste_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_haste_action_factories]))
-            # feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
 
             action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]
             bonus_action_threats = [(fba.calculate_threat(self, battle_map), fba) for fba in feasible_bonus_actions]

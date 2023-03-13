@@ -110,5 +110,8 @@ class MistyStep(Actoid, ThreatModifier):
                 max_threat_before = max([f[1].calculate_threat_to_target(battle_map, self.factory.caster) for f in factories if FactoryFlags.IS_DIRECT_THREAT in f[1].flags])
                 with battle_map.as_if_combatant_position(self.factory.caster, self.coord):
                     max_threat_after = max([f[1].calculate_threat_to_target(battle_map, self.factory.caster) for f in factories if FactoryFlags.IS_DIRECT_THREAT in f[1].flags])
-            return max_threat_after - max_threat_before
+            ret = max_threat_after - max_threat_before
+            if ret > 0:
+                print("FIXME") # This is actually how it should be
+            return ret
         return 0

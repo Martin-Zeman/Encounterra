@@ -973,17 +973,17 @@ class Map:
         return [e for e in self.teams.get_allies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
 
     def get_enemies(self, combatant):
-        return self.teams.get_enemies(combatant)
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive()]
 
     def get_allies(self, combatant):
-        return self.teams.get_allies(combatant)
+        return [a for a in self.teams.get_allies(combatant) if a.is_alive()]
 
     def get_enemies_within_hop_distance(self, combatant, distance):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]
 
     # def get_enemies_within_hop_distance(self, combatant, distance, distances):
     #     """
-    #     Get all enemenies from combatant within hop distance using distances computed by Dijkstra
+    #     Get all enemies from combatant within hop distance using distances computed by Dijkstra
     #     :param combatant: the combatant used as origin
     #     :param distance: the maximum distance
     #     :param distances: the array of distances for each square from the PoV of the combatant

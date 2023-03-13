@@ -74,7 +74,7 @@ class RoundManager:
         for r in range(self.num_rounds):
             logger.info(f"Round {r + 1}:")
             if done:
-                logger.info("EARLY END")
+                logger.info("The fight is over")
                 break
             for combatant in self.combatants:
                 if done:

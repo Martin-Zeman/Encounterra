@@ -139,7 +139,10 @@ class RecklessAttackFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         num = min(self.max_num, self.combatant.curr_num_attacks)
-        dmg = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
+        if battle_map.get_hop_distance(self.combatant, target) <= self.range:
+            dmg = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
+        else:
+            dmg = 0
         factories = target.action_factories
         factories.extend(target.bonus_action_factories)
         # Haste factories wouldn't change the result here, so we're omitting them

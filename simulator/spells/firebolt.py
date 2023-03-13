@@ -95,8 +95,7 @@ class FireboltFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         if battle_map.get_cartesian_distance(self.caster, target) <= Firebolt.spell_range.value:
             return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(Firebolt.dmg_type))
-        else:
-            return 0
+        return 0
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """

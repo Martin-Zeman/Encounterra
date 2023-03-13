@@ -7,6 +7,7 @@ from simulator.action_factory import *
 from simulator.spells.spell import SpellStats
 from simulator.feasibility import get_feasible_actions
 import logging
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -45,15 +46,13 @@ class Faurung(Combatant):
             return GetUpFactory().create()
 
         enemies, _ = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
-        while enemies and self.movement and not self.movement_generator_cache and not self.nowhere_to_go:
+        if self.movement and not self.movement_generator_cache:# and not self.nowhere_to_go:
             curr_hop_dist = battle_map.get_hop_distance(self, enemies[0])
             free_coords = battle_map.get_free_coords_at_distance_from_target(enemies[0], self, curr_hop_dist, curr_hop_dist + self.movement)
-            if not free_coords:
-                logger.info(f"{self.name} has nowhere to go to")
-                self.nowhere_to_go = True
-                break
-            path = battle_map.get_path_to(self, free_coords[0])
-            self.movement_generator_cache = MovementGenerator(self, path).get_generator()
+            self_coord = battle_map.get_combatant_position(self)
+            if free_coords and not np.any(np.all(self_coord == free_coords, axis=1)):
+                path = battle_map.get_path_to(self, free_coords[0])
+                self.movement_generator_cache = MovementGenerator(self, path).get_generator()
 
         if self.movement and self.movement_generator_cache:
             try:
@@ -86,11 +85,7 @@ class Faurung(Combatant):
             all_actions.sort(key=lambda a: a[0], reverse=True)
             ret = None
             try:
-                if len(all_actions) > 1 and isinstance(all_actions[1][1], MistyStep):
-                    # In case misty step ranks second, give preference to it
-                    ret = all_actions[1][1]
-                else:
-                    ret = all_actions[0][1]
+                ret = all_actions[0][1]
                 logger.info(f"{self} uses {ret}")
             except IndexError:
                 pass

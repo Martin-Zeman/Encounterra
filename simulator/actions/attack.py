@@ -143,7 +143,9 @@ class AttackFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         num = min(self.max_num, self.combatant.curr_num_attacks)
         # TODO: Should I include roll modifiers here? There may be a use-case in the future
-        return num * mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
+        if battle_map.get_hop_distance(self.combatant, target) <= self.range:
+            return num * mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
+        return 0
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """

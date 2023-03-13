@@ -43,8 +43,7 @@ class FireballFactory(DirectThreatFactory):
         """
         if battle_map.get_cartesian_distance(self.caster, target) <= Fireball.spell_range.value + SpellStats.TRANSLATE_RADIUS[Fireball.target]:
             return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
-        else:
-            return 0
+        return 0
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """

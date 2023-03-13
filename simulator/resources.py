@@ -15,7 +15,6 @@ def use_resources(combatant, action, battle_map):
             case Action.ATTACK | Action.RECKLESS_ATTACK:
                 combatant.curr_num_attacks -= 1
                 combatant.ammo[action.factory.name] -= 1
-                # combatant.last_attack_factory_name = action.factory.name
                 combatant.attack_mapping[action.factory][1](combatant.attack_fsm)  # trigger event on the FSM, done this way to avoid multiprocessing pickling error
             case Action.DODGE | Action.DASH | Action.FIREBOLT:
                 pass  # sufficiently tracked by not having an action anymore
