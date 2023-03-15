@@ -97,6 +97,8 @@ class ActionResolver:
             return RollModifier.DISADVANTAGE
         if target.is_dodging:
             return RollModifier.DISADVANTAGE
+        if self.battle_map.is_enemy_adjacent(attacker):
+            return RollModifier.DISADVANTAGE
         return RollModifier.STRAIGHT
 
     def has_disadvantage_ranged(self, attack, attacker, target):
@@ -108,6 +110,8 @@ class ActionResolver:
             return RollModifier.ADVANTAGE
         if self.battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
             return RollModifier.ADVANTAGE
+        if self.battle_map.is_enemy_adjacent(attacker):
+            return RollModifier.DISADVANTAGE
         return RollModifier.STRAIGHT
 
     def resolve_chaos_bolt(self, caster, spell):
@@ -263,13 +267,13 @@ class ActionResolver:
         # TODO Conditions
         target = attack.target_combatant
         assert target
-        logger.info(f"{attacker} attacks {target} with {attack}", extra={"team": self.teams.get_team(attacker)})
         if attack.factory.attack_type is AttackFactory.Type.MELEE:
             modifiers = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
         else:
             modifiers = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
 
         final_modifier = reconcile_roll_modifiers(modifiers)
+        logger.info(f"{attacker} attacks {target} with {attack}" + (f" at {final_modifier.name}" if final_modifier is not RollModifier.STRAIGHT else ""), extra={"team": self.teams.get_team(attacker)})
         if final_modifier is RollModifier.STRAIGHT:
             rolled = random.randint(1, 20)
         elif final_modifier is RollModifier.ADVANTAGE:

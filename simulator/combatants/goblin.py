@@ -62,7 +62,7 @@ class Goblin(Combatant):
             if 8 <= dist <= 16:
                 # If I'm in position, just shoot
                 return self.attack_routine()
-            elif 1 < dist < 8 and not self.movement_generator:
+            elif 1 < dist < 8 and self.movement and not self.movement_generator:
                 # If I'm not in position but also not adjacent to anyone
                 try:
                     self.plan_path(battle_map)

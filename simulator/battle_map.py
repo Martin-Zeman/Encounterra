@@ -170,11 +170,14 @@ class Map:
     @contextmanager
     def as_if_combatant_position(self, combatant, coords: np.array):
         original_coords = self.combatant_coordinate_cache[combatant]
+        original_logger_level = logger.level
+        logger.setLevel(logging.WARNING)
         self.move_combatant(combatant, CombatantCoords(coords, combatant.size))
         try:
             yield self
         finally:
             self.move_combatant(combatant, original_coords)
+            logger.setLevel(original_logger_level)
 
     @contextmanager
     def as_if_dist_from_combatant(self, combatant1, combatant2, dist, dist_type=DistanceMetric.HOP):
@@ -584,6 +587,7 @@ class Map:
         dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
         min_dist = sys.float_info.max
         nearest = None
+        nearest = None
         target_coord = None
         self_position = self.combatant_coordinate_cache[combatant]
         for potential_target, target_coord in self.combatant_coordinate_cache.items():
@@ -844,6 +848,35 @@ class Map:
 
         coords.sort(key=lambda coord: self.get_hop_distance(self_coord.get(), np.array([coord])))
         return coords
+
+
+    def get_free_coords_sorted_by_distance_from_enemies(self, combatant):
+        """
+        Returns a list of coordinates that are unoccupied and at a given distance range from a target, sorted by ascending proximity to self
+        :param combatant: sorted by ascending proximity to this combatant
+        :return: list of numpy.array coordinates
+        """
+        self_coord = self.combatant_coordinate_cache[combatant]
+        coords = []
+        distances = []
+        for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
+            potential_self_coord = CombatantCoords(np.array([x, y]), combatant.size)
+            is_empty = self.are_empty(potential_self_coord)
+            if not is_empty:
+                continue
+            min_dist = sys.maxsize
+            for potential_enemy, cmbt_coord in self.combatant_coordinate_cache.items():
+                if potential_enemy.is_alive() and self.teams.are_enemies(potential_enemy, combatant):
+                    dist = self.get_hop_distance(potential_enemy, combatant)
+                    min_dist = min(min_dist, dist)
+                else:
+                    continue
+            # if min_dist <= dist <= max_dist:
+            coords.append(potential_self_coord.get()[0])
+            distances.append(min_dist)
+
+        # coords.sort(key=lambda coord: self.get_hop_distance(self_coord.get(), np.array([coord])))
+        return np.stack([c for _, c in sorted((zip(distances, coords)), key=lambda x: x[0], reverse=True)])
 
     def remove_combatant(self, combatant):
         """

@@ -44,7 +44,6 @@ class StoneGiant(Combatant):
         self.path = battle_map.get_path_to(self, target_combatant)
         logger.debug(f"Target position: {target_position}")
         if not self.path:
-            logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
         self.movement_generator = MovementGenerator(self, self.path).get_generator()
         self.target_position_cache = target_position
@@ -86,7 +85,14 @@ class StoneGiant(Combatant):
                     try:
                         self.plan_path(battle_map, selected_action.target_combatant, target_position)
                     except RuntimeError:
-                        return None
+                        # Could be blocked, try to find an enemy within reach
+                        try:
+                            nearest_enemy, _, enemy_coord = battle_map.get_nearest(self)
+                            self.plan_path(battle_map, nearest_enemy, enemy_coord)
+                            selected_action.target_combatant = nearest_enemy
+                        except RuntimeError:
+                            logger.info(f"{self.name} has nowhere to go and no one in reach to attack. Using dodge action", extra={"team": self.team_color})
+                            return None
 
                 if not battle_map.are_in_hop_range(self, selected_action.target_combatant, selected_action.factory.range):
                     try:

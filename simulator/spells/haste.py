@@ -72,7 +72,6 @@ class HasteFactory(ThreatModifierFactory):
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
-        logger.info(f"calculate_threat_to_target 1 target {target}")
         enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
@@ -94,7 +93,6 @@ class HasteFactory(ThreatModifierFactory):
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg += attack_dmg_decrement_acc
-        logger.info(f"calculate_threat_to_target 2")
         return max_attack_dmg * ROUND_HORIZON
 
 

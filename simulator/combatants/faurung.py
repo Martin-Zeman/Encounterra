@@ -47,10 +47,9 @@ class Faurung(Combatant):
 
         enemies, _ = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
         if self.movement and not self.movement_generator_cache:# and not self.nowhere_to_go:
-            curr_hop_dist = battle_map.get_hop_distance(self, enemies[0])
-            free_coords = battle_map.get_free_coords_at_distance_from_target(enemies[0], self, curr_hop_dist, curr_hop_dist + self.movement)
+            free_coords = battle_map.get_free_coords_sorted_by_distance_from_enemies(self)
             self_coord = battle_map.get_combatant_position(self)
-            if free_coords and not np.any(np.all(self_coord == free_coords, axis=1)):
+            if not np.any(np.all(self_coord.get()[0] == free_coords, axis=1)):
                 path = battle_map.get_path_to(self, free_coords[0])
                 self.movement_generator_cache = MovementGenerator(self, path).get_generator()
 

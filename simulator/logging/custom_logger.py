@@ -41,10 +41,10 @@ class LogLevel(Enum):
 
 class CustomLogger:
 
-    VERBOSE_VALUE = logging.DEBUG - 5
+    # VERBOSE_VALUE = logging.DEBUG - 5
 
     LEVEL_MAPPING = {
-        LogLevel.VERBOSE: VERBOSE_VALUE,
+        # LogLevel.VERBOSE: VERBOSE_VALUE,
         LogLevel.DEBUG: logging.DEBUG,
         LogLevel.INFO: logging.INFO,
         LogLevel.WARNING: logging.WARNING,
@@ -52,7 +52,7 @@ class CustomLogger:
     }
 
     def __init__(self, level):
-        addLoggingLevel('VERBOSE', self.VERBOSE_VALUE)
+        # addLoggingLevel('VERBOSE', self.VERBOSE_VALUE)
         logger = logging.getLogger()
         logger.setLevel(self.LEVEL_MAPPING[level])
         stdout_handler = logging.StreamHandler(stream=sys.stdout)
