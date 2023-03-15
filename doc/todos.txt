@@ -1,3 +1,4 @@
+- I want to implement a look-up for the best coordinates for a selected action. Could be part of the factories. It would take AoE effects into account, AoO on the way and maybe even movement. This should also be factored into the overall threat of that action.
 - Maybe the approx threat should belong to the factories and would accept a dict of the FactoryStats that are boosted by the modifying ability
 - Attacks would probablyt be stored a bit differently from other abilities since you can have many different attacks with different args
 - Effects on which a combatant is concentrating should be considered in both self and foreign threat

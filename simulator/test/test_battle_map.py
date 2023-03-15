@@ -854,3 +854,20 @@ def test_get_enemies_within_radius_sorted_by_distance(battle_map, teams, combata
     battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([6, 7]), combatant4.size))
     enemies, _ = battle_map.get_enemies_within_radius_sorted_by_distance(combatant1, 4)
     assert enemies == [combatant2, combatant3]
+
+
+def test_get_free_coords_sorted_by_distance_from_enemies(battle_map, teams, combatant1, combatant2, combatant3, combatant4):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([7, 3]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 11]), combatant2.size))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([10, 12]), combatant3.size))
+    battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([11, 6]), combatant4.size))
+    free_coords = battle_map.get_free_coords_sorted_by_distance_from_enemies(combatant1)
+    assert np.array_equal(free_coords[0], np.array([0, 0]))
+
+    battle_map.move_combatant(combatant3, CombatantCoords(np.array([0, 0]), combatant3.size))
+    free_coords = battle_map.get_free_coords_sorted_by_distance_from_enemies(combatant1)
+    assert np.array_equal(free_coords[0], np.array([14, 14])) or np.array_equal(free_coords[0], np.array([13, 14]))

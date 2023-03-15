@@ -21,7 +21,7 @@ class StoneGiant(Combatant):
         super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
         self.size = Size.HUGE
         self.club = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
-        self.rock = self.rock_attack = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
+        self.rock = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
                                             dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1,
                                             attack_type=AttackFactory.Type.RANGED, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15, attack_type=AttackFactory.Type.MELEE)
@@ -40,8 +40,8 @@ class StoneGiant(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
 
 
-    def plan_path(self, battle_map, target_combatant, target_position):
-        self.path = battle_map.get_path_to(self, target_combatant)
+    def plan_path(self, battle_map, target_combatant, target_position, attack_range):
+        self.path = battle_map.get_path_to(self, target_combatant, rng=attack_range)
         logger.debug(f"Target position: {target_position}")
         if not self.path:
             raise RuntimeError
@@ -83,14 +83,20 @@ class StoneGiant(Combatant):
                 if not np.array_equal(self.target_position_cache, target_position):
                     # if the target moved or new turn recalculate path
                     try:
-                        self.plan_path(battle_map, selected_action.target_combatant, target_position)
+                        self.plan_path(battle_map, selected_action.target_combatant, target_position, selected_action.factory.range)
                     except RuntimeError:
                         # Could be blocked, try to find an enemy within reach
-                        try:
-                            nearest_enemy, _, enemy_coord = battle_map.get_nearest(self)
-                            self.plan_path(battle_map, nearest_enemy, enemy_coord)
-                            selected_action.target_combatant = nearest_enemy
-                        except RuntimeError:
+                        enemies = battle_map.get_enemies(self)
+                        alternative_target_found = False
+                        for e in enemies:
+                            if battle_map.get_hop_distance(e, self) <= selected_action.factory.range:
+                                selected_action.target_combatant = e
+                                alternative_target_found
+                                break
+                        if not alternative_target_found and self.rock in feasible_action_factories:
+                            # try if we can still throw a rock
+                            return self.rock[1].create_best(self, battle_map)
+                        else:
                             logger.info(f"{self.name} has nowhere to go and no one in reach to attack. Using dodge action", extra={"team": self.team_color})
                             return None
 
@@ -103,12 +109,12 @@ class StoneGiant(Combatant):
                         # this means that either the path has been exhausted and we're still not in range => ranged attack
                         self.movement_generator = None
                         if self.has_action:
-                            self.rock_attack[1].action_type = Action.ATTACK
+                            self.rock[1].action_type = Action.ATTACK
                         elif self.has_haste_action:
-                            self.rock_attack[1].action_type = HasteAction.HASTE_ATTACK
+                            self.rock[1].action_type = HasteAction.HASTE_ATTACK
                         else:
                             return None
-                        return self.rock_attack[1].create_best(self, battle_map)
+                        return self.rock[1].create_best(self, battle_map)
             return selected_action
 
         else:

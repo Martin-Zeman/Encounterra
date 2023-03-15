@@ -103,6 +103,8 @@ class TotemBarbarian5Lvl(Combatant):
                         else:
                             return None
                         return self.javelin_attack[1].create_best(self, battle_map)
+            if selected_action is self.javelin_attack:
+                print("FIXME")
             return selected_action
 
         else:

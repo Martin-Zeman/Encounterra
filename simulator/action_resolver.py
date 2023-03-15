@@ -103,13 +103,13 @@ class ActionResolver:
 
     def has_disadvantage_ranged(self, attack, attacker, target):
         if attack.roll_modifier is RollModifier.DISADVANTAGE:
-            return RollModifier.ADVANTAGE
+            return RollModifier.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
-            return RollModifier.ADVANTAGE
+            return RollModifier.DISADVANTAGE
         if target.is_dodging:
-            return RollModifier.ADVANTAGE
+            return RollModifier.DISADVANTAGE
         if self.battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
-            return RollModifier.ADVANTAGE
+            return RollModifier.DISADVANTAGE
         if self.battle_map.is_enemy_adjacent(attacker):
             return RollModifier.DISADVANTAGE
         return RollModifier.STRAIGHT

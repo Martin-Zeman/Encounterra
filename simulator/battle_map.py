@@ -682,7 +682,7 @@ class Map:
 
         adjacent_coords = set()
         for coord in inflated:
-            for x, y in [(coord[0] + i, coord[1] + j) for i in (-rng, 0, rng) for j in (-rng, 0, rng) if i != 0 or j != 0]:
+            for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng) for j in range(-rng, rng) if i != 0 or j != 0]:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size:
                     continue
                 square = self.grid[x, y]
@@ -711,30 +711,38 @@ class Map:
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
-    def get_nearest_free_adjacent_coords(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths):
-        adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size)
+    def get_nearest_free_adjacent_coords(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths, rng=1):
+        """
+        Get nearest free adjacent coordinates accounting for the combatant's size. Potentially increasing what is considered adjacent to rng.
+        :param my_location: the combatant location
+        :param target_location: the target location
+        :param shortest_paths: shortest paths for all coords in the grid
+        :param rng: the range of what is considered adjacent
+        :return:
+        """
+        adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size, rng)
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]
         adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
         return adjacent_coords[0][0]
 
-    def get_free_adjacent_coords_within_distance(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths, distances, max_dist):
-        """
-        Get all free and accessible coords withing distance from my_location and max range distance from target location.
-        :param my_location: the origin location
-        :param target_location: the target location distance
-        :param target_location: the array of distances for each square from the PoV of the combatant
-        :param distances: the array of distances for each square from the PoV of the combatant
-        :param max_dist: the maximum hop distance from my_location
-        :return:
-        """
-        adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size)
-        if not adjacent_coords:
-            return None
-        adjacent_coords = [np.array([x]) for x in adjacent_coords]
-        adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
-        return adjacent_coords[0][0]
+    # def get_free_adjacent_coords_within_distance(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths, distances, max_dist):
+    #     """
+    #     Get all free and accessible coords withing distance from my_location and max range distance from target location.
+    #     :param my_location: the origin location
+    #     :param target_location: the target location distance
+    #     :param target_location: the array of distances for each square from the PoV of the combatant
+    #     :param distances: the array of distances for each square from the PoV of the combatant
+    #     :param max_dist: the maximum hop distance from my_location
+    #     :return:
+    #     """
+    #     adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size)
+    #     if not adjacent_coords:
+    #         return None
+    #     adjacent_coords = [np.array([x]) for x in adjacent_coords]
+    #     adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
+    #     return adjacent_coords[0][0]
 
     def calc_dijkstra(self, combatant):
         my_location = self.get_combatant_position(combatant)
@@ -743,11 +751,14 @@ class Map:
         return distances, shortest_paths
 
     @dispatch(Combatant, Combatant)
-    def get_path_to(self, combatant, target_combatant, distances=None, shortest_paths=None):
+    def get_path_to(self, combatant, target_combatant, distances=None, shortest_paths=None, rng=1):
         """
         Calculates a path to a target combatant
         :param combatant:Combatant who wants to move
         :param target_combatant:
+        :param distances: potentially already computed distances to all coords
+        :param shortest_paths: potentially already computed shortest paths to all coords
+        :param rng: the range of what is considered adjacent
         :return: list of np.array increments to the target combatant
         """
         my_location = self.get_combatant_position(combatant)
@@ -757,7 +768,7 @@ class Map:
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
-        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, shortest_paths)
+        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, shortest_paths, rng)
         if enemy_adjacent_location is None:
             return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)
@@ -773,6 +784,8 @@ class Map:
         Calculates a path to destination coordinates
         :param combatant:Combatant who wants to move
         :param target_coord:
+        :param distances: potentially already computed distances to all coords
+        :param shortest_paths: potentially already computed shortest paths to all coords
         :return: list of np.array increments to the target destination
         """
         # TODO: consider making a variant which doesn't provoke AOO
@@ -849,14 +862,12 @@ class Map:
         coords.sort(key=lambda coord: self.get_hop_distance(self_coord.get(), np.array([coord])))
         return coords
 
-
     def get_free_coords_sorted_by_distance_from_enemies(self, combatant):
         """
-        Returns a list of coordinates that are unoccupied and at a given distance range from a target, sorted by ascending proximity to self
-        :param combatant: sorted by ascending proximity to this combatant
-        :return: list of numpy.array coordinates
+        Returns all free coordinates in a np.array matrix sorted by distances to the nearest enemy
+        :param combatant: combatant for which the coordinates are to be found
+        :return: numpy.array of nx2 shape where n is the number of coordinates returned
         """
-        self_coord = self.combatant_coordinate_cache[combatant]
         coords = []
         distances = []
         for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
@@ -867,15 +878,13 @@ class Map:
             min_dist = sys.maxsize
             for potential_enemy, cmbt_coord in self.combatant_coordinate_cache.items():
                 if potential_enemy.is_alive() and self.teams.are_enemies(potential_enemy, combatant):
-                    dist = self.get_hop_distance(potential_enemy, combatant)
+                    dist = self.get_hop_distance(potential_enemy, potential_self_coord.get())
                     min_dist = min(min_dist, dist)
                 else:
                     continue
-            # if min_dist <= dist <= max_dist:
             coords.append(potential_self_coord.get()[0])
             distances.append(min_dist)
-
-        # coords.sort(key=lambda coord: self.get_hop_distance(self_coord.get(), np.array([coord])))
+        # Convert it into a concatenated nx2 np.array
         return np.stack([c for _, c in sorted((zip(distances, coords)), key=lambda x: x[0], reverse=True)])
 
     def remove_combatant(self, combatant):

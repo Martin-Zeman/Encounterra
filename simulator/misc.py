@@ -104,7 +104,7 @@ def reconcile_roll_modifiers(modifiers):
         return RollModifier.STRAIGHT
     try:
         ret = modifiers.pop()
-    except:  # TODO Find the exact one
+    except KeyError:
         ret = RollModifier.STRAIGHT
     return ret
 

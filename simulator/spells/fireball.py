@@ -3,6 +3,7 @@ from simulator.misc import SavingThrow, DamageType
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat import mean_dmg_dc_attack
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+import numpy as np
 
 class FireballFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, has_spell_sculpting=False, **kwargs):
@@ -71,7 +72,7 @@ class Fireball(Actoid, DirectThreat):
         self.heightened = False if "heightened " not in kwargs or not kwargs["heightened "] else True
 
     def __str__(self):
-        return f"Fireball at {self.coord}"
+        return f"Fireball at {np.squeeze(self.coord)}"
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

@@ -212,10 +212,7 @@ def check_feasibility_light(combatant, action, battle_map):
                 #     res |= (combatant.num_attacks > combatant.curr_num_attacks > 0) and combatant.last_attack_factory_name is action[1].name
                     # for ag in combatant.attack_groups:
                     #     if combatant.last_attack_factory_name in ag:
-                try:
-                    res |= not combatant.attack_fsm.current_state.initial and combatant.attack_mapping[action[1]][0] in combatant.attack_fsm.current_state.value
-                except TypeError:
-                    print("FIXME")
+                res |= not combatant.attack_fsm.current_state.initial and combatant.attack_mapping[action[1]][0] in combatant.attack_fsm.current_state.value
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
