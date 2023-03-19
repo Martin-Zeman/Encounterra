@@ -14,9 +14,9 @@ class Bugbear(Combatant):
 
     def __init__(self, effect_tracker, name="Bugbear"):
         super().__init__(effect_tracker, name, level=1, hp=27, ac=16, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.morningstar_attack = self.add_ability(Action.ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
-        self.javelin_attack = self.add_ability(Action.ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, attack_type=AttackFactory.Type.RANGED)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.morningstar_attack = self.add_ability(Action.MELEE_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.movement_generator = None
         self.selected_target = None
         self.path = None
@@ -66,18 +66,18 @@ class Bugbear(Combatant):
                 # this means that either the path has been exhausted and we're still not in range => ranged attack
                 self.movement_generator = None
                 if self.has_action:
-                    self.javelin_attack[1].action_type = Action.ATTACK
+                    self.javelin_attack[1].action_type = Action.RANGED_ATTACK
                 elif self.has_haste_action:
-                    self.javelin_attack[1].action_type = HasteAction.HASTE_ATTACK
+                    self.javelin_attack[1].action_type = HasteAction.HASTE_RANGED_ATTACK
                 else:
                     return None
                 return self.javelin_attack[1].create(self.selected_target)
         else:
             # Melee attack
             if self.has_action:
-                self.morningstar_attack[1].action_type = Action.ATTACK
+                self.morningstar_attack[1].action_type = Action.MELEE_ATTACK
             elif self.has_haste_action:
-                self.morningstar_attack[1].action_type = HasteAction.HASTE_ATTACK
+                self.morningstar_attack[1].action_type = HasteAction.HASTE_MELEE_ATTACK
             else:
                 return None
             return self.morningstar_attack[1].create(self.selected_target)

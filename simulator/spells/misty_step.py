@@ -45,7 +45,7 @@ class MistyStepFactory(DirectThreatFactory):
         if self.caster.archetype is CombatantArchetype.MELEE:
             max_mod = 0
             for action in self.caster.actions:
-                if action[0] is Action.ATTACK:
+                if action[0] is Action.MELEE_ATTACK or action[0] is Action.RANGED_ATTACK:
                     max_mod = max(max_mod, action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value + self.caster.movement}, *args, **kwargs))
             for bonus_action in self.caster.bonus_actions:
                 if bonus_action[0] is BonusAction.BONUS_ATTACK or bonus_action[0] is BonusAction.PAM_BONUS_ATTACK:
@@ -93,7 +93,7 @@ class MistyStep(Actoid, ThreatModifier):
             max_mod = 0
             # TODO use similar approach as below but compare dmg to targets in range at both positions
             # for action in self.factory.caster.actions:
-            #     if action[0] is Action.ATTACK:
+            #     if action[0] is Action.MELEE_ATTACK:
             #         max_mod = max(max_mod, action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value + self.caster.movement}, *args, **kwargs))
             # for bonus_action in self.factory.caster.bonus_actions:
             #     if bonus_action[0] is BonusAction.BONUS_ATTACK or bonus_action[0] is BonusAction.PAM_BONUS_ATTACK:

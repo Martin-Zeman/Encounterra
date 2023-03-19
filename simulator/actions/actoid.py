@@ -23,6 +23,8 @@ class FactoryFlags(Flag):
     # TODO Consider merging actoid flags and factory flags
     DEFAULT = auto()
     IS_ATTACK_LIKE = auto()
+    IS_MELEE = auto()
+    IS_RANGED = auto()
     IS_DIRECT_THREAT = auto()
     IS_ATTACK_MODIFIER = auto()
     DEX_SAVE_APPLIES = auto()

@@ -13,9 +13,9 @@ class Cyanwrath(Combatant):
     def __init__(self):
         super().__init__("Cyanwrath", level=9, hp=95, ac=17, init_bonus=1, spell_to_hit=0, speed=30, resistances={DamageType.Lightning},
                          dc=15)
-        self.add_ability(Action.ATTACK,  name="Polearm", combatant=self, to_hit=7, dmg_dice="1d10", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=2, crit_range=2, attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(BonusAction.PAM_BONUS_ATTACKK,  name="Butt end of Polearm", combatant=self, to_hit=7, dmg_dice="1d4", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=2, crit_range=2, attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Polearm", combatant=self, to_hit=7, dmg_dice="1d10", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=2, crit_range=3, attack_type=AttackFactory.Type.MELEE)
+        self.add_ability(Action.MELEE_ATTACK,  name="Polearm", combatant=self, to_hit=7, dmg_dice="1d10", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=2, crit_range=2)
+        self.add_ability(BonusAction.PAM_BONUS_ATTACKK,  name="Butt end of Polearm", combatant=self, to_hit=7, dmg_dice="1d4", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=2, crit_range=2)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Polearm", combatant=self, to_hit=7, dmg_dice="1d10", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=2, crit_range=3)
         self.add_ability(BonusAction.PAM_BONUS_ATTACK)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.POLEARM_MASTER)
@@ -28,7 +28,7 @@ class Cyanwrath(Combatant):
             if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:
                 self.multiattack_in_progress = True
             if self.curr_num_attacks and self.multiattack_in_progress:
-                attack_args = self.attack_args[Action.ATTACK]
+                attack_args = self.attack_args[Action.MELEE_ATTACK]
                 attack_args[2] = self.selected_target  # sets the target
                 logger.info(f"{self.name} uses action {attack_args[0]} against {self.selected_target}",
                              extra={"team": self.team_color})

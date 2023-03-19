@@ -40,7 +40,6 @@ def combatant3(effect_tracker):
 def combatant4(effect_tracker):
     return TotemBarbarian5Lvl(effect_tracker, "TotemBarbarian5Lvl")
 
-@pytest.mark.skip(reason="enable this after combatant coord refactoring")
 def test_as_if_combatant_position(teams, effect_tracker, battle_map, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
@@ -56,7 +55,6 @@ def test_as_if_combatant_position(teams, effect_tracker, battle_map, combatant1,
         assert battle_map.get_cartesian_distance(combatant1, combatant2) == 10
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5
 
-@pytest.mark.skip(reason="enable this after combatant coord refactoring")
 def test_as_if_dist_from_combatant(teams, effect_tracker, battle_map, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
@@ -93,7 +91,6 @@ def test_as_if_dist_from_combatant(teams, effect_tracker, battle_map, combatant1
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == pytest.approx(1.41, 0.01)
 
 
-@pytest.mark.skip(reason="enable this after combatant coord refactoring")
 def test_as_if_dist_mod_from_combatant(teams, effect_tracker, battle_map, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)

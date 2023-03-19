@@ -138,7 +138,7 @@ class Combatant(ABC):
             return None
         elif isinstance(action_type, Action):
             match action_type:
-                case Action.ATTACK | Action.RECKLESS_ATTACK:
+                case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK:
                     factory = TO_FACTORY[action_type]
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.action_factories[-1]
@@ -164,7 +164,7 @@ class Combatant(ABC):
         elif isinstance(action_type, BonusAction):
             # TODO
             match action_type:
-                case BonusAction.BONUS_ATTACK:
+                case BonusAction.BONUS_MELEE_ATTACK | BonusAction.BONUS_RANGED_ATTACK:
                     factory = TO_FACTORY[action_type]
                     self.bonus_action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.bonus_action_factories[-1]

@@ -12,7 +12,7 @@ def use_resources(combatant, action, battle_map):
     if isinstance(action_type, Action):
         combatant.has_action = False
         match action_type:
-            case Action.ATTACK | Action.RECKLESS_ATTACK:
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK:
                 combatant.curr_num_attacks -= 1
                 combatant.ammo[action.factory.name] -= 1
                 combatant.attack_mapping[action.factory][1](combatant.attack_fsm)  # trigger event on the FSM, done this way to avoid multiprocessing pickling error
@@ -40,7 +40,7 @@ def use_resources(combatant, action, battle_map):
     elif isinstance(action_type, BonusAction):
         combatant.has_bonus_action = False
         match action_type:
-            case BonusAction.BONUS_ATTACK | BonusAction.PAM_BONUS_ATTACK:
+            case BonusAction.BONUS_MELEE_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK:
                 combatant.ammo[action.factory.name] -= 1
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 combatant.curr_rage_uses -= 1

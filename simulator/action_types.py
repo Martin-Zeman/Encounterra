@@ -2,7 +2,8 @@ from enum import Enum, auto
 
 
 class Action(Enum):
-    ATTACK = auto()
+    MELEE_ATTACK = auto()
+    RANGED_ATTACK = auto()
     RECKLESS_ATTACK = auto()
     DODGE = auto()
     DASH = auto()
@@ -16,7 +17,8 @@ class Action(Enum):
     TWINNED_HASTE = auto()
 
 class BonusAction(Enum):
-    BONUS_ATTACK = auto()
+    BONUS_MELEE_ATTACK = auto()
+    BONUS_RANGED_ATTACK = auto()
     PAM_BONUS_ATTACK = auto()
     RAGE = auto()
     TOTEM_RAGE = auto()
@@ -48,7 +50,8 @@ class Movement(Enum):
 
 
 class HasteAction(Enum):
-    HASTE_ATTACK = auto()
+    HASTE_MELEE_ATTACK = auto()
+    HASTE_RANGED_ATTACK = auto()
     HASTE_DASH = auto()
     HASTE_DISENGAGE = auto()
     HASTE_HIDE = auto()

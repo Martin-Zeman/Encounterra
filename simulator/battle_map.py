@@ -660,6 +660,24 @@ class Map:
             res = None
         return res
 
+    def inflate_coords(self, coords: CombatantCoords, inflate_to_size):
+        """
+        A helper function which inflated the given CombatantCoords to a given size (they may already by inflated but may need further inflation
+        due to the size of the other combatant
+        :param coords: target combatant coordinates
+        :param inflate_to_size: size of the other combatant
+        :return: inflated set of coordinates (as x, y tuples)
+        """
+        offset = 0
+        if inflate_to_size.value > Size.MEDIUM.value:
+            offset = inflate_to_size.value
+
+        inflated = set()
+        for coord in coords.get():
+            for x, y in [(x, y) for x in range(coord[0] - offset, coord[0] + 1) for y in range(coord[1] - offset, coord[1] + 1)]:
+                inflated.add((max(0, x), max(0, y)))
+        return inflated
+
     def get_free_adjacent_coords(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1):
         """
         Returns free and accessible squares adjacent (up to the range distance) to a given coordinate
@@ -670,19 +688,11 @@ class Map:
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         assert rng > 0
-        # First inflate it by the size of the combatant looking for the path
-        offset = 0
-        if inflate_to_size.value > Size.MEDIUM.value:
-            offset = inflate_to_size.value
-
-        inflated = set()
-        for coord in coords.get():
-            for x, y in [(x, y) for x in range(coord[0] - offset, coord[0] + 1) for y in range(coord[1] - offset, coord[1] + 1)]:
-                inflated.add((max(0, x), max(0, y)))
+        inflated = self.inflate_coords(coords, inflate_to_size)
 
         adjacent_coords = set()
         for coord in inflated:
-            for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng) for j in range(-rng, rng) if i != 0 or j != 0]:
+            for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1) if i != 0 or j != 0]:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size:
                     continue
                 square = self.grid[x, y]
@@ -691,6 +701,33 @@ class Map:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((x, y))
         return adjacent_coords
+
+
+    def get_free_coords_in_range(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1):
+        """
+        Returns free and accessible squares that are at the most rng away from the coords as measured by cartesian distance
+        :param coords: target combatant coordinates
+        :param shortest_paths: shortest paths to all squares (result of Dijkstra) to be able to recognize inflated terrain and map edges
+        :param inflate_to_size: inflate for the sake of pathfinding BY larger combatants
+        :param rng: maximum range of what is considered 'adjacent'
+        :return: free adjacent coordinates as a set of tuples (x, y)
+        """
+        assert rng > 0
+        # First inflate it by the size of the combatant looking for the path
+        inflated = self.inflate_coords(coords, inflate_to_size)
+
+        coords_in_range = set()
+        for coord in inflated:
+            # the rng can be used as a bounding box for the search
+            for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1) if i != 0 or j != 0]:
+                if x < 0 or x >= self.size or y < 0 or y >= self.size and self.get_cartesian_distance(coords, CombatantCoords(np.array([x, y]))) > rng:
+                    continue
+                square = self.grid[x, y]
+                consider_shortest_paths = (x, y) in shortest_paths.keys() if shortest_paths is not None else True
+                if square.is_empty() and consider_shortest_paths and (x, y) not in inflated:
+                    # have to use tuples since np.array is unhashable
+                    coords_in_range.add((x, y))
+        return coords_in_range
 
 
     def get_adjacent_coords(self, coords: CombatantCoords):

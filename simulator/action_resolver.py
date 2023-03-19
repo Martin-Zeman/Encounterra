@@ -267,7 +267,7 @@ class ActionResolver:
         # TODO Conditions
         target = attack.target_combatant
         assert target
-        if attack.factory.attack_type is AttackFactory.Type.MELEE:
+        if FactoryFlags.IS_MELEE in attack.factory.flags:
             modifiers = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
         else:
             modifiers = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}

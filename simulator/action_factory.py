@@ -1,6 +1,8 @@
 from simulator.actions.attack import Attack
 from simulator.actions.dodge import Dodge
 from simulator.actions.dash import Dash
+from simulator.actions.melee_attack import MeleeAttackFactory
+from simulator.actions.ranged_attack import RangedAttackFactory
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
 from simulator.spells.chaosbolt import Chaosbolt
@@ -32,7 +34,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 TO_FACTORY = {
-    Action.ATTACK: AttackFactory,
+    Action.MELEE_ATTACK: MeleeAttackFactory,
+    Action.RANGED_ATTACK: RangedAttackFactory,
     Action.RECKLESS_ATTACK: RecklessAttackFactory,
     Action.DODGE: DodgeFactory,
     Action.DASH: None,
@@ -45,8 +48,9 @@ TO_FACTORY = {
     Action.TWINNED_FIREBOLT: TwinnedFireboltFactory,
     Action.TWINNED_HASTE: TwinnedHasteFactory,
 
-    BonusAction.BONUS_ATTACK: AttackFactory,
-    BonusAction.PAM_BONUS_ATTACK: AttackFactory,
+    BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
+    BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
+    BonusAction.PAM_BONUS_ATTACK: MeleeAttackFactory,
     BonusAction.RAGE: RageFactory,
     BonusAction.TOTEM_RAGE: TotemRageFactory,
     BonusAction.MISTY_STEP: MistyStepFactory,
@@ -59,21 +63,22 @@ TO_FACTORY = {
     BonusAction.QUICKENED_HASTE: HasteFactory,
 
     Reaction.SHIELD: ShieldFactory,
-    Reaction.REACTION_ATTACK: AttackFactory,
+    Reaction.REACTION_ATTACK: MeleeAttackFactory,
 
-    HasteAction.HASTE_ATTACK: AttackFactory,
+    HasteAction.HASTE_MELEE_ATTACK: MeleeAttackFactory,
+    HasteAction.HASTE_RANGED_ATTACK: RangedAttackFactory,
     HasteAction.HASTE_DISENGAGE: DisengageFactory,
     HasteAction.HASTE_HIDE: None,
     HasteAction.HASTE_DASH: None
 }
 TO_QUICKENED = {Action.FIREBALL: BonusAction.QUICKENED_FIREBALL, Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT, Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT, Action.HASTE: BonusAction.QUICKENED_HASTE}
 TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}
-TO_HASTED = {Action.ATTACK: HasteAction.HASTE_ATTACK, Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE}
+TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE}
 
 def action_factory(combatant, effect_tracker, action_type, *args):
     if isinstance(action_type, Action):
         match action_type:
-            case Action.ATTACK:
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK:
                 return Attack(action_type, *args)
             case Action.DODGE:
                 return Dodge(combatant)
@@ -97,7 +102,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 return None
     elif isinstance(action_type, BonusAction):
         match action_type:
-            case BonusAction.BONUS_ATTACK | BonusAction.PAM_BONUS_ATTACK:
+            case BonusAction.BONUS_MELEE_ATTACK | BonusAction.BONUS_RANGED_ATTACK  | BonusAction.PAM_BONUS_ATTACK:
                 return Attack(action_type, *args)
             case BonusAction.TOTEM_RAGE:
                 return TotemRage(combatant)
@@ -137,7 +142,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 return None
     elif isinstance(action_type, HasteAction):
         match action_type:
-            case HasteAction.HASTE_ATTACK:
+            case HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
                 return Attack(action_type, *args)
             case HasteAction.HASTE_DASH:
                 return Dash()

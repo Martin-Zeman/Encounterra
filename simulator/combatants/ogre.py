@@ -15,9 +15,9 @@ class Ogre(Combatant):
     def __init__(self, effect_tracker, name="Ogre"):
         super().__init__(effect_tracker, name, level=1, hp=59, ac=11, init_bonus=-1, spell_to_hit=0, speed=40, resistances=set(), dc=0)
         self.size = Size.LARGE
-        self.greatclub_attack = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
-        self.javelin_attack = self.add_ability(Action.ATTACK,  name="Javelin", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, attack_type=AttackFactory.Type.RANGED)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.greatclub_attack = self.add_ability(Action.MELEE_ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
+        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK,  name="Javelin", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
         self.movement_generator = None
         self.selected_target = None
         self.path = None
@@ -67,18 +67,18 @@ class Ogre(Combatant):
                 # this means that either the path has been exhausted and we're still not in range => ranged attack
                 self.movement_generator = None
                 if self.has_action:
-                    self.javelin_attack[1].action_type = Action.ATTACK
+                    self.javelin_attack[1].action_type = Action.RANGED_ATTACK
                 elif self.has_haste_action:
-                    self.javelin_attack[1].action_type = HasteAction.HASTE_ATTACK
+                    self.javelin_attack[1].action_type = HasteAction.HASTE_RANGED_ATTACK
                 else:
                     return None
                 return self.javelin_attack[1].create(self.selected_target)
         else:
             # Melee attack
             if self.has_action:
-                self.greatclub_attack[1].action_type = Action.ATTACK
+                self.greatclub_attack[1].action_type = Action.MELEE_ATTACK
             elif self.has_haste_action:
-                self.greatclub_attack[1].action_type = HasteAction.HASTE_ATTACK
+                self.greatclub_attack[1].action_type = HasteAction.HASTE_MELEE_ATTACK
             else:
                 return None
             return self.greatclub_attack[1].create(self.selected_target)

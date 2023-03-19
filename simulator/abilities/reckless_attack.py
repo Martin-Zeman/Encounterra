@@ -19,10 +19,11 @@ class RecklessAttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, attack_type, crit_range=1, max_num=1, ammo=math.inf, on_hit=None):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, max_num=1, ammo=math.inf, on_hit=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.HAS_AMMO
+        self.flags |= FactoryFlags.IS_MELEE
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -31,11 +32,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.dmg_type = dmg_type
         self.range = attack_range
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
-        self.attack_type = attack_type  # MELEE or RANGED
-        if self.action_type is self.Type.MELEE:
-            self.ammo = math.inf
-        else:
-            self.ammo = ammo
+        self.ammo = math.inf
         self.crit_range = crit_range
         self.max_num = max_num  # the maximum number of an attack of this type, may differ from total num attacks
         self.on_hit = on_hit
@@ -50,10 +47,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
-        if self.attack_type is RecklessAttackFactory.Type.MELEE:
-            potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)
-        else:
-            potential_targets = battle_map.get_enemies_within_radius(combatant, combatant.movement + self.range)
+        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)
         hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, pt.ac, self.crit_range)) for pt
                           in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))

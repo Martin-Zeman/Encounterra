@@ -57,9 +57,14 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 res &= combatant.curr_sorcery_points > 2
                 return res
-            case Action.ATTACK:
+            case Action.MELEE_ATTACK:
                 res = (combatant.has_action or (combatant.num_attacks > combatant.curr_num_attacks > 0)) and not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                return res
+            case Action.RANGED_ATTACK:
+                res = (combatant.has_action or (combatant.num_attacks > combatant.curr_num_attacks > 0)) and not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= action.target_combatant.is_alive() and battle_map.get_cartesian_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
             case Action.RECKLESS_ATTACK:
@@ -205,7 +210,7 @@ def check_feasibility_light(combatant, action, battle_map):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 2
                 return res
-            case Action.ATTACK:
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK:
                 # Either not attacked yet, or already attacked but still has attacks left. In both cases cannot be used once attacked recklessly
                 res = combatant.has_action
                 # if Passive.MULTIATTACK in combatant.passive:

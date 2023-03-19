@@ -20,11 +20,10 @@ class StoneGiant(Combatant):
     def __init__(self, effect_tracker, name="Stone Giant"):
         super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
         self.size = Size.HUGE
-        self.club = self.add_ability(Action.ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, attack_type=AttackFactory.Type.MELEE, max_num=2)
-        self.rock = self.add_ability(Action.ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
-                                            dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1,
-                                            attack_type=AttackFactory.Type.RANGED, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15, attack_type=AttackFactory.Type.MELEE)
+        self.club = self.add_ability(Action.MELEE_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3, max_num=2)
+        self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
+                                            dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15)
         # self.attack_fsm = TwoMeleeOneRanged()
         # self.attack_mapping = {club[1]: (1, TwoMeleeOneRanged.melee), rock[1]: (2, TwoMeleeOneRanged.ranged)}
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
@@ -109,9 +108,9 @@ class StoneGiant(Combatant):
                         # this means that either the path has been exhausted and we're still not in range => ranged attack
                         self.movement_generator = None
                         if self.has_action:
-                            self.rock[1].action_type = Action.ATTACK
+                            self.rock[1].action_type = Action.RANGED_ATTACK
                         elif self.has_haste_action:
-                            self.rock[1].action_type = HasteAction.HASTE_ATTACK
+                            self.rock[1].action_type = HasteAction.HASTE_RANGED_ATTACK
                         else:
                             return None
                         return self.rock[1].create_best(self, battle_map)

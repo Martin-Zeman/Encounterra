@@ -12,8 +12,8 @@ class DragonclawCultist(Combatant):
 
     def __init__(self, effect_tracker, name="Dragonclaw"):
         super().__init__(effect_tracker, name, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.add_ability(Action.ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, attack_type=AttackFactory.Type.MELEE)
+        self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.melee_reaction_range = 1  # TODO: maybe add a lookup here
         self.has_pack_tactics = True
@@ -31,7 +31,7 @@ class DragonclawCultist(Combatant):
             if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:
                 self.multiattack_in_progress = True
             if self.curr_num_attacks and self.multiattack_in_progress:
-                attack_args = self.attack_args[Action.ATTACK]
+                attack_args = self.attack_args[Action.MELEE_ATTACK]
                 attack_args[2] = self.selected_target  # sets the target
                 logger.info(f"{self.name} uses action {attack_args[0]} against {self.selected_target}",
                              extra={"team": self.team_color})
