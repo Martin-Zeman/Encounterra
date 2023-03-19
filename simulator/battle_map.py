@@ -720,7 +720,7 @@ class Map:
         for coord in inflated:
             # the rng can be used as a bounding box for the search
             for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1) if i != 0 or j != 0]:
-                if x < 0 or x >= self.size or y < 0 or y >= self.size and self.get_cartesian_distance(coords, CombatantCoords(np.array([x, y]))) > rng:
+                if x < 0 or x >= self.size or y < 0 or y >= self.size or self.get_cartesian_distance(coords.get(), np.array([[x, y]])) > rng:
                     continue
                 square = self.grid[x, y]
                 consider_shortest_paths = (x, y) in shortest_paths.keys() if shortest_paths is not None else True

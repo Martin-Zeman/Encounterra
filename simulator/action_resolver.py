@@ -186,8 +186,8 @@ class ActionResolver:
             dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
             logger.info(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
-            spell.target.receive_dmg(dmg, spell.dmg_type)
-            if not spell.target.is_alive():
+            target.receive_dmg(dmg, spell.dmg_type)
+            if not target.is_alive():
                 self.battle_map.remove_combatant(target)
             return ActionResult.DMG
         else:

@@ -24,6 +24,6 @@ class RangedAttackFactory(AttackFactory):
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
-        combatant_coords = battle_map.get_combatant_coordinates[self.combatant]
-        return battle_map.get_free_coords_in_range(combatant_coords, shortest_paths, self.combatant.size, self.range)
+    def get_eligible_coords(self, target_combatant, battle_map, shortest_paths):
+        target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
+        return battle_map.get_free_coords_in_range(target_combatant_coords, shortest_paths, self.combatant.size, self.range)

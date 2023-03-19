@@ -24,7 +24,7 @@ from simulator.spells.fireball import FireballFactory
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.twinned_firebolt import TwinnedFireboltFactory
-from simulator.spells.twinned_haste import TwinnedHasteFactory
+from simulator.spells.twinned_haste import TwinnedHasteFactory, TwinnedHaste
 from simulator.spells.chaosbolt import ChaosboltFactory
 from simulator.abilities.totem_rage import TotemRageFactory
 from simulator.abilities.rage import RageFactory
@@ -96,7 +96,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 logger.info("Twinned Firebolt")
                 return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
             case Action.TWINNED_HASTE:
-                return Haste(action_type, *args, combatant, effect_tracker)
+                return TwinnedHaste(action_type, *args, combatant, effect_tracker)
             case _:
                 logger.error("Unknown action type")
                 return None

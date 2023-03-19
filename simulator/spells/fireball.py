@@ -17,6 +17,12 @@ class FireballFactory(DirectThreatFactory):
         self.caster = caster
         self.has_spell_sculpting = has_spell_sculpting
 
+    def get_twinned_kwargs(self):
+        return {'dc': self.dc, 'caster': self.caster, 'has_spell_sculpting': self.has_spell_sculpting}
+
+    def get_quickened_kwargs(self):
+        return {'dc': self.dc, 'caster': self.caster, 'has_spell_sculpting': self.has_spell_sculpting}
+
     def find_best_args(self, combatant, battle_map):
         coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, Fireball.spell_range.value, SpellStats.TRANSLATE_RADIUS[Fireball.target])
         return coord

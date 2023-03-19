@@ -1,3 +1,4 @@
+import inspect
 from enum import Enum, Flag, auto
 import random
 import re
@@ -207,6 +208,20 @@ def get_attacks(combatant):
     attacks = [af[1] for af in combatant.action_factories if FactoryFlags.IS_ATTACK_LIKE in af[1].flags]
     attacks.extend([baf[1] for baf in combatant.bonus_action_factories if FactoryFlags.IS_ATTACK_LIKE in baf[1].flags])
     return attacks
+
+def get_haste_eligile_attacks(combatant):
+    attacks = [af[1] for af in combatant.action_factories if FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK in af[1].flags]
+    return attacks
+
+
+# def get_args_for_class_as_kwargs_with_values_from_instance(cls, instance):
+#     """
+#     The problem here is that the instance is of another type
+#     """
+#     args = [i for i in inspect.signature(cls.__init__).parameters.keys()]
+#     # TODO figure out what to do with kwargs, may become relevant in the future
+#     # Dropping self and kwargs
+#     return {a: getattr(instance, a) for a in args[1:-1]}
 
 
 # def init_coroutine(func):

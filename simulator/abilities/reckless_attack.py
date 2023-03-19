@@ -22,6 +22,7 @@ class RecklessAttackFactory(DirectThreatFactory):
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, max_num=1, ammo=math.inf, on_hit=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
+        self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
         self.flags |= FactoryFlags.HAS_AMMO
         self.flags |= FactoryFlags.IS_MELEE
         self.name = name

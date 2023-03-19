@@ -1,7 +1,7 @@
 import copy
 import random
 import math
-
+import inspect
 from simulator.actions.actoid import FactoryFlags
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype
 from simulator.action_factory import *
@@ -148,7 +148,7 @@ class Combatant(ABC):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
                     return self.action_factories[-1]
                 case Action.FIREBOLT:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.FIREBOLT, self)))
                     return self.action_factories[-1]
                 case Action.CHAOSBOLT:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
@@ -245,29 +245,37 @@ class Combatant(ABC):
             match action_type:
                 case MetaAction.QUICKENED_SPELL:
                     assert Passive.METAMAGIC in self.passive
-                    for action in self.action_factories:
+                    for af in self.action_factories:
                         try:
-                            quickened_action = TO_QUICKENED[action]
-                            self.bonus_action_factories.append((quickened_action, TO_FACTORY[quickened_action]))
+                            quickened_action = TO_QUICKENED[af[0]]
+                            quickened_action_factory = TO_FACTORY[quickened_action]
+                            qaf_kwargs = af[1].get_quickened_kwargs()
+                            qaf_kwargs['action_type'] = quickened_action
+                            self.bonus_action_factories.append((quickened_action, quickened_action_factory(**qaf_kwargs)))
                             return self.bonus_action_factories[-1]
                         except KeyError:
                             pass
                 case MetaAction.TWINNED_SPELL:
                     assert Passive.METAMAGIC in self.passive
-                    for action in self.action_factories:
+                    for af in self.action_factories:
                         try:
-                            twinned_action = TO_TWINNED[action]
-                            self.action_factories.append((twinned_action, TO_FACTORY[twinned_action]))
-                            return self.action_factories[-1]
+                            twinned_action = TO_TWINNED[af[0]]
+                            twinned_action_factory = TO_FACTORY[twinned_action]
+                            taf_kwargs = af[1].get_twinned_kwargs()
+                            taf_kwargs['action_type'] = twinned_action
+                            self.action_factories.append((twinned_action, twinned_action_factory(**taf_kwargs)))
                         except KeyError:
                             pass
-                    for bonus_action in self.bonus_action_factories:
+                    for baf in self.bonus_action_factories:
                         try:
-                            twinned_action = TO_TWINNED[bonus_action]
-                            self.bonus_action_factories.append((twinned_action, TO_FACTORY[twinned_action]))
-                            return self.bonus_action_factories[-1]
+                            twinned_bonus_action = TO_TWINNED[baf[0]]
+                            twinned_bonus_action_factory = TO_FACTORY[twinned_bonus_action]
+                            tbaf_kwargs = af[1].get_twinned_kwargs()
+                            tbaf_kwargs['action_type'] = twinned_bonus_action
+                            self.bonus_action_factories.append((twinned_bonus_action, twinned_bonus_action_factory(**tbaf_kwargs)))
                         except KeyError:
                             pass
+                    return None  # There can be multiple ones here, cannot return them all
                 case MetaAction.EMPOWERED_SPELL:
                     assert Passive.METAMAGIC in self.passive
                     return None

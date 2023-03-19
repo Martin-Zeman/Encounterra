@@ -6,7 +6,7 @@ from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat import mean_dmg, dmg_decrement_for_ac_flat
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 from functools import reduce
-from simulator.misc import ROUND_HORIZON, get_attacks
+from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
 import logging
 
 logger = logging.getLogger(__name__)
@@ -18,17 +18,24 @@ class HasteFactory(ThreatModifierFactory):
         self.caster = caster
         self.effect_tracker = effect_tracker
 
+    def get_twinned_kwargs(self):
+        return {'effect_tracker': self.effect_tracker, 'caster': self.caster}
+
+    def get_quickened_kwargs(self):
+        return {'effect_tracker': self.effect_tracker, 'caster': self.caster}
+
 
     @staticmethod
     def get_allies_sorted_by_threat(combatant, battle_map):
         allies = battle_map.get_allies_within_radius(combatant, Haste.spell_range.value)
+        allies.append(combatant)
         enemies = battle_map.get_enemies(combatant)
         threat_per_ally = 0
         ret = []
         for ally in allies:
             # This doesn't take different attack ranges into account
             max_attack_dmg = 0
-            attacks = get_attacks(ally)
+            attacks = get_haste_eligile_attacks(ally)
             for attack in attacks:
                 potential_targets = battle_map.get_enemies_within_hop_distance(ally, ally.speed + attack.range + 1)
                 if not potential_targets:
@@ -75,7 +82,7 @@ class HasteFactory(ThreatModifierFactory):
         enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
-        attacks = get_attacks(target)
+        attacks = get_haste_eligile_attacks(target)
         for attack in attacks:
             potential_targets = battle_map.get_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:

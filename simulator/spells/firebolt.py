@@ -12,13 +12,20 @@ from simulator.utils.roll_modifiers import ROLL_MODIFIER_CRIT, ROLL_MODIFIER
 logger = logging.getLogger(__name__)
 
 class FireboltFactory(DirectThreatFactory):
-    def __init__(self, to_hit, combatant_level, action_type, caster):
+    def __init__(self, to_hit, action_type, caster):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
-        self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT
-        self.dmg_dice = self.get_dmg_dice(combatant_level)
+        self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
+        self.dmg_dice = self.get_dmg_dice(caster.level)
         self.caster = caster
+
+
+    def get_twinned_kwargs(self):
+        return {'to_hit': self.to_hit, 'caster': self.caster}
+
+    def get_quickened_kwargs(self):
+        return {'to_hit': self.to_hit, 'caster': self.caster}
 
     @staticmethod
     def get_dmg_dice(level):
@@ -86,7 +93,8 @@ class FireboltFactory(DirectThreatFactory):
             total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
             potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total], self.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(Firebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)), potential_targets)
+            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total], self.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(Firebolt.dmg_type))
+                                             - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)), potential_targets)
             dmg_acc /= len(potential_targets)
             return dmg_acc
         except KeyError:

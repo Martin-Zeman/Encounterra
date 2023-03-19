@@ -458,6 +458,42 @@ def test_get_free_adjacent_coords_huge_with_terrain(battle_map, combatant1):
     assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
 
 
+def test_get_free_coords_in_range_medium(battle_map, teams, combatant1):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
+    coords = battle_map.get_combatant_position(combatant1)
+    free_coords = battle_map.get_free_coords_in_range(coords, rng=1)
+    # only directly above, below and to the sides
+    assert free_coords == {(4, 7), (6, 7), (5, 8), (5, 6)}
+
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([8, 13])))
+    coords = battle_map.get_combatant_position(combatant1)
+    free_coords = battle_map.get_free_coords_in_range(coords, rng=2)
+    assert free_coords == {(6, 13), (7, 13), (9, 13), (10, 13), (7, 14), (8, 14), (9, 14), (7, 12), (8, 12), (9, 12), (8, 11)}
+
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([5, 5])))
+    coords = battle_map.get_combatant_position(combatant1)
+    free_coords = battle_map.get_free_coords_in_range(coords, rng=4)
+    assert (1, 1) not in free_coords and (2, 1) not in free_coords and (3, 1) not in free_coords and (4, 1) not in free_coords and (6, 1) not in free_coords
+    assert (7, 1) not in free_coords and (8, 1) not in free_coords
+    assert (1, 2) not in free_coords and (1, 3) not in free_coords and (1, 4) not in free_coords and (1, 6) not in free_coords and (1, 7) not in free_coords
+    assert (1, 8) not in free_coords and (8, 8) not in free_coords
+    assert (2, 8) not in free_coords and (8, 8) not in free_coords and (9, 8) not in free_coords
+    assert (9, 5) in free_coords and (1, 5) in free_coords and (5, 1) in free_coords and (5, 9) in free_coords
+
+def test_get_free_coords_in_range_large(battle_map, teams, combatant1):
+    combatant1.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([2, 2]), combatant1.size))
+    coords = battle_map.get_combatant_position(combatant1)
+    free_coords = battle_map.get_free_coords_in_range(coords, rng=1)
+    assert free_coords == {(2, 1), (3, 1), (1, 2), (4, 2), (1, 3), (4, 3), (2, 4), (3, 4)}
+
+    battle_map.move_combatant(combatant1, CombatantCoords(np.array([6, 8]), combatant1.size))
+    coords = battle_map.get_combatant_position(combatant1)
+    free_coords = battle_map.get_free_coords_in_range(coords, rng=2)
+    assert free_coords == {(6, 6), (7, 6), (5, 7), (6, 7), (7, 7), (8, 7), (4, 8), (5, 8), (8, 8), (9, 8), (4, 9), (5, 9), (8, 9), (9, 9), (5, 10), (6, 10), (7, 10), (8, 10), (6, 11), (7, 11)}
+
 def test_get_adjacent_coords_medium(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([6, 7])))

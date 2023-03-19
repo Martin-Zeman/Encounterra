@@ -95,9 +95,12 @@ def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier,
     for pa in potential_attackers:
         max_incoming_threat = 0
         for f in pa.action_factories:
-            if factory_flags & f[1].flags:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
-                    "roll_modifier": roll_modifier}))
+            try:
+                if factory_flags & f[1].flags:  # Checks for any overlap in flags
+                    max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                        "roll_modifier": roll_modifier}))
+            except AttributeError:
+                print("FIXME")
         incoming_threat_mod_acc += max_incoming_threat
 
         max_incoming_threat = 0

@@ -1,5 +1,6 @@
+from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, percent_of_curr_hp
+from simulator.misc import DamageType, percent_of_curr_hp, avg_roll
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce
 
@@ -7,15 +8,18 @@ from simulator.threat import mean_dmg
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 import logging
 
+from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER_CRIT, ROLL_MODIFIER
+
 logger = logging.getLogger(__name__)
 
 class TwinnedFireboltFactory(DirectThreatFactory):
-    def __init__(self, to_hit, combatant_level, action_type):
+    def __init__(self, to_hit, action_type, caster):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
-        self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT
-        self.dmg_dice = self.get_dmg_dice(combatant_level)
+        self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
+        self.dmg_dice = FireboltFactory.get_dmg_dice(caster.level)
+        self.caster = caster
 
     def find_best_args(self, combatant, battle_map):
         # TODO Should this include action type? Cause for a twinned version you would need multiple targets
@@ -50,9 +54,27 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         Calculates the average dmg increment over all targets in range
         """
         try:
-            to_hit_bonus = modified_stats['to_hit']
+            mod_to_hit_flat = modified_stats['to_hit_flat']
+        except KeyError:
+            mod_to_hit_flat = 0
+        try:
+            mod_to_hit_die = modified_stats['to_hit_die']
+        except KeyError:
+            mod_to_hit_die = '0d0'
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+            to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+            total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
+
             potential_targets = battle_map.get_enemies_within_radius(TwinnedFirebolt.spell_range.value)
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(self.to_hit + to_hit_bonus, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFirebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFirebolt.dmg_type)), potential_targets)
+            dmg_acc = reduce(
+                lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total], self.dmg_dice, 0, pt.ac,
+                                               total_crit, pt.is_resistant_to(TwinnedFirebolt.dmg_type))
+                                - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFirebolt.dmg_type)),
+                potential_targets)
             dmg_acc /= len(potential_targets)
             return dmg_acc * 2
         except IndexError:
@@ -60,9 +82,36 @@ class TwinnedFireboltFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         if battle_map.get_cartesian_distance(self.caster, target) <= TwinnedFirebolt.spell_range.value:
+            # Cannot target the same combatant twice
             return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(TwinnedFirebolt.dmg_type))
         else:
             return 0
+
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications.
+        This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
+        against fireball or bane on attack rolls etc.
+        """
+        try:
+            mod_to_hit_flat = modified_stats['to_hit_flat']
+        except KeyError:
+            mod_to_hit_flat = 0
+        try:
+            mod_to_hit_die = modified_stats['to_hit_die']
+        except KeyError:
+            mod_to_hit_die = '0d0'
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+        total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
+
+        return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(TwinnedFirebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
+                    TwinnedFirebolt.dmg_type))
 
 class TwinnedFirebolt(Actoid, DirectThreat):
 
@@ -81,23 +130,15 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         self.targets = targets
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
         return f"Twinned Firebolt on {self.targets[0]} and {self.targets[1]}"
 
-    # @staticmethod
-    # def calculate_threat_approx(combatant, battle_map, *args, **kwargs):
-    #     potential_targets = battle_map.get_enemies_within_radius(TwinnedFirebolt.spell_range.value)
-    #     dmg_dice = TwinnedFireboltFactory.get_dmg_dice(combatant.level)
-    #     dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(combatant.spell_to_hit, dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFirebolt.dmg_type)))
-    #     dmg_acc /= len(potential_targets)
-    #     dmg_acc *= 2
-    #     return dmg_acc
-
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        dmg_acc = mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.target.is_resistant_to(TwinnedFirebolt.dmg_type))
+        dmg_acc = mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.targets[0].is_resistant_to(TwinnedFirebolt.dmg_type))
         if self.targets[1] is not None:
-            dmg_acc += mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.target.is_resistant_to(TwinnedFirebolt.dmg_type))
+            dmg_acc += mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.targets[1].is_resistant_to(TwinnedFirebolt.dmg_type))
         return dmg_acc
 
 

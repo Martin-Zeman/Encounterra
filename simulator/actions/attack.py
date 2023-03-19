@@ -22,6 +22,7 @@ class AttackFactory(DirectThreatFactory):
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, max_num=1, on_hit=None, ammo=math.inf):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
+        self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
         self.flags |= FactoryFlags.HAS_AMMO
         self.name = name
         self.combatant = combatant
@@ -61,9 +62,9 @@ class AttackFactory(DirectThreatFactory):
         # return potential_targets[0][0] if potential_targets else None
 
     @abstractmethod
-    def get_eligible_coords(self, battle_map, shortest_paths):
-        combatant_coords = battle_map.get_combatant_coordinates[self.combatant]
-        return battle_map.get_free_adjacent_coords(combatant_coords, shortest_paths, self.combatant.size, self.range)
+    def get_eligible_coords(self, target_combatant, battle_map, shortest_paths):
+        target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
+        return battle_map.get_free_adjacent_coords(target_combatant_coords, shortest_paths, self.combatant.size, self.range)
 
     def create_best(self, combatant, battle_map):
         best_args = self.find_best_args(combatant, battle_map)

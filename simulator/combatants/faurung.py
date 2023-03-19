@@ -66,9 +66,9 @@ class Faurung(Combatant):
         feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
         # feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
         if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:# or len(feasible_free_actions > 0):
-            feasible_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_action_factories]))
-            feasible_bonus_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_bonus_action_factories]))
-            feasible_haste_actions = list(filter(lambda item: item is not None, [fa[1].create_best(self, battle_map) for fa in feasible_haste_action_factories]))
+            feasible_actions = list(filter(lambda item: item is not None, [faf[1].create_best(self, battle_map) for faf in feasible_action_factories]))
+            feasible_bonus_actions = list(filter(lambda item: item is not None, [fbaf[1].create_best(self, battle_map) for fbaf in feasible_bonus_action_factories]))
+            feasible_haste_actions = list(filter(lambda item: item is not None, [fhaf[1].create_best(self, battle_map) for fhaf in feasible_haste_action_factories]))
             # feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
 
             action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]
