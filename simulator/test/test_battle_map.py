@@ -5,6 +5,7 @@ from simulator.combatants.faurung import Faurung
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.effects.effect_tracker import EffectTracker
+from simulator.feasibility import get_feasible_actions
 from simulator.misc import DistanceMetric, Size, Side, Conditions
 from simulator.spells.fireball import Fireball
 from simulator.spells.spell import SpellStats
@@ -904,3 +905,20 @@ def test_get_free_coords_sorted_by_distance_from_enemies(battle_map, teams, comb
     battle_map.move_combatant(combatant3, CombatantCoords(np.array([0, 0]), combatant3.size))
     free_coords = battle_map.get_free_coords_sorted_by_distance_from_enemies(combatant1)
     assert np.array_equal(free_coords[0], np.array([14, 14])) or np.array_equal(free_coords[0], np.array([13, 14]))
+
+
+def test_get_threat_adjacency_matrix(battle_map, teams, combatant1, combatant2):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([3, 4])))
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([8, 4])))
+
+    battle_map.place_circular_element(np.array([7, 3]),  Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([7, 4]),  Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([7, 5]),  Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.build_adjacency_matrix()
+    adj_mask = battle_map.build_combatant_adjacency_mask(combatant1)
+    adj = np.multiply(battle_map.base_adjacency_matrix, adj_mask)
+    feasible_action_factories = get_feasible_actions(combatant1.action_factories, combatant1, battle_map)
+    feasible_bonus_action_factories = get_feasible_actions(combatant1.bonus_action_factories, combatant1, battle_map)
+    threat_adj = battle_map.get_threat_adjacency_matrix(adj, combatant1, feasible_action_factories, feasible_bonus_action_factories, [])

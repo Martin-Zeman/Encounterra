@@ -13,4 +13,4 @@ Allies are considered impassable same as enemies
 no multiclassing -> can only have spellslots of one class
 - dmg type of chaos bolt is determined by a randomly selected dmg die
 - misty step threat calculation doesn't take into account the loss of threat for not being able to cast a leveled spell afterwards
-just one reaction attack used for AoO and PAM
+- just one kind of a reaction attack per combatant

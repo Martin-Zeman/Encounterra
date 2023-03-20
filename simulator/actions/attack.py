@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+from simulator.action_types import BonusActionOrdering
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce
 from simulator.misc import percent_of_curr_hp, avg_roll
@@ -24,6 +25,7 @@ class AttackFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
         self.flags |= FactoryFlags.HAS_AMMO
+        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -32,7 +34,7 @@ class AttackFactory(DirectThreatFactory):
         self.dmg_type = dmg_type
         self.range = attack_range
         self.short_range = attack_range // 4
-        self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
+        self.action_type = action_type  # MELEE_ATTACK, RANGED_ATTACK, BONUS_MELEE_ATTACK, BONUS_RANGED_ATTACK REACTION_ATTACK, HASTE_MELEE...
         self.crit_range = crit_range
         self.max_num = max_num  # the maximum number of an attack of this type, may differ from total num attacks
         self.on_hit = on_hit
@@ -61,10 +63,12 @@ class AttackFactory(DirectThreatFactory):
         # potential_targets.sort(key=lambda e: e[1], reverse=True)
         # return potential_targets[0][0] if potential_targets else None
 
-    @abstractmethod
-    def get_eligible_coords(self, target_combatant, battle_map, shortest_paths):
+    def get_eligible_coords(self, target_combatant, battle_map):
         target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
-        return battle_map.get_free_adjacent_coords(target_combatant_coords, shortest_paths, self.combatant.size, self.range)
+        return battle_map.get_free_adjacent_coords(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
+
+    def get_eligible_targets(self, battle_map):
+        return battle_map.get_enemies(self.combatant)
 
     def create_best(self, combatant, battle_map):
         best_args = self.find_best_args(combatant, battle_map)

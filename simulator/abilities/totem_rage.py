@@ -2,7 +2,7 @@ from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.action_types import BonusAction
+from simulator.action_types import BonusAction, BonusActionOrdering
 from functools import reduce
 from simulator.misc import ROUND_HORIZON
 from simulator.abilities.rage import RageFactory
@@ -17,6 +17,9 @@ class TotemRageFactory(ThreatModifierFactory):
     def __init__(self, combatant):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_MODIFIER
+        self.flags |= FactoryFlags.COORD_AGNOSTIC
+        self.flags |= FactoryFlags.TARGETS_SELF
+        self.bonus_action_ordering = BonusActionOrdering.GOES_BEFORE_ACTION
         self.combatant = combatant
         self.action_type = BonusAction.TOTEM_RAGE
 
@@ -42,6 +45,31 @@ class TotemRageFactory(ThreatModifierFactory):
             max_threat = max(dmg_inc, max_threat)
 
         total_threat += max_threat
+        # Haste factories wouldn't change the result here so we're omitting them
+        max_incoming_threat = 0
+        for f in target.action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target(battle_map, self.combatant))
+        total_threat += max_incoming_threat / 2
+
+        max_incoming_threat = 0
+        for f in target.bonus_action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target(battle_map, self.combatant))
+        total_threat += max_incoming_threat / 2
+        return total_threat * ROUND_HORIZON
+
+    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
+        """
+        Calculates the threat the factory is capable of dealing to a specific target by modifying a specific given attack factory.
+        """
+        rage_bonus = RageFactory.get_rage_bonus(self.combatant.level)
+        total_threat = 0
+        # This doesn't take different attack ranges into account
+        # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
+        dmg_inc = attack_factory.calculate_threat_to_target_mod(battle_map, self, {"dmg_bonus_flat": rage_bonus})
+
+        total_threat += dmg_inc
         # Haste factories wouldn't change the result here so we're omitting them
         max_incoming_threat = 0
         for f in target.action_factories:

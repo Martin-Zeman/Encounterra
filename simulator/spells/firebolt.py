@@ -1,3 +1,4 @@
+from simulator.action_types import BonusActionOrdering
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, percent_of_curr_hp, RollModifier, avg_roll
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -15,6 +16,7 @@ class FireboltFactory(DirectThreatFactory):
     def __init__(self, to_hit, action_type, caster):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
+        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
         self.dmg_dice = self.get_dmg_dice(caster.level)

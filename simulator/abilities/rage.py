@@ -2,7 +2,7 @@ from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.action_types import BonusAction
+from simulator.action_types import BonusAction, BonusActionOrdering
 from simulator.misc import ROUND_HORIZON
 from functools import reduce
 import sys
@@ -16,6 +16,10 @@ logger = logging.getLogger(__name__)
 class RageFactory(ThreatModifierFactory):
 
     def __init__(self, combatant):
+        self.flags |= FactoryFlags.IS_ATTACK_MODIFIER
+        self.flags |= FactoryFlags.COORD_AGNOSTIC
+        self.flags |= FactoryFlags.TARGETS_SELF
+        self.bonus_action_ordering = BonusActionOrdering.GOES_BEFORE_ACTION
         self.combatant = combatant
         self.action_type = BonusAction.RAGE
 
@@ -50,6 +54,12 @@ class RageFactory(ThreatModifierFactory):
             case _:
                 logger.error("Incorrect combatant level of rage")
                 return 2
+
+    def get_eligible_coords(self, target_combatant, battle_map):
+        pass  # No need due to the COORD_AGNOSTIC flag
+
+    def get_eligible_targets(self, battle_map):
+        pass # No need due to the TARGETS_SELF flag
 
     def create_best(self, combatant, battle_map):
         return Rage(combatant)

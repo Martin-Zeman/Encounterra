@@ -1,6 +1,6 @@
 from simulator.spells.spell import SpellStats
 import logging
-from simulator.action_types import BonusAction, Action
+from simulator.action_types import BonusAction, Action, BonusActionOrdering
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 from simulator.misc import CombatantArchetype, DistanceMetric
@@ -11,6 +11,9 @@ class MistyStepFactory(DirectThreatFactory):
 
     def __init__(self, caster):
         super().__init__()
+        self.flags |= FactoryFlags.COORD_AGNOSTIC
+        self.flags |= FactoryFlags.TARGETS_COORDS
+        self.bonus_action_ordering = BonusActionOrdering.BOTH
         self.action_type = BonusAction.MISTY_STEP
         self.caster = caster
 
@@ -25,6 +28,13 @@ class MistyStepFactory(DirectThreatFactory):
             free_coords = battle_map.get_free_coords_at_distance_sorted_by_dist_to_enemies(combatant, MistyStep.spell_range.value, DistanceMetric.CARTESIAN)
             return free_coords[0][0] if free_coords else None
         return None
+
+    def get_eligible_coords(self, target_combatant, battle_map):
+        pass  # No need due to the COORD_AGNOSTIC flag
+
+    def get_eligible_targets(self, battle_map):
+        caster_coords = battle_map.get_combatant_position(self.caster)
+        return battle_map.get_free_coords_in_range(caster_coords, rng=MistyStep.spell_range.value)
 
     def create_best(self, combatant, battle_map):
         best_args = self.find_best_args(combatant, battle_map)

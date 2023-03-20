@@ -1,4 +1,4 @@
-from enum import auto, Flag
+from enum import auto, Flag, Enum
 
 class ActoidFlags(Flag):
     IS_ATTACK_LIKE = auto()
@@ -30,4 +30,5 @@ class FactoryFlags(Flag):
     IS_ATTACK_MODIFIER = auto()
     DEX_SAVE_APPLIES = auto()
     HAS_AMMO = auto()
-
+    COORD_AGNOSTIC = auto()
+    TARGETS_COORDS = auto()

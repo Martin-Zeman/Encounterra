@@ -290,6 +290,39 @@ class Map:
         self.base_adjacency_matrix = adj
         # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
+
+    # def build_threat_adjacency_matrix(self, combatant, feasible_actions, feasible_bonus_actions, feasible_haste_actions):
+    #     # start_time = time.time()
+    #     N = self.size
+    #     Nsq = N ** 2
+    #     adj = np.zeros((N, N, N, N), dtype=int)
+    #     # Take adj to encode (x,y) coordinate to (x,y) coordinate edges
+    #     # Let's now connect the nodes
+    #     for i in range(N):
+    #         for j in range(N):
+    #             # TODO I don't think the min is needed
+    #             adj[i, j, max((i - 1), 0), max((j - 1), 0)] = 1
+    #             adj[i, j, max((i - 1), 0), j] = 1
+    #             adj[i, j, max((i - 1), 0), min(j + 1, N - 1)] = 1
+    #
+    #             adj[i, j, i, max((j - 1), 0)] = 1
+    #             adj[i, j, i, j] = 1
+    #             adj[i, j, i, min(j + 1, N - 1)] = 1
+    #
+    #             adj[i, j, min(i + 1, N - 1), max((j - 1), 0)] = 1
+    #             adj[i, j, min(i + 1, N - 1), j] = 1
+    #             adj[i, j, min(i + 1, N - 1), min(j + 1, N - 1)] = 1
+    #
+    #     adj = adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
+    #     # Remove self-connections (optional)
+    #     adj -= np.eye(Nsq, dtype=int)
+    #     for coord in self.difficult_set:
+    #         adj[:, coord[0] * N + coord[1]] *= 2
+    #     for coord in self.impassable_set:
+    #         adj[:, coord[0] * N + coord[1]] = 0
+    #     self.base_adjacency_matrix = adj
+    #     # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
+
     def build_combatant_adjacency_mask(self, combatant):
         """
         Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
@@ -323,36 +356,62 @@ class Map:
         mv_reshaped[:, :, :, (N - offset):N].fill(0)
         return mask
 
-    def get_threat_adjacency_matrix(self, adj):
+    def get_threat_adjacency_matrix(self, adj, combatant, feasible_action_factories, feasible_bonus_action_factories, feasible_haste_action_factories):
         """
         Transforms a standard adjacency matrix to one based on incoming threat associated with traversing edges
         :param adj: standard distance-based adjacency matrix, already masked for a specific combatant
         :return: adjacency matrix based on threat associated with traversing the edges
         """
         # threat_adj = copy.copy(adj)
-        dist_to_threat = np.vectorize(lambda d: 0 if d > 0 else sys.maxsize)  # Using maxsize to avoid impassable edges
+        N = self.size
+        dist_to_threat = np.vectorize(lambda d: 0 if d > 0 else (-sys.maxsize - 1) / 2)  # very low negative number but not max
         threat_adj = dist_to_threat(adj)
-        # TODO include AoE and AoO
+        threat_adj_reshaped = threat_adj.view().reshape(N, N, N, N)  # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
+        enemies = self.get_enemies(combatant)
+
+        # account for AoO
+        for e in enemies:
+            if not e.has_reaction:
+                continue
+            rng = e.melee_reaction_range
+            reaction_threat = e.aoo_factory.calculate_threat_to_target(self, combatant)
+            coords = self.get_combatant_position(e)
+            adj_coords = self.get_free_adjacent_coords(coords, inflate_to_size=combatant.size, rng=rng)
+            for ac in adj_coords:
+                # it should be ok to apply this to coords that are part of the set or inaccessible, they'll just be even lower
+                threat_adj_reshaped[ac[0], ac[1], :, :] -= reaction_threat
+
+        action_mapping = dict()
+        node_cnt = N ** 2 + 1
+        all_action_factories = feasible_action_factories
+        all_action_factories.extend(feasible_bonus_action_factories)
+        all_action_factories.extend(feasible_haste_action_factories)
+        for faf in all_action_factories:
+            targets = faf.get_eligible_targets(self)
+            for t in targets:
+                coords = faf.get_eligible_coords(t, self)
+
+        # TODO account for AoE
         return threat_adj
 
 
-    def build_combatant_adjacency_mask_no_inflation(self, combatant):
-        """
-        Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
-        Allies are considered difficult terrain (potentially on top of already difficult terrain).
-        :param combatant: for whom the mask is to be constructed
-        :return: adjacency matrix mask
-        """
-        N = self.size
-        # TODO consider preallocating this for all combatants and only resetting it to ones
-
-        mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
-        for curr_combatant, coords in self.combatant_coordinate_cache.items():
-            coord = coords.get()[0]  # Take the root coordinate
-            if curr_combatant is not combatant and curr_combatant.is_alive():
-                # TODO even allies are now impassable, try and figure out of a way to improve this
-                mask[:, coord[0] * N + coord[1]] = 0
-        return mask
+    # def build_combatant_adjacency_mask_no_inflation(self, combatant):
+    #     """
+    #     Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
+    #     Allies are considered difficult terrain (potentially on top of already difficult terrain).
+    #     :param combatant: for whom the mask is to be constructed
+    #     :return: adjacency matrix mask
+    #     """
+    #     N = self.size
+    #     # TODO consider preallocating this for all combatants and only resetting it to ones
+    #
+    #     mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
+    #     for curr_combatant, coords in self.combatant_coordinate_cache.items():
+    #         coord = coords.get()[0]  # Take the root coordinate
+    #         if curr_combatant is not combatant and curr_combatant.is_alive():
+    #             # TODO even allies are now impassable, try and figure out of a way to improve this
+    #             mask[:, coord[0] * N + coord[1]] = 0
+    #     return mask
 
     def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array, reconstructed_path):
         """
@@ -597,6 +656,7 @@ class Map:
                 min_dist = dist
                 nearest = potential_target
         return nearest, min_dist, target_coord
+
 
     def is_enemy_adjacent(self, combatant):
         nearest, dist, _ = self.get_nearest(combatant)

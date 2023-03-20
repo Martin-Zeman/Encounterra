@@ -1,3 +1,4 @@
+from simulator.action_types import BonusActionOrdering
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType
 import logging
@@ -16,6 +17,7 @@ class ChaosboltFactory(DirectThreatFactory):
     def __init__(self, to_hit, action_type, caster):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
+        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.to_hit = to_hit
         self.action_type = action_type  # CHAOSBOLT, QUICKENED_CHAOSBOLT
         self.dmg_dice = "2d8"

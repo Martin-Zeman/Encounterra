@@ -24,12 +24,12 @@ class MeleeAttackFactory(AttackFactory):
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
 
-    def get_eligible_coords(self, target_combatant, battle_map, shortest_paths):
+    def get_eligible_coords(self, target_combatant, battle_map):
         """
         Returns accessible squares adjacent to a given coordinate
         :param coords: target combatant coordinates
         :return: adjacent coordinates as a set of tuples (x, y)
         """
         target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
-        return battle_map.get_free_adjacent_coords(target_combatant_coords, shortest_paths, self.combatant.size, self.range)
+        return battle_map.get_free_adjacent_coords(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
 

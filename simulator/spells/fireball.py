@@ -1,3 +1,4 @@
+from simulator.action_types import BonusActionOrdering
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -9,6 +10,7 @@ class FireballFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, has_spell_sculpting=False, **kwargs):
         super().__init__()
         self.flags |= FactoryFlags.DEX_SAVE_APPLIES
+        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.dc = dc
         self.action_type = action_type  # FIREBALL, QUICKENED_FIREBALL
         self.saving_throw = SavingThrow.DEX

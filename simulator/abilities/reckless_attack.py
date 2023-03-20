@@ -1,5 +1,6 @@
 import math
 
+from simulator.action_types import BonusActionOrdering
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -25,6 +26,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
         self.flags |= FactoryFlags.HAS_AMMO
         self.flags |= FactoryFlags.IS_MELEE
+        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -54,6 +56,13 @@ class RecklessAttackFactory(DirectThreatFactory):
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
+
+    def get_eligible_coords(self, target_combatant, battle_map):
+        target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
+        return battle_map.get_free_adjacent_coords(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
+
+    def get_eligible_targets(self, battle_map):
+        return battle_map.get_enemies(self.combatant)
 
     def create_best(self, combatant, battle_map):
         best_args = self.find_best_args(combatant, battle_map)

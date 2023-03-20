@@ -1,12 +1,14 @@
 from enum import Enum, auto
 from abc import ABC, abstractmethod
 
+from simulator.action_types import BonusActionOrdering
 from simulator.actions.actoid import FactoryFlags
 
 
 class Factory:
     def __init__(self):
         self.flags = FactoryFlags.DEFAULT
+        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT
 
 class DirectThreat(ABC):
     """
@@ -57,8 +59,16 @@ class ThreatModifierFactory(ABC, Factory):
     @abstractmethod
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
-        Calculates the threat the factory is capable of dealing to a specific target.
+        Calculates the threat the factory is capable of dealing to a specific target by modifying other factories.
         This is useful for calculating threat_in from the abilities of enemies
+        """
+        return 0
+
+    @abstractmethod
+    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
+        """
+        Calculates the threat the factory is capable of dealing to a specific target by modifying a specific given factory.
+        This is used to construct the threat adjacency matrix.
         """
         return 0
 
