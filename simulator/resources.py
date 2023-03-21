@@ -8,14 +8,18 @@ logger = logging.getLogger(__name__)
 
 
 def use_resources(combatant, action, battle_map):
-    action_type = action.factory.action_type
+    try:
+        action_type = action.factory.action_type
+    except AttributeError:
+        # This is here because during construction of FSMs we pass the action_type directly instead of the action instance
+        action_type = action
     if isinstance(action_type, Action):
         combatant.has_action = False
         match action_type:
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK:
                 combatant.curr_num_attacks -= 1
                 combatant.ammo[action.factory.name] -= 1
-                combatant.attack_mapping[action.factory][1](combatant.attack_fsm)  # trigger event on the FSM, done this way to avoid multiprocessing pickling error
+                combatant.attack_mapping[action.factory][1](combatant.action_fsm)  # trigger event on the FSM, done this way to avoid multiprocessing pickling error
             case Action.DODGE | Action.DASH | Action.FIREBOLT:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL:

@@ -1,4 +1,4 @@
-from simulator.actions.attack_fsms import TwoMeleeOneRangedWithReckless
+from simulator.actions.action_fsms import TwoMeleeOneRangedWithReckless
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_actions
@@ -25,7 +25,7 @@ class TotemBarbarian5Lvl(Combatant):
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)
         self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, max_num=2)
-        # self.attack_fsm = TwoMeleeOneRangedWithReckless()
+        # self.action_fsm = TwoMeleeOneRangedWithReckless()
         # self.attack_mapping = {axe[1]: (1, TwoMeleeOneRangedWithReckless.melee), axe_recklessly[1]: (2, TwoMeleeOneRangedWithReckless.melee_recklessly), self.javelin_attack[1]: (3,TwoMeleeOneRangedWithReckless.ranged)}
         self.movement_generator = None
         self.selected_target = None
@@ -56,12 +56,10 @@ class TotemBarbarian5Lvl(Combatant):
         feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)
         feasible_bonus_action_factories = get_feasible_actions(self.bonus_action_factories, self, battle_map)
         feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
-        # feasible_free_actions = get_feasible_actions(self.free_actions, self, battle_map)
-        if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:# or len(feasible_free_actions > 0):
+        if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:
             feasible_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_action_factories]))
             feasible_bonus_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_bonus_action_factories]))
             feasible_haste_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_haste_action_factories]))
-            # feasible_free_actions = [fa[1].create_best(self, battle_map) for fa in feasible_free_actions]
 
             action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]
             bonus_action_threats = [(fba.calculate_threat(self, battle_map), fba) for fba in feasible_bonus_actions]
@@ -113,7 +111,7 @@ class TotemBarbarian5Lvl(Combatant):
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        self.attack_fsm = TwoMeleeOneRangedWithReckless()  # Initialized here to avoid pickling error when multiprocessing
+        self.action_fsm = TwoMeleeOneRangedWithReckless()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_mapping = {self.axe[1]: (1, TwoMeleeOneRangedWithReckless.melee),
                                self.axe_recklessly[1]: (2, TwoMeleeOneRangedWithReckless.melee_recklessly),
                                self.javelin_attack[1]: (3, TwoMeleeOneRangedWithReckless.ranged)}

@@ -1,5 +1,5 @@
 from simulator.abilities.on_hit_prone import OnHitProne
-from simulator.actions.attack_fsms import TwoMeleeOneRanged
+from simulator.actions.action_fsms import TwoMeleeOneRanged
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_actions
@@ -24,7 +24,7 @@ class StoneGiant(Combatant):
         self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
                                             dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15)
-        # self.attack_fsm = TwoMeleeOneRanged()
+        # self.action_fsm = TwoMeleeOneRanged()
         # self.attack_mapping = {club[1]: (1, TwoMeleeOneRanged.melee), rock[1]: (2, TwoMeleeOneRanged.ranged)}
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.melee_reaction_range = 3
@@ -56,7 +56,7 @@ class StoneGiant(Combatant):
         feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)
         feasible_bonus_action_factories = get_feasible_actions(self.bonus_action_factories, self, battle_map)
         feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
-        if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:# or len(feasible_free_actions > 0):
+        if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:
             feasible_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_action_factories]))
             feasible_bonus_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_bonus_action_factories]))
             feasible_haste_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_haste_action_factories]))
@@ -122,7 +122,7 @@ class StoneGiant(Combatant):
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        self.attack_fsm = TwoMeleeOneRanged()  # Initialized here to avoid pickling error when multiprocessing
+        self.action_fsm = TwoMeleeOneRanged()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_mapping = {self.club[1]: (1, TwoMeleeOneRanged.melee), self.rock[1]: (2, TwoMeleeOneRanged.ranged)}
 
     def prompt_aoo(self, moving_combatant):

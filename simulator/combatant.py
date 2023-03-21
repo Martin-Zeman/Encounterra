@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from simulator.abilities.totem_rage import TotemRageFactory
 from simulator.actions.attack import AttackFactory
 from simulator.actions.dodge import DodgeFactory
+from simulator.actions.disengage import DisengageFactory
 from simulator.action_factory import TO_TWINNED, TO_QUICKENED
 
 logger = logging.getLogger(__name__)
@@ -32,12 +33,12 @@ class Combatant(ABC):
         self.effect_tracker = effect_tracker
         self.name = name
         self.level = level
-        self.action_factories = [(Action.DODGE, DodgeFactory(self))]
-        self.dodge_factory = self.action_factories[-1]
+        self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(self, Action.DISENGAGE))]
+        self.dodge_factory = self.action_factories[0]
+        self.disengage_factory = self.action_factories[1]
         self.bonus_action_factories = []
         self.reaction_factories = []
         self.haste_action_factories = []
-        # self.free_actions = []
         self.passive = []
         self.max_hp = hp
         self.curr_hp = hp
@@ -60,7 +61,7 @@ class Combatant(ABC):
         self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
         self.resistances = resistances
         self.multiattack_in_progress = False
-        self.attack_fsm = None
+        self.action_fsm = None
         self.attack_mapping = None
         self.team_color = ""
         self.selected_enemy = None

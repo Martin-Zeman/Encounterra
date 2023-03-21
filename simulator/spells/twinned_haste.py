@@ -59,7 +59,26 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         max_attack_dmg += attack_dmg_decrement_acc
         return max_attack_dmg * ROUND_HORIZON
 
-
+    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
+        enemies = battle_map.get_enemies(target)
+            # This doesn't take different attack ranges into account
+        max_attack_dmg = 0
+        potential_targets = battle_map.get_enemies_within_hop_distance(target, target.speed + attack_factory.range + 1)
+        if potential_targets:
+            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack_factory.to_hit, attack_factory.dmg_dice, attack_factory.dmg_bonus, pt.ac, attack_factory.crit_range, pt.is_resistant_to(attack_factory.dmg_type)), potential_targets, 0)
+            dmg_acc /= len(potential_targets)
+            max_attack_dmg = max(dmg_acc, max_attack_dmg)
+        attack_dmg_decrement_acc = 0
+        assert len(enemies) > 0
+        for enemy in enemies:
+            enemy_attacks = get_attacks(enemy)
+            if not enemy_attacks:
+                continue
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
+            attack_dmg_decrement_acc /= len(enemy_attacks)
+            # TODO include the ST-based abilities here
+        max_attack_dmg += attack_dmg_decrement_acc
+        return max_attack_dmg * ROUND_HORIZON
 
 class TwinnedHaste(Actoid, Effect, ThreatModifier):
 

@@ -1,4 +1,4 @@
-from simulator.actions.attack_fsms import OneMeleeOrOneRanged
+from simulator.actions.action_fsms import OneMeleeOrOneRanged
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions, Size
@@ -89,7 +89,7 @@ class Ogre(Combatant):
         super().new_turn()
         self.movement_generator = None
         # self.selected_target = None
-        self.attack_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
+        self.action_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_mapping = {self.greatclub_attack[1]: (1, OneMeleeOrOneRanged.melee), self.javelin_attack[1]: (2, OneMeleeOrOneRanged.ranged)}
 
     def prompt_aoo(self, moving_combatant):

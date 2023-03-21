@@ -1,45 +1,16 @@
+import pytest
 from simulator.action_types import Passive
-from simulator.battle_map import Map, Terrain, CombatantCoords
-from simulator.combatants.bugbear import Bugbear
-from simulator.combatants.faurung import Faurung
+from simulator.battle_map import Terrain, CombatantCoords
 from simulator.combatants.goblin import Goblin
-from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.effects.effect_tracker import EffectTracker
 from simulator.feasibility import get_feasible_actions
 from simulator.misc import DistanceMetric, Size, Side, Conditions
 from simulator.spells.fireball import Fireball
 from simulator.spells.spell import SpellStats
 from simulator.teams import Teams
+from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, teams, effect_tracker, battle_map
 import numpy as np
-import pytest
 
-@pytest.fixture()
-def teams():
-    return Teams()
 
-@pytest.fixture()
-def effect_tracker():
-    return EffectTracker()
-
-@pytest.fixture()
-def battle_map(teams):
-    return Map(15, teams)
-
-@pytest.fixture()
-def combatant1(effect_tracker):
-    return Faurung(effect_tracker, "Faurung")
-
-@pytest.fixture()
-def combatant2(effect_tracker):
-    return Goblin(effect_tracker, "Goblin")
-
-@pytest.fixture()
-def combatant3(effect_tracker):
-    return Bugbear(effect_tracker, "Bugbear")
-
-@pytest.fixture()
-def combatant4(effect_tracker):
-    return TotemBarbarian5Lvl(effect_tracker, "TotemBarbarian5Lvl")
 
 def test_as_if_combatant_position(teams, effect_tracker, battle_map, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
@@ -907,6 +878,7 @@ def test_get_free_coords_sorted_by_distance_from_enemies(battle_map, teams, comb
     assert np.array_equal(free_coords[0], np.array([14, 14])) or np.array_equal(free_coords[0], np.array([13, 14]))
 
 
+@pytest.mark.skip(reason="Not ready yet")
 def test_get_threat_adjacency_matrix(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)

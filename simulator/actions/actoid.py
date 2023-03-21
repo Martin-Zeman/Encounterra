@@ -32,3 +32,4 @@ class FactoryFlags(Flag):
     HAS_AMMO = auto()
     COORD_AGNOSTIC = auto()
     TARGETS_COORDS = auto()
+    TARGETS_SELF = auto()
