@@ -88,11 +88,7 @@ class Bugbear(Combatant):
         super().new_turn()
         self.movement_generator = None
         # self.selected_target = None
-        self.action_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
-        self.attack_mapping = {self.scimitar_attack[1]: (1, OneMeleeOrOneRanged.melee),
-                               self.shortbow_attack[1]: (2, OneMeleeOrOneRanged.ranged),
-                               self.dodge_factory[1]: (3, OneMeleeOrOneRanged.dodge),
-                               self.disengage_factory[1]: (4, OneMeleeOrOneRanged.disengage)}
+        self.attack_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam

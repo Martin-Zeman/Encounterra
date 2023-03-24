@@ -25,8 +25,6 @@ class TotemBarbarian5Lvl(Combatant):
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)
         self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, max_num=2)
-        # self.action_fsm = TwoMeleeOneRangedWithReckless()
-        # self.attack_mapping = {axe[1]: (1, TwoMeleeOneRangedWithReckless.melee), axe_recklessly[1]: (2, TwoMeleeOneRangedWithReckless.melee_recklessly), self.javelin_attack[1]: (3,TwoMeleeOneRangedWithReckless.ranged)}
         self.movement_generator = None
         self.selected_target = None
         self.path = None
@@ -111,10 +109,7 @@ class TotemBarbarian5Lvl(Combatant):
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        self.action_fsm = TwoMeleeOneRangedWithReckless()  # Initialized here to avoid pickling error when multiprocessing
-        self.attack_mapping = {self.axe[1]: (1, TwoMeleeOneRangedWithReckless.melee),
-                               self.axe_recklessly[1]: (2, TwoMeleeOneRangedWithReckless.melee_recklessly),
-                               self.javelin_attack[1]: (3, TwoMeleeOneRangedWithReckless.ranged)}
+        self.attack_fsm = TwoMeleeOneRangedWithReckless()  # Initialized here to avoid pickling error when multiprocessing
 
 
     def prompt_aoo(self, moving_combatant):

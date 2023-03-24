@@ -17,6 +17,13 @@ class MistyStepFactory(DirectThreatFactory):
         self.action_type = BonusAction.MISTY_STEP
         self.caster = caster
 
+
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "MistyStepFactory"
+
     def find_best_args(self, combatant, battle_map):
         free_coords = None
         if self.caster.archetype is CombatantArchetype.MELEE:
@@ -41,6 +48,9 @@ class MistyStepFactory(DirectThreatFactory):
         if best_args is None:
             return None
         return MistyStep(best_args, self)
+
+    def create_mock(self):
+        return MistyStep(None, self)
 
     def create(self, coord):
         return MistyStep(coord, self)

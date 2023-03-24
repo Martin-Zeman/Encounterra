@@ -23,6 +23,12 @@ class RageFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = BonusAction.RAGE
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "RageFactory"
+
     @staticmethod
     def get_rage_bonus(level):
         match level:
@@ -63,6 +69,9 @@ class RageFactory(ThreatModifierFactory):
 
     def create_best(self, combatant, battle_map):
         return Rage(combatant)
+
+    def create_mock(self):
+        return Rage(None)
 
     def create(self, target_combatant):
         return Rage(target_combatant, self)

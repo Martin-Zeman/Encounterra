@@ -25,7 +25,6 @@ class StoneGiant(Combatant):
                                             dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15)
         # self.action_fsm = TwoMeleeOneRanged()
-        # self.attack_mapping = {club[1]: (1, TwoMeleeOneRanged.melee), rock[1]: (2, TwoMeleeOneRanged.ranged)}
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.melee_reaction_range = 3
         self.movement_generator = None
@@ -122,8 +121,7 @@ class StoneGiant(Combatant):
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        self.action_fsm = TwoMeleeOneRanged()  # Initialized here to avoid pickling error when multiprocessing
-        self.attack_mapping = {self.club[1]: (1, TwoMeleeOneRanged.melee), self.rock[1]: (2, TwoMeleeOneRanged.ranged)}
+        self.attack_fsm = TwoMeleeOneRanged()  # Initialized here to avoid pickling error when multiprocessing
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

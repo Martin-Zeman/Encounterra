@@ -48,6 +48,13 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.mod_dmg_die = '0d0'
         self.mod_crit_range = 0
 
+
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "RecklessAttackFactory" + self.name
+
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)
@@ -69,6 +76,9 @@ class RecklessAttackFactory(DirectThreatFactory):
         if best_args is None:
             return None
         return RecklessAttack(best_args, self)
+
+    def create_mock(self):
+        return RecklessAttack(None, self)
 
     def calculate_threat_out_approx(self, combatant, battle_map, roll_modifier=RollModifier.ADVANTAGE):
         """

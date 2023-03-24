@@ -19,6 +19,13 @@ class FireballFactory(DirectThreatFactory):
         self.caster = caster
         self.has_spell_sculpting = has_spell_sculpting
 
+
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "FireballFactory"
+
     def get_twinned_kwargs(self):
         return {'dc': self.dc, 'caster': self.caster, 'has_spell_sculpting': self.has_spell_sculpting}
 
@@ -31,6 +38,9 @@ class FireballFactory(DirectThreatFactory):
 
     def create_best(self, combatant, battle_map, **kwargs):
         return Fireball(self.find_best_args(combatant, battle_map), self,  **kwargs)
+
+    def create_mock(self):
+        return Fireball(None, self)
 
     def create(self, coord):
         return Fireball(coord, self)

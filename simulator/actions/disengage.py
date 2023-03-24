@@ -17,8 +17,17 @@ class DisengageFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = action_type  # DISENGAGE, CUNNING DISENGAGE
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "DisengageFactory"
+
     def create_best(self, combatant, battle_map):
         return Disengage(combatant, self)
+
+    def create_mock(self):
+        return Disengage(None, self)
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """

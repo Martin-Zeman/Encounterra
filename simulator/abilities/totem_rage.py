@@ -23,8 +23,17 @@ class TotemRageFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = BonusAction.TOTEM_RAGE
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "TotemRageFactory"
+
     def create_best(self, combatant, battle_map):
         return TotemRage(combatant, self)
+
+    def create_mock(self):
+        return TotemRage(None, self)
 
     def create(self, target_combatant):
         return TotemRage(target_combatant, self)

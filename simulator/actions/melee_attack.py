@@ -15,6 +15,12 @@ class MeleeAttackFactory(AttackFactory):
         self.flags |= FactoryFlags.IS_MELEE
         self.ammo = math.inf
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "MeleeAttackFactory" + self.name
+
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)

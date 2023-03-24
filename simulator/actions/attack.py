@@ -79,6 +79,9 @@ class AttackFactory(DirectThreatFactory):
     def create(self, target_combatant):
         return Attack(target_combatant, self)
 
+    def create_mock(self):
+        return Attack(None, self)
+
     def calculate_threat_approx(self, combatant, battle_map, roll_modifier=RollModifier.STRAIGHT):
         """
         Helper function which calculates the average potential threat over all potential targets including all possible mods

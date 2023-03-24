@@ -22,6 +22,12 @@ class FireboltFactory(DirectThreatFactory):
         self.dmg_dice = self.get_dmg_dice(caster.level)
         self.caster = caster
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "FireboltFactory"
+
 
     def get_twinned_kwargs(self):
         return {'to_hit': self.to_hit, 'caster': self.caster}
@@ -60,6 +66,9 @@ class FireboltFactory(DirectThreatFactory):
         if best is None:
             return None
         return Firebolt(best, self)
+
+    def create_mock(self):
+        return Firebolt(None, self)
 
     def create(self, target_combatant):
         return Firebolt(target_combatant, self)

@@ -15,6 +15,12 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         self.caster = caster
         self.effect_tracker = effect_tracker
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "TwinnedHasteFactory"
+
     def find_best_args(self, combatant, battle_map):
         ret1 = None
         ret2 = None
@@ -28,6 +34,9 @@ class TwinnedHasteFactory(ThreatModifierFactory):
 
     def create_best(self, combatant, battle_map):
         return TwinnedHaste(self.find_best_args(combatant, battle_map), self)
+
+    def create_mock(self):
+        return TwinnedHaste(None, self)
 
     def create(self, targets):
         return TwinnedHaste(targets, self)

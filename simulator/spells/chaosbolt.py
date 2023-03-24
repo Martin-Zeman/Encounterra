@@ -24,6 +24,12 @@ class ChaosboltFactory(DirectThreatFactory):
         self.additional_dmg_dice = "1d6"
         self.caster = caster
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "ChaosboltFactory"
+
     @staticmethod
     def get_sorted_chain(battle_map, potential_targets, threat_calc_func):
         hp_percentages = [percent_of_curr_hp(pt, threat_calc_func(pt.ac)) for pt in potential_targets]
@@ -42,6 +48,9 @@ class ChaosboltFactory(DirectThreatFactory):
 
     def create_best(self, combatant, battle_map):
         return Chaosbolt(self.find_best_args(combatant, battle_map), self)
+
+    def create_mock(self):
+        return Chaosbolt(None, self)
 
     def create(self, target_combatant):
         return Chaosbolt([target_combatant], self)

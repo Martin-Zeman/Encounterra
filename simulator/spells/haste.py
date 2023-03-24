@@ -19,6 +19,12 @@ class HasteFactory(ThreatModifierFactory):
         self.caster = caster
         self.effect_tracker = effect_tracker
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "HasteFactory"
+
     def get_twinned_kwargs(self):
         return {'effect_tracker': self.effect_tracker, 'caster': self.caster}
 
@@ -71,6 +77,9 @@ class HasteFactory(ThreatModifierFactory):
         if ally is None:
             return None
         return Haste(ally, self)
+
+    def create_mock(self):
+        return Haste(None, self)
 
     def create(self, target_combatant):
         return Haste(target_combatant, self)

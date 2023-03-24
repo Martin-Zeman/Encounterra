@@ -1,4 +1,4 @@
-from simulator.actions.action_fsms import OneAttack
+from simulator.actions.action_fsms import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.spellslots import Spellslots
@@ -20,8 +20,6 @@ class Faurung(Combatant):
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
-        # self.action_fsm = OneMelee()
-        # self.attack_mapping = {staff[1]: (1, OneMelee.melee)}
         self.add_ability(Action.FIREBALL)
         self.add_ability(Action.FIREBOLT)
         self.add_ability(Action.HASTE)
@@ -30,6 +28,7 @@ class Faurung(Combatant):
         self.add_ability(Passive.METAMAGIC, sorcery_points=5)
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
+        self.build_attack_fms()
         self.spellslots = Spellslots(Spellslots.Class.SORCERER, 5)
         self.archetype = CombatantArchetype.RANGED
         self.movement_generator_cache = None
@@ -40,6 +39,11 @@ class Faurung(Combatant):
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = 7
+
+
+    def build_attack_fms(self):
+        self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_fsm.add_transition(str(self.staff), 'initial', 'nop')
 
     def get_action(self, battle_map):
         if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
@@ -95,11 +99,27 @@ class Faurung(Combatant):
         super().new_turn()
         self.nowhere_to_go = False
         self.movement_generator_cache = None
-        self.action_fsm = OneAttack()  # Initialized here to avoid pickling error when multiprocessing
-        self.attack_mapping = {self.staff[1]: (1, OneAttack.attack)}
+        # self.attack_fsm = OneAttack()  # Initialized here to avoid pickling error when multiprocessing
 
     def prompt_aoo(self, moving_combatant):
         return None
+
+    def export_resources(self):
+        return {
+            'spellslots': self.spellslots,
+            'sorcery_points': self.curr_sorcery_points,
+            'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
+            'has_action': self.has_action,
+            'has_bonus_action': self.has_bonus_action
+        }
+
+    def load_resources(self, resources):
+        self.spellslots = resources['spellslots']
+        self.curr_sorcery_points = resources['sorcery_points']
+        self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
+        self.has_action = resources['has_action']
+        self.has_bonus_action = resources['has_bonus_action']
+
 
     def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
         if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll <= self.dc + 5:

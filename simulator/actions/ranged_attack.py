@@ -18,6 +18,12 @@ class RangedAttackFactory(AttackFactory):
         self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.ammo = ammo
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "RangedAttackFactory" + self.name
+
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
         potential_targets = battle_map.get_enemies_within_radius(combatant, combatant.movement + self.range)

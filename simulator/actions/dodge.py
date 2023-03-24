@@ -18,8 +18,17 @@ class DodgeFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = Action.DODGE
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "DodgeFactory"
+
     def create_best(self, combatant, battle_map):
         return Dodge(combatant, self)
+
+    def create_mock(self):
+        return Dodge(None, self)
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """

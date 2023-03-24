@@ -21,6 +21,12 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         self.dmg_dice = FireboltFactory.get_dmg_dice(caster.level)
         self.caster = caster
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "TwinnedFireboltFactory"
+
     def find_best_args(self, combatant, battle_map):
         # TODO Should this include action type? Cause for a twinned version you would need multiple targets
         potential_targets = battle_map.get_enemies_within_radius(combatant, TwinnedFirebolt.spell_range.value)
@@ -35,6 +41,9 @@ class TwinnedFireboltFactory(DirectThreatFactory):
 
     def create_best(self, combatant, battle_map):
         return TwinnedFirebolt(self.find_best_args(combatant, battle_map), self)
+
+    def create_mock(self):
+        return TwinnedFirebolt(None, self)
 
     def create(self, targets):
         return TwinnedFirebolt(targets, self)

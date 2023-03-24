@@ -61,8 +61,8 @@ class Combatant(ABC):
         self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
         self.resistances = resistances
         self.multiattack_in_progress = False
+        self.attack_fsm = None
         self.action_fsm = None
-        self.attack_mapping = None
         self.team_color = ""
         self.selected_enemy = None
         self.selected_ally = None

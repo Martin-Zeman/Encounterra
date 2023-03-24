@@ -89,8 +89,7 @@ class Ogre(Combatant):
         super().new_turn()
         self.movement_generator = None
         # self.selected_target = None
-        self.action_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
-        self.attack_mapping = {self.greatclub_attack[1]: (1, OneMeleeOrOneRanged.melee), self.javelin_attack[1]: (2, OneMeleeOrOneRanged.ranged)}
+        self.attack_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam

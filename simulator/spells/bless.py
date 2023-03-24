@@ -10,6 +10,12 @@ class BlessFactory(ThreatModifierFactory):
         self.caster = caster
         self.effect_tracker = effect_tracker
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "BlessFactory"
+
     def find_best_args(self, combatant, battle_map):
         # Iterate over all allies within range and try plugging the mods into their factories and pick three best
         # TODO Should this include action type? Cause for a twinned version you would need multiple targets
@@ -17,6 +23,9 @@ class BlessFactory(ThreatModifierFactory):
 
     def create_best(self, combatant, battle_map):
         return Bless(self.find_best_args(combatant, battle_map), self)
+
+    def create_mock(self):
+        return Bless(None, self)
 
     # def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
     #     #  calculate the modification for all allies and them do * 3/#num_allies. And then * ROUND_HORIZON
