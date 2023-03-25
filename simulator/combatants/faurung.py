@@ -5,7 +5,7 @@ from simulator.spellslots import Spellslots
 from simulator.misc import CombatantArchetype, DamageType, get_factory_of_type, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.spells.spell import SpellStats
-from simulator.feasibility import get_feasible_actions
+from simulator.feasibility import get_feasible_factories
 import logging
 import numpy as np
 
@@ -65,9 +65,9 @@ class Faurung(Combatant):
             except StopIteration:
                 self.movement_generator_cache = None
 
-        feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)
-        feasible_bonus_action_factories = get_feasible_actions(self.bonus_action_factories, self, battle_map)
-        feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
+        feasible_action_factories = get_feasible_factories(self.action_factories, self, battle_map)
+        feasible_bonus_action_factories = get_feasible_factories(self.bonus_action_factories, self, battle_map)
+        feasible_haste_action_factories = get_feasible_factories(self.haste_action_factories, self, battle_map)
         if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:
             feasible_actions = list(filter(lambda item: item is not None, [faf[1].create_best(self, battle_map) for faf in feasible_action_factories]))
             feasible_bonus_actions = list(filter(lambda item: item is not None, [fbaf[1].create_best(self, battle_map) for fbaf in feasible_bonus_action_factories]))

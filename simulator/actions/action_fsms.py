@@ -1,6 +1,6 @@
 import copy
 from statemachine import State, StateMachine
-from simulator.feasibility import get_feasible_actions
+from simulator.feasibility import get_feasible_factories
 from simulator.resources import use_resources
 
 
@@ -42,14 +42,20 @@ class OneMeleeOrOneRanged(StateMachine):
 
 
 from transitions import Machine, State
+from transitions.extensions import GraphMachine
 class StateMachineTemplate:
-    states = ['initial', 'nop']
+    states = ['nop']
 
     def __init__(self):
-        self.machine = Machine(model=self, states=StateMachineTemplate.states, initial='initial', ignore_invalid_triggers=True, auto_transitions=False)
+        self.machine = GraphMachine(model=self, states=StateMachineTemplate.states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
+        self.last_added_state = '-1'
 
     def add_state(self, state_name):
         self.machine.add_state(State(state_name))
+        self.last_added_state = state_name
+
+    def get_last_added_state(self):
+        return self.last_added_state
 
     def add_transition(self, name, from_state, to_state):
         self.machine.add_transition(trigger=name, source=from_state, dest=to_state)
@@ -61,26 +67,14 @@ class StateMachineTemplate:
     #     return self.machine.get_triggers(state_name)
 
 
-
-
-# def generate_state_name(last_state_name):
-#     if last_state_name[-1] < 'Z':
-#         return last_state_name[:-1] + chr(ord(last_state_name[-1]) + 1)
-#     return last_state_name + 'A'
-
-def factories_to_set(factories):
-    s = set()
-    for f in factories:
-        s.add(str(f[1]))
-    return s
-
-
+def actions_to_set(actions):
+    return frozenset([str(f) for f in actions])
 
 
 def get_all_feasible_action_factories(combatant, battle_map):
-    feasible_action_factories = get_feasible_actions(combatant.action_factories, combatant, battle_map)
-    feasible_bonus_action_factories = get_feasible_actions(combatant.bonus_action_factories, combatant, battle_map)
-    feasible_haste_action_factories = get_feasible_actions(combatant.haste_action_factories, combatant, battle_map)
+    feasible_action_factories = get_feasible_factories(combatant.action_factories, combatant, battle_map)
+    feasible_bonus_action_factories = get_feasible_factories(combatant.bonus_action_factories, combatant, battle_map)
+    feasible_haste_action_factories = get_feasible_factories(combatant.haste_action_factories, combatant, battle_map)
     all_action_factories = feasible_action_factories
     all_action_factories.extend(feasible_bonus_action_factories)
     all_action_factories.extend(feasible_haste_action_factories)
@@ -88,22 +82,32 @@ def get_all_feasible_action_factories(combatant, battle_map):
 
 def generate_action_fsm(combatant, battle_map):
     fsm = StateMachineTemplate()
-    # combatant_copy = copy.deepcopy(combatant)
-    initial_resources = combatant.export_resources()
-
-    visited = []
-    def dfs(resources):
-        combatant.load_resources(resources)
-        faf = get_all_feasible_action_factories(combatant, battle_map)
-        state_footprint = factories_to_set(faf)
-        if state_footprint not in visited:
-            visited.append(state_footprint)
-            for f in faf:
-                action = f[1].create_mock()
-                use_resources(combatant, action, battle_map)
+    # initial_resources = combatant.export_resources()
+    state_footprint_to_count = dict()
+    visited = set()
+    transition_name_to_action = dict()
+    def dfs(previous_state_name, action_taken=None):
+        fafs = get_all_feasible_action_factories(combatant, battle_map)
+        fas = [faf[1].create_all(battle_map) for faf in fafs]
+        fas = [fa for sublist in fas for fa in sublist]
+        state_footprint = actions_to_set(fas)
+        if not state_footprint:
+            fsm.add_transition(str(action_taken), previous_state_name, 'nop')
+        elif state_footprint not in visited:
+            new_state_name = str(int(fsm.get_last_added_state()) + 1)
+            state_footprint_to_count[state_footprint] = new_state_name
+            if action_taken:
+                action_name = str(action_taken)
+                transition_name_to_action[action_name] = action_taken
+                fsm.add_transition(action_name, previous_state_name, new_state_name)
+            fsm.add_state(new_state_name)  # Avoid adding the initial state again
+            visited.add(state_footprint)
+            for fa in fas:
                 exported_resources = combatant.export_resources()
-                dfs(exported_resources)
-    dfs(initial_resources)
-    return visited
-    # Use something like DFS, but for every node make a copy of the resources and to load them again (this would be combatant specific function I guess)
-
+                use_resources(combatant, fa, battle_map)
+                dfs(new_state_name, str(fa))
+                combatant.load_resources(exported_resources)
+        else:
+            fsm.add_transition(str(action_taken), previous_state_name, state_footprint_to_count[state_footprint])
+    dfs(None)
+    return fsm, transition_name_to_action

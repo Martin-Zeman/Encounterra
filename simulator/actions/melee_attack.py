@@ -1,6 +1,6 @@
 import math
 from simulator.actions.actoid import FactoryFlags
-from simulator.actions.attack import AttackFactory
+from simulator.actions.attack import AttackFactory, Attack
 from simulator.misc import percent_of_curr_hp
 from simulator.threat import mean_dmg
 import logging
@@ -15,11 +15,11 @@ class MeleeAttackFactory(AttackFactory):
         self.flags |= FactoryFlags.IS_MELEE
         self.ammo = math.inf
 
-    def __str__(self):
-        """
-        Important for FSM building
-        """
-        return "MeleeAttackFactory" + self.name
+    # def __str__(self):
+    #     """
+    #     Important for FSM building
+    #     """
+    #     return "MeleeAttackFactory" + self.name
 
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
@@ -39,3 +39,6 @@ class MeleeAttackFactory(AttackFactory):
         target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
         return battle_map.get_free_adjacent_coords(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
 
+    def create_all(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return [Attack(t, self) for t in targets]

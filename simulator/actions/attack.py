@@ -51,7 +51,6 @@ class AttackFactory(DirectThreatFactory):
         return self.name + " AttackFactory"
 
     def find_best_args(self, combatant, battle_map):
-        # TODO consider prioritizing the ones you have a change to finish off
         pass
         # if self.attack_type is AttackFactory.Type.MELEE:
         #     potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)
@@ -79,14 +78,13 @@ class AttackFactory(DirectThreatFactory):
     def create(self, target_combatant):
         return Attack(target_combatant, self)
 
-    def create_mock(self):
-        return Attack(None, self)
+    # def create_mock(self):
+    #     return Attack(None, self)
 
     def calculate_threat_approx(self, combatant, battle_map, roll_modifier=RollModifier.STRAIGHT):
         """
         Helper function which calculates the average potential threat over all potential targets including all possible mods
         """
-        #TODO consider adding condition multiplier
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         if not potential_targets:
             return 0
@@ -210,7 +208,7 @@ class Attack(Actoid, DirectThreat):
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return self.factory.name
+        return self.factory.name + f" on {self.target_combatant}"
 
     def get_dmg_type(self):
         return self.factory.dmg_type

@@ -1,4 +1,4 @@
-from simulator.action_types import BonusActionOrdering
+from simulator.action_types import BonusActionOrdering, BonusAction
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, percent_of_curr_hp, RollModifier, avg_roll
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -67,8 +67,15 @@ class FireboltFactory(DirectThreatFactory):
             return None
         return Firebolt(best, self)
 
-    def create_mock(self):
-        return Firebolt(None, self)
+    def get_eligible_targets(self, battle_map):
+        return battle_map.get_enemies(self.caster)
+
+    def create_all(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return [Firebolt(t, self) for t in targets]
+
+    # def create_mock(self):
+    #     return Firebolt(None, self)
 
     def create(self, target_combatant):
         return Firebolt(target_combatant, self)
@@ -163,7 +170,7 @@ class Firebolt(Actoid, DirectThreat):
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return f"Firebolt {self.target}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + f"Firebolt on {self.target}"
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(Firebolt.dmg_type))

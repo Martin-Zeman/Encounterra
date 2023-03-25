@@ -68,12 +68,16 @@ class RageFactory(ThreatModifierFactory):
         pass # No need due to the TARGETS_SELF flag
 
     def create_best(self, combatant, battle_map):
-        return Rage(combatant)
+        return Rage(self.combatant, self)
 
-    def create_mock(self):
-        return Rage(None)
+    # def create_mock(self):
+    #     return Rage(None)
+
+    def create_all(self, battle_map):
+        return [Rage(self.combatant, self)]
 
     def create(self, target_combatant):
+        # Doesn't make much sense here
         return Rage(target_combatant, self)
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
@@ -109,11 +113,15 @@ class RageFactory(ThreatModifierFactory):
 
 class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
-    def __init__(self, combatant):
+    def __init__(self, combatant, factory):
         Actoid.__init__(self, actoid_type=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, turns=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)
+        self.factory = factory
+
+    def __str__(self):
+        return f"Rage of {self.factory.combatant}"
 
     def activate(self):
         logger.info(f"{self.combatants[0]} enters into a rage")

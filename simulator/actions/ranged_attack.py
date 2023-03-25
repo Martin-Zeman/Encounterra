@@ -2,7 +2,7 @@ import math
 
 from simulator.action_types import BonusActionOrdering
 from simulator.actions.actoid import FactoryFlags
-from simulator.actions.attack import AttackFactory
+from simulator.actions.attack import AttackFactory, Attack
 from simulator.misc import percent_of_curr_hp
 from simulator.threat import mean_dmg
 import logging
@@ -18,11 +18,11 @@ class RangedAttackFactory(AttackFactory):
         self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.ammo = ammo
 
-    def __str__(self):
-        """
-        Important for FSM building
-        """
-        return "RangedAttackFactory" + self.name
+    # def __str__(self):
+    #     """
+    #     Important for FSM building
+    #     """
+    #     return "RangedAttackFactory" + self.name
 
     def find_best_args(self, combatant, battle_map):
         # TODO consider prioritizing the ones you have a change to finish off
@@ -36,3 +36,7 @@ class RangedAttackFactory(AttackFactory):
     def get_eligible_coords(self, target_combatant, battle_map):
         target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
         return battle_map.get_free_coords_in_range(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
+
+    def create_all(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return [Attack(t, self) for t in targets]

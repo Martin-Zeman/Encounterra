@@ -49,8 +49,16 @@ class MistyStepFactory(DirectThreatFactory):
             return None
         return MistyStep(best_args, self)
 
-    def create_mock(self):
-        return MistyStep(None, self)
+    # def create_mock(self):
+    #     return MistyStep(None, self)
+
+    def create_all(self, battle_map):
+        # targets = self.get_eligible_targets(battle_map)
+        # return [MistyStep(t, self) for t in targets]
+        best_args = self.find_best_args(self.caster, battle_map)
+        if best_args is None:
+            return None
+        return [MistyStep(best_args, self)]
 
     def create(self, coord):
         return MistyStep(coord, self)

@@ -1,7 +1,7 @@
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
-from simulator.action_types import HasteAction, BonusActionOrdering
+from simulator.action_types import HasteAction, BonusActionOrdering, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat import mean_dmg, dmg_decrement_for_ac_flat
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
@@ -78,8 +78,17 @@ class HasteFactory(ThreatModifierFactory):
             return None
         return Haste(ally, self)
 
-    def create_mock(self):
-        return Haste(None, self)
+    # def create_mock(self):
+    #     return Haste(None, self)
+
+    def get_eligible_targets(self, battle_map):
+        ret = battle_map.get_allies(self.caster)
+        ret.append(self.caster)
+        return ret
+
+    def create_all(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return [Haste(t, self) for t in targets]
 
     def create(self, target_combatant):
         return Haste(target_combatant, self)
@@ -151,7 +160,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.factory = factory
 
     def __str__(self):
-        return f"Haste on {self.target}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HASTE else "") + f"Haste on {self.target}"
 
     def activate(self):
         self.factory.caster.is_concentrating = True

@@ -2,7 +2,7 @@ from simulator.abilities.on_hit_prone import OnHitProne
 from simulator.actions.action_fsms import TwoMeleeOneRanged
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
-from simulator.feasibility import get_feasible_actions
+from simulator.feasibility import get_feasible_factories
 from simulator.misc import DamageType, SavingThrow, Conditions, Size
 from simulator.action_factory import *
 from simulator.action_types import *
@@ -52,9 +52,9 @@ class StoneGiant(Combatant):
 
         # TODO add the knock prone effect to the rock
         # TODO prevent it from throwing a rock once it's used a club
-        feasible_action_factories = get_feasible_actions(self.action_factories, self, battle_map)
-        feasible_bonus_action_factories = get_feasible_actions(self.bonus_action_factories, self, battle_map)
-        feasible_haste_action_factories = get_feasible_actions(self.haste_action_factories, self, battle_map)
+        feasible_action_factories = get_feasible_factories(self.action_factories, self, battle_map)
+        feasible_bonus_action_factories = get_feasible_factories(self.bonus_action_factories, self, battle_map)
+        feasible_haste_action_factories = get_feasible_factories(self.haste_action_factories, self, battle_map)
         if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:
             feasible_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_action_factories]))
             feasible_bonus_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_bonus_action_factories]))

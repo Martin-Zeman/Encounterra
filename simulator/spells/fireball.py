@@ -1,4 +1,4 @@
-from simulator.action_types import BonusActionOrdering
+from simulator.action_types import BonusActionOrdering, BonusAction
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -39,8 +39,12 @@ class FireballFactory(DirectThreatFactory):
     def create_best(self, combatant, battle_map, **kwargs):
         return Fireball(self.find_best_args(combatant, battle_map), self,  **kwargs)
 
-    def create_mock(self):
-        return Fireball(None, self)
+    # def create_mock(self):
+    #     return Fireball(None, self)
+
+    def create_all(self, battle_map):
+        # Here there really is no need to iterate over all coords. Just find the best score
+        return [Fireball(self.find_best_args(self.caster, battle_map), self)]
 
     def create(self, coord):
         return Fireball(coord, self)
@@ -90,7 +94,7 @@ class Fireball(Actoid, DirectThreat):
         self.heightened = False if "heightened " not in kwargs or not kwargs["heightened "] else True
 
     def __str__(self):
-        return f"Fireball at {np.squeeze(self.coord)}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + f"Fireball at {np.squeeze(self.coord)}"
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

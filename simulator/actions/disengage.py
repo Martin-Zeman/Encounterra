@@ -17,17 +17,20 @@ class DisengageFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = action_type  # DISENGAGE, CUNNING DISENGAGE
 
-    def __str__(self):
-        """
-        Important for FSM building
-        """
-        return "DisengageFactory"
+    # def __str__(self):
+    #     """
+    #     Important for FSM building
+    #     """
+    #     return "DisengageFactory"
 
     def create_best(self, combatant, battle_map):
         return Disengage(combatant, self)
 
-    def create_mock(self):
-        return Disengage(None, self)
+    # def create_mock(self):
+    #     return Disengage(None, self)
+
+    def create_all(self, battle_map):
+        return [Disengage(self.combatant, self)]
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
@@ -47,6 +50,9 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, turns=1)
         self.factory = factory
+
+    def __str__(self):
+        return f"Disengage of {self.factory.combatant}"
 
     def activate(self):
         self.factory.combatant.has_disengaged = True

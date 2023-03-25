@@ -18,11 +18,14 @@ class DodgeFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = Action.DODGE
 
-    def __str__(self):
-        """
-        Important for FSM building
-        """
-        return "DodgeFactory"
+    # def __str__(self):
+    #     """
+    #     Important for FSM building
+    #     """
+    #     return "DodgeFactory"
+
+    def create_all(self, battle_map):
+        return [Dodge(self.combatant, self)]
 
     def create_best(self, combatant, battle_map):
         return Dodge(combatant, self)
@@ -48,6 +51,9 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, turns=1)
         self.factory = factory
+
+    def __str__(self):
+        return f"Dodge of {self.factory.combatant}"
 
     def activate(self):
         self.combatants[0].is_dodging = True

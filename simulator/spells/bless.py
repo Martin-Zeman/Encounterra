@@ -2,6 +2,7 @@ from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
+from itertools import combinations
 
 
 class BlessFactory(ThreatModifierFactory):
@@ -24,8 +25,15 @@ class BlessFactory(ThreatModifierFactory):
     def create_best(self, combatant, battle_map):
         return Bless(self.find_best_args(combatant, battle_map), self)
 
-    def create_mock(self):
-        return Bless(None, self)
+    def get_eligible_targets(self, battle_map):
+        return combinations(battle_map.get_enemies(self.caster), 3)
+
+    def create_all(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return [Bless(t, self) for t in targets]
+
+    # def create_mock(self):
+    #     return Bless(None, self)
 
     # def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
     #     #  calculate the modification for all allies and them do * 3/#num_allies. And then * ROUND_HORIZON

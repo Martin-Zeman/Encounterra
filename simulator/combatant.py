@@ -253,7 +253,6 @@ class Combatant(ABC):
                             qaf_kwargs = af[1].get_quickened_kwargs()
                             qaf_kwargs['action_type'] = quickened_action
                             self.bonus_action_factories.append((quickened_action, quickened_action_factory(**qaf_kwargs)))
-                            return self.bonus_action_factories[-1]
                         except KeyError:
                             pass
                 case MetaAction.TWINNED_SPELL:

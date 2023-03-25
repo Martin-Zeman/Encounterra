@@ -117,7 +117,7 @@ class ActionResolver:
     def resolve_chaos_bolt(self, caster, spell):
         # TODO Conditions
         jump = True
-        curr_target = spell.targets[0]
+        curr_target = spell.target
         potential_targets = self.teams.get_allies(curr_target)
         while jump:
             jump = False

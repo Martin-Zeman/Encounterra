@@ -1,4 +1,4 @@
-from simulator.action_types import BonusActionOrdering
+from simulator.action_types import BonusActionOrdering, BonusAction
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType
 import logging
@@ -49,11 +49,18 @@ class ChaosboltFactory(DirectThreatFactory):
     def create_best(self, combatant, battle_map):
         return Chaosbolt(self.find_best_args(combatant, battle_map), self)
 
-    def create_mock(self):
-        return Chaosbolt(None, self)
+    # def create_mock(self):
+    #     return Chaosbolt(None, self)
 
     def create(self, target_combatant):
         return Chaosbolt([target_combatant], self)
+
+    def get_eligible_targets(self, battle_map):
+        return battle_map.get_enemies(self.caster)
+
+    def create_all(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return [Chaosbolt(t, self) for t in targets]
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
@@ -82,6 +89,7 @@ class ChaosboltFactory(DirectThreatFactory):
         """
         Calculates threat to a specific target
         """
+        # TODO Consider including the potential of hitting others
         if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
             return mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
@@ -127,15 +135,15 @@ class Chaosbolt(Actoid, DirectThreat):
     dmg_type = None
 
 
-    def __init__(self, targets, factory, **kwargs):
+    def __init__(self, target, factory, **kwargs):
         super().__init__(actoid_type=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
-        self.targets = targets
+        self.targets = target
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return f"Chaosbolt on {self.targets[0]}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt on {self.targets[0]}"
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

@@ -217,7 +217,7 @@ def check_feasibility_light(combatant, action, battle_map):
                 #     res |= (combatant.num_attacks > combatant.curr_num_attacks > 0) and combatant.last_attack_factory_name is action[1].name
                     # for ag in combatant.attack_groups:
                     #     if combatant.last_attack_factory_name in ag:
-                res |= not combatant.attack_fsm.is_initial() and str(action[1]) in combatant.attack_fsm.get_available_transitions()
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
@@ -297,5 +297,5 @@ def check_feasibility_light(combatant, action, battle_map):
         return False
 
 
-def get_feasible_actions(actions, combatant, battle_map):
+def get_feasible_factories(actions, combatant, battle_map):
     return [a for a in actions if check_feasibility_light(combatant, a, battle_map)]

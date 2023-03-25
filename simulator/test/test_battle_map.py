@@ -2,7 +2,7 @@ import pytest
 from simulator.action_types import Passive
 from simulator.battle_map import Terrain, CombatantCoords
 from simulator.combatants.goblin import Goblin
-from simulator.feasibility import get_feasible_actions
+from simulator.feasibility import get_feasible_factories
 from simulator.misc import DistanceMetric, Size, Side, Conditions
 from simulator.spells.fireball import Fireball
 from simulator.spells.spell import SpellStats
@@ -891,6 +891,6 @@ def test_get_threat_adjacency_matrix(battle_map, teams, combatant1, combatant2):
     battle_map.build_adjacency_matrix()
     adj_mask = battle_map.build_combatant_adjacency_mask(combatant1)
     adj = np.multiply(battle_map.base_adjacency_matrix, adj_mask)
-    feasible_action_factories = get_feasible_actions(combatant1.action_factories, combatant1, battle_map)
-    feasible_bonus_action_factories = get_feasible_actions(combatant1.bonus_action_factories, combatant1, battle_map)
+    feasible_action_factories = get_feasible_factories(combatant1.action_factories, combatant1, battle_map)
+    feasible_bonus_action_factories = get_feasible_factories(combatant1.bonus_action_factories, combatant1, battle_map)
     threat_adj = battle_map.get_threat_adjacency_matrix(adj, combatant1, feasible_action_factories, feasible_bonus_action_factories, [])

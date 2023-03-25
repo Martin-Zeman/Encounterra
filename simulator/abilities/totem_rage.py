@@ -23,20 +23,24 @@ class TotemRageFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = BonusAction.TOTEM_RAGE
 
-    def __str__(self):
-        """
-        Important for FSM building
-        """
-        return "TotemRageFactory"
+    # def __str__(self):
+    #     """
+    #     Important for FSM building
+    #     """
+    #     return "TotemRageFactory"
 
     def create_best(self, combatant, battle_map):
-        return TotemRage(combatant, self)
+        return TotemRage(self.combatant, self)
 
     def create_mock(self):
         return TotemRage(None, self)
 
     def create(self, target_combatant):
+        # Doesn't make much sense here
         return TotemRage(target_combatant, self)
+
+    def create_all(self, battle_map):
+        return [TotemRage(self.combatant, self)]
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
@@ -103,7 +107,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.factory = factory
 
     def __str__(self):
-        return "TotemRage"
+        return f"TotemRage of {self.factory.combatant}"
 
     def activate(self):
         logger.info(f"{self.combatants[0]} enters into a totem rage")

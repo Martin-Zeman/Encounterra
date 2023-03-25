@@ -6,6 +6,7 @@ from functools import reduce
 
 from simulator.threat import mean_dmg
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+from itertools import combinations
 import logging
 
 from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER_CRIT, ROLL_MODIFIER
@@ -42,8 +43,15 @@ class TwinnedFireboltFactory(DirectThreatFactory):
     def create_best(self, combatant, battle_map):
         return TwinnedFirebolt(self.find_best_args(combatant, battle_map), self)
 
-    def create_mock(self):
-        return TwinnedFirebolt(None, self)
+    # def create_mock(self):
+    #     return TwinnedFirebolt(None, self)
+
+    def get_eligible_targets(self, battle_map):
+        return combinations(battle_map.get_enemies(self.caster), 2)
+
+    def create_all(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return [TwinnedFirebolt(t, self) for t in targets]
 
     def create(self, targets):
         return TwinnedFirebolt(targets, self)

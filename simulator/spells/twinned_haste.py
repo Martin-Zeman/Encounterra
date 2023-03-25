@@ -1,3 +1,4 @@
+from itertools import combinations
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
@@ -35,8 +36,18 @@ class TwinnedHasteFactory(ThreatModifierFactory):
     def create_best(self, combatant, battle_map):
         return TwinnedHaste(self.find_best_args(combatant, battle_map), self)
 
-    def create_mock(self):
-        return TwinnedHaste(None, self)
+    # def create_mock(self):
+    #     return TwinnedHaste(None, self)
+
+    def get_eligible_targets(self, battle_map):
+        ret = battle_map.get_allies(self.caster)
+        ret.append(self.caster)
+        ret = combinations(ret, 2)
+        return ret
+
+    def create_all(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return [TwinnedHaste(t, self) for t in targets]
 
     def create(self, targets):
         return TwinnedHaste(targets, self)

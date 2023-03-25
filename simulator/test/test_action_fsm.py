@@ -1,16 +1,19 @@
+import numpy as np
 import pytest
 from simulator.actions.action_fsms import generate_action_fsm, StateMachineTemplate
+from simulator.battle_map import CombatantCoords
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, battle_map, effect_tracker, teams
+from simulator.test.fixtures import *
+from transitions.extensions import GraphMachine
 
 def test_state_machine_template():
     fsm = StateMachineTemplate()
-    assert fsm.state == 'initial'
+    assert fsm.state == '0'
     fsm.add_state('A')
     fsm.add_state('B')
     fsm.add_state('C')
     fsm.add_state('D')
-    fsm.add_transition('to_A', 'initial', 'A')
+    fsm.add_transition('to_A', '0', 'A')
     fsm.add_transition('to_B', 'A', 'B')
     fsm.add_transition('to_C', 'B', 'C')
     fsm.add_transition('to_D', 'B', 'D')
@@ -32,15 +35,17 @@ def test_state_machine_template():
     assert fsm.get_available_transitions() == []
 
 
-# def test_generate_state_name():
-#     assert generate_state_name('A') == 'B'
-#     assert generate_state_name('C') == 'C'
-#     assert generate_state_name('Z') == 'AA'
-#     assert generate_state_name('AA') == 'AB'
-#     assert generate_state_name('FGR') == 'FGS'
-#     assert generate_state_name('FGRZ') == 'FGS'
-
-def test_generate_action_fsm(combatant1, battle_map, effect_tracker, teams):
+def test_generate_action_fsm(combatant1, combatant2, combatant3, combatant4, battle_map, effect_tracker, teams):
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
-    fsm = generate_action_fsm(combatant1, battle_map)
+    teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([7, 3]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 11]), combatant2.size))
+    battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([10, 12]), combatant3.size))
+    battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([11, 6]), combatant4.size))
+    fsm, transition_mapping = generate_action_fsm(combatant1, battle_map)
+    assert fsm.state == '0'
+    # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)
+    fsm.get_graph().draw('state_diagram.png', prog='dot')
