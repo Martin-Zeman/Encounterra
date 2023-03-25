@@ -9,10 +9,10 @@ from transitions.extensions import GraphMachine
 def test_state_machine_template():
     fsm = StateMachineTemplate()
     assert fsm.state == '0'
-    fsm.add_state('A')
-    fsm.add_state('B')
-    fsm.add_state('C')
-    fsm.add_state('D')
+    fsm.add_new_state('A')
+    fsm.add_new_state('B')
+    fsm.add_new_state('C')
+    fsm.add_new_state('D')
     fsm.add_transition('to_A', '0', 'A')
     fsm.add_transition('to_B', 'A', 'B')
     fsm.add_transition('to_C', 'B', 'C')

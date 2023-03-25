@@ -43,28 +43,36 @@ class OneMeleeOrOneRanged(StateMachine):
 
 from transitions import Machine, State
 from transitions.extensions import GraphMachine
-class StateMachineTemplate:
-    states = ['nop']
+class StateMachineTemplate(GraphMachine):
+
 
     def __init__(self):
-        self.machine = GraphMachine(model=self, states=StateMachineTemplate.states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
+        states = ['nop']
+        GraphMachine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         self.last_added_state = '-1'
 
-    def add_state(self, state_name):
-        self.machine.add_state(State(state_name))
+    def add_new_state(self, state_name):
+        self.add_state(State(state_name))
         self.last_added_state = state_name
 
     def get_last_added_state(self):
         return self.last_added_state
 
-    def add_transition(self, name, from_state, to_state):
-        self.machine.add_transition(trigger=name, source=from_state, dest=to_state)
+    # def add_transition(self, name, from_state, to_state):
+    #     self.machine.add_transition(trigger=name, source=from_state, dest=to_state)
 
     def get_available_transitions(self):
-        return self.machine.get_triggers(self.state)
+        return self.get_triggers(self.state)
 
-    # def get_transitions(self, state_name):
-    #     return self.machine.get_triggers(state_name)
+
+class AttackStateMachineTemplate(StateMachineTemplate):
+    """
+    Attack sequences are modelled by their own state machines which are used by resoures and feasibility as well as to build
+    the overall action state machines.
+    """
+    def __init__(self):
+        super().__init__()
+        self.add_state('0')
 
 
 def actions_to_set(actions):
@@ -100,7 +108,7 @@ def generate_action_fsm(combatant, battle_map):
                 action_name = str(action_taken)
                 transition_name_to_action[action_name] = action_taken
                 fsm.add_transition(action_name, previous_state_name, new_state_name)
-            fsm.add_state(new_state_name)  # Avoid adding the initial state again
+            fsm.add_new_state(new_state_name)  # Avoid adding the initial state again
             visited.add(state_footprint)
             for fa in fas:
                 exported_resources = combatant.export_resources()

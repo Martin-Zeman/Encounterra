@@ -1,4 +1,6 @@
-from simulator.actions.action_fsms import StateMachineTemplate
+import copy
+
+from simulator.actions.action_fsms import AttackStateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.spellslots import Spellslots
@@ -42,8 +44,8 @@ class Faurung(Combatant):
 
 
     def build_attack_fms(self):
-        self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
-        self.attack_fsm.add_transition(str(self.staff), 'initial', 'nop')
+        self.attack_fsm = AttackStateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
 
     def get_action(self, battle_map):
         if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
@@ -106,7 +108,7 @@ class Faurung(Combatant):
 
     def export_resources(self):
         return {
-            'spellslots': self.spellslots,
+            'spellslots': copy.deepcopy(self.spellslots),
             'sorcery_points': self.curr_sorcery_points,
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
