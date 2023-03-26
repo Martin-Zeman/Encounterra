@@ -4,14 +4,14 @@ from simulator.feasibility import get_feasible_factories
 from simulator.resources import use_resources
 
 
-class TwoMeleeOneRangedWithReckless(StateMachine):
-    A = State("A", (1, 2, 3), initial=True)  # not attacked yet
-    B = State("B", (1,))  # attacked with melee
-    C = State("C", (2,))  # attacked with melee recklessly
-    nop = State("nop", value=(), final=True)
-    melee = A.to(B) | B.to(nop)
-    melee_recklessly = A.to(C) | C.to(nop)
-    ranged = A.to(nop)
+# class TwoMeleeOneRangedWithReckless(StateMachine):
+#     A = State("A", (1, 2, 3), initial=True)  # not attacked yet
+#     B = State("B", (1,))  # attacked with melee
+#     C = State("C", (2,))  # attacked with melee recklessly
+#     nop = State("nop", value=(), final=True)
+#     melee = A.to(B) | B.to(nop)
+#     melee_recklessly = A.to(C) | C.to(nop)
+#     ranged = A.to(nop)
 
 
 class TwoMeleeOneRanged(StateMachine):
@@ -37,8 +37,6 @@ class OneMeleeOrOneRanged(StateMachine):
     nop = State("nop", value=(), final=True)
     melee = A.to(nop)
     ranged = A.to(nop)
-    dodge = A.to(nop)
-    disengage = A.to(nop)
 
 
 from transitions import Machine, State

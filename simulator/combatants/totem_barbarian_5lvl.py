@@ -1,4 +1,4 @@
-from simulator.actions.action_fsms import TwoMeleeOneRangedWithReckless
+from simulator.actions.action_fsms import AttackStateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_factories
@@ -25,6 +25,7 @@ class TotemBarbarian5Lvl(Combatant):
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)
         self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, max_num=2)
+        self.build_attack_fms()
         self.movement_generator = None
         self.selected_target = None
         self.path = None
@@ -34,6 +35,17 @@ class TotemBarbarian5Lvl(Combatant):
         self.saving_throws[SavingThrow.INT] = 0
         self.saving_throws[SavingThrow.WIS] = 0
         self.saving_throws[SavingThrow.CHA] = 1
+
+
+    def build_attack_fms(self):
+        self.attack_fsm = AttackStateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_fsm.add_state('1')  # attacked with melee
+        self.attack_fsm.add_state('2')  # attacked with melee recklessly
+        self.attack_fsm.add_transition(str(self.axe[1]), '0', '1')  # Melee
+        self.attack_fsm.add_transition(str(self.axe[1]), '1', 'nop')  # Melee
+        self.attack_fsm.add_transition(str(self.axe_recklessly[1]), '0', '2')
+        self.attack_fsm.add_transition(str(self.axe_recklessly[1]), '2', 'nop')
+        self.attack_fsm.add_transition(str(self.javelin_attack[1]), '0', 'nop')
 
 
     def plan_path(self, battle_map, target_combatant, target_position):
@@ -109,8 +121,19 @@ class TotemBarbarian5Lvl(Combatant):
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        self.attack_fsm = TwoMeleeOneRangedWithReckless()  # Initialized here to avoid pickling error when multiprocessing
 
+
+    def export_resources(self):
+        return {
+            'has_action': self.has_action,
+            'has_bonus_action': self.has_bonus_action,
+            'curr_rage_uses': self.curr_rage_uses
+        }
+
+    def load_resources(self, resources):
+        self.has_action = resources['has_action']
+        self.has_bonus_action = resources['has_bonus_action']
+        self.curr_rage_uses = resources['curr_rage_uses']
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

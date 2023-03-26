@@ -226,7 +226,7 @@ def check_feasibility_light(combatant, action, battle_map):
                 res = combatant.has_action
                 # if Passive.MULTIATTACK in combatant.passive:
                 #     res |= combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack) and combatant.last_attack_factory_name is action[1].name
-                res |= not combatant.attack_fsm.is_initial() and str(action[1]) in combatant.attack_fsm.get_available_transitions()
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.DASH | Action.DODGE:
