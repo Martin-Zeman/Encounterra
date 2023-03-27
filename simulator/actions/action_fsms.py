@@ -14,12 +14,12 @@ from simulator.resources import use_resources
 #     ranged = A.to(nop)
 
 
-class TwoMeleeOneRanged(StateMachine):
-    A = State("A", value=(1, 2), initial=True)  # not attacked yet
-    B = State("B", value=(1,))  # attacked once
-    nop = State("nop", value=(),final=True)
-    melee = A.to(B) | B.to(nop)
-    ranged = A.to(nop)
+# class TwoMeleeOneRanged(StateMachine):
+#     A = State("A", value=(1, 2), initial=True)  # not attacked yet
+#     B = State("B", value=(1,))  # attacked once
+#     nop = State("nop", value=(),final=True)
+#     melee = A.to(B) | B.to(nop)
+#     ranged = A.to(nop)
 
 # class OneAttack(StateMachine):
 #     A = State("A", value=(1,), initial=True)  # not attacked yet
@@ -45,15 +45,16 @@ class StateMachineTemplate(GraphMachine):
 
 
     def __init__(self):
-        states = ['nop']
+        states = ['0', 'nop']
         GraphMachine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         self.last_added_state = '-1'
 
     def add_new_state(self, state_name):
         self.add_state(State(state_name))
-        self.last_added_state = state_name
+        # self.last_added_state = state_name
 
-    def get_last_added_state(self):
+    def get_next_state_name(self):
+        self.last_added_state = str(int(self.last_added_state) + 1)
         return self.last_added_state
 
     # def add_transition(self, name, from_state, to_state):
@@ -100,13 +101,13 @@ def generate_action_fsm(combatant, battle_map):
         if not state_footprint:
             fsm.add_transition(str(action_taken), previous_state_name, 'nop')
         elif state_footprint not in visited:
-            new_state_name = str(int(fsm.get_last_added_state()) + 1)
+            new_state_name = fsm.get_next_state_name()
             state_footprint_to_count[state_footprint] = new_state_name
             if action_taken:
                 action_name = str(action_taken)
                 transition_name_to_action[action_name] = action_taken
                 fsm.add_transition(action_name, previous_state_name, new_state_name)
-            fsm.add_new_state(new_state_name)  # Avoid adding the initial state again
+                fsm.add_new_state(new_state_name)  # Avoid adding the initial state again
             visited.add(state_footprint)
             for fa in fas:
                 exported_resources = combatant.export_resources()
@@ -115,5 +116,5 @@ def generate_action_fsm(combatant, battle_map):
                 combatant.load_resources(exported_resources)
         else:
             fsm.add_transition(str(action_taken), previous_state_name, state_footprint_to_count[state_footprint])
-    dfs(None)
+    dfs('0')
     return fsm, transition_name_to_action

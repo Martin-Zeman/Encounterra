@@ -1,4 +1,7 @@
 import pytest
+
+from simulator.combatants.ogre import Ogre
+from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.effects.effect_tracker import EffectTracker
 from simulator.combatants.bugbear import Bugbear
@@ -34,3 +37,11 @@ def combatant3(effect_tracker):
 @pytest.fixture()
 def combatant4(effect_tracker):
     return TotemBarbarian5Lvl(effect_tracker, "TotemBarbarian5Lvl")
+
+@pytest.fixture()
+def combatant5(effect_tracker):
+    return StoneGiant(effect_tracker, "StoneGiant")
+
+@pytest.fixture()
+def combatant6(effect_tracker):
+    return Ogre(effect_tracker, "Ogre")

@@ -1,5 +1,5 @@
 from simulator.abilities.on_hit_prone import OnHitProne
-from simulator.actions.action_fsms import TwoMeleeOneRanged
+from simulator.actions.action_fsms import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_factories
@@ -24,7 +24,7 @@ class StoneGiant(Combatant):
         self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
                                             dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1, ammo=2, on_hit=OnHitProne(SavingThrow.STR, 17))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=15)
-        # self.action_fsm = TwoMeleeOneRanged()
+        self.build_attack_fms()
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.melee_reaction_range = 3
         self.movement_generator = None
@@ -36,6 +36,14 @@ class StoneGiant(Combatant):
         self.saving_throws[SavingThrow.INT] = 0
         self.saving_throws[SavingThrow.WIS] = 4
         self.saving_throws[SavingThrow.CHA] = -1
+
+
+    def build_attack_fms(self):
+        self.attack_fsm = StateMachineTemplate()
+        self.attack_fsm.add_state('1')
+        self.attack_fsm.add_transition(str(self.club[1]), '0', '1')
+        self.attack_fsm.add_transition(str(self.club[1]), '1', 'nop')
+        self.attack_fsm.add_transition(str(self.rock[1]), '0', 'nop')
 
 
     def plan_path(self, battle_map, target_combatant, target_position, attack_range):
@@ -118,10 +126,24 @@ class StoneGiant(Combatant):
         else:
             return None
 
+
+    def export_resources(self):
+        return {
+            'has_action': self.has_action,
+            'has_bonus_action': self.has_bonus_action,
+            'attack_fsm_state': self.attack_fsm.state,
+            'rock_ammo': self.rock[1].ammo
+        }
+
+    def load_resources(self, resources):
+        self.has_action = resources['has_action']
+        self.has_bonus_action = resources['has_bonus_action']
+        self.attack_fsm.state = resources['attack_fsm_state']
+        self.rock[1].ammo = resources['rock_ammo']
+
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        self.attack_fsm = TwoMeleeOneRanged()  # Initialized here to avoid pickling error when multiprocessing
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

@@ -1,4 +1,4 @@
-from simulator.actions.action_fsms import AttackStateMachineTemplate
+from simulator.actions.action_fsms import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_factories
@@ -38,7 +38,7 @@ class TotemBarbarian5Lvl(Combatant):
 
 
     def build_attack_fms(self):
-        self.attack_fsm = AttackStateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_fsm.add_state('1')  # attacked with melee
         self.attack_fsm.add_state('2')  # attacked with melee recklessly
         self.attack_fsm.add_transition(str(self.axe[1]), '0', '1')  # Melee
@@ -127,13 +127,15 @@ class TotemBarbarian5Lvl(Combatant):
         return {
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
-            'curr_rage_uses': self.curr_rage_uses
+            'curr_rage_uses': self.curr_rage_uses,
+            'attack_fsm_state': self.attack_fsm.state
         }
 
     def load_resources(self, resources):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.curr_rage_uses = resources['curr_rage_uses']
+        self.attack_fsm.state = resources['attack_fsm_state']
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

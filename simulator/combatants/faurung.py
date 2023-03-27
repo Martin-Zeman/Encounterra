@@ -1,6 +1,6 @@
 import copy
 
-from simulator.actions.action_fsms import AttackStateMachineTemplate
+from simulator.actions.action_fsms import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.spellslots import Spellslots
@@ -44,7 +44,7 @@ class Faurung(Combatant):
 
 
     def build_attack_fms(self):
-        self.attack_fsm = AttackStateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
 
     def get_action(self, battle_map):

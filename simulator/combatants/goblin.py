@@ -1,4 +1,4 @@
-from simulator.actions.action_fsms import OneMeleeOrOneRanged
+from simulator.actions.action_fsms import OneMeleeOrOneRanged, StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions
@@ -17,6 +17,7 @@ class Goblin(Combatant):
         self.shortbow_attack = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=64, crit_range=1)
         self.nimble_disengage = self.add_ability(BonusAction.CUNNING_DISENGAGE)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.build_attack_fms()
         self.selected_target = None
         self.dist_to_nearest = None
         self.saving_throws[SavingThrow.STR] = -1
@@ -25,6 +26,12 @@ class Goblin(Combatant):
         self.saving_throws[SavingThrow.INT] = 0
         self.saving_throws[SavingThrow.WIS] = -1
         self.saving_throws[SavingThrow.CHA] = -1
+
+
+    def build_attack_fms(self):
+        self.attack_fsm = StateMachineTemplate()
+        self.attack_fsm.add_transition(str(self.scimitar_attack[1]), '0', 'nop')
+        self.attack_fsm.add_transition(str(self.shortbow_attack[1]), '0', 'nop')
 
     def plan_path(self, battle_map):
         free_coords = battle_map.get_free_coords_at_distance_from_target(self.selected_target, self, 8, 16)
@@ -89,12 +96,23 @@ class Goblin(Combatant):
                 return self.attack_routine()
 
 
+    def export_resources(self):
+        return {
+            'has_action': self.has_action,
+            'has_bonus_action': self.has_bonus_action,
+            'attack_fsm_state': self.attack_fsm.state
+        }
+
+    def load_resources(self, resources):
+        self.has_action = resources['has_action']
+        self.has_bonus_action = resources['has_bonus_action']
+        self.attack_fsm.state = resources['attack_fsm_state']
+
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
         self.selected_target = None
         self.dist_to_nearest = None
-        self.attack_fsm = OneMeleeOrOneRanged()  # Initialized here to avoid pickling error when multiprocessing
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
