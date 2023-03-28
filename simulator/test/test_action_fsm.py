@@ -62,7 +62,6 @@ def test_generate_action_fsm(combatant1, combatant2, combatant3, combatant4, com
     # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)
     fsm.get_graph().draw('state_diagram_bugbear.png', prog='dot')
 
-
     fsm, transition_mapping = generate_action_fsm(combatant4, battle_map)
     assert fsm.state == '0'
     # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)

@@ -12,6 +12,7 @@ class Action(Enum):
     FIREBOLT = auto()
     CHAOSBOLT = auto()
     HASTE = auto()
+    HUNGER_OF_HADAR = auto()
     HIDE = auto()
     TWINNED_FIREBOLT = auto()
     TWINNED_HASTE = auto()
@@ -30,6 +31,7 @@ class BonusAction(Enum):
     QUICKENED_FIREBOLT = auto()
     QUICKENED_CHAOSBOLT = auto()
     QUICKENED_HASTE = auto()
+    QUICKENED_HUNGER_OF_HADAR = auto()
 
 
 class Reaction(Enum):

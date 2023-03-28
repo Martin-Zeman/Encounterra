@@ -60,6 +60,38 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
             pass
     return coords
 
+def get_affected_by_sphere(origin, radius, grid_size):
+    """
+    Gets coordinates of grid squares affected by a spheric effect originating at the center of a square at origin coordinates.
+    :param origin:
+    :param radius: radius of the sphere in grid coordinates
+    :param grid_size: size of the grid
+    :return: affected coordinates as a list of np.array
+    """
+    coords = []
+    origin_center = get_square_center(origin)
+    for x, y in [(origin[0] + i, origin[1] + j) for i in range(-radius, radius + 1) for j in range(-radius, radius + 1)]:
+        if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
+            continue
+        curr_coord_center = get_square_center(np.array([x, y]))
+        if np.linalg.norm(origin_center - curr_coord_center) <= radius:
+            coords.append(np.array([x, y]))
+    return coords
+
+def get_affected_by_square(origin, length, grid_size):
+    """
+    Gets coordinates of grid squares affected by a square effect originating at bottom left corner of a square at origin coordinates.
+    :param origin:
+    :param length: length of the square side
+    :param grid_size: size of the grid
+    :return: affected coordinates as a list of np.array
+    """
+    coords = []
+    for x, y in [(origin[0] + i, origin[1] + j) for i in range(1, length + 1) for j in range(1, length + 1)]:
+        if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
+            continue
+        coords.append(np.array([x, y]))
+    return coords
 
 def do_squares_overlap(origin1, length1, origin2, length2):
     """

@@ -285,43 +285,14 @@ class Map:
         adj -= np.eye(Nsq, dtype=int)
         for coord in self.difficult_set:
             adj[:, coord[0] * N + coord[1]] *= 2
+
+        # TODO add AoO as DT here
+
         for coord in self.impassable_set:
             adj[:, coord[0] * N + coord[1]] = 0
         self.base_adjacency_matrix = adj
         # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
-
-    # def build_threat_adjacency_matrix(self, combatant, feasible_actions, feasible_bonus_actions, feasible_haste_actions):
-    #     # start_time = time.time()
-    #     N = self.size
-    #     Nsq = N ** 2
-    #     adj = np.zeros((N, N, N, N), dtype=int)
-    #     # Take adj to encode (x,y) coordinate to (x,y) coordinate edges
-    #     # Let's now connect the nodes
-    #     for i in range(N):
-    #         for j in range(N):
-    #             # TODO I don't think the min is needed
-    #             adj[i, j, max((i - 1), 0), max((j - 1), 0)] = 1
-    #             adj[i, j, max((i - 1), 0), j] = 1
-    #             adj[i, j, max((i - 1), 0), min(j + 1, N - 1)] = 1
-    #
-    #             adj[i, j, i, max((j - 1), 0)] = 1
-    #             adj[i, j, i, j] = 1
-    #             adj[i, j, i, min(j + 1, N - 1)] = 1
-    #
-    #             adj[i, j, min(i + 1, N - 1), max((j - 1), 0)] = 1
-    #             adj[i, j, min(i + 1, N - 1), j] = 1
-    #             adj[i, j, min(i + 1, N - 1), min(j + 1, N - 1)] = 1
-    #
-    #     adj = adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
-    #     # Remove self-connections (optional)
-    #     adj -= np.eye(Nsq, dtype=int)
-    #     for coord in self.difficult_set:
-    #         adj[:, coord[0] * N + coord[1]] *= 2
-    #     for coord in self.impassable_set:
-    #         adj[:, coord[0] * N + coord[1]] = 0
-    #     self.base_adjacency_matrix = adj
-    #     # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
     def build_combatant_adjacency_mask(self, combatant):
         """
@@ -356,19 +327,19 @@ class Map:
         mv_reshaped[:, :, :, (N - offset):N].fill(0)
         return mask
 
-    def get_threat_adjacency_matrix(self, adj, combatant, feasible_action_factories, feasible_bonus_action_factories, feasible_haste_action_factories):
+    def get_threat_adjacency_matrix(self, combatant):
         """
-        Transforms a standard adjacency matrix to one based on incoming threat associated with traversing edges
-        :param adj: standard distance-based adjacency matrix, already masked for a specific combatant
+        Builds a threat adjacency matrix where edges represent the incoming threat associated with traversing them. It includes threat
+        from AoOs and AoEs. This shall then be used in the Dijkstra's algorithm to compute a side-product of threat associated with reaching
+        a certain coordinate.
+        :param combatant: the moving combatant
         :return: adjacency matrix based on threat associated with traversing the edges
         """
-        # threat_adj = copy.copy(adj)
         N = self.size
-        dist_to_threat = np.vectorize(lambda d: 0 if d > 0 else (-sys.maxsize - 1) / 2)  # very low negative number but not max
-        threat_adj = dist_to_threat(adj)
-        threat_adj_reshaped = threat_adj.view().reshape(N, N, N, N)  # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
-        enemies = self.get_enemies(combatant)
+        Nsq = N ** 2
+        threat_adj = np.zeros((N, N, N, N), dtype=int)
 
+        enemies = self.get_enemies(combatant)
         # account for AoO
         for e in enemies:
             if not e.has_reaction:
@@ -379,39 +350,15 @@ class Map:
             adj_coords = self.get_free_adjacent_coords(coords, inflate_to_size=combatant.size, rng=rng)
             for ac in adj_coords:
                 # it should be ok to apply this to coords that are part of the set or inaccessible, they'll just be even lower
-                threat_adj_reshaped[ac[0], ac[1], :, :] -= reaction_threat
+                threat_adj[ac[0], ac[1], :, :] -= reaction_threat
 
-        action_mapping = dict()
-        node_cnt = N ** 2 + 1
-        all_action_factories = feasible_action_factories
-        all_action_factories.extend(feasible_bonus_action_factories)
-        all_action_factories.extend(feasible_haste_action_factories)
-        for faf in all_action_factories:
-            targets = faf.get_eligible_targets(self)
-            for t in targets:
-                coords = faf.get_eligible_coords(t, self)
+        coord_to_threat = self.effect_tracker.get_aoe_coord_to_threat(combatant)
+        for aoe_coord, threat in coord_to_threat.items():
+            threat_adj[:, :, aoe_coord[0], aoe_coord[1]] -= threat
 
-        # TODO account for AoE
+        threat_adj = threat_adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
         return threat_adj
 
-
-    # def build_combatant_adjacency_mask_no_inflation(self, combatant):
-    #     """
-    #     Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
-    #     Allies are considered difficult terrain (potentially on top of already difficult terrain).
-    #     :param combatant: for whom the mask is to be constructed
-    #     :return: adjacency matrix mask
-    #     """
-    #     N = self.size
-    #     # TODO consider preallocating this for all combatants and only resetting it to ones
-    #
-    #     mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
-    #     for curr_combatant, coords in self.combatant_coordinate_cache.items():
-    #         coord = coords.get()[0]  # Take the root coordinate
-    #         if curr_combatant is not combatant and curr_combatant.is_alive():
-    #             # TODO even allies are now impassable, try and figure out of a way to improve this
-    #             mask[:, coord[0] * N + coord[1]] = 0
-    #     return mask
 
     def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array, reconstructed_path):
         """
@@ -464,8 +411,8 @@ class Map:
     def dijkstra(self, src, mask):
         """
         Implementation of the Dijkstra algorithm with a preference for the least zig-zaggy path
-        :param src:
-        :param mask:
+        :param src: source coordinate
+        :param mask: combatant-specific mask for the adjacency matrix
         :return: list of distances to all vertices, list of predecessors for every vertex
         """
         src = np.array(src)
@@ -485,43 +432,6 @@ class Map:
             open_set[x] = True
             for y in range(Nsq):
                 if adj[x][y] > 0 and open_set[y] is False:
-                    coord_to = (y // N, y % N)
-                    coord_to_np = np.array([coord_to[0], coord_to[1]])
-                    coord_from = np.array([x // N, x % N])
-                    if dist[y] > dist[x] + adj[x][y]:
-                        dist[y] = dist[x] + adj[x][y]
-                        shortest_paths[coord_to] = coord_from
-                    elif dist[y] >= dist[x] + adj[x][y] and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(
-                            np.abs(coord_to_np - coord_from)):
-                        # TODO this should also work with ==, try that
-                        # prefer the path with the least coordinate diff, i.e. the less zig-zaggy path
-                        shortest_paths[coord_to] = coord_from
-
-        return dist, shortest_paths
-
-    def threat_dijkstra(self, src, adj):
-        """
-        A modification of the Dijkstra algorithm with a preference for the least zig-zaggy path to use threat instead of distance
-        :param src:
-        :param mask:
-        :return: list of threat to all vertices, list of predecessors for every vertex
-        """
-        src = np.array(src)
-        N = self.size
-        Nsq = self.size ** 2
-        dist = [sys.maxsize] * Nsq
-        dist[src[0] * self.size + src[1]] = 0
-        open_set = [False] * Nsq
-        shortest_paths = {}
-
-        for _ in range(Nsq):
-            x = self.minDistance(dist, open_set)
-            if x is None:
-                # enemy-occupied squares are unreachable
-                continue
-            open_set[x] = True
-            for y in range(Nsq):
-                if adj[x][y] < sys.maxsize and open_set[y] is False:
                     coord_to = (y // N, y % N)
                     coord_to_np = np.array([coord_to[0], coord_to[1]])
                     coord_from = np.array([x // N, x % N])
@@ -842,10 +752,26 @@ class Map:
     #     return adjacent_coords[0][0]
 
     def calc_dijkstra(self, combatant):
+        """
+        Calculates the Dijkstra algorithm for a given combatant. Currently used only for testing
+        :param combatant: combatant who wants to move
+        :return: :return: list of distances to all vertices, list of predecessors for every vertex and the threat adjacency matrix
+        """
         my_location = self.get_combatant_position(combatant)
         mask = self.build_combatant_adjacency_mask(combatant)
+        threat_adj = self.get_threat_adjacency_matrix(combatant)
         distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
-        return distances, shortest_paths
+        return distances, shortest_paths, threat_adj
+
+    def accumulate_threats(self, path, threat_adj):
+        """
+        Accumulates threats along a path
+        :param path: path as a sequence of np.array coordinates
+        :param threat_adj: threat adjacency matrix where edges represent the threat associated with traversing it
+        :return: accumulated threat
+        """
+        pass  # TODO
+
 
     @dispatch(Combatant, Combatant)
     def get_path_to(self, combatant, target_combatant, distances=None, shortest_paths=None, rng=1):
@@ -864,16 +790,18 @@ class Map:
         logger.debug(f"Destination {enemy_location.get()[0]}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant)
+            threat_adj = self.get_threat_adjacency_matrix(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, shortest_paths, rng)
         if enemy_adjacent_location is None:
             return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)
         if reconstructed_path is None:
+            # TODO somehow make sure that it includes the threat of staying at a coordiante
             return None
         if logger.root.level >= logging.INFO:
             self.printDijkstra(distances, my_location.get(), enemy_location.get(), reconstructed_path['tuples'])
-        return convert_path_to_increments(reconstructed_path['numpy'])
+        return convert_path_to_increments(reconstructed_path['numpy']), self.accumulate_threats(reconstructed_path['numpy'], threat_adj)
 
     @dispatch(Combatant, np.ndarray)
     def get_path_to(self, combatant, target_coord, distances=None, shortest_paths=None):
@@ -891,13 +819,15 @@ class Map:
         logger.debug(f"Destination {target_coord}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant)
+            threat_adj = self.get_threat_adjacency_matrix(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), target_coord)
         if reconstructed_path is None:
+            # TODO somehow make sure that it includes the threat of staying at a coordiante
             return None
         if logger.root.level >= logging.INFO:
             self.printDijkstra(distances, my_location.get(), np.array([target_coord]), reconstructed_path['tuples'])
-        return convert_path_to_increments(reconstructed_path['numpy'])
+        return convert_path_to_increments(reconstructed_path['numpy']), self.accumulate_threats(reconstructed_path['numpy'], threat_adj)
 
     def get_combatant_position(self, combatant):
         try:

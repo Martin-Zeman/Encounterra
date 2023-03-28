@@ -5,8 +5,8 @@ from simulator.battle_map import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.effects.post_haste_lethargy import PostHasteLethargy
-from simulator.effects.spheric_effect import SphericEffect
-from simulator.geometry import do_squares_overlap
+from simulator.effects.aoe_spheric_effect import AoeSphericEffect
+from simulator.geometry import do_squares_overlap, get_affected_by_square, get_affected_by_sphere
 
 logger = logging.getLogger(__name__)
 
@@ -71,20 +71,49 @@ class EffectTracker:
                 return True
         return False
 
-    def get_all_affecting_coords(self, coords: CombatantCoords):
+    # def get_all_affecting_coords(self, coords: CombatantCoords):
+    #     """
+    #     Returns all effects affecting a given coordinate
+    #     :param coord: coordinate in question
+    #     :return: set of all effects affecting a combatant
+    #     """
+    #     assert self.battle_map
+    #     affecting = []
+    #     for e in self.effects:
+    #         if isinstance(e[0], AoeSquareEffect) and do_squares_overlap(e[0].origin, e[0].length, coords.get()[0], coords.size.value + 1):
+    #             affecting.append(e)
+    #         elif isinstance(e[0], AoeSphericEffect) and self.battle_map.get_cartesian_distance(coords, np.array([e[0].coord])) <= e[0].radius:
+    #             affecting.append(e)
+    #     return affecting
+
+    def get_aoe_coord_to_threat(self, combatant):
         """
         Returns all effects affecting a given coordinate
-        :param coord: coordinate in question
-        :return: set of all effects affecting a combatant
+        :param combatant: the combatant who wants to move
+        :return: a dictionary of coords -> threat asociated with the combatant entering that coord or staying there
         """
-        assert self.battle_map
-        affecting = []
+        coord_to_threat = dict()
+        def add_to_coord_to_threat(coords, action_factory):
+            threat = action_factory.calculate_threat_to_target(self.battle_map, combatant)
+            for coord in coords:
+                try:
+                    coord_to_threat[coord] += threat
+                except KeyError:
+                    coord_to_threat[coord] = threat
+
+
         for e in self.effects:
-            if isinstance(e[0], AoeSquareEffect) and do_squares_overlap(e[0].origin, e[0].length, coords.get()[0], coords.size.value + 1):
-                affecting.append(e)
-            elif isinstance(e[0], SphericEffect) and self.battle_map.get_cartesian_distance(coords, np.array([e[0].coord])) <= e[0].radius:
-                affecting.append(e)
-        return affecting
+            if isinstance(e[0], AoeSquareEffect):
+                coords = get_affected_by_square(e[0].origin, e[0].length, self.battle_map.size)
+            elif isinstance(e[0], AoeSphericEffect):
+                coords = get_affected_by_sphere(e[0].origin, e[0].radius, self.battle_map.size)
+            else:
+                continue
+            add_to_coord_to_threat(coords, e[0].factory)
+        return coord_to_threat
+
+
+
 
     def combatant_died(self, combatant):
         self.effects = [e for e in self.effects if e[1] is not combatant]
