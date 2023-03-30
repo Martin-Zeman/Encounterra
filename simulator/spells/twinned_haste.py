@@ -134,7 +134,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
             self.factory.effect_tracker.create_post_haste_lethargy(target)
             target.has_haste_action = False
 
-    def is_affecting(self, combatant):
+    def is_affecting(self, combatant, battle_map):
         return combatant is self.target
 
 

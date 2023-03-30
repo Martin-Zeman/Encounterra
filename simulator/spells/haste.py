@@ -176,7 +176,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.factory.effect_tracker.create_post_haste_lethargy(self.target)
         self.target.has_haste_action = False
 
-    def is_affecting(self, combatant):
+    def is_affecting(self, combatant, battle_map):
         return combatant is self.target
 
 

@@ -12,7 +12,7 @@ import numpy as np
 
 
 
-def test_as_if_combatant_position(teams, effect_tracker, battle_map, combatant1, combatant2):
+def test_as_if_combatant_position(teams, battle_map, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)
 
@@ -524,7 +524,7 @@ def test_get_nearest_free_adjacent_coord(battle_map, teams, combatant1, combatan
     combatant2.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 7]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
-    _, shortest_paths, _ = battle_map.calc_dijkstra(combatant1)
+    _, shortest_paths = battle_map.calc_dijkstra(combatant1)
     my_coords = battle_map.get_combatant_position(combatant1)
     target_coords = battle_map.get_combatant_position(combatant2)
     nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, shortest_paths)
@@ -558,7 +558,7 @@ def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, combatant
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 10]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([9, 10]), combatant2.size))
     battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([9, 13]), combatant3.size))
-    _, shortest_paths, _ = battle_map.calc_dijkstra(combatant1)
+    _, shortest_paths = battle_map.calc_dijkstra(combatant1)
     my_coords = battle_map.get_combatant_position(combatant1)
     target_coords = battle_map.get_combatant_position(combatant3)
     nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, shortest_paths)

@@ -155,7 +155,11 @@ class RecklessAttackFactory(DirectThreatFactory):
         incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc
 
-    def calculate_threat_to_target(self, battle_map, target, consider_dist=False, *args, **kwargs):
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        try:
+            consider_dist = kwargs["consider_dist"]
+        except KeyError:
+            consider_dist = False
         num = min(self.max_num, self.combatant.curr_num_attacks)
 
         if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
@@ -245,5 +249,5 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def get_dmg_type(self):
         return self.factory.dmg_type
 
-    def calculate_threat(self, combatant, battle_map, consider_dist=False, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, consider_dist)
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)

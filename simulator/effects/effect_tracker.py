@@ -6,7 +6,6 @@ from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.effects.post_haste_lethargy import PostHasteLethargy
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
-from simulator.geometry import do_squares_overlap, get_affected_by_square, get_affected_by_sphere
 
 logger = logging.getLogger(__name__)
 
@@ -51,13 +50,13 @@ class EffectTracker:
             effects.append(e)
         self.effects = effects
 
-    def get_all_affecting_combatant(self, combatant):
+    def get_all_affected_combatant(self, combatant):
         """
         Returns all effects affecting a combatant as a set
         :param combatant:
         :return: set of all effects affecting a combatant
         """
-        return {e[0] for e in self.effects if e[0].is_affecting(combatant)}
+        return {e[0] for e in self.effects if e[0].is_affecting(combatant, self.battle_map)}
 
     def is_affecting_combatant(self, combatant, effect_type):
         """
@@ -67,7 +66,7 @@ class EffectTracker:
         :return: True if the combatant is affected, False otherwise
         """
         for e in self.effects:
-            if type(e[0]) is effect_type and e[0].is_affecting(combatant):
+            if type(e[0]) is effect_type and e[0].is_affecting(combatant, self.battle_map):
                 return True
         return False
 

@@ -83,7 +83,7 @@ class Bless(Actoid, Effect, ThreatModifier):
                 mod.remove('1d')
             target.to_hit_dice_mod.remove('1d4')
 
-    def is_affecting(self, combatant):
+    def is_affecting(self, combatant, battle_map):
         return combatant is self.target
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):

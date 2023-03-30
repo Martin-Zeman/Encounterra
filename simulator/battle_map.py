@@ -770,40 +770,9 @@ class Map:
         """
         my_location = self.get_combatant_position(combatant)
         mask = self.build_combatant_adjacency_mask(combatant)
-        threat_adj = self.get_threat_adjacency_matrix(combatant)
+        # threat_adj = self.get_threat_adjacency_matrix(combatant)
         distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
-        return distances, shortest_paths, threat_adj
-
-    def accumulate_threats(self, path, combatant):
-        """
-        Accumulates threats along a path.
-        :param path: path as a sequence of np.array coordinates
-        :param combatant: the moving combatant
-        :return: accumulated threat
-        """
-        threat_acc = 0
-        curr_coords = copy.copy(self.get_combatant_position(combatant))
-
-        for increment in path:
-            curr_coords_data = curr_coords.get()
-            with self.as_if_combatant_position(combatant, curr_coords_data):
-                # account for AoO
-                enemies = self.get_aoo_eligible_combatants(combatant, increment)
-                for e in enemies:
-                    threat_acc -= e.aoo_factory.calculate_threat_to_target(self, combatant)
-
-                # account for AoE
-                effects = self.effect_tracker.get_aoe_effects()
-                for e in effects:
-                    affected_coords = e.get_affected_coords(self)
-                    pre_increment_dist = self.get_hop_distance(curr_coords_data, affected_coords)
-                    post_increment_dist = self.get_hop_distance(curr_coords_data + increment, affected_coords)
-                    if pre_increment_dist == 1 and post_increment_dist == 0:
-                        threat_acc -= e.factory.calculate_threat_to_target(self, combatant)
-
-        return threat_acc
-        # TODO has to account for combatant size
-        # TODO has to track which AoEs and AoOs it has already been affected by to avoid triggering it multiple times
+        return distances, shortest_paths
 
 
     @dispatch(Combatant, Combatant)
@@ -823,7 +792,7 @@ class Map:
         logger.debug(f"Destination {enemy_location.get()[0]}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant)
-            threat_adj = self.get_threat_adjacency_matrix(combatant)
+            # threat_adj = self.get_threat_adjacency_matrix(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, shortest_paths, rng)
         if enemy_adjacent_location is None:
@@ -834,7 +803,7 @@ class Map:
             return None
         if logger.root.level >= logging.INFO:
             self.printDijkstra(distances, my_location.get(), enemy_location.get(), reconstructed_path['tuples'])
-        return convert_path_to_increments(reconstructed_path['numpy']), self.accumulate_threats(reconstructed_path['numpy'], threat_adj)
+        return convert_path_to_increments(reconstructed_path['numpy'])
 
     @dispatch(Combatant, np.ndarray)
     def get_path_to(self, combatant, target_coord, distances=None, shortest_paths=None):
@@ -852,7 +821,7 @@ class Map:
         logger.debug(f"Destination {target_coord}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant)
-            threat_adj = self.get_threat_adjacency_matrix(combatant)
+            # threat_adj = self.get_threat_adjacency_matrix(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), target_coord)
         if reconstructed_path is None:
@@ -860,7 +829,7 @@ class Map:
             return None
         if logger.root.level >= logging.INFO:
             self.printDijkstra(distances, my_location.get(), np.array([target_coord]), reconstructed_path['tuples'])
-        return convert_path_to_increments(reconstructed_path['numpy']), self.accumulate_threats(reconstructed_path['numpy'], threat_adj)
+        return convert_path_to_increments(reconstructed_path['numpy'])
 
     def get_combatant_position(self, combatant):
         try:

@@ -23,5 +23,5 @@ class AoeSquareEffect(AoeEffect):
             coords.append(np.array([x, y]))
         return np.stack([c for c in coords])
 
-    def is_affecting(self, combatant):
+    def is_affecting(self, combatant, battle_map):
         return False  # TODO

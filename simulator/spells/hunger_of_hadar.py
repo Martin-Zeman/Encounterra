@@ -3,7 +3,7 @@ from simulator.action_types import BonusActionOrdering, BonusAction
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg
+from simulator.misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat import mean_dmg_dc_attack
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
@@ -49,9 +49,14 @@ class HungerOfHadarFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        if battle_map.get_cartesian_distance(self.caster, target) <= HungerOfHadar.spell_range.value + SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target]:
+        try:
+            consider_dist = kwargs["consider_dist"]
+        except KeyError:
+            consider_dist = False
+
+        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= HungerOfHadar.spell_range.value + SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target]:
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            return avg_roll(self.factory.dmg_dice) + 0.5 * mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, target.saving_throws[self.factory.saving_throw])
+            return avg_roll(self.dmg_dice) + 0.5 * mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw])
         return 0
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
@@ -74,7 +79,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_type=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
         LimitedDurationEffect.__init__(self, turns=10)
-        self.coord = coord
+        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target])
         self.factory = factory
 
     def __str__(self):
@@ -82,14 +87,30 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
 
     def on_start_of_turn(self, combatant):
+        combatant.apply_condition(Conditions.BLINDED)
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.dmg_type)
 
     def on_end_of_turn(self, combatant):
+        combatant.apply_condition(Conditions.BLINDED)
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         self.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant)
         self.dmg_type = DamageType.Cold
+
+    def on_enter(self, combatant):
+        combatant.apply_condition(Conditions.BLINDED)
+
+    def is_affecting(self, combatant, battle_map):
+        coords = self.get_affected_coords(battle_map)
+        return battle_map.get_hop_distance(combatant, coords) == 0
+
+
+    def activate(self):
+        pass
+
+    def deactivate(self):
+        pass  # TODO remove concentration?
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, HungerOfHadar.target, HungerOfHadar.type, self.coord)

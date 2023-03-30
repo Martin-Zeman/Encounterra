@@ -149,10 +149,14 @@ class AttackFactory(DirectThreatFactory):
         self.mod_crit_range = 0
         return modified - baseline
 
-    def calculate_threat_to_target(self, battle_map, target, consider_dist=False, *args, **kwargs):
+    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        try:
+            consider_dist = kwargs["consider_dist"]
+        except KeyError:
+            consider_dist = False
         num = min(self.max_num, self.combatant.curr_num_attacks)
         # TODO: Should I include roll modifiers here? There may be a use-case in the future
-        if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
+        if not consider_dist or battle_map.get_hop_distance(self.combatant, target) <= self.range:
             return num * mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         return 0
 
@@ -213,5 +217,5 @@ class Attack(Actoid, DirectThreat):
     def get_dmg_type(self):
         return self.factory.dmg_type
 
-    def calculate_threat(self, combatant, battle_map, consider_dist=False, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, consider_dist)
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)

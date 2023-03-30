@@ -13,5 +13,5 @@ class Effect(ABC):
         pass
 
     @abstractmethod
-    def is_affecting(self, combatant):
+    def is_affecting(self, combatant, battle_map):
         return False
