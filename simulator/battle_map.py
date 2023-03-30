@@ -327,48 +327,48 @@ class Map:
         mv_reshaped[:, :, :, (N - offset):N].fill(0)
         return mask
 
-    def get_threat_adjacency_matrix(self, combatant):
-        """
-        Builds a threat adjacency matrix where edges represent the incoming threat associated with traversing them. It includes threat
-        from AoOs and AoEs. This shall then be used in the Dijkstra's algorithm to compute a side-product of threat associated with reaching
-        a certain coordinate.
-        :param combatant: the moving combatant
-        :return: adjacency matrix based on threat associated with traversing the edges
-        """
-        N = self.size
-        Nsq = N ** 2
-        threat_adj = np.zeros((N, N, N, N), dtype=int)
-        aoo_attacker_adj = np.empty((N, N, N, N), dtype=object)
-        aoe_source_adj = np.empty((N, N, N, N), dtype=object)
-
-        enemies = self.get_enemies(combatant)
-        # account for AoO
-        for e in enemies:
-            if not e.has_reaction:
-                continue
-            rng = e.melee_reaction_range
-            reaction_threat = e.aoo_factory.calculate_threat_to_target(self, combatant)
-            coords = self.get_combatant_position(e)
-            adj_coords = self.get_free_adjacent_coords(coords, inflate_to_size=combatant.size, rng=rng)
-            for ac in adj_coords:
-                # it should be ok to apply this to coords that are part of the set or inaccessible, they'll just be even lower
-                threat_adj[ac[0], ac[1], :, :] -= reaction_threat
-                try:
-                    aoo_attacker_adj[ac[0], ac[1], :, :].append(e)
-                except TypeError:
-                    aoo_attacker_adj[ac[0], ac[1], :, :] = [e]  # we need to track the source of the AoO because of larger combatants
-
-        coord_to_threat = self.effect_tracker.get_aoe_coord_to_threat(combatant)
-        for aoe_coord, threat in coord_to_threat.items():
-            for t in threat:
-                threat_adj[:, :, aoe_coord[0], aoe_coord[1]] -= t[0]
-                try:
-                    aoe_source_adj[:, :, aoe_coord[0], aoe_coord[1]].append(t[1])
-                except TypeError:
-                    aoe_source_adj[:, :, aoe_coord[0], aoe_coord[1]] = [t[1]]
-
-        threat_adj = threat_adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
-        return threat_adj, aoo_attacker_adj, aoe_source_adj
+    # def get_threat_adjacency_matrix(self, combatant):
+    #     """
+    #     Builds a threat adjacency matrix where edges represent the incoming threat associated with traversing them. It includes threat
+    #     from AoOs and AoEs. This shall then be used in the Dijkstra's algorithm to compute a side-product of threat associated with reaching
+    #     a certain coordinate.
+    #     :param combatant: the moving combatant
+    #     :return: adjacency matrix based on threat associated with traversing the edges
+    #     """
+    #     N = self.size
+    #     Nsq = N ** 2
+    #     threat_adj = np.zeros((N, N, N, N), dtype=int)
+    #     aoo_attacker_adj = np.empty((N, N, N, N), dtype=object)
+    #     aoe_source_adj = np.empty((N, N, N, N), dtype=object)
+    #
+    #     enemies = self.get_enemies(combatant)
+    #     # account for AoO
+    #     for e in enemies:
+    #         if not e.has_reaction:
+    #             continue
+    #         rng = e.melee_reaction_range
+    #         reaction_threat = e.aoo_factory.calculate_threat_to_target(self, combatant)
+    #         coords = self.get_combatant_position(e)
+    #         adj_coords = self.get_free_adjacent_coords(coords, inflate_to_size=combatant.size, rng=rng)
+    #         for ac in adj_coords:
+    #             # it should be ok to apply this to coords that are part of the set or inaccessible, they'll just be even lower
+    #             threat_adj[ac[0], ac[1], :, :] -= reaction_threat
+    #             try:
+    #                 aoo_attacker_adj[ac[0], ac[1], :, :].append(e)
+    #             except TypeError:
+    #                 aoo_attacker_adj[ac[0], ac[1], :, :] = [e]  # we need to track the source of the AoO because of larger combatants
+    #
+    #     coord_to_threat = self.effect_tracker.get_aoe_coord_to_threat(combatant)
+    #     for aoe_coord, threat in coord_to_threat.items():
+    #         for t in threat:
+    #             threat_adj[:, :, aoe_coord[0], aoe_coord[1]] -= t[0]
+    #             try:
+    #                 aoe_source_adj[:, :, aoe_coord[0], aoe_coord[1]].append(t[1])
+    #             except TypeError:
+    #                 aoe_source_adj[:, :, aoe_coord[0], aoe_coord[1]] = [t[1]]
+    #
+    #     threat_adj = threat_adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
+    #     return threat_adj, aoo_attacker_adj, aoe_source_adj
 
 
     def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array, reconstructed_path):
@@ -774,16 +774,36 @@ class Map:
         distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         return distances, shortest_paths, threat_adj
 
-    def accumulate_threats(self, path, combatant_size, threat_adj):
+    def accumulate_threats(self, path, combatant):
         """
         Accumulates threats along a path.
         :param path: path as a sequence of np.array coordinates
-        :param threat_adj: threat adjacency matrix where edges represent the threat associated with traversing it
+        :param combatant: the moving combatant
         :return: accumulated threat
         """
+        threat_acc = 0
+        curr_coords = copy.copy(self.get_combatant_position(combatant))
+
+        for increment in path:
+            curr_coords_data = curr_coords.get()
+            with self.as_if_combatant_position(combatant, curr_coords_data):
+                # account for AoO
+                enemies = self.get_aoo_eligible_combatants(combatant, increment)
+                for e in enemies:
+                    threat_acc -= e.aoo_factory.calculate_threat_to_target(self, combatant)
+
+                # account for AoE
+                effects = self.effect_tracker.get_aoe_effects()
+                for e in effects:
+                    affected_coords = e.get_affected_coords(self)
+                    pre_increment_dist = self.get_hop_distance(curr_coords_data, affected_coords)
+                    post_increment_dist = self.get_hop_distance(curr_coords_data + increment, affected_coords)
+                    if pre_increment_dist == 1 and post_increment_dist == 0:
+                        threat_acc -= e.factory.calculate_threat_to_target(self, combatant)
+
+        return threat_acc
         # TODO has to account for combatant size
         # TODO has to track which AoEs and AoOs it has already been affected by to avoid triggering it multiple times
-        pass  # TODO
 
 
     @dispatch(Combatant, Combatant)

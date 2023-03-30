@@ -27,6 +27,21 @@ def test_as_if_combatant_position(teams, effect_tracker, battle_map, combatant1,
         assert battle_map.get_cartesian_distance(combatant1, combatant2) == 10
     assert battle_map.get_cartesian_distance(combatant1, combatant2) == 5
 
+def test_get_hop_distance_overlapping_medium_large(battle_map, combatant1, combatant2):
+    combatant1.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([6, 8])))
+    assert battle_map.get_hop_distance(combatant1, combatant2) == 0
+
+
+def test_get_hop_distance_overlapping_large_huge(battle_map, combatant1, combatant2):
+    combatant1.size = Size.HUGE
+    combatant2.size = Size.LARGE
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 7]), combatant1.size))
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([7, 8]), combatant2.size))
+    assert battle_map.get_hop_distance(combatant1, combatant2) == 0
+
+
 def test_as_if_dist_from_combatant(teams, effect_tracker, battle_map, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)

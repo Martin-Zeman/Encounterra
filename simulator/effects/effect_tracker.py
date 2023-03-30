@@ -86,31 +86,34 @@ class EffectTracker:
     #             affecting.append(e)
     #     return affecting
 
-    def get_aoe_coord_to_threat(self, combatant):
-        """
-        Returns all effects affecting a given coordinate
-        :param combatant: the combatant who wants to move
-        :return: a dictionary of coords -> (threat, source effect) asociated with the combatant entering that coord or staying there
-        """
-        coord_to_threat = dict()
-        def add_to_coord_to_threat(coords, effect):
-            threat = effect.factory.calculate_threat_to_target(self.battle_map, combatant)
-            for coord in coords:
-                try:
-                    coord_to_threat[coord].append((threat, effect))
-                except TypeError:
-                    coord_to_threat[coord] = [(threat, effect)]
+    # def get_aoe_coord_to_threat(self, combatant):
+    #     """
+    #     Returns all effects affecting a given coordinate
+    #     :param combatant: the combatant who wants to move
+    #     :return: a dictionary of coords -> (threat, source effect) asociated with the combatant entering that coord or staying there
+    #     """
+    #     coord_to_threat = dict()
+    #     def add_to_coord_to_threat(coords, effect):
+    #         threat = effect.factory.calculate_threat_to_target(self.battle_map, combatant)
+    #         for coord in coords:
+    #             try:
+    #                 coord_to_threat[coord].append((threat, effect))
+    #             except TypeError:
+    #                 coord_to_threat[coord] = [(threat, effect)]
+    #
+    #
+    #     for e in self.effects:
+    #         if isinstance(e[0], AoeSquareEffect):
+    #             coords = get_affected_by_square(e[0].origin, e[0].length, self.battle_map.size)
+    #         elif isinstance(e[0], AoeSphericEffect):
+    #             coords = get_affected_by_sphere(e[0].origin, e[0].radius, self.battle_map.size)
+    #         else:
+    #             continue
+    #         add_to_coord_to_threat(coords, e[0])
+    #     return coord_to_threat
 
-
-        for e in self.effects:
-            if isinstance(e[0], AoeSquareEffect):
-                coords = get_affected_by_square(e[0].origin, e[0].length, self.battle_map.size)
-            elif isinstance(e[0], AoeSphericEffect):
-                coords = get_affected_by_sphere(e[0].origin, e[0].radius, self.battle_map.size)
-            else:
-                continue
-            add_to_coord_to_threat(coords, e[0])
-        return coord_to_threat
+    def get_aoe_effects(self):
+        return [e[0] for e in self.effects if isinstance(e[0], AoeSquareEffect) or isinstance(e[0], AoeSphericEffect)]
 
 
 
