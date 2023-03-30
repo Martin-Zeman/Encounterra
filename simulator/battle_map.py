@@ -338,6 +338,8 @@ class Map:
         N = self.size
         Nsq = N ** 2
         threat_adj = np.zeros((N, N, N, N), dtype=int)
+        aoo_attacker_adj = np.empty((N, N, N, N), dtype=object)
+        aoe_source_adj = np.empty((N, N, N, N), dtype=object)
 
         enemies = self.get_enemies(combatant)
         # account for AoO
@@ -351,13 +353,22 @@ class Map:
             for ac in adj_coords:
                 # it should be ok to apply this to coords that are part of the set or inaccessible, they'll just be even lower
                 threat_adj[ac[0], ac[1], :, :] -= reaction_threat
+                try:
+                    aoo_attacker_adj[ac[0], ac[1], :, :].append(e)
+                except TypeError:
+                    aoo_attacker_adj[ac[0], ac[1], :, :] = [e]  # we need to track the source of the AoO because of larger combatants
 
         coord_to_threat = self.effect_tracker.get_aoe_coord_to_threat(combatant)
         for aoe_coord, threat in coord_to_threat.items():
-            threat_adj[:, :, aoe_coord[0], aoe_coord[1]] -= threat
+            for t in threat:
+                threat_adj[:, :, aoe_coord[0], aoe_coord[1]] -= t[0]
+                try:
+                    aoe_source_adj[:, :, aoe_coord[0], aoe_coord[1]].append(t[1])
+                except TypeError:
+                    aoe_source_adj[:, :, aoe_coord[0], aoe_coord[1]] = [t[1]]
 
         threat_adj = threat_adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
-        return threat_adj
+        return threat_adj, aoo_attacker_adj, aoe_source_adj
 
 
     def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array, reconstructed_path):
@@ -763,13 +774,15 @@ class Map:
         distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         return distances, shortest_paths, threat_adj
 
-    def accumulate_threats(self, path, threat_adj):
+    def accumulate_threats(self, path, combatant_size, threat_adj):
         """
-        Accumulates threats along a path
+        Accumulates threats along a path.
         :param path: path as a sequence of np.array coordinates
         :param threat_adj: threat adjacency matrix where edges represent the threat associated with traversing it
         :return: accumulated threat
         """
+        # TODO has to account for combatant size
+        # TODO has to track which AoEs and AoOs it has already been affected by to avoid triggering it multiple times
         pass  # TODO
 
 

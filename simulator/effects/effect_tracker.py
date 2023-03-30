@@ -90,16 +90,16 @@ class EffectTracker:
         """
         Returns all effects affecting a given coordinate
         :param combatant: the combatant who wants to move
-        :return: a dictionary of coords -> threat asociated with the combatant entering that coord or staying there
+        :return: a dictionary of coords -> (threat, source effect) asociated with the combatant entering that coord or staying there
         """
         coord_to_threat = dict()
-        def add_to_coord_to_threat(coords, action_factory):
-            threat = action_factory.calculate_threat_to_target(self.battle_map, combatant)
+        def add_to_coord_to_threat(coords, effect):
+            threat = effect.factory.calculate_threat_to_target(self.battle_map, combatant)
             for coord in coords:
                 try:
-                    coord_to_threat[coord] += threat
-                except KeyError:
-                    coord_to_threat[coord] = threat
+                    coord_to_threat[coord].append((threat, effect))
+                except TypeError:
+                    coord_to_threat[coord] = [(threat, effect)]
 
 
         for e in self.effects:
@@ -109,7 +109,7 @@ class EffectTracker:
                 coords = get_affected_by_sphere(e[0].origin, e[0].radius, self.battle_map.size)
             else:
                 continue
-            add_to_coord_to_threat(coords, e[0].factory)
+            add_to_coord_to_threat(coords, e[0])
         return coord_to_threat
 
 
