@@ -286,20 +286,20 @@ class Map:
         for coord in self.difficult_set:
             adj[:, coord[0] * N + coord[1]] *= 2
 
-        # TODO add AoO as DT here
-
         for coord in self.impassable_set:
             adj[:, coord[0] * N + coord[1]] = 0
         self.base_adjacency_matrix = adj
         # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
 
-    def build_combatant_adjacency_mask(self, combatant):
+    def build_combatant_adjacency_mask(self, combatant, consider_aoo=False):
         """
         Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
         Allies are considered difficult terrain (potentially on top of already difficult terrain).
+        Optionally, moves that incur AoO are also modelled as difficult terrain to avoid it if possible.
         For combatants larger than MEDIUM obstacles are also inflated accordingly
         :param combatant: for whom the mask is to be constructed
+        :param consider_aoo: True if should AoOs should be modelled as difficult terrain
         :return: adjacency matrix mask
         """
         N = self.size
@@ -321,6 +321,19 @@ class Map:
         for coord in self.impassable_set:
             # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
             mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
+
+        # account for AoO
+        if consider_aoo:
+            enemies = self.get_enemies(combatant)
+            for e in enemies:
+                if not e.has_reaction:
+                    continue
+                rng = e.melee_reaction_range
+                coords = self.get_combatant_position(e)
+                adj_coords = self.get_free_adjacent_coords(coords, inflate_to_size=combatant.size, rng=rng)
+                for ac in adj_coords:
+                    # it should be ok to apply this to coords that are part of the set or inaccessible
+                    mv_reshaped[ac[0], ac[1], :, :] *= 2
 
         # Inflate the edges of the map. Prevent larger combatants from stepping out of the map
         mv_reshaped[:, :, (N - offset):N, :].fill(0)
@@ -776,7 +789,7 @@ class Map:
 
 
     @dispatch(Combatant, Combatant)
-    def get_path_to(self, combatant, target_combatant, distances=None, shortest_paths=None, rng=1):
+    def get_path_to(self, combatant, target_combatant, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
         """
         Calculates a path to a target combatant
         :param combatant:Combatant who wants to move
@@ -791,7 +804,7 @@ class Map:
         enemy_location = self.get_combatant_position(target_combatant)
         logger.debug(f"Destination {enemy_location.get()[0]}")
         if not distances or not shortest_paths:
-            mask = self.build_combatant_adjacency_mask(combatant)
+            mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
             # threat_adj = self.get_threat_adjacency_matrix(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, shortest_paths, rng)
@@ -806,7 +819,7 @@ class Map:
         return convert_path_to_increments(reconstructed_path['numpy'])
 
     @dispatch(Combatant, np.ndarray)
-    def get_path_to(self, combatant, target_coord, distances=None, shortest_paths=None):
+    def get_path_to(self, combatant, target_coord, distances=None, shortest_paths=None, consider_aoo=False):
         """
         Calculates a path to destination coordinates
         :param combatant:Combatant who wants to move
@@ -819,7 +832,7 @@ class Map:
         logger.debug(f"Origin {my_location.get()[0]}")
         logger.debug(f"Destination {target_coord}")
         if not distances or not shortest_paths:
-            mask = self.build_combatant_adjacency_mask(combatant)
+            mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
             # threat_adj = self.get_threat_adjacency_matrix(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), target_coord)
