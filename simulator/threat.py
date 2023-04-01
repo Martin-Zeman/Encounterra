@@ -189,7 +189,7 @@ def accumulate_threat_along_path(battle_map, path, combatant):
             # account for AoO
             enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
             for e in enemies:
-                threat_acc -= e.aoo_factory.calculate_threat_to_target(battle_map, combatant)
+                threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant)
 
             # account for AoE
             for effect, affected_coords in effect_to_coords.items():

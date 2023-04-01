@@ -551,8 +551,8 @@ class Map:
         vec_set_comb = np.vectorize(set_comb)
         try:
             self.grid[coords.get()[:, 0], coords.get()[:, 1]] = vec_set_comb(self.grid[coords.get()[:, 0], coords.get()[:, 1]])
-        except Exception as e:
-            print("FIXME", e)
+        except AssertionError:
+            logger.error(f"The coordinate {coords.get()} are already occupied!")
         self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
@@ -815,7 +815,6 @@ class Map:
         :param shortest_paths: potentially already computed shortest paths to all coords
         :return: list of np.array increments to the target destination
         """
-        # TODO: consider making a variant which doesn't provoke AOO
         my_location = self.get_combatant_position(combatant)
         logger.debug(f"Origin {my_location.get()[0]}")
         logger.debug(f"Destination {target_coord}")
