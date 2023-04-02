@@ -217,6 +217,3 @@ class Attack(Actoid, DirectThreat):
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)
 
-    def get_eligible_coords(self, battle_map):
-        target_combatant_coords = battle_map.get_combatant_coordinates[self.target_combatant]
-        return battle_map.get_free_coords_in_hop_range(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)

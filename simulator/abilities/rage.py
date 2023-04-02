@@ -159,3 +159,6 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         total_threat += (combatant.curr_hp / 2)
         # TODO consider improving this by looping over enemy direct dmg dealing abilities
         return total_threat * ROUND_HORIZON
+
+    def get_eligible_coords(self, battle_map):
+        pass  # Due to IS_POSITIONING_INDEPENDENT

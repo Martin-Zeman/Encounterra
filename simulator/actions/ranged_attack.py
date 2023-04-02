@@ -37,4 +37,4 @@ class RangeAttack(Attack):
 
     def get_eligible_coords(self, battle_map):
         target_combatant_coords = battle_map.get_combatant_coordinates[self.target_combatant]
-        return battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
+        return battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.factory.combatant.size, rng=self.factory.range)

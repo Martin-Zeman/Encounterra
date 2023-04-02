@@ -124,7 +124,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         self.factory.caster.is_concentrating = True
         for target in self.targets:
             target.ac += 2
-            target.haste_actions = [HasteAction.HASTE_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
+            target.haste_actions = [HasteAction.HASTE_MELEE_ATTACK, HasteAction.HASTE_RANGED_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
             target.has_haste_action = True
 
     def deactivate(self):
@@ -149,3 +149,9 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         target2_threat = self.factory.calculate_threat_to_target(battle_map, self.targets[1]) if self.targets[1] is not None else 0
         return target1_threat + target2_threat
 
+    def get_eligible_coords(self, battle_map):
+        target_combatant_coords = battle_map.get_combatant_coordinates[self.targets[0]]
+        coords_for_fist = battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)
+        target_combatant_coords = battle_map.get_combatant_coordinates[self.targets[1]]
+        coords_for_second = battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)
+        return coords_for_fist.intersection(coords_for_second)

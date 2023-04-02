@@ -6,7 +6,7 @@ from simulator.action_factory import *
 from simulator.actions.actoid import ActoidFlags
 from simulator.spells.chaosbolt import Chaosbolt
 from simulator.geometry import *
-from simulator.battle_map import CombatantCoords
+from simulator.combatant_coords import CombatantCoords
 from enum import Enum, auto
 
 logger = logging.getLogger(__name__)

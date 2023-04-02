@@ -138,22 +138,28 @@ class Chaosbolt(Actoid, DirectThreat):
 
     def __init__(self, target, factory, **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
-        self.targets = target
+        self.target = target
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt on {self.targets[0]}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt on {self.target[0]}"
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        acc = 0
-        p_acc = 1
+        potential_targets = battle_map.get_enemies_within_radius(combatant, Chaosbolt.spell_range.value)   # Relaxes the 30ft distance condition
+        potential_targets.remove(self.target)
         P_SAME = 4 / 43  # 8/86 = 4 / 43
+        p_acc = P_SAME
         dmg_dice = "+".join([self.factory.dmg_dice, self.factory.additional_dmg_dice])
-        for target in self.targets:
-            acc += mean_dmg(self.factory.to_hit, dmg_dice, 0, target.ac) * p_acc
+        acc = mean_dmg(self.factory.to_hit, dmg_dice, 0, self.target.ac)
+        for pt in potential_targets:
+            acc += mean_dmg(self.factory.to_hit, dmg_dice, 0, pt.ac) * p_acc
             p_acc *= P_SAME
         return acc
+
+    def get_eligible_coords(self, battle_map):
+        target_combatant_coords = battle_map.get_combatant_coordinates[self.target]
+        return battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)
 

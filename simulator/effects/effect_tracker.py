@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 
-from simulator.battle_map import CombatantCoords
+from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.effects.post_haste_lethargy import PostHasteLethargy

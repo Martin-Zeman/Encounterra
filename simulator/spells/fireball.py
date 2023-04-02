@@ -1,4 +1,5 @@
 from simulator.action_types import BonusActionOrdering, BonusAction
+from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -103,3 +104,7 @@ class Fireball(Actoid, DirectThreat):
         for aff in affected:
             acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
         return acc
+
+    def get_eligible_coords(self, battle_map):
+        target_coords = CombatantCoords(self.coord)  # not actually a combatant, only to comply with the API
+        return battle_map.get_free_coords_in_cartesian_range(target_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)

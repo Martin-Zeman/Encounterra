@@ -1,5 +1,5 @@
 from simulator.action_factory import *
-from simulator.battle_map import CombatantCoords
+from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Conditions
 import logging
 import numpy as np

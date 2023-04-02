@@ -1,5 +1,6 @@
 from simulator.action_resolver import resolve_dmg_saving_throw
 from simulator.action_types import BonusActionOrdering, BonusAction
+from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
@@ -121,3 +122,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
             acc += 0.5 * mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw])
         return acc
+
+    def get_eligible_coords(self, battle_map):
+        target_coords = CombatantCoords(self.coord)  # not actually a combatant, only to comply with the API
+        return battle_map.get_free_coords_in_cartesian_range(target_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)

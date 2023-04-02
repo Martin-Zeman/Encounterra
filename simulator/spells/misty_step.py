@@ -141,3 +141,6 @@ class MistyStep(Actoid, ThreatModifier):
                     max_threat_after = max([f[1].calculate_threat_to_target(battle_map, self.factory.caster, cosider_dist=True) for f in factories if FactoryFlags.IS_DIRECT_THREAT in f[1].flags])
             return max_threat_after - max_threat_before
         return 0
+
+    def get_eligible_coords(self, battle_map):
+        pass  # no need due to IS_POSITIONING_INDEPENDENT

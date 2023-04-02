@@ -49,6 +49,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, turns=1)
+        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.factory = factory
 
     def __str__(self):
@@ -68,3 +69,6 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         """
         adjacent_enemies = battle_map.get_adjacent_enemies(combatant)
         return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(battle_map, self.combatant), adjacent_enemies)
+
+    def get_eligible_coords(self, battle_map):
+        pass

@@ -3,7 +3,7 @@ import copy
 import numpy as np
 import pytest
 from simulator.action_types import Action
-from simulator.battle_map import CombatantCoords
+from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Size
 from simulator.spells.hunger_of_hadar import HungerOfHadarFactory
 from simulator.teams import Teams

@@ -1,5 +1,6 @@
+# from simulator.battle_map import *
 import math
-from simulator.battle_map import *
+
 import numpy as np
 
 
