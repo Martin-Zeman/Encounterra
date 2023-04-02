@@ -17,7 +17,6 @@ class RageFactory(ThreatModifierFactory):
 
     def __init__(self, combatant):
         self.flags |= FactoryFlags.IS_ATTACK_MODIFIER
-        self.flags |= FactoryFlags.COORD_AGNOSTIC
         self.flags |= FactoryFlags.TARGETS_SELF
         self.bonus_action_ordering = BonusActionOrdering.GOES_BEFORE_ACTION
         self.combatant = combatant
@@ -114,9 +113,10 @@ class RageFactory(ThreatModifierFactory):
 class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def __init__(self, combatant, factory):
-        Actoid.__init__(self, actoid_type=ActoidFlags.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, turns=10)
+        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         self.factory = factory
 

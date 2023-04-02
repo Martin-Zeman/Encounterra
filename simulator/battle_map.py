@@ -330,7 +330,7 @@ class Map:
                     continue
                 rng = e.melee_reaction_range
                 coords = self.get_combatant_position(e)
-                adj_coords = self.get_free_adjacent_coords(coords, inflate_to_size=combatant.size, rng=rng)
+                adj_coords = self.get_free_coords_in_hop_range(coords, inflate_to_size=combatant.size, rng=rng)
                 for ac in adj_coords:
                     # it should be ok to apply this to coords that are part of the set or inaccessible
                     mv_reshaped[ac[0], ac[1], :, :] *= 2
@@ -362,7 +362,7 @@ class Map:
     #         rng = e.melee_reaction_range
     #         reaction_threat = e.aoo_factory.calculate_threat_to_target(self, combatant)
     #         coords = self.get_combatant_position(e)
-    #         adj_coords = self.get_free_adjacent_coords(coords, inflate_to_size=combatant.size, rng=rng)
+    #         adj_coords = self.get_free_coords_in_hop_range(coords, inflate_to_size=combatant.size, rng=rng)
     #         for ac in adj_coords:
     #             # it should be ok to apply this to coords that are part of the set or inaccessible, they'll just be even lower
     #             threat_adj[ac[0], ac[1], :, :] -= reaction_threat
@@ -656,8 +656,8 @@ class Map:
 
     def inflate_coords(self, coords: CombatantCoords, inflate_to_size):
         """
-        A helper function which inflated the given CombatantCoords to a given size (they may already by inflated but may need further inflation
-        due to the size of the other combatant
+        A helper function which inflates the given CombatantCoords to a given size (they may already by inflated but may need further inflation
+        due to the size of the other combatant).
         :param coords: target combatant coordinates
         :param inflate_to_size: size of the other combatant
         :return: inflated set of coordinates (as x, y tuples)
@@ -672,12 +672,13 @@ class Map:
                 inflated.add((max(0, x), max(0, y)))
         return inflated
 
-    def get_free_adjacent_coords(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1):
+    def get_free_coords_in_hop_range(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1):
         """
-        Returns free and accessible squares adjacent (up to the range distance) to a given coordinate
+        Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
+        by a combatant of 'inflate_to_size' size.
         :param coords: target combatant coordinates
         :param shortest_paths: shortest paths to all squares (result of Dijkstra) to be able to recognize inflated terrain and map edges
-        :param inflate_to_size: inflate for the sake of pathfinding by larger combatants
+        :param inflate_to_size: inflate for the sake of pathfinding BY larger combatants
         :param rng: maximum range of what is considered 'adjacent'
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
@@ -697,13 +698,15 @@ class Map:
         return adjacent_coords
 
 
-    def get_free_coords_in_range(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1):
+    def get_free_coords_in_cartesian_range(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1):
         """
-        Returns free and accessible squares that are at the most rng away from the coords as measured by cartesian distance
+        Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
+        by a combatant of 'inflate_to_size' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
+        bounding box to narrow down the search.
         :param coords: target combatant coordinates
         :param shortest_paths: shortest paths to all squares (result of Dijkstra) to be able to recognize inflated terrain and map edges
         :param inflate_to_size: inflate for the sake of pathfinding BY larger combatants
-        :param rng: maximum range of what is considered 'adjacent'
+        :param rng: maximum range
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         assert rng > 0
@@ -751,7 +754,7 @@ class Map:
         :param rng: the range of what is considered adjacent
         :return:
         """
-        adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size, rng)
+        adjacent_coords = self.get_free_coords_in_hop_range(target_location, shortest_paths, my_location.size, rng)
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]
@@ -768,7 +771,7 @@ class Map:
     #     :param max_dist: the maximum hop distance from my_location
     #     :return:
     #     """
-    #     adjacent_coords = self.get_free_adjacent_coords(target_location, shortest_paths, my_location.size)
+    #     adjacent_coords = self.get_free_coords_in_hop_range(target_location, shortest_paths, my_location.size)
     #     if not adjacent_coords:
     #         return None
     #     adjacent_coords = [np.array([x]) for x in adjacent_coords]

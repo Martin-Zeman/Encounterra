@@ -29,6 +29,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         return "TwinnedFireboltFactory"
 
     def find_best_args(self, combatant, battle_map):
+        # TODO Deprecated
         # TODO Should this include action type? Cause for a twinned version you would need multiple targets
         potential_targets = battle_map.get_enemies_within_radius(combatant, TwinnedFirebolt.spell_range.value)
         hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1)) for pt in potential_targets]
@@ -143,7 +144,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
 
 
     def __init__(self, targets, factory, **kwargs):
-        super().__init__(actoid_type=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.targets = targets
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True

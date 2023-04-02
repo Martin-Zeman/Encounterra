@@ -46,7 +46,8 @@ class Shield(Actoid, ReactionToThreat):
     dmg_type = None
 
     def __init__(self, factory):
-        super().__init__(actoid_type=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
+        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.action_type = Reaction.SHIELD
         self.factory = factory
 

@@ -47,7 +47,7 @@ class DodgeFactory(ThreatModifierFactory):
 class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def __init__(self, combatant, factory):
-        Actoid.__init__(self, actoid_type=ActoidFlags.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, turns=1)
         self.factory = factory

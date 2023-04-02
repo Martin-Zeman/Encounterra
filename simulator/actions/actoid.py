@@ -9,14 +9,15 @@ class ActoidFlags(Flag):
     IS_DASH = auto()
     IS_TOGGLE_ABILITY = auto()
     IS_GET_UP_FROM_PRONE = auto()
+    IS_POSITIONING_INDEPENDENT = auto()
 
 class Actoid:
     """
     Proto-action base class. It doesn't map onto an 'action' directly as an Actoid can represent even a partial action such as one attack
     which is part of a multiattack or a movement increment.
     """
-    def __init__(self, actoid_type):
-        self.actoid_type = actoid_type
+    def __init__(self, actoid_flags):
+        self.actoid_flags = actoid_flags
         self.action_type = None
 
 class FactoryFlags(Flag):
@@ -30,6 +31,5 @@ class FactoryFlags(Flag):
     IS_ATTACK_MODIFIER = auto()
     DEX_SAVE_APPLIES = auto()
     HAS_AMMO = auto()
-    COORD_AGNOSTIC = auto()
     TARGETS_COORDS = auto()
     TARGETS_SELF = auto()

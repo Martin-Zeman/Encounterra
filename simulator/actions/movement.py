@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 class MovementIncrement(Actoid):
     def __init__(self, increment, incurs_aoo, factory):
-        Actoid.__init__(self, actoid_type=ActoidFlags.IS_MOVEMENT)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_MOVEMENT)
         self.increment = increment
         self.incurs_aoo = incurs_aoo
         self.factory = factory
@@ -44,7 +44,7 @@ class GetUpFactory:
 
 class GetUpFromProne(Actoid):
     def __init__(self, factory):
-        Actoid.__init__(self, actoid_type=ActoidFlags.IS_GET_UP_FROM_PRONE)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_GET_UP_FROM_PRONE)
         self.factory = factory
 
     def __str__(self):

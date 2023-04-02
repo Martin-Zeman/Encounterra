@@ -1,4 +1,3 @@
-import copy
 from statemachine import State, StateMachine
 from simulator.feasibility import get_feasible_factories
 from simulator.resources import use_resources
@@ -39,9 +38,12 @@ class OneMeleeOrOneRanged(StateMachine):
     ranged = A.to(nop)
 
 
-from transitions import Machine, State
+from transitions import State
 from transitions.extensions import GraphMachine
 class StateMachineTemplate(GraphMachine):
+    """
+    A thin wrapper for the GraphMachine. It tracks the last added state to help build up the action FSM.
+    """
 
 
     def __init__(self):
@@ -51,14 +53,10 @@ class StateMachineTemplate(GraphMachine):
 
     def add_new_state(self, state_name):
         self.add_state(State(state_name))
-        # self.last_added_state = state_name
 
     def get_next_state_name(self):
         self.last_added_state = str(int(self.last_added_state) + 1)
         return self.last_added_state
-
-    # def add_transition(self, name, from_state, to_state):
-    #     self.machine.add_transition(trigger=name, source=from_state, dest=to_state)
 
     def get_available_transitions(self):
         return self.get_triggers(self.state)
@@ -79,6 +77,12 @@ def actions_to_set(actions):
 
 
 def get_all_feasible_action_factories(combatant, battle_map):
+    """
+    A helper functions which collects all feasible (bonus/haste) action factories for a combatant
+    :param combatant: for whom the feasible factories are is to be constructed
+    :param battle_map:
+    :return: all feasible (bonus/haste) action factories for a combatant
+    """
     feasible_action_factories = get_feasible_factories(combatant.action_factories, combatant, battle_map)
     feasible_bonus_action_factories = get_feasible_factories(combatant.bonus_action_factories, combatant, battle_map)
     feasible_haste_action_factories = get_feasible_factories(combatant.haste_action_factories, combatant, battle_map)
@@ -88,8 +92,14 @@ def get_all_feasible_action_factories(combatant, battle_map):
     return all_action_factories
 
 def generate_action_fsm(combatant, battle_map):
+    """
+    Builds a combatant-specific FSM which expresses all possible (bonus) action combinations the may take on their turn.
+    It assumes the combatant's attack FSM is manually constructed already and is used as an input for the overall FSM.
+    :param combatant: for whom the FSM is to be constructed
+    :param battle_map:
+    :return: fsm and the mapping between FSM transition names to the actual action factory objects
+    """
     fsm = StateMachineTemplate()
-    # initial_resources = combatant.export_resources()
     state_footprint_to_count = dict()
     visited = set()
     transition_name_to_action = dict()
@@ -97,6 +107,7 @@ def generate_action_fsm(combatant, battle_map):
         fafs = get_all_feasible_action_factories(combatant, battle_map)
         fas = [faf[1].create_all(battle_map) for faf in fafs]
         fas = [fa for sublist in fas for fa in sublist]
+        # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
         if not state_footprint:
             fsm.add_transition(str(action_taken), previous_state_name, 'nop')

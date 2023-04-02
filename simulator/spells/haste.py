@@ -67,6 +67,7 @@ class HasteFactory(ThreatModifierFactory):
         return ret
 
     def find_best_args(self, combatant, battle_map):
+        # TODO Deprecated
         try:
             return HasteFactory.get_allies_sorted_by_threat(combatant, battle_map)[0][0]
         except IndexError:

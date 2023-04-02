@@ -11,7 +11,6 @@ class MistyStepFactory(DirectThreatFactory):
 
     def __init__(self, caster):
         super().__init__()
-        self.flags |= FactoryFlags.COORD_AGNOSTIC
         self.flags |= FactoryFlags.TARGETS_COORDS
         self.bonus_action_ordering = BonusActionOrdering.BOTH
         self.action_type = BonusAction.MISTY_STEP
@@ -25,6 +24,7 @@ class MistyStepFactory(DirectThreatFactory):
         return "MistyStepFactory"
 
     def find_best_args(self, combatant, battle_map):
+        # TODO Deprecated
         free_coords = None
         if self.caster.archetype is CombatantArchetype.MELEE:
             # TODO Improve this
@@ -41,7 +41,7 @@ class MistyStepFactory(DirectThreatFactory):
 
     def get_eligible_targets(self, battle_map):
         caster_coords = battle_map.get_combatant_position(self.caster)
-        return battle_map.get_free_coords_in_range(caster_coords, rng=MistyStep.spell_range.value)
+        return battle_map.get_free_coords_in_cartesian_range(caster_coords, rng=MistyStep.spell_range.value)
 
     def create_best(self, combatant, battle_map):
         best_args = self.find_best_args(combatant, battle_map)
@@ -107,7 +107,8 @@ class MistyStep(Actoid, ThreatModifier):
     dmg_type = None
 
     def __init__(self, coord, factory):
-        super().__init__(ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
+        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.coord = coord
         self.factory = factory
 

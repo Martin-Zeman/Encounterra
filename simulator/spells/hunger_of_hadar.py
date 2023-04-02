@@ -28,6 +28,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         return "HungerOfHadarFactory"
 
     def find_best_args(self, combatant, battle_map):
+        # TODO Deprecated
         coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, HungerOfHadar.spell_range.value, SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target])
         return coord
 
@@ -77,7 +78,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_type=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
+        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
         LimitedDurationEffect.__init__(self, turns=10)
         AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target])
         self.factory = factory

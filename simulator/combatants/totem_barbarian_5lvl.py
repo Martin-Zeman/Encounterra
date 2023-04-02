@@ -87,7 +87,7 @@ class TotemBarbarian5Lvl(Combatant):
                 # logger.info(f"{self} uses {selected_action}")
             except IndexError:
                 return None
-            if ActoidFlags.IS_ATTACK_LIKE in selected_action.actoid_type:
+            if ActoidFlags.IS_ATTACK_LIKE in selected_action.actoid_flags:
                 target_position = battle_map.get_combatant_position(selected_action.target_combatant)
                 if not np.array_equal(self.target_position_cache, target_position):
                     # if the target moved, recalculate path

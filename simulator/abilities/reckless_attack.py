@@ -56,6 +56,7 @@ class RecklessAttackFactory(DirectThreatFactory):
     #     return "RecklessAttackFactory" + self.name
 
     def find_best_args(self, combatant, battle_map):
+        # TODO Deprecated
         # TODO consider prioritizing the ones you have a change to finish off
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)
         hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, pt.ac, self.crit_range)) for pt
@@ -66,7 +67,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 
     def get_eligible_coords(self, target_combatant, battle_map):
         target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
-        return battle_map.get_free_adjacent_coords(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
+        return battle_map.get_free_coords_in_hop_range(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
 
     def get_eligible_targets(self, battle_map):
         return battle_map.get_enemies(self.combatant)
@@ -230,7 +231,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, target_combatant, factory):
-        Actoid.__init__(self, actoid_type=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT | ActoidFlags.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT | ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[factory.combatant])
         LimitedDurationEffect.__init__(self, turns=1)
         self.target_combatant = target_combatant

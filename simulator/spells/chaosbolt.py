@@ -41,6 +41,7 @@ class ChaosboltFactory(DirectThreatFactory):
         return list(zip(*potential_targets[:i]))[0]
 
     def find_best_args(self, combatant, battle_map):
+        # TODO Deprecated
         potential_targets = battle_map.get_enemies_within_radius(combatant, Chaosbolt.spell_range.value)
         dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
         mean_dmg_func = partial(mean_dmg, to_hit=self.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
@@ -136,7 +137,7 @@ class Chaosbolt(Actoid, DirectThreat):
 
 
     def __init__(self, target, factory, **kwargs):
-        super().__init__(actoid_type=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.targets = target
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True

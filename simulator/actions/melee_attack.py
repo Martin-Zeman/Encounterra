@@ -15,14 +15,8 @@ class MeleeAttackFactory(AttackFactory):
         self.flags |= FactoryFlags.IS_MELEE
         self.ammo = math.inf
 
-    # def __str__(self):
-    #     """
-    #     Important for FSM building
-    #     """
-    #     return "MeleeAttackFactory" + self.name
-
     def find_best_args(self, combatant, battle_map):
-        # TODO consider prioritizing the ones you have a change to finish off
+        # TODO Deprecated
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)
         hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, pt.ac, self.crit_range)) for pt
                           in potential_targets]
@@ -30,15 +24,13 @@ class MeleeAttackFactory(AttackFactory):
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
 
-    def get_eligible_coords(self, target_combatant, battle_map):
-        """
-        Returns accessible squares adjacent to a given coordinate
-        :param coords: target combatant coordinates
-        :return: adjacent coordinates as a set of tuples (x, y)
-        """
-        target_combatant_coords = battle_map.get_combatant_coordinates[target_combatant]
-        return battle_map.get_free_adjacent_coords(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
-
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)
-        return [Attack(t, self) for t in targets]
+        return [MeleeAttack(t, self) for t in targets]
+
+
+class MeleeAttack(Attack):
+
+    def get_eligible_coords(self, battle_map):
+        target_combatant_coords = battle_map.get_combatant_coordinates[self.target_combatant]
+        return battle_map.get_free_coords_in_hop_range(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)

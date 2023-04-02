@@ -23,6 +23,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         return "TwinnedHasteFactory"
 
     def find_best_args(self, combatant, battle_map):
+        # TODO Deprecated
         ret1 = None
         ret2 = None
         try:
