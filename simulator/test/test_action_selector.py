@@ -12,5 +12,7 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 3])))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([10, 10])))  # Have to set it for fireball placement
 
     dfs = select_best_action(combatant1, battle_map)
+    dfs.get_graph().draw('state_diagram_faurung_with_coords.png', prog='dot')

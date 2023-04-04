@@ -61,6 +61,9 @@ class StateMachineTemplate(GraphMachine):
     def get_available_transitions(self):
         return self.get_triggers(self.state)
 
+    def get_available_transitions_in_state(self, state):
+        return self.get_triggers(state)
+
 
 class AttackStateMachineTemplate(StateMachineTemplate):
     """
@@ -110,7 +113,10 @@ def generate_action_fsm(combatant, battle_map):
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
         if not state_footprint:
-            fsm.add_transition(str(action_taken), previous_state_name, 'nop')
+            # no more actions -> connect to the nop state
+            action_name = str(action_taken)
+            transition_name_to_action[action_name] = action_taken
+            fsm.add_transition(action_name, previous_state_name, 'nop')
         elif state_footprint not in visited:
             new_state_name = fsm.get_next_state_name()
             state_footprint_to_count[state_footprint] = new_state_name
@@ -123,9 +129,11 @@ def generate_action_fsm(combatant, battle_map):
             for fa in fas:
                 exported_resources = combatant.export_resources()
                 use_resources(combatant, fa, battle_map)
-                dfs(new_state_name, str(fa))
+                dfs(new_state_name, fa)
                 combatant.load_resources(exported_resources)
         else:
-            fsm.add_transition(str(action_taken), previous_state_name, state_footprint_to_count[state_footprint])
+            action_name = str(action_taken)
+            transition_name_to_action[action_name] = action_taken
+            fsm.add_transition(action_name, previous_state_name, state_footprint_to_count[state_footprint])
     dfs('0')
     return fsm, transition_name_to_action

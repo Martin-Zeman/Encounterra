@@ -35,7 +35,7 @@ class FireballFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant, battle_map):
         coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, Fireball.spell_range.value, SpellStats.TRANSLATE_RADIUS[Fireball.target])
-        return coord
+        return coord[0]
 
     def create_best(self, combatant, battle_map, **kwargs):
         return Fireball(self.find_best_args(combatant, battle_map), self,  **kwargs)

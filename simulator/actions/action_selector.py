@@ -16,16 +16,25 @@ def build_action_dfs(combatant, battle_map, action_fsm, transition_name_to_actio
         all_eligible_coords.update(coord)
     coords_to_states = dict()
     for coord in all_eligible_coords:
+        # Each coord that is an eligible to at least one action gets a state
         new_state_name = dfs.get_next_state_name()
         dfs.add_state(new_state_name)
         coords_to_states[coord] = new_state_name
 
-    for i, action in enumerate(transition_actions):
-        coords = action_to_eligible_coords[action]
+    for action, coords in action_to_eligible_coords.items():
         for coord in coords:
+            try:
+                for transition in dfs.events[str(action)].transitions['0']:
+                    if transition.source == '0':
+                        original_target = transition.dest
+            except KeyError:
+                pass
+            # Put the coord state in between
             dfs.add_transition("move_to_" + coords_to_states[coord], "0", coords_to_states[coord])
-            dfs.add_transition("move_to_" + coords_to_states[coord], "0", coords_to_states[coord])
+            dfs.add_transition(str(action), coords_to_states[coord], original_target)
+            dfs.remove_transition(str(action))  # Remove the original
 
+    return dfs
     # TODO create a state for every of all_eligible_coords
     # Then connect up the states with their respective actions by prepending them between the init state and the next state
 
