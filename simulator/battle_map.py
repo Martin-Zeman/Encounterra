@@ -753,7 +753,7 @@ class Map:
         return distances, shortest_paths
 
 
-    @dispatch(Combatant, Combatant, distances=list, shortest_paths=dict, rng=int, consider_aoo=bool)
+    @dispatch(Combatant, Combatant, list, dict, int, bool)
     def get_path_to(self, combatant, target_combatant, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
         """
         Calculates a path to a target combatant
@@ -783,7 +783,7 @@ class Map:
             self.printDijkstra(distances, my_location.get(), enemy_location.get(), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
-    @dispatch(Combatant, np.ndarray, distances=list, shortest_paths=dict, consider_aoo=bool)
+    @dispatch(Combatant, np.ndarray, list, dict, bool)
     def get_path_to(self, combatant, target_coord, distances=None, shortest_paths=None, consider_aoo=False):
         """
         Calculates a path to destination coordinates
