@@ -580,6 +580,14 @@ def test_get_path_to_medium_to_medium(battle_map, teams, combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]),
                                  np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0])])
 
+def test_get_path_to_medium_to_coord(battle_map, teams, combatant1):
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
+    path = battle_map.get_path_to(combatant1, np.array([11, 3]))
+    assert np.array_equal(path, [np.array([1, 1]), np.array([1,1]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]),
+                                 np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0])])
+
 def test_get_path_to_large_to_large(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)

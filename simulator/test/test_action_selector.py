@@ -7,6 +7,7 @@ from simulator.test.fixtures import combatant1, combatant2, teams, effect_tracke
 from simulator.actions.action_selector import select_best_action
 
 def test_select_best_action(battle_map, teams, effect_tracker, combatant1, combatant2):
+    battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
