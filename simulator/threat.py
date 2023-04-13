@@ -180,7 +180,7 @@ def accumulate_threat_along_path(battle_map, path, combatant):
     :return: accumulated threat
     """
     threat_acc = 0
-    curr_coords = copy.copy(battle_map.get_combatant_position(combatant))
+    curr_coords = copy.deepcopy(battle_map.get_combatant_position(combatant))
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
 
     try:
@@ -200,7 +200,7 @@ def accumulate_threat_along_path(battle_map, path, combatant):
                         # TODO Consider improving this. We'd need something like 'threat on enter'
                         threat_acc -= effect.factory.calculate_threat_to_target(battle_map, combatant, consider_dist=False)
             curr_coords_data += increment
-    except TypeError:
+    except TypeError as e:
         print("FIXME")
 
     return threat_acc

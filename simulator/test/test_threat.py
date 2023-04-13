@@ -193,7 +193,7 @@ def test_get_path_to_combatant_large_to_medium_pass_by_two_aoo(battle_map, teams
     assert threat == pytest.approx(2*-5.39, 0.1)
 
 
-def test_get_path_to_combatant_medium_stepping_away_from_medium_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_coord_medium_stepping_away_from_medium_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     Starts with two adjacent combatants who are enemies. Calculates the threat of one stepping away from the other.
     """
@@ -204,12 +204,12 @@ def test_get_path_to_combatant_medium_stepping_away_from_medium_aoo(battle_map, 
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([3, 3])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([3, 2])))
-    path = battle_map.get_path_to_combatant(combatant1, np.array([3, 5]))
+    path = battle_map.get_path_to_coord(combatant1, np.array([3, 5]))
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-2.64, 0.1)
 
 
-def test_get_path_to_combatant_large_stepping_away_from_huge_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_coord_large_stepping_away_from_huge_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     Starts with two adjacent combatants who are enemies. Calculates the threat of one stepping away from the other. The moving combatant
     is large and the stationary one is huge.
@@ -223,7 +223,7 @@ def test_get_path_to_combatant_large_stepping_away_from_huge_aoo(battle_map, tea
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 4]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([1, 1]), combatant2.size))
-    path = battle_map.get_path_to_combatant(combatant1, np.array([1, 5]))
+    path = battle_map.get_path_to_coord(combatant1, np.array([1, 5]))
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-2.64, 0.1)
 
