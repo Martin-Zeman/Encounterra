@@ -11,7 +11,7 @@ from simulator.test.fixtures import combatant1, combatant2, combatant3, combatan
 from simulator.threat import accumulate_threat_along_path
 
 
-def test_get_path_to_medium_to_medium_one_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_combatant_medium_to_medium_one_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
     battle_map.set_effect_tracker(effect_tracker)
     effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
@@ -22,12 +22,12 @@ def test_get_path_to_medium_to_medium_one_aoe(battle_map, teams, combatant1, com
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 3])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([13, 3])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-9.1, 0.1)
 
 
-def test_get_path_to_large_to_medium_one_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_one_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     Make it so that the large combatant is only hit by the AoE due to its size. The moving combatant is of size large. Make sure the
     threat is only added once per AoE.
@@ -43,12 +43,12 @@ def test_get_path_to_large_to_medium_one_aoe(battle_map, teams, combatant1, comb
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 1]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([7, 1])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-9.1, 0.1)
 
 
-def test_get_path_to_large_to_medium_avoided_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_avoided_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     Make it so that the large combatant just narrowly skirts the outside of the AoE
     """
@@ -63,12 +63,12 @@ def test_get_path_to_large_to_medium_avoided_aoe(battle_map, teams, combatant1, 
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 1]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([7, 1])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == 0
 
 
-def test_get_path_to_medium_to_medium_two_overlapping_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_combatant_medium_to_medium_two_overlapping_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     Two overlapping AoEs. Make sure the threats are added up.
     """
@@ -84,11 +84,11 @@ def test_get_path_to_medium_to_medium_two_overlapping_aoe(battle_map, teams, com
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 3])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([13, 3])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-18.2, 0.1)
 
-def test_get_path_to_large_to_medium_two_overlapping_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_two_overlapping_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     Two overlapping AoEs. Make sure the threats are added up. The moving combatant is of size large. Make sure the
     threat is only added once per AoE.
@@ -106,12 +106,12 @@ def test_get_path_to_large_to_medium_two_overlapping_aoe(battle_map, teams, comb
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 3]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([13, 3])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-18.2, 0.1)
 
 
-def test_get_path_to_large_to_medium_starting_inside_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_starting_inside_aoe(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     The large combatant starts already inside the AoE. No threat should be accumulated.
     """
@@ -126,12 +126,12 @@ def test_get_path_to_large_to_medium_starting_inside_aoe(battle_map, teams, comb
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([5, 3]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([13, 3])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == 0
 
 
-def test_get_path_to_medium_to_medium_pass_by_one_aoo(battle_map, teams, combatant1, combatant2,combatant3, effect_tracker):
+def test_get_path_to_combatant_medium_to_medium_pass_by_one_aoo(battle_map, teams, combatant1, combatant2,combatant3, effect_tracker):
     """
     Basic AoO test. Combatant passes by one enemy on a way to another. All are of medium size.
     """
@@ -144,12 +144,12 @@ def test_get_path_to_medium_to_medium_pass_by_one_aoo(battle_map, teams, combata
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 3])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([13, 3])))
     battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([6, 4])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-5.39, 0.1)
 
 
-def test_get_path_to_medium_to_medium_pass_by_two_aoo(battle_map, teams, combatant1, combatant2, combatant3, effect_tracker):
+def test_get_path_to_combatant_medium_to_medium_pass_by_two_aoo(battle_map, teams, combatant1, combatant2, combatant3, effect_tracker):
     """
     Same as the basic AoO test but this time the combatant passes by two enemies the way to another. All are of medium size.
     """
@@ -165,12 +165,12 @@ def test_get_path_to_medium_to_medium_pass_by_two_aoo(battle_map, teams, combata
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([13, 3])))
     battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([6, 4])))
     battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([7, 4])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(2*-5.39, 0.1)
 
 
-def test_get_path_to_large_to_medium_pass_by_two_aoo(battle_map, teams, combatant1, combatant2, combatant3, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_pass_by_two_aoo(battle_map, teams, combatant1, combatant2, combatant3, effect_tracker):
     """
     Same as the basic AoO test but this time the combatant passes by two enemies the way to another. The moving combatant is of size large.
     Make sure the AoO threat is only added once per enemy.
@@ -188,12 +188,12 @@ def test_get_path_to_large_to_medium_pass_by_two_aoo(battle_map, teams, combatan
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([13, 3])))
     battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([6, 4])))
     battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([7, 4])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(2*-5.39, 0.1)
 
 
-def test_get_path_to_medium_stepping_away_from_medium_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_combatant_medium_stepping_away_from_medium_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     Starts with two adjacent combatants who are enemies. Calculates the threat of one stepping away from the other.
     """
@@ -204,12 +204,12 @@ def test_get_path_to_medium_stepping_away_from_medium_aoo(battle_map, teams, com
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([3, 3])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([3, 2])))
-    path = battle_map.get_path_to(combatant1, np.array([3, 5]))
+    path = battle_map.get_path_to_combatant(combatant1, np.array([3, 5]))
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-2.64, 0.1)
 
 
-def test_get_path_to_large_stepping_away_from_huge_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
+def test_get_path_to_combatant_large_stepping_away_from_huge_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
     """
     Starts with two adjacent combatants who are enemies. Calculates the threat of one stepping away from the other. The moving combatant
     is large and the stationary one is huge.
@@ -223,11 +223,11 @@ def test_get_path_to_large_stepping_away_from_huge_aoo(battle_map, teams, combat
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 4]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([1, 1]), combatant2.size))
-    path = battle_map.get_path_to(combatant1, np.array([1, 5]))
+    path = battle_map.get_path_to_combatant(combatant1, np.array([1, 5]))
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-2.64, 0.1)
 
-def test_get_path_to_large_stepping_away_from_two_medium_aoo(battle_map, teams, combatant1, combatant2, combatant3, effect_tracker):
+def test_get_path_to_cord_large_stepping_away_from_two_medium_aoo(battle_map, teams, combatant1, combatant2, combatant3, effect_tracker):
     """
     Starts with three adjacent combatant. One large and his two medium enemies. Calculates the threat of one stepping away from the other two.
     """
@@ -241,12 +241,12 @@ def test_get_path_to_large_stepping_away_from_two_medium_aoo(battle_map, teams, 
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([3, 3]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([3, 2])))
     battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([4, 2])))
-    path = battle_map.get_path_to(combatant1, np.array([3, 5]))
+    path = battle_map.get_path_to_coord(combatant1, np.array([3, 5]))
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-2.64 - 5.39, 0.1)
 
 
-def test_get_path_to_large_to_medium_pass_between_two_aoo_arrive_by_third(battle_map, teams, combatant1, combatant2, combatant3, combatant4, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_arrive_by_third(battle_map, teams, combatant1, combatant2, combatant3, combatant4, effect_tracker):
     """
     Same as the basic AoO test but this time the combatant passes by two enemies on either side the way to another. The moving combatant is of size large.
     Make sure the AoO threat is only added once per enemy and that the last enemy doesn't incur any threat
@@ -263,12 +263,12 @@ def test_get_path_to_large_to_medium_pass_between_two_aoo_arrive_by_third(battle
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([1, 4])))
     battle_map.set_combatant_coordinates(combatant3, CombatantCoords(np.array([4, 4])))
     battle_map.set_combatant_coordinates(combatant4, CombatantCoords(np.array([2, 8])))
-    path = battle_map.get_path_to(combatant1, combatant4)
+    path = battle_map.get_path_to_combatant(combatant1, combatant4)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-2.64 - 5.39, 0.1)
 
 
-def test_get_path_to_large_to_medium_pass_between_two_aoo_through_aoe_arrive_by_third(battle_map, teams, combatant1, combatant2, combatant3, combatant4, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_arrive_by_third(battle_map, teams, combatant1, combatant2, combatant3, combatant4, effect_tracker):
     """
     This test combines AoE and AoO.
     Same as the basic AoO test but this time the combatant passes by two enemies on either side the way to another. The moving combatant is of size large.
@@ -290,6 +290,6 @@ def test_get_path_to_large_to_medium_pass_between_two_aoo_through_aoe_arrive_by_
     hohf = HungerOfHadarFactory(15, Action.HUNGER_OF_HADAR, combatant2)
     hoh = hohf.create(np.array([3, 8]))
     effect_tracker.add(hoh, hoh.factory.caster)
-    path = battle_map.get_path_to(combatant1, combatant4)
+    path = battle_map.get_path_to_combatant(combatant1, combatant4)
     threat = accumulate_threat_along_path(battle_map, path, combatant1)
     assert threat == pytest.approx(-2.64 - 5.39 - 9.1, 0.1)

@@ -47,7 +47,7 @@ class StoneGiant(Combatant):
 
 
     def plan_path(self, battle_map, target_combatant, target_position, attack_range):
-        self.path = battle_map.get_path_to(self, target_combatant, rng=attack_range)
+        self.path = battle_map.get_path_to_combatant(self, target_combatant, rng=attack_range)
         logger.debug(f"Target position: {target_position}")
         if not self.path:
             raise RuntimeError

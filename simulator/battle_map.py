@@ -6,7 +6,6 @@ import logging
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.combatant import Combatant
-from multipledispatch import dispatch
 from simulator.misc import Conditions, Size
 from simulator.action_factory import Passive
 from simulator.geometry import get_affected_by_cone
@@ -33,6 +32,8 @@ def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
         except KeyError as e:
             # logger.error(e)  # TODO remove this once fixed
             return None
+        except TypeError:
+            print("FIXME")
     else:
         path['numpy'].append(my_location[0])
         path['tuples'].append(tuple(my_location[0]))
@@ -753,8 +754,7 @@ class Map:
         return distances, shortest_paths
 
 
-    @dispatch(Combatant, Combatant, list, dict, int, bool)
-    def get_path_to(self, combatant, target_combatant, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
+    def get_path_to_combatant(self, combatant, target_combatant, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
         """
         Calculates a path to a target combatant
         :param combatant:Combatant who wants to move
@@ -783,8 +783,7 @@ class Map:
             self.printDijkstra(distances, my_location.get(), enemy_location.get(), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
-    @dispatch(Combatant, np.ndarray, list, dict, bool)
-    def get_path_to(self, combatant, target_coord, distances=None, shortest_paths=None, consider_aoo=False):
+    def get_path_to_coord(self, combatant, target_coord, distances=None, shortest_paths=None, consider_aoo=False):
         """
         Calculates a path to destination coordinates
         :param combatant:Combatant who wants to move
@@ -807,6 +806,7 @@ class Map:
         if logger.root.level >= logging.INFO:
             self.printDijkstra(distances, my_location.get(), np.array([target_coord]), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
+
 
     def get_combatant_position(self, combatant):
         try:

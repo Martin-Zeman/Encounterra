@@ -59,7 +59,7 @@ class DragonclawCultist(Combatant):
                 dist = battle_map.get_hop_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 1:
                 # I haven't attacked yet and I'm too far away, move into range
-                path = battle_map.get_path_to(self, self.selected_target)
+                path = battle_map.get_path_to_combatant(self, self.selected_target)
                 if not path:
                     logger.info(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
                     return (Action.DODGE,)

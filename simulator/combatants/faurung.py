@@ -56,7 +56,7 @@ class Faurung(Combatant):
             free_coords = battle_map.get_free_coords_sorted_by_distance_from_enemies(self)
             self_coord = battle_map.get_combatant_position(self)
             if not np.any(np.all(self_coord.get()[0] == free_coords, axis=1)):
-                path = battle_map.get_path_to(self, free_coords[0])
+                path = battle_map.get_path_to_coord(self, free_coords[0])
                 self.movement_generator_cache = MovementGenerator(self, path).get_generator()
 
         if self.movement and self.movement_generator_cache:

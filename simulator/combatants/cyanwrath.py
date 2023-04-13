@@ -63,7 +63,7 @@ class Cyanwrath(Combatant):
                 dist = battle_map.get_hop_distance(self, self.selected_target)
             if self.movement and self.has_action and dist > 2:
                 # I haven't attacked yet and I'm too far away, move into pole-arm range
-                path = battle_map.get_path_to(self, self.selected_target)
+                path = battle_map.get_path_to_combatant(self, self.selected_target)
                 if not path:
                     logger.info(f"{self.name} has nowhere to go and uses the dodge action", extra={"team": self.team_color})
                     return (Action.DODGE,)
@@ -85,7 +85,7 @@ class Cyanwrath(Combatant):
                 logger.info(f"{self.name} wants to gain distance", extra={"team": self.team_color})
                 free_coords = battle_map.get_free_coords_at_distance_from_target(self.selected_target, self, 3)
                 if free_coords:
-                    path = battle_map.get_path_to(self, free_coords[0])
+                    path = battle_map.get_path_to_coord(self, free_coords[0])
                     self.movement_generator = MovementGenerator(self, path, True).get_generator()
                     try:
                         movement = next(self.movement_generator)

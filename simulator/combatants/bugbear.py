@@ -36,7 +36,7 @@ class Bugbear(Combatant):
 
     def plan_path(self, battle_map, target_position):
         logger.debug(f"Planning path to {self.selected_target} at position {target_position.get()}")
-        self.path = battle_map.get_path_to(self, self.selected_target)
+        self.path = battle_map.get_path_to_combatant(self, self.selected_target)
         if not self.path:
             logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError

@@ -570,25 +570,25 @@ def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, combatant
     assert not np.array_equal(nearest, np.array([7, 10]), equal_nan=False)
 
 
-def test_get_path_to_medium_to_medium(battle_map, teams, combatant1, combatant2):
+def test_get_path_to_combatant_medium_to_medium(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([11, 3])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]),
                                  np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0])])
 
-def test_get_path_to_medium_to_coord(battle_map, teams, combatant1):
+def test_get_path_to_coord_medium_to_coord(battle_map, teams, combatant1):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
-    path = battle_map.get_path_to(combatant1, np.array([11, 3]))
+    path = battle_map.get_path_to_coord(combatant1, np.array([11, 3]))
     assert np.array_equal(path, [np.array([1, 1]), np.array([1,1]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]),
                                  np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0])])
 
-def test_get_path_to_large_to_large(battle_map, teams, combatant1, combatant2):
+def test_get_path_to_combatant_large_to_large(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
     battle_map.build_adjacency_matrix()
@@ -596,31 +596,31 @@ def test_get_path_to_large_to_large(battle_map, teams, combatant1, combatant2):
     combatant2.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([0, 1])])
 
-def test_get_path_to_medium_to_large(battle_map, teams, combatant1, combatant2):
+def test_get_path_to_combatant_medium_to_large(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
     battle_map.build_adjacency_matrix()
     combatant2.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1])))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([0, 1])]) or\
            np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([1, 1])])
 
-def test_get_path_to_large_to_medium(battle_map, teams, combatant1, combatant2):
+def test_get_path_to_combatant_large_to_medium(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
     battle_map.build_adjacency_matrix()
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([1, 1]), np.array([0, 1])])
 
-def test_get_path_to_large_to_medium2(battle_map, teams, combatant1, combatant2):
+def test_get_path_to_combatant_large_to_medium2(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
     battle_map.place_circular_element(np.array([7, 14]), Terrain.DIFFICULT_TERRAIN, diameter=1)
@@ -629,10 +629,10 @@ def test_get_path_to_large_to_medium2(battle_map, teams, combatant1, combatant2)
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([4, 13]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([8, 14])))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 0]), np.array([1, 0])])
 
-def test_get_path_to_huge_to_huge(battle_map, teams, combatant1, combatant2):
+def test_get_path_to_combatant_huge_to_huge(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
     battle_map.build_adjacency_matrix()
@@ -640,7 +640,7 @@ def test_get_path_to_huge_to_huge(battle_map, teams, combatant1, combatant2):
     combatant2.size = Size.HUGE
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([0, 1]), combatant1.size))
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([5, 7]), combatant2.size))
-    path = battle_map.get_path_to(combatant1, combatant2)
+    path = battle_map.get_path_to_combatant(combatant1, combatant2)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 1]), np.array([0, 1])])
 
 

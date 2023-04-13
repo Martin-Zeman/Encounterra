@@ -41,7 +41,7 @@ class Goblin(Combatant):
         if not free_coords:
             logger.info(f"There are no free coords for the {self} to disengage to. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError
-        path = battle_map.get_path_to(self, free_coords[0])
+        path = battle_map.get_path_to_coord(self, free_coords[0])
         if not path:
             logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
             raise RuntimeError

@@ -183,21 +183,24 @@ def accumulate_threat_along_path(battle_map, path, combatant):
     curr_coords = copy.copy(battle_map.get_combatant_position(combatant))
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
 
-    for increment in path:
-        curr_coords_data = curr_coords.get()
-        with battle_map.as_if_combatant_position(combatant, curr_coords_data[0]):
-            # account for AoO
-            enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
-            for e in enemies:
-                threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant)
+    try:
+        for increment in path:
+            curr_coords_data = curr_coords.get()
+            with battle_map.as_if_combatant_position(combatant, curr_coords_data[0]):
+                # account for AoO
+                enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
+                for e in enemies:
+                    threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant)
 
-            # account for AoE
-            for effect, affected_coords in effect_to_coords.items():
-                pre_increment_dist = battle_map.get_hop_distance(curr_coords_data, affected_coords)
-                post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
-                if pre_increment_dist == 1 and post_increment_dist == 0:
-                    # TODO Consider improving this. We'd need something like 'threat on enter'
-                    threat_acc -= effect.factory.calculate_threat_to_target(battle_map, combatant, consider_dist=False)
-        curr_coords_data += increment
+                # account for AoE
+                for effect, affected_coords in effect_to_coords.items():
+                    pre_increment_dist = battle_map.get_hop_distance(curr_coords_data, affected_coords)
+                    post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
+                    if pre_increment_dist == 1 and post_increment_dist == 0:
+                        # TODO Consider improving this. We'd need something like 'threat on enter'
+                        threat_acc -= effect.factory.calculate_threat_to_target(battle_map, combatant, consider_dist=False)
+            curr_coords_data += increment
+    except TypeError:
+        print("FIXME")
 
     return threat_acc
