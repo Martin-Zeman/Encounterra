@@ -1,4 +1,6 @@
 TODO: Add tests for get_free_coords_in_cartesian_range with the combatant set
+TODO: Go back to having all the possible coords instead of just one per threat level. This makes more sense when considering disadvantage due to adjacency
+TODO: Add some more AoEs which deal dmg on entering (cloud of daggers, spike growth)
 
 If I don't consider positioning for the depth==2 actions then it doesn't really make sense having a coord for each threat
 level since the higher threat would always be picked. Or maybe not, since e.g. in case of ranged attacks one may be at a
@@ -16,6 +18,12 @@ Positioning:
     #- Each positioning is marked as a sink with the computed threat and solve Minimum-cost flow problem where the costs are represented by AoOs and AoE effects
 -
 
+Examples of AoE triggers:
+- When a creature enters the spell’s area for the first time on a turn or starts its turn there, that creature must make a Constitution saving throw
+- Each creature that is completely within the cloud at the start of its turn must make a Constitution saving throw against poison.
+- Any creature that starts its turn in the area takes 2d6 cold damage. Any creature that ends its turn in the area must succeed on a Dexterity saving throw or take 2d6 acid damage as milky, otherwordly tentacles rub against it.
+- One side of the wall, selected by you when you cast this spell, deals 5d8 fire damage to each creature that ends its turn within 10 feet of that side or inside the wall. A creature takes the same damage when it enters the wall for the first time on a turn or ends its turn there.
+- Any creature that ends its turn within 5 feet of the sphere must make a Dexterity saving throw. The creature takes 2d6 fire damage on a failed save, or half as much damage on a successful one.
 
 
 The action selection could be formulated as an integer linear programming problem. The optimization criteria could differ based on the type of a

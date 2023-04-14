@@ -72,8 +72,8 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
         for coord in coords:
             # try:
             for transitions in action_fsm.events[str(action)].transitions.values():  # Iterate over the original to avoid deleting from the one being iterated over
-                for transition in transitions:
-                    new_state_name = str(coord) + '_' + transition.source
+                for transition in [t for t in transitions if t.source == "0"]:
+                    new_state_name = str(coord)
                     dag.add_state(new_state_name)
                     coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
                     move_transition_name ="m_" + new_state_name

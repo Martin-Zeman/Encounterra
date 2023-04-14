@@ -7,10 +7,10 @@ from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat import mean_dmg_dc_attack
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+from simulator.threat_calculator import DirectThreat, DirectThreatFactory, AoEThreatFactory
 import numpy as np
 
-class HungerOfHadarFactory(DirectThreatFactory):
+class HungerOfHadarFactory(DirectThreatFactory, AoEThreatFactory):
     def __init__(self, dc, action_type, caster, **kwargs):
         super().__init__()
         self.flags |= FactoryFlags.DEX_SAVE_APPLIES
@@ -67,6 +67,16 @@ class HungerOfHadarFactory(DirectThreatFactory):
         """
         return 0 # No need
 
+    def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
+        return mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw], target.is_resistant_to(DamageType.Acid))
+
+    def threat_on_enter(self, battle_map, target, *args, **kwargs):
+        return 0
+
+    def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
+        threat = avg_roll(self.dmg_dice)
+        return threat if not target.is_resistant_to(HungerOfHadar.dmg_type) else threat / 2
+
 class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat):
 
     level = 3
@@ -120,7 +130,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         for aff in affected:
             acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            acc += 0.5 * mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw])
+            acc += 0.5 * mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(DamageType.Acid))
         return acc
 
     def get_eligible_coords(self, battle_map):

@@ -171,13 +171,33 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=Fal
     final_avg_dmg = fail_dmg + avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else fail_dmg
     return final_avg_dmg if not is_resistant else final_avg_dmg / 2
 
+
+def get_threat_for_staying_at_coord(battle_map, coords, combatant):
+    """
+    Estimates te threat associated with staying at a coordinate. This is really an estimate since the character may still
+    move.
+    :param battle_map:
+    :param coords: as np.array of size nx2 where n is the number of coords the combatant takes up
+    :param combatant:
+    :return: estimated threat (positive)
+    """
+    threat_acc = 0
+    effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
+    for effect, affected_coords in effect_to_coords.items():
+        if battle_map.get_hop_distance(affected_coords, coords) == 0:
+            threat_acc += effect.factory.threat_on_start_of_turn(battle_map, combatant)
+            threat_acc += effect.factory.threat_on_end_of_turn(battle_map, combatant)
+    return threat_acc
+
+
 def accumulate_threat_along_path(battle_map, path, combatant):
     """
-    Accumulates threats along a path.
-    :param battle_map: path as a sequence of np.array coordinates
+    Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
+    at the final destination.
+    :param battle_map:
     :param path: path as a sequence of np.array coordinates
     :param combatant: the moving combatant
-    :return: accumulated threat
+    :return: accumulated threat (negative)
     """
     threat_acc = 0
     curr_coords = copy.deepcopy(battle_map.get_combatant_position(combatant))
@@ -197,10 +217,10 @@ def accumulate_threat_along_path(battle_map, path, combatant):
                     pre_increment_dist = battle_map.get_hop_distance(curr_coords_data, affected_coords)
                     post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
                     if pre_increment_dist == 1 and post_increment_dist == 0:
-                        # TODO Consider improving this. We'd need something like 'threat on enter'
-                        threat_acc -= effect.factory.calculate_threat_to_target(battle_map, combatant, consider_dist=False)
+                        threat_acc -= effect.factory.threat_on_enter(battle_map, combatant)
             curr_coords_data += increment
+        # account for the final destination
+        threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
     except TypeError as e:
         print("FIXME")
-
     return threat_acc
