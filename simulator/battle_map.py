@@ -140,7 +140,7 @@ class Map:
         try:
             yield self
         finally:
-            self.move_combatant(combatant, original_coords)
+            self.move_combatant(combatant, original_coords.get()[0])
             logger.setLevel(original_logger_level)
 
     @contextmanager
@@ -489,6 +489,8 @@ class Map:
             self.grid[coords.get()[:, 0], coords.get()[:, 1]] = vec_set_comb(self.grid[coords.get()[:, 0], coords.get()[:, 1]])
         except AssertionError:
             logger.error(f"The coordinate {coords.get()} are already occupied!")
+        except IndexError:
+            print("FIXME")
         self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):

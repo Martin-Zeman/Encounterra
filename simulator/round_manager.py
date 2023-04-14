@@ -45,7 +45,7 @@ class RoundManager:
     def simulate_n(self, n=1, result_queue=None):
         if n > 0:
             team_tally = {color: 0 for color in self.teams.get_team_colors()}
-            combatant_initial_positions = {c: copy.deepcopy(self.battle_map.get_combatant_position(c)) for c in self.combatants} # FIXME, this isn't working
+            combatant_initial_positions = {c: copy.deepcopy(self.battle_map.get_combatant_position(c).get()[0]) for c in self.combatants} # FIXME, this isn't working
             for i in range(n):
                 logger.warning(f"{i}. Iteration")
                 self.simulate()
