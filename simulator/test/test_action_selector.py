@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from simulator.actions.action_fsms import generate_action_fsm
 from simulator.combatant_coords import CombatantCoords
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, teams, effect_tracker, battle_map
@@ -15,5 +16,9 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     battle_map.set_combatant_coordinates(combatant1, CombatantCoords(np.array([1, 3])))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(combatant2, CombatantCoords(np.array([10, 10])))  # Have to set it for fireball placement
 
-    dfs = select_best_action(combatant1, battle_map)
+    # fsm, transition_mapping = generate_action_fsm(combatant1, battle_map)
+    # assert fsm.state == '0'
+    # fsm.get_graph().draw('state_diagram_faurung_pre_coords.png', prog='dot')
+
+    dfs, _ = select_best_action(combatant1, battle_map)
     dfs.get_graph().draw('state_diagram_faurung_with_coords.png', prog='dot')

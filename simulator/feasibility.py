@@ -193,7 +193,7 @@ def check_feasibility_light(combatant, action, battle_map):
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= (len(battle_map.teams.get_allies(combatant)) > 0)
+                # res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.CHAOSBOLT:
                 res = combatant.has_action
@@ -209,6 +209,7 @@ def check_feasibility_light(combatant, action, battle_map):
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 2
+                res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK:
                 # Either not attacked yet, or already attacked but still has attacks left. In both cases cannot be used once attacked recklessly

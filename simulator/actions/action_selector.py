@@ -35,7 +35,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     :param battle_map:
     :param action_fsm: finite state machine representing all possible actions for combatant
     :param transition_name_to_action: dict mapping action names -> actions
-    :return: dict which maps threat -> (start_index, end_index)
+    :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     # TODO: Look into caching!!!
     # Pre-calculate Dijkstra for the combatant
@@ -65,27 +65,28 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
         all_eligible_coords.update(coord)
     coords_to_states = dict()
     for coord in all_eligible_coords:
-        # Each coord that is an eligible to at least one action gets a state
-        new_state_name = dag.get_next_state_name()
+        # Each coord that is an eligible to at least one action gets a state and a transition from 0
+        # new_state_name = dag.get_next_state_name()
+        new_state_name = str(coord)
         dag.add_state(new_state_name)
         coords_to_states[coord] = new_state_name
+        dag.add_transition("move_to_" + coords_to_states[coord], "0", new_state_name)
 
     for action, coords in action_to_eligible_coords.items():
         for coord in coords:
             try:
-                for transition in dag.events[str(action)].transitions['0']:
+                for transition in action_fsm.events[str(action)].transitions['0']:  # Iterate over the original to avoid deleting from the one being iterated over
                     if transition.source == '0':
-                        original_target = transition.dest
+                        # Put the coord state in between
+                        # dag.add_transition("move_to_" + coords_to_states[coord], "0", coords_to_states[coord])
+                        dag.add_transition(str(action), coords_to_states[coord], transition.dest)
+                        dag.remove_transition(str(action), '0')  # Remove the original
                     else:
                         continue
             except KeyError:
                 continue
-            # Put the coord state in between
-            dag.add_transition("move_to_" + coords_to_states[coord], "0", coords_to_states[coord])
-            dag.add_transition(str(action), coords_to_states[coord], original_target)
-            dag.remove_transition(str(action))  # Remove the original
 
-    return dag
+    return dag, coords_to_states
     # TODO create a state for every of all_eligible_coords
     # Then connect up the states with their respective actions by prepending them between the init state and the next state
 
