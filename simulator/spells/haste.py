@@ -188,5 +188,11 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         return self.factory.calculate_threat_to_target(battle_map, self.target)
 
     def get_eligible_coords(self, battle_map):
-        target_combatant_coords = battle_map.get_combatant_position(self.target)
-        return battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)
+        if self.target is self.factory.caster:
+            caster_coords = battle_map.get_combatant_position(self.factory.caster)
+            coords = battle_map.get_free_coords_in_hop_range(caster_coords, inflate_to_size=self.factory.caster.size, rng=int(self.factory.caster.movement))
+            coords.add(tuple(caster_coords.get()[0]))
+            return coords
+        else:
+            target_combatant_coords = battle_map.get_combatant_position(self.target)
+            return battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)

@@ -217,7 +217,7 @@ class ActionResolver:
                        self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]))
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
-                self.battle_map.move_combatant(caster, CombatantCoords(spell.coord, caster.size))
+                self.battle_map.move_combatant(caster, spell.coord)
                 return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
                 return self.resolve_chaos_bolt(caster, spell)

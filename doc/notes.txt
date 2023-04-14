@@ -1,3 +1,9 @@
+If I don't consider positioning for the depth==2 actions then it doesn't really make sense having a coord for each threat
+level since the higher threat would always be picked. Or maybe not, since e.g. in case of ranged attacks one may be at a
+disadvantage due to an adjacent enemy.
+But considering them is hard to do since I'm not able to plan the path
+from the previous coord.
+
 Idea:
 Positioning:
 - For each action factory:

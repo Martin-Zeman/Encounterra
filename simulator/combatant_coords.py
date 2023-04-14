@@ -8,14 +8,15 @@ class CombatantCoords:
     """
     Represents a set of coordinates taken up by a combatant
     """
-    def __init__(self, coord: np.array, size=Size.MEDIUM):
+    def __init__(self, coord: np.array, combatant=None):
         """
         Initializes the combatant coords with a root coordinate
         :param coord: the root coord of the combatant, it gets turned into n x 2 matrix where one row represents one coordinate
         :return: None
         """
-        self.size = size
-        match size:
+        self.combatant = combatant
+        self.size = combatant.size if combatant else Size.MEDIUM
+        match self.size:
             case Size.TINY | Size.SMALL | Size.MEDIUM:
                 self.coords = np.array([coord])
             case Size.LARGE:
@@ -39,4 +40,4 @@ class CombatantCoords:
         self.coords = coords
 
     def __add__(self, other):
-        return CombatantCoords(self.coords[0] + other, self.size)
+        return CombatantCoords(self.coords[0] + other, self.combatant)

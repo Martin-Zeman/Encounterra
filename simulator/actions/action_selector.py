@@ -26,11 +26,13 @@ def find_ranges_of_consecutive(coords_w_threats):
         res[val] = start_pos, end_pos
     return res
 
+
 def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action):
     """
     Builds action DAG for a combatant given the combatant's action_fsm. It determines eligible coords for each
-    action at depth == 1. It filters the coords such that only the closest one per threat level is kept. Then
-    the coords and pre-pended into the action_fsm to form the final DAG.
+    action. It then filters the coords such that only the closest one per threat level is kept (this is a heuristic
+    since it may no longer be the closest if the combatant first moves for another action). Then the coords are
+    pre-pended into the action_fsm to form the final DAG.
     :param combatant:
     :param battle_map:
     :param action_fsm: finite state machine representing all possible actions for combatant
@@ -42,7 +44,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)
     dag = copy.deepcopy(action_fsm)
 
-    # get eligible coords for all actions at depth == 1
+    # get eligible coords for all actions
     transition_names = action_fsm.get_available_transitions()
     transition_actions = [transition_name_to_action[t] for t in transition_names]
     action_to_eligible_coords = {a: a.get_eligible_coords(battle_map) for a in transition_actions if ActoidFlags.IS_POSITIONING_INDEPENDENT not in a.actoid_flags}
@@ -64,31 +66,26 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     for coord in action_to_eligible_coords.values():
         all_eligible_coords.update(coord)
     coords_to_states = dict()
-    for coord in all_eligible_coords:
-        # Each coord that is an eligible to at least one action gets a state and a transition from 0
-        # new_state_name = dag.get_next_state_name()
-        new_state_name = str(coord)
-        dag.add_state(new_state_name)
-        coords_to_states[coord] = new_state_name
-        dag.add_transition("move_to_" + coords_to_states[coord], "0", new_state_name)
 
+    added_transitions = set()
     for action, coords in action_to_eligible_coords.items():
         for coord in coords:
-            try:
-                for transition in action_fsm.events[str(action)].transitions['0']:  # Iterate over the original to avoid deleting from the one being iterated over
-                    if transition.source == '0':
-                        # Put the coord state in between
-                        # dag.add_transition("move_to_" + coords_to_states[coord], "0", coords_to_states[coord])
-                        dag.add_transition(str(action), coords_to_states[coord], transition.dest)
-                        dag.remove_transition(str(action), '0')  # Remove the original
-                    else:
-                        continue
-            except KeyError:
-                continue
+            # try:
+            for transitions in action_fsm.events[str(action)].transitions.values():  # Iterate over the original to avoid deleting from the one being iterated over
+                for transition in transitions:
+                    new_state_name = str(coord) + '_' + transition.source
+                    dag.add_state(new_state_name)
+                    coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
+                    move_transition_name ="m_" + new_state_name
+                    if move_transition_name not in added_transitions:  # Avoid adding the same transition multiple times
+                        dag.add_transition(move_transition_name, transition.source, new_state_name)
+                        added_transitions.add(move_transition_name)
+                    dag.add_transition(str(action), new_state_name, transition.dest)
+                    dag.remove_transition(str(action), transition.source)  # Remove the original
+            # except KeyError:
+            #     continue
 
     return dag, coords_to_states
-    # TODO create a state for every of all_eligible_coords
-    # Then connect up the states with their respective actions by prepending them between the init state and the next state
 
 
 def select_best_action(combatant, battle_map):

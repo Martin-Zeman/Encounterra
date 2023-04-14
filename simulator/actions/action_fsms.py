@@ -102,16 +102,14 @@ def generate_action_fsm(combatant, battle_map):
     :param battle_map:
     :return: fsm and the mapping between FSM transition names to the actual action factory objects
     """
-    counter = 0
     fsm = StateMachineTemplate()
     state_footprint_to_name = dict()
     visited = set()
     transition_name_to_action = dict()
-    def dfs(previous_state_name, counter, action_taken=None):
+    def dfs(previous_state_name, action_taken=None):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
-        counter += 1
         fafs = get_all_feasible_action_factories(combatant, battle_map)
         fas = [faf[1].create_all(battle_map) for faf in fafs]
         fas = [fa for sublist in fas for fa in sublist]  # flatten the fas from a list of lists into a single list
@@ -134,11 +132,11 @@ def generate_action_fsm(combatant, battle_map):
             for fa in fas:
                 exported_resources = combatant.export_resources()
                 use_resources(combatant, fa, battle_map)
-                dfs(new_state_name, counter, fa)
+                dfs(new_state_name, fa)
                 combatant.load_resources(exported_resources)
         else:
             action_name = str(action_taken)
             transition_name_to_action[action_name] = action_taken
             fsm.add_transition(action_name, previous_state_name, state_footprint_to_name[state_footprint])
-    dfs('0', counter)
+    dfs('0')
     return fsm, transition_name_to_action

@@ -98,7 +98,7 @@ def check_feasibility(combatant, action, battle_map):
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, np.array([action.coord])) <= action.spell_range.value
-                res &= battle_map.are_valid_coords(action.coord) and battle_map.are_empty_or_self(CombatantCoords(action.coord, combatant.size), combatant)
+                res &= battle_map.are_valid_coords(action.coord) and battle_map.are_empty_or_self(CombatantCoords(action.coord, combatant), combatant)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
                 res &= combatant.spellslots.get_spellslots(1) > 0
