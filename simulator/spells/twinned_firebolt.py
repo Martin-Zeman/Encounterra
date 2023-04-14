@@ -161,7 +161,13 @@ class TwinnedFirebolt(Actoid, DirectThreat):
 
     def get_eligible_coords(self, battle_map):
         target_combatant_coords = battle_map.get_combatant_position(self.targets[0])
-        coords_for_fist = battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)
+        coords_for_fist = battle_map.get_free_coords_in_cartesian_range(target_combatant_coords,
+                                                                        inflate_to_size=self.factory.caster.size,
+                                                                        rng=self.spell_range.value,
+                                                                        combatant=self.factory.caster)
         target_combatant_coords = battle_map.get_combatant_position(self.targets[1])
-        coords_for_second = battle_map.get_free_coords_in_cartesian_range(target_combatant_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)
+        coords_for_second = battle_map.get_free_coords_in_cartesian_range(target_combatant_coords,
+                                                                          inflate_to_size=self.factory.caster.size,
+                                                                          rng=self.spell_range.value,
+                                                                          combatant=self.factory.caster)
         return coords_for_fist.intersection(coords_for_second)

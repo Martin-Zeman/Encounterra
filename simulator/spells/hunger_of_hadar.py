@@ -125,4 +125,5 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
     def get_eligible_coords(self, battle_map):
         target_coords = CombatantCoords(self.coord)  # not actually a combatant, only to comply with the API
-        return battle_map.get_free_coords_in_cartesian_range(target_coords, inflate_to_size=self.factory.caster.size, rng=self.spell_range.value)
+        return battle_map.get_free_coords_in_cartesian_range(target_coords, inflate_to_size=self.factory.caster.size,
+                                                             rng=self.spell_range.value, combatant=self.factory.caster)

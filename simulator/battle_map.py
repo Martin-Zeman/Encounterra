@@ -623,7 +623,7 @@ class Map:
         return adjacent_coords
 
 
-    def get_free_coords_in_cartesian_range(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1):
+    def get_free_coords_in_cartesian_range(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
         by a combatant of 'inflate_to_size' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
@@ -632,6 +632,7 @@ class Map:
         :param shortest_paths: shortest paths to all squares (result of Dijkstra) to be able to recognize inflated terrain and map edges
         :param inflate_to_size: inflate for the sake of pathfinding BY larger combatants
         :param rng: maximum range
+        :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         assert rng > 0
@@ -646,7 +647,7 @@ class Map:
                     continue
                 square = self.grid[x, y]
                 consider_shortest_paths = (x, y) in shortest_paths.keys() if shortest_paths is not None else True
-                if square.is_empty_or_self(coords.combatant) and consider_shortest_paths and (x, y) not in inflated:
+                if square.is_empty_or_self(combatant) and consider_shortest_paths and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     coords_in_range.add((x, y))
         return coords_in_range

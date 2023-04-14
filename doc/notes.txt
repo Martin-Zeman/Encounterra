@@ -1,3 +1,5 @@
+TODO: Add tests for get_free_coords_in_cartesian_range with the combatant set
+
 If I don't consider positioning for the depth==2 actions then it doesn't really make sense having a coord for each threat
 level since the higher threat would always be picked. Or maybe not, since e.g. in case of ranged attacks one may be at a
 disadvantage due to an adjacent enemy.
