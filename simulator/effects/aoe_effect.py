@@ -12,6 +12,10 @@ class AoeEffect(Effect):
         pass
 
     @abstractmethod
+    def on_move_within(self, combatant):
+        pass
+
+    @abstractmethod
     def on_start_of_turn(self, combatant):
         pass
 

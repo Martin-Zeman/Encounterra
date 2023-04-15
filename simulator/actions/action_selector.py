@@ -48,23 +48,20 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     transition_names = action_fsm.get_available_transitions()
     transition_actions = [transition_name_to_action[t] for t in transition_names]
     action_to_eligible_coords = {a: a.get_eligible_coords(battle_map) for a in transition_actions if ActoidFlags.IS_POSITIONING_INDEPENDENT not in a.actoid_flags}
-    for action, coords in action_to_eligible_coords.items():
-        # For each action only pick the closest coord from all coords with the same threat level
-        coords_w_threats = [(c, accumulate_threat_along_path(battle_map, battle_map.get_path_to_coord(
-            combatant, np.array(c), distances, shortest_paths, True), combatant)) for c in coords]
-        # Sort by threat
-        coords_w_threats.sort(key=lambda c: c[1])
-        # Find where the borders of threat levels are
-        groups = find_ranges_of_consecutive(coords_w_threats)
-        new_coords = []
-        for rng in groups.values():
-            coords_w_threats[rng[0]:rng[1] + 1] = sorted(coords_w_threats[rng[0]:rng[1] + 1], key=lambda c: battle_map.get_hop_distance(combatant, np.array([c[0]])))
-            new_coords.append(coords_w_threats[rng[0]][0])
-        action_to_eligible_coords[action] = new_coords
+    # for action, coords in action_to_eligible_coords.items():
+    #     # For each action only pick the closest coord from all coords with the same threat level
+    #     coords_w_threats = [(c, accumulate_threat_along_path(battle_map, battle_map.get_path_to_coord(
+    #         combatant, np.array(c), distances, shortest_paths, True), combatant)) for c in coords]
+    #     # Sort by threat
+    #     coords_w_threats.sort(key=lambda c: c[1])
+    #     # Find where the borders of threat levels are
+    #     groups = find_ranges_of_consecutive(coords_w_threats)
+    #     new_coords = []
+    #     for rng in groups.values():
+    #         coords_w_threats[rng[0]:rng[1] + 1] = sorted(coords_w_threats[rng[0]:rng[1] + 1], key=lambda c: battle_map.get_hop_distance(combatant, np.array([c[0]])))
+    #         new_coords.append(coords_w_threats[rng[0]][0])
+    #     action_to_eligible_coords[action] = new_coords
 
-    all_eligible_coords = set()
-    for coord in action_to_eligible_coords.values():
-        all_eligible_coords.update(coord)
     coords_to_states = dict()
 
     added_transitions = set()
@@ -91,5 +88,5 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 def select_best_action(combatant, battle_map):
     fsm, transition_name_to_action = generate_action_fsm(combatant, battle_map)
     dfs = build_action_dag(combatant, battle_map, fsm, transition_name_to_action)
-    # TODO
+    # TODO Topological sort
     return dfs

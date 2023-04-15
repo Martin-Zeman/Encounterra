@@ -10,15 +10,13 @@ from simulator.threat import mean_dmg_dc_attack
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory, AoEThreat
 import numpy as np
 
-class HungerOfHadarFactory(DirectThreatFactory):
+class SpikeGrowthFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, **kwargs):
         super().__init__()
-        self.flags |= FactoryFlags.DEX_SAVE_APPLIES
         self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
-        self.dc = dc
-        self.action_type = action_type  # HUNGER_OF_HADAR, QUICKENED_HUNGER_OF_HADAR
-        self.saving_throw = SavingThrow.DEX
-        self.dmg_dice = "2d6"
+        # self.dc = dc
+        self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
+        self.dmg_dice = "2d4"
         self.caster = caster
 
 
@@ -26,22 +24,22 @@ class HungerOfHadarFactory(DirectThreatFactory):
         """
         Important for FSM building
         """
-        return "HungerOfHadarFactory"
+        return "SpikeGrowthFactory"
 
     def find_best_args(self, combatant, battle_map):
-        # TODO Deprecated
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, HungerOfHadar.spell_range.value, SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target])
+        # TODO maybe find a smarter placement for this
+        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, SpikeGrowth.spell_range.value, SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target])
         return coord
 
     def create_best(self, combatant, battle_map, **kwargs):
-        return HungerOfHadar(self.find_best_args(combatant, battle_map), self,  **kwargs)
+        return SpikeGrowth(self.find_best_args(combatant, battle_map), self,  **kwargs)
 
     def create_all(self, battle_map):
         # Here there really is no need to iterate over all coords. Just find the best score
-        return [HungerOfHadar(self.find_best_args(self.caster, battle_map), self)]
+        return [SpikeGrowth(self.find_best_args(self.caster, battle_map), self)]
 
     def create(self, coord):
-        return HungerOfHadar(coord, self)
+        return SpikeGrowth(coord, self)
 
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
@@ -56,9 +54,8 @@ class HungerOfHadarFactory(DirectThreatFactory):
         except KeyError:
             consider_dist = False
 
-        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= HungerOfHadar.spell_range.value + SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target]:
-            # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            return avg_roll(self.dmg_dice) + 0.5 * mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw])
+        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= SpikeGrowth.spell_range.value + SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target]:
+            return avg_roll(self.dmg_dice)
         return 0
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
@@ -68,44 +65,40 @@ class HungerOfHadarFactory(DirectThreatFactory):
         return 0 # No need
 
 
-class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
+class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
 
-    level = 3
+    level = 2
     spell_range = SpellStats.Range.FEET_150
     target = SpellStats.Target.RADIUS_20
     duration = SpellStats.Duration.INSTANTANEOUS
     concentration = True
     type = SpellStats.Type.HARMFUL
-    dmg_type = DamageType.Cold
+    dmg_type = DamageType.Piercing
 
 
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
-        LimitedDurationEffect.__init__(self, turns=10)
-        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target])
+        LimitedDurationEffect.__init__(self, turns=100)
+        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target])
         self.factory = factory
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + f"HungerOfHadar at {np.squeeze(self.coord)}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SPIKE_GROWTH else "") + f"Spike Growth at {np.squeeze(self.coord)}"
 
 
     def on_start_of_turn(self, combatant):
-        combatant.apply_condition(Conditions.BLINDED)
+        pass
+
+    def on_end_of_turn(self, combatant):
+        pass
+
+    def on_enter(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.dmg_type)
 
-    def on_end_of_turn(self, combatant):
-        combatant.apply_condition(Conditions.BLINDED)
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
-        self.dmg_type = DamageType.Acid
-        resolve_dmg_saving_throw(self, dmg, combatant)
-        self.dmg_type = DamageType.Cold
-
-    def on_enter(self, combatant):
-        combatant.apply_condition(Conditions.BLINDED)
-
     def on_move_within(self, combatant):
-        pass
+        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        combatant.receive_dmg(dmg, self.dmg_type)
 
     def is_affecting(self, combatant, battle_map):
         coords = self.get_affected_coords(battle_map)
@@ -113,34 +106,33 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
 
     def activate(self):
-        # TODO make the area difficult terrain
         pass
 
     def deactivate(self):
-        # TODO remove difficult terrain
         pass  # TODO remove concentration?
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, HungerOfHadar.target, HungerOfHadar.type, self.coord)
+        # TODO This needs more intelligence (also subtract dmg caused to allies)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, SpikeGrowth.target, SpikeGrowth.type, self.coord)
         acc = 0
         for aff in affected:
-            acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg
-            # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            acc += 0.5 * mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(DamageType.Acid))
+            if battle_map.teams.are_enemies(self.factory.caster, aff):
+                acc += avg_roll(self.factory.dmg_dice)
+            else:
+                acc -= avg_roll(self.factory.dmg_dice)
         return acc
 
     def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
-        return mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(DamageType.Acid))
+        return 0
 
     def threat_on_enter(self, battle_map, target, *args, **kwargs):
-        return 0
+        return avg_roll(self.factory.dmg_dice)
 
     def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
-        threat = avg_roll(self.factory.dmg_dice)
-        return threat if not target.is_resistant_to(self.dmg_type) else threat / 2
+        return 0
 
     def threat_on_move_within(self, battle_map, target, *args, **kwargs):
-        return 0
+        return avg_roll(self.factory.dmg_dice)
 
     def get_eligible_coords(self, battle_map):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
