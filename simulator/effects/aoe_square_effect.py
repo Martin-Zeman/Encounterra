@@ -17,7 +17,7 @@ class AoeSquareEffect(AoeEffect):
         """
         grid_size = battle_map.size
         coords = []
-        for x, y in [(self.origin[0] + i, self.origin[1] + j) for i in range(1, self.length + 1) for j in range(1, self.length + 1)]:
+        for x, y in [(self.origin[0] + i, self.origin[1] + j) for i in range(0, self.length) for j in range(0, self.length)]:
             if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
                 continue
             coords.append(np.array([x, y]))

@@ -918,18 +918,59 @@ class Map:
         for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
             curr_coord = np.array([[x, y]])
             affected = []
-            if self.get_cartesian_distance(caster_coords, curr_coord) <= spell_range and not any((caster_coords[:] == curr_coord).all(1)):
-                score = 0
-                for combatant, coords in self.combatant_coordinate_cache.items():
-                    if self.get_cartesian_distance(coords.get(), curr_coord) <= radius:
-                        score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
-                        affected.append(combatant)
-                if score > max_score:
-                    max_score = score
-                    best_placement = curr_coord
-                    best_affected = affected
+            if self.get_cartesian_distance(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
+                continue  # Skip those outside of spell range and those taken up by the caster
+            score = 0
+            for combatant, coords in self.combatant_coordinate_cache.items():
+                if self.get_cartesian_distance(coords.get(), curr_coord) <= radius:
+                    score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
+                    affected.append(combatant)
+            if score > max_score:
+                max_score = score
+                best_placement = curr_coord
+                best_affected = affected
         logger.info(self)
         # logger.info(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
+        return best_placement, max_score, best_affected
+
+    def find_best_placement_harmful_square(self, caster, spell_range, length):
+        """
+        Finds the best placement of a square harmful AoE effect
+        :param caster: the caster
+        :param spell_range: range of the spell/ability
+        :param length: side length of the box
+        :return: best coordinate,achieved score and set of affected combatants
+        """
+        # TODO Unit test this
+        # or find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
+        bb = np.array([[self.size, self.size], [0, 0]])  # bottom left, top right
+        for combatant, coords in self.combatant_coordinate_cache.items():
+            if self.teams.are_enemies(caster, combatant):
+                coords = coords.get()
+                bb[0] = np.minimum(bb[0], coords.min(axis=0))
+                bb[1] = np.maximum(bb[1], coords.max(axis=0))
+        # inflate the BB
+        bb[0] = np.maximum(bb[0] - length, np.array([0, 0]))
+        bb[1] = np.minimum(bb[1] + length, np.array([self.size - 1, self.size - 1]))
+        max_score = -sys.maxsize - 1
+        best_placement = None
+        best_affected = None
+        caster_coords = self.combatant_coordinate_cache[caster].get()
+        for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
+            curr_coord = np.array([[x, y]])
+            affected = []
+            if self.get_cartesian_distance(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
+                continue  # Skip those outside of spell range and those taken up by the caster
+            score = 0
+            for combatant, coords in self.combatant_coordinate_cache.items():
+                if any((coords.get()[:] >= curr_coord).all(1)) and any((coords.get()[:] < curr_coord + length).all(1)):
+                    score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
+                    affected.append(combatant)
+            if score > max_score:
+                max_score = score
+                best_placement = curr_coord
+                best_affected = affected
+        logger.info(self)
         return best_placement, max_score, best_affected
 
     def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):

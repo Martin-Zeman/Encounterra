@@ -185,8 +185,8 @@ def get_threat_for_staying_at_coord(battle_map, coords, combatant):
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     for effect, affected_coords in effect_to_coords.items():
         if battle_map.get_hop_distance(affected_coords, coords) == 0:
-            threat_acc += effect.factory.threat_on_start_of_turn(battle_map, combatant)
-            threat_acc += effect.factory.threat_on_end_of_turn(battle_map, combatant)
+            threat_acc += effect.threat_on_start_of_turn(battle_map, combatant)
+            threat_acc += effect.threat_on_end_of_turn(battle_map, combatant)
     return threat_acc
 
 
@@ -218,6 +218,8 @@ def accumulate_threat_along_path(battle_map, path, combatant):
                     post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
                     if pre_increment_dist == 1 and post_increment_dist == 0:
                         threat_acc -= effect.threat_on_enter(battle_map, combatant)
+                    elif pre_increment_dist == 0 and post_increment_dist == 0:
+                        threat_acc -= effect.threat_on_move_within(battle_map, combatant)
             curr_coords_data += increment
         # account for the final destination
         threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)

@@ -1,21 +1,19 @@
-from simulator.action_resolver import resolve_dmg_saving_throw
 from simulator.action_types import BonusActionOrdering, BonusAction
 from simulator.combatant_coords import CombatantCoords
-from simulator.effects.aoe_spheric_effect import AoeSphericEffect
+from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat import mean_dmg_dc_attack
+from simulator.misc import DamageType, avg_roll, roll_spell_dmg
+from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory, AoEThreat
 import numpy as np
 
-class SpikeGrowthFactory(DirectThreatFactory):
+class CloudOfDaggersFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, **kwargs):
         super().__init__()
         self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
-        self.dmg_dice = "2d4"
+        self.dmg_dice = "4d4"
         self.caster = caster
 
 
@@ -27,18 +25,18 @@ class SpikeGrowthFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant, battle_map):
         # TODO maybe find a smarter placement for this
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, SpikeGrowth.spell_range.value, SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target])
+        coord, _, _ = battle_map.find_best_placement_harmful_square(self.caster, CloudOfDaggers.spell_range.value, 1)
         return coord
 
     def create_best(self, combatant, battle_map, **kwargs):
-        return SpikeGrowth(self.find_best_args(combatant, battle_map), self,  **kwargs)
+        return CloudOfDaggers(self.find_best_args(combatant, battle_map), self,  **kwargs)
 
     def create_all(self, battle_map):
         # Here there really is no need to iterate over all coords. Just find the best score
-        return [SpikeGrowth(self.find_best_args(self.caster, battle_map), self)]
+        return [CloudOfDaggers(self.find_best_args(self.caster, battle_map), self)]
 
     def create(self, coord):
-        return SpikeGrowth(coord, self)
+        return CloudOfDaggers(coord, self)
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         return 0 # no need
@@ -52,7 +50,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
         except KeyError:
             consider_dist = False
 
-        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= SpikeGrowth.spell_range.value + SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target]:
+        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= CloudOfDaggers.spell_range.value + SpellStats.TRANSLATE_RADIUS[CloudOfDaggers.target]:
             return avg_roll(self.dmg_dice)
         return 0
 
@@ -63,29 +61,29 @@ class SpikeGrowthFactory(DirectThreatFactory):
         return 0 # No need
 
 
-class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
+class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThreat, AoEThreat):
 
     level = 2
-    spell_range = SpellStats.Range.FEET_150
-    target = SpellStats.Target.RADIUS_20
+    spell_range = SpellStats.Range.FEET_60
+    target = SpellStats.Target.BOX
     duration = SpellStats.Duration.INSTANTANEOUS
     concentration = True
     type = SpellStats.Type.HARMFUL
-    dmg_type = DamageType.Piercing
+    dmg_type = DamageType.Slashing
 
 
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
-        LimitedDurationEffect.__init__(self, turns=100)
-        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target])
+        LimitedDurationEffect.__init__(self, turns=10)
+        AoeSquareEffect.__init__(self, coord, 1)
         self.factory = factory
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SPIKE_GROWTH else "") + f"Spike Growth at {np.squeeze(self.coord)}"
-
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers at {np.squeeze(self.coord)}"
 
     def on_start_of_turn(self, combatant):
-        pass
+        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        combatant.receive_dmg(dmg, self.dmg_type)
 
     def on_end_of_turn(self, combatant):
         pass
@@ -95,13 +93,11 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         combatant.receive_dmg(dmg, self.dmg_type)
 
     def on_move_within(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, self.dmg_type)
+        return 0
 
     def is_affecting(self, combatant, battle_map):
         coords = self.get_affected_coords(battle_map)
         return battle_map.get_hop_distance(combatant, coords) == 0
-
 
     def activate(self):
         pass
@@ -110,8 +106,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         pass  # TODO remove concentration?
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        # TODO This needs more intelligence (also subtract dmg caused to allies)
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, SpikeGrowth.target, SpikeGrowth.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, CloudOfDaggers.target, CloudOfDaggers.type, self.coord)
         acc = 0
         for aff in affected:
             if battle_map.teams.are_enemies(self.factory.caster, aff):
@@ -127,10 +122,10 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         return avg_roll(self.factory.dmg_dice)
 
     def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
-        return 0
+        return avg_roll(self.factory.dmg_dice)
 
     def threat_on_move_within(self, battle_map, target, *args, **kwargs):
-        return avg_roll(self.factory.dmg_dice)
+        return 0
 
     def get_eligible_coords(self, battle_map):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords

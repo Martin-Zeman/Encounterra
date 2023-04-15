@@ -7,7 +7,7 @@ from simulator.misc import DistanceMetric, Size, Side, Conditions
 from simulator.spells.fireball import Fireball
 from simulator.spells.spell import SpellStats
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, teams, effect_tracker, battle_map
+from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, combatant5, teams, effect_tracker, battle_map
 import numpy as np
 
 
@@ -887,6 +887,35 @@ def test_find_best_placement_harmful_circular(battle_map, teams, combatant1, com
     assert (combatant2 in affected) != (combatant3 in affected)
     assert combatant4 not in affected
 
+
+def test_find_best_placement_harmful_square(battle_map, teams, combatant1, combatant2, combatant3, combatant4, combatant5):
+    # combatant2.size = Size.LARGE
+    combatant5.size = Size.MEDIUM  # downsize the giant for the sake of this test
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant4, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant5, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, np.array([1, 1]))
+    battle_map.set_combatant_coordinates(combatant2, np.array([4, 4]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([10, 5]))
+    battle_map.set_combatant_coordinates(combatant4, np.array([6, 7]))
+    battle_map.set_combatant_coordinates(combatant5, np.array([5, 5]))
+    # 10ft square
+    coord, score, affected = battle_map.find_best_placement_harmful_square(combatant1, 20, 2)
+    assert np.array_equal(coord, np.array([[4, 4]]))
+    assert score == 2
+    assert combatant2 in affected
+    assert combatant3 not in affected
+    assert combatant4 not in affected
+    assert combatant5 in affected
+
+    # Now move the ally in between the targets so that only one can be hit
+    battle_map.move_combatant(combatant4, np.array([5, 4]))
+    coord, score, affected = battle_map.find_best_placement_harmful_square(combatant1, 20, 2)
+    assert score == 1
+    assert combatant2 in affected or combatant3 in affected or combatant5 in affected
+    assert combatant4 not in affected
 
 def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, combatant1, combatant2, combatant3, combatant4):
     combatant2.size = Size.LARGE
