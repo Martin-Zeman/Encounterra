@@ -150,13 +150,11 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         return target1_threat + target2_threat
 
     def get_eligible_coords(self, battle_map):
-        target_combatant_coords = battle_map.get_combatant_position(self.targets[0])
-        coords_for_fist = battle_map.get_free_coords_in_cartesian_range(target_combatant_coords,
+        coords_for_fist = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                         inflate_to_size=self.factory.caster.size,
                                                                         rng=self.spell_range.value,
                                                                         combatant=self.factory.caster)
-        target_combatant_coords = battle_map.get_combatant_position(self.targets[1])
-        coords_for_second = battle_map.get_free_coords_in_cartesian_range(target_combatant_coords,
+        coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                           inflate_to_size=self.factory.caster.size,
                                                                           rng=self.spell_range.value,
                                                                           combatant=self.factory.caster)

@@ -40,8 +40,8 @@ class MistyStepFactory(DirectThreatFactory):
         pass  # No need due to the COORD_AGNOSTIC flag
 
     def get_eligible_targets(self, battle_map):
-        caster_coords = battle_map.get_combatant_position(self.caster)
-        return battle_map.get_free_coords_in_cartesian_range(caster_coords, rng=MistyStep.spell_range.value)
+        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.caster),
+                                                             rng=MistyStep.spell_range.value)
 
     def create_best(self, combatant, battle_map):
         best_args = self.find_best_args(combatant, battle_map)

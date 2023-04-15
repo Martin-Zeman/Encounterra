@@ -195,7 +195,6 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
             coords.add(tuple(caster_coords.get()[0]))
             return coords
         else:
-            target_combatant_coords = battle_map.get_combatant_position(self.target)
-            return battle_map.get_free_coords_in_cartesian_range(target_combatant_coords,
+            return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  inflate_to_size=self.factory.caster.size,
                                                                  rng=self.spell_range.value, combatant=self.target)

@@ -420,6 +420,9 @@ def test_get_free_coords_in_hop_range_medium(battle_map, combatant1):
     coords = battle_map.get_combatant_position(combatant1)
     adj = battle_map.get_free_coords_in_hop_range(coords)
     assert adj == {(4, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (5, 6), (6, 6)}
+    # same but including the combatant's own coord
+    adj = battle_map.get_free_coords_in_hop_range(coords, combatant=combatant1)
+    assert adj == {(4, 7), (5, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (5, 6), (6, 6)}
 
 def test_get_free_coords_in_hop_range_large(battle_map, combatant1):
     combatant1.size = Size.LARGE
@@ -427,6 +430,9 @@ def test_get_free_coords_in_hop_range_large(battle_map, combatant1):
     coords = battle_map.get_combatant_position(combatant1)
     adj = battle_map.get_free_coords_in_hop_range(coords)
     assert adj == {(4, 6), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
+    # same but including the combatant's own coord
+    adj = battle_map.get_free_coords_in_hop_range(coords, combatant=combatant1)
+    assert adj == {(4, 6), (5, 7), (6, 7), (5, 8), (6, 8), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
 
 def test_get_free_coords_in_hop_range_large_corner(battle_map, combatant1):
     combatant1.size = Size.LARGE
@@ -442,6 +448,11 @@ def test_get_free_coords_in_hop_range_huge_with_terrain(battle_map, combatant1):
     battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
     adj = battle_map.get_free_coords_in_hop_range(coords)
     assert adj == {(7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
+    # same but including the combatant's own coord
+    adj = battle_map.get_free_coords_in_hop_range(coords, combatant=combatant1)
+    assert adj == {(7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (8, 1), (8, 2), (9, 2), (10, 2), (8, 3), (9, 3), (10, 3),
+                   (8, 4), (9, 4), (10, 4), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3),
+                   (11, 4), (11, 5)}
 
 
 def test_get_free_coords_in_cartesian_range_medium(battle_map, teams, combatant1):
@@ -451,11 +462,17 @@ def test_get_free_coords_in_cartesian_range_medium(battle_map, teams, combatant1
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=1)
     # only directly above, below and to the sides
     assert free_coords == {(4, 7), (6, 7), (5, 8), (5, 6)}
+    free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=1, combatant=combatant1)
+    # same but including the combatant's own coord
+    assert free_coords == {(4, 7),(5, 7), (6, 7), (5, 8), (5, 6)}
 
     battle_map.move_combatant(combatant1, np.array([8, 13]))
     coords = battle_map.get_combatant_position(combatant1)
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=2)
     assert free_coords == {(6, 13), (7, 13), (9, 13), (10, 13), (7, 14), (8, 14), (9, 14), (7, 12), (8, 12), (9, 12), (8, 11)}
+    free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=2, combatant=combatant1)
+    # same but including the combatant's own coord
+    assert free_coords == {(6, 13), (7, 13), (8, 13), (9, 13), (10, 13), (7, 14), (8, 14), (9, 14), (7, 12), (8, 12), (9, 12), (8, 11)}
 
     battle_map.move_combatant(combatant1, np.array([5, 5]))
     coords = battle_map.get_combatant_position(combatant1)
@@ -466,6 +483,9 @@ def test_get_free_coords_in_cartesian_range_medium(battle_map, teams, combatant1
     assert (1, 8) not in free_coords and (8, 8) not in free_coords
     assert (2, 8) not in free_coords and (8, 8) not in free_coords and (9, 8) not in free_coords
     assert (9, 5) in free_coords and (1, 5) in free_coords and (5, 1) in free_coords and (5, 9) in free_coords
+    # same but including the combatant's own coord
+    free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=4, combatant=combatant1)
+    assert  (5, 5) in free_coords
 
 def test_get_free_coords_in_cartesian_range_large(battle_map, teams, combatant1):
     combatant1.size = Size.LARGE
@@ -474,11 +494,17 @@ def test_get_free_coords_in_cartesian_range_large(battle_map, teams, combatant1)
     coords = battle_map.get_combatant_position(combatant1)
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=1)
     assert free_coords == {(2, 1), (3, 1), (1, 2), (4, 2), (1, 3), (4, 3), (2, 4), (3, 4)}
+    free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=1, combatant=combatant1)
+    # same but including the combatant's own coord
+    assert free_coords == {(2, 1), (2, 2), (3, 2), (2, 3), (3, 3), (3, 1), (1, 2), (4, 2), (1, 3), (4, 3), (2, 4), (3, 4)}
 
     battle_map.move_combatant(combatant1, np.array([6, 8]))
     coords = battle_map.get_combatant_position(combatant1)
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=2)
     assert free_coords == {(6, 6), (7, 6), (5, 7), (6, 7), (7, 7), (8, 7), (4, 8), (5, 8), (8, 8), (9, 8), (4, 9), (5, 9), (8, 9), (9, 9), (5, 10), (6, 10), (7, 10), (8, 10), (6, 11), (7, 11)}
+    free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=2, combatant=combatant1)
+    # same but including the combatant's own coord
+    assert free_coords == {(6, 6), (6, 8), (7, 8), (6, 9), (7, 9), (7, 6), (5, 7), (6, 7), (7, 7), (8, 7), (4, 8), (5, 8), (8, 8), (9, 8), (4, 9), (5, 9), (8, 9), (9, 9), (5, 10), (6, 10), (7, 10), (8, 10), (6, 11), (7, 11)}
 
 def test_get_adjacent_coords_medium(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, np.array([5, 7]))

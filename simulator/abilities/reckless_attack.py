@@ -65,9 +65,10 @@ class RecklessAttackFactory(DirectThreatFactory):
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
 
-    def get_eligible_coords(self, target_combatant, battle_map):
-        target_combatant_coords = battle_map.get_combatant_position(target_combatant)
-        return battle_map.get_free_coords_in_hop_range(target_combatant_coords, inflate_to_size=self.combatant.size, rng=self.range)
+    # def get_eligible_coords(self, target_combatant, battle_map):
+    #     return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(target_combatant),
+    #                                                    inflate_to_size=self.combatant.size, rng=self.range,
+    #                                                    combatant=self.factory.combatant)
 
     def get_eligible_targets(self, battle_map):
         return battle_map.get_enemies(self.combatant)
@@ -254,5 +255,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)
 
     def get_eligible_coords(self, battle_map):
-        target_combatant_coords = battle_map.get_combatant_position(self.target_combatant)
-        return battle_map.get_free_coords_in_hop_range(target_combatant_coords, inflate_to_size=self.factory.combatant.size, rng=self.factory.range)
+        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
+                                                       inflate_to_size=self.factory.combatant.size,
+                                                       rng=self.factory.range,
+                                                       combatant=self.factory.combatant)
