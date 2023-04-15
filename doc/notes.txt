@@ -1,4 +1,4 @@
-TODO: Add some more AoEs which deal dmg on entering (cloud of daggers, spike growth)
+#TODO Let's add a function to return all reachable map coordinates by a combatant regardless of distancei
 
 If I don't consider positioning for the depth==2 actions then it doesn't really make sense having a coord for each threat
 level since the higher threat would always be picked. Or maybe not, since e.g. in case of ranged attacks one may be at a

@@ -941,7 +941,6 @@ class Map:
         :param length: side length of the box
         :return: best coordinate,achieved score and set of affected combatants
         """
-        # TODO Unit test this
         # or find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
         bb = np.array([[self.size, self.size], [0, 0]])  # bottom left, top right
         for combatant, coords in self.combatant_coordinate_cache.items():
