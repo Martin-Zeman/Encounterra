@@ -190,13 +190,14 @@ def get_threat_for_staying_at_coord(battle_map, coords, combatant):
     return threat_acc
 
 
-def accumulate_threat_along_path(battle_map, path, combatant):
+def accumulate_threat_along_path(battle_map, path, combatant, disengaged=False):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
     at the final destination.
     :param battle_map:
     :param path: path as a sequence of np.array coordinates
     :param combatant: the moving combatant
+    :param disengaged: If True then don't include the AoOs
     :return: accumulated threat (negative)
     """
     threat_acc = 0
@@ -208,9 +209,10 @@ def accumulate_threat_along_path(battle_map, path, combatant):
             curr_coords_data = curr_coords.get()
             with battle_map.as_if_combatant_position(combatant, curr_coords_data[0]):
                 # account for AoO
-                enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
-                for e in enemies:
-                    threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant)
+                if not disengaged:
+                    enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
+                    for e in enemies:
+                        threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant)
 
                 # account for AoE
                 for effect, affected_coords in effect_to_coords.items():
