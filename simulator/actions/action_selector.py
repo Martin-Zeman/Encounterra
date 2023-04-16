@@ -26,7 +26,7 @@ def find_ranges_of_consecutive(coords_w_threats):
     return res
 
 
-def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action):
+def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, post_misty_step_eligible_actions):
     """
     Builds action DAG for a combatant given the combatant's action_fsm. It determines eligible coords for each
     action. It then filters the coords such that only the closest one per threat level is kept (this is a heuristic
@@ -45,45 +45,38 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 
     # get eligible coords for all actions
     transition_names = action_fsm.get_available_transitions()
-    transition_actions = [transition_name_to_action[t] for t in transition_names]
+    transition_actions = [transition_name_to_action[tn] for tn in transition_names if "Dodge" not in tn and "Disengage" not in tn]
     action_to_eligible_coords = {a: a.get_eligible_coords(battle_map, shortest_paths) for a in transition_actions}
 
     coords_to_states = dict()
     added_transitions = set()
     for action, coords in action_to_eligible_coords.items():
+        print(f"{action} len coords = {len(coords)}")
         action_name = str(action)
-        match action_name.split():
-            case ["Misty", "Step", "to",*_]:
-                pass
-                # Misty Step gets a special treatment. It first gets its own pre-pended coordinates, then goes Misty
-                # Step itself and then it's connected to the target pre-pended coords of eligible follow-up actions. It
-            case ["Disengage", "of",*_] | ["Dodge", "of",*_]:
-                pass
-            case _:
-                for coord in coords:
-                    # try:
-                    for transitions in action_fsm.events[action_name].transitions.values():  # Iterate over the original to avoid deleting from the one being iterated over
-                        for transition in [t for t in transitions if t.source == "0"]:
-                            new_state_name = str(coord)
-                            dag.add_state(new_state_name)
-                            coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
-                            move_transition_name ="m_" + new_state_name
-                            if move_transition_name not in added_transitions:  # Avoid adding the same transition multiple times
-                                dag.add_transition(move_transition_name, transition.source, new_state_name)
-                                added_transitions.add(move_transition_name)
-                            dag.add_transition(action_name, new_state_name, transition.dest)
-                            dag.remove_transition(action_name, transition.source)  # Remove the original
-                    # except KeyError:
-                    #     continue
-    for action, coords in action_to_eligible_coords.items():
-        action_name = str(action)
-        if "Misty Step to" in action_name:
-            target_coord = action.coord
+        for idx, coord in enumerate(coords):
+            for transitions in action_fsm.events[action_name].transitions.values():  # Iterate over the original to avoid deleting from the one being iterated over
+                for transition in [t for t in transitions if t.source == "0"]:
+                    new_state_name = str(coord)
+                    dag.add_state(new_state_name)
+                    coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
+                    move_transition_name ="m_" + new_state_name
+                    if move_transition_name not in added_transitions:  # Avoid adding the same transition multiple times
+                        dag.add_transition(move_transition_name, transition.source, new_state_name)
+                        added_transitions.add(move_transition_name)
+                    dag.add_transition(action_name, new_state_name, transition.dest)
+                    if "Misty Step" not in action_name:
+                        # We want to keep the option to misty step directly from character coords
+                        dag.remove_transition(action_name, transition.source)  # Remove the original
+
+    # for action, coords in action_to_eligible_coords.items():
+    #     action_name = str(action)
+    #     if "Misty Step" in action_name:
+    #         target_coord = action.coord
     return dag, coords_to_states
 
 
 def select_best_action(combatant, battle_map):
-    fsm, transition_name_to_action = generate_action_fsm(combatant, battle_map)
-    dfs = build_action_dag(combatant, battle_map, fsm, transition_name_to_action)
+    fsm, transition_name_to_action, post_misty_step_eligible_actions = generate_action_fsm(combatant, battle_map)
+    dfs = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, post_misty_step_eligible_actions)
     # TODO Topological sort
     return dfs

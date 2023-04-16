@@ -100,12 +100,14 @@ def generate_action_fsm(combatant, battle_map):
     It assumes the combatant's attack FSM is manually constructed already and is used as an input for the overall FSM.
     :param combatant: for whom the FSM is to be constructed
     :param battle_map:
-    :return: fsm and the mapping between FSM transition names to the actual action factory objects
+    :return: fsm, the mapping between FSM transition names to the actual action factory objects,
+    list of actions that can be taken after misty step
     """
     fsm = StateMachineTemplate()
     state_footprint_to_name = dict()
     visited = set()
     transition_name_to_action = dict()
+    post_misty_step_eligible_actions = None  # This is only relevant for combatant's who have Misty Step
     def dfs(previous_state_name, action_taken=None):
         """
         Internal function which recursively builds the action FSM in a DFS manner
@@ -115,19 +117,23 @@ def generate_action_fsm(combatant, battle_map):
         fas = [fa for sublist in fas for fa in sublist]  # flatten the fas from a list of lists into a single list
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
+        action_taken_name = str(action_taken)
+        if "Misty Step" in action_taken_name:
+            post_misty_step_eligible_actions = fas
         if not state_footprint:
             # no more actions -> connect to the nop state
-            action_name = str(action_taken)
-            transition_name_to_action[action_name] = action_taken
-            fsm.add_transition(action_name, previous_state_name, 'nop')
+            transition_name_to_action[action_taken_name] = action_taken  # TODO This can be taken out of the if else
+            fsm.add_transition(action_taken_name, previous_state_name, 'nop')
         elif state_footprint not in visited:
             new_state_name = fsm.get_next_state_name()
             state_footprint_to_name[state_footprint] = new_state_name
             if action_taken:
-                action_name = str(action_taken)
-                transition_name_to_action[action_name] = action_taken
-                fsm.add_transition(action_name, previous_state_name, new_state_name)
+                transition_name_to_action[action_taken_name] = action_taken
+                fsm.add_transition(action_taken_name, previous_state_name, new_state_name)
                 fsm.add_new_state(new_state_name)  # Avoid adding the initial state again
+                if "Misty Step" in action_taken_name:
+                    # Misty step gets a special treatment
+                    return
             visited.add(state_footprint)
             for fa in fas:
                 exported_resources = combatant.export_resources()
@@ -135,8 +141,8 @@ def generate_action_fsm(combatant, battle_map):
                 dfs(new_state_name, fa)
                 combatant.load_resources(exported_resources)
         else:
-            action_name = str(action_taken)
-            transition_name_to_action[action_name] = action_taken
-            fsm.add_transition(action_name, previous_state_name, state_footprint_to_name[state_footprint])
+            transition_name_to_action[action_taken_name] = action_taken
+            fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_name[state_footprint])
+
     dfs('0')
-    return fsm, transition_name_to_action
+    return fsm, transition_name_to_action, post_misty_step_eligible_actions

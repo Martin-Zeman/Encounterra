@@ -77,3 +77,4 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def get_eligible_coords(self, battle_map, shortest_paths):
         pass
+        # return battle_map.get_all_accessible_coords(shortest_paths)

@@ -21,6 +21,5 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     # fsm, transition_mapping = generate_action_fsm(combatant1, battle_map)
     # assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_faurung_pre_coords.png', prog='dot')
-
     dfs, _ = select_best_action(combatant1, battle_map)
-    dfs.get_graph().draw('state_diagram_faurung_with_coords.png', prog='dot')
+    # dfs.get_graph().draw('state_diagram_faurung_with_coords.png', prog='dot')

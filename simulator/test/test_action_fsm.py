@@ -47,32 +47,32 @@ def test_generate_action_fsm(combatant1, combatant2, combatant3, combatant4, com
     battle_map.set_combatant_coordinates(combatant2, np.array([5, 11]))
     battle_map.set_combatant_coordinates(combatant3, np.array([10, 12]))
     battle_map.set_combatant_coordinates(combatant4, np.array([11, 6]))
-    fsm, transition_mapping = generate_action_fsm(combatant1, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(combatant1, battle_map)
     assert fsm.state == '0'
     # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)
     fsm.get_graph().draw('state_diagram_faurung.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(combatant2, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(combatant2, battle_map)
     assert fsm.state == '0'
     # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)
     fsm.get_graph().draw('state_diagram_goblin.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(combatant3, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(combatant3, battle_map)
     assert fsm.state == '0'
     # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)
     fsm.get_graph().draw('state_diagram_bugbear.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(combatant4, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(combatant4, battle_map)
     assert fsm.state == '0'
     # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)
     fsm.get_graph().draw('state_diagram_totem_barbarian5lvl.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(combatant5, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(combatant5, battle_map)
     assert fsm.state == '0'
     # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)
     fsm.get_graph().draw('state_diagram_stone_giant.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(combatant6, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(combatant6, battle_map)
     assert fsm.state == '0'
     # graph_machine = GraphMachine(model=fsm, use_pygraphviz=False)
     fsm.get_graph().draw('state_diagram_ogre.png', prog='dot')
