@@ -75,5 +75,5 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         """
         return -1 * calculate_threat_in_mod(combatant, 6, battle_map, RollModifier.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
 
-    def get_eligible_coords(self, battle_map):
+    def get_eligible_coords(self, battle_map, shortest_paths):
         pass

@@ -65,7 +65,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
 
-    # def get_eligible_coords(self, target_combatant, battle_map):
+    # def get_eligible_coords(self, battle_map, shortest_paths):
     #     return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(target_combatant),
     #                                                    inflate_to_size=self.combatant.size, rng=self.range,
     #                                                    combatant=self.factory.combatant)
@@ -254,7 +254,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)
 
-    def get_eligible_coords(self, battle_map):
+    def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
                                                        inflate_to_size=self.factory.combatant.size,
                                                        rng=self.factory.range,

@@ -36,9 +36,6 @@ class MistyStepFactory(DirectThreatFactory):
             return free_coords[0][0] if free_coords else None
         return None
 
-    def get_eligible_coords(self, target_combatant, battle_map):
-        pass  # No need due to the COORD_AGNOSTIC flag
-
     def get_eligible_targets(self, battle_map):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.caster),
                                                              rng=MistyStep.spell_range.value)
@@ -49,16 +46,13 @@ class MistyStepFactory(DirectThreatFactory):
             return None
         return MistyStep(best_args, self)
 
-    # def create_mock(self):
-    #     return MistyStep(None, self)
-
     def create_all(self, battle_map):
-        # targets = self.get_eligible_targets(battle_map)
-        # return [MistyStep(t, self) for t in targets]
-        best_args = self.find_best_args(self.caster, battle_map)
-        if best_args is None:
-            return None
-        return [MistyStep(best_args, self)]
+        targets = self.get_eligible_targets(battle_map)
+        return [MistyStep(t, self) for t in targets]
+        # best_args = self.find_best_args(self.caster, battle_map)
+        # if best_args is None:
+        #     return None
+        # return [MistyStep(best_args, self)]
 
     def create(self, coord):
         return MistyStep(coord, self)
@@ -108,12 +102,11 @@ class MistyStep(Actoid, ThreatModifier):
 
     def __init__(self, coord, factory):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
-        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.coord = coord
         self.factory = factory
 
     def __str__(self):
-        return f"Misty Step to {self.coord}"
+        return f"Misty Step to {self.coord[0]}, {self.coord[1]}"
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         # TODO Add up all potential dmg from enemies that would normally be within their movement range
@@ -142,5 +135,5 @@ class MistyStep(Actoid, ThreatModifier):
             return max_threat_after - max_threat_before
         return 0
 
-    def get_eligible_coords(self, battle_map):
-        pass  # no need due to IS_POSITIONING_INDEPENDENT
+    def get_eligible_coords(self, battle_map, shortest_paths):
+        return battle_map.get_all_accessible_coords(shortest_paths)

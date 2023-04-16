@@ -187,7 +187,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         """
         return self.factory.calculate_threat_to_target(battle_map, self.target)
 
-    def get_eligible_coords(self, battle_map):
+    def get_eligible_coords(self, battle_map, shortest_paths):
         if self.target is self.factory.caster:
             # TODO just return all free coords
             caster_coords = battle_map.get_combatant_position(self.factory.caster)

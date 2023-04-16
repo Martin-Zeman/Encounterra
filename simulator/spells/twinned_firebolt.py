@@ -159,7 +159,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
             dmg_acc += mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.targets[1].is_resistant_to(TwinnedFirebolt.dmg_type))
         return dmg_acc
 
-    def get_eligible_coords(self, battle_map):
+    def get_eligible_coords(self, battle_map, shortest_paths):
         coords_for_fist = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                         inflate_to_size=self.factory.caster.size,
                                                                         rng=self.spell_range.value,

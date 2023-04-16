@@ -70,5 +70,5 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         adjacent_enemies = battle_map.get_adjacent_enemies(combatant)
         return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(battle_map, self.combatant), adjacent_enemies)
 
-    def get_eligible_coords(self, battle_map):
+    def get_eligible_coords(self, battle_map, shortest_paths):
         pass

@@ -20,11 +20,19 @@ logger = logging.getLogger(__name__)
 
 SQRT_OF_TWO = 1.41421
 
-def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
-    current_position = target_location
+def reconstruct_from_shortest_path(shortest_path, source, target):
+    """
+    Works backwards using the shortest paths produced by Dijkstra to obtain a sequence of coordinates from source to
+    target.
+    :param shortest_path: shortest path dict (output of Dijkstra)
+    :param source: source coordinates
+    :param target: target coordinates
+    :return: path from source to target as a sequence of coordinates
+    """
+    current_position = target
     # The square of the enemy itself is inaccessible, have to take the closest free adjacent one
     path = {'tuples': [], 'numpy': []}
-    while not np.array_equal(current_position, my_location[0]):
+    while not np.array_equal(current_position, source[0]):
         path['numpy'].append(current_position)
         path['tuples'].append(tuple(current_position))
         # have to convert to tuple cause numpy array is non-hashable
@@ -36,8 +44,8 @@ def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
         except TypeError:
             print("FIXME")
     else:
-        path['numpy'].append(my_location[0])
-        path['tuples'].append(tuple(my_location[0]))
+        path['numpy'].append(source[0])
+        path['tuples'].append(tuple(source[0]))
     path['numpy'].reverse()
     path['tuples'].reverse()
     return path
@@ -45,6 +53,12 @@ def reconstruct_from_shortest_path(shortest_path, my_location, target_location):
 
 
 def convert_path_to_increments(path):
+    """
+    Converts a sequence of coordinates to a sequence of coordinate increments
+    target.
+    :param path: path as a sequence of coordinates
+    :return: sequence of increments
+    """
     increments = []
     for i in range(len(path) - 1):
         increments.append(path[i + 1] - path[i])
@@ -366,12 +380,13 @@ class Map:
         N = self.size
         Nsq = self.size ** 2
         dist = [sys.maxsize] * Nsq
-        dist[src[0] * self.size + src[1]] = 0
+        src_idx = src[0] * self.size + src[1]
+        dist[src_idx] = 0
         open_set = [False] * Nsq
         adj = np.multiply(self.base_adjacency_matrix, mask)
         shortest_paths = {}
 
-        pq = [(0, src[0] * self.size + src[1])]
+        pq = [(0, src_idx)]
         while pq:
             _, x = heapq.heappop(pq)
             if open_set[x]:
@@ -382,7 +397,7 @@ class Map:
                     coord_to = (y // N, y % N)
                     coord_to_np = np.array([coord_to[0], coord_to[1]])
                     coord_from = np.array([x // N, x % N])
-                    new_dist =  dist[x] + adj[x][y]
+                    new_dist = dist[x] + adj[x][y]
                     if dist[y] > new_dist:
                         dist[y] = dist[x] + adj[x][y]
                         shortest_paths[coord_to] = coord_from
@@ -393,7 +408,7 @@ class Map:
                         # prefer the path with the least coordinate diff, i.e. the less zig-zaggy path
                         shortest_paths[coord_to] = coord_from
                         heapq.heappush(pq, (new_dist, y))
-        end_time = time.time()
+        # end_time = time.time()
         # execution_time = end_time - start_time
         # print("Execution time:", execution_time)
         return dist, shortest_paths
@@ -660,6 +675,14 @@ class Map:
                     coords_in_range.add((x, y))
         return coords_in_range
 
+    def get_all_accessible_coords(self, shortest_paths):
+        """
+        Returns all free and square coordinates accessible by a combatant given the shortest paths dict (output of Dijkstra)
+        :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
+        :return: free and accessible coordinates as a set of tuples (x, y)
+        """
+        return set(shortest_paths.keys())
+
 
     def get_adjacent_coords(self, coords: CombatantCoords):
         """
@@ -892,6 +915,10 @@ class Map:
 
 
     def reset(self, combatant_initial_positions):
+        """
+        Resets all combatants to their initial positions
+        :param combatant_initial_positions: the initial positions as a dict
+        """
         logger.debug("Resetting the battle map")
         for row in self.grid:
             for square in row:
@@ -902,7 +929,7 @@ class Map:
 
     def get_harmful_bounding_box(self, caster, inflation):
         """
-        Gets a bounding box which contains all enemies inflated by the inflation size
+        A helper function which constructs a bounding box which contains all enemies inflated by the inflation size
         :param caster: the caster (since the BB is determined by enemies)
         :param inflation: radius or side length of the harmful AoE effect
         :return: bounding box in [[x1, y1], [x2, y2]] where x1,y1 are top right, x2,y2 are bottom left

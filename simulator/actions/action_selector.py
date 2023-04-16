@@ -1,6 +1,5 @@
 import copy
 import itertools
-
 import numpy as np
 
 from simulator.actions.action_fsms import generate_action_fsm
@@ -47,41 +46,39 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     # get eligible coords for all actions
     transition_names = action_fsm.get_available_transitions()
     transition_actions = [transition_name_to_action[t] for t in transition_names]
-    action_to_eligible_coords = {a: a.get_eligible_coords(battle_map) for a in transition_actions if ActoidFlags.IS_POSITIONING_INDEPENDENT not in a.actoid_flags}
-    # for action, coords in action_to_eligible_coords.items():
-    #     # For each action only pick the closest coord from all coords with the same threat level
-    #     coords_w_threats = [(c, accumulate_threat_along_path(battle_map, battle_map.get_path_to_coord(
-    #         combatant, np.array(c), distances, shortest_paths, True), combatant)) for c in coords]
-    #     # Sort by threat
-    #     coords_w_threats.sort(key=lambda c: c[1])
-    #     # Find where the borders of threat levels are
-    #     groups = find_ranges_of_consecutive(coords_w_threats)
-    #     new_coords = []
-    #     for rng in groups.values():
-    #         coords_w_threats[rng[0]:rng[1] + 1] = sorted(coords_w_threats[rng[0]:rng[1] + 1], key=lambda c: battle_map.get_hop_distance(combatant, np.array([c[0]])))
-    #         new_coords.append(coords_w_threats[rng[0]][0])
-    #     action_to_eligible_coords[action] = new_coords
+    action_to_eligible_coords = {a: a.get_eligible_coords(battle_map, shortest_paths) for a in transition_actions}
 
     coords_to_states = dict()
-
     added_transitions = set()
     for action, coords in action_to_eligible_coords.items():
-        for coord in coords:
-            # try:
-            for transitions in action_fsm.events[str(action)].transitions.values():  # Iterate over the original to avoid deleting from the one being iterated over
-                for transition in [t for t in transitions if t.source == "0"]:
-                    new_state_name = str(coord)
-                    dag.add_state(new_state_name)
-                    coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
-                    move_transition_name ="m_" + new_state_name
-                    if move_transition_name not in added_transitions:  # Avoid adding the same transition multiple times
-                        dag.add_transition(move_transition_name, transition.source, new_state_name)
-                        added_transitions.add(move_transition_name)
-                    dag.add_transition(str(action), new_state_name, transition.dest)
-                    dag.remove_transition(str(action), transition.source)  # Remove the original
-            # except KeyError:
-            #     continue
-
+        action_name = str(action)
+        match action_name.split():
+            case ["Misty", "Step", "to",*_]:
+                pass
+                # Misty Step gets a special treatment. It first gets its own pre-pended coordinates, then goes Misty
+                # Step itself and then it's connected to the target pre-pended coords of eligible follow-up actions. It
+            case ["Disengage", "of",*_] | ["Dodge", "of",*_]:
+                pass
+            case _:
+                for coord in coords:
+                    # try:
+                    for transitions in action_fsm.events[action_name].transitions.values():  # Iterate over the original to avoid deleting from the one being iterated over
+                        for transition in [t for t in transitions if t.source == "0"]:
+                            new_state_name = str(coord)
+                            dag.add_state(new_state_name)
+                            coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
+                            move_transition_name ="m_" + new_state_name
+                            if move_transition_name not in added_transitions:  # Avoid adding the same transition multiple times
+                                dag.add_transition(move_transition_name, transition.source, new_state_name)
+                                added_transitions.add(move_transition_name)
+                            dag.add_transition(action_name, new_state_name, transition.dest)
+                            dag.remove_transition(action_name, transition.source)  # Remove the original
+                    # except KeyError:
+                    #     continue
+    for action, coords in action_to_eligible_coords.items():
+        action_name = str(action)
+        if "Misty Step to" in action_name:
+            target_coord = action.coord
     return dag, coords_to_states
 
 

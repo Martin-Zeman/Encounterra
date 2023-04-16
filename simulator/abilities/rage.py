@@ -60,8 +60,8 @@ class RageFactory(ThreatModifierFactory):
                 logger.error("Incorrect combatant level of rage")
                 return 2
 
-    def get_eligible_coords(self, target_combatant, battle_map):
-        pass  # No need due to the COORD_AGNOSTIC flag
+    def get_eligible_coords(self, battle_map, shortest_paths):
+        pass  # No need due to the IS_POSITIONING_INDEPENDENT flag
 
     def get_eligible_targets(self, battle_map):
         pass # No need due to the TARGETS_SELF flag
@@ -160,5 +160,5 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # TODO consider improving this by looping over enemy direct dmg dealing abilities
         return total_threat * ROUND_HORIZON
 
-    def get_eligible_coords(self, battle_map):
+    def get_eligible_coords(self, battle_map, shortest_paths):
         pass  # Due to IS_POSITIONING_INDEPENDENT

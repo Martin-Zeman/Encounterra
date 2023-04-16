@@ -159,7 +159,7 @@ class Chaosbolt(Actoid, DirectThreat):
             p_acc *= P_SAME
         return acc
 
-    def get_eligible_coords(self, battle_map):
+    def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              inflate_to_size=self.factory.caster.size,
                                                              rng=self.spell_range.value,
