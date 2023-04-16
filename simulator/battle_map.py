@@ -13,6 +13,7 @@ from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
 import time
+import heapq
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -360,6 +361,7 @@ class Map:
         :param mask: combatant-specific mask for the adjacency matrix
         :return: list of distances to all vertices, list of predecessors for every vertex
         """
+        # start_time = time.time()
         src = np.array(src)
         N = self.size
         Nsq = self.size ** 2
@@ -369,26 +371,31 @@ class Map:
         adj = np.multiply(self.base_adjacency_matrix, mask)
         shortest_paths = {}
 
-        for _ in range(Nsq):
-            x = self.minDistance(dist, open_set)
-            if x is None:
-                # enemy-occupied squares are unreachable
+        pq = [(0, src[0] * self.size + src[1])]
+        while pq:
+            _, x = heapq.heappop(pq)
+            if open_set[x]:
                 continue
             open_set[x] = True
             for y in range(Nsq):
-                if adj[x][y] > 0 and open_set[y] is False:
+                if adj[x][y] > 0 and not open_set[y]:
                     coord_to = (y // N, y % N)
                     coord_to_np = np.array([coord_to[0], coord_to[1]])
                     coord_from = np.array([x // N, x % N])
-                    if dist[y] > dist[x] + adj[x][y]:
+                    new_dist =  dist[x] + adj[x][y]
+                    if dist[y] > new_dist:
                         dist[y] = dist[x] + adj[x][y]
                         shortest_paths[coord_to] = coord_from
-                    elif dist[y] >= dist[x] + adj[x][y] and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(
+                        heapq.heappush(pq, (new_dist, y))
+                    elif dist[y] >= new_dist and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(
                             np.abs(coord_to_np - coord_from)):
                         # TODO this should also work with ==, try that
                         # prefer the path with the least coordinate diff, i.e. the less zig-zaggy path
                         shortest_paths[coord_to] = coord_from
-
+                        heapq.heappush(pq, (new_dist, y))
+        end_time = time.time()
+        # execution_time = end_time - start_time
+        # print("Execution time:", execution_time)
         return dist, shortest_paths
 
     def get_pam_eligible_combatants(self, combatant, increment):
