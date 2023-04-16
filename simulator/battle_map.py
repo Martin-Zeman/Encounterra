@@ -893,6 +893,24 @@ class Map:
         for combatant, coord in combatant_initial_positions.items():
             self.set_combatant_coordinates(combatant, copy.deepcopy(coord))
 
+    def get_harmful_bounding_box(self, caster, inflation):
+        """
+        Gets a bounding box which contains all enemies inflated by the inflation size
+        :param caster: the caster (since the BB is determined by enemies)
+        :param inflation: radius or side length of the harmful AoE effect
+        :return: bounding box in [[x1, y1], [x2, y2]] where x1,y1 are top right, x2,y2 are bottom left
+        """
+        bb = np.array([[self.size, self.size], [0, 0]])  # top right, bottom left
+        for combatant, coords in self.combatant_coordinate_cache.items():
+            if self.teams.are_enemies(caster, combatant):
+                coords = coords.get()
+                bb[0] = np.minimum(bb[0], coords.min(axis=0))
+                bb[1] = np.maximum(bb[1], coords.max(axis=0))
+        # inflate the BB
+        bb[0] = np.maximum(bb[0] - inflation, np.array([0, 0]))
+        bb[1] = np.minimum(bb[1] + inflation, np.array([self.size - 1, self.size - 1]))
+        return bb
+
     def find_best_placement_harmful_circular(self, caster, spell_range, radius):
         """
         Finds the best placement of a spherical harmful AoE effect
@@ -901,16 +919,8 @@ class Map:
         :param radius: radius of the harmful AoE effect
         :return: best coordinate,achieved score and set of affected combatants
         """
-        # or find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
-        bb = np.array([[self.size, self.size], [0, 0]])  # bottom left, top right
-        for combatant, coords in self.combatant_coordinate_cache.items():
-            if self.teams.are_enemies(caster, combatant):
-                coords = coords.get()
-                bb[0] = np.minimum(bb[0], coords.min(axis=0))
-                bb[1] = np.maximum(bb[1], coords.max(axis=0))
-        # inflate the BB
-        bb[0] = np.maximum(bb[0] - radius, np.array([0, 0]))
-        bb[1] = np.minimum(bb[1] + radius, np.array([self.size - 1, self.size - 1]))
+        # Find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
+        bb = self.get_harmful_bounding_box(caster, radius)
         max_score = -sys.maxsize - 1
         best_placement = None
         best_affected = None
@@ -941,16 +951,8 @@ class Map:
         :param length: side length of the box
         :return: best coordinate,achieved score and set of affected combatants
         """
-        # or find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
-        bb = np.array([[self.size, self.size], [0, 0]])  # bottom left, top right
-        for combatant, coords in self.combatant_coordinate_cache.items():
-            if self.teams.are_enemies(caster, combatant):
-                coords = coords.get()
-                bb[0] = np.minimum(bb[0], coords.min(axis=0))
-                bb[1] = np.maximum(bb[1], coords.max(axis=0))
-        # inflate the BB
-        bb[0] = np.maximum(bb[0] - length, np.array([0, 0]))
-        bb[1] = np.minimum(bb[1] + length, np.array([self.size - 1, self.size - 1]))
+        # Find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
+        bb = self.get_harmful_bounding_box(caster, length)
         max_score = -sys.maxsize - 1
         best_placement = None
         best_affected = None
