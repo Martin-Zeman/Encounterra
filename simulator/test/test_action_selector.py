@@ -18,8 +18,91 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))  # Have to set it for fireball placement
     # battle_map.set_combatant_coordinates(combatant3, np.array([2, 3]))  # Have to set it for fireball placement
 
-    # fsm, transition_mapping = generate_action_fsm(combatant1, battle_map)
+    # fsm, transition_mapping, _ = generate_action_fsm(combatant1, battle_map)
     # assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_faurung_pre_coords.png', prog='dot')
-    dfs, _ = select_best_action(combatant1, battle_map)
-    # dfs.get_graph().draw('state_diagram_faurung_with_coords.png', prog='dot')
+    dfs = select_best_action(combatant1, battle_map)
+    # dfs.get_graph().draw('state_diagram_faurung_with_coords',format='svg', prog='dot')
+
+    # Tests the Misty Step movement + Firebolt
+    assert dfs.state == '0'
+    transitions = dfs.get_available_transitions()
+    assert "ms_(7, 3)" in transitions
+    assert "ms_(2, 3)" in transitions
+    assert "m_(7, 3)" in transitions
+    dfs.trigger("ms_(2, 3)")
+    transitions = dfs.get_available_transitions()
+    assert "Staff of Defence on Goblin" not in transitions  # Test that Misty Step actions are also prepended with movement
+    # TODO What about the Dodge here?
+    assert "Firebolt on Goblin" in transitions
+    dfs.trigger("Firebolt on Goblin")
+    assert len(dfs.get_available_transitions()) == 0
+
+    # Tests regular movement + quickened fireball
+    dfs.reset()
+    assert dfs.state == '0'
+    dfs.trigger("m_(2, 3)")
+    transitions = dfs.get_available_transitions()
+    # Check that we have all the action (except for the Staff attack) available
+    assert 'Quickened Fireball at [ 6 10]' in transitions
+    assert 'Quickened Firebolt on Goblin' in transitions
+    assert 'Quickened Haste on Faurung' in transitions
+    assert 'Fireball at [ 6 10]' in transitions
+    assert 'Firebolt on Goblin' in transitions
+    assert 'Haste on Faurung' in transitions
+    dfs.trigger("Quickened Fireball at [ 6 10]")
+    transitions = dfs.get_available_transitions()
+    # For the second action, coordinates are not taken into account, but Dodge is included
+    assert 'Staff of Defence on Goblin' in transitions
+    assert 'Firebolt on Goblin' in transitions
+    assert 'Dodge of Faurung' in transitions
+
+    # Tests regular movement + fireball
+    dfs.reset()
+    assert dfs.state == '0'
+    dfs.trigger("m_(2, 3)")
+    transitions = dfs.get_available_transitions()
+    # Check that we have all the action (except for the Staff attack) available
+    assert 'Quickened Fireball at [ 6 10]' in transitions
+    assert 'Quickened Firebolt on Goblin' in transitions
+    assert 'Quickened Haste on Faurung' in transitions
+    assert 'Fireball at [ 6 10]' in transitions
+    assert 'Firebolt on Goblin' in transitions
+    assert 'Haste on Faurung' in transitions
+    dfs.trigger("Fireball at [ 6 10]")
+    transitions = dfs.get_available_transitions()
+    # For the second action, coordinates are not taken into account, but Dodge is included
+    assert 'Quickened Firebolt on Goblin' in transitions
+
+    # Tests regular movement + staff of defence attack
+    dfs.reset()
+    assert dfs.state == '0'
+    dfs.trigger("m_(9, 10)")
+    transitions = dfs.get_available_transitions()
+    # Check that we have all the action (except for the Staff attack) available
+    assert 'Quickened Fireball at [ 6 10]' in transitions
+    assert 'Quickened Firebolt on Goblin' in transitions
+    assert 'Quickened Haste on Faurung' in transitions
+    assert 'Fireball at [ 6 10]' in transitions
+    assert 'Firebolt on Goblin' in transitions
+    assert 'Haste on Faurung' in transitions
+    assert 'Staff of Defence on Goblin' in transitions
+    dfs.trigger("Staff of Defence on Goblin")
+    transitions = dfs.get_available_transitions()
+    # For the second action, coordinates are not taken into account, but Dodge is included
+    assert 'Quickened Fireball at [ 6 10]' in transitions
+    assert 'Quickened Firebolt on Goblin' in transitions
+    assert 'Quickened Haste on Faurung' in transitions
+
+    # Tests Misty Step movement + staff of defence attack
+    dfs.reset()
+    assert dfs.state == '0'
+    dfs.trigger("ms_(9, 10)")
+    transitions = dfs.get_available_transitions()
+    # Check that we have all the action (except for the Staff attack) available
+    assert "Staff of Defence on Goblin" in transitions  # Test that Misty Step actions are also prepended with movement
+    assert "Firebolt on Goblin" in transitions
+    # assert "Dodge of Faurung" in transitions  TODO figure out the Dodge
+    dfs.trigger("Staff of Defence on Goblin")
+    assert len(dfs.get_available_transitions()) == 0
+

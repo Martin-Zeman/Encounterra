@@ -26,7 +26,7 @@ def find_ranges_of_consecutive(coords_w_threats):
     return res
 
 
-def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, post_misty_step_eligible_actions):
+def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, misty_step_state):
     """
     Builds action DAG for a combatant given the combatant's action_fsm. It determines eligible coords for each
     action. It then filters the coords such that only the closest one per threat level is kept (this is a heuristic
@@ -36,12 +36,16 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     :param battle_map:
     :param action_fsm: finite state machine representing all possible actions for combatant
     :param transition_name_to_action: dict mapping action names -> actions
+    :param misty_step_state: name of the state into which taking the Misty Step bonus action would take us
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     # TODO: Look into caching!!!
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)
     dag = copy.deepcopy(action_fsm)
+
+    post_misty_step_actions = dag.get_available_transitions_in_state(misty_step_state)
+    added_misty_step_coord_states = set()  # thanks which misty steps states have already been created
 
     # get eligible coords for all actions
     transition_names = action_fsm.get_available_transitions()
@@ -51,32 +55,34 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     coords_to_states = dict()
     added_transitions = set()
     for action, coords in action_to_eligible_coords.items():
-        print(f"{action} len coords = {len(coords)}")
         action_name = str(action)
-        for idx, coord in enumerate(coords):
+        for coord in coords:
             for transitions in action_fsm.events[action_name].transitions.values():  # Iterate over the original to avoid deleting from the one being iterated over
                 for transition in [t for t in transitions if t.source == "0"]:
                     new_state_name = str(coord)
                     dag.add_state(new_state_name)
                     coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
-                    move_transition_name ="m_" + new_state_name
+                    move_transition_name = "m_" + new_state_name
                     if move_transition_name not in added_transitions:  # Avoid adding the same transition multiple times
                         dag.add_transition(move_transition_name, transition.source, new_state_name)
                         added_transitions.add(move_transition_name)
                     dag.add_transition(action_name, new_state_name, transition.dest)
-                    if "Misty Step" not in action_name:
-                        # We want to keep the option to misty step directly from character coords
-                        dag.remove_transition(action_name, transition.source)  # Remove the original
+                    dag.remove_transition(action_name, transition.source)  # Remove the original
 
-    # for action, coords in action_to_eligible_coords.items():
-    #     action_name = str(action)
-    #     if "Misty Step" in action_name:
-    #         target_coord = action.coord
+                    # Make a special graph section to model misty step
+                    if action_name in post_misty_step_actions:
+                        new_state_name = "ms_" + str(coord)
+                        if new_state_name not in added_misty_step_coord_states:
+                            added_misty_step_coord_states.add(new_state_name)
+                            dag.add_state(new_state_name)
+                        dag.add_transition(new_state_name, "0", new_state_name)  # transition name is the same as state name
+                        dag.add_transition(action_name, new_state_name, "nop")
+
     return dag, coords_to_states
 
 
 def select_best_action(combatant, battle_map):
-    fsm, transition_name_to_action, post_misty_step_eligible_actions = generate_action_fsm(combatant, battle_map)
-    dfs = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, post_misty_step_eligible_actions)
+    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
+    dfs, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, misty_step_state)
     # TODO Topological sort
     return dfs
