@@ -38,9 +38,11 @@ class OneMeleeOrOneRanged(StateMachine):
     ranged = A.to(nop)
 
 
-from transitions import State
+from transitions import State, Machine
 from transitions.extensions import GraphMachine
-class StateMachineTemplate(GraphMachine):
+
+# class StateMachineTemplate(GraphMachine):
+class StateMachineTemplate(Machine):
     """
     A thin wrapper for the GraphMachine. It tracks the last added state to help build up the action FSM.
     """
@@ -48,7 +50,8 @@ class StateMachineTemplate(GraphMachine):
 
     def __init__(self):
         states = ['0', 'nop']
-        GraphMachine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
+        # GraphMachine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
+        Machine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         self.last_added_state = '-1'
 
     def add_new_state(self, state_name):
