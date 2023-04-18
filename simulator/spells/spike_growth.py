@@ -11,6 +11,14 @@ from simulator.threat_calculator import DirectThreat, DirectThreatFactory, AoETh
 import numpy as np
 
 class SpikeGrowthFactory(DirectThreatFactory):
+    level = 2
+    range = SpellStats.Range.FEET_150.value
+    target = SpellStats.Target.RADIUS_20
+    duration = SpellStats.Duration.INSTANTANEOUS
+    concentration = True
+    type = SpellStats.Type.HARMFUL
+    dmg_type = DamageType.Piercing
+
     def __init__(self, action_type, caster, **kwargs):
         super().__init__()
         self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
@@ -27,7 +35,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant, battle_map):
         # TODO maybe find a smarter placement for this
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, SpikeGrowth.spell_range.value, SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target])
+        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, SpikeGrowthFactory.range, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target])
         return coord
 
     def create_best(self, combatant, battle_map, **kwargs):
@@ -52,7 +60,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
         except KeyError:
             consider_dist = False
 
-        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= SpikeGrowth.spell_range.value + SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target]:
+        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= SpikeGrowthFactory.range + SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target]:
             return avg_roll(self.dmg_dice)
         return 0
 
@@ -65,19 +73,10 @@ class SpikeGrowthFactory(DirectThreatFactory):
 
 class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
 
-    level = 2
-    spell_range = SpellStats.Range.FEET_150
-    target = SpellStats.Target.RADIUS_20
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = True
-    type = SpellStats.Type.HARMFUL
-    dmg_type = DamageType.Piercing
-
-
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
         LimitedDurationEffect.__init__(self, turns=100)
-        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[SpikeGrowth.target])
+        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target])
         self.factory = factory
 
     def __str__(self):
@@ -92,11 +91,11 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
 
     def on_enter(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, self.dmg_type)
+        combatant.receive_dmg(dmg, SpikeGrowthFactory.dmg_type)
 
     def on_move_within(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, self.dmg_type)
+        combatant.receive_dmg(dmg, SpikeGrowthFactory.dmg_type)
 
     def is_affecting(self, combatant, battle_map):
         coords = self.get_affected_coords(battle_map)
@@ -111,7 +110,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         # TODO This needs more intelligence (also subtract dmg caused to allies)
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, SpikeGrowth.target, SpikeGrowth.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, SpikeGrowthFactory.target, SpikeGrowthFactory.type, self.coord)
         acc = 0
         for aff in affected:
             if battle_map.teams.are_enemies(self.factory.caster, aff):
@@ -135,4 +134,4 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              inflate_to_size=self.factory.caster.size,
-                                                             rng=self.spell_range.value, combatant=self.factory.caster)
+                                                             rng=SpikeGrowthFactory.range, combatant=self.factory.caster)

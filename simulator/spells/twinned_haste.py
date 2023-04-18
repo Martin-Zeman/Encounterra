@@ -10,6 +10,15 @@ from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
 from simulator.spells.haste import HasteFactory
 
 class TwinnedHasteFactory(ThreatModifierFactory):
+    level = 3
+    range = SpellStats.Range.FEET_30.value
+    target = SpellStats.Target.ONE_CREATURE
+    duration = SpellStats.Duration.MINUTE
+    concentration = True
+    type = SpellStats.Type.BUFF
+    dc = None
+    dmg_type = None
+
     def __init__(self, action_type, caster, effect_tracker):
         super().__init__()
         self.action_type = action_type # TWINNED_HASTE, QUICKENED_HASTE, HASTE
@@ -103,15 +112,6 @@ class TwinnedHasteFactory(ThreatModifierFactory):
 
 class TwinnedHaste(Actoid, Effect, ThreatModifier):
 
-    level = 3
-    spell_range = SpellStats.Range.FEET_30
-    target = SpellStats.Target.ONE_CREATURE
-    duration = SpellStats.Duration.MINUTE
-    concentration = True
-    type = SpellStats.Type.BUFF
-    dc = None
-    dmg_type = None
-
     def __init__(self, targets, factory):
         super().__init__(ActoidFlags.IS_SPELL)
         self.targets = targets
@@ -136,7 +136,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
             target.has_haste_action = False
 
     def is_affecting(self, combatant, battle_map):
-        return combatant is self.target
+        return combatant in self.targets
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
@@ -152,10 +152,10 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
     def get_eligible_coords(self, battle_map, shortest_paths):
         coords_for_fist = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                         inflate_to_size=self.factory.caster.size,
-                                                                        rng=self.spell_range.value,
+                                                                        rng=TwinnedHasteFactory.range,
                                                                         combatant=self.factory.caster)
         coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                           inflate_to_size=self.factory.caster.size,
-                                                                          rng=self.spell_range.value,
+                                                                          rng=TwinnedHasteFactory.range,
                                                                           combatant=self.factory.caster)
         return coords_for_fist.intersection(coords_for_second)

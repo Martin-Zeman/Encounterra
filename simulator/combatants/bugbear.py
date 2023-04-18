@@ -94,7 +94,6 @@ class Bugbear(Combatant):
     def new_turn(self):
         super().new_turn()
         self.movement_generator = None
-        # self.selected_target = None
 
     def export_resources(self):
         return {

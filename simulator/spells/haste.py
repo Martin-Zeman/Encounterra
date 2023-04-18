@@ -12,6 +12,15 @@ import logging
 logger = logging.getLogger(__name__)
 
 class HasteFactory(ThreatModifierFactory):
+    level = 3
+    range = SpellStats.Range.FEET_30.value
+    target = SpellStats.Target.ONE_CREATURE
+    duration = SpellStats.Duration.MINUTE
+    concentration = True
+    type = SpellStats.Type.BUFF
+    dc = None
+    dmg_type = None
+
     def __init__(self, action_type, caster, effect_tracker):
         super().__init__()
         self.bonus_action_ordering = BonusActionOrdering.GOES_BEFORE_ACTION  # In case this became a bonus action
@@ -34,7 +43,7 @@ class HasteFactory(ThreatModifierFactory):
 
     @staticmethod
     def get_allies_sorted_by_threat(combatant, battle_map):
-        allies = battle_map.get_allies_within_radius(combatant, Haste.spell_range.value)
+        allies = battle_map.get_allies_within_radius(combatant, HasteFactory.range)
         allies.append(combatant)
         enemies = battle_map.get_enemies(combatant)
         threat_per_ally = 0
@@ -145,15 +154,6 @@ class HasteFactory(ThreatModifierFactory):
 
 class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
 
-    level = 3
-    spell_range = SpellStats.Range.FEET_30
-    target = SpellStats.Target.ONE_CREATURE
-    duration = SpellStats.Duration.MINUTE
-    concentration = True
-    type = SpellStats.Type.BUFF
-    dc = None
-    dmg_type = None
-
     def __init__(self, target, factory):
         super().__init__(ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, turns=10)
@@ -167,7 +167,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.factory.caster.is_concentrating = True
         self.target.ac += 2
         # TODO rework this in the new way
-        self.target.haste_actions = [HasteAction.HASTE_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
+        self.target.haste_actions = [HasteAction.HASTE_MELEE_ATTACK, HasteAction.HASTE_RANGED_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
         self.target.has_haste_action = True
 
     def deactivate(self):
@@ -193,4 +193,4 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         else:
             return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  inflate_to_size=self.factory.caster.size,
-                                                                 rng=self.spell_range.value, combatant=self.target)
+                                                                 rng=HasteFactory.range, combatant=self.target)

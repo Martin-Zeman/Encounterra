@@ -4,7 +4,7 @@ from simulator.battle_map import Terrain, CombatantCoords
 from simulator.combatants.goblin import Goblin
 from simulator.feasibility import get_feasible_factories
 from simulator.misc import DistanceMetric, Size, Side, Conditions
-from simulator.spells.fireball import Fireball
+from simulator.spells.fireball import FireballFactory
 from simulator.spells.spell import SpellStats
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, combatant5, teams, effect_tracker, battle_map
@@ -873,7 +873,7 @@ def test_find_best_placement_harmful_circular(battle_map, teams, combatant1, com
     battle_map.set_combatant_coordinates(combatant3, np.array([10, 5]))
     battle_map.set_combatant_coordinates(combatant4, np.array([6, 7]))
     # Fireball-like
-    coord, score, affected = battle_map.find_best_placement_harmful_circular(combatant1, Fireball.spell_range.value, 4)
+    coord, score, affected = battle_map.find_best_placement_harmful_circular(combatant1, FireballFactory.range, 4)
     assert np.array_equal(coord, np.array([[7, 3]]))
     assert score == 2
     assert combatant2 in affected
@@ -882,7 +882,7 @@ def test_find_best_placement_harmful_circular(battle_map, teams, combatant1, com
 
     #Now move the ally in between the targets so that only one can be hit
     battle_map.move_combatant(combatant4,  np.array([6, 4]))
-    coord, score, affected = battle_map.find_best_placement_harmful_circular(combatant1, Fireball.spell_range.value, 4)
+    coord, score, affected = battle_map.find_best_placement_harmful_circular(combatant1, FireballFactory.range, 4)
     assert score == 1
     assert (combatant2 in affected) != (combatant3 in affected)
     assert combatant4 not in affected

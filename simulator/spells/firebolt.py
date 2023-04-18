@@ -13,6 +13,15 @@ from simulator.utils.roll_modifiers import ROLL_MODIFIER_CRIT, ROLL_MODIFIER
 logger = logging.getLogger(__name__)
 
 class FireboltFactory(DirectThreatFactory):
+    level = 0
+    range = SpellStats.Range.FEET_120.value
+    target = SpellStats.Target.ONE_CREATURE
+    duration = SpellStats.Duration.INSTANTANEOUS
+    concentration = False
+    type = SpellStats.Type.HARMFUL
+    dc = None
+    dmg_type = DamageType.Fire
+
     def __init__(self, to_hit, action_type, caster):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
@@ -53,7 +62,7 @@ class FireboltFactory(DirectThreatFactory):
     def find_best_args(self, combatant, battle_map):
         # TODO Deprecated
         # TODO Should this include action type? Cause for a twinned version you would need multiple targets
-        potential_targets = battle_map.get_enemies_within_radius(combatant, Firebolt.spell_range.value)
+        potential_targets = battle_map.get_enemies_within_radius(combatant, FireboltFactory.range)
         hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1)) for pt in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
@@ -75,21 +84,9 @@ class FireboltFactory(DirectThreatFactory):
         targets = self.get_eligible_targets(battle_map)
         return [Firebolt(t, self) for t in targets]
 
-    # def create_mock(self):
-    #     return Firebolt(None, self)
-
     def create(self, target_combatant):
         return Firebolt(target_combatant, self)
 
-    # def calculate_threat_approx(self, battle_map, *args, **kwargs):
-    #     """
-    #     Calculates the average dmg over all targets in range
-    #     """
-    #     potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
-    #     dmg_dice = FireboltFactory.get_dmg_dice(self.caster.level)
-    #     dmg_acc = accumulate(potential_targets, lambda pt: mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)))
-    #     dmg_acc /= len(potential_targets)
-    #     return dmg_acc
 
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
         """
@@ -111,17 +108,17 @@ class FireboltFactory(DirectThreatFactory):
             to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
             total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
-            potential_targets = battle_map.get_enemies_within_radius(Firebolt.spell_range.value)
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total], self.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(Firebolt.dmg_type))
-                                             - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(Firebolt.dmg_type)), potential_targets)
+            potential_targets = battle_map.get_enemies_within_radius(FireboltFactory.range)
+            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total], self.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(FireboltFactory.dmg_type))
+                                             - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(FireboltFactory.dmg_type)), potential_targets)
             dmg_acc /= len(potential_targets)
             return dmg_acc
         except KeyError:
             return 0
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
-        if battle_map.get_cartesian_distance(self.caster, target) <= Firebolt.spell_range.value:
-            return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(Firebolt.dmg_type))
+        if battle_map.get_cartesian_distance(self.caster, target) <= FireboltFactory.range:
+            return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(FireboltFactory.dmg_type))
         return 0
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
@@ -147,22 +144,11 @@ class FireboltFactory(DirectThreatFactory):
         to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
         total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
-        return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(Firebolt.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
-                    Firebolt.dmg_type))
+        return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(FireboltFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
+                    FireboltFactory.dmg_type))
 
 
 class Firebolt(Actoid, DirectThreat):
-
-    level = 0
-    spell_range = SpellStats.Range.FEET_120
-    target = SpellStats.Target.ONE_CREATURE
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = False
-    type = SpellStats.Type.HARMFUL
-    dc = None
-    dmg_type = DamageType.Fire
-
-
     def __init__(self, target, factory, **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.target = target
@@ -174,10 +160,10 @@ class Firebolt(Actoid, DirectThreat):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + f"Firebolt on {self.target}"
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(Firebolt.dmg_type))
+        return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type))
 
     def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              inflate_to_size=self.factory.caster.size,
-                                                             rng=self.spell_range.value, combatant=self.factory.caster)
+                                                             rng=FireboltFactory.range, combatant=self.factory.caster)
 

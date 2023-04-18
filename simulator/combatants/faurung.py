@@ -23,7 +23,8 @@ class Faurung(Combatant):
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Action.FIREBALL)
-        self.add_ability(Action.FIREBOLT)
+        self.firebolt = self.add_ability(Action.FIREBOLT)
+        self.danger_zone_attack = self.firebolt
         self.add_ability(Action.HASTE)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Reaction.SHIELD)

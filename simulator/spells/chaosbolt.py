@@ -14,6 +14,18 @@ from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MOD
 logger = logging.getLogger(__name__)
 
 class ChaosboltFactory(DirectThreatFactory):
+    DMG_TYPE = (
+        DamageType.Acid, DamageType.Cold, DamageType.Fire, DamageType.Force, DamageType.Lightning, DamageType.Poison, DamageType.Psychic,
+        DamageType.Thunder)
+
+    level = 1
+    range = SpellStats.Range.FEET_120.value
+    target = SpellStats.Target.ONE_CREATURE
+    duration = SpellStats.Duration.INSTANTANEOUS
+    concentration = False
+    type = SpellStats.Type.HARMFUL
+    dc = None
+    dmg_type = None
     def __init__(self, to_hit, action_type, caster):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
@@ -42,7 +54,7 @@ class ChaosboltFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant, battle_map):
         # TODO Deprecated
-        potential_targets = battle_map.get_enemies_within_radius(combatant, Chaosbolt.spell_range.value)
+        potential_targets = battle_map.get_enemies_within_radius(combatant, ChaosboltFactory.range)
         dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
         mean_dmg_func = partial(mean_dmg, to_hit=self.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
         return self.get_sorted_chain(battle_map, potential_targets, mean_dmg_func)
@@ -71,7 +83,7 @@ class ChaosboltFactory(DirectThreatFactory):
         # TODO implement once I have spells that do this, e.g. Bless
         try:
             to_hit_bonus = modified_stats['to_hit']
-            potential_targets = battle_map.get_enemies_within_radius(self.caster, Chaosbolt.spell_range.value)
+            potential_targets = battle_map.get_enemies_within_radius(self.caster, ChaosboltFactory.range)
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
             mean_dmg_func = partial(mean_dmg, to_hit=self.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
             mean_dmg_func_mod = partial(mean_dmg, to_hit=self.to_hit + to_hit_bonus, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
@@ -91,7 +103,7 @@ class ChaosboltFactory(DirectThreatFactory):
         Calculates threat to a specific target
         """
         # TODO Consider including the potential of hitting others
-        if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
+        if battle_map.get_cartesian_distance(self.caster, target) <= ChaosboltFactory.range:
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
             return mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
         return 0
@@ -110,7 +122,7 @@ class ChaosboltFactory(DirectThreatFactory):
         except KeyError:
             roll_modifier = RollModifier.STRAIGHT
 
-        if battle_map.get_cartesian_distance(self.caster, target) <= Chaosbolt.spell_range.value:
+        if battle_map.get_cartesian_distance(self.caster, target) <= ChaosboltFactory.range:
             to_hit_total = self.to_hit + to_hit_bonus
             to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
             total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
@@ -122,19 +134,6 @@ class ChaosboltFactory(DirectThreatFactory):
 
 
 class Chaosbolt(Actoid, DirectThreat):
-    DMG_TYPE = (
-        DamageType.Acid, DamageType.Cold, DamageType.Fire, DamageType.Force, DamageType.Lightning, DamageType.Poison, DamageType.Psychic,
-        DamageType.Thunder)
-
-    level = 1
-    spell_range = SpellStats.Range.FEET_120
-    target = SpellStats.Target.ONE_CREATURE
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = False
-    type = SpellStats.Type.HARMFUL
-    dc = None
-    dmg_type = None
-
 
     def __init__(self, target, factory, **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
@@ -148,7 +147,7 @@ class Chaosbolt(Actoid, DirectThreat):
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        potential_targets = battle_map.get_enemies_within_radius(combatant, Chaosbolt.spell_range.value)   # Relaxes the 30ft distance condition
+        potential_targets = battle_map.get_enemies_within_radius(combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
         potential_targets.remove(self.target)
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME
@@ -162,6 +161,6 @@ class Chaosbolt(Actoid, DirectThreat):
     def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              inflate_to_size=self.factory.caster.size,
-                                                             rng=self.spell_range.value,
+                                                             rng=ChaosboltFactory.range,
                                                              combatant=self.factory.caster)
 

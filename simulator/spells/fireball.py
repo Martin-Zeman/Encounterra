@@ -8,6 +8,14 @@ from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 import numpy as np
 
 class FireballFactory(DirectThreatFactory):
+    level = 3
+    range = SpellStats.Range.FEET_150.value
+    target = SpellStats.Target.RADIUS_20
+    duration = SpellStats.Duration.INSTANTANEOUS
+    concentration = False
+    type = SpellStats.Type.HARMFUL
+    dmg_type = DamageType.Fire
+
     def __init__(self, dc, action_type, caster, has_spell_sculpting=False, **kwargs):
         super().__init__()
         self.flags |= FactoryFlags.DEX_SAVE_APPLIES
@@ -34,7 +42,7 @@ class FireballFactory(DirectThreatFactory):
         return {'dc': self.dc, 'caster': self.caster, 'has_spell_sculpting': self.has_spell_sculpting}
 
     def find_best_args(self, combatant, battle_map):
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, Fireball.spell_range.value, SpellStats.TRANSLATE_RADIUS[Fireball.target])
+        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, FireballFactory.range, SpellStats.TRANSLATE_RADIUS[FireballFactory.target])
         return coord[0]
 
     def create_best(self, combatant, battle_map, **kwargs):
@@ -65,7 +73,7 @@ class FireballFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        if battle_map.get_cartesian_distance(self.caster, target) <= Fireball.spell_range.value + SpellStats.TRANSLATE_RADIUS[Fireball.target]:
+        if battle_map.get_cartesian_distance(self.caster, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
             return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
         return 0
 
@@ -76,15 +84,6 @@ class FireballFactory(DirectThreatFactory):
         return 0 # No need
 
 class Fireball(Actoid, DirectThreat):
-
-    level = 3
-    spell_range = SpellStats.Range.FEET_150
-    target = SpellStats.Target.RADIUS_20
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = False
-    type = SpellStats.Type.HARMFUL
-    dmg_type = DamageType.Fire
-
 
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
@@ -99,7 +98,7 @@ class Fireball(Actoid, DirectThreat):
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, Fireball.target, Fireball.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, FireballFactory.target, FireballFactory.type, self.coord)
         acc = 0
         for aff in affected:
             acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
@@ -108,5 +107,5 @@ class Fireball(Actoid, DirectThreat):
     def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              inflate_to_size=self.factory.caster.size,
-                                                             rng=self.spell_range.value,
+                                                             rng=FireballFactory.range,
                                                              combatant=self.factory.caster)

@@ -7,6 +7,15 @@ from simulator.threat_calculator import ReactionToThreat, DirectThreatFactory
 logger = logging.getLogger(__name__)
 
 class ShieldFactory(DirectThreatFactory):
+    level = 1
+    range = SpellStats.Range.SELF.value
+    target = SpellStats.Target.SELF
+    duration = SpellStats.Duration.INSTANTANEOUS
+    concentration = False
+    type = SpellStats.Type.BUFF
+    dc = None
+    dmg_type = None
+
 
     def __init__(self, caster):
         self.action_type = Reaction.SHIELD
@@ -35,15 +44,6 @@ class ShieldFactory(DirectThreatFactory):
 
 
 class Shield(Actoid, ReactionToThreat):
-
-    level = 1
-    spell_range = SpellStats.Range.SELF
-    target = SpellStats.Target.SELF
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = False
-    type = SpellStats.Type.BUFF
-    dc = None
-    dmg_type = None
 
     def __init__(self, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)

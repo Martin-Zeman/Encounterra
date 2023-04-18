@@ -11,6 +11,14 @@ from simulator.threat_calculator import DirectThreat, DirectThreatFactory, AoETh
 import numpy as np
 
 class HungerOfHadarFactory(DirectThreatFactory):
+    level = 3
+    range = SpellStats.Range.FEET_150.value
+    target = SpellStats.Target.RADIUS_20
+    duration = SpellStats.Duration.INSTANTANEOUS
+    concentration = True
+    type = SpellStats.Type.HARMFUL
+    dmg_type = DamageType.Cold
+
     def __init__(self, dc, action_type, caster, **kwargs):
         super().__init__()
         self.flags |= FactoryFlags.DEX_SAVE_APPLIES
@@ -30,7 +38,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant, battle_map):
         # TODO Deprecated
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, HungerOfHadar.spell_range.value, SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target])
+        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, HungerOfHadarFactory.range, SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target])
         return coord
 
     def create_best(self, combatant, battle_map, **kwargs):
@@ -56,7 +64,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         except KeyError:
             consider_dist = False
 
-        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= HungerOfHadar.spell_range.value + SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target]:
+        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= HungerOfHadarFactory.range + SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target]:
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
             return avg_roll(self.dmg_dice) + 0.5 * mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw])
         return 0
@@ -70,19 +78,10 @@ class HungerOfHadarFactory(DirectThreatFactory):
 
 class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
 
-    level = 3
-    spell_range = SpellStats.Range.FEET_150
-    target = SpellStats.Target.RADIUS_20
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = True
-    type = SpellStats.Type.HARMFUL
-    dmg_type = DamageType.Cold
-
-
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
         LimitedDurationEffect.__init__(self, turns=10)
-        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[HungerOfHadar.target])
+        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target])
         self.factory = factory
 
     def __str__(self):
@@ -121,7 +120,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         pass  # TODO remove concentration?
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, HungerOfHadar.target, HungerOfHadar.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.coord)
         acc = 0
         for aff in affected:
             acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg
@@ -145,4 +144,4 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              inflate_to_size=self.factory.caster.size,
-                                                             rng=self.spell_range.value, combatant=self.factory.caster)
+                                                             rng=HungerOfHadarFactory.range, combatant=self.factory.caster)

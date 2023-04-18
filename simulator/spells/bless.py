@@ -6,6 +6,15 @@ from itertools import combinations
 
 
 class BlessFactory(ThreatModifierFactory):
+    level = 1
+    range = SpellStats.Range.FEET_30.value
+    target = SpellStats.Target.THREE_CREATURES
+    duration = SpellStats.Duration.MINUTE
+    concentration = True
+    type = SpellStats.Type.BUFF
+    dc = None
+    dmg_type = None
+
     def __init__(self, action_type, caster, effect_tracker):
         self.action_type = action_type # QUICKENED_BLESS, BLESS
         self.caster = caster
@@ -54,16 +63,6 @@ class BlessFactory(ThreatModifierFactory):
 
 
 class Bless(Actoid, Effect, ThreatModifier):
-
-    level = 1
-    spell_range = SpellStats.Range.FEET_30
-    target = SpellStats.Target.THREE_CREATURES
-    duration = SpellStats.Duration.MINUTE
-    concentration = True
-    type = SpellStats.Type.BUFF
-    dc = None
-    dmg_type = None
-
     def __init__(self, targets, factory):
         super().__init__(ActoidFlags.IS_SPELL)
         self.targets = targets
@@ -85,7 +84,7 @@ class Bless(Actoid, Effect, ThreatModifier):
             target.to_hit_dice_mod.remove('1d4')
 
     def is_affecting(self, combatant, battle_map):
-        return combatant is self.target
+        return combatant in self.targets
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         # TODO Multiply the threat increment by 3 for 3 rounds

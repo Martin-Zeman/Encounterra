@@ -8,6 +8,14 @@ from simulator.misc import CombatantArchetype, DistanceMetric
 logger = logging.getLogger(__name__)
 
 class MistyStepFactory(DirectThreatFactory):
+    level = 2
+    range = SpellStats.Range.FEET_30.value
+    target = SpellStats.Target.SELF
+    duration = SpellStats.Duration.INSTANTANEOUS
+    concentration = False
+    type = SpellStats.Type.OTHER
+    dc = None
+    dmg_type = None
 
     def __init__(self, caster):
         super().__init__()
@@ -32,13 +40,13 @@ class MistyStepFactory(DirectThreatFactory):
                 free_coords = battle_map.get_free_coords_at_distance_from_target(self.caster.selected_enemy, self.caster, 1)
             return free_coords[0][0] if free_coords else None
         elif self.caster.archetype is CombatantArchetype.RANGED:
-            free_coords = battle_map.get_free_coords_at_distance_sorted_by_dist_to_enemies(combatant, MistyStep.spell_range.value, DistanceMetric.CARTESIAN)
+            free_coords = battle_map.get_free_coords_at_distance_sorted_by_dist_to_enemies(combatant, MistyStepFactory.range, DistanceMetric.CARTESIAN)
             return free_coords[0][0] if free_coords else None
         return None
 
     def get_eligible_targets(self, battle_map):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.caster),
-                                                             rng=MistyStep.spell_range.value)
+                                                             rng=MistyStepFactory.range)
 
     def create_best(self, combatant, battle_map):
         best_args = self.find_best_args(combatant, battle_map)
@@ -68,10 +76,10 @@ class MistyStepFactory(DirectThreatFactory):
             max_mod = 0
             for action in self.caster.actions:
                 if action[0] is Action.MELEE_ATTACK or action[0] is Action.RANGED_ATTACK:
-                    max_mod = max(max_mod, action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value + self.caster.movement}, *args, **kwargs))
+                    max_mod = max(max_mod, action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStepFactory.range + self.caster.movement}, *args, **kwargs))
             for bonus_action in self.caster.bonus_actions:
-                if bonus_action[0] is BonusAction.BONUS_ATTACK or bonus_action[0] is BonusAction.PAM_BONUS_ATTACK:
-                    max_mod = max(max_mod, bonus_action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStep.spell_range.value + self.caster.movement}, *args, **kwargs))
+                if bonus_action[0] is BonusAction.BONUS_MELEE_ATTACK or bonus_action[0] is BonusAction.PAM_BONUS_ATTACK:
+                    max_mod = max(max_mod, bonus_action[1].calculate_threat_approx_mod(self, battle_map, {'range': MistyStepFactory.range + self.caster.movement}, *args, **kwargs))
             return max_mod
         elif self.caster.archetype is CombatantArchetype.RANGED:
             enemies = battle_map.get_enemies(self.caster)
@@ -80,7 +88,7 @@ class MistyStepFactory(DirectThreatFactory):
             for enemy in enemies:
                 factories = enemy.action_factories.extend(enemy.bonus_action_factories).extend(enemy.haste_action_factories)
                 max_threat_before = max([f.calculate_threat_to_target(battle_map, self.caster) for f in factories])
-                with battle_map.as_if_dist_mod_from_combatant(self.caster, enemy, self.caster.movement + MistyStep.spell_range.value):
+                with battle_map.as_if_dist_mod_from_combatant(self.caster, enemy, self.caster.movement + MistyStepFactory.range):
                     max_threat_after = max([f.calculate_threat_to_target(battle_map, self.caster) for f in factories])
             return max_threat_after - max_threat_before
         return 0
@@ -90,15 +98,6 @@ class MistyStepFactory(DirectThreatFactory):
 
 
 class MistyStep(Actoid, ThreatModifier):
-
-    level = 2
-    spell_range = SpellStats.Range.FEET_30
-    target = SpellStats.Target.SELF
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = False
-    type = SpellStats.Type.OTHER
-    dc = None
-    dmg_type = None
 
     def __init__(self, coord, factory):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)

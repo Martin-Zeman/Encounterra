@@ -171,6 +171,20 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=Fal
     final_avg_dmg = fail_dmg + avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else fail_dmg
     return final_avg_dmg if not is_resistant else final_avg_dmg / 2
 
+def get_danger_zone_threat(battle_map, coords, combatant):
+    """
+    Adds potential threat projected by the virtue of being near an enemy. It adds up all the projected threat for all
+    enemies within their projection range.
+    move.
+    :param battle_map:
+    :param coords: as np.array of size nx2 where n is the number of coords the combatant takes up
+    :param combatant:
+    :return: danger zone threat (positive)
+    """
+    enemies = battle_map.get_enemies(combatant)
+    acc = reduce(lambda acc, e: acc + e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant) if
+        battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0, enemies, 0)
+    return acc
 
 def get_threat_for_staying_at_coord(battle_map, coords, combatant):
     """
@@ -187,6 +201,7 @@ def get_threat_for_staying_at_coord(battle_map, coords, combatant):
         if battle_map.get_hop_distance(affected_coords, coords) == 0:
             threat_acc += effect.threat_on_start_of_turn(battle_map, combatant)
             threat_acc += effect.threat_on_end_of_turn(battle_map, combatant)
+    threat_acc += get_danger_zone_threat(battle_map, coords, combatant)
     return threat_acc
 
 

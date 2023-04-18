@@ -38,6 +38,7 @@ class Combatant(ABC):
         self.disengage_factory = self.action_factories[1]
         self.bonus_action_factories = []
         self.reaction_factories = []
+        self.danger_zone_attack = None
         self.haste_action_factories = []
         self.passive = []
         self.max_hp = hp
@@ -216,6 +217,7 @@ class Combatant(ABC):
                 case Reaction.REACTION_ATTACK:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                     self.aoo_factory = self.reaction_factories[-1]
+                    self.danger_zone_attack = self.reaction_factories[-1]  # By default this is set to the reaction attack
                     self.melee_reaction_range = self.aoo_factory[1].range
                     return None
                 case Reaction.SHIELD:

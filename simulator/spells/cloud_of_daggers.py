@@ -9,6 +9,14 @@ from simulator.threat_calculator import DirectThreat, DirectThreatFactory, AoETh
 import numpy as np
 
 class CloudOfDaggersFactory(DirectThreatFactory):
+    level = 2
+    range = SpellStats.Range.FEET_60.value
+    target = SpellStats.Target.BOX
+    duration = SpellStats.Duration.INSTANTANEOUS
+    concentration = True
+    type = SpellStats.Type.HARMFUL
+    dmg_type = DamageType.Slashing
+
     def __init__(self, action_type, caster, **kwargs):
         super().__init__()
         self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
@@ -25,7 +33,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant, battle_map):
         # TODO maybe find a smarter placement for this
-        coord, _, _ = battle_map.find_best_placement_harmful_square(self.caster, CloudOfDaggers.spell_range.value, 1)
+        coord, _, _ = battle_map.find_best_placement_harmful_square(self.caster, CloudOfDaggersFactory.range, 1)
         return coord
 
     def create_best(self, combatant, battle_map, **kwargs):
@@ -50,7 +58,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         except KeyError:
             consider_dist = False
 
-        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= CloudOfDaggers.spell_range.value + SpellStats.TRANSLATE_RADIUS[CloudOfDaggers.target]:
+        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= CloudOfDaggersFactory.range + SpellStats.TRANSLATE_RADIUS[CloudOfDaggersFactory.target]:
             return avg_roll(self.dmg_dice)
         return 0
 
@@ -63,15 +71,6 @@ class CloudOfDaggersFactory(DirectThreatFactory):
 
 class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThreat, AoEThreat):
 
-    level = 2
-    spell_range = SpellStats.Range.FEET_60
-    target = SpellStats.Target.BOX
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = True
-    type = SpellStats.Type.HARMFUL
-    dmg_type = DamageType.Slashing
-
-
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
         LimitedDurationEffect.__init__(self, turns=10)
@@ -83,14 +82,14 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
 
     def on_start_of_turn(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, self.dmg_type)
+        combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
 
     def on_end_of_turn(self, combatant):
         pass
 
     def on_enter(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, self.dmg_type)
+        combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
 
     def on_move_within(self, combatant):
         return 0
@@ -106,7 +105,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         pass  # TODO remove concentration?
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, CloudOfDaggers.target, CloudOfDaggers.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.coord)
         acc = 0
         for aff in affected:
             if battle_map.teams.are_enemies(self.factory.caster, aff):
@@ -130,4 +129,4 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              inflate_to_size=self.factory.caster.size,
-                                                             rng=self.spell_range.value, combatant=self.factory.caster)
+                                                             rng=CloudOfDaggersFactory.range, combatant=self.factory.caster)
