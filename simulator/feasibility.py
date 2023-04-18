@@ -181,7 +181,7 @@ def check_feasibility_light(combatant, action, battle_map):
     """
     action_type = action[0]
     if isinstance(action_type, Action):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED):
+        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         match action_type:
             case Action.FIREBALL:
@@ -212,34 +212,26 @@ def check_feasibility_light(combatant, action, battle_map):
                 res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK:
-                # Either not attacked yet, or already attacked but still has attacks left. In both cases cannot be used once attacked recklessly
                 res = combatant.has_action
-                # if Passive.MULTIATTACK in combatant.passive:
-                #     res |= (combatant.num_attacks > combatant.curr_num_attacks > 0) and combatant.last_attack_factory_name is action[1].name
-                    # for ag in combatant.attack_groups:
-                    #     if combatant.last_attack_factory_name in ag:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.RECKLESS_ATTACK:
-                # Either not attacked yet or already attacked recklessly and still has attacks left
                 res = combatant.has_action
-                # if Passive.MULTIATTACK in combatant.passive:
-                #     res |= combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack) and combatant.last_attack_factory_name is action[1].name
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= combatant.ammo[action[1].name] > 0
                 return res
-            case Action.DASH | Action.DODGE:
+            case Action.DASH | Action.DISENGAGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
-                                                                                 Conditions.RESTRAINED,
-                                                                                 Conditions.STUNNED,
-                                                                                 Conditions.PARALYZED)
+                                                                                 Conditions.RESTRAINED)
+            case Action.DODGE :
+                return combatant.has_action
             case _:
                 logger.error("Unknown action type")
                 return False
     elif isinstance(action_type, BonusAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED):
+        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         res = combatant.has_bonus_action
         match action_type:

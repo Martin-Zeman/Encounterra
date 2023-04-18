@@ -27,6 +27,8 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     # Tests the Misty Step movement + Firebolt
     assert dfs.state == '0'
     transitions = dfs.get_available_transitions()
+    assert "Dodge of Faurung" in transitions
+    assert "Disengage of Faurung" in transitions
     assert "ms_(7, 3)" in transitions
     assert "ms_(2, 3)" in transitions
     assert "m_(7, 3)" in transitions
@@ -50,12 +52,15 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     assert 'Fireball at [ 6 10]' in transitions
     assert 'Firebolt on Goblin' in transitions
     assert 'Haste on Faurung' in transitions
+    assert 'Dodge of Faurung' not in transitions  # Once you do a regular move, Dodge should not be available
+    assert 'Disengage of Faurung' not in transitions  # Once you do a regular move, Disengage should not be available
     dfs.trigger("Quickened Fireball at [ 6 10]")
     transitions = dfs.get_available_transitions()
     # For the second action, coordinates are not taken into account, but Dodge is included
     assert 'Staff of Defence on Goblin' in transitions
     assert 'Firebolt on Goblin' in transitions
     assert 'Dodge of Faurung' in transitions
+    assert 'Disengage of Faurung' in transitions
 
     # Tests regular movement + fireball
     dfs.reset()
@@ -69,9 +74,11 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     assert 'Fireball at [ 6 10]' in transitions
     assert 'Firebolt on Goblin' in transitions
     assert 'Haste on Faurung' in transitions
+    assert 'Dodge of Faurung' not in transitions  # Once you do a regular move, Dodge should not be available
+    assert 'Disengage of Faurung' not in transitions  # Once you do a regular move, Disengage should not be available
     dfs.trigger("Fireball at [ 6 10]")
     transitions = dfs.get_available_transitions()
-    # For the second action, coordinates are not taken into account, but Dodge is included
+    # For the second action, coordinates are not taken into account
     assert 'Quickened Firebolt on Goblin' in transitions
 
     # Tests regular movement + staff of defence attack
@@ -87,6 +94,8 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     assert 'Firebolt on Goblin' in transitions
     assert 'Haste on Faurung' in transitions
     assert 'Staff of Defence on Goblin' in transitions
+    assert 'Dodge of Faurung' not in transitions  # Once you do a regular move, Dodge should not be available
+    assert 'Disengage of Faurung' not in transitions  # Once you do a regular move, Disengage should not be available
     dfs.trigger("Staff of Defence on Goblin")
     transitions = dfs.get_available_transitions()
     # For the second action, coordinates are not taken into account, but Dodge is included
@@ -102,7 +111,40 @@ def test_select_best_action(battle_map, teams, effect_tracker, combatant1, comba
     # Check that we have all the action (except for the Staff attack) available
     assert "Staff of Defence on Goblin" in transitions  # Test that Misty Step actions are also prepended with movement
     assert "Firebolt on Goblin" in transitions
-    # assert "Dodge of Faurung" in transitions  TODO figure out the Dodge
     dfs.trigger("Staff of Defence on Goblin")
+    assert len(dfs.get_available_transitions()) == 0
+
+    # Tests Dodge + movement + a quickened spell
+    dfs.reset()
+    assert dfs.state == '0'
+    dfs.trigger("Dodge of Faurung")
+    assert dfs.state == 'Dodged'
+    transitions = dfs.get_available_transitions()
+    assert "m_(7, 3)" in transitions
+    assert "ms_(2, 3)" not in transitions  # Even though it's possible, we don't support Misty Step after Dodge, as it doesn't make muche sense
+    dfs.trigger("m_(7, 3)")
+    assert dfs.state == "do_(7, 3)"
+    transitions = dfs.get_available_transitions()
+    assert 'Quickened Fireball at [ 6 10]' in transitions
+    assert 'Quickened Firebolt on Goblin' in transitions
+    assert 'Quickened Haste on Faurung' in transitions
+    dfs.trigger("Quickened Haste on Faurung")
+    assert len(dfs.get_available_transitions()) == 0
+
+    # Tests Disengage + movement + a quickened spell
+    dfs.reset()
+    assert dfs.state == '0'
+    dfs.trigger("Disengage of Faurung")
+    assert dfs.state == 'Disengaged'
+    transitions = dfs.get_available_transitions()
+    assert "m_(5, 3)" in transitions
+    assert "ms_(2, 3)" not in transitions  # Even though it's possible, we don't support Misty Step after Dodge, as it doesn't make muche sense
+    dfs.trigger("m_(5, 3)")
+    assert dfs.state == "di_(5, 3)"
+    transitions = dfs.get_available_transitions()
+    assert 'Quickened Fireball at [ 6 10]' in transitions
+    assert 'Quickened Firebolt on Goblin' in transitions
+    assert 'Quickened Haste on Faurung' in transitions
+    dfs.trigger("Quickened Firebolt on Goblin")
     assert len(dfs.get_available_transitions()) == 0
 
