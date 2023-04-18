@@ -1,6 +1,4 @@
 # TODO Add something like threat zones for ranged squishees to be incentivized to get as far away as they can. This is also crucial for the new Misty Step concept to work.
-# TODO create adjacency matrix for Misty Step where the nodes of distance > 1 are connected with a 0 cost edge. Before that make all zero edges into -1. This should be ok
-#TODO Let's add a function to return all reachable map coordinates by a combatant regardless of distance
 # TODO In case of dodge it always makes sense to use it before movement. So connect it that way
 # TODO In case of disengage it always makes sense to use it before movement. So connect it that way and then when adding up the threat don't add any from AoO
 
