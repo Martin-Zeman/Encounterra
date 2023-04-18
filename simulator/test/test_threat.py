@@ -333,3 +333,18 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_
     assert threat == pytest.approx(-2.64 - 5.399 - 20.0 - 2.649 - 5.399 - 6.625, 0.001)  # the -20 is composed of -10 for entering and -10 for staying plus danger zone
     threat = accumulate_threat_along_path(battle_map, path, combatant1, disengaged=True)
     assert threat == pytest.approx(-20.0 - 2.649 - 5.399 - 6.625, 0.001)  # the -20 is composed of -10 for entering and -10 for staying plus danger zone
+
+def test_get_path_to_combatant_medium_getting_out_of_danger_zone(battle_map, teams, combatant1, combatant3, effect_tracker):
+    """
+    Tests that the there is no threat when there's no AoE, AoO and the combatant gets out of the danger zone
+    """
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(combatant1, np.array([12, 1]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([14, 1]))
+    path = battle_map.get_path_to_coord(combatant1, np.array([6, 1]))
+    threat = accumulate_threat_along_path(battle_map, path, combatant1)
+    assert threat == 0

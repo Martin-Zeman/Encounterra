@@ -215,6 +215,7 @@ def accumulate_threat_along_path(battle_map, path, combatant, disengaged=False):
     :param disengaged: If True then don't include the AoOs
     :return: accumulated threat (negative)
     """
+    # TODO Add test where the character runs out of the danger zone
     threat_acc = 0
     curr_coords = copy.deepcopy(battle_map.get_combatant_position(combatant))
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
