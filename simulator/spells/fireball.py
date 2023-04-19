@@ -98,7 +98,7 @@ class Fireball(Actoid, DirectThreat):
 
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, FireballFactory.target, FireballFactory.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, FireballFactory.target, FireballFactory.type, np.array([self.coord]))
         acc = 0
         for aff in affected:
             acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])

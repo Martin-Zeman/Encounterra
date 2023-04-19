@@ -1,5 +1,7 @@
 import copy
 import itertools
+import sys
+
 import numpy as np
 from toposort import toposort_flatten
 
@@ -137,9 +139,35 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     return dag, coords_to_states
 
 
+def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action):
+    """
+
+    :param combatant: the combatant for whom the DAG is modeled
+    :param battle_map:
+    :param dag: finite state machine representing all possible actions for combatant
+    :param sorted_states: topologically sorted states of the DAG
+    :param transition_name_to_action: dict mapping action names -> actions
+    :return: the longest path in the DAG as per the threat along its edges and nodes
+    """
+    MINUS_INF = -sys.maxsize - 1
+    threat = dict.fromkeys(sorted_states, MINUS_INF)
+    threat['0'] = 0
+
+    for idx, state in enumerate(sorted_states):
+        try:
+            for transition_name, target_state in dag.forward_transitions[state]:
+                threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map) + (threat[state] if threat[state] > MINUS_INF else 0)
+                # TODO Add the threat along path here
+                if threat_acc > threat[target_state]:
+                    threat[target_state] = threat_acc
+        except KeyError:
+            print("FIXME??")
+    return threat
+
+
 def select_best_action(combatant, battle_map):
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
-    dfs, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, misty_step_state)
-    sorted_states = toposort_flatten(dfs.dependencies)
-    # TODO Topological sort
-    return dfs
+    dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, misty_step_state)
+    sorted_states = toposort_flatten(dag.dependencies)
+    longest_pth = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action)
+    return dag

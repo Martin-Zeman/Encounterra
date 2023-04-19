@@ -68,7 +68,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         Calculate how much dmg would the disengage potentially mitigate. This will be the same as the one for the factory.
         """
         adjacent_enemies = battle_map.get_adjacent_enemies(combatant)
-        return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(battle_map, self.combatant), adjacent_enemies)
+        return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(battle_map, self.combatant), adjacent_enemies, 0)
 
     def get_eligible_coords(self, battle_map, shortest_paths):
         return None  # We don't want to have any coords pre-pended in the DAG

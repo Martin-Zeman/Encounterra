@@ -53,7 +53,8 @@ class StateMachineTemplate(Machine):
         # GraphMachine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         Machine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         self.last_added_state = '-1'
-        self.dependencies = {'0': []}
+        self.dependencies = {'nop': ['0']}
+        self.forward_transitions = dict()
 
     def add_new_state(self, state_name):
         self.add_state(State(state_name))
@@ -70,7 +71,12 @@ class StateMachineTemplate(Machine):
 
     def add_transition(self, name, origin, dest):
         """
-        Overrides the add_transition of the Machine to allow us to build our dependency dictionary on the side
+        Overrides the add_transition of the Machine to allow us to build our dependency dictionary on the side and
+        enable us to do a topological sort directly without additional processing.
+        At the same time we're building our simplified version of forward transitions. This is the reverse of the
+        dependencies which tells us which states are directly reachable from a given source state. It is possible
+        to extract this information from the Machine itself but only with extra processing. This serves as sort of a
+        cache.
         :param name: name of the transition
         :param origin: name of the origin state
         :param dest: name of the destination state
@@ -78,8 +84,13 @@ class StateMachineTemplate(Machine):
         """
         try:
             self.dependencies[dest].append(origin)
+            # try:
+            self.forward_transitions[origin].append((name,dest))
+            # except KeyError:
+            #     self.forward_transitions[origin] = {name: [dest]}
         except KeyError:
             self.dependencies[dest] = [origin]
+            self.forward_transitions[origin] = [(name, dest)]
         super().add_transition(name, origin, dest)
 
     # def get_actions_leading_to_state(self, state):
@@ -150,11 +161,12 @@ def generate_action_fsm(combatant, battle_map):
         state_footprint = actions_to_set(fas)
         action_taken_name = str(action_taken)
         if not state_footprint:
-            # no more actions -> connect to the nop state
+            # No more actions -> connect to the nop state
             if "Misty Step" not in action_taken_name:
                 transition_name_to_action[action_taken_name] = action_taken  # TODO This can be taken out of the if else
                 fsm.add_transition(action_taken_name, previous_state_name, 'nop')
         elif state_footprint not in visited:
+            # State not yet discovered, create a new state, remember the footprint and add transitions
             visited.add(state_footprint)
             new_state_name = fsm.get_next_state_name()
             state_footprint_to_state_name[state_footprint] = new_state_name
@@ -172,6 +184,7 @@ def generate_action_fsm(combatant, battle_map):
                 dfs(new_state_name, fa)
                 combatant.load_resources(exported_resources)
         else:
+            # State already exists, just hook up the transition
             if "Misty Step" in action_taken_name:
                 # Misty Step gets a special treatment. We just need to make the state MS would bring us into but not include it in the graph
                 misty_step_state = state_footprint_to_state_name[state_footprint]
