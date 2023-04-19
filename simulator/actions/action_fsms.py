@@ -53,6 +53,7 @@ class StateMachineTemplate(Machine):
         # GraphMachine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         Machine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         self.last_added_state = '-1'
+        self.dependencies = {'0': []}
 
     def add_new_state(self, state_name):
         self.add_state(State(state_name))
@@ -66,6 +67,20 @@ class StateMachineTemplate(Machine):
 
     def get_available_transitions_in_state(self, state):
         return self.get_triggers(state)
+
+    def add_transition(self, name, origin, dest):
+        """
+        Overrides the add_transition of the Machine to allow us to build our dependency dictionary on the side
+        :param name: name of the transition
+        :param origin: name of the origin state
+        :param dest: name of the destination state
+        :return:
+        """
+        try:
+            self.dependencies[dest].append(origin)
+        except KeyError:
+            self.dependencies[dest] = [origin]
+        super().add_transition(name, origin, dest)
 
     # def get_actions_leading_to_state(self, state):
     #     actions = []

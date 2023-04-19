@@ -1,6 +1,7 @@
 import copy
 import itertools
 import numpy as np
+from toposort import toposort_flatten
 
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.actoid import ActoidFlags
@@ -139,5 +140,6 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 def select_best_action(combatant, battle_map):
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
     dfs, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, misty_step_state)
+    sorted_states = toposort_flatten(dfs.dependencies)
     # TODO Topological sort
     return dfs
