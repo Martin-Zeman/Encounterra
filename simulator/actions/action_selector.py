@@ -1,6 +1,8 @@
 import copy
 import itertools
+import re
 import sys
+import time
 
 import numpy as np
 from toposort import toposort_flatten
@@ -78,7 +80,7 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
             dag.add_transition(move_transition_name, new_source_state, new_state_name) # will be added multiple times, but it's ok
             dag.add_transition(post_action, new_state_name, "nop")
 
-def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, misty_step_state):
+def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, shortest_paths, misty_step_state):
     """
     Builds action DAG for a combatant given the combatant's action_fsm. It determines eligible coords for each
     action. Then the coords are pre-pended into the action_fsm to form the final DAG. However, Misty Step, Dodge and
@@ -89,12 +91,11 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     :param battle_map:
     :param action_fsm: finite state machine representing all possible actions for combatant
     :param transition_name_to_action: dict mapping action names -> actions
+    :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
     :param misty_step_state: name of the state into which taking the Misty Step bonus action would take us
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     # TODO: Look into caching!!!
-    # Pre-calculate Dijkstra for the combatant
-    distances, shortest_paths = battle_map.calc_dijkstra(combatant)
     dag = copy.deepcopy(action_fsm)
 
     post_misty_step_actions, post_dodge_actions, post_disengage_actions = get_data_for_special_treatment_actions(combatant, misty_step_state, dag)
@@ -139,35 +140,46 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     return dag, coords_to_states
 
 
-def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action):
+def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths):
     """
-
+    Finds the longest path in the DAG which represents the movement and actions with the highest calculated threat.
     :param combatant: the combatant for whom the DAG is modeled
     :param battle_map:
     :param dag: finite state machine representing all possible actions for combatant
     :param sorted_states: topologically sorted states of the DAG
     :param transition_name_to_action: dict mapping action names -> actions
+    :param distances: potentially already computed distances to all coords
+    :param shortest_paths: potentially already computed shortest paths to all coords
     :return: the longest path in the DAG as per the threat along its edges and nodes
     """
     MINUS_INF = -sys.maxsize - 1
     threat = dict.fromkeys(sorted_states, MINUS_INF)
+    sorted_states.pop()  # Get rid of the nop state
     threat['0'] = 0
+    pattern = r'([a-z]+)_\((\d+), (\d+)\)'
 
     for idx, state in enumerate(sorted_states):
-        try:
-            for transition_name, target_state in dag.forward_transitions[state]:
+        start_time = time.time()
+        for transition_name, target_state in dag.forward_transitions[state]:
+            try:
                 threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map) + (threat[state] if threat[state] > MINUS_INF else 0)
-                # TODO Add the threat along path here
-                if threat_acc > threat[target_state]:
-                    threat[target_state] = threat_acc
-        except KeyError:
-            print("FIXME??")
+            except KeyError:
+                # Happens for all movement nodes
+                movement_type, x, y = re.search(pattern, transition_name).groups()
+                path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
+                # TODO handle misty step
+                threat_acc = accumulate_threat_along_path(battle_map, path, combatant, disengaged=True if movement_type == 'di' else False)
+            if threat_acc > threat[target_state]:
+                threat[target_state] = threat_acc
+        print("---One state took {:.4f} seconds ---".format((time.time() - start_time)))
     return threat
 
 
 def select_best_action(combatant, battle_map):
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
-    dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, misty_step_state)
+    # Pre-calculate Dijkstra for the combatant
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant)
+    dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     sorted_states = toposort_flatten(dag.dependencies)
-    longest_pth = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action)
+    longest_pth = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
     return dag
