@@ -113,7 +113,8 @@ class Faurung(Combatant):
             'sorcery_points': self.curr_sorcery_points,
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
-            'has_bonus_action': self.has_bonus_action
+            'has_bonus_action': self.has_bonus_action,
+            'attack_state_machine': self.attack_fsm.state
         }
 
     def load_resources(self, resources):
@@ -122,6 +123,7 @@ class Faurung(Combatant):
         self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
+        self.attack_fsm.set_state(resources['attack_state_machine'])
 
 
     def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):

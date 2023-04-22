@@ -98,7 +98,7 @@ def action_factory(combatant, effect_tracker, action_type, *args):
             case Action.TWINNED_HASTE:
                 return TwinnedHaste(action_type, *args, combatant, effect_tracker)
             case _:
-                logger.error("Unknown action type")
+                logger.error("action_factory: Unknown action type")
                 return None
     elif isinstance(action_type, BonusAction):
         match action_type:

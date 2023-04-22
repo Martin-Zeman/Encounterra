@@ -21,7 +21,7 @@ def use_resources(combatant, action, battle_map):
                 combatant.curr_num_attacks -= 1
                 combatant.ammo[action.factory.name] -= 1
                 combatant.attack_fsm.trigger(str(action.factory))
-            case Action.DODGE | Action.DASH | Action.FIREBOLT:
+            case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL:
                 combatant.spellslots.use_spellslot(3)
@@ -41,7 +41,7 @@ def use_resources(combatant, action, battle_map):
             case Action.TWINNED_FIREBOLT:
                 combatant.curr_sorcery_points -= 1
             case _:
-                logger.error("Unknown action type")
+                logger.error("use_resources: Unknown action type")
     elif isinstance(action_type, BonusAction):
         combatant.has_bonus_action = False
         match action_type:

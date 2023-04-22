@@ -764,16 +764,14 @@ class Map:
         logger.debug(f"Destination {enemy_location.get()[0]}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            # threat_adj = self.get_threat_adjacency_matrix(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, shortest_paths, rng)
         if enemy_adjacent_location is None:
             return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)
         if reconstructed_path is None:
-            # TODO somehow make sure that it includes the threat of staying at a coordiante
             return None
-        if logger.root.level >= logging.INFO:
+        if logger.root.level <= logging.INFO:
             self.printDijkstra(distances, my_location.get(), enemy_location.get(), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
@@ -791,13 +789,11 @@ class Map:
         logger.debug(f"Destination {target_coord}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            # threat_adj = self.get_threat_adjacency_matrix(combatant)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), target_coord)
         if reconstructed_path is None:
-            # TODO somehow make sure that it includes the threat of staying at a coordiante
             return None
-        if logger.root.level >= logging.INFO:
+        if logger.root.level <= logging.INFO:
             self.printDijkstra(distances, my_location.get(), np.array([target_coord]), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 

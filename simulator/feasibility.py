@@ -78,7 +78,7 @@ def check_feasibility(combatant, action, battle_map):
                                                                                  Conditions.STUNNED,
                                                                                  Conditions.PARALYZED)
             case _:
-                logger.error("Unknown action type")
+                logger.error("check_feasibility: Unknown action type")
                 return False
     elif isinstance(action_type, BonusAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED):
@@ -167,7 +167,7 @@ def check_feasibility(combatant, action, battle_map):
     #             logger.error("Unknown free action")
     #             return False
     else:
-        logger.error("Unknown action type")
+        logger.error("check_feasibility: Unknown action type")
         return False
 
 
@@ -228,7 +228,7 @@ def check_feasibility_light(combatant, action, battle_map):
             case Action.DODGE :
                 return combatant.has_action
             case _:
-                logger.error("Unknown action type")
+                logger.error("check_feasibility_light: Unknown action type")
                 return False
     elif isinstance(action_type, BonusAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
@@ -286,7 +286,7 @@ def check_feasibility_light(combatant, action, battle_map):
     #             logger.error("Unknown free action")
     #             return False
     else:
-        logger.error("Unknown action type")
+        logger.error("check_feasibility_light: Unknown action type")
         return False
 
 
