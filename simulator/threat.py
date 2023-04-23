@@ -1,9 +1,11 @@
 import copy
+import time
 from functools import cache, reduce
 from scipy.stats import randint
 from simulator.misc import parse_dmg_dice
 from simulator.utils.roll_modifiers import RollModifier
 
+THREAT_PATH_CACHE = dict()
 
 @cache
 def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
@@ -205,42 +207,57 @@ def get_threat_for_staying_at_coord(battle_map, coords, combatant):
     return threat_acc
 
 
-def accumulate_threat_along_path(battle_map, path, combatant, disengaged=False):
+def get_aoe_and_aoo_threat_for_increment(battle_map, curr_coords_data, increment, combatant, effect_to_coords, disengaged=False):
     """
-    Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
-    at the final destination.
+    A helper caching function which accumulates threats from AoE and AoO along a path.
+    Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
     :param battle_map:
     :param path: path as a sequence of np.array coordinates
     :param combatant: the moving combatant
+    :param effect_to_coords: mapping of AoE effects to their coordinates
     :param disengaged: If True then don't include the AoOs
     :return: accumulated threat (negative)
     """
-    # TODO Add test where the character runs out of the danger zone
     threat_acc = 0
-    curr_coords = copy.deepcopy(battle_map.get_combatant_position(combatant))
-    effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
-
     try:
-        for increment in path:
-            curr_coords_data = curr_coords.get()
-            with battle_map.as_if_combatant_position(combatant, curr_coords_data[0]):
-                # account for AoO
-                if not disengaged:
-                    enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
-                    for e in enemies:
-                        threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant)
+        threat_acc = THREAT_PATH_CACHE[(tuple(curr_coords_data[0]), tuple(increment))]
+    except KeyError:
+        with battle_map.as_if_combatant_position(combatant, curr_coords_data[0]):
+            # account for AoO
+            if not disengaged:
+                enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
+                for e in enemies:
+                    threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant)
 
-                # account for AoE
-                for effect, affected_coords in effect_to_coords.items():
-                    pre_increment_dist = battle_map.get_hop_distance(curr_coords_data, affected_coords)
-                    post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
-                    if pre_increment_dist == 1 and post_increment_dist == 0:
-                        threat_acc -= effect.threat_on_enter(battle_map, combatant)
-                    elif pre_increment_dist == 0 and post_increment_dist == 0:
-                        threat_acc -= effect.threat_on_move_within(battle_map, combatant)
-            curr_coords_data += increment
-        # account for the final destination
-        threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
-    except TypeError as e:
-        print("FIXME")
+            # account for AoE
+            for effect, affected_coords in effect_to_coords.items():
+                pre_increment_dist = battle_map.get_hop_distance(curr_coords_data, affected_coords)
+                post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
+                if pre_increment_dist == 1 and post_increment_dist == 0:
+                    threat_acc -= effect.threat_on_enter(battle_map, combatant)
+                elif pre_increment_dist == 0 and post_increment_dist == 0:
+                    threat_acc -= effect.threat_on_move_within(battle_map, combatant)
+        THREAT_PATH_CACHE[(tuple(curr_coords_data[0]), tuple(increment))] = threat_acc
+    return threat_acc
+
+
+def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=False):
+    """
+    Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
+    at the final destination. Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
+    :param battle_map:
+    :param path: path as a sequence of np.array coordinates
+    :param combatant: the moving combatant
+    :param effect_to_coords: mapping of AoE effects to their coordinates
+    :param disengaged: If True then don't include the AoOs
+    :return: accumulated threat (negative)
+    """
+    threat_acc = 0
+    curr_coords = copy.copy(battle_map.get_combatant_position(combatant))  # TODO shallow copy should be enough here
+    curr_coords_data = curr_coords.get()
+    for increment in path:
+        threat_acc += get_aoe_and_aoo_threat_for_increment(battle_map, curr_coords_data, increment, combatant, effect_to_coords, disengaged)
+        curr_coords_data += increment
+    # account for the final destination
+    threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
     return threat_acc
