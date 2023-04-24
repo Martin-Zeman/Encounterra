@@ -102,11 +102,27 @@ class ChaosboltFactory(DirectThreatFactory):
         """
         Calculates threat to a specific target
         """
+        # try:
+        #     roll_modifier = kwargs['roll_modifier']
+        # except KeyError:
+        #     roll_modifier = RollModifier.STRAIGHT
+        #
+        # to_hit_total = self.to_hit
+        # to_hit_total = to_hit_total + ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+
         # TODO Consider including the potential of hitting others
+        acc = 0
         if battle_map.get_cartesian_distance(self.caster, target) <= ChaosboltFactory.range:
+            other_potential_targets = battle_map.get_enemies_within_radius(self.caster, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
+            other_potential_targets.remove(self.target)
+            P_SAME = 4 / 43  # 8/86 = 4 / 43
+            p_acc = P_SAME
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
-            return mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
-        return 0
+            acc = mean_dmg(self.to_hit, dmg_dice, 0, self.target.ac)
+            for pt in other_potential_targets:
+                acc += mean_dmg(self.to_hit, dmg_dice, 0, pt.ac) * p_acc
+                p_acc *= P_SAME
+        return acc
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """

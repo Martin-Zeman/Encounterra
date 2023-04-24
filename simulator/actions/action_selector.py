@@ -1,5 +1,6 @@
 import copy
 import itertools
+import logging
 import re
 import sys
 import time
@@ -9,8 +10,10 @@ from toposort import toposort_flatten
 
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.actoid import ActoidFlags
-from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment
+from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
+    accumulate_threat_along_path_with_misty_step
 
+logger = logging.getLogger(__name__)
 
 def find_ranges_of_consecutive(coords_w_threats):
     """
@@ -159,15 +162,26 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     threat['0'] = 0
     pattern = r'([msdio]+)_\((\d+), (\d+)\)'
     for idx, state in enumerate(sorted_states):
-
         for transition_name, target_state in dag.forward_transitions[state]:
             try:
+                # Is it a transition which represents a (bonus) action?
                 threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map) + (threat[state] if threat[state] > MINUS_INF else 0)
             except KeyError:
+                # or different kind which represents some kind of a movement
                 movement_type, x, y = re.search(pattern, transition_name).groups()
                 path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
-                # TODO handle misty step
-                threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=True if movement_type == 'di' else False)
+                match movement_type:
+                    case "m":
+                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
+                    case "di":
+                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=True)
+                    case "do":
+                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, dodged=True)
+                    case "ms":
+                        threat_acc = accumulate_threat_along_path_with_misty_step(battle_map, path, combatant, effect_to_coords)
+                    case _:
+                        logger.error(f"Unknown movement type {movement_type}")
+                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
             if threat_acc > threat[target_state]:
                 threat[target_state] = threat_acc
     return threat

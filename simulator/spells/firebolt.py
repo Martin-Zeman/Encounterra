@@ -117,6 +117,14 @@ class FireboltFactory(DirectThreatFactory):
             return 0
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+        # try:
+        #     roll_modifier = kwargs['roll_modifier']
+        # except KeyError:
+        #     roll_modifier = RollModifier.STRAIGHT
+        #
+        # to_hit_total = self.to_hit
+        # to_hit_total = to_hit_total + ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+
         if battle_map.get_cartesian_distance(self.caster, target) <= FireboltFactory.range:
             return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(FireboltFactory.dmg_type))
         return 0

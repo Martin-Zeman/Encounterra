@@ -208,8 +208,8 @@ def get_threat_for_staying_at_coord(battle_map, coords, combatant):
     return threat_acc
 
 
-@cached(cache={}, key=lambda curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged: hashkey((tuple(curr_coords_data[0]), tuple(increment))))
-def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged=False):
+@cached(cache={}, key=lambda curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment))))
+def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     A helper caching function which accumulates threats from AoE and AoO along a path.
     Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
@@ -221,13 +221,14 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
     :param disengaged: If True then don't include the AoOs
     :return: accumulated threat (negative)
     """
+    roll_modifier = RollModifier.DISADVANTAGE if dodged else RollModifier.STRAIGHT
     threat_acc = 0
     with battle_map.as_if_combatant_position(combatant, curr_coords_data[0]):
         # account for AoO
         if not disengaged:
             enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
             for e in enemies:
-                threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant)
+                threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier)
 
         # account for AoE
         for effect, affected_coords in effect_to_coords.items():
@@ -240,7 +241,29 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
     return threat_acc
 
 
-def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=False):
+def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=False, dodged=False):
+    """
+    Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
+    at the final destination. Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
+    :param battle_map:
+    :param path: path as a sequence of np.array coordinates
+    :param combatant: the moving combatant
+    :param effect_to_coords: mapping of AoE effects to their coordinates
+    :param disengaged: If True then don't include the AoOs
+    :param dodged: If True then attacks at the moving combatant are calculated at a disadvantage
+    :return: accumulated threat (negative)
+    """
+    threat_acc = 0
+    curr_coords = copy.copy(battle_map.get_combatant_position(combatant))  # TODO shallow copy should be enough here
+    curr_coords_data = curr_coords.get()
+    for increment in path:
+        threat_acc += get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged)
+        curr_coords_data += increment
+    # account for the final destination
+    threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
+    return threat_acc
+
+def accumulate_threat_along_path_with_misty_step(battle_map, path, combatant, effect_to_coords):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
     at the final destination. Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
@@ -251,12 +274,14 @@ def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, 
     :param disengaged: If True then don't include the AoOs
     :return: accumulated threat (negative)
     """
+    # TODO
     threat_acc = 0
     curr_coords = copy.copy(battle_map.get_combatant_position(combatant))  # TODO shallow copy should be enough here
     curr_coords_data = curr_coords.get()
     for increment in path:
-        threat_acc += get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged)
+        threat_acc += get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords)
         curr_coords_data += increment
     # account for the final destination
     threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
     return threat_acc
+
