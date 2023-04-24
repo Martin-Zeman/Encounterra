@@ -9,7 +9,7 @@ from toposort import toposort_flatten
 
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.actoid import ActoidFlags
-from simulator.threat import accumulate_threat_along_path, THREAT_PATH_CACHE
+from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment
 
 
 def find_ranges_of_consecutive(coords_w_threats):
@@ -174,7 +174,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
 
 
 def select_best_action(combatant, battle_map):
-    THREAT_PATH_CACHE.clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)
