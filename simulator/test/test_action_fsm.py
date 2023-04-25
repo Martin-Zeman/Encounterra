@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
-from simulator.actions.action_fsms import generate_action_fsm, StateMachineTemplate
+from simulator.actions.action_fsms import generate_action_fsm
+from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant_coords import CombatantCoords
 from simulator.teams import Teams
 from simulator.test.fixtures import *

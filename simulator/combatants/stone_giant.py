@@ -1,5 +1,5 @@
 from simulator.abilities.on_hit_prone import OnHitProne
-from simulator.actions.action_fsms import StateMachineTemplate
+from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_factories

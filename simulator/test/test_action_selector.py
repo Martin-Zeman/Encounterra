@@ -16,10 +16,10 @@ def test_select_best_action_misty_step_and_firebolt(battle_map, teams, effect_tr
     effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)  # For the log coloring...
-    # teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(combatant1, np.array([1, 3]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))  # Have to set it for fireball placement
-    # battle_map.set_combatant_coordinates(combatant3, np.array([2, 3]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant3, np.array([3, 4]))  # Have to set it for fireball placement
 
     # fsm, transition_mapping, _ = generate_action_fsm(combatant1, battle_map)
     # assert fsm.state == '0'
@@ -180,9 +180,9 @@ def test_select_best_action_dodge_and_movement_and_quickened_spell(battle_map, t
     dfs.trigger("Dodge of Faurung")
     assert dfs.state == 'Dodged'
     transitions = dfs.get_available_transitions()
-    assert "m_(7, 3)" in transitions
+    assert "do_(7, 3)" in transitions
     assert "ms_(2, 3)" not in transitions  # Even though it's possible, we don't support Misty Step after Dodge, as it's very niche
-    dfs.trigger("m_(7, 3)")
+    dfs.trigger("do_(7, 3)")
     assert dfs.state == "do_(7, 3)"
     transitions = dfs.get_available_transitions()
     assert 'Quickened Fireball at [ 6 10]' in transitions
@@ -208,9 +208,9 @@ def test_select_best_action_disengage_and_movement_and_quickened_spell(battle_ma
     dfs.trigger("Disengage of Faurung")
     assert dfs.state == 'Disengaged'
     transitions = dfs.get_available_transitions()
-    assert "m_(5, 3)" in transitions
+    assert "di_(5, 3)" in transitions
     assert "ms_(2, 3)" not in transitions  # Even though it's possible, we don't support Misty Step after Dodge, as it doesn't make muche sense
-    dfs.trigger("m_(5, 3)")
+    dfs.trigger("di_(5, 3)")
     assert dfs.state == "di_(5, 3)"
     transitions = dfs.get_available_transitions()
     assert 'Quickened Fireball at [ 6 10]' in transitions

@@ -1,4 +1,5 @@
-from simulator.actions.action_fsms import OneMeleeOrOneRanged, StateMachineTemplate
+from simulator.actions.action_fsms import OneMeleeOrOneRanged
+from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions, Size

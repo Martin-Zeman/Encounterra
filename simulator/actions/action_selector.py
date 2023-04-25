@@ -80,7 +80,7 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
             if new_state_name not in added_states:
                 added_states.add(new_state_name)
                 dag.add_state(new_state_name)
-                move_transition_name = "m_" + str(coord)
+                move_transition_name = coord_state_prefix + str(coord)
                 dag.add_transition(move_transition_name, new_source_state, new_state_name) # will be added multiple times, but it's ok
             dag.add_transition(post_action, new_state_name, "nop")
 
