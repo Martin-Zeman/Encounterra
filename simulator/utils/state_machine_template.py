@@ -10,7 +10,7 @@ class StateMachineTemplate(Machine):
         states = ['0', 'nop']
         Machine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         self.last_added_state = '-1'
-        self.dependencies = {'nop': ['0']}
+        self.dependencies = {'nop': {'0'}}
         self.forward_transitions = dict()
 
     def add_new_state(self, state_name):
@@ -40,15 +40,31 @@ class StateMachineTemplate(Machine):
         :return:
         """
         try:
-            self.dependencies[dest].append(origin)
+            self.dependencies[dest].add(origin)
         except KeyError:
-            self.dependencies[dest] = [origin]
+            self.dependencies[dest] = {origin}
 
         try:
-            self.forward_transitions[origin].append((name, dest))
+            self.forward_transitions[origin].add((name, dest))
         except KeyError:
-            self.forward_transitions[origin] = [(name, dest)]
+            self.forward_transitions[origin] = {(name, dest)}
         super().add_transition(name, origin, dest)
+
+    def remove_transition(self, name, origin, dest):
+        """
+        Overrides the remove_transition of the Machine to allow us to also remove from the forward and backward dictionaries on the side
+        :param name: name of the transition
+        :param origin: name of the origin state
+        :param dest: name of the destination state
+        :return:
+        """
+        try:
+            self.dependencies[dest].discard(origin)
+        except ValueError:
+            pass
+
+        self.forward_transitions[origin] = {ft for ft in self.forward_transitions[origin] if ft[0] != name}
+        super().remove_transition(name, origin)
 
 
     def reset(self):

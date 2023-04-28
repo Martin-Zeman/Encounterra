@@ -193,8 +193,8 @@ def get_danger_zone_threat(battle_map, coords, combatant):
     :return: danger zone threat (positive)
     """
     enemies = battle_map.get_enemies(combatant)
-    acc = reduce(lambda acc, e: acc + e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant) if
-        battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0, enemies, 0)
+    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant) if
+        battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
 
 def get_threat_for_staying_at_coord(battle_map, coords, combatant):

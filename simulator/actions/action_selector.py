@@ -65,7 +65,9 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
     """
     # TODO Consider merging Dodged and Disengaged into one state
     # a prefix to make the newly pre-pended coord state unique
-    dag.remove_transition(action_name, "0")
+    dag.trigger(action_name)
+    dag.remove_transition(action_name, "0", dag.state)
+    dag.state = "0"
     action_type = action_name.split()[0]
     coord_state_prefix = action_type[0:2].lower() + "_"  # di_ or do_
     new_source_state = action_type + "d"  # Dodged or Disengaged
@@ -116,26 +118,27 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     coords_to_states = dict()
     for action_name, coords in action_to_eligible_coords.items():
         for coord in coords:
-            for transitions in action_fsm.events[action_name].transitions.values():  # Iterate over the original to avoid deleting from the one being iterated over
-                for transition in [t for t in transitions if t.source == "0"]:
-                    new_state_name = str(coord)
+            transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]
+            assert len(transitions) == 1
+            for transition in transitions:  # Iterate over the original to avoid deleting from the one being iterated over
+                new_state_name = str(coord)
+                if new_state_name not in added_states:
+                    added_states.add(new_state_name)
+                    dag.add_state(new_state_name)
+                coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
+                move_transition_name = "m_" + new_state_name
+                dag.add_transition(move_transition_name, transition.source, new_state_name) # will be added multiple times, but it's ok
+                dag.add_transition(action_name, new_state_name, transition.dest)
+                dag.remove_transition(action_name, transition.source, transition.dest)  # Remove the original
+
+                # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement
+                if action_name in post_misty_step_actions:
+                    new_state_name = "ms_" + str(coord)
                     if new_state_name not in added_states:
                         added_states.add(new_state_name)
                         dag.add_state(new_state_name)
-                    coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
-                    move_transition_name = "m_" + new_state_name
-                    dag.add_transition(move_transition_name, transition.source, new_state_name) # will be added multiple times, but it's ok
-                    dag.add_transition(action_name, new_state_name, transition.dest)
-                    dag.remove_transition(action_name, transition.source)  # Remove the original
-
-                    # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement
-                    if action_name in post_misty_step_actions:
-                        new_state_name = "ms_" + str(coord)
-                        if new_state_name not in added_states:
-                            added_states.add(new_state_name)
-                            dag.add_state(new_state_name)
-                        dag.add_transition(new_state_name, "0", new_state_name)  # transition name is the same as state name
-                        dag.add_transition(action_name, new_state_name, "nop")
+                    dag.add_transition(new_state_name, "0", new_state_name)  # transition name is the same as state name
+                    dag.add_transition(action_name, new_state_name, "nop")
 
     build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_dodge_actions, added_states, dodge_name)
     build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_disengage_actions, added_states, disengage_name)
@@ -160,14 +163,16 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     threat = dict.fromkeys(sorted_states, MINUS_INF)
     sorted_states.pop()  # Get rid of the nop state
     threat['0'] = 0
+    max_threat_transition = {'0': None}
+    max_threat = MINUS_INF
     pattern = r'([msdio]+)_\((\d+), (\d+)\)'
-    for idx, state in enumerate(sorted_states):
+    for state in sorted_states:
         for transition_name, target_state in dag.forward_transitions[state]:
             try:
                 # Is it a transition which represents a (bonus) action?
                 threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map) + (threat[state] if threat[state] > MINUS_INF else 0)
             except KeyError:
-                # or different kind which represents some kind of a movement
+                # or different kind which represents some type of movement
                 movement_type, x, y = re.search(pattern, transition_name).groups()
                 path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
                 match movement_type:
@@ -184,10 +189,21 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                         threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
             if threat_acc > threat[target_state]:
                 threat[target_state] = threat_acc
-    return threat
+                max_threat_transition[target_state] = (transition_name, state)
+                if threat_acc > max_threat:
+                    max_threat = threat_acc
+
+    # Let's go backwards to reconstruct the longest path
+    curr_state = 'nop'
+    max_threat_path = []
+    while curr_state != '0':
+        max_threat_path.insert(0, max_threat_transition[curr_state][0])
+        curr_state = max_threat_transition[curr_state][1]
+    return max_threat_path
 
 
 def select_best_action(combatant, battle_map):
+    start_time = time.time()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
     # Pre-calculate Dijkstra for the combatant
@@ -195,4 +211,5 @@ def select_best_action(combatant, battle_map):
     dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     sorted_states = toposort_flatten(dag.dependencies)
     longest_pth = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
+    print("---select_best_action took %s seconds ---" % (time.time() - start_time))
     return dag
