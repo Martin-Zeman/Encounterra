@@ -205,12 +205,40 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     return max_threat_path
 
 
-def select_best_action(combatant, battle_map, distances, shortest_paths):
+def translate_longest_pth_to_actions(transition_name_to_action, longest_pth):
+    """
+    Translates the string form of longest path back to action objects
+    :param transition_name_to_action: dictionary mapping non-movement types to actions
+    :param longest_pth: list of best actions as strings
+    :return: list of the following types: np.array, action, bonus action
+    """
+    pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+    actions = []
+    for action in longest_pth:
+        try:
+            actions.append(transition_name_to_action[action])
+        except KeyError:
+            movement_type, x, y = re.search(pattern, action).groups()
+            # TODO add a movement generator here
+            actions.append(np.array([x, y]))
+
+    return actions
+
+
+def get_best_actions(combatant, battle_map, distances, shortest_paths):
+    """
+    Finds chain of movement, action and bonus action with the highest (threat_out - threat_in)
+    :param combatant: the combatant for whom the DAG is modeled
+    :param battle_map:
+    :param distances: potentially already computed distances to all coords
+    :param shortest_paths: potentially already computed shortest paths to all coords
+    :return: list of the following types: np.array, action, bonus action
+    """
     start_time = time.time()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
     dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     sorted_states = toposort_flatten(dag.dependencies)
     longest_pth = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
-    print("---select_best_action took %s seconds ---" % (time.time() - start_time))
-    return dag
+    print("---get_best_actions took %s seconds ---" % (time.time() - start_time))
+    return translate_longest_pth_to_actions(transition_name_to_action, longest_pth)

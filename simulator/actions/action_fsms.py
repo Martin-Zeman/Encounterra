@@ -84,9 +84,7 @@ def generate_action_fsm(combatant, battle_map):
         """
         nonlocal misty_step_state
         fafs = get_all_feasible_action_factories(combatant, battle_map)
-        # fas = {tuple(af_to_a[faf]) for faf in fafs}
         fas = {a for faf in fafs for a in af_to_a[faf]}
-        # fas = {fa for sublist in fas for fa in fafs}  # flatten the fas from a list of lists into a single list
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
         action_taken_name = str(action_taken)
