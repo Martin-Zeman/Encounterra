@@ -1,4 +1,4 @@
-from functools import reduce
+from functools import reduce, cache
 
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
@@ -63,6 +63,10 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.factory.combatant.has_disengaged = False
 
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         Calculate how much dmg would the disengage potentially mitigate. This will be the same as the one for the factory.

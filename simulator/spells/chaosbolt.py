@@ -6,7 +6,7 @@ from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.threat import mean_dmg
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
 from simulator.misc import percent_of_curr_hp
-from functools import partial
+from functools import partial, cache
 from functools import reduce
 
 from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
@@ -161,7 +161,11 @@ class Chaosbolt(Actoid, DirectThreat):
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt on {self.target[0]}"
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         potential_targets = battle_map.get_enemies_within_radius(combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
         potential_targets.remove(self.target)

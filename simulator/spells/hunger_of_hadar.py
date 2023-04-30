@@ -1,3 +1,5 @@
+from functools import cache
+
 from simulator.action_resolver import resolve_dmg_saving_throw
 from simulator.action_types import BonusActionOrdering, BonusAction
 from simulator.combatant_coords import CombatantCoords
@@ -119,6 +121,10 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         # TODO remove difficult terrain
         pass  # TODO remove concentration?
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.coord)
         acc = 0

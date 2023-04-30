@@ -1,3 +1,5 @@
+from functools import cache
+
 from simulator.action_types import BonusActionOrdering, BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
@@ -104,6 +106,10 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def deactivate(self):
         pass  # TODO remove concentration?
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.coord)
         acc = 0

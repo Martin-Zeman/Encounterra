@@ -3,7 +3,7 @@ import copy
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
-from simulator.spellslots import Spellslots
+from simulator.spellslots import Spellslots, Class
 from simulator.misc import CombatantArchetype, DamageType, get_factory_of_type, SavingThrow, Conditions
 from simulator.action_factory import *
 from simulator.spells.spell import SpellStats
@@ -32,7 +32,7 @@ class Faurung(Combatant):
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.build_attack_fms()
-        self.spellslots = Spellslots(Spellslots.Class.SORCERER, 5)
+        self.spellslots = Spellslots(Class.SORCERER, 5)
         self.archetype = CombatantArchetype.RANGED
         self.movement_generator_cache = None
         self.nowhere_to_go = False

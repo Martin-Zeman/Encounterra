@@ -1,3 +1,5 @@
+from functools import cache
+
 from simulator.spells.spell import SpellStats
 import logging
 from simulator.action_types import BonusAction, Action, BonusActionOrdering
@@ -107,6 +109,11 @@ class MistyStep(Actoid, ThreatModifier):
     def __str__(self):
         return f"Misty Step to {self.coord[0]}, {self.coord[1]}"
 
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         # TODO Add up all potential dmg from enemies that would normally be within their movement range
         # this can be arbitrated between other bonus action abilities

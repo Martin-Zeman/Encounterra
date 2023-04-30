@@ -1,3 +1,5 @@
+import pstats
+
 import numpy as np
 import pytest
 
@@ -7,6 +9,7 @@ from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, teams, effect_tracker, battle_map
 from simulator.actions.action_selector import select_best_action
+import cProfile
 
 
 def test_select_best_action_misty_step_and_firebolt(battle_map, teams, effect_tracker, combatant1, combatant2, combatant3):
@@ -24,7 +27,13 @@ def test_select_best_action_misty_step_and_firebolt(battle_map, teams, effect_tr
     # fsm, transition_mapping, _ = generate_action_fsm(combatant1, battle_map)
     # assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_faurung_pre_coords.png', prog='dot')
-    dfs = select_best_action(combatant1, battle_map)
+    # Pre-calculate Dijkstra for the combatant
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    # from simulator.actions.action_selector import select_best_action
+    # cProfile.runctx('select_best_action(combatant1, battle_map, distances, shortest_paths)', None, locals(), filename="select_best_action_stats")
+    # p = pstats.Stats("select_best_action_stats")
+    # p.strip_dirs().sort_stats("cumtime").print_stats()
+    dfs = select_best_action(combatant1, battle_map, distances, shortest_paths)
     # dfs.get_graph().draw('state_diagram_faurung_with_coords',format='svg', prog='dot')
 
     # Tests the Misty Step movement + Firebolt
@@ -55,7 +64,9 @@ def test_select_best_action_movement_and_quickened_fireball(battle_map, teams, e
         battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))
         # battle_map.set_combatant_coordinates(combatant3, np.array([2, 3]))
 
-        dfs = select_best_action(combatant1, battle_map)
+        # Pre-calculate Dijkstra for the combatant
+        distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+        dfs = select_best_action(combatant1, battle_map, distances, shortest_paths)
         # Tests regular movement + quickened fireball
         assert dfs.state == '0'
         dfs.trigger("m_(2, 3)")
@@ -88,7 +99,9 @@ def test_select_best_action_movement_and_fireball(battle_map, teams, effect_trac
     battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))
     # battle_map.set_combatant_coordinates(combatant3, np.array([2, 3]))  # Have to set it for fireball placement
 
-    dfs = select_best_action(combatant1, battle_map)
+    # Pre-calculate Dijkstra for the combatant
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    dfs = select_best_action(combatant1, battle_map, distances, shortest_paths)
     # Tests regular movement + fireball
     assert dfs.state == '0'
     dfs.trigger("m_(2, 3)")
@@ -118,7 +131,9 @@ def test_select_best_action_movement_and_staff_attack(battle_map, teams, effect_
     battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))
     # battle_map.set_combatant_coordinates(combatant3, np.array([2, 3]))
 
-    dfs = select_best_action(combatant1, battle_map)
+    # Pre-calculate Dijkstra for the combatant
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    dfs = select_best_action(combatant1, battle_map, distances, shortest_paths)
     # Tests regular movement + staff of defence attack
     assert dfs.state == '0'
     dfs.trigger("m_(9, 10)")
@@ -152,7 +167,9 @@ def test_select_best_action_misty_step_and_staff_attack(battle_map, teams, effec
     battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))
     # battle_map.set_combatant_coordinates(combatant3, np.array([2, 3]))
 
-    dfs = select_best_action(combatant1, battle_map)
+    # Pre-calculate Dijkstra for the combatant
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    dfs = select_best_action(combatant1, battle_map, distances, shortest_paths)
     # Tests Misty Step movement + staff of defence attack
     assert dfs.state == '0'
     dfs.trigger("ms_(9, 10)")
@@ -174,7 +191,9 @@ def test_select_best_action_dodge_and_movement_and_quickened_spell(battle_map, t
     battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))
     # battle_map.set_combatant_coordinates(combatant3, np.array([2, 3]))
 
-    dfs = select_best_action(combatant1, battle_map)
+    # Pre-calculate Dijkstra for the combatant
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    dfs = select_best_action(combatant1, battle_map, distances, shortest_paths)
     # Tests Dodge + movement + a quickened spell
     assert dfs.state == '0'
     dfs.trigger("Dodge of Faurung")
@@ -202,7 +221,9 @@ def test_select_best_action_disengage_and_movement_and_quickened_spell(battle_ma
     battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))
     # battle_map.set_combatant_coordinates(combatant3, np.array([2, 3]))
 
-    dfs = select_best_action(combatant1, battle_map)
+    # Pre-calculate Dijkstra for the combatant
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    dfs = select_best_action(combatant1, battle_map, distances, shortest_paths)
     # Tests Disengage + movement + a quickened spell
     assert dfs.state == '0'
     dfs.trigger("Disengage of Faurung")

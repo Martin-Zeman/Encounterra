@@ -2,7 +2,7 @@ from abc import abstractmethod
 
 from simulator.action_types import BonusActionOrdering
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import reduce
+from functools import reduce, cache
 from simulator.misc import percent_of_curr_hp, avg_roll
 from simulator.threat import mean_dmg
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
@@ -223,6 +223,10 @@ class Attack(Actoid, DirectThreat):
     def get_dmg_type(self):
         return self.factory.dmg_type
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)
 

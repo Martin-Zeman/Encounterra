@@ -65,9 +65,7 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
     """
     # TODO Consider merging Dodged and Disengaged into one state
     # a prefix to make the newly pre-pended coord state unique
-    dag.trigger(action_name)
-    dag.remove_transition(action_name, "0", dag.state)
-    dag.state = "0"
+    dag.remove_transition(action_name, "0")
     action_type = action_name.split()[0]
     coord_state_prefix = action_type[0:2].lower() + "_"  # di_ or do_
     new_source_state = action_type + "d"  # Dodged or Disengaged
@@ -129,7 +127,6 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                 move_transition_name = "m_" + new_state_name
                 dag.add_transition(move_transition_name, transition.source, new_state_name) # will be added multiple times, but it's ok
                 dag.add_transition(action_name, new_state_name, transition.dest)
-                dag.remove_transition(action_name, transition.source, transition.dest)  # Remove the original
 
                 # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement
                 if action_name in post_misty_step_actions:
@@ -139,6 +136,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                         dag.add_state(new_state_name)
                     dag.add_transition(new_state_name, "0", new_state_name)  # transition name is the same as state name
                     dag.add_transition(action_name, new_state_name, "nop")
+        dag.remove_transition(action_name, transition.source)  # Remove the original
 
     build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_dodge_actions, added_states, dodge_name)
     build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_disengage_actions, added_states, disengage_name)
@@ -166,6 +164,11 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     max_threat_transition = {'0': None}
     max_threat = MINUS_INF
     pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+
+    # Optimization: calculate_threat is cached, so we need to clear the cache before the computation
+    for action in transition_name_to_action.values():
+        action.clear_cache()
+
     for state in sorted_states:
         for transition_name, target_state in dag.forward_transitions[state]:
             try:
@@ -202,12 +205,10 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     return max_threat_path
 
 
-def select_best_action(combatant, battle_map):
+def select_best_action(combatant, battle_map, distances, shortest_paths):
     start_time = time.time()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
-    # Pre-calculate Dijkstra for the combatant
-    distances, shortest_paths = battle_map.calc_dijkstra(combatant)
     dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     sorted_states = toposort_flatten(dag.dependencies)
     longest_pth = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)

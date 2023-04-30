@@ -1,3 +1,5 @@
+from functools import cache
+
 from simulator.action_types import BonusActionOrdering, BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
@@ -97,6 +99,10 @@ class Fireball(Actoid, DirectThreat):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + f"Fireball at {np.squeeze(self.coord)}"
 
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, FireballFactory.target, FireballFactory.type, np.array([self.coord]))
         acc = 0

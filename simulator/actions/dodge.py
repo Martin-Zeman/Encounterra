@@ -1,3 +1,5 @@
+from functools import cache
+
 from simulator.action_types import Action
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
@@ -69,6 +71,10 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
             pass  # may not be present if called by reset
 
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         Calculate how much dmg would the dodge potentially mitigate. This will be the same as the one for the factory.

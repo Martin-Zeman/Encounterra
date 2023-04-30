@@ -5,7 +5,7 @@ from simulator.action_types import HasteAction, BonusActionOrdering, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat import mean_dmg, dmg_decrement_for_ac_flat
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
-from functools import reduce
+from functools import reduce, cache
 from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
 import logging
 
@@ -181,6 +181,10 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         return combatant is self.target
 
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         It's the same as the single target version of the factory

@@ -264,8 +264,6 @@ def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, 
     threat_acc = 0
     curr_coords = battle_map.get_combatant_position(combatant)
     curr_coords_data = copy.copy(curr_coords.get()) # TODO shallow copy should be enough here
-    if path is None:
-        print("FIXME")
     for increment in path:
         threat_acc += get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged)
         curr_coords_data += increment

@@ -73,14 +73,20 @@ def generate_action_fsm(combatant, battle_map):
     visited = set()
     transition_name_to_action = dict()
     misty_step_state = None
+
+    # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
+    fafs = get_all_feasible_action_factories(combatant, battle_map)
+    af_to_a = {faf: faf[1].create_all(battle_map) for faf in fafs}
+
     def dfs(previous_state_name, action_taken=None):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
         nonlocal misty_step_state
         fafs = get_all_feasible_action_factories(combatant, battle_map)
-        fas = [faf[1].create_all(battle_map) for faf in fafs]
-        fas = [fa for sublist in fas for fa in sublist]  # flatten the fas from a list of lists into a single list
+        # fas = {tuple(af_to_a[faf]) for faf in fafs}
+        fas = {a for faf in fafs for a in af_to_a[faf]}
+        # fas = {fa for sublist in fas for fa in fafs}  # flatten the fas from a list of lists into a single list
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
         action_taken_name = str(action_taken)

@@ -50,7 +50,7 @@ class StateMachineTemplate(Machine):
             self.forward_transitions[origin] = {(name, dest)}
         super().add_transition(name, origin, dest)
 
-    def remove_transition(self, name, origin, dest):
+    def remove_transition(self, name, origin):
         """
         Overrides the remove_transition of the Machine to allow us to also remove from the forward and backward dictionaries on the side
         :param name: name of the transition
@@ -58,8 +58,13 @@ class StateMachineTemplate(Machine):
         :param dest: name of the destination state
         :return:
         """
+        original_state = self.state
+        self.trigger(name)
+        dest_state = self.state
+        self.state = original_state
+
         try:
-            self.dependencies[dest].discard(origin)
+            self.dependencies[dest_state].discard(origin)
         except ValueError:
             pass
 

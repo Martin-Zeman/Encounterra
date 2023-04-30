@@ -2,7 +2,7 @@ from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, percent_of_curr_hp, avg_roll
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import reduce
+from functools import reduce, cache
 
 from simulator.threat import mean_dmg
 from simulator.threat_calculator import DirectThreat, DirectThreatFactory
@@ -139,6 +139,10 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def __str__(self):
         return f"Twinned Firebolt on {self.targets[0]} and {self.targets[1]}"
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         dmg_acc = mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.targets[0].is_resistant_to(TwinnedFireboltFactory.dmg_type))
         if self.targets[1] is not None:
