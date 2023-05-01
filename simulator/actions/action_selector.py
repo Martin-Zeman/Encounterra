@@ -8,8 +8,10 @@ import time
 import numpy as np
 from toposort import toposort_flatten
 
+from simulator.action_types import Movement
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.actoid import ActoidFlags
+from simulator.actions.movement import MovementGenerator
 from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
     accumulate_threat_along_path_with_misty_step
 
@@ -205,9 +207,13 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     return max_threat_path
 
 
-def translate_longest_pth_to_actions(transition_name_to_action, longest_pth):
+def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth):
     """
     Translates the string form of longest path back to action objects
+    :param combatant: the combatant for whom the actions are translated
+    :param battle_map:
+    :param distances: potentially already computed distances to all coords
+    :param shortest_paths: potentially already computed shortest paths to all coords
     :param transition_name_to_action: dictionary mapping non-movement types to actions
     :param longest_pth: list of best actions as strings
     :return: list of the following types: np.array, action, bonus action
@@ -219,9 +225,19 @@ def translate_longest_pth_to_actions(transition_name_to_action, longest_pth):
             actions.append(transition_name_to_action[action])
         except KeyError:
             movement_type, x, y = re.search(pattern, action).groups()
-            # TODO add a movement generator here
-            actions.append(np.array([x, y]))
-
+            match movement_type:
+                case "m" | "do":
+                    path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]))
+                    movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
+                    actions.append(movement_generator)
+                case "di":
+                    path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]))
+                    movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGE).get_generator()
+                    actions.append(movement_generator)
+                case "ms":
+                    pass # TODO
+                case _:
+                    logger.error(f"Unknown movement type {movement_type}")
     return actions
 
 
@@ -234,11 +250,11 @@ def get_best_actions(combatant, battle_map, distances, shortest_paths):
     :param shortest_paths: potentially already computed shortest paths to all coords
     :return: list of the following types: np.array, action, bonus action
     """
-    start_time = time.time()
+    # start_time = time.time()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
     dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     sorted_states = toposort_flatten(dag.dependencies)
     longest_pth = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
-    print("---get_best_actions took %s seconds ---" % (time.time() - start_time))
-    return translate_longest_pth_to_actions(transition_name_to_action, longest_pth)
+    # print("---get_best_actions took %s seconds ---" % (time.time() - start_time))
+    return translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth)

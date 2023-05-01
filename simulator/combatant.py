@@ -85,7 +85,7 @@ class Combatant(ABC):
         self.conditions = Conditions.NONE
         self.toughness = None
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
-        self.has_disengaged = False
+        self.has_disengaged = False  # TODO Get rid of this
         self.spellslots = None
         self.is_concentrating = False
         self.already_cast_leveled_spell_this_turn = False

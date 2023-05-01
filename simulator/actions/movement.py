@@ -29,7 +29,7 @@ class MovementGenerator:
     def get_generator(self):
         try:
             while self.path and self.combatant.movement:
-                yield MovementIncrement(self.path.pop(0), not self.combatant.has_disengaged, self)
+                yield MovementIncrement(self.path.pop(0), self.action_type is Movement.STANDARD, self)
                 # yield self.path.pop(0)
         except GeneratorExit:
             pass

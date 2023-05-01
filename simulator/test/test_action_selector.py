@@ -4,12 +4,16 @@ import numpy as np
 import pytest
 
 from simulator.actions.action_fsms import generate_action_fsm
+from simulator.actions.movement import MovementGenerator
 from simulator.combatant_coords import CombatantCoords
 from simulator.logging.custom_logger import CustomLogger, LogLevel
+from simulator.spells.fireball import Fireball
+from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, teams, effect_tracker, battle_map
 from simulator.actions.action_selector import get_best_actions, build_action_dag
 from simulator.threat import get_aoe_and_aoo_threat_for_increment
+import types
 import cProfile
 
 
@@ -270,6 +274,7 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
     # p = pstats.Stats("select_best_action_stats")
     # p.strip_dirs().sort_stats("cumtime").print_stats()
     best_actions = get_best_actions(combatant1, battle_map, distances, shortest_paths)
-    assert best_actions == ['m_(0, 12)', 'Twinned Firebolt on Goblin and Bugbear', 'Quickened Fireball at [2 7]'] \
-           or best_actions == ['m_(0, 12)', 'Quickened Fireball at [2 7]', 'Twinned Firebolt on Goblin and Bugbear']
+    assert isinstance(best_actions[0], types.GeneratorType)
+    assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], TwinnedFirebolt)
+    assert isinstance(best_actions[2], Fireball) or isinstance(best_actions[2], TwinnedFirebolt)
 
