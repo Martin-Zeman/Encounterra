@@ -12,8 +12,11 @@ from simulator.action_types import Movement
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.actoid import ActoidFlags
 from simulator.actions.movement import MovementGenerator
+from simulator.battle_map import convert_path_to_increments
+from simulator.misc import reconstruct_path_through_dag
+from simulator.spells.misty_step import MistyStepFactory
 from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
-    accumulate_threat_along_path_with_misty_step
+    calc_threat_for_path_with_misty_step
 
 logger = logging.getLogger(__name__)
 
@@ -130,7 +133,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                 dag.add_transition(move_transition_name, transition.source, new_state_name) # will be added multiple times, but it's ok
                 dag.add_transition(action_name, new_state_name, transition.dest)
 
-                # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement
+                # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement (not a direct jump to the coord)
                 if action_name in post_misty_step_actions:
                     new_state_name = "ms_" + str(coord)
                     if new_state_name not in added_states:
@@ -154,8 +157,8 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     :param dag: finite state machine representing all possible actions for combatant
     :param sorted_states: topologically sorted states of the DAG
     :param transition_name_to_action: dict mapping action names -> actions
-    :param distances: potentially already computed distances to all coords
-    :param shortest_paths: potentially already computed shortest paths to all coords
+    :param distances: potentially already pre-computed distances to all coords
+    :param shortest_paths: potentially already pre-computed shortest paths to all coords
     :return: the longest path in the DAG as per the threat along its edges and nodes
     """
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
@@ -163,9 +166,10 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     threat = dict.fromkeys(sorted_states, MINUS_INF)
     sorted_states.pop()  # Get rid of the nop state
     threat['0'] = 0
-    max_threat_transition = {'0': None}
+    max_threat_backwards_transition = {'0': None}
     max_threat = MINUS_INF
     pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+    transition_name_to_ms_path = dict()
 
     # Optimization: calculate_threat is cached, so we need to clear the cache before the computation
     for action in transition_name_to_action.values():
@@ -173,6 +177,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
 
     for state in sorted_states:
         for transition_name, target_state in dag.forward_transitions[state]:
+
             try:
                 # Is it a transition which represents a (bonus) action?
                 threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map) + (threat[state] if threat[state] > MINUS_INF else 0)
@@ -188,37 +193,75 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     case "do":
                         threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, dodged=True)
                     case "ms":
-                        threat_acc = accumulate_threat_along_path_with_misty_step(battle_map, path, combatant, effect_to_coords)
+                        threat_acc, misty_step_path = calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_coords)
+                        transition_name_to_ms_path[transition_name] = misty_step_path
                     case _:
                         logger.error(f"Unknown movement type {movement_type}")
                         threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
             if threat_acc > threat[target_state]:
                 threat[target_state] = threat_acc
-                max_threat_transition[target_state] = (transition_name, state)
+                max_threat_backwards_transition[target_state] = (transition_name, state)
                 if threat_acc > max_threat:
                     max_threat = threat_acc
 
     # Let's go backwards to reconstruct the longest path
-    curr_state = 'nop'
-    max_threat_path = []
-    while curr_state != '0':
-        max_threat_path.insert(0, max_threat_transition[curr_state][0])
-        curr_state = max_threat_transition[curr_state][1]
-    return max_threat_path
+    return reconstruct_path_through_dag('nop', '0', max_threat_backwards_transition), transition_name_to_ms_path
 
 
-def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth):
+def decode_ms_path_to_actions(combatant, ms_path, actions, ms_pattern, ms_factory):
+    """
+    A helper function which decodes an action which represents movement with the possibility of including Misty Step into a sequence of
+    actions which look like: regular movement (optional), Misty Step, regular movement (optional)
+    :param combatant: the combatant for whom the actions are translated
+    :param ms_path: name of the current action to be decoded
+    :param actions: the list of actions to which we add the resulting sequence
+    :param ms_pattern: Optimization to avoid reallocation: search regex to extract coordinates from action names
+    :param ms_factory: Optimization to avoid reallocation: Misty Step factory instance
+    :return: None but actions shall be modified
+    """
+    before_ms_idx = None
+    ms_idx = None
+    for i, element in enumerate(ms_path):
+        if element.startswith('m_'):
+            before_ms_idx = i
+        elif element.startswith('ms_'):
+            ms_idx = i
+            break
+    after_ms_idx = (len(ms_path) - 1) if ms_idx != (len(ms_path) - 1) else None
+    if before_ms_idx:
+        before_path = []
+        for i in range(0, before_ms_idx + 1):
+            x, y = re.search(ms_pattern, ms_path[before_ms_idx]).groups()
+            before_path.append(np.array([int(x), int(y)]))
+        before_path = convert_path_to_increments(before_path)
+        before_movement_generator = MovementGenerator(combatant, before_path, Movement.STANDARD).get_generator()
+        actions.append(before_movement_generator)
+    x, y = re.search(ms_pattern, ms_path[ms_idx]).groups()
+    actions.append(ms_factory.create(np.array([int(x), int(y)])))
+    if after_ms_idx:
+        after_path = []
+        for i in range(ms_idx + 1, after_ms_idx + 1):
+            x, y = re.search(ms_pattern, ms_path[after_ms_idx]).groups()
+            after_path.append(np.array([int(x), int(y)]))
+        after_path = convert_path_to_increments(after_path)
+        after_movement_generator = MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()
+        actions.append(after_movement_generator)
+
+def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path):
     """
     Translates the string form of longest path back to action objects
     :param combatant: the combatant for whom the actions are translated
     :param battle_map:
-    :param distances: potentially already computed distances to all coords
-    :param shortest_paths: potentially already computed shortest paths to all coords
-    :param transition_name_to_action: dictionary mapping non-movement types to actions
+    :param distances: potentially already pre-computed distances to all coords
+    :param shortest_paths: potentially already pre-computed shortest paths to all coords
+    :param transition_name_to_action: dictionary mapping of non-movement types to actions
     :param longest_pth: list of best actions as strings
+    :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
     :return: list of the following types: np.array, action, bonus action
     """
     pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+    ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
+    ms_factory = MistyStepFactory(combatant)
     actions = []
     for action in longest_pth:
         try:
@@ -227,15 +270,15 @@ def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_
             movement_type, x, y = re.search(pattern, action).groups()
             match movement_type:
                 case "m" | "do":
-                    path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]))
+                    path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
                     movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
                     actions.append(movement_generator)
                 case "di":
-                    path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]))
+                    path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, False)
                     movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGE).get_generator()
                     actions.append(movement_generator)
                 case "ms":
-                    pass # TODO
+                    decode_ms_path_to_actions(combatant, transition_name_to_ms_path[action], actions, ms_pattern, ms_factory)
                 case _:
                     logger.error(f"Unknown movement type {movement_type}")
     return actions
@@ -246,8 +289,8 @@ def get_best_actions(combatant, battle_map, distances, shortest_paths):
     Finds chain of movement, action and bonus action with the highest (threat_out - threat_in)
     :param combatant: the combatant for whom the DAG is modeled
     :param battle_map:
-    :param distances: potentially already computed distances to all coords
-    :param shortest_paths: potentially already computed shortest paths to all coords
+    :param distances: potentially already pre-computed distances to all coords
+    :param shortest_paths: potentially already pre-computed shortest paths to all coords
     :return: list of the following types: np.array, action, bonus action
     """
     # start_time = time.time()
@@ -255,6 +298,6 @@ def get_best_actions(combatant, battle_map, distances, shortest_paths):
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
     dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     sorted_states = toposort_flatten(dag.dependencies)
-    longest_pth = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
+    longest_pth, transition_name_to_ms_path = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
     # print("---get_best_actions took %s seconds ---" % (time.time() - start_time))
-    return translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth)
+    return translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)

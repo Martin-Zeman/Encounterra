@@ -214,6 +214,21 @@ def get_haste_eligile_attacks(combatant):
     return attacks
 
 
+def reconstruct_path_through_dag(leaf_state, initial_state, max_threat_backwards_transition):
+    """
+    A small utility function that goes backwards from a leaf state in a DAG towards the initial state and reconstructs the path
+    :param leaf_state:
+    :param initial_state: path as a sequence of np.array coordinates
+    :param max_threat_backwards_transition: backwards transition dict which state -> predecessor state
+    :return: reconstructed path
+    """
+    curr_state = leaf_state
+    reconstructed_path = []
+    while curr_state != initial_state:
+        reconstructed_path.insert(0, max_threat_backwards_transition[curr_state][0])
+        curr_state = max_threat_backwards_transition[curr_state][1]
+    return reconstructed_path
+
 # def get_args_for_class_as_kwargs_with_values_from_instance(cls, instance):
 #     """
 #     The problem here is that the instance is of another type

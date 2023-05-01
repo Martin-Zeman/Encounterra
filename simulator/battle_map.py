@@ -753,8 +753,8 @@ class Map:
         Calculates a path to a target combatant
         :param combatant:Combatant who wants to move
         :param target_combatant:
-        :param distances: potentially already computed distances to all coords
-        :param shortest_paths: potentially already computed shortest paths to all coords
+        :param distances: potentially already pre-computed distances to all coords
+        :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :param rng: the range of what is considered adjacent
         :return: list of np.array increments to the target combatant
         """
@@ -780,8 +780,8 @@ class Map:
         Calculates a path to destination coordinates
         :param combatant:Combatant who wants to move
         :param target_coord:
-        :param distances: potentially already computed distances to all coords
-        :param shortest_paths: potentially already computed shortest paths to all coords
+        :param distances: potentially already pre-computed distances to all coords
+        :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of np.array increments to the target destination
         """
         my_location = self.get_combatant_position(combatant)

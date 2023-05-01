@@ -266,7 +266,7 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
     teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(combatant1, np.array([1, 3]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(combatant2, np.array([10, 10]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(combatant3, np.array([3, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant3, np.array([2, 4]))  # Have to set it for fireball placement
 
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     # from simulator.actions.action_selector import get_best_actions

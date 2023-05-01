@@ -3,14 +3,16 @@ import copy
 import numpy as np
 import pytest
 from simulator.action_types import Action
+from simulator.actions.action_selector import decode_ms_path_to_actions
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Size
 from simulator.spells.cloud_of_daggers import CloudOfDaggersFactory
 from simulator.spells.hunger_of_hadar import HungerOfHadarFactory
+from simulator.spells.misty_step import MistyStepFactory
 from simulator.spells.spike_growth import SpikeGrowthFactory
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, teams, effect_tracker, battle_map
-from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment
+from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, calc_threat_for_path_with_misty_step
 
 
 def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map, teams, combatant1, combatant2, effect_tracker):
@@ -184,7 +186,7 @@ def test_get_path_to_combatant_medium_to_medium_pass_by_one_aoo(battle_map, team
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
-    assert threat == pytest.approx(-5.39 - 2.649 - 5.399, 0.01)  # includes danger zone
+    assert threat == pytest.approx(2 * -5.399 - 2.649, 0.01)  # includes danger zone
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords, disengaged=True)
     assert threat == pytest.approx(-2.649 - 5.399, 0.01)  # includes danger zone
@@ -210,7 +212,7 @@ def test_get_path_to_combatant_medium_to_medium_pass_by_two_aoo(battle_map, team
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
-    assert threat == pytest.approx(2*-5.399 - 2.649 - 2 * 5.399, 0.001)  # includes danger zone
+    assert threat == pytest.approx(4 * -5.399 - 2.649, 0.001)  # includes danger zone
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords, disengaged=True)
     assert threat == pytest.approx(-2.649 - 2 * 5.399, 0.001)  # includes danger zone
@@ -238,7 +240,7 @@ def test_get_path_to_combatant_large_to_medium_pass_by_two_aoo(battle_map, teams
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
-    assert threat == pytest.approx(2*-5.399 - 2.649 - 2 * 5.399, 0.01)  # includes danger zone
+    assert threat == pytest.approx(4 * -5.399 - 2.649, 0.01)  # includes danger zone
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords, disengaged=True)
     assert threat == pytest.approx(-2.649 - 2 * 5.399, 0.01)  # includes danger zone
@@ -259,10 +261,10 @@ def test_get_path_to_coord_medium_stepping_away_from_medium_aoo(battle_map, team
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
-    assert threat == pytest.approx(-2.64 - 2.649, 0.01)
+    assert threat == pytest.approx(2 * -2.649, 0.001)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords, disengaged=True)
-    assert threat == pytest.approx(-2.649, 0.01)
+    assert threat == pytest.approx(-2.649, 0.001)
 
 
 def test_get_path_to_coord_large_stepping_away_from_huge_aoo(battle_map, teams, combatant1, combatant2, effect_tracker):
@@ -283,10 +285,10 @@ def test_get_path_to_coord_large_stepping_away_from_huge_aoo(battle_map, teams, 
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
-    assert threat == pytest.approx(-2.64 - 2.649, 0.01)
+    assert threat == pytest.approx(2 * -2.649, 0.001)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords, disengaged=True)
-    assert threat == pytest.approx(-2.649, 0.01)
+    assert threat == pytest.approx(-2.649, 0.001)
 
 def test_get_path_to_cord_large_stepping_away_from_two_medium_aoo(battle_map, teams, combatant1, combatant2, combatant3, effect_tracker):
     """
@@ -306,7 +308,7 @@ def test_get_path_to_cord_large_stepping_away_from_two_medium_aoo(battle_map, te
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
-    assert threat == pytest.approx(-2.649 - 5.399 - 2.649 - 5.399, 0.001)  # includes danger zone
+    assert threat == pytest.approx(2 * -2.649 - 2 * 5.399, 0.001)  # includes danger zone
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords, disengaged=True)
     assert threat == pytest.approx(-2.649 - 5.399, 0.001)  # includes danger zone
@@ -333,7 +335,7 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_arrive_by_th
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
-    assert threat == pytest.approx(-2.64 - 5.399 - 2.649 - 5.399 - 6.625, 0.001)  # includes danger zone
+    assert threat == pytest.approx(2 * -2.649 - 2 * 5.399 - 6.625, 0.001)  # includes danger zone
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords, disengaged=True)
     assert threat == pytest.approx(-2.649 - 5.399 - 6.625, 0.001)  # includes danger zone
@@ -366,7 +368,7 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
-    assert threat == pytest.approx(-2.64 - 5.399 - 20.0 - 2.649 - 5.399 - 6.625, 0.001)  # the -20 is composed of -10 for entering and -10 for staying plus danger zone
+    assert threat == pytest.approx(2 * -2.649 - 2 * 5.399 - 20.0 - 6.625, 0.001)  # the -20 is composed of -10 for entering and -10 for staying plus danger zone
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords, disengaged=True)
     assert threat == pytest.approx(-20.0 - 2.649 - 5.399 - 6.625, 0.001)  # the -20 is composed of -10 for entering and -10 for staying plus danger zone
@@ -387,3 +389,28 @@ def test_get_path_to_combatant_medium_getting_out_of_danger_zone(battle_map, tea
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
     assert threat == 0
+
+
+def test_calc_threat_for_path_with_misty_step_scenario_1(battle_map, teams, combatant1, combatant3, effect_tracker):
+    """
+    Simple scenario with two combatants starting adjacent. We test that Misty Step lets us avoid the AoO.
+    It tests calc_threat_for_path_with_misty_step as well as decode_ms_path_to_actions.
+    """
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(combatant1, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([5, 6]))
+    path = battle_map.get_path_to_coord(combatant1, np.array([0, 14]))
+    effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
+    threat, max_threat_path = calc_threat_for_path_with_misty_step(battle_map, path, combatant1, effect_to_coords)
+    assert threat == 0
+
+    actions = []
+    ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
+    ms_factory = MistyStepFactory(combatant1)
+    decode_ms_path_to_actions(combatant1, max_threat_path, actions, ms_pattern, ms_factory)
+    assert len(actions) > 0
+

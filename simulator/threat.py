@@ -11,8 +11,8 @@ from toposort import toposort_flatten
 from transitions import Machine
 from transitions.extensions import GraphMachine
 
-from simulator.utils.state_machine_template import StateMachineTemplate, GraphStateMachineTemplate
-from simulator.misc import parse_dmg_dice
+from simulator.utils.state_machine_template import StateMachineTemplate
+from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.utils.roll_modifiers import RollModifier
 
@@ -271,7 +271,7 @@ def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, 
     threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
     return threat_acc
 
-def accumulate_threat_along_path_with_misty_step(battle_map, path, combatant, effect_to_coords):
+def calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_coords):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
     at the final destination. Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
@@ -285,11 +285,14 @@ def accumulate_threat_along_path_with_misty_step(battle_map, path, combatant, ef
     # class Dummy(object):
     #     pass
     threat_acc = 0
+    max_threat_path = None
 
     # First build the Misty Step DAG
-    curr_coords = battle_map.get_combatant_position(combatant)  # TODO shallow copy should be enough here
+    curr_coords = battle_map.get_combatant_position(combatant)
     if path:
-        curr_coords_data = copy.copy(curr_coords.get())
+        # We build a DAG with two branches where one branch represents moving before using Misty Step and the other after
+        # The only transitions between the branches represent Misty Step itself which can be taken at different points of the path
+        curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
         coords = [curr_coords.get()[0]]
         initial_state_name = str(tuple(curr_coords_data[0]))
         states = [initial_state_name]
@@ -305,8 +308,8 @@ def accumulate_threat_along_path_with_misty_step(battle_map, path, combatant, ef
             new_ms_state_name = "ms_" + new_state_name
             states.append(new_state_name)
             states.append(new_ms_state_name)
-            transition_name = 'move_to_' + new_state_name
-            ms_transition_name = 'move_to_' + new_ms_state_name
+            transition_name = 'm_to_' + new_state_name
+            ms_transition_name = 'm_to_' + new_ms_state_name
             transitions.append([transition_name, previous_state, new_state_name])
             transitions.append([ms_transition_name, previous_ms_state, new_ms_state_name])
             transition_to_threat[transition_name] = curr_threat
@@ -324,27 +327,31 @@ def accumulate_threat_along_path_with_misty_step(battle_map, path, combatant, ef
         for i in range(0, len(coords) - 1):
             for j in range(i + 1, len(coords)):
                 if np.linalg.norm(coords[i] - coords[j]) <= MistyStepFactory.range:
-                    dest_name = str(tuple(coords[j]))
+                    dest_name = "ms_" + str(tuple(coords[j]))
                     ms_dag.add_transition('ms_to_' + dest_name, str(tuple(coords[i])), dest_name)
                     # graph_ms_dag.add_transition('ms_to_' + dest_name, str(tuple(coords[i])), dest_name)
 
         # Then sort the states topologically and find the longest path
         sorted_states = toposort_flatten(ms_dag.dependencies)
+        assert "ms_" in sorted_states[-1]  # TODO remove this later
         MINUS_INF = -sys.maxsize - 1
         threat = dict.fromkeys(sorted_states, MINUS_INF)
-        sorted_states.pop()  # Drop the last two states since they're both leaves
-        sorted_states.pop()
         threat[sorted_states[0]] = 0
+        max_threat_backwards_transition = {sorted_states[0]: None}  # it's guaranteed that the first state is the initial coord
         for state in sorted_states:
-            for transition_name, target_state in ms_dag.forward_transitions[state]:
-                threat_acc = (transition_to_threat[transition_name] if transition_name[0:2] != "ms" else 0 + threat[state]) if threat[state] > MINUS_INF else 0
-                if threat_acc > threat[target_state]:
-                    threat[target_state] = threat_acc
-        # TODO Add extraction of the actual best route
+            try:
+                for transition_name, target_state in ms_dag.forward_transitions[state]:
+                    threat_acc = ((0 if transition_name.startswith("ms") else transition_to_threat[transition_name]) + threat[state]) if threat[state] > MINUS_INF else 0
+                    if threat_acc > threat[target_state]:
+                        threat[target_state] = threat_acc
+                        max_threat_backwards_transition[target_state] = (transition_name, state)
+            except KeyError:
+                pass  # Ok, for the last state in each branch as they are leaves and have no out edges
 
+        max_threat_path = reconstruct_path_through_dag(sorted_states[-1], sorted_states[0], max_threat_backwards_transition)
         threat_acc += threat[states[-1]]  # the last ms state was added last which represents the longest (best) path
         # graph_ms_dag.get_graph().draw('misty_step_dag.png', prog='dot')
     # account for the final destination
     threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
-    return threat_acc
+    return threat_acc, max_threat_path
 
