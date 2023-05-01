@@ -485,7 +485,7 @@ def test_get_free_coords_in_cartesian_range_medium(battle_map, teams, combatant1
     assert (9, 5) in free_coords and (1, 5) in free_coords and (5, 1) in free_coords and (5, 9) in free_coords
     # same but including the combatant's own coord
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=4, combatant=combatant1)
-    assert  (5, 5) in free_coords
+    assert (5, 5) in free_coords
 
 def test_get_free_coords_in_cartesian_range_large(battle_map, teams, combatant1):
     combatant1.size = Size.LARGE

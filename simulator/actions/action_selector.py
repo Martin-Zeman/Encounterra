@@ -208,11 +208,12 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     return reconstruct_path_through_dag('nop', '0', max_threat_backwards_transition), transition_name_to_ms_path
 
 
-def decode_ms_path_to_actions(combatant, ms_path, actions, ms_pattern, ms_factory):
+def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pattern, ms_factory):
     """
     A helper function which decodes an action which represents movement with the possibility of including Misty Step into a sequence of
     actions which look like: regular movement (optional), Misty Step, regular movement (optional)
     :param combatant: the combatant for whom the actions are translated
+    :param initial_coord: the initial coordinate of the combatant
     :param ms_path: name of the current action to be decoded
     :param actions: the list of actions to which we add the resulting sequence
     :param ms_pattern: Optimization to avoid reallocation: search regex to extract coordinates from action names
@@ -228,20 +229,20 @@ def decode_ms_path_to_actions(combatant, ms_path, actions, ms_pattern, ms_factor
             ms_idx = i
             break
     after_ms_idx = (len(ms_path) - 1) if ms_idx != (len(ms_path) - 1) else None
-    if before_ms_idx:
-        before_path = []
+    if before_ms_idx is not None:
+        before_path = [initial_coord]
         for i in range(0, before_ms_idx + 1):
-            x, y = re.search(ms_pattern, ms_path[before_ms_idx]).groups()
+            x, y = re.search(ms_pattern, ms_path[i]).groups()
             before_path.append(np.array([int(x), int(y)]))
         before_path = convert_path_to_increments(before_path)
         before_movement_generator = MovementGenerator(combatant, before_path, Movement.STANDARD).get_generator()
         actions.append(before_movement_generator)
     x, y = re.search(ms_pattern, ms_path[ms_idx]).groups()
     actions.append(ms_factory.create(np.array([int(x), int(y)])))
-    if after_ms_idx:
-        after_path = []
+    if after_ms_idx is not None:
+        after_path = [actions[-1].coord]  # use the Misty Step target coord as the initial one
         for i in range(ms_idx + 1, after_ms_idx + 1):
-            x, y = re.search(ms_pattern, ms_path[after_ms_idx]).groups()
+            x, y = re.search(ms_pattern, ms_path[i]).groups()
             after_path.append(np.array([int(x), int(y)]))
         after_path = convert_path_to_increments(after_path)
         after_movement_generator = MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()
@@ -278,7 +279,7 @@ def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_
                     movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGE).get_generator()
                     actions.append(movement_generator)
                 case "ms":
-                    decode_ms_path_to_actions(combatant, transition_name_to_ms_path[action], actions, ms_pattern, ms_factory)
+                    decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[action], actions, ms_pattern, ms_factory)
                 case _:
                     logger.error(f"Unknown movement type {movement_type}")
     return actions

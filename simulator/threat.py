@@ -282,6 +282,7 @@ def calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_
     :param disengaged: If True then don't include the AoOs
     :return: accumulated threat (negative)
     """
+    # TODO Make it prefer
     # class Dummy(object):
     #     pass
     threat_acc = 0

@@ -1,4 +1,5 @@
 import copy
+import types
 
 import numpy as np
 import pytest
@@ -8,7 +9,7 @@ from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Size
 from simulator.spells.cloud_of_daggers import CloudOfDaggersFactory
 from simulator.spells.hunger_of_hadar import HungerOfHadarFactory
-from simulator.spells.misty_step import MistyStepFactory
+from simulator.spells.misty_step import MistyStepFactory, MistyStep
 from simulator.spells.spike_growth import SpikeGrowthFactory
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, teams, effect_tracker, battle_map
@@ -411,6 +412,59 @@ def test_calc_threat_for_path_with_misty_step_scenario_1(battle_map, teams, comb
     actions = []
     ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(combatant1)
-    decode_ms_path_to_actions(combatant1, max_threat_path, actions, ms_pattern, ms_factory)
-    assert len(actions) > 0
+    decode_ms_path_to_actions(combatant1, battle_map.get_combatant_position(combatant1).get()[0], max_threat_path, actions, ms_pattern, ms_factory)
+    assert isinstance(actions[0], types.GeneratorType)
+    assert isinstance(actions[1], MistyStep)
+    assert isinstance(actions[2], types.GeneratorType)
 
+
+def test_calc_threat_for_path_with_misty_step_scenario_2(battle_map, teams, combatant1, combatant3, effect_tracker):
+    """
+    A scenario with two combatants starting a bit apart from each other. One needs to move to a coord farther behind the other.
+    The destination is directly within reach of Misty Step and so that's the only action the combatant takes.
+    """
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(combatant1, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([8, 5]))
+    path = battle_map.get_path_to_coord(combatant1, np.array([11, 5]))
+    effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
+    threat, max_threat_path = calc_threat_for_path_with_misty_step(battle_map, path, combatant1, effect_to_coords)
+    assert threat == pytest.approx(-5.399, 0.001)  # Just for the danger zone
+
+    actions = []
+    ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
+    ms_factory = MistyStepFactory(combatant1)
+    decode_ms_path_to_actions(combatant1, battle_map.get_combatant_position(combatant1).get()[0], max_threat_path, actions, ms_pattern, ms_factory)
+    assert len(actions) == 1
+    assert isinstance(actions[0], MistyStep)
+    assert np.array_equal(actions[0].coord, np.array([11, 5]), equal_nan=False)
+
+
+def test_calc_threat_for_path_with_misty_step_scenario_3(battle_map, teams, combatant1, combatant3, effect_tracker):
+    """
+    A scenario with two combatants starting a bit apart from each other. One needs to move to a coord farther behind the other.
+    The destination just within reach if the combatant uses all its movement plus Misty Step.
+    """
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(combatant1, np.array([2, 5]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([5, 5]))
+    path = battle_map.get_path_to_coord(combatant1, np.array([14, 5]))
+    effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
+    threat, max_threat_path = calc_threat_for_path_with_misty_step(battle_map, path, combatant1, effect_to_coords)
+    assert threat == 0  # Out of the danger zone
+
+    actions = []
+    ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
+    ms_factory = MistyStepFactory(combatant1)
+    decode_ms_path_to_actions(combatant1, battle_map.get_combatant_position(combatant1).get()[0], max_threat_path, actions, ms_pattern, ms_factory)
+    # Technically, many different combinations are valid here but this one tends to be picked
+    assert isinstance(actions[1], MistyStep)
+    assert len(list(actions[0])) + len(list(actions[2])) == combatant1.speed
