@@ -103,8 +103,8 @@ class Fireball(Actoid, DirectThreat):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, FireballFactory.target, FireballFactory.type, np.array([self.coord]))
+    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
+        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.caster, combatant_coords, FireballFactory.target, FireballFactory.type, np.array([self.coord]), combatant_coords)
         acc = 0
         for aff in affected:
             acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
@@ -112,6 +112,7 @@ class Fireball(Actoid, DirectThreat):
 
     def get_eligible_coords(self, battle_map, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
+                                                             shortest_paths,
                                                              inflate_to_size=self.factory.caster.size,
                                                              rng=FireballFactory.range,
                                                              combatant=self.factory.caster)

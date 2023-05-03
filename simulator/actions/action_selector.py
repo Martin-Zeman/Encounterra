@@ -13,6 +13,7 @@ from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.actoid import ActoidFlags
 from simulator.actions.movement import MovementGenerator
 from simulator.battle_map import convert_path_to_increments
+from simulator.combatant_coords import CombatantCoords
 from simulator.misc import reconstruct_path_through_dag
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
@@ -180,7 +181,17 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
 
             try:
                 # Is it a transition which represents a (bonus) action?
-                threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map) + (threat[state] if threat[state] > MINUS_INF else 0)
+                try:
+                    # Get the coord transition that preceded this state
+                    previous_transition_name = max_threat_backwards_transition[state][0]
+                    _, x, y = re.search(pattern, previous_transition_name).groups()
+                    combatant_coords = CombatantCoords(np.array([int(x), int(y)]))
+                except KeyError:
+                    combatant_coords = battle_map.get_combatant_position(combatant)
+                except:
+                    print("FIXME")
+                    combatant_coords = None
+                threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state] if threat[state] > MINUS_INF else 0)
             except KeyError:
                 # or different kind which represents some type of movement
                 movement_type, x, y = re.search(pattern, transition_name).groups()

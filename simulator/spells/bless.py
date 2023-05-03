@@ -1,5 +1,6 @@
 from functools import cache
 
+from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.actions.actoid import Actoid, ActoidFlags
@@ -93,7 +94,7 @@ class Bless(Actoid, Effect, ThreatModifier):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         # TODO Multiply the threat increment by 3 for 3 rounds
         # TODO iterate over all abilities of the targets and try plugging the mods into their factories
         return 0

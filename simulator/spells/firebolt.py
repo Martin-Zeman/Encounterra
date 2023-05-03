@@ -1,4 +1,5 @@
 from simulator.action_types import BonusActionOrdering, BonusAction
+from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, percent_of_curr_hp, RollModifier, avg_roll
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -172,7 +173,7 @@ class Firebolt(Actoid, DirectThreat):
 
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type))
 
     def get_eligible_coords(self, battle_map, shortest_paths):

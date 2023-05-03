@@ -1,5 +1,6 @@
 import copy
 
+from simulator.actions.action_selector import get_best_actions
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
@@ -42,67 +43,24 @@ class Faurung(Combatant):
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = 7
-
+        self.action_plan = []
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
 
     def get_action(self, battle_map):
-        if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
-            return GetUpFactory().create()
-
-        enemies, _ = battle_map.get_enemies_within_radius_sorted_by_distance(self, SpellStats.Range.FEET_120.value)
-        if self.movement and not self.movement_generator_cache:# and not self.nowhere_to_go:
-            free_coords = battle_map.get_free_coords_sorted_by_distance_from_enemies(self)
-            self_coord = battle_map.get_combatant_position(self)
-            if not np.any(np.all(self_coord.get()[0] == free_coords, axis=1)):
-                path = battle_map.get_path_to_coord(self, free_coords[0])
-                self.movement_generator_cache = MovementGenerator(self, path).get_generator()
-
-        if self.movement and self.movement_generator_cache:
-            try:
-                movement = next(self.movement_generator_cache)
-                logger.info("Trying to get distance")
-                return movement
-            except StopIteration:
-                self.movement_generator_cache = None
-
-        feasible_action_factories = get_feasible_factories(self.action_factories, self, battle_map)
-        feasible_bonus_action_factories = get_feasible_factories(self.bonus_action_factories, self, battle_map)
-        feasible_haste_action_factories = get_feasible_factories(self.haste_action_factories, self, battle_map)
-        if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:
-            feasible_actions = list(filter(lambda item: item is not None, [faf[1].create_best(self, battle_map) for faf in feasible_action_factories]))
-            feasible_bonus_actions = list(filter(lambda item: item is not None, [fbaf[1].create_best(self, battle_map) for fbaf in feasible_bonus_action_factories]))
-            feasible_haste_actions = list(filter(lambda item: item is not None, [fhaf[1].create_best(self, battle_map) for fhaf in feasible_haste_action_factories]))
-
-            action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]
-            bonus_action_threats = [(fba.calculate_threat(self, battle_map), fba) for fba in feasible_bonus_actions]
-            haste_action_threats = [(fha.calculate_threat(self, battle_map), fha) for fha in feasible_haste_actions]
-
-            # action_threats.sort(key=lambda a: a[0], reverse=True)
-            # bonus_action_threats.sort(key=lambda a: a[0], reverse=True)
-            # haste_action_threats.sort(key=lambda a: a[0], reverse=True)
-            all_actions = action_threats
-            all_actions.extend(bonus_action_threats)
-            all_actions.extend(haste_action_threats)
-            all_actions.sort(key=lambda a: a[0], reverse=True)
-            ret = None
-            try:
-                ret = all_actions[0][1]
-                logger.info(f"{self} uses {ret}")
-            except IndexError:
-                pass
-            return ret
+        distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated in every case (due to forced movement etc.)
+        if not self.action_plan:
+            self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
         else:
-            return None
-
+            return self.action_plan.pop(0)
 
     def new_turn(self):
         super().new_turn()
         self.nowhere_to_go = False
         self.movement_generator_cache = None
-        # self.attack_fsm = OneAttack()  # Initialized here to avoid pickling error when multiprocessing
+        self.action_plan = []
 
     def prompt_aoo(self, moving_combatant):
         return None
@@ -127,11 +85,11 @@ class Faurung(Combatant):
 
 
     def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
-        if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll <= self.dc + 5:
+        if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll < self.dc + 5:
             shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
             logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})
             return shield_factory.create() if shield_factory else None
-        elif attack_roll > self.dc + 5:
+        elif attack_roll >= self.dc + 5:
             logger.info("Shield would not suffice")
         elif self.has_reaction:
             logger.info(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})

@@ -1,5 +1,6 @@
 from functools import cache
 
+from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 import logging
 from simulator.action_types import BonusAction, Action, BonusActionOrdering
@@ -114,7 +115,7 @@ class MistyStep(Actoid, ThreatModifier):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         # TODO Add up all potential dmg from enemies that would normally be within their movement range
         # this can be arbitrated between other bonus action abilities
         if self.factory.caster.archetype is CombatantArchetype.MELEE:

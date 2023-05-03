@@ -125,8 +125,8 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.caster, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.coord)
+    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
+        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.caster, combatant_coords, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.coord)
         acc = 0
         for aff in affected:
             acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg

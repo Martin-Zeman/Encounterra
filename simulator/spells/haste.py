@@ -1,3 +1,4 @@
+from simulator.combatant_coords import CombatantCoords
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
@@ -185,7 +186,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         """
         It's the same as the single target version of the factory
         """

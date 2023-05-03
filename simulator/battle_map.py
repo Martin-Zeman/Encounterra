@@ -501,8 +501,7 @@ class Map:
         self.combatant_coordinate_cache[combatant] = new_coords
         logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
 
-    def set_combatant_coordinates(self, combatant, coords: np.array):
-        coords = CombatantCoords(coords, combatant)
+    def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
         def set_comb(square):
             square.set_combatant(combatant)
             return square
@@ -1004,6 +1003,22 @@ class Map:
         logger.info(self)
         return best_placement, max_score, best_affected
 
+    def get_combatants_affected_by_aoe_with_caster_mock_position(self, caster, caster_coords: CombatantCoords, target_template, ability_type, origin, angle=0):
+        """
+        Gets combatants affected by an AoE effect
+        :param caster: the caster of the AoE
+        :param caster_coords: the 'as if' position of the caster
+        :param target_template: RADIUS_X or CONE_Y
+        :param ability_type: SpellStats.Type.HARMFUL or SpellStats.Type.BUFF
+        :param origin: origin of the AoE
+        :param angle: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
+        :return: affected combatants
+        """
+        ret = None
+        with self.as_if_combatant_position(caster, caster_coords.get()[0]):
+            ret = self.get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle)
+        return ret
+
     def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):
         """
         Gets combatants affected by an AoE effect
@@ -1039,6 +1054,7 @@ class Map:
             case _:
                 logger.error("Unrecognized ability target type")
         return affected_combatants
+
 
     def get_enemies_within_radius_sorted_by_distance(self, combatant, radius):
         enemies = [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]

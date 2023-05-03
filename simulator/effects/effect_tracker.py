@@ -50,7 +50,7 @@ class EffectTracker:
             effects.append(e)
         self.effects = effects
 
-    def get_all_affected_combatant(self, combatant):
+    def get_all_affecting_combatant(self, combatant):
         """
         Returns all effects affecting a combatant as a set
         :param combatant:
