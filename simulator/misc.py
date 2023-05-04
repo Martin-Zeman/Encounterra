@@ -225,8 +225,11 @@ def reconstruct_path_through_dag(leaf_state, initial_state, max_threat_backwards
     curr_state = leaf_state
     reconstructed_path = []
     while curr_state != initial_state:
-        reconstructed_path.insert(0, max_threat_backwards_transition[curr_state][0])
-        curr_state = max_threat_backwards_transition[curr_state][1]
+        try:
+            reconstructed_path.insert(0, max_threat_backwards_transition[curr_state][0])
+            curr_state = max_threat_backwards_transition[curr_state][1]
+        except KeyError:
+            print("FIXME")
     return reconstructed_path
 
 # def get_args_for_class_as_kwargs_with_values_from_instance(cls, instance):

@@ -105,7 +105,7 @@ class Bugbear(Combatant):
     def load_resources(self, resources):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
-        self.attack_fsm.state = resources['attack_fsm_state']
+        self.attack_fsm.set_state(resources['attack_fsm_state'])
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam

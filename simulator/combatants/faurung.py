@@ -53,6 +53,8 @@ class Faurung(Combatant):
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated in every case (due to forced movement etc.)
         if not self.action_plan:
             self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
+        if self.action_plan is None:
+            return None
         actoid = self.action_plan.pop(0)
         try:
             return next(actoid)
@@ -92,7 +94,7 @@ class Faurung(Combatant):
     def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
         if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll < self.dc + 5:
             shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
-            logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})
+            # logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})
             return shield_factory.create() if shield_factory else None
         elif attack_roll >= self.dc + 5:
             logger.info("Shield would not suffice")

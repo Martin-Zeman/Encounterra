@@ -50,9 +50,6 @@ class FireballFactory(DirectThreatFactory):
     def create_best(self, combatant, battle_map, **kwargs):
         return Fireball(self.find_best_args(combatant, battle_map), self,  **kwargs)
 
-    # def create_mock(self):
-    #     return Fireball(None, self)
-
     def create_all(self, battle_map):
         # Here there really is no need to iterate over all coords. Just find the best score
         return [Fireball(self.find_best_args(self.caster, battle_map), self)]
@@ -60,16 +57,8 @@ class FireballFactory(DirectThreatFactory):
     def create(self, coord):
         return Fireball(coord, self)
 
-    # def calculate_threat_approx(self, battle_map, *args, **kwargs):
-    #     placement, _, affected = battle_map.find_best_placement_harmful_circular(self.caster, SpellStats.Range.FEET_150.value,
-    #                                                                              SpellStats.Target.RADIUS_20.value)
-    #     acc = 0
-    #     for aff in affected:
-    #         acc += mean_dmg_dc_attack(self.caster.dc, "8d6", True, aff.saving_throws[SavingThrow.DEX])
-    #     return acc
-
     def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        return 0 # no need
+        return 0  # No need
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
@@ -83,7 +72,7 @@ class FireballFactory(DirectThreatFactory):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        return 0 # No need
+        return 0  # No need
 
 class Fireball(Actoid, DirectThreat):
 
@@ -104,10 +93,11 @@ class Fireball(Actoid, DirectThreat):
 
     @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.caster, combatant_coords, FireballFactory.target, FireballFactory.type, np.array([self.coord]), combatant_coords)
+        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.caster, combatant_coords, FireballFactory.target, FireballFactory.type, self.coord, combatant_coords)
         acc = 0
         for aff in affected:
-            acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
+            mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
+            acc += (1 if battle_map.teams.are_enemies(combatant, aff) else -1) * mean_dmg
         return acc
 
     def get_eligible_coords(self, battle_map, shortest_paths):

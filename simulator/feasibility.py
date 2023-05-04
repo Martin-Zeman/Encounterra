@@ -122,7 +122,7 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.are_valid_coords(action.coord)
                 return res
             case BonusAction.QUICKENED_FIREBOLT:
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res

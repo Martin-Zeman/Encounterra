@@ -89,7 +89,10 @@ class GridSquare:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
+        try:
+            assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
+        except AssertionError:
+            print("FIXME")
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
@@ -1037,12 +1040,12 @@ class Map:
             case SpellStats.Target.RADIUS_10 | SpellStats.Target.RADIUS_20 | SpellStats.Target.RADIUS_30:
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
                     if ability_type is SpellStats.Type.HARMFUL:
-                        if self.get_cartesian_distance(combatant_coords.get(), origin) <= SpellStats.TRANSLATE_RADIUS[
+                        if self.get_cartesian_distance(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template]:
                             affected_combatants.append(potential_target)
                     elif ability_type is SpellStats.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if self.get_cartesian_distance(combatant_coords.get(), origin) <= SpellStats.TRANSLATE_RADIUS[
+                        if self.get_cartesian_distance(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
             case SpellStats.Target.CONE_15 | SpellStats.Target.CONE_30 | SpellStats.Target.CONE_60 | SpellStats.Target.CONE_90:

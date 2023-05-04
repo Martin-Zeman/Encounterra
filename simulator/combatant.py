@@ -350,6 +350,7 @@ class Combatant(ABC):
         self.shield_spell_active = False
         self.has_haste_action = False
         self.last_attack_factory_name = None
+        self.attack_fsm.set_state('0')
 
     def reset(self):
         self.has_action = True

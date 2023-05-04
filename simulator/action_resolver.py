@@ -71,7 +71,7 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
         saved = False
     logger.info(
         f"{type(ability).__name__} deals {dmg if not saved else dmg // 2} to {target_combatant}")
-    target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.dmg_type)
+    target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.factory.dmg_type)
 
 
 class ActionResolver:
@@ -186,7 +186,7 @@ class ActionResolver:
             dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
             logger.info(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
-            target.receive_dmg(dmg, spell.dmg_type)
+            target.receive_dmg(dmg, spell.factory.dmg_type)
             if not target.is_alive():
                 self.battle_map.remove_combatant(target)
             return ActionResult.DMG
@@ -195,6 +195,7 @@ class ActionResolver:
             return ActionResult.MISS
 
     def resolve_spell(self, caster, spell):
+        logger.info(f"{caster} casts {spell}", extra={"team": caster.team_color})
         match spell.factory.action_type:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.factory.target, spell.factory.type, spell.coord)

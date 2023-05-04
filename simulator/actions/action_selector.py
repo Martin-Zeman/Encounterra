@@ -113,13 +113,14 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 
     # Get eligible coords for all actions
     transition_names = action_fsm.get_available_transitions()
+    if transition_names[0] == 'None':
+        return None
     dodge_name = "Dodge of " + str(combatant)
     disengage_name = "Disengage of " + str(combatant)
     transition_names.remove(dodge_name)
     transition_names.remove(disengage_name)
     action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, shortest_paths) for tn in transition_names}
 
-    coords_to_states = dict()
     for action_name, coords in action_to_eligible_coords.items():
         for coord in coords:
             transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]
@@ -129,7 +130,6 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                 if new_state_name not in added_states:
                     added_states.add(new_state_name)
                     dag.add_state(new_state_name)
-                coords_to_states[coord] = new_state_name  # TODO what is this good for? doesn't it get overwritten?
                 move_transition_name = "m_" + new_state_name
                 dag.add_transition(move_transition_name, transition.source, new_state_name) # will be added multiple times, but it's ok
                 dag.add_transition(action_name, new_state_name, transition.dest)
@@ -146,8 +146,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 
     build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_dodge_actions, added_states, dodge_name)
     build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_disengage_actions, added_states, disengage_name)
-
-    return dag, coords_to_states
+    return dag
 
 
 def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths):
@@ -177,47 +176,50 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
         action.clear_cache()
 
     for state in sorted_states:
-        for transition_name, target_state in dag.forward_transitions[state]:
+        try:
+            for transition_name, target_state in dag.forward_transitions[state]:
 
-            try:
-                # Is it a transition which represents a (bonus) action?
                 try:
-                    # Get the coord transition that preceded this state
-                    previous_transition_name = max_threat_backwards_transition[state][0]
-                    _, x, y = re.search(pattern, previous_transition_name).groups()
-                    combatant_coords = CombatantCoords(np.array([int(x), int(y)]))
-                except KeyError:
-                    combatant_coords = battle_map.get_combatant_position(combatant)
-                except AttributeError:
-                    combatant_coords = None
-                threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state] if threat[state] > MINUS_INF else 0)
-            except KeyError:  # either not in the dict or regex search came up empty
-                # or different kind which represents some type of movement
-                try:
-                    movement_type, x, y = re.search(pattern, transition_name).groups()
-                except AttributeError:
-                    print("FIXME")
-                path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
-                if not path:
-                    continue
-                match movement_type:
-                    case "m":
-                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
-                    case "di":
-                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=True)
-                    case "do":
-                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, dodged=True)
-                    case "ms":
-                        threat_acc, misty_step_path = calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_coords)
-                        transition_name_to_ms_path[transition_name] = misty_step_path
-                    case _:
-                        logger.error(f"Unknown movement type {movement_type}")
-                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
-            if threat_acc > threat[target_state]:
-                threat[target_state] = threat_acc
-                max_threat_backwards_transition[target_state] = (transition_name, state)
-                if threat_acc > max_threat:
-                    max_threat = threat_acc
+                    # Is it a transition which represents a (bonus) action?
+                    try:
+                        # Get the coord transition that preceded this state
+                        previous_transition_name = max_threat_backwards_transition[state][0]
+                        _, x, y = re.search(pattern, previous_transition_name).groups()
+                        combatant_coords = CombatantCoords(np.array([int(x), int(y)]))
+                    except KeyError:
+                        combatant_coords = battle_map.get_combatant_position(combatant)
+                    except AttributeError:
+                        combatant_coords = None
+                    threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state] if threat[state] > MINUS_INF else 0)
+                except KeyError:  # either not in the dict or regex search came up empty
+                    # or different kind which represents some type of movement
+                    try:
+                        movement_type, x, y = re.search(pattern, transition_name).groups()
+                    except AttributeError:
+                        print("FIXME")
+                    path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
+                    if not path:
+                        continue
+                    match movement_type:
+                        case "m":
+                            threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
+                        case "di":
+                            threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=True)
+                        case "do":
+                            threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, dodged=True)
+                        case "ms":
+                            threat_acc, misty_step_path = calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_coords)
+                            transition_name_to_ms_path[transition_name] = misty_step_path
+                        case _:
+                            logger.error(f"Unknown movement type {movement_type}")
+                            threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
+                if threat_acc > threat[target_state]:
+                    threat[target_state] = threat_acc
+                    max_threat_backwards_transition[target_state] = (transition_name, state)
+                    if threat_acc > max_threat:
+                        max_threat = threat_acc
+        except KeyError:
+            print("FIXME")
 
     # Let's go backwards to reconstruct the longest path
     return reconstruct_path_through_dag('nop', '0', max_threat_backwards_transition), transition_name_to_ms_path
@@ -312,7 +314,9 @@ def get_best_actions(combatant, battle_map, distances, shortest_paths):
     # start_time = time.time()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
-    dag, _ = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    if dag is None:
+        return None
     sorted_states = toposort_flatten(dag.dependencies)
     longest_pth, transition_name_to_ms_path = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
     # print("---get_best_actions took %s seconds ---" % (time.time() - start_time))
