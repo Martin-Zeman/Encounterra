@@ -103,7 +103,7 @@ class Session:
             random_coords = CombatantCoords(random_coord, combatant)
             logger.warning(f"Setting initial position {random_coords.get()[0]} for {combatant}")
             if self.battle_map.are_empty(random_coords):
-                self.battle_map.set_combatant_coordinates(combatant, random_coords)
+                self.battle_map.set_combatant_coordinates(combatant, random_coord)
                 break
 
     def place_combatants_on_the_map(self):

@@ -53,8 +53,13 @@ class Faurung(Combatant):
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated in every case (due to forced movement etc.)
         if not self.action_plan:
             self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
-        else:
-            return self.action_plan.pop(0)
+        actoid = self.action_plan.pop(0)
+        try:
+            return next(actoid)
+        except TypeError:
+            return actoid
+        except Exception as e:
+            return actoid
 
     def new_turn(self):
         super().new_turn()

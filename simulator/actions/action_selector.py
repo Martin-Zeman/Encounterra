@@ -167,7 +167,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     threat = dict.fromkeys(sorted_states, MINUS_INF)
     sorted_states.pop()  # Get rid of the nop state
     threat['0'] = 0
-    max_threat_backwards_transition = {'0': None}
+    max_threat_backwards_transition = dict()
     max_threat = MINUS_INF
     pattern = r'([msdio]+)_\((\d+), (\d+)\)'
     transition_name_to_ms_path = dict()
@@ -188,14 +188,18 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     combatant_coords = CombatantCoords(np.array([int(x), int(y)]))
                 except KeyError:
                     combatant_coords = battle_map.get_combatant_position(combatant)
-                except:
-                    print("FIXME")
+                except AttributeError:
                     combatant_coords = None
                 threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state] if threat[state] > MINUS_INF else 0)
-            except KeyError:
+            except KeyError:  # either not in the dict or regex search came up empty
                 # or different kind which represents some type of movement
-                movement_type, x, y = re.search(pattern, transition_name).groups()
+                try:
+                    movement_type, x, y = re.search(pattern, transition_name).groups()
+                except AttributeError:
+                    print("FIXME")
                 path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
+                if not path:
+                    continue
                 match movement_type:
                     case "m":
                         threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)

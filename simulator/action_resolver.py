@@ -197,7 +197,7 @@ class ActionResolver:
     def resolve_spell(self, caster, spell):
         match spell.factory.action_type:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
-                affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.target, spell.type, spell.coord)
+                affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.factory.target, spell.factory.type, spell.coord)
                 dmg = roll_spell_dmg(spell.factory.dmg_dice)
                 for combatant in affected:
                     logger.info(f"{combatant} is hit by Fireball")

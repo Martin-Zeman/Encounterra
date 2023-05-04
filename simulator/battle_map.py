@@ -501,7 +501,8 @@ class Map:
         self.combatant_coordinate_cache[combatant] = new_coords
         logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
 
-    def set_combatant_coordinates(self, combatant, coords: CombatantCoords):
+    def set_combatant_coordinates(self, combatant, coords: np.array):
+        coords = CombatantCoords(coords, combatant)
         def set_comb(square):
             square.set_combatant(combatant)
             return square
@@ -968,7 +969,6 @@ class Map:
                 max_score = score
                 best_placement = curr_coord
                 best_affected = affected
-        logger.info(self)
         # logger.info(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
         return best_placement, max_score, best_affected
 
@@ -1014,9 +1014,11 @@ class Map:
         :param angle: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
         :return: affected combatants
         """
-        ret = None
-        with self.as_if_combatant_position(caster, caster_coords.get()[0]):
-            ret = self.get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle)
+        if caster_coords is not None:
+            with self.as_if_combatant_position(caster, caster_coords.get()[0]):
+                ret = self.get_combatants_affected_by_aoe(caster, target_template, ability_type, origin, angle)
+        else:
+            ret = self.get_combatants_affected_by_aoe(caster, target_template, ability_type, origin, angle)
         return ret
 
     def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):

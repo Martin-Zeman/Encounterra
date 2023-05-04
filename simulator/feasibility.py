@@ -18,7 +18,7 @@ def check_feasibility(combatant, action, battle_map):
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.are_valid_coords(action.coord)
-                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.factory.range
+                res &= battle_map.get_cartesian_distance(combatant, np.array([action.coord])) <= action.factory.range
                 return res
             case Action.HASTE:
                 res = combatant.has_action
@@ -110,14 +110,14 @@ def check_feasibility(combatant, action, battle_map):
             case BonusAction.QUICKENED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= aaction.factory.range
+                res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 return res
             case BonusAction.QUICKENED_FIREBALL:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, action.coord) <= action.factory.range
+                res &= battle_map.get_cartesian_distance(combatant, np.array([action.coord])) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.are_valid_coords(action.coord)
                 return res
