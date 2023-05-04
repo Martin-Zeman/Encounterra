@@ -124,7 +124,7 @@ def check_feasibility(combatant, action, battle_map):
             case BonusAction.QUICKENED_FIREBOLT:
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
-                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
+                res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
             case BonusAction.CUNNING_DISENGAGE:
