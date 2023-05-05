@@ -89,10 +89,7 @@ class GridSquare:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        try:
-            assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
-        except AssertionError:
-            print("FIXME")
+        assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
@@ -512,8 +509,6 @@ class Map:
         vec_set_comb = np.vectorize(set_comb)
         try:
             self.grid[coords.get()[:, 0], coords.get()[:, 1]] = vec_set_comb(self.grid[coords.get()[:, 0], coords.get()[:, 1]])
-        except AssertionError:
-            logger.error(f"The coordinate {coords.get()} are already occupied!")
         except IndexError:
             print("FIXME")
         self.combatant_coordinate_cache[combatant] = coords

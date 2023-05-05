@@ -30,16 +30,16 @@ def test_as_if_combatant_position(teams, battle_map, combatant1, combatant2):
 def test_get_hop_distance_overlapping_medium_large(battle_map, combatant1, combatant2):
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(combatant2, np.array([6, 8]))
-    assert battle_map.get_hop_distance(combatant1, combatant2) == 0
+    with pytest.raises(AssertionError):
+        battle_map.set_combatant_coordinates(combatant2, np.array([6, 8]))
 
 
 def test_get_hop_distance_overlapping_large_huge(battle_map, combatant1, combatant2):
     combatant1.size = Size.HUGE
     combatant2.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(combatant2, np.array([7, 8]))
-    assert battle_map.get_hop_distance(combatant1, combatant2) == 0
+    with pytest.raises(AssertionError):
+        battle_map.set_combatant_coordinates(combatant2, np.array([7, 8]))
 
 
 def test_as_if_dist_from_combatant(teams, effect_tracker, battle_map, combatant1, combatant2):
@@ -447,10 +447,10 @@ def test_get_free_coords_in_hop_range_huge_with_terrain(battle_map, combatant1):
     coords = battle_map.get_combatant_position(combatant1)
     battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
     adj = battle_map.get_free_coords_in_hop_range(coords)
-    assert adj == {(7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
+    assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
     # same but including the combatant's own coord
     adj = battle_map.get_free_coords_in_hop_range(coords, combatant=combatant1)
-    assert adj == {(7, 1), (7, 2), (7, 3), (7, 4), (7, 5), (8, 1), (8, 2), (9, 2), (10, 2), (8, 3), (9, 3), (10, 3),
+    assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 2), (9, 2), (10, 2), (8, 3), (9, 3), (10, 3),
                    (8, 4), (9, 4), (10, 4), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3),
                    (11, 4), (11, 5)}
 
@@ -927,7 +927,7 @@ def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, combatant1, co
     battle_map.set_combatant_coordinates(combatant2, np.array([4, 4]))
     battle_map.set_combatant_coordinates(combatant3, np.array([10, 5]))
     battle_map.set_combatant_coordinates(combatant4, np.array([6, 7]))
-    combatants = battle_map.get_combatants_affected_by_aoe(combatant1, SpellStats.Target.RADIUS_20, SpellStats.Type.HARMFUL, np.array([[7, 3]]))
+    combatants = battle_map.get_combatants_affected_by_aoe(combatant1, SpellStats.Target.RADIUS_20, SpellStats.Type.HARMFUL, np.array([7, 3]))
     assert combatant1 not in combatants
     assert combatant2 in combatants
     assert combatant3 in combatants

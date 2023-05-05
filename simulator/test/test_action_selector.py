@@ -1,15 +1,18 @@
+import copy
 import pstats
+from functools import reduce
 
 import numpy as np
 import pytest
 
 from simulator.actions.action_fsms import generate_action_fsm
-from simulator.actions.movement import MovementGenerator
+from simulator.actions.movement import MovementGenerator, MovementIncrement
 from simulator.battle_map import Terrain
 from simulator.combatant_coords import CombatantCoords
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
+from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, teams, effect_tracker, battle_map
@@ -276,9 +279,12 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
     # p = pstats.Stats("select_best_action_stats")
     # p.strip_dirs().sort_stats("cumtime").print_stats()
     best_actions = get_best_actions(combatant1, battle_map, distances, shortest_paths)
-    assert isinstance(best_actions[0], types.GeneratorType)
-    assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], TwinnedFirebolt)
-    assert isinstance(best_actions[2], Fireball) or isinstance(best_actions[2], TwinnedFirebolt)
+    new_coord = copy.copy(battle_map.get_combatant_position(combatant1).get())
+    for ba in best_actions:
+        new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
+    assert battle_map.get_hop_distance(new_coord, combatant3) > (combatant3.speed + combatant3.danger_zone_attack[1].range)
+    assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], TwinnedFirebolt)
+    assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], TwinnedFirebolt)
 
 
 def test_not_hitting_self_with_fireball(battle_map, teams, effect_tracker, combatant1, combatant3):
@@ -301,6 +307,11 @@ def test_not_hitting_self_with_fireball(battle_map, teams, effect_tracker, comba
 
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     best_actions = get_best_actions(combatant1, battle_map, distances, shortest_paths)
-    assert isinstance(best_actions[0], types.GeneratorType)
-    assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], Firebolt)
-    assert isinstance(best_actions[2], Fireball) or isinstance(best_actions[2], Firebolt)
+    new_coord = copy.copy(battle_map.get_combatant_position(combatant1).get())
+    for ba in best_actions:
+        new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
+    fireball = best_actions[-2] if isinstance(best_actions[-2], Fireball) else best_actions[-1]
+    assert battle_map.get_hop_distance(new_coord, np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    assert battle_map.get_hop_distance(new_coord, combatant3) > (combatant3.speed + combatant3.danger_zone_attack[1].range)
+    assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], Firebolt)
+    assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], Firebolt)
