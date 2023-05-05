@@ -110,7 +110,7 @@ class GridSquare:
         return self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN
 
     def is_empty_or_self(self, combatant):
-        return (self.occupancy is Occupancy.FREE) or (self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
+        return ((self.occupancy is Occupancy.FREE) or (self.combatant is combatant)) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
 
     def is_difficult_terrain(self):
         return self.terrain is Terrain.DIFFICULT_TERRAIN

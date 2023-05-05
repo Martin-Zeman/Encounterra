@@ -159,7 +159,8 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     :param transition_name_to_action: dict mapping action names -> actions
     :param distances: potentially already pre-computed distances to all coords
     :param shortest_paths: potentially already pre-computed shortest paths to all coords
-    :return: the longest path in the DAG as per the threat along its edges and nodes
+    :return: the longest path in the DAG as per the threat along its edges and nodes and a mapping of transitions names
+    to special Misty Step paths
     """
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     MINUS_INF = -sys.maxsize - 1
@@ -198,7 +199,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     except AttributeError:
                         print("FIXME")
                     path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
-                    if not path:
+                    if path is None:  # Note that an empty path is still a valid one
                         continue
                     match movement_type:
                         case "m":
@@ -290,13 +291,14 @@ def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_
                 case "m" | "do":
                     path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
                     movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
-                    actions.append(movement_generator)
+                    actions.extend(list(movement_generator))  # Unpack the movement generator
                 case "di":
                     path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, False)
                     movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGE).get_generator()
-                    actions.append(movement_generator)
+                    actions.extend(list(movement_generator))  # Unpack the movement generator
                 case "ms":
                     decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[action], actions, ms_pattern, ms_factory)
+                    # TODO also unpack actions
                 case _:
                     logger.error(f"Unknown movement type {movement_type}")
     return actions

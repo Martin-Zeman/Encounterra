@@ -5,9 +5,11 @@ import pytest
 
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.movement import MovementGenerator
+from simulator.battle_map import Terrain
 from simulator.combatant_coords import CombatantCoords
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.spells.fireball import Fireball
+from simulator.spells.firebolt import Firebolt
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, teams, effect_tracker, battle_map
@@ -36,7 +38,7 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag, _ = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     # dfs.get_graph().draw('state_diagram_faurung_with_coords',format='svg', prog='dot')
 
     # Tests the Misty Step movement + Firebolt
@@ -71,7 +73,7 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
         get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-        dag, _ = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+        dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
         # Tests regular movement + quickened fireball
         assert dag.state == '0'
         dag.trigger("m_(2, 3)")
@@ -108,7 +110,7 @@ def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracke
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag, _ = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     # Tests regular movement + fireball
     assert dag.state == '0'
     dag.trigger("m_(2, 3)")
@@ -142,7 +144,7 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag, _ = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     # Tests regular movement + staff of defence attack
     assert dag.state == '0'
     dag.trigger("m_(9, 10)")
@@ -180,7 +182,7 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag, _ = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     # Tests Misty Step movement + staff of defence attack
     assert dag.state == '0'
     dag.trigger("ms_(9, 10)")
@@ -206,7 +208,7 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag, _ = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     # Tests Dodge + movement + a quickened spell
     assert dag.state == '0'
     dag.trigger("Dodge of Faurung")
@@ -238,7 +240,7 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag, _ = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
     # Tests Disengage + movement + a quickened spell
     assert dag.state == '0'
     dag.trigger("Disengage of Faurung")
@@ -278,3 +280,27 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
     assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], TwinnedFirebolt)
     assert isinstance(best_actions[2], Fireball) or isinstance(best_actions[2], TwinnedFirebolt)
 
+
+def test_not_hitting_self_with_fireball(battle_map, teams, effect_tracker, combatant1, combatant3):
+    """
+    This test case is based on a scenario encountered during testing. We make sure that combatant1 doesn't hit
+    itself with a fireball.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.place_circular_element(np.array([7, 10]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([10, 2]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([3, 2]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([5, 4]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant1, np.array([3, 14]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant3, np.array([4, 13]))  # Have to set it for fireball placement
+
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    best_actions = get_best_actions(combatant1, battle_map, distances, shortest_paths)
+    assert isinstance(best_actions[0], types.GeneratorType)
+    assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], Firebolt)
+    assert isinstance(best_actions[2], Fireball) or isinstance(best_actions[2], Firebolt)
