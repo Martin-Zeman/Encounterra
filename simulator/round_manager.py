@@ -27,7 +27,7 @@ class RoundManager:
         self.combatants.sort(key=by_initiative, reverse=True)
         logger.info("--------------INITIATIVE ORDER--------------")
         for combatant in self.combatants:
-            logger.info(f"{combatant} with {combatant.curr_init}")
+            logger.info(f"{combatant} with {combatant.curr_init}", extra={"team": combatant.team_color})
 
     def goes_before_in_initiative(self, combatant1, combatant2):
         return True if self.combatants.index(combatant1) < self.combatants.index(combatant2) else False
