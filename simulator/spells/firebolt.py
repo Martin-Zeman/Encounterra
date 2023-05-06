@@ -148,12 +148,17 @@ class FireboltFactory(DirectThreatFactory):
             roll_modifier = modified_stats['roll_modifier']
         except KeyError:
             roll_modifier = RollModifier.STRAIGHT
+        try:
+            target_ac = modified_stats['target_ac']
+        except KeyError:
+            target_ac = 0
 
+        total_target_ac = target_ac + target.ac
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-        to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+        to_hit_total += ROLL_MODIFIER[roll_modifier][total_target_ac - to_hit_total]
         total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
-        return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(FireboltFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
+        return mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(FireboltFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     FireboltFactory.dmg_type))
 
 

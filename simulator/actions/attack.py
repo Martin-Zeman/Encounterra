@@ -193,16 +193,21 @@ class AttackFactory(DirectThreatFactory):
         except KeyError:
             mod_crit_range = 0
         try:
+            target_ac = modified_stats['target_ac']
+        except KeyError:
+            target_ac = 0
+        try:
             roll_modifier = modified_stats['roll_modifier']
         except KeyError:
             roll_modifier = RollModifier.STRAIGHT
 
+        total_target_ac = target.ac + target_ac
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-        to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+        to_hit_total += ROLL_MODIFIER[roll_modifier][total_target_ac - to_hit_total]
         total_crit = self.crit_range + mod_crit_range
         total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
         try:
-            modified = num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
+            modified = num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
         except:
             logger.error("Error in mean_dmg of calculate_threat_to_target_mod of AttackFactory")
             modified = baseline
