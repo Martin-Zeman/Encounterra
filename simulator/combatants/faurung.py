@@ -43,7 +43,6 @@ class Faurung(Combatant):
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = 7
-        self.action_plan = []
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
@@ -51,23 +50,19 @@ class Faurung(Combatant):
 
     def get_action(self, battle_map):
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated in every case (due to forced movement etc.)
-        if not self.action_plan:
-            self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
         if self.action_plan is None:
-            return None
+            self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
+        if not self.action_plan:
+            return None  # Either no action possible or all actions already used
         actoid = self.action_plan.pop(0)
-        try:
-            return next(actoid)
-        except TypeError:
-            return actoid
-        except Exception as e:
-            return actoid
+        while isinstance(actoid, MovementIncrement) and self.movement == 0:
+            actoid = self.action_plan.pop(0)  # Once we run out of movement, we discard the rest of the planned route and try the next action anyway
+        return actoid
 
     def new_turn(self):
         super().new_turn()
         self.nowhere_to_go = False
         self.movement_generator_cache = None
-        self.action_plan = []
 
     def prompt_aoo(self, moving_combatant):
         return None

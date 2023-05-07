@@ -5,6 +5,7 @@ from functools import reduce
 import numpy as np
 import pytest
 
+from simulator.action_resolver import ActionResolver
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.movement import MovementGenerator, MovementIncrement
 from simulator.battle_map import Terrain
@@ -15,7 +16,7 @@ from simulator.spells.firebolt import Firebolt
 from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, combatant2, combatant3, teams, effect_tracker, battle_map
+from simulator.test.fixtures import combatant1, combatant2, combatant3,combatant4, combatant5, combatant6, teams, effect_tracker, battle_map
 from simulator.actions.action_selector import get_best_actions, build_action_dag
 from simulator.threat import get_aoe_and_aoo_threat_for_increment
 import types
@@ -352,3 +353,54 @@ def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3)
     assert battle_map.get_hop_distance(new_coord, combatant4) > (combatant4.speed + combatant4.danger_zone_attack[1].range)
     assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], TwinnedFirebolt)
     assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], TwinnedFirebolt)
+
+def test_error_case_3(battle_map, teams, effect_tracker, combatant1, combatant3, combatant4, combatant5, combatant6):
+    """
+    This test case is based on a scenario encountered during testing. Sorcerer faces off against
+    two Bugbears next to each other.
+    """
+    CustomLogger(LogLevel.WARNING)
+    combatant7 = copy.deepcopy(combatant3)
+    battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([14, 8]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([1, 3]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([1, 8]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant1, combatant3, combatant4, combatant5, combatant6, combatant7]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.RED)  # Faurung
+    teams.add_combatant_to_team(combatant3, Teams.Color.BLUE)  # Bugbear 1
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # TotemBarbarian5Lvl
+    teams.add_combatant_to_team(combatant5, Teams.Color.RED)  # StoneGiant
+    teams.add_combatant_to_team(combatant6, Teams.Color.BLUE)  # Ogre
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # Bugbear 2
+    battle_map.set_combatant_coordinates(combatant1, np.array([14, 13]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([3, 11]))
+    battle_map.set_combatant_coordinates(combatant4, np.array([3, 12]))
+    battle_map.set_combatant_coordinates(combatant5, np.array([0, 11]))
+    battle_map.set_combatant_coordinates(combatant6, np.array([3, 9]))
+    battle_map.set_combatant_coordinates(combatant7, np.array([9, 12]))
+    battle_map.build_adjacency_matrix()
+
+    try:
+        actoid1 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant1)
+        actoid2 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant1)
+        actoid3 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant1)
+        actoid4 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant1)
+        actoid5 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant1)
+        actoid6 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant1)
+        actoid7 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant1)
+        actoid8 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, combatant1)
+        actoid9 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid9, combatant1)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
