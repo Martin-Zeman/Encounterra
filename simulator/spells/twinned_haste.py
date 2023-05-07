@@ -5,7 +5,7 @@ from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.action_types import HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat import mean_dmg, dmg_decrement_for_ac_flat
+from simulator.threat import mean_dmg
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 from functools import reduce, cache
 from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
@@ -85,8 +85,9 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             enemy_attacks = get_attacks(enemy)
             if not enemy_attacks:
                 continue
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_mod(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
+
             # TODO include the ST-based abilities here
         max_attack_dmg += attack_dmg_decrement_acc
         return max_attack_dmg * ROUND_HORIZON
@@ -106,7 +107,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             enemy_attacks = get_attacks(enemy)
             if not enemy_attacks:
                 continue
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_mod(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg += attack_dmg_decrement_acc

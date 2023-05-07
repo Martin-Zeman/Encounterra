@@ -119,6 +119,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     disengage_name = "Disengage of " + str(combatant)
     transition_names.remove(dodge_name)
     transition_names.remove(disengage_name)
+    # TODO Try restricting it to only actions within hop range
     action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, shortest_paths) for tn in transition_names}
 
     for action_name, coords in action_to_eligible_coords.items():
