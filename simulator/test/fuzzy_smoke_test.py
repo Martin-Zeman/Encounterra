@@ -12,7 +12,7 @@ from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams
 
-# @pytest.mark.skipif(not pytest.config.getoption('-k'), reason='Manual test only')
+@pytest.mark.skip( reason='Manual test only')
 @pytest.mark.parametrize('execution_number', range(1))
 def test_random_matchup(execution_number):
     CustomLogger(LogLevel.INFO)

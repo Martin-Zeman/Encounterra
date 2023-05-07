@@ -287,7 +287,7 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
     assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], TwinnedFirebolt)
 
 
-def test_not_hitting_self_with_fireball(battle_map, teams, effect_tracker, combatant1, combatant3):
+def test_error_case_1(battle_map, teams, effect_tracker, combatant1, combatant3):
     """
     This test case is based on a scenario encountered during testing. We make sure that combatant1 doesn't hit
     itself with a fireball.
@@ -311,7 +311,44 @@ def test_not_hitting_self_with_fireball(battle_map, teams, effect_tracker, comba
     for ba in best_actions:
         new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
     fireball = best_actions[-2] if isinstance(best_actions[-2], Fireball) else best_actions[-1]
-    assert battle_map.get_hop_distance(new_coord, np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    assert battle_map.get_cartesian_distance(new_coord, np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     assert battle_map.get_hop_distance(new_coord, combatant3) > (combatant3.speed + combatant3.danger_zone_attack[1].range)
     assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], Firebolt)
     assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], Firebolt)
+
+def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3):
+    """
+    This test case is based on a scenario encountered during testing. Sorcerer faces off against
+    two Bugbears next to each other.
+    """
+    CustomLogger(LogLevel.WARNING)
+    combatant4 = copy.deepcopy(combatant3)
+    battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([14, 0]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([13, 14]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([14, 14]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([9, 4]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([7, 14]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant1, np.array([0, 8]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant3, np.array([1, 9]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant4, np.array([2, 9]))  # Have to set it for fireball placement
+    battle_map.build_adjacency_matrix()
+
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    best_actions = get_best_actions(combatant1, battle_map, distances, shortest_paths)
+    new_coord = copy.copy(battle_map.get_combatant_position(combatant1).get())
+    for ba in best_actions:
+        new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
+    fireball = best_actions[-2] if isinstance(best_actions[-2], Fireball) else best_actions[-1]
+    assert battle_map.get_cartesian_distance(new_coord, np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    assert battle_map.get_cartesian_distance(combatant3, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    assert battle_map.get_cartesian_distance(combatant4, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    assert battle_map.get_hop_distance(new_coord, combatant3) > (combatant3.speed + combatant3.danger_zone_attack[1].range)
+    assert battle_map.get_hop_distance(new_coord, combatant4) > (combatant4.speed + combatant4.danger_zone_attack[1].range)
+    assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], TwinnedFirebolt)
+    assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], TwinnedFirebolt)

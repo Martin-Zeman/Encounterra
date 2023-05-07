@@ -121,7 +121,6 @@ class Map:
         init_grid = np.arange(size**2).reshape((size, size))
         self.grid = np.empty((size, size), dtype=object)
         self.grid[:, :] = vGridSquare(init_grid)
-        self.terrain_encoding = np.zeros((size, size), dtype=int)
         self.base_adjacency_matrix = np.zeros((size, size))
         self.difficult_set = set()
         self.impassable_set = set()
@@ -216,24 +215,22 @@ class Map:
             y = max(0, min(coord[1], N - 1))
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                 self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
-                self.terrain_encoding[x][y] = Terrain.IMPASSABLE_TERRAIN.value
                 self.impassable_set.add((coord[0], coord[1]))
             elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                 self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
-                self.terrain_encoding[x][y] = Terrain.DIFFICULT_TERRAIN.value
                 self.difficult_set.add((coord[0], coord[1]))
         elif diameter > 1:
-            for x in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
-                for y in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
+            for x_offset in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
+                for y_offset in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
+                    x = max(0, min(coord[0] + x_offset, N - 1))
+                    y = max(0, min(coord[1] + y_offset, N - 1))
                     try:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
-                            self.grid[coord[0] + x][coord[1] + y].terrain = Terrain.IMPASSABLE_TERRAIN
-                            self.terrain_encoding[coord[0] + x][coord[1] + y] = Terrain.IMPASSABLE_TERRAIN.value
-                            self.impassable_set.add((coord[0] + x, coord[1] + y))
+                            self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
+                            self.impassable_set.add((x, y))
                         elif terrain_type == Terrain.DIFFICULT_TERRAIN:
-                            self.grid[coord[0] + x][coord[1] + y].terrain = Terrain.DIFFICULT_TERRAIN
-                            self.terrain_encoding[coord[0] + x][coord[1] + y] = Terrain.DIFFICULT_TERRAIN.value
-                            self.difficult_set.add((coord[0] + x, coord[1] + y))
+                            self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
+                            self.difficult_set.add((x, y))
                     except IndexError:
                         pass  # out of grid
 
