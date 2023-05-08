@@ -1,4 +1,4 @@
-from simulator.action_types import BonusActionOrdering, BonusAction
+from simulator.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType
@@ -30,7 +30,6 @@ class ChaosboltFactory(DirectThreatFactory):
     def __init__(self, to_hit, action_type, caster):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.to_hit = to_hit
         self.action_type = action_type  # CHAOSBOLT, QUICKENED_CHAOSBOLT
         self.dmg_dice = "2d8"
@@ -141,7 +140,7 @@ class ChaosboltFactory(DirectThreatFactory):
 
         if battle_map.get_cartesian_distance(self.caster, target) <= ChaosboltFactory.range:
             to_hit_total = self.to_hit + to_hit_bonus
-            to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
             total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])

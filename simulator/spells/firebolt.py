@@ -1,4 +1,4 @@
-from simulator.action_types import BonusActionOrdering, BonusAction
+from simulator.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, percent_of_curr_hp, RollModifier, avg_roll
@@ -26,7 +26,6 @@ class FireboltFactory(DirectThreatFactory):
     def __init__(self, to_hit, action_type, caster):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
         self.dmg_dice = self.get_dmg_dice(caster.level)
@@ -110,7 +109,7 @@ class FireboltFactory(DirectThreatFactory):
             total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
             potential_targets = battle_map.get_enemies_within_radius(FireboltFactory.range)
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total], self.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(FireboltFactory.dmg_type))
+            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - to_hit_total, 20))], self.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(FireboltFactory.dmg_type))
                                              - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(FireboltFactory.dmg_type)), potential_targets)
             dmg_acc /= len(potential_targets)
             return dmg_acc
@@ -118,14 +117,6 @@ class FireboltFactory(DirectThreatFactory):
             return 0
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
-        # try:
-        #     roll_modifier = kwargs['roll_modifier']
-        # except KeyError:
-        #     roll_modifier = RollModifier.STRAIGHT
-        #
-        # to_hit_total = self.to_hit
-        # to_hit_total = to_hit_total + ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
-
         if battle_map.get_cartesian_distance(self.caster, target) <= FireboltFactory.range:
             return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(FireboltFactory.dmg_type))
         return 0
@@ -155,7 +146,7 @@ class FireboltFactory(DirectThreatFactory):
 
         total_target_ac = target_ac + target.ac
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-        to_hit_total += ROLL_MODIFIER[roll_modifier][total_target_ac - to_hit_total]
+        to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
 
         return mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(FireboltFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(

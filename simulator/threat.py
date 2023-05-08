@@ -11,6 +11,7 @@ from toposort import toposort_flatten
 from transitions import Machine
 from transitions.extensions import GraphMachine
 
+from simulator.actions.actoid import FactoryFlags
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag
 from simulator.spells.misty_step import MistyStepFactory
@@ -108,7 +109,7 @@ def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier,
         max_incoming_threat = 0
         for f in pa.action_factories:
             try:
-                if factory_flags & f[1].flags:  # Checks for any overlap in flags
+                if factory_flags & f[1].flags and not factory_flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
                     max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
                         "roll_modifier": roll_modifier}))
             except AttributeError:
@@ -117,14 +118,14 @@ def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier,
 
         max_incoming_threat = 0
         for f in pa.bonus_action_factories:
-            if factory_flags & f[1].flags:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and not factory_flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
                 max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
                     "roll_modifier": roll_modifier}))
         incoming_threat_mod_acc += max_incoming_threat
 
         max_incoming_threat = 0
         for f in pa.haste_action_factories:
-            if factory_flags & f[1].flags:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and not factory_flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
                 max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
                     "roll_modifier": roll_modifier}))
         incoming_threat_mod_acc += max_incoming_threat

@@ -52,7 +52,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
     #     return TwinnedHaste(None, self)
 
     def get_eligible_targets(self, battle_map):
-        ret = battle_map.get_allies(self.caster)
+        ret = battle_map.get_allies_within_radius(self.caster, TwinnedHasteFactory.range)
         ret.append(self.caster)
         ret = combinations(ret, 2)
         return ret

@@ -3,7 +3,7 @@ from functools import cache
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 import logging
-from simulator.action_types import BonusAction, Action, BonusActionOrdering
+from simulator.action_types import BonusAction, Action
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 from simulator.misc import CombatantArchetype, DistanceMetric
@@ -23,7 +23,6 @@ class MistyStepFactory(DirectThreatFactory):
     def __init__(self, caster):
         super().__init__()
         self.flags |= FactoryFlags.TARGETS_COORDS
-        self.bonus_action_ordering = BonusActionOrdering.BOTH
         self.action_type = BonusAction.MISTY_STEP
         self.caster = caster
 

@@ -1,6 +1,5 @@
 import math
 
-from simulator.action_types import BonusActionOrdering
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
 from simulator.combatant_coords import CombatantCoords
@@ -16,7 +15,6 @@ class RangedAttackFactory(AttackFactory):
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, max_num=1, ammo=math.inf, on_hit=None):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, max_num, on_hit)
         self.flags |= FactoryFlags.IS_RANGED
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.ammo = ammo
 
     def find_best_args(self, combatant, battle_map):

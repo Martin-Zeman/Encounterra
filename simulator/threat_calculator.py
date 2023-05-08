@@ -1,14 +1,12 @@
 from enum import Enum, auto
 from abc import ABC, abstractmethod
 
-from simulator.action_types import BonusActionOrdering
 from simulator.actions.actoid import FactoryFlags
 
 
 class Factory:
     def __init__(self):
         self.flags = FactoryFlags.DEFAULT
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT
 
 
     @abstractmethod

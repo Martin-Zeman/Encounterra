@@ -3,7 +3,7 @@ from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.action_types import BonusAction, BonusActionOrdering
+from simulator.action_types import BonusAction
 from simulator.misc import ROUND_HORIZON
 from functools import reduce
 import sys
@@ -19,7 +19,6 @@ class RageFactory(ThreatModifierFactory):
     def __init__(self, combatant):
         self.flags |= FactoryFlags.IS_ATTACK_MODIFIER
         self.flags |= FactoryFlags.TARGETS_SELF
-        self.bonus_action_ordering = BonusActionOrdering.GOES_BEFORE_ACTION
         self.combatant = combatant
         self.action_type = BonusAction.RAGE
 

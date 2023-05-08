@@ -33,3 +33,4 @@ class FactoryFlags(Flag):
     HAS_AMMO = auto()
     TARGETS_COORDS = auto()
     TARGETS_SELF = auto()
+    USES_CALCULATE_THREAT_IN_MOD = auto()  # This is a very technical one which helps prevent endless recursion

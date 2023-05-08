@@ -20,12 +20,7 @@ class DodgeFactory(ThreatModifierFactory):
         super().__init__()
         self.combatant = combatant
         self.action_type = Action.DODGE
-
-    # def __str__(self):
-    #     """
-    #     Important for FSM building
-    #     """
-    #     return "DodgeFactory"
+        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_MOD
 
     def create_all(self, battle_map):
         return [Dodge(self.combatant, self)]

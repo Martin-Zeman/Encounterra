@@ -58,7 +58,8 @@ class Faurung(Combatant):
 
         # Switch to secondary plan if movement's been exhausted and there's still more movement planned
         if isinstance(actoid, MovementIncrement) and self.movement == 0:
-            self.secondary_plan = get_best_actions(self, battle_map, distances, shortest_paths)
+            if self.secondary_plan is None:
+                self.secondary_plan = get_best_actions(self, battle_map, distances, shortest_paths)
             actoid = self.secondary_plan.pop(0) if self.secondary_plan else None
 
         return actoid

@@ -63,10 +63,7 @@ class Teams:
 
     def get_allies(self, combatant):
         team_members = copy.copy(self.team_book[self.reverse_team_book[combatant]])
-        try:
-            team_members.remove(combatant)
-        except ValueError:
-            logging.ERROR("FIXME get_allies")
+        team_members.remove(combatant)  # Remove self
         return team_members
 
     def get_enemies(self, combatant):

@@ -1,7 +1,7 @@
 from functools import cache
 
 from simulator.action_resolver import resolve_dmg_saving_throw
-from simulator.action_types import BonusActionOrdering, BonusAction
+from simulator.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -23,7 +23,6 @@ class SpikeGrowthFactory(DirectThreatFactory):
 
     def __init__(self, action_type, caster, **kwargs):
         super().__init__()
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
         self.dmg_dice = "2d4"
         self.caster = caster

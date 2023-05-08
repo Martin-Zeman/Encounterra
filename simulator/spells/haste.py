@@ -2,7 +2,7 @@ from simulator.combatant_coords import CombatantCoords
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
-from simulator.action_types import HasteAction, BonusActionOrdering, BonusAction
+from simulator.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat import mean_dmg, dmg_decrement_for_ac_flat
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
@@ -24,7 +24,6 @@ class HasteFactory(ThreatModifierFactory):
 
     def __init__(self, action_type, caster, effect_tracker):
         super().__init__()
-        self.bonus_action_ordering = BonusActionOrdering.GOES_BEFORE_ACTION  # In case this became a bonus action
         self.action_type = action_type  # TWINNED_HASTE, QUICKENED_HASTE, HASTE
         self.caster = caster
         self.effect_tracker = effect_tracker
@@ -93,7 +92,7 @@ class HasteFactory(ThreatModifierFactory):
     #     return Haste(None, self)
 
     def get_eligible_targets(self, battle_map):
-        ret = battle_map.get_allies(self.caster)
+        ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
         ret.append(self.caster)
         return ret
 

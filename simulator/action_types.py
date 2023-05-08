@@ -77,8 +77,3 @@ class MetaAction(Enum):
     EMPOWERED_SPELL = auto()
 
 
-class BonusActionOrdering(Enum):
-    GOES_BEFORE_ACTION = auto()
-    GOES_AFTER_ACTION = auto()
-    INDEPENDENT = auto()  # the order doesn't really matter
-    BOTH = auto()  # can be useful either way in its own right

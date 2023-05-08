@@ -12,10 +12,10 @@ from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams
 
-@pytest.mark.skip( reason='Manual test only')
-@pytest.mark.parametrize('execution_number', range(1))
+# @pytest.mark.skip( reason='Manual test only')
+@pytest.mark.parametrize('execution_number', range(2))
 def test_random_matchup(execution_number):
-    CustomLogger(LogLevel.INFO)
+    # CustomLogger(LogLevel.INFO)
     combatant_pool = [Faurung, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl]
     session = Session()
 

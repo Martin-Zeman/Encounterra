@@ -1,6 +1,5 @@
 from abc import abstractmethod
 
-from simulator.action_types import BonusActionOrdering
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce, cache
 from simulator.misc import percent_of_curr_hp, avg_roll
@@ -25,7 +24,6 @@ class AttackFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
         self.flags |= FactoryFlags.HAS_AMMO
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -88,7 +86,7 @@ class AttackFactory(DirectThreatFactory):
         num = min(self.max_num, self.combatant.curr_num_attacks)
         def mean_dmg_mod(acc, pt):
             to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
-            to_hit_total += ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total]
+            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - to_hit_total, 20))]
             total_crit = self.crit_range + self.mod_crit_range
             total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
             return acc + num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
@@ -158,7 +156,7 @@ class AttackFactory(DirectThreatFactory):
             roll_modifier = RollModifier.STRAIGHT
 
         to_hit_total = self.to_hit
-        to_hit_total = to_hit_total + ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+        to_hit_total = to_hit_total + ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
 
         num = min(self.max_num, self.combatant.curr_num_attacks)
         # TODO: Should I include roll modifiers here? There may be a use-case in the future
@@ -203,7 +201,10 @@ class AttackFactory(DirectThreatFactory):
 
         total_target_ac = target.ac + target_ac
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-        to_hit_total += ROLL_MODIFIER[roll_modifier][total_target_ac - to_hit_total]
+        try:
+            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(total_target_ac - to_hit_total, 20))]
+        except KeyError:  # Can happen for extreme differences between the AC and the to_hit
+            pass  # The effect is negligible in that case
         total_crit = self.crit_range + mod_crit_range
         total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
         try:

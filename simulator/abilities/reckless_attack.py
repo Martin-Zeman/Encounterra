@@ -1,6 +1,5 @@
 import math
 
-from simulator.action_types import BonusActionOrdering
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -27,7 +26,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
         self.flags |= FactoryFlags.HAS_AMMO
         self.flags |= FactoryFlags.IS_MELEE
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
+        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_MOD
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -93,7 +92,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         num = min(self.max_num, self.combatant.curr_num_attacks)
         def mean_dmg_mod(acc, pt):
             to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
-            to_hit_total += ROLL_MODIFIER[roll_modifier][pt.ac - to_hit_total]
+            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - to_hit_total, 20))]
             total_crit = self.crit_range + self.mod_crit_range
             total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
             return acc + num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
@@ -162,7 +161,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         num = min(self.max_num, self.combatant.curr_num_attacks)
 
         if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
-            dmg = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
+            dmg = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         else:
             dmg = 0
         factories = target.action_factories
@@ -182,7 +181,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         num = min(self.max_num, self.combatant.curr_num_attacks)
         baseline = 0
         if battle_map.are_in_hop_range(self.combatant, target, self.range):
-            baseline = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][target.ac - self.to_hit], self.dmg_dice, self.dmg_bonus,
+            baseline = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
                                 target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         try:
             mod_range = modified_stats['range']
@@ -217,7 +216,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         with battle_map.as_if_dist_mod_from_combatant(self.combatant, target, -mod_range):
             if battle_map.are_in_hop_range(self.combatant, target, self.range):
                 to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-                to_hit_total += ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+                to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
                 total_crit = self.crit_range + mod_crit_range
                 total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
                 modified = num * mean_dmg(self.to_hit + to_hit_total, self.dmg_dice + mod_dmg_die, self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))

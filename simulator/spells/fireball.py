@@ -1,6 +1,6 @@
 from functools import cache
 
-from simulator.action_types import BonusActionOrdering, BonusAction
+from simulator.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType
@@ -21,7 +21,6 @@ class FireballFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, has_spell_sculpting=False, **kwargs):
         super().__init__()
         self.flags |= FactoryFlags.DEX_SAVE_APPLIES
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.dc = dc
         self.action_type = action_type  # FIREBALL, QUICKENED_FIREBALL
         self.saving_throw = SavingThrow.DEX

@@ -1,7 +1,7 @@
 from functools import cache
 
 from simulator.action_resolver import resolve_dmg_saving_throw
-from simulator.action_types import BonusActionOrdering, BonusAction
+from simulator.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -24,7 +24,6 @@ class HungerOfHadarFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, **kwargs):
         super().__init__()
         self.flags |= FactoryFlags.DEX_SAVE_APPLIES
-        self.bonus_action_ordering = BonusActionOrdering.INDEPENDENT  # In case this became a bonus action
         self.dc = dc
         self.action_type = action_type  # HUNGER_OF_HADAR, QUICKENED_HUNGER_OF_HADAR
         self.saving_throw = SavingThrow.DEX

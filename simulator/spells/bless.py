@@ -39,7 +39,7 @@ class BlessFactory(ThreatModifierFactory):
         return Bless(self.find_best_args(combatant, battle_map), self)
 
     def get_eligible_targets(self, battle_map):
-        return combinations(battle_map.get_enemies(self.caster), 3)
+        return combinations(battle_map.get_enemies_within_radius(self.caster, BlessFactory.range), 3)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

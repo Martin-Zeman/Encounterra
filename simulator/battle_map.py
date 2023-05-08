@@ -1067,7 +1067,7 @@ class Map:
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
 
     def get_allies_within_radius(self, combatant, radius):
-        return [e for e in self.teams.get_allies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
+        return [a for a in self.teams.get_allies(combatant) if a.is_alive() and self.get_cartesian_distance(a, combatant) <= radius]
 
     def get_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive()]

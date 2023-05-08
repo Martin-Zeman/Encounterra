@@ -48,6 +48,8 @@ def test_generate_action_fsm(combatant1, combatant2, combatant3, combatant4, com
     battle_map.set_combatant_coordinates(combatant2, np.array([5, 11]))
     battle_map.set_combatant_coordinates(combatant3, np.array([10, 12]))
     battle_map.set_combatant_coordinates(combatant4, np.array([11, 6]))
+    battle_map.set_combatant_coordinates(combatant5, np.array([0, 0]))
+    battle_map.set_combatant_coordinates(combatant6, np.array([13, 6]))
     fsm, transition_mapping, _ = generate_action_fsm(combatant1, battle_map)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_faurung.png', prog='dot')

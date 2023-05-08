@@ -110,7 +110,7 @@ def check_feasibility(combatant, action, battle_map):
             case BonusAction.QUICKENED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 return res
