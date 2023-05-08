@@ -290,7 +290,7 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
 
 def test_error_case_1(battle_map, teams, effect_tracker, combatant1, combatant3):
     """
-    This test case is based on a scenario encountered during testing. We make sure that combatant1 doesn't hit
+    This test case is based on a scenario encountered during fuzzy testing. We make sure that combatant1 doesn't hit
     itself with a fireball.
     """
     CustomLogger(LogLevel.WARNING)
@@ -319,7 +319,7 @@ def test_error_case_1(battle_map, teams, effect_tracker, combatant1, combatant3)
 
 def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3):
     """
-    This test case is based on a scenario encountered during testing. Sorcerer faces off against
+    This test case is based on a scenario encountered during fuzzy testing. Sorcerer faces off against
     two Bugbears next to each other.
     """
     CustomLogger(LogLevel.WARNING)
@@ -356,7 +356,7 @@ def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3)
 
 def test_error_case_3(battle_map, teams, effect_tracker, combatant1, combatant3, combatant4, combatant5, combatant6):
     """
-    This test case is based on a scenario encountered during testing. Sorcerer faces off against
+    This test case is based on a scenario encountered during fuzzy testing. Sorcerer faces off against
     two Bugbears next to each other.
     """
     CustomLogger(LogLevel.WARNING)
@@ -407,7 +407,7 @@ def test_error_case_3(battle_map, teams, effect_tracker, combatant1, combatant3,
 
 def test_error_case_4(battle_map, teams, effect_tracker, combatant1, combatant4, combatant5):
     """
-    This test case is based on a scenario encountered during testing. Sorcerer faces off against
+    This test case is based on a scenario encountered during fuzzy testing. Sorcerer faces off against
     two Bugbears next to each other.
     """
     CustomLogger(LogLevel.WARNING)

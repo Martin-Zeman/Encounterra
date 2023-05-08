@@ -1,6 +1,7 @@
 import math
 
 from simulator.action_types import BonusActionOrdering
+from simulator.combatant_coords import CombatantCoords
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -65,10 +66,6 @@ class RecklessAttackFactory(DirectThreatFactory):
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
 
-    # def get_eligible_coords(self, battle_map, shortest_paths):
-    #     return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(target_combatant),
-    #                                                    inflate_to_size=self.combatant.size, rng=self.range,
-    #                                                    combatant=self.factory.combatant)
 
     def get_eligible_targets(self, battle_map):
         return battle_map.get_enemies(self.combatant)
@@ -259,3 +256,6 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
                                                        inflate_to_size=self.factory.combatant.size,
                                                        rng=self.factory.range,
                                                        combatant=self.factory.combatant)
+
+    def is_current_coord_eligible(self, battle_map):
+        return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)

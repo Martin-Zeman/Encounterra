@@ -1,6 +1,7 @@
 from functools import reduce, cache
 
 from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.combatant_coords import CombatantCoords
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.action_types import BonusAction
@@ -75,6 +76,9 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(battle_map, combatant), adjacent_enemies, 0)
         return 0  # Threat that a Disengage would potentially mitigate is calculated in a different way
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, shortest_paths, distances):
         return None  # We don't want to have any coords pre-pended in the DAG
         # return battle_map.get_all_accessible_coords(shortest_paths)
+
+    def is_current_coord_eligible(self, battle_map):
+        return True

@@ -2,6 +2,7 @@ from functools import cache
 
 from simulator.action_types import Action
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
+from simulator.combatant_coords import CombatantCoords
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.threat import calculate_threat_in_mod
@@ -82,6 +83,9 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # return -1 * calculate_threat_in_mod(combatant, 6, battle_map, RollModifier.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
         return 0  # Threat that a Dodge would potentially mitigate is calculated in a different way
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, shortest_paths, distances):
         return None # We don't want to have any coords pre-pended in the DAG
         # return battle_map.get_all_accessible_coords(shortest_paths)
+
+    def is_current_coord_eligible(self, battle_map):
+        return True

@@ -49,14 +49,18 @@ class Faurung(Combatant):
         self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
 
     def get_action(self, battle_map):
-        distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated in every case (due to forced movement etc.)
-        if self.action_plan is None:
-            self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
-        if not self.action_plan:
+        distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
+        if self.primary_plan is None:
+            self.primary_plan = get_best_actions(self, battle_map, distances, shortest_paths)
+        if not self.primary_plan:
             return None  # Either no action possible or all actions already used
-        actoid = self.action_plan.pop(0)
-        while isinstance(actoid, MovementIncrement) and self.movement == 0:
-            actoid = self.action_plan.pop(0)  # Once we run out of movement, we discard the rest of the planned route and try the next action anyway
+        actoid = self.primary_plan.pop(0)
+
+        # Switch to secondary plan if movement's been exhausted and there's still more movement planned
+        if isinstance(actoid, MovementIncrement) and self.movement == 0:
+            self.secondary_plan = get_best_actions(self, battle_map, distances, shortest_paths)
+            actoid = self.secondary_plan.pop(0) if self.secondary_plan else None
+
         return actoid
 
     def new_turn(self):

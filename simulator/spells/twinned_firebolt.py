@@ -160,3 +160,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
                                                                           rng=TwinnedFireboltFactory.range,
                                                                           combatant=self.factory.caster)
         return coords_for_fist.intersection(coords_for_second)
+
+    def is_current_coord_eligible(self, battle_map):
+        return battle_map.get_cartesian_distance(self.factory.caster, self.targets[0]) <= TwinnedFireboltFactory.range \
+            and battle_map.get_cartesian_distance(self.factory.caster, self.targets[1]) <= TwinnedFireboltFactory.range

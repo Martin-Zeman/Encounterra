@@ -185,3 +185,5 @@ class Chaosbolt(Actoid, DirectThreat):
                                                              rng=ChaosboltFactory.range,
                                                              combatant=self.factory.caster)
 
+    def is_current_coord_eligible(self, battle_map):
+        return battle_map.get_cartesian_distance(self.factory.caster, self.target) <= ChaosboltFactory.range

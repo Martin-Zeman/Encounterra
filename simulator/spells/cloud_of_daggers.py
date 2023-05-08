@@ -136,3 +136,6 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              inflate_to_size=self.factory.caster.size,
                                                              rng=CloudOfDaggersFactory.range, combatant=self.factory.caster)
+
+    def is_current_coord_eligible(self, battle_map):
+        return battle_map.get_cartesian_distance(self.factory.caster, np.array([self.coord])) <= CloudOfDaggersFactory.range

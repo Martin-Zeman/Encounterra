@@ -1,3 +1,4 @@
+from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.action_types import Reaction
 import logging
@@ -59,3 +60,6 @@ class Shield(Actoid, ReactionToThreat):
 
     def get_eligible_coords(self, battle_map, shortest_paths):
         pass  # No need due to IS_POSITIONING_INDEPENDENT, in addition to that it's a reaction anyway
+
+    def is_current_coord_eligible(self, battle_map):
+        return True

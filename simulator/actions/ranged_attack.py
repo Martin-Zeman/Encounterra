@@ -3,6 +3,7 @@ import math
 from simulator.action_types import BonusActionOrdering
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
+from simulator.combatant_coords import CombatantCoords
 from simulator.misc import percent_of_curr_hp
 from simulator.threat import mean_dmg
 import logging
@@ -39,3 +40,6 @@ class RangeAttack(Attack):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target_combatant),
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=self.factory.range, combatant=self.factory.combatant)
+
+    def is_current_coord_eligible(self, battle_map):
+        return battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) <= self.factory.range

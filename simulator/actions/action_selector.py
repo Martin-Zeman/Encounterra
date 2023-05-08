@@ -81,14 +81,17 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
         dag.add_transition(action_name, "0", new_source_state)
 
     for post_action in post_actions:
-        for coord in action_to_eligible_coords[post_action]:
-            new_state_name = coord_state_prefix + str(coord)  # Needs to be made unique from the other coord states
-            if new_state_name not in added_states:
-                added_states.add(new_state_name)
-                dag.add_state(new_state_name)
-                move_transition_name = coord_state_prefix + str(coord)
-                dag.add_transition(move_transition_name, new_source_state, new_state_name) # will be added multiple times, but it's ok
-            dag.add_transition(post_action, new_state_name, "nop")
+        try:
+            for coord in action_to_eligible_coords[post_action]:
+                new_state_name = coord_state_prefix + str(coord)  # Needs to be made unique from the other coord states
+                if new_state_name not in added_states:
+                    added_states.add(new_state_name)
+                    dag.add_state(new_state_name)
+                    move_transition_name = coord_state_prefix + str(coord)
+                    dag.add_transition(move_transition_name, new_source_state, new_state_name) # will be added multiple times, but it's ok
+                dag.add_transition(post_action, new_state_name, "nop")
+        except KeyError:
+            pass  # Some may not be available for the secondary plan
 
 def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, shortest_paths, misty_step_state):
     """
@@ -97,30 +100,39 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     Disengage require special treatment. Misty Step generates a special form of movement which is added as a transition
     to all post-Misty-Step states. Dodge and Disengage always make sense to be taken before any movement, therefore
     in their case coords are also pre-pended to their follow-up actions.
+    The algorithm works in two phases. In the first phase when the combatant still has movement left, it follows the steps described above.
+    If it comes to the second phase when the combatant's out of movement, it runs similarly to the first phase but only considering the
+    combatant's current coordiante. The aims of this approach is to first try and execute the primary (the best) action and it's impossible
+    to get into position the combatant at least tries something at the location they managed to reach.
     :param combatant: the combatant for whom the DAG is modeled
     :param battle_map:
     :param action_fsm: finite state machine representing all possible actions for combatant
     :param transition_name_to_action: dict mapping action names -> actions
     :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
     :param misty_step_state: name of the state into which taking the Misty Step bonus action would take us
+    :param distances: Optional: already pre-computed distances to all coords, if None then don't take combatant's movement range into consideration
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     # TODO: Look into caching!!!
     dag = copy.deepcopy(action_fsm)
 
-    post_misty_step_actions, post_dodge_actions, post_disengage_actions = get_data_for_special_treatment_actions(combatant, misty_step_state, dag)
-    added_states = set()  # tracks which states have already been added
-
     # Get eligible coords for all actions
     transition_names = action_fsm.get_available_transitions()
     if transition_names[0] == 'None':
         return None
-    dodge_name = "Dodge of " + str(combatant)
-    disengage_name = "Disengage of " + str(combatant)
+    combatant_name = str(combatant)
+    dodge_name = "Dodge of " + combatant_name
+    disengage_name = "Disengage of " + combatant_name
     transition_names.remove(dodge_name)
     transition_names.remove(disengage_name)
-    # TODO Try restricting it to only actions within hop range
-    action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, shortest_paths) for tn in transition_names}
+    if combatant.movement > 0:
+        action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, shortest_paths) for tn in transition_names}
+    else:
+        current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
+        action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible(battle_map)}
+
+    post_misty_step_actions, post_dodge_actions, post_disengage_actions = get_data_for_special_treatment_actions(combatant, misty_step_state, dag)
+    added_states = set()  # tracks which states have already been added
 
     for action_name, coords in action_to_eligible_coords.items():
         for coord in coords:
@@ -132,7 +144,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                     added_states.add(new_state_name)
                     dag.add_state(new_state_name)
                 move_transition_name = "m_" + new_state_name
-                dag.add_transition(move_transition_name, transition.source, new_state_name) # will be added multiple times, but it's ok
+                dag.add_transition(move_transition_name, transition.source, new_state_name)  # Will be added multiple times, but it's ok
                 dag.add_transition(action_name, new_state_name, transition.dest)
 
                 # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement (not a direct jump to the coord)
@@ -299,7 +311,7 @@ def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_
 
 def get_best_actions(combatant, battle_map, distances, shortest_paths):
     """
-    Finds chain of movement, action and bonus action with the highest (threat_out - threat_in)
+    Finds chain of movement, action and bonus action (not necessarily in that order) with the highest 'threat_out - threat_in'
     :param combatant: the combatant for whom the DAG is modeled
     :param battle_map:
     :param distances: potentially already pre-computed distances to all coords

@@ -200,3 +200,6 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
             return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  inflate_to_size=self.factory.caster.size,
                                                                  rng=HasteFactory.range, combatant=self.target)
+
+    def is_current_coord_eligible(self, battle_map):
+        return battle_map.get_cartesian_distance(self.factory.caster, self.target) <= HasteFactory.range

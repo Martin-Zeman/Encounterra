@@ -1,3 +1,4 @@
+from simulator.combatant_coords import CombatantCoords
 from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
@@ -159,3 +160,6 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def get_eligible_coords(self, battle_map, shortest_paths):
         pass  # Due to IS_POSITIONING_INDEPENDENT
+
+    def is_current_coord_eligible(self, battle_map):
+        return True

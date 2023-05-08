@@ -6,32 +6,6 @@ Examples of AoE triggers:
 - Any creature that ends its turn within 5 feet of the sphere must make a Dexterity saving throw. The creature takes 2d6 fire damage on a failed save, or half as much damage on a successful one.
 
 
-The action selection could be formulated as an integer linear programming problem. The optimization criteria could differ based on the type of a
-character but in general it would maximize (threat_out - threat_in). I'd need to add a threat to a given specific combatant by a factory (already WIP).
-This could help me determine the incoming threat. It could even handle threat from potential AoO.
-I think I would need to include all combinations of action + targeting. For each such pair a all feasible required positioning would be calculated.
-There would be Threat_in as a function of the positioning would be selected along with the positioning. I'd calculate both action and bonus
-action and their positionings separately at first. Then pick one which I want to do first and then potentially recalculate the other.
-(There would be a hard constraint that the threat_in cannot be higher or equal current hit points -> may not work)
-So I'd calculate threat for all possible action and target combination (including dash)
-    - I have a variable D_a,e how much dmg an attack "a" does to an enemy "n"
-    - Variable which selects an action A
-    - Variable which selects the i-th target T_i,a for action "a". Most actions have only one target.
-    - each action would define its own constraints, e.g. for attacks you have to be adjacent
-    - the constraints would be activated based on the selected action
-    - There would be areas of threat projected by enemies determined by their range and calculated directly against the combatant
-    - max (threat_out - threat_in)
-    - stuff like reckless attack could be activated by a variable and add to both threat_out and threat_in...here the optimization becomes interesting
-    - For each target the best route to the adjacent square would be calculated and AoO dmg added as an extra threat for that option
-    Potential issues constraints:
-        - I need to take conditions into account, both existing ones and ones potentially inflicted by one action
-        - Need to deal with the order of action and bonus action. Some could have the constraints expressed as equations (like PaM bonus attack)
-        - Would have to recalculate in case the
-        - in case of hex the threat_out would only be activated if the other selected action was an attack-like action
-
-I could improve pathfinding to give the path with the least AoO.
-
-
 Longer lasting AoEs and multi-target effects are to be tracked by the EffectTracker.
 It tracks the caster, location, who's currently affected as well as duration. It has a removal by broken concentration.
 It can return any of the above. It can tell if a character is entering the area with location + increment.
@@ -50,15 +24,6 @@ FaurungDt vs 4 Cultists on Ubuntu:
  Team RED won total of 569 times
 ---Simulation took 218.1 seconds ---
 
-
-Trainign Faurung:
- Feasibility rate: 0.046; Unfeasibility rate 0.078
- Feasibility rate: 0.028; Unfeasibility rate 0.098
- Feasibility rate: 0.02; Unfeasibility rate 0.112
- Feasibility rate: 0.022; Unfeasibility rate 0.12
- Feasibility rate: 0.028; Unfeasibility rate 0.092
- Feasibility rate: 0.02; Unfeasibility rate 0.1
- Feasibility rate: 0.038; Unfeasibility rate 0.102
 
  Kinds of multiattacks:
  Horned Devil: The devil makes three melee attacks: two with its fork and one with its tails. It can use Hurl Flame in place of any melee

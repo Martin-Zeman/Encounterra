@@ -1,3 +1,4 @@
+from simulator.combatant_coords import CombatantCoords
 from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
@@ -59,9 +60,6 @@ class RageFactory(ThreatModifierFactory):
             case _:
                 logger.error("Incorrect combatant level of rage")
                 return 2
-
-    def get_eligible_coords(self, battle_map, shortest_paths):
-        pass  # No need due to the IS_POSITIONING_INDEPENDENT flag
 
     def get_eligible_targets(self, battle_map):
         pass # No need due to the TARGETS_SELF flag
@@ -162,3 +160,6 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def get_eligible_coords(self, battle_map, shortest_paths):
         pass  # Due to IS_POSITIONING_INDEPENDENT
+
+    def is_current_coord_eligible(self, battle_map):
+        return True
