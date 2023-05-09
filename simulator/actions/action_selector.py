@@ -75,6 +75,11 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
     action_type = action_name.split()[0]
     coord_state_prefix = action_type[0:2].lower() + "_"  # di_ or do_
     new_source_state = action_type + "d"  # Dodged or Disengaged
+
+    if not post_actions:  # If there are no follow-up actions possible, connect directly to nop and return
+        dag.add_transition(action_name, "0", "nop")
+        return
+
     if new_source_state not in added_states:
         added_states.add(new_source_state)
         dag.add_state(new_source_state)

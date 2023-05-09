@@ -64,8 +64,7 @@ class Combatant(ABC):
         self.multiattack_in_progress = False
         self.attack_fsm = None
         self.action_fsm = None
-        self.primary_plan = None
-        self.secondary_plan = None
+        self.action_plan = None
         self.team_color = ""
         self.selected_enemy = None
         self.selected_ally = None
@@ -353,8 +352,7 @@ class Combatant(ABC):
         self.has_haste_action = False
         self.last_attack_factory_name = None
         self.attack_fsm.set_state('0')
-        self.primary_plan = None
-        self.secondary_plan = None
+        self.action_plan = None
 
     def reset(self):
         self.has_action = True

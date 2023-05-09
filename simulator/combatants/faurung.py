@@ -50,19 +50,13 @@ class Faurung(Combatant):
 
     def get_action(self, battle_map):
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
-        if self.primary_plan is None:
-            self.primary_plan = get_best_actions(self, battle_map, distances, shortest_paths)
-        if not self.primary_plan:
+        if self.action_plan:
+            if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
+                return self.action_plan.pop(0)
+        self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
+        if not self.action_plan:
             return None  # Either no action possible or all actions already used
-        actoid = self.primary_plan.pop(0)
-
-        # Switch to secondary plan if movement's been exhausted and there's still more movement planned
-        if isinstance(actoid, MovementIncrement) and self.movement == 0:
-            if self.secondary_plan is None:
-                self.secondary_plan = get_best_actions(self, battle_map, distances, shortest_paths)
-            actoid = self.secondary_plan.pop(0) if self.secondary_plan else None
-
-        return actoid
+        return self.action_plan.pop(0)
 
     def new_turn(self):
         super().new_turn()

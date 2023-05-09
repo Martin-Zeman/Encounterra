@@ -112,7 +112,7 @@ def check_feasibility(combatant, action, battle_map):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
-                res &= battle_map.teams.are_allies(combatant, action.targets[0])
+                res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
             case BonusAction.QUICKENED_FIREBALL:
                 res &= combatant.spellslots.get_spellslots(3) > 0

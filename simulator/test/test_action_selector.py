@@ -319,8 +319,7 @@ def test_error_case_1(battle_map, teams, effect_tracker, combatant1, combatant3)
 
 def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3):
     """
-    This test case is based on a scenario encountered during fuzzy testing. Sorcerer faces off against
-    two Bugbears next to each other.
+    This test case is based on a scenario encountered during fuzzy testing.
     """
     CustomLogger(LogLevel.WARNING)
     combatant4 = copy.deepcopy(combatant3)
@@ -356,8 +355,7 @@ def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3)
 
 def test_error_case_3(battle_map, teams, effect_tracker, combatant1, combatant3, combatant4, combatant5, combatant6):
     """
-    This test case is based on a scenario encountered during fuzzy testing. Sorcerer faces off against
-    two Bugbears next to each other.
+    This test case is based on a scenario encountered during fuzzy testing.
     """
     CustomLogger(LogLevel.WARNING)
     combatant7 = copy.deepcopy(combatant3)
@@ -407,8 +405,7 @@ def test_error_case_3(battle_map, teams, effect_tracker, combatant1, combatant3,
 
 def test_error_case_4(battle_map, teams, effect_tracker, combatant1, combatant4, combatant5):
     """
-    This test case is based on a scenario encountered during fuzzy testing. Sorcerer faces off against
-    two Bugbears next to each other.
+    This test case is based on a scenario encountered during fuzzy testing.
     """
     CustomLogger(LogLevel.WARNING)
     combatant6 = copy.deepcopy(combatant1)
@@ -451,8 +448,7 @@ def test_error_case_4(battle_map, teams, effect_tracker, combatant1, combatant4,
 
 def test_error_case_5(battle_map, teams, effect_tracker, combatant1, combatant2, combatant4, combatant5, combatant6):
     """
-    This test case is based on a scenario encountered during fuzzy testing. Sorcerer faces off against
-    two Bugbears next to each other.
+    This test case is based on a scenario encountered during fuzzy testing.
     """
     CustomLogger(LogLevel.WARNING)
     combatant7 = copy.deepcopy(combatant1)
@@ -494,5 +490,110 @@ def test_error_case_5(battle_map, teams, effect_tracker, combatant1, combatant2,
         action_resolver.resolve_action(actoid7, combatant1)
         actoid8 = combatant1.get_action(battle_map)
         action_resolver.resolve_action(actoid8, combatant1)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+def test_error_case_6(battle_map, teams, effect_tracker, combatant1, combatant3, combatant4, combatant6):
+    """
+    This test case is based on a scenario encountered during fuzzy testing. The purpose of this test is to make sure we don't enter
+    into an endless recursion via the Barbarian's Reckless Attack.
+    """
+    CustomLogger(LogLevel.WARNING)
+    combatant7 = copy.deepcopy(combatant4)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant3, combatant4, combatant6, combatant7]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # Faurung
+    teams.add_combatant_to_team(combatant3, Teams.Color.BLUE)  # Bugbear
+    teams.add_combatant_to_team(combatant4, Teams.Color.BLUE)  # TotemBarbarian5Lvl 1
+    teams.add_combatant_to_team(combatant6, Teams.Color.BLUE)  # Ogre
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # TotemBarbarian5Lvl 2
+    battle_map.set_combatant_coordinates(combatant1, np.array([5, 5]))  # Bugbear
+    battle_map.set_combatant_coordinates(combatant3, np.array([14, 14]))  # Bugbear
+    battle_map.set_combatant_coordinates(combatant4, np.array([9, 14]))  # TotemBarbarian5Lvl 1
+    battle_map.set_combatant_coordinates(combatant6, np.array([10, 13]))  # Ogre
+    battle_map.set_combatant_coordinates(combatant7, np.array([0, 8]))  # TotemBarbarian5Lvl 2
+    battle_map.build_adjacency_matrix()
+
+    try:
+        actoid1 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant4)
+        actoid2 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant4)
+        actoid3 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant4)
+        actoid4 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant4)
+        actoid5 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant4)
+        actoid6 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant4)
+        actoid7 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant4)
+        actoid8 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, combatant4)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_7(battle_map, teams, effect_tracker, combatant1, combatant2, combatant4):
+    """
+    This test case is based on a scenario encountered during fuzzy testing.
+    """
+    CustomLogger(LogLevel.WARNING)
+    combatant6 = copy.deepcopy(combatant1)
+    battle_map.place_circular_element(np.array([0, 6]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([11, 13]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([13, 1]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([10, 12]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant1, combatant4, combatant5, combatant6]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # Faurung 1
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)  # Goblin
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # TotemBarbarian5Lvl
+    battle_map.set_combatant_coordinates(combatant1, np.array([9, 13]))
+    battle_map.set_combatant_coordinates(combatant2, np.array([10, 9]))
+    battle_map.set_combatant_coordinates(combatant4, np.array([4, 8]))
+    battle_map.build_adjacency_matrix()
+
+    try:
+        actoid1 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant2)
+        actoid2 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant2)
+        actoid3 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant2)
+        actoid4 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant2)
+        actoid5 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant2)
+        actoid6 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant2)
+
+
+        actoid1 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant1)
+        actoid2 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant1)
+        actoid3 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant1)
+        actoid4 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant1)
+        actoid5 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant1)
+        actoid6 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant1)
+        actoid7 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant1)
+        actoid8 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, combatant1)
+
+        actoid1 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant4)
+        actoid2 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant4)
     except Exception as e:
         assert False, f"Raised an exception {e}"
