@@ -36,6 +36,21 @@ def test_state_machine_template():
     assert fsm.get_available_transitions() == []
 
 
+def test_remove_state():
+    fsm = StateMachineTemplate()
+    try:
+        fsm.add_new_state('A')
+        fsm.add_transition('to_A', '0', 'A')
+        fsm.add_transition('to_nop', 'A', 'nop')
+        fsm.remove_transition('to_A', '0')
+        fsm.add_transition('to_A', '0', 'A')
+        fsm.remove_transition('to_A', '0')
+        fsm.add_transition('to_A', '0', 'A')
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+    # Have to inspect the log output manually
+
+
 def test_generate_action_fsm(combatant1, combatant2, combatant3, combatant4, combatant5, combatant6, battle_map, effect_tracker, teams):
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)

@@ -207,7 +207,7 @@ class ActionResolver:
                         # TODO revisit if this is really needed
                         self.battle_map.remove_combatant(combatant)
                 return ActionResult.DMG
-            case Action.HASTE | BonusAction.QUICKENED_HASTE:
+            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
                 spell.activate()
                 self.effect_tracker.add(spell, caster)
                 return ActionResult.MEDIUM_BUFF

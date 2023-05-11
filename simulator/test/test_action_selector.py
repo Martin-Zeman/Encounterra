@@ -353,6 +353,7 @@ def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3)
     assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], TwinnedFirebolt)
     assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], TwinnedFirebolt)
 
+
 def test_error_case_3(battle_map, teams, effect_tracker, combatant1, combatant3, combatant4, combatant5, combatant6):
     """
     This test case is based on a scenario encountered during fuzzy testing.
@@ -573,7 +574,6 @@ def test_error_case_7(battle_map, teams, effect_tracker, combatant1, combatant2,
         actoid6 = combatant2.get_action(battle_map)
         action_resolver.resolve_action(actoid6, combatant2)
 
-
         actoid1 = combatant1.get_action(battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
         actoid2 = combatant1.get_action(battle_map)
@@ -595,5 +595,49 @@ def test_error_case_7(battle_map, teams, effect_tracker, combatant1, combatant2,
         action_resolver.resolve_action(actoid1, combatant4)
         actoid2 = combatant4.get_action(battle_map)
         action_resolver.resolve_action(actoid2, combatant4)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+def test_error_case_8(battle_map, teams, effect_tracker, combatant1, combatant5, combatant6):
+    """
+    This test case is based on a scenario encountered during fuzzy testing.
+    """
+    CustomLogger(LogLevel.WARNING)
+    combatant7 = copy.deepcopy(combatant1)
+    battle_map.place_circular_element(np.array([4, 12]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([0, 1]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([14, 13]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant1, combatant5, combatant6, combatant7]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # Faurung 1
+    teams.add_combatant_to_team(combatant5, Teams.Color.RED)  # StoneGiant
+    teams.add_combatant_to_team(combatant6, Teams.Color.RED)  # Ogre
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # Faurung 2
+    battle_map.set_combatant_coordinates(combatant1, np.array([10, 10]))  # Faurung 1
+    battle_map.set_combatant_coordinates(combatant5, np.array([0, 12]))  # StoneGiant
+    battle_map.set_combatant_coordinates(combatant6, np.array([9, 13]))   # Ogre
+    battle_map.set_combatant_coordinates(combatant7, np.array([8, 13]))  # Faurung 2
+    battle_map.build_adjacency_matrix()
+
+    try:
+        actoid1 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant7)
+        actoid2 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant7)
+        actoid3 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant7)
+        actoid4 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant7)
+        actoid5 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant7)
+        actoid6 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant7)
+        actoid7 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant7)
+        actoid8 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, combatant7)
     except Exception as e:
         assert False, f"Raised an exception {e}"

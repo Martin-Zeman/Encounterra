@@ -49,6 +49,13 @@ class Faurung(Combatant):
         self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
 
     def get_action(self, battle_map):
+        """
+        Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,
+        it follows the steps described above. In the second phase, once the combatant reaches the target destination or runs out of movement
+        the best action is recalculated every time to react to any possible changes on the battle_map.
+        :param battle_map:
+        :return: the next best actoid
+        """
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
         if self.action_plan:
             if isinstance(self.action_plan[0], MovementIncrement) and self.movement:

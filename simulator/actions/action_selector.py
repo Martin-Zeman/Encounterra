@@ -51,12 +51,14 @@ def get_data_for_special_treatment_actions(combatant, misty_step_state, dag):
     :return: tuple of (post_misty_step_actions, added_misty_step_coord_states, post_dodge_actions, post_disengage_actions)
     """
     post_misty_step_actions = dag.get_available_transitions_in_state(misty_step_state)
-    dag.trigger("Dodge of " + str(combatant))
-    post_dodge_actions = dag.get_available_transitions()
-    dag.reset()
-    dag.trigger("Disengage of " + str(combatant))
-    post_disengage_actions = dag.get_available_transitions()
-    dag.reset()
+    post_dodge_actions = None
+    if dag.trigger("Dodge of " + str(combatant)):
+        post_dodge_actions = dag.get_available_transitions()
+        dag.reset()
+    post_disengage_actions = None
+    if dag.trigger("Disengage of " + str(combatant)):
+        post_disengage_actions = dag.get_available_transitions()
+        dag.reset()
     return post_misty_step_actions, post_dodge_actions, post_disengage_actions
 
 def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_actions, added_states, action_name):
@@ -64,19 +66,21 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
     A helper function which builds the Dodge and Disengage parts of the DAG
     :param action_to_eligible_coords: mapping from action names to their eligible coordinates
     :param dag: the DAG which we're building
-    :param post_actions: post Dodge/Disengage eligible actions
+    :param post_actions: post Dodge/Disengage eligible actions, None if action is not eligible, [] if there are no eligible follow-up actions
     :param added_states: set of already existing states to avoid adding them multiple times
     :param action_name: Dodge or Disengage
     :return: the dag
     """
     # TODO Consider merging Dodged and Disengaged into one state
     # a prefix to make the newly pre-pended coord state unique
-    dag.remove_transition(action_name, "0")
     action_type = action_name.split()[0]
     coord_state_prefix = action_type[0:2].lower() + "_"  # di_ or do_
     new_source_state = action_type + "d"  # Dodged or Disengaged
 
-    if not post_actions:  # If there are no follow-up actions possible, connect directly to nop and return
+    if post_actions is None:  # If Action name is not eligible, return
+        return
+
+    if len(post_actions) == 0:  # If there are no follow-up actions possible, connect directly to nop and return
         dag.add_transition(action_name, "0", "nop")
         return
 
@@ -105,10 +109,6 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     Disengage require special treatment. Misty Step generates a special form of movement which is added as a transition
     to all post-Misty-Step states. Dodge and Disengage always make sense to be taken before any movement, therefore
     in their case coords are also pre-pended to their follow-up actions.
-    The algorithm works in two phases. In the first phase when the combatant still has movement left, it follows the steps described above.
-    If it comes to the second phase when the combatant's out of movement, it runs similarly to the first phase but only considering the
-    combatant's current coordiante. The aims of this approach is to first try and execute the primary (the best) action and it's impossible
-    to get into position the combatant at least tries something at the location they managed to reach.
     :param combatant: the combatant for whom the DAG is modeled
     :param battle_map:
     :param action_fsm: finite state machine representing all possible actions for combatant
@@ -119,26 +119,24 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     # TODO: Look into caching!!!
-    dag = copy.deepcopy(action_fsm)
-
-    # Get eligible coords for all actions
-    transition_names = action_fsm.get_available_transitions()
-    if transition_names[0] == 'None':
-        return None
+    post_misty_step_actions, post_dodge_actions, post_disengage_actions = get_data_for_special_treatment_actions(combatant, misty_step_state, action_fsm)
     combatant_name = str(combatant)
     dodge_name = "Dodge of " + combatant_name
     disengage_name = "Disengage of " + combatant_name
-    transition_names.remove(dodge_name)
-    transition_names.remove(disengage_name)
+    action_fsm.remove_transition(dodge_name, '0')
+    action_fsm.remove_transition(disengage_name, '0')
+    dag = copy.deepcopy(action_fsm)
+    transition_names = action_fsm.get_available_transitions()
+    if transition_names[0] == 'None':
+        return None
+
     if combatant.movement > 0:
         action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, shortest_paths) for tn in transition_names}
     else:
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
         action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible(battle_map)}
 
-    post_misty_step_actions, post_dodge_actions, post_disengage_actions = get_data_for_special_treatment_actions(combatant, misty_step_state, dag)
     added_states = set()  # tracks which states have already been added
-
     for action_name, coords in action_to_eligible_coords.items():
         for coord in coords:
             transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]

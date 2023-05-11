@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def check_feasibility(combatant, action, battle_map):
     action_type = action.factory.action_type
     if isinstance(action_type, Action):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED):
+        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         match action_type:
             case Action.FIREBALL:
@@ -58,30 +58,39 @@ def check_feasibility(combatant, action, battle_map):
                 res &= combatant.curr_sorcery_points > 2
                 return res
             case Action.MELEE_ATTACK:
-                res = (combatant.has_action or (combatant.num_attacks > combatant.curr_num_attacks > 0)) and not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res = combatant.has_action
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
             case Action.RANGED_ATTACK:
-                res = (combatant.has_action or (combatant.num_attacks > combatant.curr_num_attacks > 0)) and not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res = combatant.has_action
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_cartesian_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
             case Action.RECKLESS_ATTACK:
-                res = combatant.has_action or (combatant.curr_num_attacks > 0 and battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack))
+                res = combatant.has_action
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
-            case Action.DASH | Action.DODGE:
+            case Action.DASH | Action.DISENGAGE:
+                # Technically, those actions are possible but make no sense
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
-                                                                                 Conditions.RESTRAINED,
-                                                                                 Conditions.STUNNED,
-                                                                                 Conditions.PARALYZED)
+                                                                                 Conditions.RESTRAINED)
+            case Action.DODGE:
+                return combatant.has_action
             case _:
                 logger.error("check_feasibility: Unknown action type")
                 return False
     elif isinstance(action_type, BonusAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED):
+        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         res = combatant.has_bonus_action
         match action_type:
@@ -133,7 +142,7 @@ def check_feasibility(combatant, action, battle_map):
                 logger.error("Unknown bonus action")
                 return False
     elif isinstance(action_type, Reaction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED):
+        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         match action_type:
             case Reaction.SHIELD:
@@ -144,6 +153,8 @@ def check_feasibility(combatant, action, battle_map):
                 logger.error("Unknown reaction")
         return combatant.has_reaction
     elif isinstance(action_type, Movement):
+        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+            return False
         match action_type:
             case Movement.STANDARD:
                 target_position = battle_map.get_combatant_position(combatant) + action.increment
@@ -156,7 +167,7 @@ def check_feasibility(combatant, action, battle_map):
             case _:
                 logger.error("Unknown movement")
     elif isinstance(action_type, HasteAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED):
+        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         return combatant.has_haste_action
     # elif isinstance(action_type, FreeAction):
@@ -225,7 +236,7 @@ def check_feasibility_light(combatant, action, battle_map):
             case Action.DASH | Action.DISENGAGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED)
-            case Action.DODGE :
+            case Action.DODGE:
                 return combatant.has_action
             case _:
                 logger.error("check_feasibility_light: Unknown action type")

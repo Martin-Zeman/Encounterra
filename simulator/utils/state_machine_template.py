@@ -65,12 +65,10 @@ class StateMachineTemplate(Machine):
 
         try:
             self.dependencies[dest_state].discard(origin)
-        except ValueError:
+            self.forward_transitions[origin] = {ft for ft in self.forward_transitions[origin] if ft[0] != name}
+            super().remove_transition(name, origin)
+        except (ValueError, KeyError):
             pass
-
-        self.forward_transitions[origin] = {ft for ft in self.forward_transitions[origin] if ft[0] != name}
-        super().remove_transition(name, origin)
-
 
     def reset(self):
         self.set_state('0')
