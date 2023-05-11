@@ -641,3 +641,46 @@ def test_error_case_8(battle_map, teams, effect_tracker, combatant1, combatant5,
         action_resolver.resolve_action(actoid8, combatant7)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+def test_error_case_9(battle_map, teams, effect_tracker, combatant1, combatant5, combatant6):
+    """
+    This test case is based on a scenario encountered during fuzzy testing.
+    """
+    CustomLogger(LogLevel.WARNING)
+    combatant7 = copy.deepcopy(combatant5)
+    combatant8 = copy.deepcopy(combatant6)
+    battle_map.place_circular_element(np.array([10, 10]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([13, 14]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([6, 0]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant1, combatant5, combatant6, combatant7, combatant8]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # Faurung 1
+    teams.add_combatant_to_team(combatant5, Teams.Color.BLUE)  # StoneGiant 1
+    teams.add_combatant_to_team(combatant6, Teams.Color.BLUE)  # Ogre 1
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # Stone Giant 2
+    teams.add_combatant_to_team(combatant8, Teams.Color.RED)  # Ogre 2
+    battle_map.set_combatant_coordinates(combatant1, np.array([3, 5]))  # Faurung 1
+    battle_map.set_combatant_coordinates(combatant5, np.array([12, 10]))  # StoneGiant 1
+    battle_map.set_combatant_coordinates(combatant6, np.array([1, 10]))   # Ogre 1
+    battle_map.set_combatant_coordinates(combatant7, np.array([3, 8]))  # Stone Giant 2
+    battle_map.set_combatant_coordinates(combatant8, np.array([12, 8]))  # Ogre 2
+    battle_map.build_adjacency_matrix()
+
+    try:
+        actoid1 = combatant5.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant5)
+        actoid2 = combatant5.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant5)
+
+        actoid3 = combatant7.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant7)
+
+        actoid4 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant1)
+        actoid5 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant1)
+
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
