@@ -180,11 +180,10 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     """
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     MINUS_INF = -sys.maxsize - 1
-    threat = dict.fromkeys(sorted_states, MINUS_INF)
+    threat = {key: [MINUS_INF, MINUS_INF] for key in sorted_states}
     sorted_states.pop()  # Get rid of the nop state
-    threat['0'] = 0
+    threat['0'] = [0, 0]
     max_threat_backwards_transition = dict()
-    max_threat = MINUS_INF
     pattern = r'([msdio]+)_\((\d+), (\d+)\)'
     transition_name_to_ms_path = dict()
 
@@ -205,7 +204,8 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     combatant_coords = battle_map.get_combatant_position(combatant)
                 except AttributeError:
                     combatant_coords = None
-                threat_acc = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state] if threat[state] > MINUS_INF else 0)
+                transition_threat = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state][1] if threat[state][1] > MINUS_INF else 0)
+                movement_threat = threat[state][0] if threat[state][0] > MINUS_INF else 0
             except KeyError:  # either not in the dict or regex search came up empty
                 # or different kind which represents some type of movement
                 movement_type, x, y = re.search(pattern, transition_name).groups()
@@ -214,22 +214,25 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     continue
                 match movement_type:
                     case "m":
-                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
+                        movement_threat = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
                     case "di":
-                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=True)
+                        movement_threat = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=True)
                     case "do":
-                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, dodged=True)
+                        movement_threat = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, dodged=True)
                     case "ms":
-                        threat_acc, misty_step_path = calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_coords)
+                        movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_coords)
                         transition_name_to_ms_path[transition_name] = misty_step_path
                     case _:
                         logger.error(f"Unknown movement type {movement_type}")
-                        threat_acc = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
-            if threat_acc > threat[target_state]:
-                threat[target_state] = threat_acc
+                        movement_threat = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
+                transition_threat = threat[state][1] if threat[state][1] > MINUS_INF else 0
+                assert movement_threat <= 0  # TODO eventually remove
+                if movement_threat > threat[target_state][0]:
+                    threat[target_state][0] = movement_threat
+                    max_threat_backwards_transition[target_state] = (transition_name, state)
+            if (movement_threat + transition_threat > threat[target_state][0] + threat[target_state][1]) and transition_threat > 0:
+                threat[target_state] = [movement_threat, transition_threat]
                 max_threat_backwards_transition[target_state] = (transition_name, state)
-                if threat_acc > max_threat:
-                    max_threat = threat_acc
     # Let's go backwards to reconstruct the longest path
     return reconstruct_path_through_dag('nop', '0', max_threat_backwards_transition), transition_name_to_ms_path
 

@@ -1,5 +1,8 @@
+import numpy as np
 from statemachine import State, StateMachine
-from simulator.feasibility import get_feasible_factories
+
+from simulator.action_types import BonusAction
+from simulator.feasibility import get_feasible_factories, check_feasibility_light
 from simulator.resources import use_resources
 from simulator.utils.state_machine_template import StateMachineTemplate
 
@@ -45,24 +48,27 @@ def actions_to_set(actions):
 
 def get_all_feasible_action_factories(combatant, battle_map):
     """
-    A helper functions which collects all feasible (bonus/haste) action factories for a combatant
+    A helper functions which collects all feasible (bonus/haste) action factories for a combatant. Note that it excludes Misty Step which
+    is resolved separately.
     :param combatant: for whom the feasible factories are is to be constructed
     :param battle_map:
     :return: all feasible (bonus/haste) action factories for a combatant
     """
     feasible_action_factories = get_feasible_factories(combatant.action_factories, combatant, battle_map)
-    feasible_bonus_action_factories = get_feasible_factories(combatant.bonus_action_factories, combatant, battle_map)
+    feasible_bonus_action_factories = [fbaf for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant, battle_map) if fbaf[0] is not BonusAction.MISTY_STEP]
     feasible_haste_action_factories = get_feasible_factories(combatant.haste_action_factories, combatant, battle_map)
     all_action_factories = feasible_action_factories
     all_action_factories.extend(feasible_bonus_action_factories)
     all_action_factories.extend(feasible_haste_action_factories)
     return all_action_factories
 
+
 def generate_action_fsm(combatant, battle_map):
     """
     Builds a combatant-specific FSM which expresses all possible (bonus) action combinations the may take on their turn.
     It assumes the combatant's attack FSM is manually constructed already and is used as an input for the overall FSM.
-    Misty Step gets a special treatment.
+    Misty Step gets a special treatment. We don't create states nor transitions for the Misty Step actions. We just note down which state
+    the initial Misty Step would bring us into and pass it onto build_action_dag.
     :param combatant: for whom the FSM is to be constructed
     :param battle_map:
     :return: fsm, the mapping between FSM transition names to the actual action factory objects,
@@ -82,7 +88,6 @@ def generate_action_fsm(combatant, battle_map):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
-        nonlocal misty_step_state
         fafs = get_all_feasible_action_factories(combatant, battle_map)
         fas = {a for faf in fafs for a in af_to_a[faf]}
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
@@ -90,22 +95,17 @@ def generate_action_fsm(combatant, battle_map):
         action_taken_name = str(action_taken)
         if not state_footprint:
             # No more actions -> connect to the nop state
-            if "Misty Step" not in action_taken_name:
-                transition_name_to_action[action_taken_name] = action_taken  # TODO This can be taken out of the if else
-                fsm.add_transition(action_taken_name, previous_state_name, 'nop')
+            transition_name_to_action[action_taken_name] = action_taken  # TODO This can be taken out of the if else
+            fsm.add_transition(action_taken_name, previous_state_name, 'nop')
         elif state_footprint not in visited:
             # State not yet discovered, create a new state, remember the footprint and add transitions
             visited.add(state_footprint)
             new_state_name = fsm.get_next_state_name()
             state_footprint_to_state_name[state_footprint] = new_state_name
             if action_taken:
+                transition_name_to_action[action_taken_name] = action_taken
                 fsm.add_new_state(new_state_name)  # Avoid adding the initial state again
-                if "Misty Step" in action_taken_name:
-                    # Misty Step gets a special treatment. We just need to make the state MS would bring us into but not include it in the graph
-                    misty_step_state = new_state_name
-                else:
-                    transition_name_to_action[action_taken_name] = action_taken
-                    fsm.add_transition(action_taken_name, previous_state_name, new_state_name)
+                fsm.add_transition(action_taken_name, previous_state_name, new_state_name)
             for fa in fas:
                 exported_resources = combatant.export_resources()
                 use_resources(combatant, fa, battle_map)
@@ -113,12 +113,31 @@ def generate_action_fsm(combatant, battle_map):
                 combatant.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
-            if "Misty Step" in action_taken_name:
-                # Misty Step gets a special treatment. We just need to make the state MS would bring us into but not include it in the graph
-                misty_step_state = state_footprint_to_state_name[state_footprint]
-                return  # No need to explore further with Misty Step
             transition_name_to_action[action_taken_name] = action_taken
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])
 
     dfs('0')
+
+    # If the combatant has Misty Step, deal with it separately
+    for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant, battle_map):
+        if fbaf[0] is BonusAction.MISTY_STEP:
+            ms = fbaf[1].create(np.array([0, 0]))  # coords don't matter here
+            exported_resources = combatant.export_resources()
+            use_resources(combatant, ms, battle_map)
+            fafs = get_all_feasible_action_factories(combatant, battle_map)
+            fas = {a for faf in fafs for a in af_to_a[faf]}
+            if not fas:
+                combatant.load_resources(exported_resources)
+                break
+            misty_step_state_footprint = actions_to_set(fas)
+            try:
+                misty_step_state = state_footprint_to_state_name[misty_step_state_footprint]
+            except KeyError:
+                misty_step_state = fsm.get_next_state_name()
+                fsm.add_new_state(misty_step_state)
+                dfs(misty_step_state)
+            finally:
+                combatant.load_resources(exported_resources)
+            break
+
     return fsm, transition_name_to_action, misty_step_state

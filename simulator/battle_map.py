@@ -228,9 +228,17 @@ class Map:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                             self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
                             self.impassable_set.add((x, y))
+                            try:
+                                self.difficult_set.remove((x, y))
+                            except KeyError:
+                                pass
                         elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                             self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
                             self.difficult_set.add((x, y))
+                            try:
+                                self.impassable_set.remove((x, y))
+                            except KeyError:
+                                pass
                     except IndexError:
                         pass  # out of grid
 

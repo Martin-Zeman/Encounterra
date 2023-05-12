@@ -442,7 +442,10 @@ def test_error_case_4(battle_map, teams, effect_tracker, combatant1, combatant4,
         actoid6 = combatant1.get_action(battle_map)
         action_resolver.resolve_action(actoid6, combatant1)
         actoid7 = combatant1.get_action(battle_map)
-        assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(combatant1).get(), np.array([actoid7.coord])) > SpellStats.TRANSLATE_RADIUS[actoid7.factory.target]
+        action_resolver.resolve_action(actoid7, combatant1)
+        actoid8 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, combatant1)
+        assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(combatant1).get(), np.array([actoid8.coord])) > SpellStats.TRANSLATE_RADIUS[actoid8.factory.target]
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -682,5 +685,50 @@ def test_error_case_9(battle_map, teams, effect_tracker, combatant1, combatant5,
         actoid5 = combatant1.get_action(battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
 
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+def test_error_case_10(battle_map, teams, effect_tracker, combatant1, combatant2, combatant5):
+    """
+    This test case is based on a scenario encountered during fuzzy testing. Here the sorcerer is out of 3rd level spellslots.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.place_circular_element(np.array([3, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([4, 13]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([5, 4]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([13, 1]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant1, combatant5]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # Faurung 1
+    teams.add_combatant_to_team(combatant5, Teams.Color.RED)  # StoneGiant 1
+    battle_map.set_combatant_coordinates(combatant1, np.array([0, 3]))  # Faurung 1
+    battle_map.set_combatant_coordinates(combatant5, np.array([3, 6]))   # Stone Giant 1
+    battle_map.build_adjacency_matrix()
+    combatant5.curr_hp = 52
+    combatant1.spellslots.use_spellslot(3)
+    combatant1.spellslots.use_spellslot(1)
+    combatant1.spellslots.use_spellslot(1)
+    combatant1.spellslots.use_spellslot(3)
+    combatant1.curr_sorcery_points -= 4
+
+    try:
+        actoid1 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant1)
+        actoid2 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant1)
+        actoid3 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant1)
+        actoid4 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant1)
+        actoid5 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant1)
+        actoid6 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant1)
+        actoid7 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant1)
+        actoid8 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
