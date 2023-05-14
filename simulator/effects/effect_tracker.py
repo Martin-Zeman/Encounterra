@@ -7,7 +7,7 @@ from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.effects.post_haste_lethargy import PostHasteLethargy
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class EffectTracker:
     """

@@ -4,7 +4,7 @@ from simulator.misc import Conditions
 import logging
 import numpy as np
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 def check_feasibility(combatant, action, battle_map):

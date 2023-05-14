@@ -4,6 +4,7 @@ import logging
 import re
 import sys
 import time
+import math
 
 import numpy as np
 from toposort import toposort_flatten
@@ -19,7 +20,7 @@ from simulator.spells.misty_step import MistyStepFactory
 from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
     calc_threat_for_path_with_misty_step
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 def find_ranges_of_consecutive(coords_w_threats):
     """
@@ -136,6 +137,10 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
         action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible(battle_map)}
 
+    for transition in transition_names:  # Filter out actions which don't have any eligible coords
+        if transition not in action_to_eligible_coords.keys():
+            dag.remove_transition(transition, '0')
+
     added_states = set()  # tracks which states have already been added
     for action_name, coords in action_to_eligible_coords.items():
         for coord in coords:
@@ -179,8 +184,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     to special Misty Step paths
     """
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
-    MINUS_INF = -sys.maxsize - 1
-    threat = {key: [MINUS_INF, MINUS_INF] for key in sorted_states}
+    threat = {key: [-math.inf, -math.inf] for key in sorted_states}
     sorted_states.pop()  # Get rid of the nop state
     threat['0'] = [0, 0]
     max_threat_backwards_transition = dict()
@@ -204,8 +208,8 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     combatant_coords = battle_map.get_combatant_position(combatant)
                 except AttributeError:
                     combatant_coords = None
-                transition_threat = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state][1] if threat[state][1] > MINUS_INF else 0)
-                movement_threat = threat[state][0] if threat[state][0] > MINUS_INF else 0
+                transition_threat = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
+                movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
             except KeyError:  # either not in the dict or regex search came up empty
                 # or different kind which represents some type of movement
                 movement_type, x, y = re.search(pattern, transition_name).groups()
@@ -225,7 +229,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     case _:
                         logger.error(f"Unknown movement type {movement_type}")
                         movement_threat = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
-                transition_threat = threat[state][1] if threat[state][1] > MINUS_INF else 0
+                transition_threat = threat[state][1] if threat[state][1] > -math.inf else 0
                 assert movement_threat <= 0  # TODO eventually remove
                 if movement_threat > threat[target_state][0]:
                     threat[target_state][0] = movement_threat

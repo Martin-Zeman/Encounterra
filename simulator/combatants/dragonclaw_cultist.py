@@ -5,7 +5,7 @@ from simulator.action_factory import *
 from simulator.misc import Side
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 class DragonclawCultist(Combatant):

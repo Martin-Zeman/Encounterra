@@ -2,7 +2,7 @@ from simulator.abilities.on_hit_effect import OnHit
 from simulator.misc import roll_saving_throw, reconcile_roll_modifiers, Conditions
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class OnHitProne(OnHit):
     def __init__(self, st, dc):

@@ -4,7 +4,7 @@ from simulator.effects.effect_tracker import EffectTracker
 import logging
 import copy
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 class RoundManager:

@@ -11,7 +11,7 @@ from simulator.threat import dmg_increment_for_dmg_flat
 from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class TotemRageFactory(ThreatModifierFactory):
 

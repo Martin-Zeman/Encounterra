@@ -9,7 +9,7 @@ from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
 from simulator.misc import SavingThrow, RollModifier
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class DisengageFactory(ThreatModifierFactory):
 

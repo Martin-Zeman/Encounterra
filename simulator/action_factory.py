@@ -31,7 +31,7 @@ from simulator.abilities.rage import RageFactory
 from simulator.abilities.reckless_attack import RecklessAttackFactory
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 TO_FACTORY = {
     Action.MELEE_ATTACK: MeleeAttackFactory,

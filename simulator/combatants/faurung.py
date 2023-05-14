@@ -12,7 +12,7 @@ from simulator.feasibility import get_feasible_factories
 import logging
 import numpy as np
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 class Faurung(Combatant):
@@ -80,7 +80,8 @@ class Faurung(Combatant):
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
-            'attack_state_machine': self.attack_fsm.state
+            'attack_state_machine': self.attack_fsm.state,
+            'curr_num_attacks': self.curr_num_attacks  # TODO REMOVE THIS
         }
 
     def load_resources(self, resources):
@@ -90,6 +91,7 @@ class Faurung(Combatant):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
+        self.curr_num_attacks = resources['curr_num_attacks']  # TODO remove this
 
 
     def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):

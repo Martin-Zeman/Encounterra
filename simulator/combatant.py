@@ -13,7 +13,7 @@ from simulator.actions.dodge import DodgeFactory
 from simulator.actions.disengage import DisengageFactory
 from simulator.action_factory import TO_TWINNED, TO_QUICKENED
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 class Combatant(ABC):

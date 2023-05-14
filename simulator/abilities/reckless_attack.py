@@ -89,13 +89,12 @@ class RecklessAttackFactory(DirectThreatFactory):
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         if not potential_targets:
             return 0
-        num = min(self.max_num, self.combatant.curr_num_attacks)
         def mean_dmg_mod(acc, pt):
             to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
             to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - to_hit_total, 20))]
             total_crit = self.crit_range + self.mod_crit_range
             total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
-            return acc + num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
+            return acc + mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
                                   self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
 
         dmg_acc = reduce(mean_dmg_mod, potential_targets)
@@ -158,10 +157,9 @@ class RecklessAttackFactory(DirectThreatFactory):
             consider_dist = kwargs["consider_dist"]
         except KeyError:
             consider_dist = False
-        num = min(self.max_num, self.combatant.curr_num_attacks)
 
         if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
-            dmg = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
+            dmg = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         else:
             dmg = 0
         factories = target.action_factories
@@ -178,10 +176,9 @@ class RecklessAttackFactory(DirectThreatFactory):
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
-        num = min(self.max_num, self.combatant.curr_num_attacks)
         baseline = 0
         if battle_map.are_in_hop_range(self.combatant, target, self.range):
-            baseline = num * mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
+            baseline = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
                                 target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         try:
             mod_range = modified_stats['range']
@@ -219,7 +216,7 @@ class RecklessAttackFactory(DirectThreatFactory):
                 to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
                 total_crit = self.crit_range + mod_crit_range
                 total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
-                modified = num * mean_dmg(self.to_hit + to_hit_total, self.dmg_dice + mod_dmg_die, self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
+                modified = mean_dmg(self.to_hit + to_hit_total, self.dmg_dice + mod_dmg_die, self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
         incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc

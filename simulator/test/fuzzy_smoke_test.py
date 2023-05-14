@@ -11,11 +11,14 @@ from simulator.combatants.faurung import Faurung
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams
+import logging
+
+logger = logging.getLogger("EncounTroll")
 
 # @pytest.mark.skip( reason='Manual test only')
 @pytest.mark.slow
-@pytest.mark.parametrize('execution_number', range(1))
-def test_random_matchup(execution_number):
+# @pytest.mark.parametrize('execution_number', range(1))
+def test_random_matchup():
     CustomLogger(LogLevel.INFO)
     combatant_pool = [Faurung, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl]
     session = Session()
@@ -25,6 +28,9 @@ def test_random_matchup(execution_number):
 
     blue_team = random.sample(combatant_pool, num_blue_combatants)
     red_team = random.sample(combatant_pool, num_red_combatants)
+    logger.info(f"Starting a fuzzy test with:")
+    logger.info(f"Blue team: {blue_team}")
+    logger.info(f"Red team: {red_team}")
 
     for combatant in blue_team:
         session.add_combatant(combatant, Teams.Color.BLUE)

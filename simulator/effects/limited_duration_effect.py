@@ -1,7 +1,7 @@
 from simulator.effects.effect import Effect
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 class LimitedDurationEffect(Effect):
     def __init__(self, turns):
        self.turns = turns

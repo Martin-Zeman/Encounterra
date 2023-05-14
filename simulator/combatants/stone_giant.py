@@ -10,7 +10,7 @@ from simulator.actions.actoid import ActoidFlags
 import numpy as np
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 

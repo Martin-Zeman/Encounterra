@@ -9,7 +9,7 @@ from simulator.geometry import *
 from simulator.combatant_coords import CombatantCoords
 from enum import Enum, auto
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class ActionResult(Enum):
     # TODO get rid of this
@@ -461,7 +461,7 @@ class ActionResolver:
         """
         for effect in effects:
             match effect.__class__.__name__:
-                case "Haste":
+                case "Haste" | "TwinnedHaste":
                     # resolves the part of the haste spell which needs to be applied every turn
                     combatant.movement = combatant.speed * 2
                     combatant.has_haste_action = True

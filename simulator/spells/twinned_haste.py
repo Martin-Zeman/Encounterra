@@ -89,7 +89,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             attack_dmg_decrement_acc /= len(enemy_attacks)
 
             # TODO include the ST-based abilities here
-        max_attack_dmg += attack_dmg_decrement_acc
+        max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
         return max_attack_dmg * ROUND_HORIZON
 
     def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
@@ -110,7 +110,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_mod(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
-        max_attack_dmg += attack_dmg_decrement_acc
+        max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
         return max_attack_dmg * ROUND_HORIZON
 
 class TwinnedHaste(Actoid, Effect, ThreatModifier):
@@ -157,15 +157,20 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         return target1_threat + target2_threat
 
     def get_eligible_coords(self, battle_map, shortest_paths):
-        coords_for_fist = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
-                                                                        inflate_to_size=self.factory.caster.size,
-                                                                        rng=TwinnedHasteFactory.range,
-                                                                        combatant=self.factory.caster)
-        coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
-                                                                          inflate_to_size=self.factory.caster.size,
-                                                                          rng=TwinnedHasteFactory.range,
-                                                                          combatant=self.factory.caster)
-        return coords_for_fist.intersection(coords_for_second)
+        if self.targets[0] is self.factory.caster:
+            coords_for_first = battle_map.get_all_accessible_coords(shortest_paths)
+        else:
+            coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
+                                                                             inflate_to_size=self.factory.caster.size,
+                                                                             rng=TwinnedHasteFactory.range)
+
+        if self.targets[1] is self.factory.caster:
+            coords_for_second = battle_map.get_all_accessible_coords(shortest_paths)
+        else:
+            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
+                                                                              inflate_to_size=self.factory.caster.size,
+                                                                              rng=TwinnedHasteFactory.range)
+        return coords_for_first.intersection(coords_for_second)
 
     def is_current_coord_eligible(self, battle_map):
         return battle_map.get_cartesian_distance(self.factory.caster, self.targets[0]) <= TwinnedHasteFactory.range and \

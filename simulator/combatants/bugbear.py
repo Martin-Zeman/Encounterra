@@ -7,7 +7,7 @@ from simulator.misc import Side
 import numpy as np
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 class Bugbear(Combatant):

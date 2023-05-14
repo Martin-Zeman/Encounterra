@@ -7,7 +7,7 @@ from simulator.threat import mean_dmg
 import logging
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class MeleeAttackFactory(AttackFactory):
 

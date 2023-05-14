@@ -3,7 +3,7 @@ import logging
 
 from simulator.misc import roll_saving_throw, reconcile_roll_modifiers
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 class EndOfTurnEffect(Effect):
     def __init__(self, combatant, st, dc):
        self.combatant = combatant

@@ -16,7 +16,7 @@ import time
 import heapq
 from enum import Enum
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 SQRT_OF_TWO = 1.41421
 

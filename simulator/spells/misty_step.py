@@ -8,7 +8,7 @@ from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
 from simulator.misc import CombatantArchetype, DistanceMetric
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class MistyStepFactory(DirectThreatFactory):
     level = 2

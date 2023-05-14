@@ -10,7 +10,7 @@ from functools import reduce, cache
 from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
 import logging
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class HasteFactory(ThreatModifierFactory):
     level = 3
@@ -70,7 +70,7 @@ class HasteFactory(ThreatModifierFactory):
 
                 attack_dmg_decrement_acc /= len(enemy_attacks)
                 # TODO include the ST-based abilities here
-            threat_per_ally += attack_dmg_decrement_acc
+            threat_per_ally -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
             ret.append([ally, threat_per_ally])
         ret.sort(key=lambda e: e[1], reverse=True)
         return ret
@@ -129,7 +129,7 @@ class HasteFactory(ThreatModifierFactory):
             attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_mod(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
-        max_attack_dmg += attack_dmg_decrement_acc
+        max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
         return max_attack_dmg * ROUND_HORIZON
 
     def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
@@ -150,7 +150,7 @@ class HasteFactory(ThreatModifierFactory):
             attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
-        max_attack_dmg += attack_dmg_decrement_acc
+        max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
         return max_attack_dmg * ROUND_HORIZON
 
 class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
@@ -198,7 +198,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         else:
             return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  inflate_to_size=self.factory.caster.size,
-                                                                 rng=HasteFactory.range, combatant=self.target)
+                                                                 rng=HasteFactory.range)
 
     def is_current_coord_eligible(self, battle_map):
         return battle_map.get_cartesian_distance(self.factory.caster, self.target) <= HasteFactory.range

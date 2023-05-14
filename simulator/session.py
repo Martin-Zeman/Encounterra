@@ -14,7 +14,7 @@ from enum import Enum
 import logging
 import multiprocessing as mp
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 class Session:

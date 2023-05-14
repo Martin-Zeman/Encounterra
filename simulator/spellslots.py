@@ -2,7 +2,7 @@ from enum import Enum
 import logging
 import copy
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 FULL_CASTER_TABLE = {

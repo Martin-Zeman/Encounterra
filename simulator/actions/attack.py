@@ -11,7 +11,7 @@ import logging
 
 from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER_CRIT, ROLL_MODIFIER
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class AttackFactory(DirectThreatFactory):
 
@@ -83,13 +83,12 @@ class AttackFactory(DirectThreatFactory):
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         if not potential_targets:
             return 0
-        num = min(self.max_num, self.combatant.curr_num_attacks)
         def mean_dmg_mod(acc, pt):
             to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
             to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - to_hit_total, 20))]
             total_crit = self.crit_range + self.mod_crit_range
             total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
-            return acc + num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
+            return acc + mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
                                   self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
 
         dmg_acc = reduce(mean_dmg_mod, potential_targets)
@@ -158,18 +157,16 @@ class AttackFactory(DirectThreatFactory):
         to_hit_total = self.to_hit
         to_hit_total = to_hit_total + ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
 
-        num = min(self.max_num, self.combatant.curr_num_attacks)
         # TODO: Should I include roll modifiers here? There may be a use-case in the future
         if not consider_dist or battle_map.get_hop_distance(self.combatant, target) <= self.range:
-            return num * mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
+            return mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         return 0
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        num = min(self.max_num, self.combatant.curr_num_attacks)
-        baseline = num * mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
+        baseline = mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         try:
             mod_dmg_flat = modified_stats['dmg_bonus_flat']
         except KeyError:
@@ -208,7 +205,7 @@ class AttackFactory(DirectThreatFactory):
         total_crit = self.crit_range + mod_crit_range
         total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
         try:
-            modified = num * mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
+            modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
         except:
             logger.error("Error in mean_dmg of calculate_threat_to_target_mod of AttackFactory")
             modified = baseline

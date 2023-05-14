@@ -2,7 +2,7 @@ from simulator.action_factory import *
 import logging
 from simulator.misc import Conditions
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 
 

@@ -12,7 +12,7 @@ import logging
 
 from simulator.utils.roll_modifiers import RollModifier
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class DodgeFactory(ThreatModifierFactory):
 

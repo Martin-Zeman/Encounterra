@@ -12,7 +12,7 @@ from functools import reduce
 
 from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class ChaosboltFactory(DirectThreatFactory):
     DMG_TYPE = (

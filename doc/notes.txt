@@ -49,3 +49,16 @@ FaurungDt vs 4 Cultists on Ubuntu:
  Manticore: The manticore makes three attacks: one with its bite and two with its claws or three with its tail spikes.
 
  -> make a special category for these conditional attacks (like the gricks). They may have a target restriction.
+
+ Encountenance
+ Encountopia
+ EnCounterCraft
+ Dice 'n' counts
+
+ Quality Assurance:
+ - Unit tests
+ - Fuzzy smoke testing
+ - TODO: Statistical system tests
+ - Test cases based identified on error cases
+ - Various asserts
+ - Double-checking of feasibility

@@ -211,9 +211,15 @@ def get_threat_for_staying_at_coord(battle_map, coords, combatant):
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     for effect, affected_coords in effect_to_coords.items():
         if battle_map.get_hop_distance(affected_coords, coords) == 0:
-            threat_acc += effect.threat_on_start_of_turn(battle_map, combatant)
-            threat_acc += effect.threat_on_end_of_turn(battle_map, combatant)
-    threat_acc += get_danger_zone_threat(battle_map, coords, combatant)
+            t = effect.threat_on_start_of_turn(battle_map, combatant)
+            assert t >= 0
+            threat_acc += t
+            t = effect.threat_on_end_of_turn(battle_map, combatant)
+            assert t >= 0
+            threat_acc += t
+    dzt = get_danger_zone_threat(battle_map, coords, combatant)
+    assert dzt >= 0
+    threat_acc += dzt
     return threat_acc
 
 
@@ -237,16 +243,34 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
         if not disengaged:
             enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
             for e in enemies:
-                threat_acc -= e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier)
+                t = e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier)
+                try:
+                    assert t >= 0
+                except AssertionError:
+                    print("FIXME")
+                    e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier)
+                threat_acc -= t
 
         # account for AoE
         for effect, affected_coords in effect_to_coords.items():
             pre_increment_dist = battle_map.get_hop_distance(curr_coords_data, affected_coords)
             post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
             if pre_increment_dist == 1 and post_increment_dist == 0:
-                threat_acc -= effect.threat_on_enter(battle_map, combatant)
+                t = effect.threat_on_enter(battle_map, combatant)
+                try:
+                    assert t >= 0
+                except AssertionError:
+                    print("FIXME")
+                    effect.threat_on_enter(battle_map, combatant)
+                threat_acc -= t
             elif pre_increment_dist == 0 and post_increment_dist == 0:
-                threat_acc -= effect.threat_on_move_within(battle_map, combatant)
+                t = effect.threat_on_move_within(battle_map, combatant)
+                try:
+                    assert t >= 0
+                except AssertionError:
+                    print("FIXME")
+                    effect.threat_on_move_within(battle_map, combatant)
+                threat_acc -= t
     return threat_acc
 
 
@@ -264,12 +288,22 @@ def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, 
     """
     threat_acc = 0
     curr_coords = battle_map.get_combatant_position(combatant)
-    curr_coords_data = copy.copy(curr_coords.get()) # TODO shallow copy should be enough here
+    curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
     for increment in path:
-        threat_acc += get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged)
+        t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged)
+        try:
+            assert t <= 0
+        except AssertionError:
+            print("FIXME")
+        threat_acc += t
         curr_coords_data += increment
     # account for the final destination
-    threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
+    t = get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
+    try:
+        assert t >= 0
+    except AssertionError:
+        print("FIXME")
+    threat_acc -= t
     return threat_acc
 
 def calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_coords):

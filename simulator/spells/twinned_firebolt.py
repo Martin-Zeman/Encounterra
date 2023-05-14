@@ -12,7 +12,7 @@ import logging
 
 from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER_CRIT, ROLL_MODIFIER
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("EncounTroll")
 
 class TwinnedFireboltFactory(DirectThreatFactory):
     level = 0
