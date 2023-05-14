@@ -15,30 +15,29 @@ import logging
 
 logger = logging.getLogger("EncounTroll")
 
-# @pytest.mark.skip( reason='Manual test only')
 @pytest.mark.slow
-# @pytest.mark.parametrize('execution_number', range(1))
 def test_random_matchup():
     CustomLogger(LogLevel.INFO)
-    combatant_pool = [Faurung, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl]
-    session = Session()
+    for _ in range(10):
+        combatant_pool = [Faurung, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl]
+        session = Session()
 
-    num_blue_combatants = random.randint(1, 4)
-    num_red_combatants = random.randint(1, 4)
+        num_blue_combatants = random.randint(1, 4)
+        num_red_combatants = random.randint(1, 4)
 
-    blue_team = random.sample(combatant_pool, num_blue_combatants)
-    red_team = random.sample(combatant_pool, num_red_combatants)
-    logger.info(f"Starting a fuzzy test with:")
-    logger.info(f"Blue team: {blue_team}")
-    logger.info(f"Red team: {red_team}")
+        blue_team = random.sample(combatant_pool, num_blue_combatants)
+        red_team = random.sample(combatant_pool, num_red_combatants)
+        logger.info(f"Starting a fuzzy test with:")
+        logger.info(f"Blue team: {blue_team}")
+        logger.info(f"Red team: {red_team}")
 
-    for combatant in blue_team:
-        session.add_combatant(combatant, Teams.Color.BLUE)
-    for combatant in red_team:
-        session.add_combatant(combatant, Teams.Color.RED)
+        for combatant in blue_team:
+            session.add_combatant(combatant, Teams.Color.BLUE)
+        for combatant in red_team:
+            session.add_combatant(combatant, Teams.Color.RED)
 
-    session.set_num_simulations(1)
-    try:
-        session.simulate(parallel=False)
-    except Exception as e:
-        assert False, f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception {e}"
+        session.set_num_simulations(1)
+        try:
+            session.simulate(parallel=False)
+        except Exception as e:
+            assert False, f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception {e}"
