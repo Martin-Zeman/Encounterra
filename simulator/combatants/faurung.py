@@ -36,7 +36,6 @@ class Faurung(Combatant):
         self.spellslots = Spellslots(Class.SORCERER, 5)
         self.archetype = CombatantArchetype.RANGED
         self.movement_generator_cache = None
-        self.nowhere_to_go = False
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 6
@@ -56,6 +55,8 @@ class Faurung(Combatant):
         :param battle_map:
         :return: the next best actoid
         """
+        if self.is_affected_by(Conditions.PRONE):
+            return GetUpFactory().create()
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
         if self.action_plan:
             if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
@@ -67,7 +68,6 @@ class Faurung(Combatant):
 
     def new_turn(self):
         super().new_turn()
-        self.nowhere_to_go = False
         self.movement_generator_cache = None
 
     def prompt_aoo(self, moving_combatant):

@@ -268,8 +268,7 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pat
             x, y = re.search(ms_pattern, ms_path[i]).groups()
             before_path.append(np.array([int(x), int(y)]))
         before_path = convert_path_to_increments(before_path)
-        before_movement_generator = MovementGenerator(combatant, before_path, Movement.STANDARD).get_generator()
-        actions.append(before_movement_generator)
+        actions.extend(list(MovementGenerator(combatant, before_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
     x, y = re.search(ms_pattern, ms_path[ms_idx]).groups()
     actions.append(ms_factory.create(np.array([int(x), int(y)])))
     if after_ms_idx is not None:
@@ -278,8 +277,7 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pat
             x, y = re.search(ms_pattern, ms_path[i]).groups()
             after_path.append(np.array([int(x), int(y)]))
         after_path = convert_path_to_increments(after_path)
-        after_movement_generator = MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()
-        actions.append(after_movement_generator)
+        actions.extend(list(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
 
 def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path):
     """
