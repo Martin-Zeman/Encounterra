@@ -126,6 +126,7 @@ class Map:
         self.impassable_set = set()
         self.combatant_coordinate_cache = dict()  # Maps combatant -> coordinate
         self.effect_tracker = None
+        self.combatant_positioning_hash = None
 
     def __str__(self):
         string_repr = ""
@@ -1102,3 +1103,20 @@ class Map:
     def is_difficult_terrain_at(self, coords: CombatantCoords):
         vec_is_difficult_terrain = np.vectorize(GridSquare.is_difficult_terrain)
         return np.any(vec_is_difficult_terrain(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
+
+
+    # def has_combatant_positioning_changed(self, new_hash):
+    #     """
+    #     Determines if the collective positioning of all combatants has changed since the last call. Note that this is NOT updated along
+    #     with the positioning of combatants. It's determined as compared to the last call of this method ONLY!
+    #     :param: new_hash the new hash  recalculated by the callee
+    #     :return: True if the positioning of any combatant has changed since last call, False otherwise
+    #     """
+    #     # TODO Unit-test this
+    #     if new_hash != self.combatant_positioning_hash:
+    #         self.combatant_positioning_hash = new_hash
+    #         return True
+    #     return False
+    #
+    # def calc_positioning_hash(self):
+    #     return hash(frozenset(self.combatant_coordinate_cache.items()))

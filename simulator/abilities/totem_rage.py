@@ -71,30 +71,6 @@ class TotemRageFactory(ThreatModifierFactory):
         total_threat += max_incoming_threat / 2
         return total_threat * ROUND_HORIZON
 
-    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
-        """
-        Calculates the threat the factory is capable of dealing to a specific target by modifying a specific given attack factory.
-        """
-        rage_bonus = RageFactory.get_rage_bonus(self.combatant.level)
-        total_threat = 0
-        # This doesn't take different attack ranges into account
-        # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
-        dmg_inc = attack_factory.calculate_threat_to_target_mod(battle_map, self, {"dmg_bonus_flat": rage_bonus})
-
-        total_threat += dmg_inc
-        # Haste factories wouldn't change the result here so we're omitting them
-        max_incoming_threat = 0
-        for f in target.action_factories:
-            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target(battle_map, self.combatant))
-        total_threat += max_incoming_threat / 2
-
-        max_incoming_threat = 0
-        for f in target.bonus_action_factories:
-            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_incoming_threat = max(max_incoming_threat, f[1].calculate_threat_to_target(battle_map, self.combatant))
-        total_threat += max_incoming_threat / 2
-        return total_threat * ROUND_HORIZON
 
 class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 

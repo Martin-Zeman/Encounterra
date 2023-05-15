@@ -69,6 +69,8 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
+        if target.haste_action_factories:  # No benefit if already hasted
+            return 0
         enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
@@ -92,26 +94,6 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
         return max_attack_dmg * ROUND_HORIZON
 
-    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
-        enemies = battle_map.get_enemies(target)
-            # This doesn't take different attack ranges into account
-        max_attack_dmg = 0
-        potential_targets = battle_map.get_enemies_within_hop_distance(target, target.speed + attack_factory.range + 1)
-        if potential_targets:
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack_factory.to_hit, attack_factory.dmg_dice, attack_factory.dmg_bonus, pt.ac, attack_factory.crit_range, pt.is_resistant_to(attack_factory.dmg_type)), potential_targets, 0)
-            dmg_acc /= len(potential_targets)
-            max_attack_dmg = max(dmg_acc, max_attack_dmg)
-        attack_dmg_decrement_acc = 0
-        assert len(enemies) > 0
-        for enemy in enemies:
-            enemy_attacks = get_attacks(enemy)
-            if not enemy_attacks:
-                continue
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_mod(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
-            attack_dmg_decrement_acc /= len(enemy_attacks)
-            # TODO include the ST-based abilities here
-        max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
-        return max_attack_dmg * ROUND_HORIZON
 
 class TwinnedHaste(Actoid, Effect, ThreatModifier):
 
@@ -127,16 +109,19 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         self.factory.caster.is_concentrating = True
         for target in self.targets:
             target.ac += 2
-            target.haste_actions = [HasteAction.HASTE_MELEE_ATTACK, HasteAction.HASTE_RANGED_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
-            target.has_haste_action = True
+            target.add_hasted_factories()
+            target.has_haste_action = True  # TODO Remove this
+            target.movement += target.speed
+            target.speed *= 2
 
     def deactivate(self):
         self.factory.caster.is_concentrating = False
         for target in self.targets:
             target.ac -= 2
-            target.haste_actions.clear()
+            target.haste_action_factories.clear()
             self.factory.effect_tracker.create_post_haste_lethargy(target)
-            target.has_haste_action = False
+            target.has_haste_action = False  # TODO Remove this
+            target.speed /= 2
 
     def is_affecting(self, combatant, battle_map):
         return combatant in self.targets

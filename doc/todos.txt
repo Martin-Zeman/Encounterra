@@ -1,5 +1,6 @@
 - make haste action factories work with the new AI
 - do the best action as usual but once movement is exhausted. Recalculate it again but this time with only the current coordinate.
+- Faurung seems to be oscillating in movement sometimes
 
 - I want to implement a look-up for the best coordinates for a selected action. Could be part of the factories. It would take AoE effects into account, AoO on the way and maybe even movement. This should also be factored into the overall threat of that action.
 - Maybe the approx threat should belong to the factories and would accept a dict of the FactoryStats that are boosted by the modifying ability

@@ -104,14 +104,6 @@ class ThreatModifierFactory(ABC, Factory):
         """
         return 0
 
-    @abstractmethod
-    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
-        """
-        Calculates the threat the factory is capable of dealing to a specific target by modifying a specific given factory.
-        This is used to construct the threat adjacency matrix.
-        """
-        return 0
-
 class DirectThreatFactory(ABC, Factory):
 
     def __init__(self):

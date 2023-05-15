@@ -39,10 +39,6 @@ class DisengageFactory(ThreatModifierFactory):
         """
         return target.aoo_factory[1].calculate_threat_to_target(battle_map, self.combatant)
 
-    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
-        return 0
-
-
 
 class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 

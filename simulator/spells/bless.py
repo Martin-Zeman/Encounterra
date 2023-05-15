@@ -60,10 +60,6 @@ class BlessFactory(ThreatModifierFactory):
         """
         return 0
 
-    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
-        return 0
-
-
 
 class Bless(Actoid, Effect, ThreatModifier):
     def __init__(self, targets, factory):

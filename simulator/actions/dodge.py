@@ -38,9 +38,6 @@ class DodgeFactory(ThreatModifierFactory):
         # The target is irrelevant here
         return -1 * calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
 
-    def calculate_threat_to_target_using_attack(self, battle_map, target, attack_factory, *args, **kwargs):
-        return 0
-
 
 class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
