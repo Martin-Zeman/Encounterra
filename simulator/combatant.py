@@ -228,11 +228,12 @@ class Combatant(ABC):
                     logger.error("Unknown reaction")
                     return None
         elif isinstance(action_type, HasteAction):
+            # TODO Remove this
             for action in self.action_factories:
                 try:
                     # A combatant can have multiple attacks, we need a hastened version of all of them
                     hasted_action = TO_HASTED[action]
-                    self.haste_action_factories.append((hasted_action, copy.deepcopy(action))) # Need a copy to change the action_type
+                    self.haste_action_factories.append((hasted_action, copy.deepcopy(action)))  # Need a copy to change the action_type
                     self.haste_action_factories[-1].action_type = action_type
                     return None
                 except KeyError:
@@ -290,12 +291,16 @@ class Combatant(ABC):
             logger.error("Unknown high level action class")
             return None
 
-    def commit_abilities(self):
-        """
-        Checks some sanity rules for abilites, e.g. if you have TWIN_SPELL and some spells then you also expect to have their
-        """
-        # TODO Do I need this or not?
-        pass
+    def add_hasted_factories(self):
+        for action in self.action_factories:
+            try:
+                # A combatant can have multiple attacks, we need a hastened version of all of them
+                hasted_action = TO_HASTED[action]
+                self.haste_action_factories.append((hasted_action, copy.deepcopy(action)))  # Need a copy to change the action_type
+                self.haste_action_factories[-1].action_type = hasted_action
+                return None
+            except KeyError:
+                pass
 
     def has_passive(self, ability):
         return ability in self.passive
@@ -383,33 +388,6 @@ class Combatant(ABC):
                 self.ammo[f[1].name] = f[1].ammo
         self.last_attack_factory_name = None
 
-
-    # @abstractmethod
-    # def calculate_threat(self, battle_map):
-    #     """
-    #     Calculates the threat potential of the combatant for all their abilities
-    #     @param battle_map:
-    #     @return:
-    #     """
-    #     return 0
-    #
-    #
-    # def calculate_threat_approx(self, battle_map):
-    #     """
-    #     Calculates the threat potential of the combatant as a non-self character (i.e. being considered as a target)
-    #     @param battle_map:
-    #     @return:
-    #     """
-    #     # iterate over abilities, calculate their approx threat and order them and return the max
-    #     return 0
-    #
-    # def calculate_threat_approx_haste_action(self, battle_map):
-    #     """
-    #     Calculates the threat potential of the combatant as a non-self character that can be achieved with a haste action
-    #     @param battle_map:
-    #     @return:
-    #     """
-    #     return 0
 
     def is_bloodied_or_worse(self):
         return self.condition.value >= self.State.BLOODIED.value

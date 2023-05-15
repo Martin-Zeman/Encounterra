@@ -171,8 +171,10 @@ class ActionResolver:
         if final_modifier == RollModifier.STRAIGHT:
             rolled = random.randint(1, 20)
         elif final_modifier.ADVANTAGE:
+            logger.info(f"{caster} rolls for {spell} with advantage", extra={"team": self.teams.get_team(caster)})
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
+            logger.info(f"{caster} rolls for {spell} with disadvantage", extra={"team": self.teams.get_team(caster)})
             rolled = min(random.randint(1, 20), random.randint(1, 20))
 
         multiplier = 1
@@ -278,8 +280,10 @@ class ActionResolver:
         if final_modifier is RollModifier.STRAIGHT:
             rolled = random.randint(1, 20)
         elif final_modifier is RollModifier.ADVANTAGE:
+            logger.info(f"{attacker} rolls for {attack} with advantage", extra={"team": self.teams.get_team(attacker)})
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
+            logger.info(f"{attacker} rolls for {attack} with disadvantage", extra={"team": self.teams.get_team(attacker)})
             rolled = min(random.randint(1, 20), random.randint(1, 20))
 
         multiplier = 1

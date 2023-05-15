@@ -167,16 +167,15 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
     def activate(self):
         self.factory.caster.is_concentrating = True
         self.target.ac += 2
-        # TODO rework this in the new way
-        self.target.haste_actions = [HasteAction.HASTE_MELEE_ATTACK, HasteAction.HASTE_RANGED_ATTACK, HasteAction.HASTE_DISENGAGE, HasteAction.HASTE_DASH, HasteAction.HASTE_HIDE]
-        self.target.has_haste_action = True
+        self.target.add_hasted_factories()
+        self.target.has_haste_action = True  # TODO Remove this
 
     def deactivate(self):
         self.factory.caster.is_concentrating = False
         self.target.ac -= 2
-        self.target.haste_actions.clear()
+        self.target.haste_action_factories.clear()
         self.factory.effect_tracker.create_post_haste_lethargy(self.target)
-        self.target.has_haste_action = False
+        self.target.has_haste_action = False  # TODO Remove this
 
     def is_affecting(self, combatant, battle_map):
         return combatant is self.target

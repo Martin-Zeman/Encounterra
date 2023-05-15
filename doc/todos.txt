@@ -1,3 +1,4 @@
+- make haste action factories work with the new AI
 - do the best action as usual but once movement is exhausted. Recalculate it again but this time with only the current coordinate.
 
 - I want to implement a look-up for the best coordinates for a selected action. Could be part of the factories. It would take AoE effects into account, AoO on the way and maybe even movement. This should also be factored into the overall threat of that action.
