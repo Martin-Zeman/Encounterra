@@ -18,7 +18,7 @@ logger = logging.getLogger("EncounTroll")
 @pytest.mark.slow
 def test_random_matchup():
     CustomLogger(LogLevel.INFO)
-    for _ in range(10):
+    for _ in range(100):
         combatant_pool = [Faurung, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl]
         session = Session()
 

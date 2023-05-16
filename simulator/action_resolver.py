@@ -366,6 +366,7 @@ class ActionResolver:
             combatant.movement += combatant.speed
             return False
         elif actoid.actoid_flags is ActoidFlags.IS_GET_UP_FROM_PRONE:
+            logger.info(f"{combatant} gets up from being prone")
             combatant.remove_condition(Conditions.PRONE)  # resources already taken
         return False
 

@@ -94,6 +94,7 @@ class HasteFactory(ThreatModifierFactory):
     def get_eligible_targets(self, battle_map):
         ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
         ret.append(self.caster)
+        ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
 
     def create_all(self, battle_map):
@@ -150,8 +151,6 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.target.ac += 2
         self.target.add_hasted_factories()
         self.target.has_haste_action = True  # TODO Remove this
-        self.target.movement += self.target.speed
-        self.target.speed *= 2
 
     def deactivate(self):
         self.factory.caster.is_concentrating = False
@@ -159,7 +158,6 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.target.haste_action_factories.clear()
         self.factory.effect_tracker.create_post_haste_lethargy(self.target)
         self.target.has_haste_action = False  # TODO Remove this
-        self.target.speed /= 2
 
     def is_affecting(self, combatant, battle_map):
         return combatant is self.target

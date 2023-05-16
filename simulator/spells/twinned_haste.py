@@ -48,12 +48,11 @@ class TwinnedHasteFactory(ThreatModifierFactory):
     def create_best(self, combatant, battle_map):
         return TwinnedHaste(self.find_best_args(combatant, battle_map), self)
 
-    # def create_mock(self):
-    #     return TwinnedHaste(None, self)
 
     def get_eligible_targets(self, battle_map):
-        ret = battle_map.get_allies_within_radius(self.caster, TwinnedHasteFactory.range)
+        ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
         ret.append(self.caster)
+        ret = [a for a in ret if len(a.haste_action_factories) == 0]
         ret = combinations(ret, 2)
         return ret
 
@@ -111,8 +110,6 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
             target.ac += 2
             target.add_hasted_factories()
             target.has_haste_action = True  # TODO Remove this
-            target.movement += target.speed
-            target.speed *= 2
 
     def deactivate(self):
         self.factory.caster.is_concentrating = False
@@ -121,7 +118,6 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
             target.haste_action_factories.clear()
             self.factory.effect_tracker.create_post_haste_lethargy(target)
             target.has_haste_action = False  # TODO Remove this
-            target.speed /= 2
 
     def is_affecting(self, combatant, battle_map):
         return combatant in self.targets

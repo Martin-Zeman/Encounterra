@@ -825,3 +825,96 @@ def test_error_case_12(battle_map, teams, effect_tracker, combatant1, combatant4
         action_resolver.resolve_action(actoid2, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+
+def test_error_case_13(battle_map, teams, effect_tracker, combatant1, combatant4, combatant5):
+    """
+    This test case is based on a scenario encountered during fuzzy testing.
+    """
+    CustomLogger(LogLevel.WARNING)
+    combatant6 = copy.deepcopy(combatant5)
+    battle_map.place_circular_element(np.array([1, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([12, 14]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([3, 12]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([9, 11]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant1, combatant4, combatant5, combatant6]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # Faurung 1
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # TotemBarbarian5Lvl 1
+    teams.add_combatant_to_team(combatant5, Teams.Color.BLUE)  # StoneGiant 1
+    teams.add_combatant_to_team(combatant6, Teams.Color.RED)  # StoneGiant 2
+    battle_map.set_combatant_coordinates(combatant1, np.array([5, 5]))  # Faurung 1
+    battle_map.set_combatant_coordinates(combatant4, np.array([4, 6]))   # TotemBarbarian5Lvl 1
+    battle_map.set_combatant_coordinates(combatant5, np.array([1, 10]))   # StoneGiant 1
+    battle_map.set_combatant_coordinates(combatant6, np.array([8, 8]))   # TotemBarbarian5Lvl 2
+    battle_map.build_adjacency_matrix()
+
+    combatant1.curr_hp = 43
+    combatant1.spellslots.use_spellslot(3)
+    combatant1.spellslots.use_spellslot(3)
+    combatant1.spellslots.use_spellslot(1)
+    combatant1.curr_sorcery_points = 0
+
+    try:
+        actoid1 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant1)
+        actoid2 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant1)
+        actoid3 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant1)
+        actoid4 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant1)
+        actoid5 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant1)
+        actoid6 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant1)
+        actoid7 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant1)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_14(battle_map, teams, effect_tracker, combatant1, combatant5, combatant6):
+    """
+    This test case is based on a scenario encountered during fuzzy testing.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.place_circular_element(np.array([4, 11]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([13, 10]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([10, 13]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([10, 2]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant1, combatant5, combatant6]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.RED)  # Faurung 1
+    teams.add_combatant_to_team(combatant5, Teams.Color.BLUE)  # StoneGiant 1
+    teams.add_combatant_to_team(combatant6, Teams.Color.BLUE)  # Ogre 1
+    battle_map.set_combatant_coordinates(combatant1, np.array([0, 14]))  # Faurung 1
+    battle_map.set_combatant_coordinates(combatant5, np.array([0, 10]))   # StoneGiant 1
+    battle_map.set_combatant_coordinates(combatant6, np.array([1, 13]))   # TotemBarbarian5Lvl 2
+    battle_map.build_adjacency_matrix()
+
+    combatant1.spellslots.use_spellslot(3)
+    combatant1.spellslots.use_spellslot(1)
+    combatant1.curr_sorcery_points = 2
+
+    try:
+        actoid1 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant1)
+        actoid2 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant1)
+        actoid3 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant1)
+        actoid4 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant1)
+        actoid5 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant1)
+        actoid6 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant1)
+        actoid7 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant1)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"

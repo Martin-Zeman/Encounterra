@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 from simulator.action_types import Action
 from simulator.actions.action_selector import decode_ms_path_to_actions
+from simulator.actions.movement import MovementIncrement
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Size
 from simulator.spells.cloud_of_daggers import CloudOfDaggersFactory
@@ -413,9 +414,12 @@ def test_calc_threat_for_path_with_misty_step_scenario_1(battle_map, teams, comb
     ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(combatant1)
     decode_ms_path_to_actions(combatant1, battle_map.get_combatant_position(combatant1).get()[0], max_threat_path, actions, ms_pattern, ms_factory)
-    assert isinstance(actions[0], types.GeneratorType)
+    assert isinstance(actions[0], MovementIncrement)
     assert isinstance(actions[1], MistyStep)
-    assert isinstance(actions[2], types.GeneratorType)
+    assert isinstance(actions[2], MovementIncrement)
+    assert isinstance(actions[3], MovementIncrement)
+    assert isinstance(actions[4], MovementIncrement)
+    assert isinstance(actions[5], MovementIncrement)
 
 
 def test_calc_threat_for_path_with_misty_step_scenario_2(battle_map, teams, combatant1, combatant3, effect_tracker):
@@ -465,6 +469,6 @@ def test_calc_threat_for_path_with_misty_step_scenario_3(battle_map, teams, comb
     ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(combatant1)
     decode_ms_path_to_actions(combatant1, battle_map.get_combatant_position(combatant1).get()[0], max_threat_path, actions, ms_pattern, ms_factory)
-    # Technically, many different combinations are valid here but this one tends to be picked
-    assert isinstance(actions[1], MistyStep)
-    assert len(list(actions[0])) + len(list(actions[2])) == combatant1.speed
+    # Many different combinations are valid we just assert that Misty Step is used exactly once and the length of the path checks out
+    assert sum(1 for a in actions if isinstance(a, MistyStep)) == 1
+    assert len(actions) == 7
