@@ -232,7 +232,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                         logger.error(f"Unknown movement type {movement_type}")
                         movement_threat = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
                 transition_threat = threat[state][1] if threat[state][1] > -math.inf else 0
-                transition_threat += 0.1 if np.array_equal(destination, current_coords.get()[0]) else 0  # Small bias towards current position
+                movement_threat += 0.01 if np.array_equal(destination, current_coords.get()[0]) else 0  # Small bias towards current position
                 # assert movement_threat <= 0  # TODO eventually remove
                 if movement_threat > threat[target_state][0]:
                     threat[target_state][0] = movement_threat

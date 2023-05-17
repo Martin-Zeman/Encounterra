@@ -101,57 +101,6 @@ class RecklessAttackFactory(DirectThreatFactory):
         dmg_acc /= len(potential_targets)
         return dmg_acc
 
-
-    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        """
-        Goes over all the modified stats and accumulates the threat delta for all of them
-        """
-        # TODO
-        baseline = self.calculate_threat_out_approx(self.combatant, battle_map)
-        try:
-            self.mod_range = modified_stats['range']
-        except KeyError:
-            self.mod_range = 0
-        try:
-            self.mod_dmg_flat = modified_stats['dmg_bonus_flat']
-        except KeyError:
-            self.mod_dmg_flat = 0
-        try:
-            self.mod_dmg_die = modified_stats['dmg_bonus_die']
-        except KeyError:
-            self.mod_dmg_die = '0d0'
-        try:
-            self.mod_to_hit_flat = modified_stats['to_hit_flat']
-        except KeyError:
-            self.mod_to_hit_flat = 0
-        try:
-            self.mod_to_hit_die = modified_stats['to_hit_die']
-        except KeyError:
-            self.mod_to_hit_die = '0d0'
-        try:
-            self.mod_crit_range = modified_stats['crit_range']
-        except KeyError:
-            self.mod_crit_range = 0
-        try:
-            roll_modifier = reconcile_roll_modifiers({RollModifier.ADVANTAGE, modified_stats['roll_modifier']})
-        except KeyError:
-            roll_modifier = RollModifier.ADVANTAGE
-
-        modified = baseline
-        try:
-            modified = self.calculate_threat_out_approx(self.combatant, battle_map, roll_modifier)
-        except:
-            pass # just make sure the original stats are restored
-
-        self.mod_range = 0
-        self.mod_to_hit_die = '0d0'
-        self.mod_to_hit_flat = 0
-        self.mod_dmg_flat = 0
-        self.mod_dmg_die = '0d0'
-        self.mod_crit_range = 0
-        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
-        return modified - baseline - incoming_threat_mod_acc
-
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         try:
             consider_dist = kwargs["consider_dist"]

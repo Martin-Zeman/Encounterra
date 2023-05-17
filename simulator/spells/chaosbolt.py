@@ -75,28 +75,6 @@ class ChaosboltFactory(DirectThreatFactory):
         targets = self.get_eligible_targets(battle_map)
         return [Chaosbolt(t, self) for t in targets]
 
-    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        """
-        Calculates the threat diff based on provided stat modifications. Relevant bonuses are:
-        - to_hit
-        """
-        # TODO implement once I have spells that do this, e.g. Bless
-        try:
-            to_hit_bonus = modified_stats['to_hit']
-            potential_targets = battle_map.get_enemies_within_radius(self.caster, ChaosboltFactory.range)
-            dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
-            mean_dmg_func = partial(mean_dmg, to_hit=self.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
-            mean_dmg_func_mod = partial(mean_dmg, to_hit=self.to_hit + to_hit_bonus, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
-            sorted_targets = ChaosboltFactory.get_sorted_chain(battle_map, potential_targets, mean_dmg_func)
-            acc = 0
-            p_acc = 1
-            P_SAME = 4 / 43  # 8/86 = 4 / 43
-            for target in sorted_targets:
-                acc += (mean_dmg_func_mod(ac=target.ac) - mean_dmg_func(ac=target.ac)) * p_acc
-                p_acc *= P_SAME
-            return acc
-        except IndexError:
-            return 0
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
@@ -167,14 +145,17 @@ class Chaosbolt(Actoid, DirectThreat):
 
     @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
+        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.caster) else RollModifier.DISADVANTAGE
+        to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.target.ac - self.factory.to_hit, 20))]
         potential_targets = battle_map.get_enemies_within_radius(combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
         potential_targets.remove(self.target)
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME
         dmg_dice = "+".join([self.factory.dmg_dice, self.factory.additional_dmg_dice])
-        acc = mean_dmg(self.factory.to_hit, dmg_dice, 0, self.target.ac)
+        acc = mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac)
         for pt in potential_targets:
-            acc += mean_dmg(self.factory.to_hit, dmg_dice, 0, pt.ac) * p_acc
+            to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - self.factory.to_hit, 20))]
+            acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac) * p_acc
             p_acc *= P_SAME
         return acc
 

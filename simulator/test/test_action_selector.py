@@ -43,7 +43,7 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # dfs.get_graph().draw('state_diagram_faurung_with_coords',format='svg', prog='dot')
 
     # Tests the Misty Step movement + Firebolt
@@ -78,7 +78,7 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
         get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-        dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+        dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
         # Tests regular movement + quickened fireball
         assert dag.state == '0'
         dag.trigger("m_(2, 3)")
@@ -115,7 +115,7 @@ def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracke
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests regular movement + fireball
     assert dag.state == '0'
     dag.trigger("m_(2, 3)")
@@ -149,7 +149,7 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests regular movement + staff of defence attack
     assert dag.state == '0'
     dag.trigger("m_(9, 10)")
@@ -187,7 +187,7 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests Misty Step movement + staff of defence attack
     assert dag.state == '0'
     dag.trigger("ms_(9, 10)")
@@ -213,7 +213,7 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests Dodge + movement + a quickened spell
     assert dag.state == '0'
     dag.trigger("Dodge of Faurung")
@@ -245,7 +245,7 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
-    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests Disengage + movement + a quickened spell
     assert dag.state == '0'
     dag.trigger("Disengage of Faurung")
@@ -282,11 +282,12 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
     # p.strip_dirs().sort_stats("cumtime").print_stats()
     best_actions = get_best_actions(combatant1, battle_map, distances, shortest_paths)
     new_coord = copy.copy(battle_map.get_combatant_position(combatant1).get())
-    for ba in best_actions:
-        new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
-    assert battle_map.get_hop_distance(new_coord, combatant3) > (combatant3.speed + combatant3.danger_zone_attack[1].range)
-    assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], TwinnedFirebolt)
-    assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], TwinnedFirebolt)
+    # for ba in best_actions:
+    #     new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
+    # assert battle_map.get_hop_distance(new_coord, combatant3) > (combatant3.speed + combatant3.danger_zone_attack[1].range)
+    # Staying still is actually preferable here
+    assert isinstance(best_actions[0], Fireball) or isinstance(best_actions[0], TwinnedFirebolt)
+    assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], TwinnedFirebolt)
 
 
 def test_error_case_1(battle_map, teams, effect_tracker, combatant1, combatant3):
@@ -312,11 +313,11 @@ def test_error_case_1(battle_map, teams, effect_tracker, combatant1, combatant3)
     new_coord = copy.copy(battle_map.get_combatant_position(combatant1).get())
     for ba in best_actions:
         new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
-    fireball = best_actions[-2] if isinstance(best_actions[-2], Fireball) else best_actions[-1]
-    assert battle_map.get_cartesian_distance(new_coord, np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert battle_map.get_hop_distance(new_coord, combatant3) > (combatant3.speed + combatant3.danger_zone_attack[1].range)
-    assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], Firebolt)
-    assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], Firebolt)
+    fireball = best_actions[0] if isinstance(best_actions[0], Fireball) else best_actions[1]
+    # Staying still is actually preferable here
+    assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(combatant1).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    assert isinstance(best_actions[0], Fireball) or isinstance(best_actions[0], Firebolt)
+    assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], Firebolt)
 
 def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3):
     """
@@ -430,23 +431,13 @@ def test_error_case_4(battle_map, teams, effect_tracker, combatant1, combatant4,
     battle_map.build_adjacency_matrix()
 
     try:
+        # The Danger Zone of the Stone Giant spans the whole map so it doesn't pay off to move and suffer the AoO
         actoid1 = combatant1.get_action(battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
         actoid2 = combatant1.get_action(battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
         actoid3 = combatant1.get_action(battle_map)
-        action_resolver.resolve_action(actoid3, combatant1)
-        actoid4 = combatant1.get_action(battle_map)
-        action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
-        action_resolver.resolve_action(actoid5, combatant1)
-        actoid6 = combatant1.get_action(battle_map)
-        action_resolver.resolve_action(actoid6, combatant1)
-        actoid7 = combatant1.get_action(battle_map)
-        action_resolver.resolve_action(actoid7, combatant1)
-        actoid8 = combatant1.get_action(battle_map)
-        action_resolver.resolve_action(actoid8, combatant1)
-        assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(combatant1).get(), np.array([actoid8.coord])) > SpellStats.TRANSLATE_RADIUS[actoid8.factory.target]
+        assert actoid3 is None
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

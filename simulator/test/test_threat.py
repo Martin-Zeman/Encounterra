@@ -9,6 +9,7 @@ from simulator.actions.movement import MovementIncrement
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Size
 from simulator.spells.cloud_of_daggers import CloudOfDaggersFactory
+from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.hunger_of_hadar import HungerOfHadarFactory
 from simulator.spells.misty_step import MistyStepFactory, MistyStep
 from simulator.spells.spike_growth import SpikeGrowthFactory
@@ -472,3 +473,44 @@ def test_calc_threat_for_path_with_misty_step_scenario_3(battle_map, teams, comb
     # Many different combinations are valid we just assert that Misty Step is used exactly once and the length of the path checks out
     assert sum(1 for a in actions if isinstance(a, MistyStep)) == 1
     assert len(actions) == 7
+
+
+def test_ranged_spell_with_enemy_adjacent(battle_map, teams, effect_tracker, combatant1, combatant3):
+    """
+    This test case asserts that a ranged spell causes a lower threat whenever there's an enemy adjacent
+    """
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant1, np.array([3, 14]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([4, 13]))
+
+    ff = FireboltFactory(6, Action.FIREBOLT, combatant1)
+    firebolt = ff.create(combatant3)
+    threat_enemy_adjacent = firebolt.calculate_threat(combatant1, battle_map)
+    battle_map.move_combatant(combatant1, np.array([2, 14]))
+    firebolt.clear_cache()
+    threat_no_enemy_adjacent = firebolt.calculate_threat(combatant1, battle_map)
+    assert threat_no_enemy_adjacent > threat_enemy_adjacent
+
+def test_ranged_attack_with_enemy_adjacent(battle_map, teams, effect_tracker, combatant2, combatant3):
+    """
+    This test case asserts that a ranged attack causes a lower threat whenever there's an enemy adjacent
+    """
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant2, np.array([3, 14]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([4, 13]))
+
+    shortbow_attack = combatant2.shortbow_attack[1].create(combatant3)
+    threat_enemy_adjacent = shortbow_attack.calculate_threat(combatant2, battle_map)
+    battle_map.move_combatant(combatant2, np.array([2, 14]))
+    shortbow_attack.clear_cache()
+    threat_no_enemy_adjacent = shortbow_attack.calculate_threat(combatant2, battle_map)
+    assert threat_no_enemy_adjacent > threat_enemy_adjacent
+

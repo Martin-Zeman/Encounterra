@@ -706,16 +706,16 @@ class Map:
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
-    def get_nearest_free_adjacent_coords(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths, rng=1):
+    def get_nearest_free_adjacent_coords(self, my_location: CombatantCoords, target_location: CombatantCoords, distances, rng=1):
         """
         Get nearest free adjacent coordinates accounting for the combatant's size. Potentially increasing what is considered adjacent to rng.
         :param my_location: the combatant location
         :param target_location: the target location
-        :param shortest_paths: shortest paths for all coords in the grid
+        :param distances: distances for all coords in the grid
         :param rng: the range of what is considered adjacent
         :return:
         """
-        adjacent_coords = self.get_free_coords_in_hop_range(target_location, shortest_paths, my_location.size, rng,
+        adjacent_coords = self.get_free_coords_in_hop_range(target_location, distances, my_location.size, rng,
                                                             combatant=my_location.combatant)
         if not adjacent_coords:
             return None
@@ -769,7 +769,7 @@ class Map:
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
-        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, shortest_paths, rng)
+        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, distances, rng)
         if enemy_adjacent_location is None:
             return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)

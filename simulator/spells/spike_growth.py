@@ -49,9 +49,6 @@ class SpikeGrowthFactory(DirectThreatFactory):
     def create(self, coord):
         return SpikeGrowth(coord, self)
 
-    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        return 0 # no need
-
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
         Calculates threat to one specific target

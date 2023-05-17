@@ -64,37 +64,6 @@ class TwinnedFireboltFactory(DirectThreatFactory):
     def create(self, targets):
         return TwinnedFirebolt(targets, self)
 
-    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        """
-        Calculates the average dmg increment over all targets in range
-        """
-        try:
-            mod_to_hit_flat = modified_stats['to_hit_flat']
-        except KeyError:
-            mod_to_hit_flat = 0
-        try:
-            mod_to_hit_die = modified_stats['to_hit_die']
-        except KeyError:
-            mod_to_hit_die = '0d0'
-        try:
-            roll_modifier = modified_stats['roll_modifier']
-        except KeyError:
-            roll_modifier = RollModifier.STRAIGHT
-
-            to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-            total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
-
-            potential_targets = battle_map.get_enemies_within_radius(TwinnedFireboltFactory.range)
-            dmg_acc = reduce(
-                lambda acc, pt: acc + mean_dmg(to_hit_total + ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - to_hit_total, 20))], self.dmg_dice, 0, pt.ac,
-                                               total_crit, pt.is_resistant_to(TwinnedFireboltFactory.dmg_type))
-                                - mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1, pt.is_resistant_to(TwinnedFireboltFactory.dmg_type)),
-                potential_targets)
-            dmg_acc /= len(potential_targets)
-            return dmg_acc * 2
-        except IndexError:
-            return 0
-
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         if battle_map.get_cartesian_distance(self.caster, target) <= TwinnedFireboltFactory.range:
             # Cannot target the same combatant twice
@@ -145,9 +114,12 @@ class TwinnedFirebolt(Actoid, DirectThreat):
 
     @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        dmg_acc = mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.targets[0].is_resistant_to(TwinnedFireboltFactory.dmg_type))
+        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.caster) else RollModifier.DISADVANTAGE
+        to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
+        dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.targets[0].is_resistant_to(TwinnedFireboltFactory.dmg_type))
         if self.targets[1] is not None:
-            dmg_acc += mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.targets[1].is_resistant_to(TwinnedFireboltFactory.dmg_type))
+            to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
+            dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.targets[1].is_resistant_to(TwinnedFireboltFactory.dmg_type))
         return dmg_acc
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

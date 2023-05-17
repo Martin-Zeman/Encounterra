@@ -115,15 +115,6 @@ class DirectThreatFactory(ABC, Factory):
     It also mandates that a factory be able to compute a threat increment based on a dictionary of modified stats
     """
     @abstractmethod
-    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
-        """
-        Calculates the threat delta of the factory given stat modifications. This is a general estimation with no specific target.
-        This is useful for evaluation the threat_out of (de)buff abilities. It's meant to be called from the threat calculation methods
-        of (de)buff abilities.
-        """
-        return 0
-
-    @abstractmethod
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
         Calculates the threat the factory is capable of dealing to a specific target.

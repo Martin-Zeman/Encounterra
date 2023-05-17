@@ -25,6 +25,9 @@ class MeleeAttackFactory(AttackFactory):
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
 
+    def create(self, target_combatant):
+        return MeleeAttack(target_combatant, self)
+
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)
         return [MeleeAttack(t, self) for t in targets]

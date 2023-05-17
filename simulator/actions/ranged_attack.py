@@ -1,4 +1,5 @@
 import math
+from functools import cache
 
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
@@ -7,6 +8,7 @@ from simulator.misc import percent_of_curr_hp
 from simulator.threat import mean_dmg
 import logging
 
+from simulator.utils.roll_modifiers import RollModifier
 
 logger = logging.getLogger("EncounTroll")
 
@@ -26,6 +28,8 @@ class RangedAttackFactory(AttackFactory):
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         return potential_targets[0][0] if potential_targets else None
 
+    def create(self, target_combatant):
+        return RangeAttack(target_combatant, self)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)
@@ -33,6 +37,11 @@ class RangedAttackFactory(AttackFactory):
 
 
 class RangeAttack(Attack):
+
+    @cache
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
+        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, roll_modifier=roll_modifier, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target_combatant),

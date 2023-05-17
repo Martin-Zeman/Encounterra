@@ -549,25 +549,25 @@ def test_get_nearest_free_adjacent_coord(battle_map, teams, combatant1, combatan
     combatant2.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, np.array([1, 7]))
     battle_map.set_combatant_coordinates(combatant2, np.array([5, 7]))
-    _, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    distances, _ = battle_map.calc_dijkstra(combatant1)
     my_coords = battle_map.get_combatant_position(combatant1)
     target_coords = battle_map.get_combatant_position(combatant2)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, shortest_paths)
+    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
     assert np.array_equal(nearest, np.array([4, 7]), equal_nan=False)
 
     battle_map.move_combatant(combatant1, np.array([3, 9]))
     my_coords = battle_map.get_combatant_position(combatant1)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, shortest_paths)
+    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
     assert np.array_equal(nearest, np.array([4, 9]), equal_nan=False)
 
     battle_map.move_combatant(combatant1, np.array([8, 6]))
     my_coords = battle_map.get_combatant_position(combatant1)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, shortest_paths)
+    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
     assert np.array_equal(nearest, np.array([7, 6]), equal_nan=False)
 
     battle_map.move_combatant(combatant1, np.array([7, 11]))
     my_coords = battle_map.get_combatant_position(combatant1)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, shortest_paths)
+    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
     assert np.array_equal(nearest, np.array([7, 9]), equal_nan=False)
 
 def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, combatant1, combatant2, combatant3):
@@ -583,10 +583,10 @@ def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, combatant
     battle_map.set_combatant_coordinates(combatant1, np.array([4, 10]))
     battle_map.set_combatant_coordinates(combatant2, np.array([9, 10]))
     battle_map.set_combatant_coordinates(combatant3, np.array([9, 13]))
-    _, shortest_paths = battle_map.calc_dijkstra(combatant1)
+    distances, _ = battle_map.calc_dijkstra(combatant1)
     my_coords = battle_map.get_combatant_position(combatant1)
     target_coords = battle_map.get_combatant_position(combatant3)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, shortest_paths)
+    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
     assert not np.array_equal(nearest, np.array([7, 10]), equal_nan=False)
 
 
