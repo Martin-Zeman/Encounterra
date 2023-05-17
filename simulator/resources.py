@@ -38,6 +38,9 @@ def use_resources(combatant, action, battle_map):
             case Action.CHAOSBOLT:
                 combatant.spellslots.use_spellslot(1)
                 combatant.already_cast_leveled_spell_this_turn = True
+            case Action.SCORCHING_RAY:
+                combatant.spellslots.use_spellslot(2)
+                combatant.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_FIREBOLT:
                 combatant.curr_sorcery_points -= 1
             case _:
@@ -54,6 +57,10 @@ def use_resources(combatant, action, battle_map):
                 combatant.already_cast_leveled_spell_this_turn = True
             case BonusAction.QUICKENED_CHAOSBOLT:
                 combatant.spellslots.use_spellslot(1)
+                combatant.already_cast_leveled_spell_this_turn = True
+                combatant.curr_sorcery_points -= 2
+            case BonusAction.QUICKENED_SCORCHING_RAY:
+                combatant.spellslots.use_spellslot(2)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_HASTE:

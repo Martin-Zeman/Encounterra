@@ -41,17 +41,15 @@ def find_ranges_of_consecutive(coords_w_threats):
         res[val] = start_pos, end_pos
     return res
 
-def get_data_for_special_treatment_actions(combatant, misty_step_state, dag):
+def get_data_for_special_treatment_actions(combatant, dag):
     """
     A helper function which takes care of the actions that requre special treatment such as Misty Step, Dodge and
     Disengage.
     :param combatant: the combatant taking the actions
-    :param misty_step_state: state of the DAG after taking Misty Step action to any coord. This is handed into here for
     the sake of efficiency since it needs to be determined in the preceding step already to prevent expanding on Misty Step.
     :param dag: the DAG on which we operate
     :return: tuple of (post_misty_step_actions, added_misty_step_coord_states, post_dodge_actions, post_disengage_actions)
     """
-    post_misty_step_actions = dag.get_available_transitions_in_state(misty_step_state)
     post_dodge_actions = None
     if dag.trigger("Dodge of " + str(combatant)):
         post_dodge_actions = dag.get_available_transitions()
@@ -60,7 +58,7 @@ def get_data_for_special_treatment_actions(combatant, misty_step_state, dag):
     if dag.trigger("Disengage of " + str(combatant)):
         post_disengage_actions = dag.get_available_transitions()
         dag.reset()
-    return post_misty_step_actions, post_dodge_actions, post_disengage_actions
+    return post_dodge_actions, post_disengage_actions
 
 def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_actions, added_states, action_name):
     """
@@ -103,7 +101,7 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
         except KeyError:
             pass  # Some may not be available for the secondary plan
 
-def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, distances, shortest_paths, misty_step_state):
+def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions):
     """
     Builds action DAG for a combatant given the combatant's action_fsm. It determines eligible coords for each
     action. Then the coords are pre-pended into the action_fsm to form the final DAG. However, Misty Step, Dodge and
@@ -116,11 +114,11 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     :param transition_name_to_action: dict mapping action names -> actions
     :param distances: the distances to all squares (result of Dijkstra)
     :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
-    :param misty_step_state: name of the state into which taking the Misty Step bonus action would take us
+    :param post_misty_step_actions: list of actions that are eligible after taking the Misty Step action
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     # TODO: Look into caching!!!
-    post_misty_step_actions, post_dodge_actions, post_disengage_actions = get_data_for_special_treatment_actions(combatant, misty_step_state, action_fsm)
+    post_dodge_actions, post_disengage_actions = get_data_for_special_treatment_actions(combatant, action_fsm)
     combatant_name = str(combatant)
     dodge_name = "Dodge of " + combatant_name
     disengage_name = "Disengage of " + combatant_name
@@ -130,6 +128,8 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     transition_names = action_fsm.get_available_transitions()
     if transition_names[0] == 'None':
         return None
+    if not post_misty_step_actions:
+        post_misty_step_actions = []
 
     if combatant.movement > 0:
         action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, distances, shortest_paths) for tn in transition_names}
@@ -236,10 +236,12 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                 # assert movement_threat <= 0  # TODO eventually remove
                 if movement_threat > threat[target_state][0]:
                     threat[target_state][0] = movement_threat
+                    logger.info(f"Discovered new best movement={transition_name} with movement_threat={movement_threat} and transition_threat={transition_threat} from {state} to {target_state}")
                     max_threat_backwards_transition[target_state] = (transition_name, state)
             if (movement_threat + transition_threat > threat[target_state][0] + threat[target_state][1]) and transition_threat > 0:
                 threat[target_state] = [movement_threat, transition_threat]
                 max_threat_backwards_transition[target_state] = (transition_name, state)
+                logger.info(f"Discovered new best overall transition={transition_name} with movement_threat={movement_threat} and transition_threat={transition_threat} from {state} to {target_state}")
     # Let's go backwards to reconstruct the longest path
     return reconstruct_path_through_dag('nop', '0', max_threat_backwards_transition), transition_name_to_ms_path
 
@@ -331,8 +333,8 @@ def get_best_actions(combatant, battle_map, distances, shortest_paths):
     """
     # start_time = time.time()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
-    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
-    dag = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+    fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(combatant, battle_map)
+    dag = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
     if dag is None:
         return None
     sorted_states = toposort_flatten(dag.dependencies)

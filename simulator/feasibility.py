@@ -34,6 +34,17 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
                 return res
+            case Action.SCORCHING_RAY:
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[1])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[2])
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
+                return res
             case Action.FIREBOLT:
                 res = combatant.has_action
                 res &= battle_map.teams.are_enemies(combatant, action.target)
@@ -115,6 +126,17 @@ def check_feasibility(combatant, action, battle_map):
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
+                return res
+            case BonusAction.QUICKENED_SCORCHING_RAY:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
+                res &= combatant.curr_sorcery_points > 1
+                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[1])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[2])
                 return res
             case BonusAction.QUICKENED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
@@ -211,6 +233,11 @@ def check_feasibility_light(combatant, action, battle_map):
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
+            case Action.SCORCHING_RAY:
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                return res
             case Action.FIREBOLT:
                 return combatant.has_action
             case Action.TWINNED_FIREBOLT:
@@ -258,6 +285,11 @@ def check_feasibility_light(combatant, action, battle_map):
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
                 res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.curr_sorcery_points > 1
+                return res
+            case BonusAction.QUICKENED_SCORCHING_RAY:
+                res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 return res

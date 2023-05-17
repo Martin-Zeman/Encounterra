@@ -224,6 +224,11 @@ class ActionResolver:
                 return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
                 return self.resolve_chaos_bolt(caster, spell)
+            case Action.SCORCHING_RAY | BonusAction.QUICKENED_SCORCHING_RAY:
+                ret = (self.resolve_ranged_spell_attack(caster, spell, spell.targets[0]),
+                       self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]),
+                       self.resolve_ranged_spell_attack(caster, spell, spell.targets[2]))
+                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case Reaction.SHIELD:
                 assert not caster.shield_spell_active
                 caster.shield_spell_active = True
@@ -370,27 +375,6 @@ class ActionResolver:
             combatant.remove_condition(Conditions.PRONE)  # resources already taken
         return False
 
-    # def resolve_action(self, action_type, args, combatant):
-    #     """
-    #     The core of action resolution
-    #     @param action_type: action type
-    #     @param args: packed arguments of the action, can take on different interpretations based on the action_type
-    #     @param combatant: originator of the action
-    #     @return: only relevant return here is DMG/MISS used for sentinel
-    #     """
-    #     if action_type is MetaAction.DONE:
-    #         return ActionResult.NOP
-    #     action = action_factory(combatant, self.effect_tracker, action_type, *args)
-    #     feasible = check_feasibility(combatant, action, self.battle_map)
-    #     if not feasible and combatant.has_action:
-    #         action = Dodge(combatant)
-    #         logger.info(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
-    #     elif not feasible:
-    #         logger.info(f"Action of type {action_type} by {combatant} is non-feasible.")
-    #         return ActionResult.UNFEASIBLE
-    #     use_resources(combatant, action)
-    #     return self.resolve_by_actoid_flags(action, combatant)
-
 
     def resolve_action(self, action, combatant):
         """
@@ -409,40 +393,8 @@ class ActionResolver:
             else:
                 logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
             return None
-        # if not feasible and combatant.has_action:
-        #     action = Dodge(combatant)
-        #     logger.info(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
-        # elif not feasible:
-        #     logger.info(f"Action of type {action_type} by {combatant} is non-feasible.")
-        #     return ActionResult.UNFEASIBLE
         use_resources(combatant, action, self.battle_map)
         return self.resolve_by_actoid_flags(action, combatant)
-
-    # def resolve_action_train(self, action_type, args, combatant):
-    #     """
-    #     The core of action resolution for the training mode
-    #     @param action_type: action type
-    #     @param arg1: can take on different interpretations based on the action_type
-    #     @param arg2: can take on different interpretations based on the action_type
-    #     @param combatant: originator of the action
-    #     @return: resolution of the action as ActionResult
-    #     """
-    #     if action_type is MetaAction.DONE:
-    #         return ActionResult.NOP
-    #     action = action_factory(combatant, self.effect_tracker, action_type, *args)
-    #     feasible = check_feasibility(combatant, action, self.battle_map)
-    #     if not feasible and combatant.has_action:
-    #         action = Dodge(combatant)
-    #         logger.info(f"Action of type {action_type} by {combatant} is non-feasible. Dodging instead.")
-    #     elif not feasible:
-    #         logger.info(f"Action of type {action_type} by {combatant} is non-feasible.")
-    #         return ActionResult.UNFEASIBLE
-    #     use_resources(combatant, action)
-    #     result = self.resolve_by_actoid_flags(action, combatant)
-    #     if not combatant.is_alive():
-    #         # could have nuked itself with an AoE...
-    #         return ActionResult.TRAINEE_DEAD
-    #     return result if feasible else ActionResult.UNFEASIBLE
 
     def resolve_toggle_ability(self, combatant, ability):
         match ability.__class__.__name__:

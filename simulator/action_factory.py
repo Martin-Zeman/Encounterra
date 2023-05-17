@@ -6,6 +6,7 @@ from simulator.actions.ranged_attack import RangedAttackFactory
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
 from simulator.spells.chaosbolt import Chaosbolt
+from simulator.spells.scorching_ray import ScorchingRayFactory
 from simulator.spells.shield import Shield
 from simulator.spells.misty_step import MistyStep
 from simulator.spells.haste import Haste
@@ -47,6 +48,7 @@ TO_FACTORY = {
     Action.HIDE: None,
     Action.TWINNED_FIREBOLT: TwinnedFireboltFactory,
     Action.TWINNED_HASTE: TwinnedHasteFactory,
+    Action.SCORCHING_RAY: ScorchingRayFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -61,6 +63,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_FIREBOLT: FireboltFactory,
     BonusAction.QUICKENED_CHAOSBOLT: ChaosboltFactory,
     BonusAction.QUICKENED_HASTE: HasteFactory,
+    BonusAction.QUICKENED_SCORCHING_RAY: ScorchingRayFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
@@ -71,7 +74,13 @@ TO_FACTORY = {
     HasteAction.HASTE_HIDE: None,
     HasteAction.HASTE_DASH: None
 }
-TO_QUICKENED = {Action.FIREBALL: BonusAction.QUICKENED_FIREBALL, Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT, Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT, Action.HASTE: BonusAction.QUICKENED_HASTE}
+TO_QUICKENED = {
+    Action.FIREBALL: BonusAction.QUICKENED_FIREBALL,
+    Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT,
+    Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT,
+    Action.HASTE: BonusAction.QUICKENED_HASTE,
+    Action.SCORCHING_RAY: BonusAction.QUICKENED_SCORCHING_RAY
+}
 TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}
 TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE}
 

@@ -1,11 +1,13 @@
+import logging
 import numpy as np
-from statemachine import State, StateMachine
 
+from statemachine import State, StateMachine
 from simulator.action_types import BonusAction
 from simulator.feasibility import get_feasible_factories, check_feasibility_light
 from simulator.resources import use_resources
 from simulator.utils.state_machine_template import StateMachineTemplate
 
+logger = logging.getLogger("EncounTroll")
 
 # class TwoMeleeOneRangedWithReckless(StateMachine):
 #     A = State("A", (1, 2, 3), initial=True)  # not attacked yet
@@ -78,10 +80,11 @@ def generate_action_fsm(combatant, battle_map):
     state_footprint_to_state_name = dict()
     visited = set()
     transition_name_to_action = dict()
-    misty_step_state = None
+    post_misty_step_actions = None
 
     # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
     fafs = get_all_feasible_action_factories(combatant, battle_map)
+    logger.info(f"generate_action_fsm: get_all_feasible_action_factories: {fafs}")
     af_to_a = {faf: faf[1].create_all(battle_map) for faf in fafs}
 
     def dfs(previous_state_name, action_taken=None):
@@ -89,32 +92,40 @@ def generate_action_fsm(combatant, battle_map):
         Internal function which recursively builds the action FSM in a DFS manner
         """
         fafs = get_all_feasible_action_factories(combatant, battle_map)
+        logger.info(f"generate_action_fsm: get_all_feasible_action_factories: {fafs}")
         fas = {a for faf in fafs for a in af_to_a[faf]}
+        logger.info(f"generate_action_fsm: all feasible actions: {fas}")
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
         action_taken_name = str(action_taken)
+        if action_taken:
+            transition_name_to_action[action_taken_name] = action_taken  # TODO This can be taken out of the if else
+
         if not state_footprint:
             # No more actions -> connect to the nop state
-            transition_name_to_action[action_taken_name] = action_taken  # TODO This can be taken out of the if else
+            logger.info(f"generate_action_fsm: adding transition 1 from: {previous_state_name} to: nop")
             fsm.add_transition(action_taken_name, previous_state_name, 'nop')
         elif state_footprint not in visited:
             # State not yet discovered, create a new state, remember the footprint and add transitions
             visited.add(state_footprint)
-            new_state_name = fsm.get_next_state_name()
-            state_footprint_to_state_name[state_footprint] = new_state_name
+            curr_state_name = fsm.get_next_state_name()
+            state_footprint_to_state_name[state_footprint] = curr_state_name
             if action_taken:
-                transition_name_to_action[action_taken_name] = action_taken
-                fsm.add_new_state(new_state_name)  # Avoid adding the initial state again
-                fsm.add_transition(action_taken_name, previous_state_name, new_state_name)
+                fsm.add_new_state(curr_state_name)  # Avoid adding the initial state again
+                logger.info(f"generate_action_fsm: adding transition 2 {action_taken_name} from: {previous_state_name} to: {curr_state_name}")
+                fsm.add_transition(action_taken_name, previous_state_name, curr_state_name)
             for fa in fas:
                 exported_resources = combatant.export_resources()
                 use_resources(combatant, fa, battle_map)
-                dfs(new_state_name, fa)
+                dfs(curr_state_name, fa)
                 combatant.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
-            transition_name_to_action[action_taken_name] = action_taken
+            logger.info(f"generate_action_fsm: adding transition 3 {action_taken_name} from: {previous_state_name} to: {state_footprint_to_state_name[state_footprint]}")
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])
+
+    # if combatant.spellslots.get_spellslots(3) == 0 and combatant.curr_sorcery_points == 0:
+    #     print("FIXME")
 
     dfs('0')
 
@@ -125,19 +136,22 @@ def generate_action_fsm(combatant, battle_map):
             exported_resources = combatant.export_resources()
             use_resources(combatant, ms, battle_map)
             fafs = get_all_feasible_action_factories(combatant, battle_map)
-            fas = {a for faf in fafs for a in af_to_a[faf]}
-            if not fas:
-                combatant.load_resources(exported_resources)
-                break
-            misty_step_state_footprint = actions_to_set(fas)
-            try:
-                misty_step_state = state_footprint_to_state_name[misty_step_state_footprint]
-            except KeyError:
-                misty_step_state = fsm.get_next_state_name()
-                fsm.add_new_state(misty_step_state)
-                dfs(misty_step_state)
-            finally:
-                combatant.load_resources(exported_resources)
-            break
+            post_misty_step_actions = {str(a) for faf in fafs for a in af_to_a[faf]}
+            logger.info(f"generate_action_fsm: post_misty_step_actions: {post_misty_step_actions}")
+            combatant.load_resources(exported_resources)
+            # if not fas:
+            #     combatant.load_resources(exported_resources)
+            #     break
+            # misty_step_state_footprint = actions_to_set(fas)  # I'm doing this outside because I need to remember it
+            # try:
+            #     post_misty_step_state = state_footprint_to_state_name[misty_step_state_footprint]
+            # except KeyError:
+            #     post_misty_step_state = fsm.get_next_state_name()
+            #     state_footprint_to_state_name[misty_step_state_footprint] = post_misty_step_state
+            #     fsm.add_new_state(post_misty_step_state)
+            #     dfs(post_misty_step_state)
+            # finally:
+            #     combatant.load_resources(exported_resources)
+            # break
 
-    return fsm, transition_name_to_action, misty_step_state
+    return fsm, transition_name_to_action, post_misty_step_actions

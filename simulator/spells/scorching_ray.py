@@ -38,6 +38,9 @@ class ScorchingRayFactory(DirectThreatFactory):
         """
         return "ScorchingRayFactory"
 
+    def get_quickened_kwargs(self):
+        return {'to_hit': self.to_hit, 'caster': self.caster}
+
     def get_eligible_targets(self, battle_map):
         # Range is so big that it doesn't matter
         return combinations_with_replacement(battle_map.get_enemies(self.caster), 3)
@@ -52,9 +55,36 @@ class ScorchingRayFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         if battle_map.get_cartesian_distance(self.caster, target) <= ScorchingRayFactory.range:
             # Cannot target the same combatant twice
-            return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ScorchingRayFactory.dmg_type))
+            return 3 * mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ScorchingRayFactory.dmg_type))
         else:
             return 0
+
+    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications.
+        This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
+        against fireball or bane on attack rolls etc.
+        """
+        try:
+            mod_to_hit_flat = modified_stats['to_hit_flat']
+        except KeyError:
+            mod_to_hit_flat = 0
+        try:
+            mod_to_hit_die = modified_stats['to_hit_die']
+        except KeyError:
+            mod_to_hit_die = '0d0'
+        try:
+            roll_modifier = modified_stats['roll_modifier']
+        except KeyError:
+            roll_modifier = RollModifier.STRAIGHT
+
+        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
+        total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
+
+        # We assume the maximum threat in case where all three rays are aimed at the target
+        return 3*(mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(ScorchingRayFactory.dmg_type)) - \
+            mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ScorchingRayFactory.dmg_type)))
 
 
 class ScorchingRay(Actoid, DirectThreat):

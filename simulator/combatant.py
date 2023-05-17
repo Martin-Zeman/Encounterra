@@ -156,6 +156,9 @@ class Combatant(ABC):
                 case Action.CHAOSBOLT:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
                     return self.action_factories[-1]
+                case Action.SCORCHING_RAY:
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.SCORCHING_RAY, self)))
+                    return self.action_factories[-1]
                 case Action.HASTE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
                     return self.action_factories[-1]

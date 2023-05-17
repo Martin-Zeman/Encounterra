@@ -18,6 +18,7 @@ class Action(Enum):
     HIDE = auto()
     TWINNED_FIREBOLT = auto()
     TWINNED_HASTE = auto()
+    SCORCHING_RAY = auto()
 
 class BonusAction(Enum):
     BONUS_MELEE_ATTACK = auto()
@@ -36,6 +37,7 @@ class BonusAction(Enum):
     QUICKENED_HUNGER_OF_HADAR = auto()
     QUICKENED_SPIKE_GROWTH = auto()
     QUICKENED_CLOUD_OF_DAGGERS = auto()
+    QUICKENED_SCORCHING_RAY = auto()
 
 
 class Reaction(Enum):

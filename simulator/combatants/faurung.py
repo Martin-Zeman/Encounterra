@@ -28,6 +28,7 @@ class Faurung(Combatant):
         self.danger_zone_attack = self.firebolt
         self.add_ability(Action.HASTE)
         self.add_ability(BonusAction.MISTY_STEP)
+        self.add_ability(Action.SCORCHING_RAY)
         self.add_ability(Reaction.SHIELD)
         self.add_ability(Passive.METAMAGIC, sorcery_points=5)
         self.add_ability(MetaAction.QUICKENED_SPELL)
@@ -35,17 +36,22 @@ class Faurung(Combatant):
         self.build_attack_fms()
         self.spellslots = Spellslots(Class.SORCERER, 5)
         self.archetype = CombatantArchetype.RANGED
-        self.movement_generator_cache = None
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 6
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = 7
+        logger.info(f"init: action_factories: {self.action_factories}")
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
+
+    def debug_misty_step(self):
+        for af in self.action_factories:
+            if af[0] is BonusAction.MISTY_STEP:
+                print("FIXME")
 
     def get_action(self, battle_map):
         """
@@ -55,20 +61,26 @@ class Faurung(Combatant):
         :param battle_map:
         :return: the next best actoid
         """
+        logger.info(f"start of get_action: action_factories: {self.action_factories}")
+        self.debug_misty_step()
         if self.is_affected_by(Conditions.PRONE):
+            logger.info(f"end of get_action 1: action_factories: {self.action_factories}")
+            self.debug_misty_step()
             return GetUpFactory().create()
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
         if self.action_plan:
             if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
+                logger.info(f"end of get_action 2: action_factories: {self.action_factories}")
+                self.debug_misty_step()
                 return self.action_plan.pop(0)
         self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
         if not self.action_plan:
+            logger.info(f"end of get_action 3: action_factories: {self.action_factories}")
+            self.debug_misty_step()
             return None  # Either no action possible or all actions already used
+        logger.info(f"end of get_action 4: action_factories: {self.action_factories}")
+        self.debug_misty_step()
         return self.action_plan.pop(0)
-
-    def new_turn(self):
-        super().new_turn()
-        self.movement_generator_cache = None
 
     def prompt_aoo(self, moving_combatant):
         return None
@@ -80,6 +92,7 @@ class Faurung(Combatant):
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
+            'has_haste_action': self.has_haste_action,
             'attack_state_machine': self.attack_fsm.state,
             'curr_num_attacks': self.curr_num_attacks  # TODO REMOVE THIS
         }
@@ -90,6 +103,7 @@ class Faurung(Combatant):
         self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
+        self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
         self.curr_num_attacks = resources['curr_num_attacks']  # TODO remove this
 
