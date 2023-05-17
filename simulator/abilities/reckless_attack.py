@@ -111,8 +111,6 @@ class RecklessAttackFactory(DirectThreatFactory):
             dmg = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         else:
             dmg = 0
-        factories = target.action_factories
-        factories.extend(target.bonus_action_factories)
         # Haste factories wouldn't change the result here, so we're omitting them
         total_threat = dmg
         # even the single target calculation the combatant is still more vulnerable to all potential attackers
