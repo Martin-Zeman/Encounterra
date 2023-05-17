@@ -58,7 +58,7 @@ class Shield(Actoid, ReactionToThreat):
     def calculate_threat_mod(self, combatant, battle_map, incoming_action, actor, *args, **kwargs):
         return 0 # TODO Consider removing this from ReactionToThreat altogether
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         pass  # No need due to IS_POSITIONING_INDEPENDENT, in addition to that it's a reaction anyway
 
     def is_current_coord_eligible(self, battle_map):

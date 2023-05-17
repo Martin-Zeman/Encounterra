@@ -99,9 +99,9 @@ class Fireball(Actoid, DirectThreat):
             acc += (1 if battle_map.teams.are_enemies(combatant, aff) else -1) * mean_dmg
         return acc
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
-                                                             shortest_paths,
+                                                             distances,
                                                              inflate_to_size=self.factory.caster.size,
                                                              rng=FireballFactory.range,
                                                              combatant=self.factory.caster)

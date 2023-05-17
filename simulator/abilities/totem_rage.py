@@ -133,7 +133,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         return total_threat * ROUND_HORIZON
 
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         pass  # Due to IS_POSITIONING_INDEPENDENT
 
     def is_current_coord_eligible(self, battle_map):

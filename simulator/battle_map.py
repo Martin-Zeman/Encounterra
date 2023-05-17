@@ -623,12 +623,12 @@ class Map:
                 inflated.add((max(0, x), max(0, y)))
         return inflated
 
-    def get_free_coords_in_hop_range(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
+    def get_free_coords_in_hop_range(self, coords: CombatantCoords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
         by a combatant of 'inflate_to_size' size.
         :param coords: target combatant coordinates
-        :param shortest_paths: the shortest paths to all squares (result of Dijkstra) to be able to recognize inflated terrain and map edges
+        :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
         :param inflate_to_size: inflate for the sake of pathfinding BY larger combatants
         :param rng: maximum range of what is considered 'adjacent'
         :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
@@ -643,20 +643,20 @@ class Map:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size:
                     continue
                 square = self.grid[x, y]
-                consider_shortest_paths = (x, y) in shortest_paths.keys() if shortest_paths is not None else True
-                if square.is_empty_or_self(combatant) and consider_shortest_paths:# and (x, y) not in inflated:
+                consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances is not None else True
+                if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
 
-    def get_free_coords_in_cartesian_range(self, coords: CombatantCoords, shortest_paths=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
+    def get_free_coords_in_cartesian_range(self, coords: CombatantCoords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
         by a combatant of 'inflate_to_size' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
         bounding box to narrow down the search.
         :param coords: target combatant or destination coordinates
-        :param shortest_paths: the shortest paths to all squares (result of Dijkstra) to be able to recognize inflated terrain and map edges
+        :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
         :param inflate_to_size: inflate for the sake of pathfinding BY larger combatants (as opposed to TO larger combatants)
         :param rng: maximum range
         :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
@@ -673,8 +673,8 @@ class Map:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size or self.get_cartesian_distance(coords.get(), np.array([[x, y]])) > rng:
                     continue
                 square = self.grid[x, y]
-                consider_shortest_paths = (x, y) in shortest_paths.keys() if shortest_paths is not None else True
-                if square.is_empty_or_self(combatant) and consider_shortest_paths:# and (x, y) not in inflated:
+                consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances is not None else True
+                if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     coords_in_range.add((x, y))
         return coords_in_range

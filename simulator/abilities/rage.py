@@ -157,7 +157,7 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # TODO consider improving this by looping over enemy direct dmg dealing abilities
         return total_threat * ROUND_HORIZON
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         pass  # Due to IS_POSITIONING_INDEPENDENT
 
     def is_current_coord_eligible(self, battle_map):

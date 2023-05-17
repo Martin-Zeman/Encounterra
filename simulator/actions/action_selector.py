@@ -103,7 +103,7 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
         except KeyError:
             pass  # Some may not be available for the secondary plan
 
-def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, shortest_paths, misty_step_state):
+def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, distances, shortest_paths, misty_step_state):
     """
     Builds action DAG for a combatant given the combatant's action_fsm. It determines eligible coords for each
     action. Then the coords are pre-pended into the action_fsm to form the final DAG. However, Misty Step, Dodge and
@@ -114,9 +114,9 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     :param battle_map:
     :param action_fsm: finite state machine representing all possible actions for combatant
     :param transition_name_to_action: dict mapping action names -> actions
+    :param distances: the distances to all squares (result of Dijkstra)
     :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
     :param misty_step_state: name of the state into which taking the Misty Step bonus action would take us
-    :param distances: Optional: already pre-computed distances to all coords, if None then don't take combatant's movement range into consideration
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     # TODO: Look into caching!!!
@@ -132,7 +132,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
         return None
 
     if combatant.movement > 0:
-        action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, shortest_paths) for tn in transition_names}
+        action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, distances, shortest_paths) for tn in transition_names}
     else:
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
         action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible(battle_map)}
@@ -190,6 +190,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     max_threat_backwards_transition = dict()
     pattern = r'([msdio]+)_\((\d+), (\d+)\)'
     transition_name_to_ms_path = dict()
+    current_coords = battle_map.get_combatant_position(combatant)
 
     # Optimization: calculate_threat is cached, so we need to clear the cache before the computation
     for action in transition_name_to_action.values():
@@ -203,17 +204,18 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     # Get the coord transition that preceded this state
                     previous_transition_name = max_threat_backwards_transition[state][0]
                     _, x, y = re.search(pattern, previous_transition_name).groups()
-                    combatant_coords = CombatantCoords(np.array([int(x), int(y)]))
+                    pretend_coords = CombatantCoords(np.array([int(x), int(y)]))
                 except KeyError:
-                    combatant_coords = battle_map.get_combatant_position(combatant)
+                    pretend_coords = current_coords
                 except AttributeError:
-                    combatant_coords = None
-                transition_threat = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, combatant_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
+                    pretend_coords = None
+                transition_threat = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, pretend_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
                 movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
             except KeyError:  # either not in the dict or regex search came up empty
                 # or different kind which represents some type of movement
                 movement_type, x, y = re.search(pattern, transition_name).groups()
-                path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
+                destination = np.array([int(x), int(y)])
+                path = battle_map.get_path_to_coord(combatant, destination, distances, shortest_paths, True)
                 if path is None:  # Note that an empty path is still a valid one
                     continue
                 match movement_type:
@@ -230,7 +232,8 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                         logger.error(f"Unknown movement type {movement_type}")
                         movement_threat = accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords)
                 transition_threat = threat[state][1] if threat[state][1] > -math.inf else 0
-                assert movement_threat <= 0  # TODO eventually remove
+                transition_threat += 0.1 if np.array_equal(destination, current_coords.get()[0]) else 0  # Small bias towards current position
+                # assert movement_threat <= 0  # TODO eventually remove
                 if movement_threat > threat[target_state][0]:
                     threat[target_state][0] = movement_threat
                     max_threat_backwards_transition[target_state] = (transition_name, state)
@@ -329,7 +332,7 @@ def get_best_actions(combatant, battle_map, distances, shortest_paths):
     # start_time = time.time()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant, battle_map)
-    dag = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, shortest_paths, misty_step_state)
+    dag = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     if dag is None:
         return None
     sorted_states = toposort_flatten(dag.dependencies)

@@ -75,7 +75,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # return -1 * calculate_threat_in_mod(combatant, 6, battle_map, RollModifier.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
         return 0  # Threat that a Dodge would potentially mitigate is calculated in a different way
 
-    def get_eligible_coords(self, battle_map, shortest_paths, distances):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return None # We don't want to have any coords pre-pended in the DAG
         # return battle_map.get_all_accessible_coords(shortest_paths)
 

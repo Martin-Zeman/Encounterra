@@ -908,6 +908,49 @@ def test_error_case_14(battle_map, teams, effect_tracker, combatant1, combatant5
         action_resolver.resolve_action(actoid2, combatant1)
         actoid3 = combatant1.get_action(battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_15(battle_map, teams, effect_tracker, combatant1, combatant2, combatant4, combatant5, combatant6):
+    """
+    This test case is based on a scenario encountered during fuzzy testing.
+    """
+    # TODO Why is this not failing?
+    CustomLogger(LogLevel.WARNING)
+    battle_map.place_circular_element(np.array([0, 12]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([7, 10]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([10, 12]), Terrain.DIFFICULT_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([13, 6]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant1, combatant2, combatant4, combatant5, combatant6]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(combatant1, Teams.Color.RED)  # Faurung 1
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)  # Goblin 1
+    teams.add_combatant_to_team(combatant4, Teams.Color.BLUE)  # TotemBarbarian5Lvl 1
+    teams.add_combatant_to_team(combatant5, Teams.Color.RED)  # StoneGiant 1
+    teams.add_combatant_to_team(combatant6, Teams.Color.RED)  # Ogre 1
+    battle_map.set_combatant_coordinates(combatant1, np.array([7, 8]))  # Faurung 1
+    battle_map.set_combatant_coordinates(combatant2, np.array([0, 9]))  # Goblin 1
+    battle_map.set_combatant_coordinates(combatant4, np.array([8, 7]))  # TotemBarbarian5Lvl 1
+    battle_map.set_combatant_coordinates(combatant5, np.array([8, 12]))   # StoneGiant 1
+    battle_map.set_combatant_coordinates(combatant6, np.array([9, 8]))   # Ogre 2
+    battle_map.build_adjacency_matrix()
+
+    combatant5.haste_action_factories = [1]  # Simulates that haste factories are not empty
+    combatant1.spellslots.use_spellslot(3)
+    combatant1.spellslots.use_spellslot(3)
+    combatant1.spellslots.use_spellslot(1)
+    combatant1.curr_sorcery_points = 0
+
+    try:
+        actoid1 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant1)
+        actoid2 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant1)
+        actoid3 = combatant1.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant1)
         actoid4 = combatant1.get_action(battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
         actoid5 = combatant1.get_action(battle_map)

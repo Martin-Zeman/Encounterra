@@ -34,8 +34,9 @@ class RangedAttackFactory(AttackFactory):
 
 class RangeAttack(Attack):
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target_combatant),
+                                                             distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=self.factory.range, combatant=self.factory.combatant)
 

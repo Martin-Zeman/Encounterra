@@ -72,7 +72,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         # return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(battle_map, combatant), adjacent_enemies, 0)
         return 0  # Threat that a Disengage would potentially mitigate is calculated in a different way
 
-    def get_eligible_coords(self, battle_map, shortest_paths, distances):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return None  # We don't want to have any coords pre-pended in the DAG
         # return battle_map.get_all_accessible_coords(shortest_paths)
 

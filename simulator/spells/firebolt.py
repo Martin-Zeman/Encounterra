@@ -172,8 +172,9 @@ class Firebolt(Actoid, DirectThreat):
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         return mean_dmg(self.factory.to_hit, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type))
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+                                                             distances,
                                                              inflate_to_size=self.factory.caster.size,
                                                              rng=FireboltFactory.range, combatant=self.factory.caster)
 

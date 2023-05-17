@@ -137,8 +137,9 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def threat_on_move_within(self, battle_map, target, *args, **kwargs):
         return avg_roll(self.factory.dmg_dice)
 
-    def get_eligible_coords(self, battle_map, shortest_paths):
+    def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
+                                                             distances,
                                                              inflate_to_size=self.factory.caster.size,
                                                              rng=SpikeGrowthFactory.range, combatant=self.factory.caster)
 
