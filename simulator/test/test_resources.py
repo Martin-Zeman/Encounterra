@@ -1,14 +1,12 @@
 import numpy as np
-import pytest
 
-from simulator.action_types import Action
+from simulator.actions.action_types import Action
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.resources import use_resources
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.firebolt import FireboltFactory
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, combatant2, combatant3, teams, effect_tracker, battle_map
-
+from simulator.test.fixtures import combatant1, combatant2, teams, effect_tracker, battle_map
 
 def test_use_resources_spellslots(battle_map, teams, effect_tracker, combatant1, combatant2):
     CustomLogger(LogLevel.WARNING)

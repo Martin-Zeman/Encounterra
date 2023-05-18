@@ -1,12 +1,11 @@
 from functools import cache
 
-from simulator.action_types import Action
+from simulator.actions.action_types import Action
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from simulator.combatant_coords import CombatantCoords
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.threat import calculate_threat_in_mod
-from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
+from simulator.threat_utils import calculate_threat_in_mod
+from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 from simulator.misc import SavingThrow
 import logging
 
@@ -22,14 +21,17 @@ class DodgeFactory(ThreatModifierFactory):
         self.action_type = Action.DODGE
         self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_MOD
 
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "DodgeFactory"
+
     def create_all(self, battle_map):
         return [Dodge(self.combatant, self)]
 
     def create_best(self, combatant, battle_map):
         return Dodge(combatant, self)
-
-    def create_mock(self):
-        return Dodge(None, self)
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """

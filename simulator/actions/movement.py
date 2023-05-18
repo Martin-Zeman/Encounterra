@@ -1,7 +1,7 @@
 import logging
 import numpy as np
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.action_types import Movement
+from simulator.actions.action_types import Movement
 
 logger = logging.getLogger("EncounTroll")
 

@@ -7,8 +7,8 @@ from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.misc import reconcile_roll_modifiers
 from functools import reduce
 from simulator.misc import percent_of_curr_hp, avg_roll
-from simulator.threat import mean_dmg, calculate_threat_in_mod
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+from simulator.threat_utils import mean_dmg, calculate_threat_in_mod
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
 
 from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
@@ -75,8 +75,6 @@ class RecklessAttackFactory(DirectThreatFactory):
             return None
         return RecklessAttack(best_args, self)
 
-    def create_mock(self):
-        return RecklessAttack(None, self)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

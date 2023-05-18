@@ -1,12 +1,12 @@
-from simulator.action_types import BonusAction
+from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, percent_of_curr_hp, RollModifier, avg_roll
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import reduce, cache
+from functools import cache
 
-from simulator.threat import mean_dmg
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+from simulator.threat_utils import mean_dmg
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import logging
 
 from simulator.utils.roll_modifiers import ROLL_MODIFIER_CRIT, ROLL_MODIFIER

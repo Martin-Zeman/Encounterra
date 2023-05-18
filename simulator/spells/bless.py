@@ -4,7 +4,7 @@ from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
+from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 from itertools import combinations
 
 
@@ -44,14 +44,6 @@ class BlessFactory(ThreatModifierFactory):
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)
         return [Bless(t, self) for t in targets]
-
-    # def create_mock(self):
-    #     return Bless(None, self)
-
-    # def calculate_threat_approx(self, combatant, battle_map, *args, **kwargs):
-    #     #  calculate the modification for all allies and them do * 3/#num_allies. And then * ROUND_HORIZON
-    #     # TODO This should call the mod threat calculation of the attack factory for all the attacks
-    #     return 0
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """

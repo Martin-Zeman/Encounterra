@@ -1,5 +1,5 @@
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.action_types import Action
+
 
 class Dash(Actoid):
     def __init__(self):

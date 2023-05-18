@@ -1,8 +1,7 @@
 import pytest
-from simulator.action_types import Passive
+from simulator.actions.action_types import Passive
 from simulator.battle_map import Terrain, CombatantCoords
 from simulator.combatants.goblin import Goblin
-from simulator.feasibility import get_feasible_factories
 from simulator.misc import DistanceMetric, Size, Side, Conditions
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.spell import SpellStats

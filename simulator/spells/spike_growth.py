@@ -1,15 +1,13 @@
 from functools import cache
 
-from simulator.action_resolver import resolve_dmg_saving_throw
-from simulator.action_types import BonusAction
+from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat import mean_dmg_dc_attack
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory, AoEThreat
+from simulator.misc import DamageType, avg_roll, roll_spell_dmg
+from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
 import numpy as np
 
 class SpikeGrowthFactory(DirectThreatFactory):

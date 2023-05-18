@@ -3,8 +3,8 @@ from abc import abstractmethod
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce, cache
 from simulator.misc import percent_of_curr_hp, avg_roll
-from simulator.threat import mean_dmg
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+from simulator.threat_utils import mean_dmg
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
 import math
 import logging
@@ -72,9 +72,6 @@ class AttackFactory(DirectThreatFactory):
 
     def create(self, target_combatant):
         return Attack(target_combatant, self)
-
-    # def create_mock(self):
-    #     return Attack(None, self)
 
     def calculate_threat_approx(self, combatant, battle_map, roll_modifier=RollModifier.STRAIGHT):
         """

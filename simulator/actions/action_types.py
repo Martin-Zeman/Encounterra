@@ -53,10 +53,6 @@ class Movement(Enum):
     GET_UP_FROM_PRONE = auto()
 
 #
-# class FreeAction(Enum):
-#     RECKLESS_ATTACK = auto()
-
-
 class HasteAction(Enum):
     HASTE_MELEE_ATTACK = auto()
     HASTE_RANGED_ATTACK = auto()

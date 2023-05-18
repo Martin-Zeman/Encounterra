@@ -2,8 +2,8 @@ import logging
 import numpy as np
 
 from statemachine import State, StateMachine
-from simulator.action_types import BonusAction
-from simulator.feasibility import get_feasible_factories, check_feasibility_light
+from simulator.actions.action_types import BonusAction
+from simulator.feasibility import get_feasible_factories
 from simulator.resources import use_resources
 from simulator.utils.state_machine_template import StateMachineTemplate
 

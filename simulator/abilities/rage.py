@@ -1,15 +1,13 @@
-from simulator.combatant_coords import CombatantCoords
 from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.action_types import BonusAction
+from simulator.actions.action_types import BonusAction
 from simulator.misc import ROUND_HORIZON
 from functools import reduce
 import sys
 
-from simulator.threat import dmg_increment_for_dmg_flat
-from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
+from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -65,9 +63,6 @@ class RageFactory(ThreatModifierFactory):
 
     def create_best(self, combatant, battle_map):
         return Rage(self.combatant, self)
-
-    # def create_mock(self):
-    #     return Rage(None)
 
     def create_all(self, battle_map):
         return [Rage(self.combatant, self)]

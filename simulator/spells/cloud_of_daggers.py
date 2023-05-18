@@ -1,13 +1,13 @@
 from functools import cache
 
-from simulator.action_types import BonusAction
+from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, avg_roll, roll_spell_dmg
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory, AoEThreat
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
 import numpy as np
 
 class CloudOfDaggersFactory(DirectThreatFactory):

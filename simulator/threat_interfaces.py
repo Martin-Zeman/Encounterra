@@ -9,13 +9,6 @@ class Factory:
         self.flags = FactoryFlags.DEFAULT
 
 
-    @abstractmethod
-    def create_mock(self):
-        """
-        Every factory needs to have this in order to build the action FSM for each combatant.
-        """
-        pass
-
 class DirectThreat(ABC):
     """
     Direct dmg causing ability, directly healing ability or an ability that directly prevents dmg

@@ -1,11 +1,10 @@
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.effects.effect import Effect
-from simulator.action_types import HasteAction, BonusAction
+from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat import mean_dmg, dmg_decrement_for_ac_flat
-from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
+from simulator.threat_utils import mean_dmg, dmg_decrement_for_ac_flat
+from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 from functools import reduce, cache
 from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
 import logging
@@ -87,9 +86,6 @@ class HasteFactory(ThreatModifierFactory):
         if ally is None:
             return None
         return Haste(ally, self)
-
-    # def create_mock(self):
-    #     return Haste(None, self)
 
     def get_eligible_targets(self, battle_map):
         ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)

@@ -17,9 +17,9 @@ from simulator.spells.firebolt import Firebolt
 from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, combatant2, combatant3,combatant4, combatant5, combatant6, teams, effect_tracker, battle_map
+from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, combatant5, combatant6, teams, effect_tracker, battle_map
 from simulator.actions.action_selector import get_best_actions, build_action_dag
-from simulator.threat import get_aoe_and_aoo_threat_for_increment
+from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 import types
 import cProfile
 

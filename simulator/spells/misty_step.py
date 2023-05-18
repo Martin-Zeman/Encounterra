@@ -3,10 +3,9 @@ from functools import cache
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 import logging
-from simulator.action_types import BonusAction, Action
+from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat_calculator import ThreatModifier, DirectThreatFactory
-from simulator.misc import CombatantArchetype, DistanceMetric
+from simulator.threat_interfaces import ThreatModifier, DirectThreatFactory
 
 logger = logging.getLogger("EncounTroll")
 

@@ -5,8 +5,8 @@ from simulator.misc import DamageType, percent_of_curr_hp, avg_roll
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce, cache
 
-from simulator.threat import mean_dmg
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+from simulator.threat_utils import mean_dmg
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
 

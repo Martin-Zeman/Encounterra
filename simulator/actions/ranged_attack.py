@@ -5,7 +5,7 @@ from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import percent_of_curr_hp
-from simulator.threat import mean_dmg
+from simulator.threat_utils import mean_dmg
 import logging
 
 from simulator.utils.roll_modifiers import RollModifier

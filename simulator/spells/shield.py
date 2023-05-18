@@ -1,9 +1,8 @@
-from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
-from simulator.action_types import Reaction
+from simulator.actions.action_types import Reaction
 import logging
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_calculator import ReactionToThreat, DirectThreatFactory
+from simulator.threat_interfaces import ReactionToThreat, DirectThreatFactory
 
 logger = logging.getLogger("EncounTroll")
 
@@ -36,9 +35,6 @@ class ShieldFactory(DirectThreatFactory):
 
     def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
         return 0
-
-    # def create_mock(self):
-    #     return Shield(self)
 
     def create(self):
         return Shield(self)

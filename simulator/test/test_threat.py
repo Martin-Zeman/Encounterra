@@ -1,12 +1,10 @@
 import copy
-import types
 
 import numpy as np
 import pytest
-from simulator.action_types import Action
+from simulator.actions.action_types import Action
 from simulator.actions.action_selector import decode_ms_path_to_actions
 from simulator.actions.movement import MovementIncrement
-from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Size
 from simulator.spells.cloud_of_daggers import CloudOfDaggersFactory
 from simulator.spells.firebolt import FireboltFactory
@@ -14,8 +12,8 @@ from simulator.spells.hunger_of_hadar import HungerOfHadarFactory
 from simulator.spells.misty_step import MistyStepFactory, MistyStep
 from simulator.spells.spike_growth import SpikeGrowthFactory
 from simulator.teams import Teams
+from simulator.threat_utils import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, calc_threat_for_path_with_misty_step
 from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, teams, effect_tracker, battle_map
-from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, calc_threat_for_path_with_misty_step
 
 
 def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map, teams, combatant1, combatant2, effect_tracker):

@@ -1,14 +1,12 @@
-from simulator.combatant_coords import CombatantCoords
 from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.action_types import BonusAction
+from simulator.actions.action_types import BonusAction
 from functools import reduce
 from simulator.misc import ROUND_HORIZON
 from simulator.abilities.rage import RageFactory
-from simulator.threat import dmg_increment_for_dmg_flat
-from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
+from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -22,17 +20,14 @@ class TotemRageFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = BonusAction.TOTEM_RAGE
 
-    # def __str__(self):
-    #     """
-    #     Important for FSM building
-    #     """
-    #     return "TotemRageFactory"
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "TotemRageFactory"
 
     def create_best(self, combatant, battle_map):
         return TotemRage(self.combatant, self)
-
-    def create_mock(self):
-        return TotemRage(None, self)
 
     def create(self, target_combatant):
         # Doesn't make much sense here

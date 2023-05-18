@@ -1,23 +1,19 @@
 import copy
-import itertools
 import logging
 import re
-import sys
-import time
 import math
 
 import numpy as np
 from toposort import toposort_flatten
 
-from simulator.action_types import Movement
+from simulator.actions.action_types import Movement
 from simulator.actions.action_fsms import generate_action_fsm
-from simulator.actions.actoid import ActoidFlags
 from simulator.actions.movement import MovementGenerator
 from simulator.battle_map import convert_path_to_increments
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import reconstruct_path_through_dag
 from simulator.spells.misty_step import MistyStepFactory
-from simulator.threat import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
+from simulator.threat_utils import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
     calc_threat_for_path_with_misty_step
 
 logger = logging.getLogger("EncounTroll")
@@ -170,6 +166,27 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     return dag
 
 
+def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwards_transition):
+    """
+    A helper function which determines if we use the coordinates of the previous transition of the current coordinates or None
+    :param current_coords: combatant's current coordinates
+    :param search_pattern: regex coordinate search pattern
+    :param state: state of the dag currently being examined
+    :param max_threat_backwards_transition: backwards transition dict which state -> predecessor state
+    :return: the coordinate to be considered as the combatant's position when calculating the next transition threat
+    """
+    pretend_coords = None
+    try:
+        # Get the coord transition that preceded this state
+        previous_transition_name = max_threat_backwards_transition[state][0]
+        _, x, y = re.search(search_pattern, previous_transition_name).groups()
+        pretend_coords = CombatantCoords(np.array([int(x), int(y)]))
+    except KeyError:
+        pretend_coords = current_coords
+    except AttributeError:
+        pass
+    return pretend_coords
+
 def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths):
     """
     Finds the longest path in the DAG which represents the movement and actions with the highest calculated threat.
@@ -200,15 +217,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
         for transition_name, target_state in dag.forward_transitions[state]:
             try:
                 # Is it a transition which represents a (bonus) action?
-                try:
-                    # Get the coord transition that preceded this state
-                    previous_transition_name = max_threat_backwards_transition[state][0]
-                    _, x, y = re.search(pattern, previous_transition_name).groups()
-                    pretend_coords = CombatantCoords(np.array([int(x), int(y)]))
-                except KeyError:
-                    pretend_coords = current_coords
-                except AttributeError:
-                    pretend_coords = None
+                pretend_coords = get_pretend_coords(current_coords, pattern, state, max_threat_backwards_transition)
                 transition_threat = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, pretend_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
                 movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
             except KeyError:  # either not in the dict or regex search came up empty

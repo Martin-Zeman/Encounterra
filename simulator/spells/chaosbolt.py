@@ -1,14 +1,13 @@
-from simulator.action_types import BonusAction
+from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType
 import logging
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from simulator.threat import mean_dmg
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+from simulator.threat_utils import mean_dmg
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from simulator.misc import percent_of_curr_hp
 from functools import partial, cache
-from functools import reduce
 
 from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
 
@@ -61,9 +60,6 @@ class ChaosboltFactory(DirectThreatFactory):
 
     def create_best(self, combatant, battle_map):
         return Chaosbolt(self.find_best_args(combatant, battle_map), self)
-
-    # def create_mock(self):
-    #     return Chaosbolt(None, self)
 
     def create(self, target_combatant):
         return Chaosbolt([target_combatant], self)

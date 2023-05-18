@@ -1,12 +1,12 @@
 from functools import cache
 
-from simulator.action_types import BonusAction
+from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat import mean_dmg_dc_attack
-from simulator.threat_calculator import DirectThreat, DirectThreatFactory
+from simulator.threat_utils import mean_dmg_dc_attack
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import numpy as np
 
 class FireballFactory(DirectThreatFactory):

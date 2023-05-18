@@ -1,12 +1,9 @@
-from functools import reduce, cache
+from functools import cache
 
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.combatant_coords import CombatantCoords
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.action_types import BonusAction
-from simulator.threat_calculator import ThreatModifier, ThreatModifierFactory
-from simulator.misc import SavingThrow, RollModifier
+from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -18,17 +15,14 @@ class DisengageFactory(ThreatModifierFactory):
         self.combatant = combatant
         self.action_type = action_type  # DISENGAGE, CUNNING DISENGAGE
 
-    # def __str__(self):
-    #     """
-    #     Important for FSM building
-    #     """
-    #     return "DisengageFactory"
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "DisengageFactory"
 
     def create_best(self, combatant, battle_map):
         return Disengage(combatant, self)
-
-    # def create_mock(self):
-    #     return Disengage(None, self)
 
     def create_all(self, battle_map):
         return [Disengage(self.combatant, self)]

@@ -48,11 +48,6 @@ class Faurung(Combatant):
         self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
         self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
 
-    def debug_misty_step(self):
-        for af in self.action_factories:
-            if af[0] is BonusAction.MISTY_STEP:
-                print("FIXME")
-
     def get_action(self, battle_map):
         """
         Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,
@@ -61,20 +56,15 @@ class Faurung(Combatant):
         :param battle_map:
         :return: the next best actoid
         """
-        self.debug_misty_step()
         if self.is_affected_by(Conditions.PRONE):
-            self.debug_misty_step()
             return GetUpFactory().create()
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
         if self.action_plan:
             if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
-                self.debug_misty_step()
                 return self.action_plan.pop(0)
         self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
         if not self.action_plan:
-            self.debug_misty_step()
             return None  # Either no action possible or all actions already used
-        self.debug_misty_step()
         return self.action_plan.pop(0)
 
     def prompt_aoo(self, moving_combatant):
