@@ -5,7 +5,7 @@ from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.misc import reconcile_roll_modifiers
-from functools import reduce
+from functools import reduce, cache
 from simulator.misc import percent_of_curr_hp, avg_roll
 from simulator.threat_utils import mean_dmg, calculate_threat_in_mod
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
@@ -189,8 +189,18 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def get_dmg_type(self):
         return self.factory.dmg_type
 
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
+
+    @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)
+
+    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+        """
+        The delta in threat when modified_stats are applied on this ability.
+        """
+        return self.factory.calculate_threat_to_target_mod(self, battle_map, self.target_combatant, modified_stats, *args, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),

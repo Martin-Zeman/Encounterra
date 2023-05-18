@@ -187,6 +187,17 @@ def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwar
         pass
     return pretend_coords
 
+def get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action):
+    threat = 0
+    try:
+        previous_transition_name = max_threat_backwards_transition[state][0]
+        threat += transition_name_to_action[previous_transition_name].calculate_threat_for_attack(combatant, battle_map, action)
+    except (AttributeError, KeyError):
+        pass
+    except Exception as e:
+        logger.error(f"Unexpected exception occurred in get_threat_modification_by_previous_action: {e}")
+    return threat
+
 def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths):
     """
     Finds the longest path in the DAG which represents the movement and actions with the highest calculated threat.
@@ -218,7 +229,9 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
             try:
                 # Is it a transition which represents a (bonus) action?
                 pretend_coords = get_pretend_coords(current_coords, pattern, state, max_threat_backwards_transition)
-                transition_threat = transition_name_to_action[transition_name].calculate_threat(combatant, battle_map, pretend_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
+                action = transition_name_to_action[transition_name]
+                transition_threat = action.calculate_threat(combatant, battle_map, pretend_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
+                transition_threat += get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action)
                 movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
             except KeyError:  # either not in the dict or regex search came up empty
                 # or different kind which represents some type of movement

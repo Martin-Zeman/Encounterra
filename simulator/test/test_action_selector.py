@@ -529,6 +529,10 @@ def test_error_case_6(battle_map, teams, effect_tracker, combatant1, combatant3,
         action_resolver.resolve_action(actoid7, combatant4)
         actoid8 = combatant4.get_action(battle_map)
         action_resolver.resolve_action(actoid8, combatant4)
+        actoid9 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid9, combatant4)
+        actoid10 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid10, combatant4)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -590,6 +594,22 @@ def test_error_case_7(battle_map, teams, effect_tracker, combatant1, combatant2,
         action_resolver.resolve_action(actoid1, combatant4)
         actoid2 = combatant4.get_action(battle_map)
         action_resolver.resolve_action(actoid2, combatant4)
+        actoid3 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant4)
+        actoid4 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant4)
+        actoid5 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant4)
+        actoid6 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant4)
+        actoid7 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant4)
+        actoid8 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, combatant4)
+        actoid9 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid9, combatant4)
+        actoid10 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid10, combatant4)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

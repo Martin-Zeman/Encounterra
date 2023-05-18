@@ -120,6 +120,9 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
                 acc -= avg_roll(self.factory.dmg_dice)
         return acc
 
+    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+        return 0  # Not relevant for this ability
+
     def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
         return 0
 
