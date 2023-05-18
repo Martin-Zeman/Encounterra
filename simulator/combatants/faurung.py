@@ -61,24 +61,19 @@ class Faurung(Combatant):
         :param battle_map:
         :return: the next best actoid
         """
-        logger.info(f"start of get_action: action_factories: {self.action_factories}")
         self.debug_misty_step()
         if self.is_affected_by(Conditions.PRONE):
-            logger.info(f"end of get_action 1: action_factories: {self.action_factories}")
             self.debug_misty_step()
             return GetUpFactory().create()
         distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
         if self.action_plan:
             if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
-                logger.info(f"end of get_action 2: action_factories: {self.action_factories}")
                 self.debug_misty_step()
                 return self.action_plan.pop(0)
         self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
         if not self.action_plan:
-            logger.info(f"end of get_action 3: action_factories: {self.action_factories}")
             self.debug_misty_step()
             return None  # Either no action possible or all actions already used
-        logger.info(f"end of get_action 4: action_factories: {self.action_factories}")
         self.debug_misty_step()
         return self.action_plan.pop(0)
 

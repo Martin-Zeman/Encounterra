@@ -54,9 +54,9 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
     modifiers = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
     final_modifier = reconcile_roll_modifiers(modifiers)
 
-    if final_modifier == RollModifier.STRAIGHT:
+    if final_modifier is RollModifier.STRAIGHT:
         rolled = random.randint(1, 20)
-    elif final_modifier == RollModifier.ADVANTAGE:
+    elif final_modifier is RollModifier.ADVANTAGE:
         rolled = max(random.randint(1, 20), random.randint(1, 20))
     else:
         rolled = min(random.randint(1, 20), random.randint(1, 20))
@@ -124,9 +124,9 @@ class ActionResolver:
             modifiers = {self.has_advantage_ranged(spell, caster, curr_target), self.has_disadvantage_spell_ranged(spell, caster, curr_target)}
             final_modifier = reconcile_roll_modifiers(modifiers)
 
-            if final_modifier == RollModifier.STRAIGHT:
+            if final_modifier is RollModifier.STRAIGHT:
                 rolled = random.randint(1, 20)
-            elif final_modifier == RollModifier.ADVANTAGE:
+            elif final_modifier is RollModifier.ADVANTAGE:
                 rolled = max(random.randint(1, 20), random.randint(1, 20))
             else:
                 rolled = min(random.randint(1, 20), random.randint(1, 20))
@@ -168,9 +168,9 @@ class ActionResolver:
         modifiers = {self.has_advantage_ranged(spell, caster, target), self.has_disadvantage_spell_ranged(spell, caster, target)}
         final_modifier = reconcile_roll_modifiers(modifiers)
 
-        if final_modifier == RollModifier.STRAIGHT:
+        if final_modifier is RollModifier.STRAIGHT:
             rolled = random.randint(1, 20)
-        elif final_modifier.ADVANTAGE:
+        elif final_modifier is final_modifier.ADVANTAGE:
             logger.info(f"{caster} rolls for {spell} with advantage", extra={"team": self.teams.get_team(caster)})
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
@@ -386,7 +386,6 @@ class ActionResolver:
         """
         if action is None:
             return None
-        # action = action_factory(combatant, self.effect_tracker, action_type, *args)
         if not check_feasibility(combatant, action, self.battle_map):
             if action.factory.action_type is Movement.STANDARD:
                 pass  # This can be caused by difficult terrain which is ok
