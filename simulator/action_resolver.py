@@ -1,3 +1,4 @@
+from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.misc import *
 from simulator.misc import SavingThrow
 from simulator.feasibility import check_feasibility

@@ -49,11 +49,11 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.mod_crit_range = 0
 
 
-    # def __str__(self):
-    #     """
-    #     Important for FSM building
-    #     """
-    #     return "RecklessAttackFactory" + self.name
+    def __str__(self):
+        """
+        Important for FSM building
+        """
+        return "RecklessAttackFactory" + self.name
 
     def find_best_args(self, combatant, battle_map):
         # TODO Deprecated

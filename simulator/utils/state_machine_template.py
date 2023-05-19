@@ -16,6 +16,14 @@ class StateMachineTemplate(Machine):
     def add_new_state(self, state_name):
         self.add_state(State(state_name))
 
+    def remove_state(self, state_name):
+        # del self.forward_transitions[state_name]
+        # for val in self.dependencies.values():
+        #     val.discard(state_name)
+        for t in self.get_available_transitions_in_state(state_name):
+            self.remove_transition(t, state_name)
+        # self.states.remove(state_name)
+
     def get_next_state_name(self):
         self.last_added_state = str(int(self.last_added_state) + 1)
         return self.last_added_state

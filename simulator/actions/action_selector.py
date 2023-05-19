@@ -97,6 +97,26 @@ def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_act
         except KeyError:
             pass  # Some may not be available for the secondary plan
 
+
+def prune_dead_dependencies(dag):
+    """
+    A small helper function which cuts off the dependencies any states that are unreachable from '0'. This is necessary since
+    the dead branch may be arbitrarily long (for long multiattacks)
+    :param dag: the DAG to be pruned
+    :return: None but the dag is modified
+    """
+    removed = True
+    while removed:
+        removed = False
+        for state in dag.states:
+            try:
+                if not dag.dependencies[state]:
+                    for successor_state in dag.forward_transitions[state]:
+                        dag.dependencies[successor_state].discard(state)
+                    removed = True
+            except KeyError:
+                pass  # Will happen for state 0
+
 def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions):
     """
     Builds action DAG for a combatant given the combatant's action_fsm. It determines eligible coords for each
@@ -147,8 +167,8 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                 if new_state_name not in added_states:
                     added_states.add(new_state_name)
                     dag.add_state(new_state_name)
-                move_transition_name = "m_" + new_state_name
-                dag.add_transition(move_transition_name, transition.source, new_state_name)  # Will be added multiple times, but it's ok
+                    move_transition_name = "m_" + new_state_name
+                    dag.add_transition(move_transition_name, transition.source, new_state_name)  # Will be added multiple times, but it's ok
                 dag.add_transition(action_name, new_state_name, transition.dest)
 
                 # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement (not a direct jump to the coord)
@@ -163,6 +183,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 
     build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_dodge_actions, added_states, dodge_name)
     build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_disengage_actions, added_states, disengage_name)
+    prune_dead_dependencies(dag)
     return dag
 
 
@@ -225,6 +246,8 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
         action.clear_cache()
 
     for state in sorted_states:
+        if state != '0' and not dag.dependencies[state]:
+            continue  # This essentially prunes unreachable states
         for transition_name, target_state in dag.forward_transitions[state]:
             try:
                 # Is it a transition which represents a (bonus) action?

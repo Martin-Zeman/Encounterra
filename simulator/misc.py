@@ -231,21 +231,3 @@ def reconstruct_path_through_dag(leaf_state, initial_state, max_threat_backwards
         except KeyError:
             print("FIXME")
     return reconstructed_path
-
-# def get_args_for_class_as_kwargs_with_values_from_instance(cls, instance):
-#     """
-#     The problem here is that the instance is of another type
-#     """
-#     args = [i for i in inspect.signature(cls.__init__).parameters.keys()]
-#     # TODO figure out what to do with kwargs, may become relevant in the future
-#     # Dropping self and kwargs
-#     return {a: getattr(instance, a) for a in args[1:-1]}
-
-
-# def init_coroutine(func):
-#     @functools.wraps(func)
-#     def init(*args, **kwargs):
-#         gen = func(*args, **kwargs)
-#         next(gen)
-#         return gen
-#     return init
