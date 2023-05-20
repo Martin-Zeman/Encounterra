@@ -6,7 +6,7 @@ import math
 import numpy as np
 from toposort import toposort_flatten
 
-from simulator.actions.action_types import Movement
+from simulator.actions.action_types import Movement, PRIORITY_ACTIONS
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.movement import MovementGenerator
 from simulator.battle_map import convert_path_to_increments
@@ -37,66 +37,64 @@ def find_ranges_of_consecutive(coords_w_threats):
         res[val] = start_pos, end_pos
     return res
 
-def get_data_for_special_treatment_actions(combatant, dag):
+def get_post_transitions_of_priority_transitions(dag, transition_name_to_action):
     """
-    A helper function which takes care of the actions that requre special treatment such as Misty Step, Dodge and
-    Disengage.
+    A helper function which gets eligible follow-up actions to all priority actions present in the DAG
     :param combatant: the combatant taking the actions
-    the sake of efficiency since it needs to be determined in the preceding step already to prevent expanding on Misty Step.
     :param dag: the DAG on which we operate
-    :return: tuple of (post_misty_step_actions, added_misty_step_coord_states, post_dodge_actions, post_disengage_actions)
+    :param transition_name_to_action: dict mapping action names -> actions
+    :return: dict priority_transition_name -> list of eligible follow-up transitions
     """
-    post_dodge_actions = None
-    if dag.trigger("Dodge of " + str(combatant)):
-        post_dodge_actions = dag.get_available_transitions()
-        dag.reset()
-    post_disengage_actions = None
-    if dag.trigger("Disengage of " + str(combatant)):
-        post_disengage_actions = dag.get_available_transitions()
-        dag.reset()
-    return post_dodge_actions, post_disengage_actions
+    post_priority_transitions = dict()
+    for transition in dag.get_available_transitions():
+        if transition == 'None':
+            break
+        if transition_name_to_action[transition].factory.action_type in PRIORITY_ACTIONS.keys():
+            post_transitions = None
+            if dag.trigger(transition):
+                # We filter out priority transitions even from all the post transitions
+                try:
+                    post_transitions = [ft for ft in dag.forward_transitions[dag.state] if transition_name_to_action[ft[0]].factory.action_type not in PRIORITY_ACTIONS.keys()]
+                except KeyError:
+                    pass  # For the case when the target state is nop
+                dag.reset()
+            post_priority_transitions[transition] = post_transitions
+    return post_priority_transitions
 
-def build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_actions, added_states, action_name):
+
+def build_priority_transitions(post_priority_transitions, action_to_eligible_coords, dag, added_states, transition_name_to_action):
     """
-    A helper function which builds the Dodge and Disengage parts of the DAG
+    A helper function which builds the priority part of the DAG such as Dodge or Disengage.
+    :param post_priority_transitions: dict from transition -> list of eligible follow-up transitions if the form of (transition, dest_state)
     :param action_to_eligible_coords: mapping from action names to their eligible coordinates
     :param dag: the DAG which we're building
-    :param post_actions: post Dodge/Disengage eligible actions, None if action is not eligible, [] if there are no eligible follow-up actions
     :param added_states: set of already existing states to avoid adding them multiple times
-    :param action_name: Dodge or Disengage
-    :return: the dag
+    :param transition_name_to_action: dict mapping action names -> actions
+    :return: None but the the dag is modified
     """
-    # TODO Consider merging Dodged and Disengaged into one state
-    # a prefix to make the newly pre-pended coord state unique
-    action_type = action_name.split()[0]
-    coord_state_prefix = action_type[0:2].lower() + "_"  # di_ or do_
-    new_source_state = action_type + "d"  # Dodged or Disengaged
-
-    if post_actions is None:  # If Action name is not eligible, return
-        return
-
-    if len(post_actions) == 0:  # If there are no follow-up actions possible, connect directly to nop and return
-        dag.add_transition(action_name, "0", "nop")
-        return
-
-    if new_source_state not in added_states:
-        added_states.add(new_source_state)
-        dag.add_state(new_source_state)
-        dag.add_transition(action_name, "0", new_source_state)
-
-    for post_action in post_actions:
-        try:
-            for coord in action_to_eligible_coords[post_action]:
-                new_state_name = coord_state_prefix + str(coord)  # Needs to be made unique from the other coord states
-                if new_state_name not in added_states:
-                    added_states.add(new_state_name)
-                    dag.add_state(new_state_name)
-                    move_transition_name = coord_state_prefix + str(coord)
-                    dag.add_transition(move_transition_name, new_source_state, new_state_name) # will be added multiple times, but it's ok
-                dag.add_transition(post_action, new_state_name, "nop")
-        except KeyError:
-            pass  # Some may not be available for the secondary plan
-
+    for transition, post_transitions in post_priority_transitions.items():
+        if not post_transitions:  # If there are no follow-up actions possible, connect directly to nop and return
+            dag.add_transition(transition, "0", "nop")
+            continue
+        action_type = transition.split()[0]
+        new_source_state = action_type + "d"  # e.g. Dodge of FooBar -> Dodged
+        prefix = PRIORITY_ACTIONS[transition_name_to_action[transition].factory.action_type][1]
+        if new_source_state not in added_states:
+            added_states.add(new_source_state)
+            dag.add_state(new_source_state)
+        dag.add_transition(transition, "0", new_source_state)
+        for post_transition in post_transitions:
+            try:
+                for coord in action_to_eligible_coords[post_transition[0]]:
+                    coord_state_name = prefix + str(coord)  # Needs to be made unique from the other coord states
+                    if coord_state_name not in added_states:
+                        added_states.add(coord_state_name)
+                        dag.add_state(coord_state_name)
+                    move_transition_name = prefix + str(coord)
+                    dag.add_transition(move_transition_name, new_source_state, coord_state_name)  # Will be added multiple times, but it's ok
+                    dag.add_transition(post_transition[0], coord_state_name, post_transition[1])
+            except KeyError:
+                pass  # Some may not be available for the secondary plan
 
 def prune_dead_dependencies(dag):
     """
@@ -113,6 +111,7 @@ def prune_dead_dependencies(dag):
                 if not dag.dependencies[state]:
                     for successor_state in dag.forward_transitions[state]:
                         dag.dependencies[successor_state].discard(state)
+                        # TODO delete key if set empty?
                     removed = True
             except KeyError:
                 pass  # Will happen for state 0
@@ -133,16 +132,14 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     :param post_misty_step_actions: list of actions that are eligible after taking the Misty Step action
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
-    # TODO: Look into caching!!!
-    post_dodge_actions, post_disengage_actions = get_data_for_special_treatment_actions(combatant, action_fsm)
-    combatant_name = str(combatant)
-    dodge_name = "Dodge of " + combatant_name
-    disengage_name = "Disengage of " + combatant_name
-    action_fsm.remove_transition(dodge_name, '0')
-    action_fsm.remove_transition(disengage_name, '0')
+    post_priority_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action)
+    for priority_transition in post_priority_transitions.keys():  # TODO Do I need to have them removed for all states or just 0?
+        for origin_state in action_fsm.states.keys():
+            action_fsm.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+
     dag = copy.deepcopy(action_fsm)
     transition_names = action_fsm.get_available_transitions()
-    if transition_names[0] == 'None':
+    if not transition_names or transition_names[0] == 'None':
         return None
     if not post_misty_step_actions:
         post_misty_step_actions = []
@@ -181,8 +178,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                     dag.add_transition(action_name, new_state_name, "nop")
         dag.remove_transition(action_name, transition.source)  # Remove the original
 
-    build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_dodge_actions, added_states, dodge_name)
-    build_special_treatment_part_of_dag(action_to_eligible_coords, dag, post_disengage_actions, added_states, disengage_name)
+    build_priority_transitions(post_priority_transitions, action_to_eligible_coords, dag, added_states, transition_name_to_action)
     prune_dead_dependencies(dag)
     return dag
 
@@ -212,7 +208,7 @@ def get_threat_modification_by_previous_action(combatant, battle_map, state, act
     threat = 0
     try:
         previous_transition_name = max_threat_backwards_transition[state][0]
-        threat += transition_name_to_action[previous_transition_name].calculate_threat_for_attack(combatant, battle_map, action)
+        threat = transition_name_to_action[previous_transition_name].calculate_threat_for_attack(combatant, battle_map, action)
     except (AttributeError, KeyError):
         pass
     except Exception as e:

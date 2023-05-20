@@ -3,7 +3,7 @@ from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions
-from simulator.action_factory import *
+from simulator.actions.action_factory import *
 from simulator.actions.action_types import *
 import logging
 

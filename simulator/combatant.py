@@ -1,17 +1,14 @@
 import copy
 import random
 import math
-import inspect
 from simulator.actions.actoid import FactoryFlags
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype
-from simulator.action_factory import *
+from simulator.actions.action_factory import *
 from enum import Enum
 from abc import ABC, abstractmethod
-from simulator.abilities.totem_rage import TotemRageFactory
-from simulator.actions.attack import AttackFactory
 from simulator.actions.dodge import DodgeFactory
 from simulator.actions.disengage import DisengageFactory
-from simulator.action_factory import TO_TWINNED, TO_QUICKENED
+from simulator.actions.action_factory import TO_TWINNED, TO_QUICKENED
 
 logger = logging.getLogger("EncounTroll")
 

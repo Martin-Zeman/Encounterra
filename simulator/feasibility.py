@@ -1,5 +1,5 @@
 from simulator.abilities.reckless_attack import RecklessAttack
-from simulator.action_factory import *
+from simulator.actions.action_factory import *
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Conditions
 import logging

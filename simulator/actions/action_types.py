@@ -20,6 +20,7 @@ class Action(Enum):
     TWINNED_HASTE = auto()
     SCORCHING_RAY = auto()
 
+
 class BonusAction(Enum):
     BONUS_MELEE_ATTACK = auto()
     BONUS_RANGED_ATTACK = auto()
@@ -52,7 +53,7 @@ class Movement(Enum):
     FORCED = auto()
     GET_UP_FROM_PRONE = auto()
 
-#
+
 class HasteAction(Enum):
     HASTE_MELEE_ATTACK = auto()
     HASTE_RANGED_ATTACK = auto()
@@ -68,6 +69,7 @@ class Passive(Enum):
     DANGER_SENSE = auto()
     METAMAGIC = auto()
 
+
 class MetaAction(Enum):
     DONE = auto()
     QUICKENED_SPELL = auto()
@@ -75,3 +77,11 @@ class MetaAction(Enum):
     EMPOWERED_SPELL = auto()
 
 
+PRIORITY_ACTIONS = {
+    Action.DODGE: ("Dodge", "do_"),
+    Action.DISENGAGE: ("Disengage", "di_"),
+    BonusAction.CUNNING_DODGE: ("Cunning Dodge", "do_"),
+    BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "di_"),
+    BonusAction.TOTEM_RAGE: ("TotemRage", "m_"),
+    BonusAction.RAGE: ("Rage", "m_")
+}

@@ -7,12 +7,11 @@ from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.combatant import Combatant
 from simulator.misc import Conditions, Size
-from simulator.action_factory import Passive
+from simulator.actions.action_factory import Passive
 from simulator.geometry import get_affected_by_cone
 from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
-import time
 import heapq
 from enum import Enum
 

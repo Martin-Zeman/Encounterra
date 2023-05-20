@@ -3,11 +3,8 @@ from simulator.misc import *
 from simulator.misc import SavingThrow
 from simulator.feasibility import check_feasibility
 from simulator.resources import use_resources
-from simulator.action_factory import *
+from simulator.actions.action_factory import *
 from simulator.actions.actoid import ActoidFlags
-from simulator.spells.chaosbolt import Chaosbolt
-from simulator.geometry import *
-from simulator.combatant_coords import CombatantCoords
 from enum import Enum, auto
 
 logger = logging.getLogger("EncounTroll")

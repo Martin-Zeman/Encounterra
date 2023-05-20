@@ -4,7 +4,7 @@ from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
 from simulator.feasibility import get_feasible_factories
 from simulator.misc import DamageType, SavingThrow, Conditions, Size
-from simulator.action_factory import *
+from simulator.actions.action_factory import *
 from simulator.actions.action_types import *
 from simulator.actions.actoid import ActoidFlags
 import numpy as np

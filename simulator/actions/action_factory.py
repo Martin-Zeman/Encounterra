@@ -154,12 +154,6 @@ def action_factory(combatant, effect_tracker, action_type, *args):
                 return Dash()
             case _:
                 logger.error("Unknown haste action")
-    # elif isinstance(action_type, FreeAction):
-    #     match action_type:
-    #         case FreeAction.RECKLESS_ATTACK:
-    #             return RecklessAttack(combatant)
-    #         case _:
-    #             logger.error("Unknown free action")
     else:
         logger.error("Unknown high level action class")
         return None

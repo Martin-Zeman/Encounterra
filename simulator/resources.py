@@ -1,4 +1,4 @@
-from simulator.action_factory import *
+from simulator.actions.action_factory import *
 import logging
 from simulator.misc import Conditions
 

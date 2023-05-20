@@ -18,7 +18,6 @@ class Actoid:
     """
     def __init__(self, actoid_flags):
         self.actoid_flags = actoid_flags
-        self.action_type = None
 
 class FactoryFlags(Flag):
     # TODO Consider merging actoid flags and factory flags
