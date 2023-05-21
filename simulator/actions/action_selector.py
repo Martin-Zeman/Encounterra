@@ -160,13 +160,12 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
             transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]
             assert len(transitions) == 1
             for transition in transitions:  # Iterate over the original to avoid deleting from the one being iterated over
-                new_state_name = str(coord)
-                if new_state_name not in added_states:
-                    added_states.add(new_state_name)
-                    dag.add_state(new_state_name)
-                    move_transition_name = "m_" + new_state_name
-                    dag.add_transition(move_transition_name, transition.source, new_state_name)  # Will be added multiple times, but it's ok
-                dag.add_transition(action_name, new_state_name, transition.dest)
+                new_state_and_transition_name = "m_" + str(coord)
+                if new_state_and_transition_name not in added_states:
+                    added_states.add(new_state_and_transition_name)
+                    dag.add_state(new_state_and_transition_name)
+                    dag.add_transition(new_state_and_transition_name, transition.source, new_state_and_transition_name)  # Will be added multiple times, but it's ok
+                dag.add_transition(action_name, new_state_and_transition_name, transition.dest)
 
                 # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement (not a direct jump to the coord)
                 if action_name in post_misty_step_actions:
@@ -206,13 +205,20 @@ def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwar
 
 def get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action):
     threat = 0
-    try:
-        previous_transition_name = max_threat_backwards_transition[state][0]
-        threat = transition_name_to_action[previous_transition_name].calculate_threat_for_attack(combatant, battle_map, action)
-    except (AttributeError, KeyError):
-        pass
-    except Exception as e:
-        logger.error(f"Unexpected exception occurred in get_threat_modification_by_previous_action: {e}")
+    curr_state = state
+    while True:
+        try:
+            previous_transition_name = max_threat_backwards_transition[curr_state][0]
+            threat = transition_name_to_action[previous_transition_name].calculate_threat_for_attack(combatant, battle_map, action)
+            break
+        except (KeyError, AttributeError):
+            try:
+                curr_state = max_threat_backwards_transition[curr_state][1]
+            except KeyError:
+                break
+        except Exception as e:
+            logger.error(f"Unexpected exception occurred in get_threat_modification_by_previous_action: {e}")
+            break
     return threat
 
 def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths):

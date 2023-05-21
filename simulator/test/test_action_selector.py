@@ -300,6 +300,7 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, combatant3, comba
 
     try:
         actoid1 = combatant4.get_action(battle_map)
+        assert str(actoid1) == 'TotemRage of TotemBarbarian5Lvl'
         action_resolver.resolve_action(actoid1, combatant4)
         actoid2 = combatant4.get_action(battle_map)
         action_resolver.resolve_action(actoid2, combatant4)
@@ -318,7 +319,11 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, combatant3, comba
         actoid9 = combatant4.get_action(battle_map)
         action_resolver.resolve_action(actoid9, combatant4)
         actoid10 = combatant4.get_action(battle_map)
+        assert str(actoid10) == 'RecklessAttack at Bugbear'
         action_resolver.resolve_action(actoid10, combatant4)
+        actoid11 = combatant4.get_action(battle_map)
+        assert str(actoid11) == 'RecklessAttack at Bugbear'
+        action_resolver.resolve_action(actoid11, combatant4)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
