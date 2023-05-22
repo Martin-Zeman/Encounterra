@@ -185,10 +185,10 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def __str__(self):
         return f"RecklessAttack at {self.target_combatant}"
 
-    def activate(self):
+    def activate(self, battle_map):
         self.combatants[0].reckless_attack_active = True
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         self.combatants[0].reckless_attack_active = False
 
     def get_dmg_type(self):

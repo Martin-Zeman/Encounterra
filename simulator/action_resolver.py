@@ -7,6 +7,8 @@ from simulator.actions.action_factory import *
 from simulator.actions.actoid import ActoidFlags
 from enum import Enum, auto
 
+from simulator.spells.faerie_fire import FaerieFire
+
 logger = logging.getLogger("EncounTroll")
 
 class ActionResult(Enum):
@@ -85,6 +87,8 @@ class ActionResolver:
             return RollModifier.ADVANTAGE
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
+            return RollModifier.ADVANTAGE
+        if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
             return RollModifier.ADVANTAGE
         return RollModifier.STRAIGHT
 
@@ -208,9 +212,12 @@ class ActionResolver:
                         self.battle_map.remove_combatant(combatant)
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
-                spell.activate()
+                spell.activate(None)
                 self.effect_tracker.add(spell, caster)
                 return ActionResult.MEDIUM_BUFF
+            case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
+                spell.activate(self.battle_map)
+                self.effect_tracker.add(spell, caster)
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
                 return self.resolve_ranged_spell_attack(caster, spell, spell.target)
             case Action.TWINNED_FIREBOLT:
@@ -248,6 +255,8 @@ class ActionResolver:
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollModifier.ADVANTAGE
         if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) == 1:
+            return RollModifier.ADVANTAGE
+        if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
             return RollModifier.ADVANTAGE
         return RollModifier.STRAIGHT
 
@@ -396,12 +405,12 @@ class ActionResolver:
     def resolve_toggle_ability(self, combatant, ability):
         match ability.__class__.__name__:
             case "TotemRage" | "Rage" | "Disengage" | "Dodge":
-                ability.activate()
+                ability.activate(None)
                 self.effect_tracker.add(ability, combatant)
             case "RecklessAttack":
                 if not self.effect_tracker.is_affecting_combatant(combatant, RecklessAttack):
                     # don't need to add it again in case of a multiattack
-                    ability.activate()
+                    ability.activate(None)
                     self.effect_tracker.add(ability, combatant)
             case _:
                 logger.error(f"Unknown toggle ability {ability.__class__.__name__}")

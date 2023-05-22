@@ -98,10 +98,10 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         return battle_map.get_hop_distance(combatant, coords) == 0
 
 
-    def activate(self):
+    def activate(self, battle_map):
         pass
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         pass  # TODO remove concentration?
 
 

@@ -112,8 +112,10 @@ def generate_action_fsm(combatant, battle_map):
             for fa in fas:
                 exported_resources = combatant.export_resources()
                 use_resources(combatant, fa, battle_map)
+                # TODO Add action-enabling action resolution here
                 dfs(curr_state_name, fa)
                 combatant.load_resources(exported_resources)
+                # TODO Remove the action-enabling effects here
         else:
             # State already exists, just hook up the transition
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])

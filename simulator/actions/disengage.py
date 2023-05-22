@@ -46,10 +46,10 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
     def __str__(self):
         return f"Disengage of {self.factory.combatant}"
 
-    def activate(self):
+    def activate(self, battle_map):
         self.factory.combatant.has_disengaged = True
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s disengage fades")
         self.factory.combatant.has_disengaged = False
 

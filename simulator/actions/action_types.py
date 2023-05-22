@@ -19,6 +19,7 @@ class Action(Enum):
     TWINNED_FIREBOLT = auto()
     TWINNED_HASTE = auto()
     SCORCHING_RAY = auto()
+    FAERIE_FIRE = auto()
 
 
 class BonusAction(Enum):
@@ -39,6 +40,7 @@ class BonusAction(Enum):
     QUICKENED_SPIKE_GROWTH = auto()
     QUICKENED_CLOUD_OF_DAGGERS = auto()
     QUICKENED_SCORCHING_RAY = auto()
+    QUICKENED_FAERIE_FIRE = auto()
 
 
 class Reaction(Enum):

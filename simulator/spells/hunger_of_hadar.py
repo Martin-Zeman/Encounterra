@@ -108,11 +108,11 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return battle_map.get_hop_distance(combatant, coords) == 0
 
 
-    def activate(self):
+    def activate(self, battle_map):
         # TODO make the area difficult terrain
         pass
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         # TODO remove difficult terrain
         pass  # TODO remove concentration?
 

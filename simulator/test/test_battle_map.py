@@ -6,7 +6,7 @@ from simulator.misc import DistanceMetric, Size, Side, Conditions
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.spell import SpellStats
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, combatant5, teams, effect_tracker, battle_map
+from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, combatant5, combatant6, teams, effect_tracker, battle_map
 import numpy as np
 
 
@@ -931,6 +931,28 @@ def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, combatant1, co
     assert combatant2 in combatants
     assert combatant3 in combatants
     assert combatant4 not in combatants
+
+def test_get_combatants_affected_by_aoe_square(battle_map, teams, combatant1, combatant2, combatant3, combatant4, combatant5, combatant6):
+    combatant2.size = Size.LARGE
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant2, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant4, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant5, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant6, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, np.array([1, 1]))
+    battle_map.set_combatant_coordinates(combatant2, np.array([8, 5]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([10, 5]))
+    battle_map.set_combatant_coordinates(combatant4, np.array([11, 4]))
+    battle_map.set_combatant_coordinates(combatant5, np.array([10, 6]))
+    battle_map.set_combatant_coordinates(combatant6, np.array([5, 3]))
+    combatants = battle_map.get_combatants_affected_by_aoe(combatant1, SpellStats.Target.BOX_20, SpellStats.Type.HARMFUL, np.array([7, 3]))
+    assert combatant1 not in combatants
+    assert combatant2 in combatants
+    assert combatant3 in combatants
+    assert combatant4 not in combatants
+    assert combatant5 in combatants
+    assert combatant6 not in combatants
 
 def test_get_enemies_within_radius_sorted_by_distance(battle_map, teams, combatant1, combatant2, combatant3, combatant4):
     combatant2.size = Size.LARGE

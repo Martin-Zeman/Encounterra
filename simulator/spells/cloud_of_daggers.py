@@ -13,7 +13,7 @@ import numpy as np
 class CloudOfDaggersFactory(DirectThreatFactory):
     level = 2
     range = SpellStats.Range.FEET_60.value
-    target = SpellStats.Target.BOX
+    target = SpellStats.Target.BOX_5
     duration = SpellStats.Duration.INSTANTANEOUS
     concentration = True
     type = SpellStats.Type.HARMFUL
@@ -30,15 +30,15 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         """
         Important for FSM building
         """
-        return "SpikeGrowthFactory"
+        return "CloudOfDaggersFactory"
 
     def find_best_args(self, combatant, battle_map):
         # TODO maybe find a smarter placement for this
         coord, _, _ = battle_map.find_best_placement_harmful_square(self.caster, CloudOfDaggersFactory.range, 1)
         return coord
 
-    def create_best(self, combatant, battle_map, **kwargs):
-        return CloudOfDaggers(self.find_best_args(combatant, battle_map), self,  **kwargs)
+    # def create_best(self, combatant, battle_map, **kwargs):
+    #     return CloudOfDaggers(self.find_best_args(combatant, battle_map), self,  **kwargs)
 
     def create_all(self, battle_map):
         # Here there really is no need to iterate over all coords. Just find the best score
@@ -72,7 +72,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
         LimitedDurationEffect.__init__(self, turns=10)
-        AoeSquareEffect.__init__(self, coord, 1)
+        AoeSquareEffect.__init__(self, coord, SpellStats.TRANSLATE_BOX[CloudOfDaggersFactory.target])
         self.factory = factory
 
     def __str__(self):
@@ -96,10 +96,10 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         coords = self.get_affected_coords(battle_map)
         return battle_map.get_hop_distance(combatant, coords) == 0
 
-    def activate(self):
+    def activate(self, battle_map):
         pass
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         pass  # TODO remove concentration?
 
     def clear_cache(self):

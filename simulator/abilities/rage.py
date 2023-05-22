@@ -115,12 +115,12 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, Attac
     def __str__(self):
         return f"Rage of {self.factory.combatant}"
 
-    def activate(self):
+    def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} enters into a rage")
         self.combatants[0].ability_dmg_bonus += self.rage_bonus
         self.combatants[0].resistances.update([DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing])
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         self.combatants[0].resistances.remove(DamageType.Slashing)

@@ -103,14 +103,14 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
     def __str__(self):
         return f"Twinned Haste on {self.targets[0]} and {self.targets[1]}"
 
-    def activate(self):
+    def activate(self, battle_map):
         self.factory.caster.is_concentrating = True
         for target in self.targets:
             target.ac += 2
             target.add_hasted_factories()
             target.has_haste_action = True  # TODO Remove this
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         self.factory.caster.is_concentrating = False
         for target in self.targets:
             target.ac -= 2

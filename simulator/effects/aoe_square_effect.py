@@ -15,13 +15,7 @@ class AoeSquareEffect(AoeEffect):
         :param battle_map:
         :return: affected coordinates as a np.array of nx2 where n is the number of coordinates returned
         """
-        grid_size = battle_map.size
-        coords = []
-        for x, y in [(self.origin[0] + i, self.origin[1] + j) for i in range(0, self.length) for j in range(0, self.length)]:
-            if x < 0 or x >= grid_size or y < 0 or y >= grid_size:
-                continue
-            coords.append(np.array([x, y]))
-        return np.stack([c for c in coords])
+        return battle_map.get_coords_affected_by_square_aoe(self.origin, self.length)
 
     def is_affecting(self, combatant, battle_map):
         return False  # TODO

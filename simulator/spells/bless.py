@@ -59,7 +59,7 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
         self.targets = targets
         self.factory = factory
 
-    def activate(self):
+    def activate(self, battle_map):
         # todo should check if not already under the influence of another bless
         self.factory.caster.is_concentrating = True
         for target in self.targets:
@@ -67,7 +67,7 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
                 mod.append('1d')
             target.to_hit_dice_mod.append('1d4')
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         self.factory.caster.is_concentrating = False
         for target in self.targets:
             for mod in target.saving_throws_dice_mod.values():

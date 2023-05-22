@@ -5,11 +5,11 @@ from abc import ABC, abstractmethod
 class Effect(ABC):
 
     @abstractmethod
-    def activate(self):
+    def activate(self, battle_map):
         pass
 
     @abstractmethod
-    def deactivate(self):
+    def deactivate(self, battle_map):
         pass
 
     @abstractmethod

@@ -142,13 +142,13 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HASTE else "") + f"Haste on {self.target}"
 
-    def activate(self):
+    def activate(self, battle_map):
         self.factory.caster.is_concentrating = True
         self.target.ac += 2
         self.target.add_hasted_factories()
         self.target.has_haste_action = True  # TODO Remove this
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         self.factory.caster.is_concentrating = False
         self.target.ac -= 2
         self.target.haste_action_factories.clear()

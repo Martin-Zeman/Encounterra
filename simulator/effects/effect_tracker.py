@@ -33,10 +33,10 @@ class EffectTracker:
         effects = []
         for e in self.effects:
             if getattr(e[0], "new_turn", False) and e[1] is combatant:
-                if not e[0].new_turn():
+                if not e[0].new_turn(self.battle_map):
                     continue
             if getattr(e[0], "start_of_turn", False) and e[1] is combatant:
-                if not e[0].start_of_turn():
+                if not e[0].start_of_turn(self.battle_map):
                     continue
             effects.append(e)
         self.effects = effects
@@ -45,7 +45,7 @@ class EffectTracker:
         effects = []
         for e in self.effects:
             if getattr(e[0], "end_of_turn", False) and e[1] is combatant:
-                if not e[0].end_of_turn():
+                if not e[0].end_of_turn(self.battle_map):
                     continue
             effects.append(e)
         self.effects = effects
@@ -126,5 +126,5 @@ class EffectTracker:
     def reset(self):
         logger.warning("Resetting effect tracker")
         for effect in self.effects:
-            effect[0].deactivate()
+            effect[0].deactivate(self.battle_map)
         self.effects.clear()

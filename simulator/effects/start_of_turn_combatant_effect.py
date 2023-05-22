@@ -12,7 +12,7 @@ class StartOfTurnEffect(Effect):
        self.dc = dc
 
 
-    def start_of_turn(self):
+    def start_of_turn(self, battle_map):
         """
 
         :return: False if the saved against the effect and can be removed, True otherwise
@@ -20,6 +20,6 @@ class StartOfTurnEffect(Effect):
         saved = roll_saving_throw(self.combatant.saving_throws[self.st], self.dc, reconcile_roll_modifiers(self.combatant.saving_throws_roll_mod[self.st]))
         if saved:
             # logger.info(f"{self.__class__.__name__} expires")
-            self.deactivate()
+            self.deactivate(battle_map)
             return False
         return True

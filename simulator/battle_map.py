@@ -1024,11 +1024,25 @@ class Map:
             ret = self.get_combatants_affected_by_aoe(caster, target_template, ability_type, origin, angle)
         return ret
 
+    def get_coords_affected_by_square_aoe(self, origin, length):
+        """
+        Gets coordinates of grid squares affected by a square effect originating at bottom left corner of a square at origin coordinates.
+        :param origin: bottom left coordinate of the square
+        :param length: length of the square's side
+        :return: affected coordinates as a np.array of nx2 where n is the number of coordinates returned
+        """
+        coords = []
+        for x, y in [(origin[0] + i, origin[1] + j) for i in range(0, length) for j in range(0, length)]:
+            if x < 0 or x >= self.size or y < 0 or y >= self.size:
+                continue
+            coords.append(np.array([x, y]))
+        return np.stack([c for c in coords])
+
     def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):
         """
         Gets combatants affected by an AoE effect
         :param caster: the caster of the AoE
-        :param target_template: RADIUS_X or CONE_Y
+        :param target_template: RADIUS_X, CONE_Y, BOX_Z
         :param ability_type: SpellStats.Type.HARMFUL or SpellStats.Type.BUFF
         :param origin: origin of the AoE
         :param angle: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
@@ -1056,6 +1070,12 @@ class Map:
                 origin = self.combatant_coordinate_cache[caster]
                 affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
                 affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords]
+
+            case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_20:
+                affected_coords = self.get_coords_affected_by_square_aoe(origin, SpellStats.TRANSLATE_BOX[target_template])
+                for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
+                    if self.get_cartesian_distance(potential_target, affected_coords) == 0:
+                        affected_combatants.append(potential_target)
             case _:
                 logger.error("Unrecognized ability target type")
         return affected_combatants
@@ -1086,36 +1106,9 @@ class Map:
     def get_enemies_within_hop_distance(self, combatant, distance):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]
 
-    # def get_enemies_within_hop_distance(self, combatant, distance, distances):
-    #     """
-    #     Get all enemies from combatant within hop distance using distances computed by Dijkstra
-    #     :param combatant: the combatant used as origin
-    #     :param distance: the maximum distance
-    #     :param distances: the array of distances for each square from the PoV of the combatant
-    #     :return:
-    #     """
-    #     return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]
-
     def get_enemies_within_their_movement_range(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= e.movement + 1]
 
     def is_difficult_terrain_at(self, coords: CombatantCoords):
         vec_is_difficult_terrain = np.vectorize(GridSquare.is_difficult_terrain)
         return np.any(vec_is_difficult_terrain(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
-
-
-    # def has_combatant_positioning_changed(self, new_hash):
-    #     """
-    #     Determines if the collective positioning of all combatants has changed since the last call. Note that this is NOT updated along
-    #     with the positioning of combatants. It's determined as compared to the last call of this method ONLY!
-    #     :param: new_hash the new hash  recalculated by the callee
-    #     :return: True if the positioning of any combatant has changed since last call, False otherwise
-    #     """
-    #     # TODO Unit-test this
-    #     if new_hash != self.combatant_positioning_hash:
-    #         self.combatant_positioning_hash = new_hash
-    #         return True
-    #     return False
-    #
-    # def calc_positioning_hash(self):
-    #     return hash(frozenset(self.combatant_coordinate_cache.items()))

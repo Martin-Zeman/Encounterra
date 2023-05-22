@@ -80,14 +80,14 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
     def __str__(self):
         return f"TotemRage of {self.factory.combatant}"
 
-    def activate(self):
+    def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} enters into a totem rage")
         self.combatants[0].ability_dmg_bonus += self.rage_bonus
         self.combatants[0].resistances.update(
             [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Fire, DamageType.Lightning, DamageType.Acid, DamageType.Cold,
              DamageType.Force, DamageType.Necrotic, DamageType.Poison, DamageType.Radiant, DamageType.Piercing])
 
-    def deactivate(self):
+    def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         self.combatants[0].resistances.remove(DamageType.Slashing)

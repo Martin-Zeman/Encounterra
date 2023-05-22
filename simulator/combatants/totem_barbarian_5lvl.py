@@ -24,9 +24,6 @@ class TotemBarbarian5Lvl(Combatant):
         self.add_ability(Passive.DANGER_SENSE)
         self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, max_num=2)
         self.build_attack_fms()
-        self.movement_generator = None
-        self.selected_target = None
-        self.path = None
         self.saving_throws[SavingThrow.STR] = 7
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 7
