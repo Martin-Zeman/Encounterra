@@ -85,7 +85,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             enemy_attacks = get_attacks(enemy)
             if not enemy_attacks:
                 continue
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_mod(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
 
             # TODO include the ST-based abilities here

@@ -133,7 +133,7 @@ class DirectThreatFactory(ABC, Factory):
         return 0
 
     @abstractmethod
-    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw

@@ -71,7 +71,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         else:
             return 0
 
-    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
@@ -123,8 +123,8 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         return dmg_acc
 
     def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
-        ret = self.factory.calculate_threat_to_target_mod(battle_map, self.targets[0], modified_stats)
-        ret += self.factory.calculate_threat_to_target_mod(battle_map, self.targets[1], modified_stats)
+        ret = self.factory.calculate_threat_to_target_delta(battle_map, self.targets[0], modified_stats)
+        ret += self.factory.calculate_threat_to_target_delta(battle_map, self.targets[1], modified_stats)
         return ret
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

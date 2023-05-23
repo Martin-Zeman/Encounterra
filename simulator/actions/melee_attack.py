@@ -11,10 +11,9 @@ logger = logging.getLogger("EncounTroll")
 
 class MeleeAttackFactory(AttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, max_num=1, ammo=math.inf, on_hit=None):
-        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, max_num, on_hit)
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None):
+        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit)
         self.flags |= FactoryFlags.IS_MELEE
-        self.ammo = math.inf
 
     def find_best_args(self, combatant, battle_map):
         # TODO Deprecated
@@ -31,6 +30,7 @@ class MeleeAttackFactory(AttackFactory):
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)
         return [MeleeAttack(t, self) for t in targets]
+
 
 
 class MeleeAttack(Attack):

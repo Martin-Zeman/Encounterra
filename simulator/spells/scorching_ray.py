@@ -60,7 +60,7 @@ class ScorchingRayFactory(DirectThreatFactory):
             return 0
 
 
-    def calculate_threat_to_target_mod_single_target(self, target, modified_stats):
+    def calculate_threat_to_target_delta_single_target(self, target, modified_stats):
         """
         Helper function
         """
@@ -85,14 +85,14 @@ class ScorchingRayFactory(DirectThreatFactory):
         return 3*(mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(ScorchingRayFactory.dmg_type)) - \
             mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ScorchingRayFactory.dmg_type)))
 
-    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
         # We assume the maximum threat in case where all three rays are aimed at the target
-        return 3 * self.calculate_threat_to_target_mod_single_target(target, modified_stats)
+        return 3 * self.calculate_threat_to_target_delta_single_target(target, modified_stats)
 
 
 class ScorchingRay(Actoid, DirectThreat):
@@ -122,9 +122,9 @@ class ScorchingRay(Actoid, DirectThreat):
         return dmg_acc
 
     def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
-        ret = self.factory.calculate_threat_to_target_mod_single_target(self.targets[0], modified_stats)
-        ret += self.factory.calculate_threat_to_target_mod_single_target(self.targets[1], modified_stats)
-        ret += self.factory.calculate_threat_to_target_mod_single_target(self.targets[2], modified_stats)
+        ret = self.factory.calculate_threat_to_target_delta_single_target(self.targets[0], modified_stats)
+        ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[1], modified_stats)
+        ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[2], modified_stats)
         return ret
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

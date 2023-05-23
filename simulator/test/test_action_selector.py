@@ -284,6 +284,9 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
 
 
 def test_rage_before_attack(battle_map, teams, effect_tracker, combatant3, combatant4):
+    """
+    We assert that the barbarian rages before doing anything else.
+    """
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
@@ -324,6 +327,77 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, combatant3, comba
         actoid11 = combatant4.get_action(battle_map)
         assert str(actoid11) == 'RecklessAttack at Bugbear'
         action_resolver.resolve_action(actoid11, combatant4)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, combatant3, combatant4):
+    """
+    It had occured during testing that the bugbear would opt for staying at range and throw javelins rather than go in melee range
+    which is not desirable.
+    """
+    CustomLogger(LogLevel.WARNING)
+
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant3, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant3, np.array([4, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant4, np.array([11, 4]))  # Have to set it for fireball placement
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant3, combatant4]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+
+    try:
+        # First the Bugbear tries to get a distance and throw a javelin
+        actoid1 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, combatant3)
+        actoid2 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant3)
+        actoid3 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant3)
+        actoid4 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant3)
+        actoid5 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant3)
+        actoid6 = combatant3.get_action(battle_map)
+        assert str(actoid6) == "None"
+
+        # Then it tries to get back into melee
+        combatant3.new_turn()
+        actoid7 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant3)
+        actoid8 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, combatant3)
+        actoid9 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid9, combatant3)
+        actoid10 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid10, combatant3)
+        actoid11 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid11, combatant3)
+        actoid12 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid12, combatant3)
+        actoid13 = combatant3.get_action(battle_map)
+        assert str(actoid13) == "None"
+
+        # Then it finally attacks in melee
+        combatant3.new_turn()
+        actoid14 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid14, combatant3)
+        actoid15 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid15, combatant3)
+        actoid16 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid16, combatant3)
+        actoid17 = combatant3.get_action(battle_map)
+        action_resolver.resolve_action(actoid17, combatant3)
+        actoid18 = combatant3.get_action(battle_map)
+        assert str(actoid18) == "Morningstar on TotemBarbarian5Lvl"
+        action_resolver.resolve_action(actoid18, combatant3)
+        actoid19 = combatant3.get_action(battle_map)
+        assert str(actoid19) == "None"
+
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

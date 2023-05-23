@@ -1,5 +1,6 @@
 from abc import abstractmethod
 
+from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce, cache
 from simulator.misc import percent_of_curr_hp, avg_roll
@@ -19,7 +20,7 @@ class AttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, max_num=1, on_hit=None, ammo=math.inf):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
@@ -34,7 +35,7 @@ class AttackFactory(DirectThreatFactory):
         self.short_range = attack_range // 4
         self.action_type = action_type  # MELEE_ATTACK, RANGED_ATTACK, BONUS_MELEE_ATTACK, BONUS_RANGED_ATTACK REACTION_ATTACK, HASTE_MELEE...
         self.crit_range = crit_range
-        self.max_num = max_num  # the maximum number of an attack of this type, may differ from total num attacks
+        self.ammo = ammo
         self.on_hit = on_hit
 
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
@@ -47,6 +48,11 @@ class AttackFactory(DirectThreatFactory):
 
     def __str__(self):
         return self.name + " AttackFactory"
+
+    def get_kwargs(self):
+        return {'name': self.name, 'combatant': self.combatant, 'to_hit': self.to_hit, 'dmg_dice': self.dmg_dice,
+                'dmg_bonus': self.dmg_bonus, 'dmg_type': self.dmg_type, 'attack_range': self.range, 'action_type': self.action_type,
+                'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit}
 
     def find_best_args(self, combatant, battle_map):
         # TODO Deprecated
@@ -105,14 +111,14 @@ class AttackFactory(DirectThreatFactory):
             roll_modifier = RollModifier.STRAIGHT
 
         to_hit_total = self.to_hit
-        to_hit_total = to_hit_total + ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
+        to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
 
         # TODO: Should I include roll modifiers here? There may be a use-case in the future
         if not consider_dist or battle_map.get_hop_distance(self.combatant, target) <= self.range:
             return mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         return 0
 
-    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -157,7 +163,7 @@ class AttackFactory(DirectThreatFactory):
         try:
             modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
         except:
-            logger.error("Error in mean_dmg of calculate_threat_to_target_mod of AttackFactory")
+            logger.error("Error in mean_dmg of calculate_threat_to_target_delta of AttackFactory")
             modified = baseline
         return modified - baseline
 
@@ -171,7 +177,7 @@ class Attack(Actoid, DirectThreat):
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return self.factory.name + f" on {self.target_combatant}"
+        return ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name + f" on {self.target_combatant}"
 
     def get_dmg_type(self):
         return self.factory.dmg_type
@@ -187,4 +193,4 @@ class Attack(Actoid, DirectThreat):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        return self.factory.calculate_threat_to_target_mod(battle_map, self.target_combatant, modified_stats, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modified_stats, *args, **kwargs)

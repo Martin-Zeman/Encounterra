@@ -125,7 +125,7 @@ class HasteFactory(ThreatModifierFactory):
             if not enemy_attacks:
                 continue
             # attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_mod(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive

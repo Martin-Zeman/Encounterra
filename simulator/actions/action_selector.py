@@ -250,6 +250,10 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     for state in sorted_states:
         if state != '0' and not dag.dependencies[state]:
             continue  # This essentially prunes unreachable states
+        try:
+            dag.forward_transitions[state]
+        except KeyError:
+            print("FIXME")
         for transition_name, target_state in dag.forward_transitions[state]:
             try:
                 # Is it a transition which represents a (bonus) action?
@@ -286,6 +290,8 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
             if (movement_threat + transition_threat > threat[target_state][0] + threat[target_state][1]) and transition_threat > 0:
                 threat[target_state] = [movement_threat, transition_threat]
                 max_threat_backwards_transition[target_state] = (transition_name, state)
+    if not max_threat_backwards_transition:
+        return None, None
     # Let's go backwards to reconstruct the longest path
     return reconstruct_path_through_dag('nop', '0', max_threat_backwards_transition), transition_name_to_ms_path
 
@@ -383,5 +389,7 @@ def get_best_actions(combatant, battle_map, distances, shortest_paths):
         return None
     sorted_states = toposort_flatten(dag.dependencies)
     longest_pth, transition_name_to_ms_path = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
+    if longest_pth is None:
+        return None
     # print("---get_best_actions took %s seconds ---" % (time.time() - start_time))
     return translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)

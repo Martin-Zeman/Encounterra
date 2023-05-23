@@ -98,7 +98,7 @@ class ChaosboltFactory(DirectThreatFactory):
                 p_acc *= P_SAME
         return acc
 
-    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -159,7 +159,7 @@ class Chaosbolt(Actoid, DirectThreat):
         """
         The delta in threat when modified_stats are applied on this ability.
         """
-        return self.factory.calculate_threat_to_target_mod(battle_map, self.target, modified_stats, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target, modified_stats, *args, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),

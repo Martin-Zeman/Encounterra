@@ -1,5 +1,6 @@
 from functools import cache
 
+from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -20,6 +21,9 @@ class DisengageFactory(ThreatModifierFactory):
         Important for FSM building
         """
         return "DisengageFactory"
+
+    def get_kwargs(self):
+        return {'combatant': self.combatant, 'action_type': self.action_type}
 
     def create_best(self, combatant, battle_map):
         return Disengage(combatant, self)
@@ -44,7 +48,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.factory = factory
 
     def __str__(self):
-        return f"Disengage of {self.factory.combatant}"
+        return ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + f"Disengage of {self.factory.combatant}"
 
     def activate(self, battle_map):
         self.factory.combatant.has_disengaged = True

@@ -9,6 +9,10 @@ from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, combatant5, combatant6, teams, effect_tracker, battle_map
 
 def test_haste(battle_map, teams, effect_tracker, combatant1, combatant3, combatant4):
+    """
+    We assert that a hasted bugbear utilizes both its regular attack and hasted attack independently, although each attack must be used
+    once.
+    """
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
@@ -29,15 +33,14 @@ def test_haste(battle_map, teams, effect_tracker, combatant1, combatant3, combat
         hf = HasteFactory(Action.HASTE, combatant1, effect_tracker)
         haste = hf.create(combatant3)
         action_resolver.resolve_action(haste, combatant1)
-        raise Exception  # TODO
 
         actoid1 = combatant3.get_action(battle_map)
         action_resolver.resolve_action(actoid1, combatant3)
         actoid2 = combatant3.get_action(battle_map)
+        assert str(actoid1) == "Morningstar on TotemBarbarian5Lvl" or str(actoid2) == "Morningstar on TotemBarbarian5Lvl"
+        assert str(actoid1) == "Hasted Morningstar on TotemBarbarian5Lvl" or str(actoid2) == "Hasted Morningstar on TotemBarbarian5Lvl"
         action_resolver.resolve_action(actoid2, combatant3)
         actoid3 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid3, combatant3)
-        actoid4 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid4, combatant3)
+        assert str(actoid3) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"

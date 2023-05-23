@@ -85,5 +85,6 @@ PRIORITY_ACTIONS = {
     BonusAction.CUNNING_DODGE: ("Cunning Dodge", "do_"),
     BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "di_"),
     BonusAction.TOTEM_RAGE: ("TotemRage", "m_"),
-    BonusAction.RAGE: ("Rage", "m_")
+    BonusAction.RAGE: ("Rage", "m_"),
+    HasteAction.HASTE_DISENGAGE: ("Disengage", "di_")
 }

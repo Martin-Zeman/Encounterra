@@ -80,6 +80,7 @@ TO_QUICKENED = {
 }
 TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}
 TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE}
+# HASTED_ACTIONS = {Action.MELEE_ATTACK, Action.RANGED_ATTACK, Action.HIDE, Action.DASH, Action.DISENGAGE}
 
 def action_factory(combatant, effect_tracker, action_type, *args):
     if isinstance(action_type, Action):

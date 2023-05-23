@@ -292,13 +292,13 @@ class Combatant(ABC):
             return None
 
     def add_hasted_factories(self):
-        for action in self.action_factories:
+        for af in self.action_factories:
             try:
-                # A combatant can have multiple attacks, we need a hastened version of all of them
-                hasted_action = TO_HASTED[action]
-                self.haste_action_factories.append((hasted_action, copy.deepcopy(action)))  # Need a copy to change the action_type
-                self.haste_action_factories[-1].action_type = hasted_action
-                return None
+                hasted_action = TO_HASTED[af[0]]
+                hasted_action_factory = TO_FACTORY[hasted_action]
+                haf_kwargs = af[1].get_kwargs()
+                haf_kwargs['action_type'] = hasted_action
+                self.haste_action_factories.append((hasted_action, hasted_action_factory(**haf_kwargs)))
             except KeyError:
                 pass
 

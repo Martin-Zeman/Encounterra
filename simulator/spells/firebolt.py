@@ -93,7 +93,7 @@ class FireboltFactory(DirectThreatFactory):
             return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(FireboltFactory.dmg_type))
         return 0
 
-    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
@@ -147,7 +147,7 @@ class Firebolt(Actoid, DirectThreat):
         return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type))
 
     def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
-        return self.factory.calculate_threat_to_target_mod(battle_map, self.target, modified_stats, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target, modified_stats, *args, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),

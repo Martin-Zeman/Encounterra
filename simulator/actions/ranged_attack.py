@@ -14,10 +14,9 @@ logger = logging.getLogger("EncounTroll")
 
 class RangedAttackFactory(AttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, max_num=1, ammo=math.inf, on_hit=None):
-        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, max_num, on_hit)
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None):
+        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit)
         self.flags |= FactoryFlags.IS_RANGED
-        self.ammo = ammo
 
     def find_best_args(self, combatant, battle_map):
         # TODO Deprecated
@@ -41,6 +40,7 @@ class RangeAttack(Attack):
     @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
+        roll_modifier = RollModifier.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) > self.factory.short_range else roll_modifier
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, roll_modifier=roll_modifier, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

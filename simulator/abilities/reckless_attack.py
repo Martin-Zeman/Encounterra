@@ -20,7 +20,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, max_num=1, ammo=math.inf, on_hit=None):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
@@ -37,7 +37,6 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.ammo = math.inf
         self.crit_range = crit_range
-        self.max_num = max_num  # the maximum number of an attack of this type, may differ from total num attacks
         self.on_hit = on_hit
 
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
@@ -115,7 +114,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return total_threat - incoming_threat_mod_acc
 
-    def calculate_threat_to_target_mod(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
@@ -205,7 +204,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         """
         The delta in threat when modified_stats are applied on this ability.
         """
-        return self.factory.calculate_threat_to_target_mod(battle_map, self.target_combatant, modified_stats, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modified_stats, *args, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),

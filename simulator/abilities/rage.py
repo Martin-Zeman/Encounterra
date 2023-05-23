@@ -83,7 +83,7 @@ class RageFactory(ThreatModifierFactory):
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
         attacks = get_attacks(self.combatant)
         for attack in attacks:
-            dmg_inc = attack.calculate_threat_to_target_mod(battle_map, self, {"dmg_bonus_flat": rage_bonus})
+            dmg_inc = attack.calculate_threat_to_target_delta(battle_map, self, {"dmg_bonus_flat": rage_bonus})
             max_threat = max(dmg_inc, max_threat)
 
         total_threat += max_threat

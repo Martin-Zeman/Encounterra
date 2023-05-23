@@ -16,13 +16,13 @@ class TotemBarbarian5Lvl(Combatant):
 
     def __init__(self, effect_tracker, name="TotemBarbarian5Lvl"):
         super().__init__(effect_tracker, name, level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
-        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, max_num=2)
+        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(BonusAction.TOTEM_RAGE)
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.DANGER_SENSE)
-        self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, max_num=2)
+        self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 7
         self.saving_throws[SavingThrow.DEX] = 1

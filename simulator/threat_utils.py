@@ -110,7 +110,7 @@ def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier,
         for f in pa.action_factories:
             try:
                 if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
-                    max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                    max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
                         "roll_modifier": roll_modifier}))
             except AttributeError:
                 print("FIXME")
@@ -119,14 +119,14 @@ def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier,
         max_incoming_threat = 0
         for f in pa.bonus_action_factories:
             if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
                     "roll_modifier": roll_modifier}))
         incoming_threat_mod_acc += max_incoming_threat
 
         max_incoming_threat = 0
         for f in pa.haste_action_factories:
             if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_mod(battle_map, combatant, {
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
                     "roll_modifier": roll_modifier}))
         incoming_threat_mod_acc += max_incoming_threat
     if roll_modifier is RollModifier.ADVANTAGE:
