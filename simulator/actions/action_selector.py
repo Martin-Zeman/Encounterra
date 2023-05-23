@@ -250,10 +250,6 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     for state in sorted_states:
         if state != '0' and not dag.dependencies[state]:
             continue  # This essentially prunes unreachable states
-        try:
-            dag.forward_transitions[state]
-        except KeyError:
-            print("FIXME")
         for transition_name, target_state in dag.forward_transitions[state]:
             try:
                 # Is it a transition which represents a (bonus) action?

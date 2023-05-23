@@ -351,7 +351,6 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, combatant3,
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
 
     try:
-        # First the Bugbear tries to get a distance and throw a javelin
         actoid1 = combatant3.get_action(battle_map)
         action_resolver.resolve_action(actoid1, combatant3)
         actoid2 = combatant3.get_action(battle_map)
@@ -363,41 +362,9 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, combatant3,
         actoid5 = combatant3.get_action(battle_map)
         action_resolver.resolve_action(actoid5, combatant3)
         actoid6 = combatant3.get_action(battle_map)
-        assert str(actoid6) == "None"
-
-        # Then it tries to get back into melee
-        combatant3.new_turn()
+        action_resolver.resolve_action(actoid6, combatant3)
         actoid7 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid7, combatant3)
-        actoid8 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid8, combatant3)
-        actoid9 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid9, combatant3)
-        actoid10 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid10, combatant3)
-        actoid11 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid11, combatant3)
-        actoid12 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid12, combatant3)
-        actoid13 = combatant3.get_action(battle_map)
-        assert str(actoid13) == "None"
-
-        # Then it finally attacks in melee
-        combatant3.new_turn()
-        actoid14 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid14, combatant3)
-        actoid15 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid15, combatant3)
-        actoid16 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid16, combatant3)
-        actoid17 = combatant3.get_action(battle_map)
-        action_resolver.resolve_action(actoid17, combatant3)
-        actoid18 = combatant3.get_action(battle_map)
-        assert str(actoid18) == "Morningstar on TotemBarbarian5Lvl"
-        action_resolver.resolve_action(actoid18, combatant3)
-        actoid19 = combatant3.get_action(battle_map)
-        assert str(actoid19) == "None"
-
+        assert str(actoid7) == "Morningstar on TotemBarbarian5Lvl"
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

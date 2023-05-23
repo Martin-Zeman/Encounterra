@@ -57,27 +57,22 @@ def test_error_case_2(battle_map, teams, effect_tracker, combatant1, combatant3)
     battle_map.place_circular_element(np.array([7, 14]), Terrain.DIFFICULT_TERRAIN, diameter=1)
     battle_map.set_effect_tracker(effect_tracker)
     effect_tracker.set_battle_map(battle_map)
-    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
-    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
-    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(combatant1, np.array([0, 8]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(combatant3, np.array([1, 9]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(combatant4, np.array([2, 9]))  # Have to set it for fireball placement
+    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(combatant1, np.array([0, 8]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([1, 9]))
+    battle_map.set_combatant_coordinates(combatant4, np.array([2, 9]))
     battle_map.build_adjacency_matrix()
 
     distances, shortest_paths = battle_map.calc_dijkstra(combatant1)
     best_actions = get_best_actions(combatant1, battle_map, distances, shortest_paths)
-    new_coord = copy.copy(battle_map.get_combatant_position(combatant1).get())
-    for ba in best_actions:
-        new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
-    fireball = best_actions[-2] if isinstance(best_actions[-2], Fireball) else best_actions[-1]
-    assert battle_map.get_cartesian_distance(new_coord, np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    fireball = best_actions[0] if isinstance(best_actions[0], Fireball) else best_actions[1]
+    assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(combatant1).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     assert battle_map.get_cartesian_distance(combatant3, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     assert battle_map.get_cartesian_distance(combatant4, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert battle_map.get_hop_distance(new_coord, combatant3) > (combatant3.speed + combatant3.danger_zone_attack[1].range)
-    assert battle_map.get_hop_distance(new_coord, combatant4) > (combatant4.speed + combatant4.danger_zone_attack[1].range)
-    assert isinstance(best_actions[-2], Fireball) or isinstance(best_actions[-2], TwinnedFirebolt)
-    assert isinstance(best_actions[-1], Fireball) or isinstance(best_actions[-1], TwinnedFirebolt)
+    assert isinstance(best_actions[0], Fireball) or isinstance(best_actions[1], Fireball)
+    assert isinstance(best_actions[0], TwinnedFirebolt) or isinstance(best_actions[1], TwinnedFirebolt)
 
 
 def test_error_case_3(battle_map, teams, effect_tracker, combatant1, combatant3, combatant4, combatant5, combatant6):

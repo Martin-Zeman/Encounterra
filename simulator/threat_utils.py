@@ -194,7 +194,7 @@ def get_danger_zone_threat(battle_map, coords, combatant):
     :return: danger zone threat (positive)
     """
     enemies = battle_map.get_enemies(combatant)
-    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant) if
+    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant) / 2 if
         battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
 
@@ -291,18 +291,12 @@ def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, 
     curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
     for increment in path:
         t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged)
-        try:
-            assert t <= 0
-        except AssertionError:
-            print("FIXME")
+        assert t <= 0
         threat_acc += t
         curr_coords_data += increment
     # account for the final destination
     t = get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
-    try:
-        assert t >= 0
-    except AssertionError:
-        print("FIXME")
+    assert t >= 0
     threat_acc -= t
     return threat_acc
 
