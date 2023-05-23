@@ -1,4 +1,7 @@
+import copy
+
 from simulator.abilities.on_hit_prone import OnHitProne
+from simulator.actions.action_selector import get_best_actions
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
@@ -27,9 +30,6 @@ class StoneGiant(Combatant):
         self.build_attack_fms()
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.melee_reaction_range = 3
-        self.movement_generator = None
-        self.selected_target = None
-        self.path = None
         self.saving_throws[SavingThrow.STR] = 6
         self.saving_throws[SavingThrow.DEX] = 5
         self.saving_throws[SavingThrow.CON] = 8
@@ -46,100 +46,42 @@ class StoneGiant(Combatant):
         self.attack_fsm.add_transition(str(self.rock[1]), '0', 'nop')
 
 
-    def plan_path(self, battle_map, target_combatant, target_position, attack_range):
-        self.path = battle_map.get_path_to_combatant(self, target_combatant, rng=attack_range)
-        logger.debug(f"Target position: {target_position}")
-        if not self.path:
-            raise RuntimeError
-        self.movement_generator = MovementGenerator(self, self.path).get_generator()
-        self.target_position_cache = target_position
-
     def get_action(self, battle_map):
-        if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
+        """
+        Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,
+        it follows the steps described above. In the second phase, once the combatant reaches the target destination or runs out of movement
+        the best action is recalculated every time to react to any possible changes on the battle_map.
+        :param battle_map:
+        :return: the next best actoid
+        """
+        if self.is_affected_by(Conditions.PRONE):
             return GetUpFactory().create()
-
-        # TODO add the knock prone effect to the rock
-        # TODO prevent it from throwing a rock once it's used a club
-        feasible_action_factories = get_feasible_factories(self.action_factories, self, battle_map)
-        feasible_bonus_action_factories = get_feasible_factories(self.bonus_action_factories, self, battle_map)
-        feasible_haste_action_factories = get_feasible_factories(self.haste_action_factories, self, battle_map)
-        if len(feasible_action_factories) > 0 or len(feasible_bonus_action_factories) > 0 or len(feasible_haste_action_factories) > 0:
-            feasible_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_action_factories]))
-            feasible_bonus_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_bonus_action_factories]))
-            feasible_haste_actions = list(filter(lambda item: item is not None, [f[1].create_best(self, battle_map) for f in feasible_haste_action_factories]))
-
-            action_threats = [(fa.calculate_threat(self, battle_map), fa) for fa in feasible_actions]
-            bonus_action_threats = [(fba.calculate_threat(self, battle_map), fba) for fba in feasible_bonus_actions]
-            haste_action_threats = [(fha.calculate_threat(self, battle_map), fha) for fha in feasible_haste_actions]
-
-            # action_threats.sort(key=lambda a: a[0], reverse=True)
-            # bonus_action_threats.sort(key=lambda a: a[0], reverse=True)
-            # haste_action_threats.sort(key=lambda a: a[0], reverse=True)
-            all_actions = action_threats
-            all_actions.extend(bonus_action_threats)
-            all_actions.extend(haste_action_threats)
-            all_actions.sort(key=lambda a: a[0], reverse=True)
-            try:
-                selected_action = all_actions[0][1]
-                # logger.info(f"{self} uses {selected_action}")
-            except IndexError:
-                return None
-            if ActoidFlags.IS_ATTACK_LIKE in selected_action.actoid_flags:
-                target_position = battle_map.get_combatant_position(selected_action.target_combatant)
-                if not np.array_equal(self.target_position_cache, target_position):
-                    # if the target moved or new turn recalculate path
-                    try:
-                        self.plan_path(battle_map, selected_action.target_combatant, target_position, selected_action.factory.range)
-                    except RuntimeError:
-                        # Could be blocked, try to find an enemy within reach
-                        enemies = battle_map.get_enemies(self)
-                        alternative_target_found = False
-                        for e in enemies:
-                            if battle_map.get_hop_distance(e, self) <= selected_action.factory.range:
-                                selected_action.target_combatant = e
-                                alternative_target_found
-                                break
-                        if not alternative_target_found and self.rock in feasible_action_factories:
-                            # try if we can still throw a rock
-                            return self.rock[1].create_best(self, battle_map)
-                        else:
-                            logger.info(f"{self.name} has nowhere to go and no one in reach to attack. Using dodge action", extra={"team": self.team_color})
-                            return None
-
-                if not battle_map.are_in_hop_range(self, selected_action.target_combatant, selected_action.factory.range):
-                    try:
-                        movement = next(self.movement_generator)
-                        logger.debug(f"Moving by {movement}")
-                        return movement
-                    except StopIteration:
-                        # this means that either the path has been exhausted and we're still not in range => ranged attack
-                        self.movement_generator = None
-                        if self.has_action:
-                            self.rock[1].action_type = Action.RANGED_ATTACK
-                        elif self.has_haste_action:
-                            self.rock[1].action_type = HasteAction.HASTE_RANGED_ATTACK
-                        else:
-                            return None
-                        return self.rock[1].create_best(self, battle_map)
-            return selected_action
-
-        else:
-            return None
+        distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
+        if self.action_plan:
+            if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
+                return self.action_plan.pop(0)
+        self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
+        if not self.action_plan:
+            return None  # Either no action possible or all actions already used
+        return self.action_plan.pop(0)
 
 
     def export_resources(self):
         return {
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
+            'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state,
-            'rock_ammo': self.rock[1].ammo
+            'ammo': copy.deepcopy(self.ammo)
         }
 
     def load_resources(self, resources):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
-        self.attack_fsm.state = resources['attack_fsm_state']
-        self.rock[1].ammo = resources['rock_ammo']
+        self.has_haste_action = resources['has_haste_action']
+        self.attack_fsm.set_state(resources['attack_fsm_state'])
+        self.ammo = resources['ammo']
+
 
     def new_turn(self):
         super().new_turn()

@@ -3,11 +3,9 @@ import copy
 from simulator.actions.action_selector import get_best_actions
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator, GetUpFactory
+from simulator.actions.movement import GetUpFactory
 from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.actions.action_factory import *
-from simulator.misc import Side
-import numpy as np
 import logging
 
 logger = logging.getLogger("EncounTroll")
