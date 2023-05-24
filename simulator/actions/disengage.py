@@ -1,6 +1,6 @@
 from functools import cache
 
-from simulator.actions.action_types import HasteAction
+from simulator.actions.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -48,7 +48,12 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.factory = factory
 
     def __str__(self):
-        return ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + f"Disengage of {self.factory.combatant}"
+        prefix = ""
+        if isinstance(self.factory.action_type, HasteAction):
+            prefix = "Hasted "
+        elif self.factory.action_type is BonusAction.CUNNING_DISENGAGE:
+            prefix = "Cunning "
+        return prefix + f"Disengage of {self.factory.combatant}"
 
     def activate(self, battle_map):
         self.factory.combatant.has_disengaged = True

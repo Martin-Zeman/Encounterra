@@ -89,7 +89,7 @@ def use_resources(combatant, action, battle_map):
                 logger.error("Unknown reaction type")
     elif isinstance(action_type, Movement):
         match action_type:
-            case Movement.STANDARD:
+            case Movement.STANDARD | Movement.DISENGAGE | Movement.DISENGAGE:
                 target_position = battle_map.get_combatant_position(combatant) + action.increment
                 decrement = 1
                 if combatant.is_affected_by(Conditions.PRONE):

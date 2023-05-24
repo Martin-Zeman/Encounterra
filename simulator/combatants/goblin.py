@@ -1,3 +1,6 @@
+import copy
+
+from simulator.actions.action_selector import get_best_actions
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator, GetUpFactory
@@ -19,8 +22,6 @@ class Goblin(Combatant):
         self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.danger_zone_attack = self.shortbow_attack
         self.build_attack_fms()
-        self.selected_target = None
-        self.dist_to_nearest = None
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 0
@@ -34,86 +35,41 @@ class Goblin(Combatant):
         self.attack_fsm.add_transition(str(self.scimitar_attack[1]), '0', 'nop')
         self.attack_fsm.add_transition(str(self.shortbow_attack[1]), '0', 'nop')
 
-    def plan_path(self, battle_map):
-        free_coords = battle_map.get_free_coords_at_distance_from_target(self.selected_target, self, 8, 16)
-        for coord in free_coords:
-            assert battle_map.is_empty(coord), "COORD IS NOT FREE"
-            assert battle_map.are_valid_coords(coord), "COORD IS NOT VALID"
-        if not free_coords:
-            logger.info(f"There are no free coords for the {self} to disengage to. Using dodge action", extra={"team": self.team_color})
-            raise RuntimeError
-        path = battle_map.get_path_to_coord(self, free_coords[0])
-        if not path:
-            logger.info(f"{self.name} has nowhere to go. Using dodge action", extra={"team": self.team_color})
-            raise RuntimeError
-        self.movement_generator = MovementGenerator(self, path).get_generator()
-
-    def attack_routine(self):
-        if self.has_action:
-            return self.shortbow_attack[1].create(self.selected_target)
-        else:
-            for ha in self.haste_action_factories:
-                if ha[1].name == "Shortbow":
-                    return ha[1].create(self.selected_target)
-
     def get_action(self, battle_map):
-        if self.is_affected_by(Conditions.PRONE) and self.movement >= self.speed / 2:
+        """
+        Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,
+        it follows the steps described above. In the second phase, once the combatant reaches the target destination or runs out of movement
+        the best action is recalculated every time to react to any possible changes on the battle_map.
+        :param battle_map:
+        :return: the next best actoid
+        """
+        if self.is_affected_by(Conditions.PRONE):
             return GetUpFactory().create()
-
-        # TODO he doesn't shoot after moving into position
-        if not self.selected_target:
-            self.selected_target, self.dist_to_nearest, target_position = battle_map.get_nearest(self, Side.ENEMY)
-        if not self.selected_target:
-            return None
-        while self.has_action or self.has_haste_action:
-            dist = battle_map.get_hop_distance(self, self.selected_target)
-            if 8 <= dist <= 16:
-                # If I'm in position, just shoot
-                return self.attack_routine()
-            elif 1 < dist < 8 and self.movement and not self.movement_generator:
-                # If I'm not in position but also not adjacent to anyone
-                try:
-                    self.plan_path(battle_map)
-                except RuntimeError:
-                    return self.dodge_factory[1].create_best(self, battle_map)
-            elif dist == 1 and self.movement and self.has_bonus_action and not self.has_disengaged:
-                # I'f I'm adjacent to an enemy I first need to disengage
-                return self.nimble_disengage[1].create_best(self, battle_map)
-            elif dist == 1 and self.movement and not self.movement_generator:
-                # Once I've disengaged, plan escape path
-                try:
-                    self.plan_path(battle_map)
-                except RuntimeError:
-                    return self.dodge_factory[1].create_best(self, battle_map)
-            elif self.movement_generator and self.movement > 0:
-                # Move
-                try:
-                    movement = next(self.movement_generator)
-                    logger.debug(f"Moving by {movement}")
-                    return movement
-                except StopIteration:
-                    self.movement_generator = None
-            else:
-                return self.attack_routine()
+        distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
+        if self.action_plan:
+            if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
+                return self.action_plan.pop(0)
+        self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
+        if not self.action_plan:
+            return None  # Either no action possible or all actions already used
+        return self.action_plan.pop(0)
 
 
     def export_resources(self):
         return {
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
-            'attack_fsm_state': self.attack_fsm.state
+            'has_haste_action': self.has_haste_action,
+            'attack_fsm_state': self.attack_fsm.state,
+            'ammo': copy.deepcopy(self.ammo)
         }
 
     def load_resources(self, resources):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
-        self.attack_fsm.state = resources['attack_fsm_state']
-
-    def new_turn(self):
-        super().new_turn()
-        self.movement_generator = None
-        self.selected_target = None
-        self.dist_to_nearest = None
+        self.has_haste_action = resources['has_haste_action']
+        self.attack_fsm.set_state(resources['attack_fsm_state'])
+        self.ammo = resources['ammo']
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam

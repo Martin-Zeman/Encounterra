@@ -179,7 +179,7 @@ def check_feasibility(combatant, action, battle_map):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         match action_type:
-            case Movement.STANDARD:
+            case Movement.STANDARD | Movement.DISENGAGE | Movement.CUNNING_DISENGAGE:
                 target_position = battle_map.get_combatant_position(combatant) + action.increment
                 movement_needed = 1 if not battle_map.is_difficult_terrain_at(target_position) else 2
                 res = combatant.movement >= movement_needed and battle_map.are_valid_coords(target_position.get()) and battle_map.are_empty_or_self(target_position, combatant)
@@ -302,6 +302,8 @@ def check_feasibility_light(combatant, action, battle_map):
             case BonusAction.QUICKENED_FIREBOLT:
                 return res and combatant.curr_sorcery_points > 1
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
+            case BonusAction.CUNNING_DISENGAGE:
+                return res
             case _:
                 logger.error("Unknown bonus action")
                 return False

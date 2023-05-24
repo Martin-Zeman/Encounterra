@@ -10,7 +10,7 @@ class StateMachineTemplate(Machine):
         states = ['0', 'nop']
         Machine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         self.last_added_state = '-1'
-        self.dependencies = {'nop': {'0'}}
+        self.dependencies = {'nop': ['0']}
         self.forward_transitions = dict()
 
     def add_new_state(self, state_name):
@@ -48,9 +48,9 @@ class StateMachineTemplate(Machine):
         :return:
         """
         try:
-            self.dependencies[dest].add(origin)
+            self.dependencies[dest].append(origin)
         except KeyError:
-            self.dependencies[dest] = {origin}
+            self.dependencies[dest] = [origin]
 
         try:
             self.forward_transitions[origin].add((name, dest))
@@ -67,13 +67,16 @@ class StateMachineTemplate(Machine):
         :return:
         """
         original_state = self.state
+        self.state = origin
         self.trigger(transition_name)
         dest_state = self.state
         self.state = original_state
 
         try:
-            self.dependencies[dest_state].discard(origin)
             self.forward_transitions[origin] = {ft for ft in self.forward_transitions[origin] if ft[0] != transition_name}
+            if not self.forward_transitions[origin]:  # Created a dead end
+                self.add_transition("dummy", origin, 'nop')
+            self.dependencies[dest_state].remove(origin)
             super().remove_transition(transition_name, origin)
         except (ValueError, KeyError):
             pass

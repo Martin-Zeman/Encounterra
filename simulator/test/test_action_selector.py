@@ -72,8 +72,11 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action, misty_step_state = generate_action_fsm(combatant1, battle_map)
         dag = build_action_dag(combatant1, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+        transitions = dag.get_available_transitions()
         # Tests regular movement + quickened fireball
         assert dag.state == '0'
+        assert 'Dodge of Faurung' in transitions
+        assert 'Disengage of Faurung' in transitions
         dag.trigger("m_(2, 3)")
         transitions = dag.get_available_transitions()
         # Check that we have all the action (except for the Staff attack) available
@@ -90,8 +93,8 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         # For the second action, coordinates are not taken into account, but Dodge is included
         assert 'Staff of Defence on Goblin' in transitions
         assert 'Firebolt on Goblin' in transitions
-        assert 'Dodge of Faurung' in transitions
-        assert 'Disengage of Faurung' in transitions
+        assert 'Dodge of Faurung' not in transitions
+        assert 'Disengage of Faurung' not in transitions
 
 def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracker, combatant1, combatant2, combatant3):
     battle_map.build_adjacency_matrix()
@@ -368,3 +371,43 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, combatant3,
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+def test_goblin_using_cunning_disengage(battle_map, teams, effect_tracker, combatant2, combatant3):
+    """
+    We assert that the goblin first uses his cunning disengage to first get away and then shoots his bow.
+    """
+    CustomLogger(LogLevel.WARNING)
+    combatant4 = copy.deepcopy(combatant3)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(combatant2, np.array([6, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant3, np.array([7, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(combatant4, np.array([8, 4]))  # Have to set it for fireball placement
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [combatant2, combatant3, combatant4]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+
+    try:
+        actoid1 = combatant2.get_action(battle_map)
+        assert str(actoid1) == "Cunning Disengage of Goblin"
+        action_resolver.resolve_action(actoid1, combatant2)
+        actoid2 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, combatant2)
+        actoid3 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, combatant2)
+        actoid4 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, combatant2)
+        actoid5 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, combatant2)
+        actoid6 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, combatant2)
+        actoid7 = combatant2.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, combatant2)
+        actoid8 = combatant2.get_action(battle_map)
+        assert str(actoid8) == "Shortbow on Bugbear"
+    except Exception as e:
+        assert False, f"Raised an exception {e}"

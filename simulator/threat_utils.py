@@ -17,6 +17,7 @@ from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.utils.roll_modifiers import RollModifier
 
+
 @cache
 def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
     """
@@ -108,12 +109,9 @@ def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier,
     for pa in potential_attackers:
         max_incoming_threat = 0
         for f in pa.action_factories:
-            try:
-                if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
-                    max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
-                        "roll_modifier": roll_modifier}))
-            except AttributeError:
-                print("FIXME")
+            if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
+                    "roll_modifier": roll_modifier}))
         incoming_threat_mod_acc += max_incoming_threat
 
         max_incoming_threat = 0
@@ -223,7 +221,7 @@ def get_threat_for_staying_at_coord(battle_map, coords, combatant):
     return threat_acc
 
 
-@cached(cache={}, key=lambda curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment))))
+@cached(cache={}, key=lambda curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
 def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     A helper caching function which accumulates threats from AoE and AoO along a path.
@@ -244,11 +242,7 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
             enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
             for e in enemies:
                 t = e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier)
-                try:
-                    assert t >= 0
-                except AssertionError:
-                    print("FIXME")
-                    e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier)
+                assert t >= 0
                 threat_acc -= t
 
         # account for AoE
@@ -257,19 +251,11 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
             post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
             if pre_increment_dist == 1 and post_increment_dist == 0:
                 t = effect.threat_on_enter(battle_map, combatant)
-                try:
-                    assert t >= 0
-                except AssertionError:
-                    print("FIXME")
-                    effect.threat_on_enter(battle_map, combatant)
+                assert t >= 0
                 threat_acc -= t
             elif pre_increment_dist == 0 and post_increment_dist == 0:
                 t = effect.threat_on_move_within(battle_map, combatant)
-                try:
-                    assert t >= 0
-                except AssertionError:
-                    print("FIXME")
-                    effect.threat_on_move_within(battle_map, combatant)
+                assert t >= 0
                 threat_acc -= t
     return threat_acc
 
