@@ -144,7 +144,7 @@ class Firebolt(Actoid, DirectThreat):
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.caster) else RollModifier.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.target.ac - self.factory.to_hit, 20))]
-        return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type))
+        return min(mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type)), self.target.curr_hp)
 
     def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
         return self.factory.calculate_threat_to_target_delta(battle_map, self.target, modified_stats, *args, **kwargs)

@@ -92,7 +92,7 @@ class Fireball(Actoid, DirectThreat):
         affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.caster, combatant_coords, FireballFactory.target, FireballFactory.type, self.coord, combatant_coords)
         acc = 0
         for aff in affected:
-            mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
+            mean_dmg = min(mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw]), aff.curr_hp)
             acc += (1 if battle_map.teams.are_enemies(combatant, aff) else -1) * mean_dmg
         return acc
 

@@ -111,9 +111,9 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         acc = 0
         for aff in affected:
             if battle_map.teams.are_enemies(self.factory.caster, aff):
-                acc += avg_roll(self.factory.dmg_dice)
+                acc += min(avg_roll(self.factory.dmg_dice), aff.curr_hp)
             else:
-                acc -= avg_roll(self.factory.dmg_dice)
+                acc -= min(avg_roll(self.factory.dmg_dice), aff.curr_hp)
         return acc
 
     def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):

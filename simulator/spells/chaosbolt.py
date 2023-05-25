@@ -148,10 +148,10 @@ class Chaosbolt(Actoid, DirectThreat):
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME
         dmg_dice = "+".join([self.factory.dmg_dice, self.factory.additional_dmg_dice])
-        acc = mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac)
+        acc = min(mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac), self.target.curr_hp)
         for pt in potential_targets:
             to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - self.factory.to_hit, 20))]
-            acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac) * p_acc
+            acc += min(mean_dmg(to_hit_total, dmg_dice, 0, pt.ac), pt.curr_hp) * p_acc
             p_acc *= P_SAME
         return acc
 

@@ -126,7 +126,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         for aff in affected:
             acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            acc += 0.5 * mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(DamageType.Acid))
+            acc += 0.5 * min(mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(DamageType.Acid)), aff.curr_hp)
         return acc
 
     def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
