@@ -81,12 +81,6 @@ class HasteFactory(ThreatModifierFactory):
         except IndexError:
             return None
 
-    def create_best(self, combatant, battle_map):
-        ally = self.find_best_args(combatant, battle_map)
-        if ally is None:
-            return None
-        return Haste(ally, self)
-
     def get_eligible_targets(self, battle_map):
         ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
         ret.append(self.caster)

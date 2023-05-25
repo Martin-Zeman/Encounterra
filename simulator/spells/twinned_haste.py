@@ -44,10 +44,6 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             pass
         return [ret1, ret2]
 
-    def create_best(self, combatant, battle_map):
-        return TwinnedHaste(self.find_best_args(combatant, battle_map), self)
-
-
     def get_eligible_targets(self, battle_map):
         ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
         ret.append(self.caster)

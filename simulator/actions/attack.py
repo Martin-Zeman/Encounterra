@@ -70,12 +70,6 @@ class AttackFactory(DirectThreatFactory):
     def get_eligible_targets(self, battle_map):
         return battle_map.get_enemies(self.combatant)
 
-    def create_best(self, combatant, battle_map):
-        best_args = self.find_best_args(combatant, battle_map)
-        if best_args is None:
-            return None
-        return Attack(best_args, self)
-
     def create(self, target_combatant):
         return Attack(target_combatant, self)
 

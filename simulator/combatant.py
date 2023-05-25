@@ -1,6 +1,8 @@
 import copy
 import random
 import math
+
+from simulator.abilities.wildshape import WildshapeFactory
 from simulator.actions.actoid import FactoryFlags
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype
 from simulator.actions.action_factory import *
@@ -210,6 +212,13 @@ class Combatant(ABC):
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_HASTE:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                    return self.bonus_action_factories[-1]
+                case BonusAction.MOON_WILDSHAPE:
+                    self.max_wildshape_uses = WildshapeFactory.get_wildshape_uses(self.level)
+                    self.curr_wildshape_uses = WildshapeFactory.get_wildshape_uses(self.level)
+                    self.current_wildshape_form = None
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    self.available_wildshape_forms = self.bonus_action_factories[-1].preallocate_wildshape_forms()
                     return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required

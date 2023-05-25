@@ -11,9 +11,9 @@ import logging
 logger = logging.getLogger("EncounTroll")
 
 
-class Bugbear(Combatant):
+class GiantConstrictorSnake(Combatant):
 
-    def __init__(self, effect_tracker, name="Bugbear"):
+    def __init__(self, effect_tracker, name="Giant Constrictor Snake"):
         super().__init__(effect_tracker, name, level=1, hp=27, ac=16, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.morningstar_attack = self.add_ability(Action.MELEE_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.javelin_attack = self.add_ability(Action.RANGED_ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=1)

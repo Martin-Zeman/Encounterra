@@ -12,37 +12,32 @@ import logging
 logger = logging.getLogger("EncounTroll")
 
 
-class Faurung(Combatant):
+class MoonDruid5Lvl(Combatant):
 
-    def __init__(self, effect_tracker, name="Faurung"):
-        super().__init__(effect_tracker, name, level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
-        self.staff = self.add_ability(Action.MELEE_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
-                         dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
-                         dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Action.FIREBALL)
-        self.firebolt = self.add_ability(Action.FIREBOLT)
-        self.danger_zone_attack = self.firebolt
-        self.add_ability(Action.HASTE)
-        self.add_ability(BonusAction.MISTY_STEP)
-        self.add_ability(Action.SCORCHING_RAY)
-        self.add_ability(Reaction.SHIELD)
-        self.add_ability(Passive.METAMAGIC, sorcery_points=5)
-        self.add_ability(MetaAction.QUICKENED_SPELL)
-        self.add_ability(MetaAction.TWINNED_SPELL)
+    def __init__(self, effect_tracker, name="MoonDruid5Lvl"):
+        super().__init__(effect_tracker, name, level=5, hp=42, ac=15, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
+        self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1,
+                         dmg_type=DamageType.Slashing, attack_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1,
+                         dmg_type=DamageType.Slashing, attack_range=1)
+        self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=4, dmg_dice="1d8", dmg_bonus=1,
+                         dmg_type=DamageType.Piercing, attack_range=120)
+        self.danger_zone_attack = self.scimitar
+
         self.build_attack_fms()
-        self.spellslots = Spellslots(Class.SORCERER, 5)
+        self.spellslots = Spellslots(Class.DRUID, 5)
         self.archetype = CombatantArchetype.RANGED
         self.saving_throws[SavingThrow.STR] = -1
-        self.saving_throws[SavingThrow.DEX] = 2
-        self.saving_throws[SavingThrow.CON] = 6
-        self.saving_throws[SavingThrow.INT] = 1
-        self.saving_throws[SavingThrow.WIS] = 1
-        self.saving_throws[SavingThrow.CHA] = 7
+        self.saving_throws[SavingThrow.DEX] = 1
+        self.saving_throws[SavingThrow.CON] = 3
+        self.saving_throws[SavingThrow.INT] = 4
+        self.saving_throws[SavingThrow.WIS] = 7
+        self.saving_throws[SavingThrow.CHA] = 1
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
+        self.attack_fsm.add_transition(str(self.scimitar[1]), '0', 'nop')
+        self.attack_fsm.add_transition(str(self.longbow[1]), '0', 'nop')
 
     def get_action(self, battle_map):
         """
@@ -64,12 +59,16 @@ class Faurung(Combatant):
         return self.action_plan.pop(0)
 
     def prompt_aoo(self, moving_combatant):
+        if self.has_reaction:
+            aoo = self.aoo_factory[1].create(moving_combatant)
+            logger.info(f"{self.name} took an AoO {aoo} against {moving_combatant}",
+                        extra={"team": self.team_color})
+            return aoo
         return None
 
     def export_resources(self):
         return {
             'spellslots': copy.deepcopy(self.spellslots),
-            'sorcery_points': self.curr_sorcery_points,
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
@@ -80,22 +79,9 @@ class Faurung(Combatant):
 
     def load_resources(self, resources):
         self.spellslots = resources['spellslots']
-        self.curr_sorcery_points = resources['sorcery_points']
         self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
         self.curr_num_attacks = resources['curr_num_attacks']  # TODO remove this
-
-
-    def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
-        if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll < self.dc + 5:
-            shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
-            # logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})
-            return shield_factory.create() if shield_factory else None
-        elif attack_roll >= self.dc + 5:
-            logger.info("Shield would not suffice")
-        elif self.has_reaction:
-            logger.info(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
-        return None

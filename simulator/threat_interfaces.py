@@ -140,3 +140,15 @@ class DirectThreatFactory(ABC, Factory):
         against fireball or bane on attack rolls etc.
         """
         return 0
+
+class TransformerFactory(ABC, Factory):
+
+    """
+    A factory that modifies the user and the factories they have at their disposal
+    """
+    @abstractmethod
+    def calculate_threat(self, battle_map, *args, **kwargs):
+        """
+        Direct threat changes such as changes in HP. Doesn't account for newly added/lost action factories.
+        """
+        return 0

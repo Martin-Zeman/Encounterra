@@ -25,9 +25,6 @@ class DisengageFactory(ThreatModifierFactory):
     def get_kwargs(self):
         return {'combatant': self.combatant, 'action_type': self.action_type}
 
-    def create_best(self, combatant, battle_map):
-        return Disengage(combatant, self)
-
     def create_all(self, battle_map):
         return [Disengage(self.combatant, self)]
 

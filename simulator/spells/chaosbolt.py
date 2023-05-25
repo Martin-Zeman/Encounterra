@@ -58,9 +58,6 @@ class ChaosboltFactory(DirectThreatFactory):
         mean_dmg_func = partial(mean_dmg, to_hit=self.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
         return self.get_sorted_chain(battle_map, potential_targets, mean_dmg_func)
 
-    def create_best(self, combatant, battle_map):
-        return Chaosbolt(self.find_best_args(combatant, battle_map), self)
-
     def create(self, target_combatant):
         return Chaosbolt([target_combatant], self)
 

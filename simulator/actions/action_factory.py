@@ -1,3 +1,4 @@
+from simulator.abilities.wildshape import WildshapeFactory
 from simulator.actions.attack import Attack
 from simulator.actions.dodge import Dodge
 from simulator.actions.dash import Dash
@@ -46,6 +47,7 @@ TO_FACTORY = {
     Action.TWINNED_FIREBOLT: TwinnedFireboltFactory,
     Action.TWINNED_HASTE: TwinnedHasteFactory,
     Action.SCORCHING_RAY: ScorchingRayFactory,
+    Action.WILDSHAPE: WildshapeFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -61,6 +63,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_CHAOSBOLT: ChaosboltFactory,
     BonusAction.QUICKENED_HASTE: HasteFactory,
     BonusAction.QUICKENED_SCORCHING_RAY: ScorchingRayFactory,
+    BonusAction.MOON_WILDSHAPE: WildshapeFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,

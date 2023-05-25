@@ -33,7 +33,7 @@ class TotemBarbarian5Lvl(Combatant):
 
 
     def build_attack_fms(self):
-        self.attack_fsm = StateMachineTemplate()  # Initialized here to avoid pickling error when multiprocessing
+        self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_state('1')  # attacked with melee
         self.attack_fsm.add_state('2')  # attacked with melee recklessly
         self.attack_fsm.add_transition(str(self.axe[1]), '0', '1')  # Melee

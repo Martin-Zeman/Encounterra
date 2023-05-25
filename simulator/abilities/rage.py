@@ -61,9 +61,6 @@ class RageFactory(ThreatModifierFactory):
     def get_eligible_targets(self, battle_map):
         pass # No need due to the TARGETS_SELF flag
 
-    def create_best(self, combatant, battle_map):
-        return Rage(self.combatant, self)
-
     def create_all(self, battle_map):
         return [Rage(self.combatant, self)]
 

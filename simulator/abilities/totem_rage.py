@@ -26,9 +26,6 @@ class TotemRageFactory(ThreatModifierFactory):
         """
         return "TotemRageFactory"
 
-    def create_best(self, combatant, battle_map):
-        return TotemRage(self.combatant, self)
-
     def create(self, target_combatant):
         # Doesn't make much sense here
         return TotemRage(target_combatant, self)

@@ -51,9 +51,6 @@ class TwinnedFireboltFactory(DirectThreatFactory):
             target2 = None
         return potential_targets[0][0], target2
 
-    def create_best(self, combatant, battle_map):
-        return TwinnedFirebolt(self.find_best_args(combatant, battle_map), self)
-
     def get_eligible_targets(self, battle_map):
         return combinations(battle_map.get_enemies(self.caster), 2)
 

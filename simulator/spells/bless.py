@@ -35,9 +35,6 @@ class BlessFactory(ThreatModifierFactory):
         # TODO Should this include action type? Cause for a twinned version you would need multiple targets
         return 0
 
-    def create_best(self, combatant, battle_map):
-        return Bless(self.find_best_args(combatant, battle_map), self)
-
     def get_eligible_targets(self, battle_map):
         return combinations(battle_map.get_enemies_within_radius(self.caster, BlessFactory.range), 3)
 

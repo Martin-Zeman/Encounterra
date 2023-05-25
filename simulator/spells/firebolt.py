@@ -71,12 +71,6 @@ class FireboltFactory(DirectThreatFactory):
         except IndexError:
             return None
 
-    def create_best(self, combatant, battle_map):
-        best = self.find_best_args(combatant, battle_map)
-        if best is None:
-            return None
-        return Firebolt(best, self)
-
     def get_eligible_targets(self, battle_map):
         return battle_map.get_enemies(self.caster)
 
