@@ -4,7 +4,7 @@ import math
 
 from simulator.abilities.wildshape import WildshapeFactory
 from simulator.actions.actoid import FactoryFlags
-from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype
+from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC
 from simulator.actions.action_factory import *
 from enum import Enum
 from abc import ABC, abstractmethod
@@ -83,6 +83,7 @@ class Combatant(ABC):
         self.perception = 0
         self.condition = self.State.FINE
         self.conditions = Conditions.NONE
+        self.dc_conditions = []
         self.toughness = None
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.has_disengaged = False  # TODO Get rid of this
@@ -134,6 +135,8 @@ class Combatant(ABC):
                 case Passive.METAMAGIC:
                     self.curr_sorcery_points = kwargs["sorcery_points"]
                     self.max_sorcery_points = kwargs["sorcery_points"]
+                case Passive.PACK_TACTICS:
+                    self.has_pack_tactics = True
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -163,6 +166,17 @@ class Combatant(ABC):
                     return self.action_factories[-1]
                 case Action.DISENGAGE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
+                    return self.action_factories[-1]
+                case Action.WILDSHAPE:
+                    self.max_wildshape_uses = WildshapeFactory.get_wildshape_uses(self.level)
+                    self.curr_wildshape_uses = WildshapeFactory.get_wildshape_uses(self.level)
+                    self.current_wildshape_form = None
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    self.available_wildshape_forms = self.bonus_action_factories[-1].preallocate_wildshape_forms()
+                    return self.bonus_action_factories[-1]
+                case Action.POUNCE:
+                    factory = TO_FACTORY[action_type]
+                    self.action_factories.append((action_type, factory(**kwargs)))
                     return self.action_factories[-1]
                 case _:
                     return None
@@ -334,20 +348,26 @@ class Combatant(ABC):
     def is_resistant_to(self, dmg_type):
         return dmg_type in self.resistances
 
-    def apply_condition(self, condition):
+    def apply_condition(self, condition: Conditions):
         self.conditions |= condition
 
-    def remove_condition(self, condition):
+    def remove_condition(self, condition: Conditions):
         self.conditions ^= condition
 
     def is_affected_by(self, condition):
-        return condition in self.conditions
+        return condition in self.conditions  # TODO include DC conditions
 
     def is_affected_by_any(self, *args):
         for condition in args:
-            if condition in self.conditions:
+            if condition in self.conditions:  # TODO include DC conditions
                 return True
         return False
+
+    def apply_dc_condition(self, condition: ConditionWithDC):
+        self.dc_conditions.append(condition)
+
+    def remove_dc_condition(self, condition: ConditionWithDC):
+        self.dc_conditions.rempve(condition)
 
     def new_turn(self):
         self.has_action = True
@@ -383,7 +403,7 @@ class Combatant(ABC):
         if self.shield_spell_active:
             self.ac -= 5
         self.shield_spell_active = False
-        self.conditions = Conditions.NONE
+        self.conditions = []
         self.condition = self.State.FINE
         self.has_haste_action = False
         self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)

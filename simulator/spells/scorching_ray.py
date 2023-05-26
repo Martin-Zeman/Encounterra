@@ -121,7 +121,7 @@ class ScorchingRay(Actoid, DirectThreat):
         dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, 1, self.targets[2].is_resistant_to(ScorchingRayFactory.dmg_type))
         return dmg_acc
 
-    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         ret = self.factory.calculate_threat_to_target_delta_single_target(self.targets[0], modified_stats)
         ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[1], modified_stats)
         ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[2], modified_stats)

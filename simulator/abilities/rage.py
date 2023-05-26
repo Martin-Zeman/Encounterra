@@ -140,7 +140,7 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, Attac
         """
         rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         if FactoryFlags.IS_MELEE in attack.factory.flags:
-            return attack.calculate_threat_mod(battle_map, {"dmg_bonus_flat": rage_bonus})
+            return attack.calculate_threat_delta(battle_map, {"dmg_bonus_flat": rage_bonus})
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

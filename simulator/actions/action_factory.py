@@ -1,3 +1,4 @@
+from simulator.abilities.pounce import PounceFactory
 from simulator.abilities.wildshape import WildshapeFactory
 from simulator.actions.attack import Attack
 from simulator.actions.dodge import Dodge
@@ -48,6 +49,7 @@ TO_FACTORY = {
     Action.TWINNED_HASTE: TwinnedHasteFactory,
     Action.SCORCHING_RAY: ScorchingRayFactory,
     Action.WILDSHAPE: WildshapeFactory,
+    Action.POUNCE: PounceFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,

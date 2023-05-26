@@ -59,6 +59,13 @@ class Conditions(Flag):
     UNCONSCIOUS = auto()
 
 
+class ConditionWithDC:
+    def __init__(self, conditions, st, dc):
+        self.conditions = conditions  # Could multiples such as grapple + restrained go often together
+        self.st = st
+        self.dc = dc
+
+
 class Size(Enum):
     TINY = -2
     SMALL = -1

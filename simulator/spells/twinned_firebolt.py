@@ -119,7 +119,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
             dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.targets[1].is_resistant_to(TwinnedFireboltFactory.dmg_type))
         return dmg_acc
 
-    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         ret = self.factory.calculate_threat_to_target_delta(battle_map, self.targets[0], modified_stats)
         ret += self.factory.calculate_threat_to_target_delta(battle_map, self.targets[1], modified_stats)
         return ret

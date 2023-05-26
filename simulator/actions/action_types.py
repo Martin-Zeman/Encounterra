@@ -21,6 +21,8 @@ class Action(Enum):
     SCORCHING_RAY = auto()
     FAERIE_FIRE = auto()
     WILDSHAPE = auto()
+    POUNCE = auto()
+    CONSTRICT = auto()
 
 
 class BonusAction(Enum):
@@ -72,6 +74,7 @@ class Passive(Enum):
     POLEARM_MASTER = auto()
     DANGER_SENSE = auto()
     METAMAGIC = auto()
+    PACK_TACTICS = auto()
 
 
 class MetaAction(Enum):

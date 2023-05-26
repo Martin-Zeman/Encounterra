@@ -193,7 +193,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)
 
-    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         """
         The delta in threat when modified_stats are applied on this ability.
         """

@@ -93,7 +93,7 @@ class Fireball(Actoid, DirectThreat):
             acc += (1 if battle_map.teams.are_enemies(combatant, aff) else -1) * mean_dmg
         return acc
 
-    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         return 0  # Not relevant for this ability
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

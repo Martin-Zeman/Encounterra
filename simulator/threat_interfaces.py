@@ -22,7 +22,7 @@ class DirectThreat(ABC):
         return 0
 
     @abstractmethod
-    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         """
         The delta in threat when modified_stats are applied on this ability.
         """

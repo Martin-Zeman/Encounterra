@@ -164,6 +164,18 @@ def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags)
     return incoming_threat_acc
 
 @cache
+def get_saving_throw_success_prob(dc, st_bonus):
+    """
+    Calculates the probability of a successful saving throw given the DC and the ST bonus
+    @param dc: DC
+    @param st_bonus: respective saving throw bonus
+    @return:
+    """
+    rv = randint(1, 21, st_bonus)
+    p_fail = rv.cdf(dc - 1)
+    return 1 - p_fail
+
+@cache
 def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=False):
     """
     Calculates mean damage of a DC-based ability

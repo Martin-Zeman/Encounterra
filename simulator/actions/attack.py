@@ -183,7 +183,7 @@ class Attack(Actoid, DirectThreat):
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, kwargs)
 
-    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
