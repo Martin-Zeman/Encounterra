@@ -1,16 +1,11 @@
-Multi-attack cannot be split - FIXED?
-So far only medium sized combatants
 map only of square shape
 combatants always know where enemies are even though they can't see them
 same initiative rolls aren't ordered by dex
 No resurrections
-currently no dodge actions - FIXED
 currently no one dashes
-upcasting? should be there
+No upcasting
 only one DC per character
 no shoving
 Allies are considered impassable same as enemies
 no multiclassing -> can only have spellslots of one class
-- dmg type of chaos bolt is determined by a randomly selected dmg die
-- misty step threat calculation doesn't take into account the loss of threat for not being able to cast a leveled spell afterwards
-- just one kind of a reaction attack per combatant
+Druids don't willingly cancel their wildshape

@@ -178,6 +178,11 @@ class Combatant(ABC):
                     factory = TO_FACTORY[action_type]
                     self.action_factories.append((action_type, factory(**kwargs)))
                     return self.action_factories[-1]
+                case Action.CONSTRICT:
+                    factory = TO_FACTORY[action_type]
+                    self.is_constricting = False
+                    self.action_factories.append((action_type, factory(**kwargs)))
+                    return self.action_factories[-1]
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):
@@ -354,12 +359,18 @@ class Combatant(ABC):
     def remove_condition(self, condition: Conditions):
         self.conditions ^= condition
 
-    def is_affected_by(self, condition):
-        return condition in self.conditions  # TODO include DC conditions
+    def is_affected_by(self, condition: Conditions):
+        for dc_cond in self.dc_conditions:
+            if condition in dc_cond.conditions:
+                return True
+        return condition in self.conditions
 
     def is_affected_by_any(self, *args):
         for condition in args:
-            if condition in self.conditions:  # TODO include DC conditions
+            for dc_cond in self.dc_conditions:
+                if condition in dc_cond.conditions:
+                    return True
+            if condition in self.conditions:
                 return True
         return False
 
@@ -367,7 +378,7 @@ class Combatant(ABC):
         self.dc_conditions.append(condition)
 
     def remove_dc_condition(self, condition: ConditionWithDC):
-        self.dc_conditions.rempve(condition)
+        self.dc_conditions.remove(condition)
 
     def new_turn(self):
         self.has_action = True

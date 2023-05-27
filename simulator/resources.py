@@ -43,6 +43,10 @@ def use_resources(combatant, action, battle_map):
                 combatant.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_FIREBOLT:
                 combatant.curr_sorcery_points -= 1
+            case Action.WILDSHAPE:
+                combatant.curr_wildshape_uses -= 1
+            case Action.POUNCE | Action.CONSTRICT:
+                pass  # Sufficiently tracked by not having a bonus action anymore
             case _:
                 logger.error("use_resources: Unknown action type")
     elif isinstance(action_type, BonusAction):
@@ -75,14 +79,16 @@ def use_resources(combatant, action, battle_map):
             case BonusAction.QUICKENED_FIREBOLT:
                 combatant.curr_sorcery_points -= 2
             case BonusAction.CUNNING_DISENGAGE:
-                pass  # sufficiently tracked by not having a bonus action anymore
+                pass  # Sufficiently tracked by not having a bonus action anymore
+            case BonusAction.MOON_WILDSHAPE:
+                combatant.curr_wildshape_uses -= 1
             case _:
                 logger.error("Unknown bonus action type")
     elif isinstance(action_type, Reaction):
         combatant.has_reaction = False
         match action_type:
             case Reaction.REACTION_ATTACK:
-                pass  # sufficiently tracked by not having a reaction anymore
+                pass  # Sufficiently tracked by not having a reaction anymore
             case Reaction.SHIELD:
                 combatant.spellslots.use_spellslot(1)
             case _:

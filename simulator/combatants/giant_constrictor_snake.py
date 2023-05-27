@@ -1,5 +1,6 @@
 import copy
 
+from simulator.abilities.on_hit_auto_restrained import OnHitAutoRestrained
 from simulator.actions.action_selector import get_best_actions
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
@@ -16,7 +17,8 @@ class GiantConstrictorSnake(Combatant):
     def __init__(self, effect_tracker, name="Giant Constrictor Snake"):
         super().__init__(effect_tracker, name, level=1, hp=60, ac=12, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
-        self.constrict_crush = self.add_ability(Action.CONSTRICT,  to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, on_hit=OnHitAutoRestrained(SavingThrow.STR, 17))
+        self.constrict_attack = self.add_ability(Action.MELEE_ATTACK,  to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, on_hit=OnHitAutoRestrained(SavingThrow.STR, 16))
+        self.constrict = self.add_ability(Action.CONSTRICT,  attack=self.constrict_attack)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 2
@@ -29,8 +31,7 @@ class GiantConstrictorSnake(Combatant):
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_transition(str(self.morningstar_attack[1]), '0', 'nop')  # Melee
-        self.attack_fsm.add_transition(str(self.javelin_attack[1]), '0', 'nop')  # Ranged
+        self.attack_fsm.add_transition(str(self.bite[1]), '0', 'nop')  # Melee
 
     def get_action(self, battle_map):
         """
@@ -58,6 +59,7 @@ class GiantConstrictorSnake(Combatant):
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state,
+            'is_constricting': self.is_constricting,
             'ammo': copy.deepcopy(self.ammo)
         }
 
@@ -66,6 +68,7 @@ class GiantConstrictorSnake(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_fsm_state'])
+        self.is_constricting = resources['is_constricting']
         self.ammo = resources['ammo']
 
     def prompt_aoo(self, moving_combatant):

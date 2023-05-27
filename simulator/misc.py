@@ -60,10 +60,11 @@ class Conditions(Flag):
 
 
 class ConditionWithDC:
-    def __init__(self, conditions, st, dc):
+    def __init__(self, conditions, st, dc, attacker):
         self.conditions = conditions  # Could multiples such as grapple + restrained go often together
         self.st = st
         self.dc = dc
+        self.attacker = attacker
 
 
 class Size(Enum):

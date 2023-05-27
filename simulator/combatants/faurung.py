@@ -27,11 +27,11 @@ class Faurung(Combatant):
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.SCORCHING_RAY)
         self.add_ability(Reaction.SHIELD)
-        self.add_ability(Passive.METAMAGIC, sorcery_points=5)
+        self.add_ability(Passive.METAMAGIC, sorcery_points=self.level)
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.build_attack_fms()
-        self.spellslots = Spellslots(Class.SORCERER, 5)
+        self.spellslots = Spellslots(Class.SORCERER, self.level)
         self.archetype = CombatantArchetype.RANGED
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2

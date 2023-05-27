@@ -10,6 +10,7 @@ from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.quetzalcoatlus import Quetzalcoatlus
 from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 from simulator.effects.combatant_effect import CombatantEffect
+from simulator.misc import SavingThrow
 
 from simulator.threat_interfaces import TransformerFactory, DirectThreat
 import logging
@@ -64,8 +65,6 @@ class WildshapeFactory(TransformerFactory):
                 case _:
                     logger.error("Incorrect character level. No wildshape forms added!")
         return []
-    def get_eligible_targets(self, battle_map):
-        pass # No need due to the TARGETS_SELF flag
 
 
     def preallocate_wildshape_forms(self):
@@ -84,7 +83,7 @@ class Wildshape(Actoid, CombatantEffect, DirectThreat):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
-        self.form = form
+        self.form = form(factory.combatant.effect_tracker, f"{factory.combatant} wildshaped into {form.__name__}")
         self.factory = factory
 
     def __str__(self):
@@ -92,19 +91,25 @@ class Wildshape(Actoid, CombatantEffect, DirectThreat):
 
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
-        # TODO set the curr hp of the form to the maximum hp
-        # TODO set int, wis and char of the target and the STs to be the same as the humanoid form
-        # TODO set the has_actions of the wildshape to be the same
-        # TODO set is_concentrating of the wildshape to be the same
-        # self.combatants[0].ability_dmg_bonus += self.rage_bonus
-        # self.combatants[0].resistances.update([DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing])
+        self.combatants[0].current_wildshape_form = self.form
+        self.form.curr_hp = self.form.max_hp
+        self.form.saving_throws[SavingThrow.INT] = self.combatants[0].saving_throws[SavingThrow.INT]
+        self.form.saving_throws[SavingThrow.WIS] = self.combatants[0].saving_throws[SavingThrow.WIS]
+        self.form.saving_throws[SavingThrow.CHA] = self.combatants[0].saving_throws[SavingThrow.CHA]
+        self.form.has_action = self.combatants[0].has_action
+        self.form.has_bonus_action = self.combatants[0].has_bonus_action
+        self.form.has_haste_action = self.combatants[0].has_haste_action
+        self.form.has_reaction = self.combatants[0].has_reaction
+        self.form.is_concentrating = self.combatants[0].is_concentrating
 
     def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s wildshape fades")
-        # self.combatants[0].ability_dmg_bonus -= self.rage_bonus
-        # self.combatants[0].resistances.remove(DamageType.Slashing)
-        # self.combatants[0].resistances.remove(DamageType.Bludgeoning)
-        # self.combatants[0].resistances.remove(DamageType.Piercing)
+        self.combatants[0].current_wildshape_form = None
+        self.combatants[0].has_action = self.form.has_action
+        self.combatants[0].has_bonus_action = self.form.has_bonus_action
+        self.combatants[0].has_haste_action = self.form.has_haste_action
+        self.combatants[0].has_reaction = self.form.has_reaction
+        self.combatants[0].is_concentrating = self.form.is_concentrating
 
     def clear_cache(self):
         pass

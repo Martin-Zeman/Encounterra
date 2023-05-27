@@ -1,45 +1,45 @@
 from simulator.actions.action_types import Action
 from simulator.actions.actoid import FactoryFlags, Actoid, ActoidFlags
 from simulator.threat_interfaces import DirectThreatFactory, DirectThreat
-from simulator.threat_utils import  get_saving_throw_success_prob
 import logging
 
 
 logger = logging.getLogger("EncounTroll")
 
-class PounceFactory(DirectThreatFactory):
+class ConstrictFactory(DirectThreatFactory):
 
-    def __init__(self, combatant, primary_attack, secondary_attack, distance):
+    def __init__(self, combatant, attack):
         DirectThreatFactory().__init__()
         self.combatant = combatant
-        self.primary_attack = primary_attack
-        self.secondary_attack = secondary_attack
-        self.distance = distance
-        self.action_type = Action.POUNCE
+        self.attack = attack
+        self.action_type = Action.CONSTRICT
         self.flags |= FactoryFlags.IS_MELEE
 
 
     def __str__(self):
-        return "PounceFactory"
+        return "ConstrictFactory"
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies_without_hop_distance(self.combatant, self.distance - 1)
+        return battle_map.get_enemies(self.combatant)
 
     def create(self, target_combatant):
-        return Pounce(target_combatant, self)
+        if self.combatant.is_constricting:
+            return None
+        return Constrict(target_combatant, self)
 
     def create_all(self, battle_map):
+        if self.combatant.is_constricting:
+            return None
         targets = self.get_eligible_targets(battle_map)
-        return [Pounce(t, self) for t in targets]
+        return [Constrict(t, self) for t in targets]
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies
         """
-        # TODO include the threat of the PRONE in the calculation
-        p_fail = 1 - get_saving_throw_success_prob(self.primary_attack.on_hit.dc, target.saving_throws[self.primary_attack.on_hit.st])
-        return self.primary_attack.calculate_threat_to_target(battle_map, target) + p_fail * self.secondary_attack.calculate_threat_to_target(battle_map, target)
+        # TODO include the threat of the RESTRAINED and GRAPPLED in the calculation
+        return self.attack.calculate_threat_to_target(battle_map, target)
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
@@ -47,12 +47,11 @@ class PounceFactory(DirectThreatFactory):
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
-        p_fail = 1 - get_saving_throw_success_prob(self.primary_attack.on_hit.dc, target.saving_throws[self.primary_attack.on_hit.st])
-        return self.primary_attack.calculate_threat_to_target_delta(battle_map, target, modified_stats) + p_fail * self.secondary_attack.calculate_threat_to_target_delta(battle_map, target, modified_stats)
+        return self.attack.calculate_threat_to_target_delta(battle_map, target, modified_stats)
 
 
 
-class Pounce(Actoid, DirectThreat):
+class Constrict(Actoid, DirectThreat):
 
     def __init__(self, target_combatant, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
@@ -60,17 +59,17 @@ class Pounce(Actoid, DirectThreat):
         self.factory = factory
 
     def __str__(self):
-        return f"Pounce on {self.target_combatant}"
+        return f"Constrict on {self.target_combatant}"
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
                                                        distances,
-                                                       inflate_to_size=self.factory.combatant.size + self.factory.distance,
-                                                       rng=battle_map.size,  # approximation, could theoretically be longer
+                                                       inflate_to_size=self.factory.combatant.size,
+                                                       rng=1,
                                                        combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_hop_distance(self.factory.combatant, self.target_combatant) >= self.factory.distance
+        return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.attack.range)
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """

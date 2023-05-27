@@ -96,8 +96,10 @@ def check_feasibility(combatant, action, battle_map):
                 # Technically, those actions are possible but make no sense
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED)
-            case Action.DODGE:
+            case Action.DODGE | Action.CONSTRICT | Action.POUNCE:
                 return combatant.has_action
+            case Action.WILDSHAPE:
+                return combatant.has_action and combatant.curr_wildshape_uses > 0
             case _:
                 logger.error("check_feasibility: Unknown action type")
                 return False
@@ -161,6 +163,8 @@ def check_feasibility(combatant, action, battle_map):
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
             case BonusAction.CUNNING_DISENGAGE:
                 return res
+            case BonusAction.MOON_WILDSHAPE:
+                return res and combatant.curr_wildshape_uses > 0
             case _:
                 logger.error("Unknown bonus action")
                 return False
@@ -264,8 +268,10 @@ def check_feasibility_light(combatant, action, battle_map):
             case Action.DASH | Action.DISENGAGE:
                 return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
                                                                                  Conditions.RESTRAINED)
-            case Action.DODGE:
+            case Action.DODGE | Action.POUNCE | Action.CONSTRICT:
                 return combatant.has_action
+            case Action.WILDSHAPE:
+                return combatant.has_action and combatant.curr_wildshape_uses > 0
             case _:
                 logger.error("check_feasibility_light: Unknown action type")
                 return False
@@ -304,6 +310,8 @@ def check_feasibility_light(combatant, action, battle_map):
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
             case BonusAction.CUNNING_DISENGAGE:
                 return res
+            case BonusAction.MOON_WILDSHAPE:
+                return res and combatant.curr_wildshape_uses > 0
             case _:
                 logger.error("Unknown bonus action")
                 return False
