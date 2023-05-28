@@ -1,7 +1,7 @@
 from simulator.actions.action_types import Action
 from simulator.actions.actoid import FactoryFlags, Actoid, ActoidFlags
 from simulator.threat_interfaces import DirectThreatFactory, DirectThreat
-from simulator.threat_utils import  get_saving_throw_success_prob
+from simulator.threat_utils import get_saving_throw_success_prob
 import logging
 
 

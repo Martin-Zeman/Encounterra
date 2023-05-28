@@ -59,18 +59,6 @@ class FireboltFactory(DirectThreatFactory):
                 logger.error("Incorrect caster level of Firebolt")
                 return "1d10"
 
-    def find_best_args(self, combatant, battle_map):
-        # TODO Deprecated
-        # TODO Should this include action type? Cause for a twinned version you would need multiple targets
-        potential_targets = battle_map.get_enemies_within_radius(combatant, FireboltFactory.range)
-        hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, 0, pt.ac, 1)) for pt in potential_targets]
-        potential_targets = list(zip(potential_targets, hp_percentages))
-        potential_targets.sort(key=lambda e: e[1], reverse=True)
-        try:
-            return potential_targets[0][0]
-        except IndexError:
-            return None
-
     def get_eligible_targets(self, battle_map):
         return battle_map.get_enemies(self.caster)
 

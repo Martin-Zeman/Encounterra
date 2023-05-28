@@ -52,19 +52,6 @@ class AttackFactory(DirectThreatFactory):
                 'dmg_bonus': self.dmg_bonus, 'dmg_type': self.dmg_type, 'attack_range': self.range, 'action_type': self.action_type,
                 'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit}
 
-    def find_best_args(self, combatant, battle_map):
-        # TODO Deprecated
-        pass
-        # if self.attack_type is AttackFactory.Type.MELEE:
-        #     potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)
-        # else:
-        #     potential_targets = battle_map.get_enemies_within_radius(combatant, combatant.movement + self.range)
-        # hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, pt.ac, self.crit_range)) for pt
-        #                   in potential_targets]
-        # potential_targets = list(zip(potential_targets, hp_percentages))
-        # potential_targets.sort(key=lambda e: e[1], reverse=True)
-        # return potential_targets[0][0] if potential_targets else None
-
     def get_eligible_targets(self, battle_map):
         return battle_map.get_enemies(self.combatant)
 

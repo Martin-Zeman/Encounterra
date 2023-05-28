@@ -32,18 +32,6 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         """
         return "TwinnedHasteFactory"
 
-    def find_best_args(self, combatant, battle_map):
-        # TODO Deprecated
-        ret1 = None
-        ret2 = None
-        try:
-            ret = HasteFactory.get_allies_sorted_by_threat(combatant, battle_map)
-            ret1 = ret[0][0]
-            ret2 = ret[1][0]
-        except IndexError:
-            pass
-        return [ret1, ret2]
-
     def get_eligible_targets(self, battle_map):
         ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
         ret.append(self.caster)

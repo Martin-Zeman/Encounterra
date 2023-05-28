@@ -32,9 +32,6 @@ class MistyStepFactory(DirectThreatFactory):
         """
         return "MistyStepFactory"
 
-    def find_best_args(self, combatant, battle_map):
-        return None
-
     def get_eligible_targets(self, battle_map):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.caster),
                                                              rng=MistyStepFactory.range)

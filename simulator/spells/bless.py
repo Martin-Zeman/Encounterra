@@ -29,12 +29,6 @@ class BlessFactory(ThreatModifierFactory):
         """
         return "BlessFactory"
 
-    def find_best_args(self, combatant, battle_map):
-        # TODO Deprecated
-        # Iterate over all allies within range and try plugging the mods into their factories and pick three best
-        # TODO Should this include action type? Cause for a twinned version you would need multiple targets
-        return 0
-
     def get_eligible_targets(self, battle_map):
         return combinations(battle_map.get_enemies_within_radius(self.caster, BlessFactory.range), 3)
 

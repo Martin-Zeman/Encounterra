@@ -1,10 +1,10 @@
-import inspect
 from enum import Enum, Flag, auto
 import random
 import re
 import math
 import numpy as np
 from functools import reduce, cache
+
 from simulator.actions.actoid import FactoryFlags
 import logging
 from simulator.utils.roll_modifiers import RollModifier
@@ -239,3 +239,4 @@ def reconstruct_path_through_dag(leaf_state, initial_state, max_threat_backwards
         except KeyError:
             print("FIXME")
     return reconstructed_path
+

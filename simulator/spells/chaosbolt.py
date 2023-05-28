@@ -51,13 +51,6 @@ class ChaosboltFactory(DirectThreatFactory):
                 break
         return list(zip(*potential_targets[:i]))[0]
 
-    def find_best_args(self, combatant, battle_map):
-        # TODO Deprecated
-        potential_targets = battle_map.get_enemies_within_radius(combatant, ChaosboltFactory.range)
-        dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
-        mean_dmg_func = partial(mean_dmg, to_hit=self.to_hit, dmg_dice=dmg_dice, dmg_bonus=0, crit_range=1)
-        return self.get_sorted_chain(battle_map, potential_targets, mean_dmg_func)
-
     def create(self, target_combatant):
         return Chaosbolt([target_combatant], self)
 

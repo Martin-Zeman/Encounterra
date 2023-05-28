@@ -74,13 +74,6 @@ class HasteFactory(ThreatModifierFactory):
         ret.sort(key=lambda e: e[1], reverse=True)
         return ret
 
-    def find_best_args(self, combatant, battle_map):
-        # TODO Deprecated
-        try:
-            return HasteFactory.get_allies_sorted_by_threat(combatant, battle_map)[0][0]
-        except IndexError:
-            return None
-
     def get_eligible_targets(self, battle_map):
         ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
         ret.append(self.caster)

@@ -5,7 +5,7 @@ from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.misc import reconcile_roll_modifiers
 from functools import reduce, cache
-from simulator.misc import percent_of_curr_hp, avg_roll
+from simulator.misc import avg_roll
 from simulator.threat_utils import mean_dmg, calculate_threat_in_mod
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
@@ -52,16 +52,6 @@ class RecklessAttackFactory(DirectThreatFactory):
         Important for FSM building
         """
         return "RecklessAttackFactory" + self.name
-
-    def find_best_args(self, combatant, battle_map):
-        # TODO Deprecated
-        # TODO consider prioritizing the ones you have a change to finish off
-        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.movement + self.range + 1)
-        hp_percentages = [percent_of_curr_hp(pt, mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, pt.ac, self.crit_range)) for pt
-                          in potential_targets]
-        potential_targets = list(zip(potential_targets, hp_percentages))
-        potential_targets.sort(key=lambda e: e[1], reverse=True)
-        return potential_targets[0][0] if potential_targets else None
 
 
     def get_eligible_targets(self, battle_map):

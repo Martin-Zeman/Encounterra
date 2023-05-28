@@ -1,12 +1,10 @@
 import copy
+
 import logging
 import random
 import math
 from contextlib import contextmanager
 
-from simulator.abilities.rage import RageFactory
-from simulator.actions.action_types import Action, Passive, BonusAction, Reaction, HasteAction, MetaAction, TO_FACTORY, TO_HASTED, \
-    TO_QUICKENED, TO_TWINNED
 from simulator.actions.actoid import FactoryFlags
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC
@@ -14,6 +12,9 @@ from enum import Enum
 from abc import ABC, abstractmethod
 from simulator.actions.dodge import DodgeFactory
 from simulator.actions.disengage import DisengageFactory
+from simulator.abilities.rage import RageFactory
+from simulator.actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKENED, TO_TWINNED
+from simulator.actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
 
 logger = logging.getLogger("EncounTroll")
 
@@ -116,6 +117,7 @@ class Combatant(ABC):
     def roll_initiative(self):
         self.curr_init = random.randint(1, 20) + self.init_bonus
 
+
     def add_ability(self, action_type, **kwargs):
         """
 
@@ -153,19 +155,24 @@ class Combatant(ABC):
                     self.ammo[just_added[1].name] = just_added[1].ammo
                     return just_added
                 case Action.FIREBALL:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
+                    self.action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
                     return self.action_factories[-1]
                 case Action.FIREBOLT:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.FIREBOLT, self)))
+                    self.action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.FIREBOLT, self)))
                     return self.action_factories[-1]
                 case Action.CHAOSBOLT:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
+                    self.action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
                     return self.action_factories[-1]
                 case Action.SCORCHING_RAY:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.SCORCHING_RAY, self)))
+                    self.action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.SCORCHING_RAY, self)))
                     return self.action_factories[-1]
                 case Action.HASTE:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                    self.action_factories.append(
+                        (action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
                     return self.action_factories[-1]
                 case Action.DISENGAGE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
@@ -175,7 +182,6 @@ class Combatant(ABC):
                     self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.current_wildshape_form = None
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
-                    self.available_wildshape_forms = self.bonus_action_factories[-1].preallocate_wildshape_forms()
                     return self.bonus_action_factories[-1]
                 case Action.POUNCE:
                     factory = TO_FACTORY[action_type]
@@ -215,32 +221,35 @@ class Combatant(ABC):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_DODGE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))  # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_DISENGAGE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type))) # TODO
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))  # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_HIDE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type])) # TODO
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))  # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBALL:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
+                    self.bonus_action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBOLT:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
+                    self.bonus_action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_CHAOSBOLT:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
+                    self.bonus_action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_HASTE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                    self.bonus_action_factories.append(
+                        (action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.MOON_WILDSHAPE:
                     self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.current_wildshape_form = None
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
-                    self.available_wildshape_forms = self.bonus_action_factories[-1].preallocate_wildshape_forms()
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
                     return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required
@@ -332,7 +341,6 @@ class Combatant(ABC):
                 self.haste_action_factories.append((hasted_action, hasted_action_factory(**haf_kwargs)))
             except KeyError:
                 pass
-
 
     def has_passive(self, ability):
         return ability in self.passive

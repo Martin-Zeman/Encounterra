@@ -1,14 +1,6 @@
 import math
 
-from simulator.actions.action_types import Action, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.combatants.brown_bear import BrownBear
-from simulator.combatants.dire_wolf import DireWolf
-from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
-from simulator.combatants.giant_spider import GiantSpider
-from simulator.combatants.giant_toad import GiantToad
-from simulator.combatants.quetzalcoatlus import Quetzalcoatlus
-from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.misc import SavingThrow
@@ -22,7 +14,7 @@ logger = logging.getLogger("EncounTroll")
 class WildshapeFactory(TransformerFactory):
 
     def __init__(self, combatant, action_type):
-        TransformerFactory.__init__()
+        TransformerFactory.__init__(self)
         self.flags |= FactoryFlags.TARGETS_SELF
         self.combatant = combatant
         self.action_type = action_type
@@ -41,42 +33,19 @@ class WildshapeFactory(TransformerFactory):
             case _:
                 return 2
 
-    @staticmethod
-    def get_available_forms(level, action_type):
-        if action_type is Action.WILDSHAPE:
-            pass
-        elif action_type is BonusAction.MOON_WILDSHAPE:
-            match level:
-                case lvl if 2 <= lvl <= 5:
-                    return [DireWolf, BrownBear, GiantToad, GiantSpider]
-                case lvl if 6 <= lvl <= 8:
-                    return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
-                case lvl if 9 <= lvl <= 11:
-                    return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
-                    # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion]
-                case lvl if 12 <= lvl <= 14:
-                    return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
-                    # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus]
-                case lvl if 15 <= lvl <= 17:
-                    return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
-                    # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus, GiantCrocodile]
-                case lvl if 18 <= lvl <= 20:
-                    return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
-                    # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus, GiantCrocodile, Mammoth]
-                case _:
-                    logger.error("Incorrect character level. No wildshape forms added!")
-        return []
 
-
-    def preallocate_wildshape_forms(self):
-        available_forms = WildshapeFactory.get_available_forms(self.combatant.level, self.action_type)
-        return [Wildshape(self.combatant, form, self) for form in available_forms]
     def create_all(self, battle_map):
         return self.combatant.available_wildshape_forms
 
     def create(self, form):
         # Doesn't make much sense here
         return Wildshape(self.combatant, form, self)
+
+    def calculate_threat(self, battle_map, *args, **kwargs):
+        """
+        Direct threat changes such as changes in HP. Doesn't account for newly added/lost action factories.
+        """
+        return max([hp for hp in self.combatant.available_wildshape_forms.curr_hp])
 
 class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 

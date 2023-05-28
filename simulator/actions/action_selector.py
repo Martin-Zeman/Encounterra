@@ -6,12 +6,13 @@ import math
 import numpy as np
 from toposort import toposort_flatten
 
-from simulator.actions.action_types import Movement, PRIORITY_ACTIONS
+from simulator.actions.action_constants import PRIORITY_ACTIONS
+from simulator.actions.action_types import Movement
 from simulator.actions.action_fsms import generate_action_fsm
-from simulator.actions.movement import MovementGenerator
+from simulator.actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from simulator.battle_map import convert_path_to_increments
 from simulator.combatant_coords import CombatantCoords
-from simulator.misc import reconstruct_path_through_dag
+from simulator.misc import reconstruct_path_through_dag, Conditions
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.threat_utils import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
     calc_threat_for_path_with_misty_step
@@ -393,3 +394,23 @@ def get_best_actions(combatant, battle_map, distances, shortest_paths):
         return None
     # print("---get_best_actions took %s seconds ---" % (time.time() - start_time))
     return translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)
+
+
+def get_action(combatant, battle_map):
+    """
+    Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,
+    it follows the steps described above. In the second phase, once the combatant reaches the target destination or runs out of movement
+    the best action is recalculated every time to react to any possible changes on the battle_map.
+    :param battle_map:
+    :return: the next best actoid
+    """
+    if combatant.is_affected_by(Conditions.PRONE):
+        return GetUpFactory().create()
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
+    if combatant.action_plan:
+        if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
+            return combatant.action_plan.pop(0)
+    combatant.action_plan = get_best_actions(combatant, battle_map, distances, shortest_paths)
+    if not combatant.action_plan:
+        return None  # Either no action possible or all actions already used
+    return combatant.action_plan.pop(0)

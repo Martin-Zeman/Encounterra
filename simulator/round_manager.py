@@ -4,6 +4,8 @@ from simulator.effects.effect_tracker import EffectTracker
 import logging
 import copy
 
+from simulator.utils.utils import preallocate_wildshape_forms
+
 logger = logging.getLogger("EncounTroll")
 
 
@@ -29,6 +31,21 @@ class RoundManager:
         for combatant in self.combatants:
             logger.info(f"{combatant} with {combatant.curr_init}", extra={"team": combatant.team_color})
 
+    def prep_combatants(self):
+        """
+        Secondary initialization. It's an optimization measure.
+        """
+        for combatant in self.combatants:
+            for baf in combatant.bonus_action_factories:
+                if baf[0] is BonusAction.MOON_WILDSHAPE:
+                    combatant.available_wildshape_forms = preallocate_wildshape_forms(combatant, BonusAction.MOON_WILDSHAPE)
+                    break
+            for af in combatant.action_factories:
+                if af[0] is Action.WILDSHAPE:
+                    combatant.available_wildshape_forms = preallocate_wildshape_forms(combatant, Action.WILDSHAPE)
+                    break
+
+
     def goes_before_in_initiative(self, combatant1, combatant2):
         return True if self.combatants.index(combatant1) < self.combatants.index(combatant2) else False
 
@@ -46,6 +63,7 @@ class RoundManager:
         if n > 0:
             team_tally = {color: 0 for color in self.teams.get_team_colors()}
             combatant_initial_positions = {c: copy.deepcopy(self.battle_map.get_combatant_position(c).get()[0]) for c in self.combatants}
+            self.prep_combatants()
             for i in range(n):
                 logger.warning(f"{i}. Iteration")
                 self.simulate()
