@@ -1,7 +1,6 @@
 import math
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
-from simulator.combatant_coords import CombatantCoords
 from simulator.misc import percent_of_curr_hp
 from simulator.threat_utils import mean_dmg
 import logging

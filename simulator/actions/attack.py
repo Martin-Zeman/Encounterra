@@ -1,9 +1,7 @@
-from abc import abstractmethod
-
 from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce, cache
-from simulator.misc import percent_of_curr_hp, avg_roll
+from simulator.misc import avg_roll
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto

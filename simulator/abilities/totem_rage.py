@@ -3,7 +3,6 @@ from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.action_types import BonusAction
-from functools import reduce
 from simulator.misc import ROUND_HORIZON
 from simulator.abilities.rage import RageFactory
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory, AttackThreatModifier

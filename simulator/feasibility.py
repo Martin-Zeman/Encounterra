@@ -1,5 +1,7 @@
+from simulator.abilities.rage import Rage
 from simulator.abilities.reckless_attack import RecklessAttack
-from simulator.actions.action_factory import *
+from simulator.abilities.totem_rage import TotemRage
+from simulator.actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Conditions
 import logging

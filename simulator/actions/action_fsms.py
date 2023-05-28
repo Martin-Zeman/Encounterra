@@ -1,4 +1,5 @@
 import logging
+
 import numpy as np
 
 from statemachine import State, StateMachine
@@ -113,10 +114,9 @@ def generate_action_fsm(combatant, battle_map):
             for fa in fas:
                 exported_resources = combatant.export_resources()
                 use_resources(combatant, fa, battle_map)
-                # TODO Add action-enabling action resolution here
-                dfs(curr_state_name, fa)
+                with combatant.as_if_used_action_enabler(fa):
+                    dfs(curr_state_name, fa)
                 combatant.load_resources(exported_resources)
-                # TODO Remove the action-enabling effects here
         else:
             # State already exists, just hook up the transition
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])

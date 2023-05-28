@@ -1,5 +1,5 @@
-from simulator.actions.action_factory import *
 import logging
+from simulator.actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction
 from simulator.misc import Conditions
 
 logger = logging.getLogger("EncounTroll")

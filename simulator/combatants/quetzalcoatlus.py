@@ -1,11 +1,9 @@
 import copy
 
-from simulator.actions.action_selector import get_best_actions
+from simulator.actions.action_types import Action, Reaction
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.actions.movement import GetUpFactory
-from simulator.misc import DamageType, SavingThrow, Conditions
-from simulator.actions.action_factory import *
+from simulator.misc import DamageType, SavingThrow
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -31,25 +29,6 @@ class Quetzalcoatlus(Combatant):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_transition(str(self.morningstar_attack[1]), '0', 'nop')  # Melee
         self.attack_fsm.add_transition(str(self.javelin_attack[1]), '0', 'nop')  # Ranged
-
-    def get_action(self, battle_map):
-        """
-        Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,
-        it follows the steps described above. In the second phase, once the combatant reaches the target destination or runs out of movement
-        the best action is recalculated every time to react to any possible changes on the battle_map.
-        :param battle_map:
-        :return: the next best actoid
-        """
-        if self.is_affected_by(Conditions.PRONE):
-            return GetUpFactory().create()
-        distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
-        if self.action_plan:
-            if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
-                return self.action_plan.pop(0)
-        self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
-        if not self.action_plan:
-            return None  # Either no action possible or all actions already used
-        return self.action_plan.pop(0)
 
 
     def export_resources(self):

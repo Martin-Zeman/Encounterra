@@ -1,7 +1,7 @@
+from simulator.actions.action_types import Action, Reaction, Passive, MetaAction, Movement
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator
 from simulator.misc import DamageType, SavingThrow
-from simulator.actions.action_factory import *
 from simulator.misc import Side
 import logging
 

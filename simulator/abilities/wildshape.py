@@ -9,6 +9,7 @@ from simulator.combatants.giant_spider import GiantSpider
 from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.quetzalcoatlus import Quetzalcoatlus
 from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
+from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.misc import SavingThrow
 
@@ -77,7 +78,7 @@ class WildshapeFactory(TransformerFactory):
         # Doesn't make much sense here
         return Wildshape(self.combatant, form, self)
 
-class Wildshape(Actoid, CombatantEffect, DirectThreat):
+class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def __init__(self, combatant, form, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
@@ -110,6 +111,20 @@ class Wildshape(Actoid, CombatantEffect, DirectThreat):
         self.combatants[0].has_haste_action = self.form.has_haste_action
         self.combatants[0].has_reaction = self.form.has_reaction
         self.combatants[0].is_concentrating = self.form.is_concentrating
+
+    def enable(self, battle_map):
+        self.combatants[0].current_wildshape_form = self.form
+        self.form.has_action = self.combatants[0].has_action
+        self.form.has_bonus_action = self.combatants[0].has_bonus_action
+        self.form.has_haste_action = self.combatants[0].has_haste_action
+        self.form.has_reaction = self.combatants[0].has_reaction
+
+    def disable(self, battle_map):
+        self.combatants[0].current_wildshape_form = None
+        self.combatants[0].has_action = self.form.has_action
+        self.combatants[0].has_bonus_action = self.form.has_bonus_action
+        self.combatants[0].has_haste_action = self.form.has_haste_action
+        self.combatants[0].has_reaction = self.form.has_reaction
 
     def clear_cache(self):
         pass

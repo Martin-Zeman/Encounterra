@@ -4,7 +4,6 @@ from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.action_types import BonusAction
 from simulator.misc import ROUND_HORIZON
-from functools import reduce
 import sys
 
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory, AttackThreatModifier

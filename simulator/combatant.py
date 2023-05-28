@@ -1,16 +1,19 @@
 import copy
+import logging
 import random
 import math
+from contextlib import contextmanager
 
-from simulator.abilities.wildshape import WildshapeFactory
+from simulator.abilities.rage import RageFactory
+from simulator.actions.action_types import Action, Passive, BonusAction, Reaction, HasteAction, MetaAction, TO_FACTORY, TO_HASTED, \
+    TO_QUICKENED, TO_TWINNED
 from simulator.actions.actoid import FactoryFlags
+from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC
-from simulator.actions.action_factory import *
 from enum import Enum
 from abc import ABC, abstractmethod
 from simulator.actions.dodge import DodgeFactory
 from simulator.actions.disengage import DisengageFactory
-from simulator.actions.action_factory import TO_TWINNED, TO_QUICKENED
 
 logger = logging.getLogger("EncounTroll")
 
@@ -168,8 +171,8 @@ class Combatant(ABC):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
                     return self.action_factories[-1]
                 case Action.WILDSHAPE:
-                    self.max_wildshape_uses = WildshapeFactory.get_wildshape_uses(self.level)
-                    self.curr_wildshape_uses = WildshapeFactory.get_wildshape_uses(self.level)
+                    self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
+                    self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.current_wildshape_form = None
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.available_wildshape_forms = self.bonus_action_factories[-1].preallocate_wildshape_forms()
@@ -233,8 +236,8 @@ class Combatant(ABC):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.MOON_WILDSHAPE:
-                    self.max_wildshape_uses = WildshapeFactory.get_wildshape_uses(self.level)
-                    self.curr_wildshape_uses = WildshapeFactory.get_wildshape_uses(self.level)
+                    self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
+                    self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.current_wildshape_form = None
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.available_wildshape_forms = self.bonus_action_factories[-1].preallocate_wildshape_forms()
@@ -329,6 +332,7 @@ class Combatant(ABC):
                 self.haste_action_factories.append((hasted_action, hasted_action_factory(**haf_kwargs)))
             except KeyError:
                 pass
+
 
     def has_passive(self, ability):
         return ability in self.passive
@@ -428,12 +432,16 @@ class Combatant(ABC):
                 self.ammo[f[1].name] = f[1].ammo
         self.last_attack_factory_name = None
 
-
-    def is_bloodied_or_worse(self):
-        return self.condition.value >= self.State.BLOODIED.value
-
-    def is_near_death(self):
-        return self.condition is self.State.NEAR_DEATH
+    @contextmanager
+    def as_if_used_action_enabler(self, action):
+        if issubclass(action, ActionEnablerEffect):
+            try:
+                action.enable()
+                yield self
+            finally:
+                action.disable()
+        else:
+            yield self
 
     def add_team(self, team_color):
         self.team_color = team_color

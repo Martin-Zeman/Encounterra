@@ -1,5 +1,5 @@
+from simulator.actions.action_types import Action, BonusAction, Reaction, Passive
 from simulator.combatant import Combatant
-from simulator.actions.action_factory import *
 from simulator.actions.movement import MovementGenerator
 from simulator.misc import DamageType
 from simulator.misc import Side

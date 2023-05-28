@@ -1,5 +1,3 @@
-import numpy as np
-
 from simulator.effects.aoe_effect import AoeEffect
 
 

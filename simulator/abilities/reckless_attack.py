@@ -1,6 +1,5 @@
 import math
 
-from simulator.combatant_coords import CombatantCoords
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags

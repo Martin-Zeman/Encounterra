@@ -1,12 +1,13 @@
 from simulator.abilities.reckless_attack import RecklessAttack
+from simulator.actions.action_types import BonusAction, Action, Reaction, Passive, Movement
 from simulator.misc import *
 from simulator.misc import SavingThrow
 from simulator.feasibility import check_feasibility
 from simulator.resources import use_resources
-from simulator.actions.action_factory import *
 from simulator.actions.actoid import ActoidFlags
 from enum import Enum, auto
 
+from simulator.spells.chaosbolt import ChaosboltFactory
 from simulator.spells.faerie_fire import FaerieFire
 
 logger = logging.getLogger("EncounTroll")

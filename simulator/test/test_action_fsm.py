@@ -51,18 +51,18 @@ def test_remove_state():
     # Have to inspect the log output manually
 
 
-def test_generate_action_fsm(combatant1, combatant2, combatant3, combatant4, combatant5, combatant6, battle_map, effect_tracker, teams):
+def test_generate_action_fsm(combatant1, combatant2, combatant3, test_totem_barbarian, combatant5, combatant6, battle_map, effect_tracker, teams):
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant3, Teams.Color.RED)
-    teams.add_combatant_to_team(combatant4, Teams.Color.RED)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
     teams.add_combatant_to_team(combatant5, Teams.Color.RED)
     teams.add_combatant_to_team(combatant6, Teams.Color.BLUE)
     battle_map.set_combatant_coordinates(combatant1, np.array([7, 3]))
     battle_map.set_combatant_coordinates(combatant2, np.array([5, 11]))
     battle_map.set_combatant_coordinates(combatant3, np.array([10, 12]))
-    battle_map.set_combatant_coordinates(combatant4, np.array([11, 6]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 6]))
     battle_map.set_combatant_coordinates(combatant5, np.array([0, 0]))
     battle_map.set_combatant_coordinates(combatant6, np.array([13, 6]))
     fsm, transition_mapping, _ = generate_action_fsm(combatant1, battle_map)
@@ -77,7 +77,7 @@ def test_generate_action_fsm(combatant1, combatant2, combatant3, combatant4, com
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_bugbear.png', prog='dot')
 
-    fsm, transition_mapping, _ = generate_action_fsm(combatant4, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(test_totem_barbarian, battle_map)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_totem_barbarian5lvl.png', prog='dot')
 

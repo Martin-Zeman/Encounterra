@@ -1,9 +1,6 @@
 import logging
-import numpy as np
 
-from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.effects.post_haste_lethargy import PostHasteLethargy
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 
@@ -70,52 +67,8 @@ class EffectTracker:
                 return True
         return False
 
-    # def get_all_affecting_coords(self, coords: CombatantCoords):
-    #     """
-    #     Returns all effects affecting a given coordinate
-    #     :param coord: coordinate in question
-    #     :return: set of all effects affecting a combatant
-    #     """
-    #     assert self.battle_map
-    #     affecting = []
-    #     for e in self.effects:
-    #         if isinstance(e[0], AoeSquareEffect) and do_squares_overlap(e[0].origin, e[0].length, coords.get()[0], coords.size.value + 1):
-    #             affecting.append(e)
-    #         elif isinstance(e[0], AoeSphericEffect) and self.battle_map.get_cartesian_distance(coords, np.array([e[0].coord])) <= e[0].radius:
-    #             affecting.append(e)
-    #     return affecting
-
-    # def get_aoe_coord_to_threat(self, combatant):
-    #     """
-    #     Returns all effects affecting a given coordinate
-    #     :param combatant: the combatant who wants to move
-    #     :return: a dictionary of coords -> (threat, source effect) asociated with the combatant entering that coord or staying there
-    #     """
-    #     coord_to_threat = dict()
-    #     def add_to_coord_to_threat(coords, effect):
-    #         threat = effect.factory.calculate_threat_to_target(self.battle_map, combatant)
-    #         for coord in coords:
-    #             try:
-    #                 coord_to_threat[coord].append((threat, effect))
-    #             except TypeError:
-    #                 coord_to_threat[coord] = [(threat, effect)]
-    #
-    #
-    #     for e in self.effects:
-    #         if isinstance(e[0], AoeSquareEffect):
-    #             coords = get_affected_by_square(e[0].origin, e[0].length, self.battle_map.size)
-    #         elif isinstance(e[0], AoeSphericEffect):
-    #             coords = get_affected_by_sphere(e[0].origin, e[0].radius, self.battle_map.size)
-    #         else:
-    #             continue
-    #         add_to_coord_to_threat(coords, e[0])
-    #     return coord_to_threat
-
     def get_aoe_effects(self):
         return [e[0] for e in self.effects if isinstance(e[0], AoeSquareEffect) or isinstance(e[0], AoeSphericEffect)]
-
-
-
 
     def combatant_died(self, combatant):
         self.effects = [e for e in self.effects if e[1] is not combatant]

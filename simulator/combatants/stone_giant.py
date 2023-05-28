@@ -1,15 +1,9 @@
 import copy
 
 from simulator.abilities.on_hit_prone import OnHitProne
-from simulator.actions.action_selector import get_best_actions
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.actions.movement import MovementGenerator, GetUpFactory
-from simulator.feasibility import get_feasible_factories
-from simulator.misc import DamageType, SavingThrow, Conditions, Size
-from simulator.actions.action_factory import *
-from simulator.actions.action_types import *
-from simulator.actions.actoid import ActoidFlags
+from simulator.misc import DamageType, SavingThrow, Size
 import numpy as np
 import logging
 
@@ -44,26 +38,6 @@ class StoneGiant(Combatant):
         self.attack_fsm.add_transition(str(self.club[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.club[1]), '1', 'nop')
         self.attack_fsm.add_transition(str(self.rock[1]), '0', 'nop')
-
-
-    def get_action(self, battle_map):
-        """
-        Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,
-        it follows the steps described above. In the second phase, once the combatant reaches the target destination or runs out of movement
-        the best action is recalculated every time to react to any possible changes on the battle_map.
-        :param battle_map:
-        :return: the next best actoid
-        """
-        if self.is_affected_by(Conditions.PRONE):
-            return GetUpFactory().create()
-        distances, shortest_paths = battle_map.calc_dijkstra(self)  # Has to be recalculated every time (due to forced movement etc.)
-        if self.action_plan:
-            if isinstance(self.action_plan[0], MovementIncrement) and self.movement:
-                return self.action_plan.pop(0)
-        self.action_plan = get_best_actions(self, battle_map, distances, shortest_paths)
-        if not self.action_plan:
-            return None  # Either no action possible or all actions already used
-        return self.action_plan.pop(0)
 
 
     def export_resources(self):

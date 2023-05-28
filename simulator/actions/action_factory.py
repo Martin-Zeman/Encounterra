@@ -33,133 +33,82 @@ import logging
 
 logger = logging.getLogger("EncounTroll")
 
-TO_FACTORY = {
-    Action.MELEE_ATTACK: MeleeAttackFactory,
-    Action.RANGED_ATTACK: RangedAttackFactory,
-    Action.RECKLESS_ATTACK: RecklessAttackFactory,
-    Action.DODGE: DodgeFactory,
-    Action.DASH: None,
-    Action.DISENGAGE: DisengageFactory,
-    Action.FIREBALL: FireballFactory,
-    Action.FIREBOLT: FireboltFactory,
-    Action.CHAOSBOLT: ChaosboltFactory,
-    Action.HASTE: HasteFactory,
-    Action.HIDE: None,
-    Action.TWINNED_FIREBOLT: TwinnedFireboltFactory,
-    Action.TWINNED_HASTE: TwinnedHasteFactory,
-    Action.SCORCHING_RAY: ScorchingRayFactory,
-    Action.WILDSHAPE: WildshapeFactory,
-    Action.POUNCE: PounceFactory,
 
-    BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
-    BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
-    BonusAction.PAM_BONUS_ATTACK: MeleeAttackFactory,
-    BonusAction.RAGE: RageFactory,
-    BonusAction.TOTEM_RAGE: TotemRageFactory,
-    BonusAction.MISTY_STEP: MistyStepFactory,
-    BonusAction.CUNNING_DODGE: DodgeFactory,
-    BonusAction.CUNNING_DISENGAGE: DisengageFactory,
-    BonusAction.CUNNING_HIDE: None,
-    BonusAction.QUICKENED_FIREBALL: FireballFactory,
-    BonusAction.QUICKENED_FIREBOLT: FireboltFactory,
-    BonusAction.QUICKENED_CHAOSBOLT: ChaosboltFactory,
-    BonusAction.QUICKENED_HASTE: HasteFactory,
-    BonusAction.QUICKENED_SCORCHING_RAY: ScorchingRayFactory,
-    BonusAction.MOON_WILDSHAPE: WildshapeFactory,
-
-    Reaction.SHIELD: ShieldFactory,
-    Reaction.REACTION_ATTACK: MeleeAttackFactory,
-
-    HasteAction.HASTE_MELEE_ATTACK: MeleeAttackFactory,
-    HasteAction.HASTE_RANGED_ATTACK: RangedAttackFactory,
-    HasteAction.HASTE_DISENGAGE: DisengageFactory,
-    HasteAction.HASTE_HIDE: None,
-    HasteAction.HASTE_DASH: None
-}
-TO_QUICKENED = {
-    Action.FIREBALL: BonusAction.QUICKENED_FIREBALL,
-    Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT,
-    Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT,
-    Action.HASTE: BonusAction.QUICKENED_HASTE,
-    Action.SCORCHING_RAY: BonusAction.QUICKENED_SCORCHING_RAY
-}
-TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}
-TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE}
 # HASTED_ACTIONS = {Action.MELEE_ATTACK, Action.RANGED_ATTACK, Action.HIDE, Action.DASH, Action.DISENGAGE}
 
-def action_factory(combatant, effect_tracker, action_type, *args):
-    if isinstance(action_type, Action):
-        match action_type:
-            case Action.MELEE_ATTACK | Action.RANGED_ATTACK:
-                return Attack(action_type, *args)
-            case Action.DODGE:
-                return Dodge(combatant)
-            case Action.DASH:
-                return Dash()
-            case Action.FIREBALL:
-                return Fireball(action_type, *args, combatant.dc)
-            case Action.FIREBOLT:
-                return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
-            case Action.CHAOSBOLT:
-                return Chaosbolt(action_type, combatant.spell_to_hit, *args)
-            case Action.HASTE:
-                return Haste(action_type, *args, combatant, effect_tracker)
-            case Action.TWINNED_FIREBOLT:
-                logger.info("Twinned Firebolt")
-                return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
-            case Action.TWINNED_HASTE:
-                return TwinnedHaste(action_type, *args, combatant, effect_tracker)
-            case _:
-                logger.error("action_factory: Unknown action type")
-                return None
-    elif isinstance(action_type, BonusAction):
-        match action_type:
-            case BonusAction.BONUS_MELEE_ATTACK | BonusAction.BONUS_RANGED_ATTACK  | BonusAction.PAM_BONUS_ATTACK:
-                return Attack(action_type, *args)
-            case BonusAction.TOTEM_RAGE:
-                return TotemRage(combatant)
-            case BonusAction.RAGE:
-                return Rage(combatant)
-            case BonusAction.MISTY_STEP:
-                return MistyStep(*args)
-            case BonusAction.QUICKENED_CHAOSBOLT:
-                logger.info("Quickened Chaosbolt")
-                return Chaosbolt(action_type, combatant.spell_to_hit, *args)
-            case BonusAction.QUICKENED_FIREBALL:
-                logger.info("Quickened Fireball")
-                return Fireball(action_type, *args, combatant.dc)
-            case BonusAction.QUICKENED_FIREBOLT:
-                logger.info("Quickened Firebolt")
-                return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
-            case BonusAction.QUICKENED_HASTE:
-                return Haste(action_type, *args, combatant, effect_tracker)
-            case _:
-                logger.error("Unknown bonus action type")
-                return None
-    elif isinstance(action_type, Reaction):
-        match action_type:
-            case Reaction.REACTION_ATTACK:
-                return Attack(action_type, *args)
-            case Reaction.SHIELD:
-                return Shield()
-            case _:
-                logger.error("Unknown reaction type")
-                return None
-    elif isinstance(action_type, Movement):
-        match action_type:
-            case Movement.STANDARD:
-                return MovementIncrement(*args, True)
-            case _:
-                logger.error("Unknown movement type")
-                return None
-    elif isinstance(action_type, HasteAction):
-        match action_type:
-            case HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
-                return Attack(action_type, *args)
-            case HasteAction.HASTE_DASH:
-                return Dash()
-            case _:
-                logger.error("Unknown haste action")
-    else:
-        logger.error("Unknown high level action class")
-        return None
+# def action_factory(combatant, effect_tracker, action_type, *args):
+#     if isinstance(action_type, Action):
+#         match action_type:
+#             case Action.MELEE_ATTACK | Action.RANGED_ATTACK:
+#                 return Attack(action_type, *args)
+#             case Action.DODGE:
+#                 return Dodge(combatant)
+#             case Action.DASH:
+#                 return Dash()
+#             case Action.FIREBALL:
+#                 return Fireball(action_type, *args, combatant.dc)
+#             case Action.FIREBOLT:
+#                 return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
+#             case Action.CHAOSBOLT:
+#                 return Chaosbolt(action_type, combatant.spell_to_hit, *args)
+#             case Action.HASTE:
+#                 return Haste(action_type, *args, combatant, effect_tracker)
+#             case Action.TWINNED_FIREBOLT:
+#                 logger.info("Twinned Firebolt")
+#                 return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
+#             case Action.TWINNED_HASTE:
+#                 return TwinnedHaste(action_type, *args, combatant, effect_tracker)
+#             case _:
+#                 logger.error("action_factory: Unknown action type")
+#                 return None
+#     elif isinstance(action_type, BonusAction):
+#         match action_type:
+#             case BonusAction.BONUS_MELEE_ATTACK | BonusAction.BONUS_RANGED_ATTACK  | BonusAction.PAM_BONUS_ATTACK:
+#                 return Attack(action_type, *args)
+#             case BonusAction.TOTEM_RAGE:
+#                 return TotemRage(combatant)
+#             case BonusAction.RAGE:
+#                 return Rage(combatant)
+#             case BonusAction.MISTY_STEP:
+#                 return MistyStep(*args)
+#             case BonusAction.QUICKENED_CHAOSBOLT:
+#                 logger.info("Quickened Chaosbolt")
+#                 return Chaosbolt(action_type, combatant.spell_to_hit, *args)
+#             case BonusAction.QUICKENED_FIREBALL:
+#                 logger.info("Quickened Fireball")
+#                 return Fireball(action_type, *args, combatant.dc)
+#             case BonusAction.QUICKENED_FIREBOLT:
+#                 logger.info("Quickened Firebolt")
+#                 return Firebolt(action_type, combatant.spell_to_hit, combatant.level, *args)
+#             case BonusAction.QUICKENED_HASTE:
+#                 return Haste(action_type, *args, combatant, effect_tracker)
+#             case _:
+#                 logger.error("Unknown bonus action type")
+#                 return None
+#     elif isinstance(action_type, Reaction):
+#         match action_type:
+#             case Reaction.REACTION_ATTACK:
+#                 return Attack(action_type, *args)
+#             case Reaction.SHIELD:
+#                 return Shield()
+#             case _:
+#                 logger.error("Unknown reaction type")
+#                 return None
+#     elif isinstance(action_type, Movement):
+#         match action_type:
+#             case Movement.STANDARD:
+#                 return MovementIncrement(*args, True)
+#             case _:
+#                 logger.error("Unknown movement type")
+#                 return None
+#     elif isinstance(action_type, HasteAction):
+#         match action_type:
+#             case HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
+#                 return Attack(action_type, *args)
+#             case HasteAction.HASTE_DASH:
+#                 return Dash()
+#             case _:
+#                 logger.error("Unknown haste action")
+#     else:
+#         logger.error("Unknown high level action class")
+#         return None

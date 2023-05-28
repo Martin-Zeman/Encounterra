@@ -13,7 +13,7 @@ from simulator.spells.misty_step import MistyStepFactory, MistyStep
 from simulator.spells.spike_growth import SpikeGrowthFactory
 from simulator.teams import Teams
 from simulator.threat_utils import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, calc_threat_for_path_with_misty_step
-from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, teams, effect_tracker, battle_map
+from simulator.test.fixtures import combatant1, combatant2, combatant3, test_totem_barbarian, teams, effect_tracker, battle_map
 
 
 def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map, teams, combatant1, combatant2, effect_tracker):
@@ -315,7 +315,7 @@ def test_get_path_to_cord_large_stepping_away_from_two_medium_aoo(battle_map, te
     assert threat == pytest.approx(-2.649/2 - 5.399/2, 0.001)  # includes danger zone
 
 
-def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_arrive_by_third(battle_map, teams, combatant1, combatant2, combatant3, combatant4, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_arrive_by_third(battle_map, teams, combatant1, combatant2, combatant3, test_totem_barbarian, effect_tracker):
     """
     Same as the basic AoO test but this time the combatant passes by two enemies on either side the way to another. The moving combatant is of size large.
     Make sure the AoO threat is only added once per enemy and that the last enemy doesn't incur any threat
@@ -326,13 +326,13 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_arrive_by_th
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
-    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, np.array([2, 1]))
     battle_map.set_combatant_coordinates(combatant2, np.array([1, 4]))
     battle_map.set_combatant_coordinates(combatant3, np.array([4, 4]))
-    battle_map.set_combatant_coordinates(combatant4, np.array([2, 8]))
-    path = battle_map.get_path_to_combatant(combatant1, combatant4)
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([2, 8]))
+    path = battle_map.get_path_to_combatant(combatant1, test_totem_barbarian)
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)
@@ -342,7 +342,7 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_arrive_by_th
     assert threat == pytest.approx(-2.649/2 - 5.399/2 - 6.625/2, 0.001)  # includes danger zone
 
 
-def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_arrive_by_third(battle_map, teams, combatant1, combatant2, combatant3, combatant4, effect_tracker):
+def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_arrive_by_third(battle_map, teams, combatant1, combatant2, combatant3, test_totem_barbarian, effect_tracker):
     """
     This test combines AoE and AoO.
     Same as the basic AoO test but this time the combatant passes by two enemies on either side the way to another. The
@@ -356,16 +356,16 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(combatant2, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
-    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(combatant1, np.array([2, 1]))
     battle_map.set_combatant_coordinates(combatant2, np.array([1, 4]))
     battle_map.set_combatant_coordinates(combatant3, np.array([4, 4]))
-    battle_map.set_combatant_coordinates(combatant4, np.array([2, 8]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([2, 8]))
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, combatant2)
     cod = codf.create(np.array([2, 7]))
     effect_tracker.add(cod, cod.factory.caster)
-    path = battle_map.get_path_to_combatant(combatant1, combatant4)
+    path = battle_map.get_path_to_combatant(combatant1, test_totem_barbarian)
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, combatant1, effect_to_coords)

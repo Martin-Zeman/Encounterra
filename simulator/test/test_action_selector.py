@@ -10,7 +10,7 @@ from simulator.misc import Conditions
 from simulator.spells.fireball import Fireball
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, combatant2, combatant3, combatant4, combatant5, combatant6, teams, effect_tracker, battle_map
+from simulator.test.fixtures import combatant1, combatant2, combatant3, test_totem_barbarian, combatant5, combatant6, teams, effect_tracker, battle_map
 from simulator.actions.action_selector import get_best_actions, build_action_dag
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 import types
@@ -286,7 +286,7 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
     assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], TwinnedFirebolt)
 
 
-def test_rage_before_attack(battle_map, teams, effect_tracker, combatant3, combatant4):
+def test_rage_before_attack(battle_map, teams, effect_tracker, combatant3, test_totem_barbarian):
     """
     We assert that the barbarian rages before doing anything else.
     """
@@ -295,46 +295,46 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, combatant3, comba
     battle_map.set_effect_tracker(effect_tracker)
     effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(combatant3, Teams.Color.BLUE)  # For the log coloring...
-    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(combatant3, np.array([4, 4]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(combatant4, np.array([13, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([13, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     effect_tracker.set_battle_map(battle_map)
-    combatants = [combatant3, combatant4]
+    combatants = [combatant3, test_totem_barbarian]
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
 
     try:
-        actoid1 = combatant4.get_action(battle_map)
+        actoid1 = test_totem_barbarian.get_action(battle_map)
         assert str(actoid1) == 'TotemRage of TotemBarbarian5Lvl'
-        action_resolver.resolve_action(actoid1, combatant4)
-        actoid2 = combatant4.get_action(battle_map)
-        action_resolver.resolve_action(actoid2, combatant4)
-        actoid3 = combatant4.get_action(battle_map)
-        action_resolver.resolve_action(actoid3, combatant4)
-        actoid4 = combatant4.get_action(battle_map)
-        action_resolver.resolve_action(actoid4, combatant4)
-        actoid5 = combatant4.get_action(battle_map)
-        action_resolver.resolve_action(actoid5, combatant4)
-        actoid6 = combatant4.get_action(battle_map)
-        action_resolver.resolve_action(actoid6, combatant4)
-        actoid7 = combatant4.get_action(battle_map)
-        action_resolver.resolve_action(actoid7, combatant4)
-        actoid8 = combatant4.get_action(battle_map)
-        action_resolver.resolve_action(actoid8, combatant4)
-        actoid9 = combatant4.get_action(battle_map)
-        action_resolver.resolve_action(actoid9, combatant4)
-        actoid10 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid1, test_totem_barbarian)
+        actoid2 = test_totem_barbarian.get_action(battle_map)
+        action_resolver.resolve_action(actoid2, test_totem_barbarian)
+        actoid3 = test_totem_barbarian.get_action(battle_map)
+        action_resolver.resolve_action(actoid3, test_totem_barbarian)
+        actoid4 = test_totem_barbarian.get_action(battle_map)
+        action_resolver.resolve_action(actoid4, test_totem_barbarian)
+        actoid5 = test_totem_barbarian.get_action(battle_map)
+        action_resolver.resolve_action(actoid5, test_totem_barbarian)
+        actoid6 = test_totem_barbarian.get_action(battle_map)
+        action_resolver.resolve_action(actoid6, test_totem_barbarian)
+        actoid7 = test_totem_barbarian.get_action(battle_map)
+        action_resolver.resolve_action(actoid7, test_totem_barbarian)
+        actoid8 = test_totem_barbarian.get_action(battle_map)
+        action_resolver.resolve_action(actoid8, test_totem_barbarian)
+        actoid9 = test_totem_barbarian.get_action(battle_map)
+        action_resolver.resolve_action(actoid9, test_totem_barbarian)
+        actoid10 = test_totem_barbarian.get_action(battle_map)
         assert str(actoid10) == 'RecklessAttack at Bugbear'
-        action_resolver.resolve_action(actoid10, combatant4)
-        actoid11 = combatant4.get_action(battle_map)
+        action_resolver.resolve_action(actoid10, test_totem_barbarian)
+        actoid11 = test_totem_barbarian.get_action(battle_map)
         assert str(actoid11) == 'RecklessAttack at Bugbear'
-        action_resolver.resolve_action(actoid11, combatant4)
+        action_resolver.resolve_action(actoid11, test_totem_barbarian)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
 
-def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, combatant3, combatant4):
+def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, combatant3, test_totem_barbarian):
     """
     It had occured during testing that the bugbear would opt for staying at range and throw javelins rather than go in melee range
     which is not desirable.
@@ -344,13 +344,13 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, combatant3,
     battle_map.set_effect_tracker(effect_tracker)
     effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(combatant3, Teams.Color.BLUE)  # For the log coloring...
-    teams.add_combatant_to_team(combatant4, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(combatant3, np.array([4, 4]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(combatant4, np.array([11, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     effect_tracker.set_battle_map(battle_map)
-    combatants = [combatant3, combatant4]
+    combatants = [combatant3, test_totem_barbarian]
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
 
     try:

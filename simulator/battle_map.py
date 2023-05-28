@@ -3,11 +3,11 @@ import numpy as np
 import math
 import sys
 import logging
+from simulator.actions.action_types import Passive
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.combatant import Combatant
 from simulator.misc import Conditions, Size
-from simulator.actions.action_factory import Passive
 from simulator.geometry import get_affected_by_cone
 from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
