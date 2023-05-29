@@ -441,15 +441,17 @@ class Combatant(ABC):
         self.last_attack_factory_name = None
 
     @contextmanager
-    def as_if_used_action_enabler(self, action):
-        if issubclass(action, ActionEnablerEffect):
+    def as_if_used_action_enabler(self, action, battle_map):
+        if isinstance(action, ActionEnablerEffect):
             try:
-                action.enable()
-                yield self
+                action.enable(battle_map)
+                # yield self
+                yield True
             finally:
-                action.disable()
+                action.disable(battle_map)
         else:
-            yield self
+            # yield self
+            yield False
 
     def add_team(self, team_color):
         self.team_color = team_color

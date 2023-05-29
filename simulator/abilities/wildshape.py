@@ -82,6 +82,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.combatants[0].is_concentrating = self.form.is_concentrating
 
     def enable(self, battle_map):
+        battle_map.teams.replace_combatant(self.combatants[0], self.form)
         self.combatants[0].current_wildshape_form = self.form
         self.form.has_action = self.combatants[0].has_action
         self.form.has_bonus_action = self.combatants[0].has_bonus_action
@@ -89,6 +90,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.has_reaction = self.combatants[0].has_reaction
 
     def disable(self, battle_map):
+        battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
         self.combatants[0].has_bonus_action = self.form.has_bonus_action
@@ -100,6 +102,9 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.form.max_hp - combatant.curr_hp
+
+    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+        return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_all_accessible_coords(shortest_paths)

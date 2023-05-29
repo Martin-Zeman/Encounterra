@@ -11,7 +11,7 @@ from simulator.spells.fireball import Fireball
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, test_totem_barbarian, combatant5, combatant6, teams, effect_tracker, battle_map
-from simulator.actions.action_selector import get_best_actions, build_action_dag
+from simulator.actions.action_selector import get_best_actions, build_action_dag, get_action
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 import types
 import cProfile
@@ -305,29 +305,29 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, combatant3, test_
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
 
     try:
-        actoid1 = test_totem_barbarian.get_action(battle_map)
+        actoid1 = get_action(test_totem_barbarian, battle_map)
         assert str(actoid1) == 'TotemRage of TotemBarbarian5Lvl'
         action_resolver.resolve_action(actoid1, test_totem_barbarian)
-        actoid2 = test_totem_barbarian.get_action(battle_map)
+        actoid2 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid2, test_totem_barbarian)
-        actoid3 = test_totem_barbarian.get_action(battle_map)
+        actoid3 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid3, test_totem_barbarian)
-        actoid4 = test_totem_barbarian.get_action(battle_map)
+        actoid4 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid4, test_totem_barbarian)
-        actoid5 = test_totem_barbarian.get_action(battle_map)
+        actoid5 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid5, test_totem_barbarian)
-        actoid6 = test_totem_barbarian.get_action(battle_map)
+        actoid6 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid6, test_totem_barbarian)
-        actoid7 = test_totem_barbarian.get_action(battle_map)
+        actoid7 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid7, test_totem_barbarian)
-        actoid8 = test_totem_barbarian.get_action(battle_map)
+        actoid8 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid8, test_totem_barbarian)
-        actoid9 = test_totem_barbarian.get_action(battle_map)
+        actoid9 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid9, test_totem_barbarian)
-        actoid10 = test_totem_barbarian.get_action(battle_map)
+        actoid10 = get_action(test_totem_barbarian, battle_map)
         assert str(actoid10) == 'RecklessAttack at Bugbear'
         action_resolver.resolve_action(actoid10, test_totem_barbarian)
-        actoid11 = test_totem_barbarian.get_action(battle_map)
+        actoid11 = get_action(test_totem_barbarian, battle_map)
         assert str(actoid11) == 'RecklessAttack at Bugbear'
         action_resolver.resolve_action(actoid11, test_totem_barbarian)
     except Exception as e:
@@ -354,19 +354,19 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, combatant3,
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
 
     try:
-        actoid1 = combatant3.get_action(battle_map)
+        actoid1 = get_action(combatant3, battle_map)
         action_resolver.resolve_action(actoid1, combatant3)
-        actoid2 = combatant3.get_action(battle_map)
+        actoid2 = get_action(combatant3, battle_map)
         action_resolver.resolve_action(actoid2, combatant3)
-        actoid3 = combatant3.get_action(battle_map)
+        actoid3 = get_action(combatant3, battle_map)
         action_resolver.resolve_action(actoid3, combatant3)
-        actoid4 = combatant3.get_action(battle_map)
+        actoid4 = get_action(combatant3, battle_map)
         action_resolver.resolve_action(actoid4, combatant3)
-        actoid5 = combatant3.get_action(battle_map)
+        actoid5 = get_action(combatant3, battle_map)
         action_resolver.resolve_action(actoid5, combatant3)
-        actoid6 = combatant3.get_action(battle_map)
+        actoid6 = get_action(combatant3, battle_map)
         action_resolver.resolve_action(actoid6, combatant3)
-        actoid7 = combatant3.get_action(battle_map)
+        actoid7 = get_action(combatant3, battle_map)
         assert str(actoid7) == "Morningstar on TotemBarbarian5Lvl"
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -392,22 +392,22 @@ def test_goblin_using_cunning_disengage(battle_map, teams, effect_tracker, comba
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
 
     try:
-        actoid1 = combatant2.get_action(battle_map)
+        actoid1 = get_action(combatant2, battle_map)
         assert str(actoid1) == "Cunning Disengage of Goblin"
         action_resolver.resolve_action(actoid1, combatant2)
-        actoid2 = combatant2.get_action(battle_map)
+        actoid2 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid2, combatant2)
-        actoid3 = combatant2.get_action(battle_map)
+        actoid3 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid3, combatant2)
-        actoid4 = combatant2.get_action(battle_map)
+        actoid4 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid4, combatant2)
-        actoid5 = combatant2.get_action(battle_map)
+        actoid5 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid5, combatant2)
-        actoid6 = combatant2.get_action(battle_map)
+        actoid6 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid6, combatant2)
-        actoid7 = combatant2.get_action(battle_map)
+        actoid7 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid7, combatant2)
-        actoid8 = combatant2.get_action(battle_map)
+        actoid8 = get_action(combatant2, battle_map)
         assert str(actoid8) == "Shortbow on Bugbear"
     except Exception as e:
         assert False, f"Raised an exception {e}"

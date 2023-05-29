@@ -38,11 +38,11 @@ class RoundManager:
         for combatant in self.combatants:
             for baf in combatant.bonus_action_factories:
                 if baf[0] is BonusAction.MOON_WILDSHAPE:
-                    combatant.available_wildshape_forms = preallocate_wildshape_forms(combatant, BonusAction.MOON_WILDSHAPE)
+                    combatant.available_wildshape_forms = preallocate_wildshape_forms(combatant, BonusAction.MOON_WILDSHAPE, baf[1])
                     break
             for af in combatant.action_factories:
                 if af[0] is Action.WILDSHAPE:
-                    combatant.available_wildshape_forms = preallocate_wildshape_forms(combatant, Action.WILDSHAPE)
+                    combatant.available_wildshape_forms = preallocate_wildshape_forms(combatant, Action.WILDSHAPE, af[1])
                     break
 
 
@@ -112,7 +112,7 @@ class RoundManager:
                     continue
                 while True:
                     # try:
-                    action = combatant.get_action(self.battle_map)
+                    action = get_action(combatant, self.battle_map)
                     # except TypeError as e:
                         # logger.error(f"{combatant} threw {e} for action {action}")
                     if action is None:

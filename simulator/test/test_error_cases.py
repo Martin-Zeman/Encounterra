@@ -13,7 +13,9 @@ from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import combatant1, combatant2, combatant3, test_totem_barbarian, combatant5, combatant6, teams, effect_tracker, battle_map
-from simulator.actions.action_selector import get_best_actions
+from simulator.actions.action_selector import get_best_actions, get_action
+
+
 def test_error_case_1(battle_map, teams, effect_tracker, combatant1, combatant3):
     """
     This test case is based on a scenario encountered during fuzzy testing. We make sure that combatant1 doesn't hit
@@ -104,23 +106,23 @@ def test_error_case_3(battle_map, teams, effect_tracker, combatant1, combatant3,
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
-        actoid4 = combatant1.get_action(battle_map)
+        actoid4 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
+        actoid5 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
-        actoid6 = combatant1.get_action(battle_map)
+        actoid6 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid6, combatant1)
-        actoid7 = combatant1.get_action(battle_map)
+        actoid7 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid7, combatant1)
-        actoid8 = combatant1.get_action(battle_map)
+        actoid8 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid8, combatant1)
-        actoid9 = combatant1.get_action(battle_map)
+        actoid9 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid9, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -151,11 +153,11 @@ def test_error_case_4(battle_map, teams, effect_tracker, combatant1, test_totem_
 
     try:
         # The Danger Zone of the Stone Giant spans the whole map so it doesn't pay off to move and suffer the AoO
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         assert actoid3 is None
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -189,21 +191,21 @@ def test_error_case_5(battle_map, teams, effect_tracker, combatant1, combatant2,
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
-        actoid4 = combatant1.get_action(battle_map)
+        actoid4 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
+        actoid5 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
-        actoid6 = combatant1.get_action(battle_map)
+        actoid6 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid6, combatant1)
-        actoid7 = combatant1.get_action(battle_map)
+        actoid7 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid7, combatant1)
-        actoid8 = combatant1.get_action(battle_map)
+        actoid8 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid8, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -232,25 +234,25 @@ def test_error_case_6(battle_map, teams, effect_tracker, combatant1, combatant3,
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = test_totem_barbarian.get_action(battle_map)
+        actoid1 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid1, test_totem_barbarian)
-        actoid2 = test_totem_barbarian.get_action(battle_map)
+        actoid2 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid2, test_totem_barbarian)
-        actoid3 = test_totem_barbarian.get_action(battle_map)
+        actoid3 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid3, test_totem_barbarian)
-        actoid4 = test_totem_barbarian.get_action(battle_map)
+        actoid4 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid4, test_totem_barbarian)
-        actoid5 = test_totem_barbarian.get_action(battle_map)
+        actoid5 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid5, test_totem_barbarian)
-        actoid6 = test_totem_barbarian.get_action(battle_map)
+        actoid6 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid6, test_totem_barbarian)
-        actoid7 = test_totem_barbarian.get_action(battle_map)
+        actoid7 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid7, test_totem_barbarian)
-        actoid8 = test_totem_barbarian.get_action(battle_map)
+        actoid8 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid8, test_totem_barbarian)
-        actoid9 = test_totem_barbarian.get_action(battle_map)
+        actoid9 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid9, test_totem_barbarian)
-        actoid10 = test_totem_barbarian.get_action(battle_map)
+        actoid10 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid10, test_totem_barbarian)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -279,55 +281,55 @@ def test_error_case_7(battle_map, teams, effect_tracker, combatant1, combatant2,
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = combatant2.get_action(battle_map)
+        actoid1 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid1, combatant2)
-        actoid2 = combatant2.get_action(battle_map)
+        actoid2 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid2, combatant2)
-        actoid3 = combatant2.get_action(battle_map)
+        actoid3 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid3, combatant2)
-        actoid4 = combatant2.get_action(battle_map)
+        actoid4 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid4, combatant2)
-        actoid5 = combatant2.get_action(battle_map)
+        actoid5 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid5, combatant2)
-        actoid6 = combatant2.get_action(battle_map)
+        actoid6 = get_action(combatant2, battle_map)
         action_resolver.resolve_action(actoid6, combatant2)
 
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
-        actoid4 = combatant1.get_action(battle_map)
+        actoid4 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
+        actoid5 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
-        actoid6 = combatant1.get_action(battle_map)
+        actoid6 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid6, combatant1)
-        actoid7 = combatant1.get_action(battle_map)
+        actoid7 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid7, combatant1)
-        actoid8 = combatant1.get_action(battle_map)
+        actoid8 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid8, combatant1)
 
-        actoid1 = test_totem_barbarian.get_action(battle_map)
+        actoid1 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid1, test_totem_barbarian)
-        actoid2 = test_totem_barbarian.get_action(battle_map)
+        actoid2 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid2, test_totem_barbarian)
-        actoid3 = test_totem_barbarian.get_action(battle_map)
+        actoid3 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid3, test_totem_barbarian)
-        actoid4 = test_totem_barbarian.get_action(battle_map)
+        actoid4 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid4, test_totem_barbarian)
-        actoid5 = test_totem_barbarian.get_action(battle_map)
+        actoid5 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid5, test_totem_barbarian)
-        actoid6 = test_totem_barbarian.get_action(battle_map)
+        actoid6 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid6, test_totem_barbarian)
-        actoid7 = test_totem_barbarian.get_action(battle_map)
+        actoid7 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid7, test_totem_barbarian)
-        actoid8 = test_totem_barbarian.get_action(battle_map)
+        actoid8 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid8, test_totem_barbarian)
-        actoid9 = test_totem_barbarian.get_action(battle_map)
+        actoid9 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid9, test_totem_barbarian)
-        actoid10 = test_totem_barbarian.get_action(battle_map)
+        actoid10 = get_action(test_totem_barbarian, battle_map)
         action_resolver.resolve_action(actoid10, test_totem_barbarian)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -357,21 +359,21 @@ def test_error_case_8(battle_map, teams, effect_tracker, combatant1, combatant5,
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = combatant7.get_action(battle_map)
+        actoid1 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid1, combatant7)
-        actoid2 = combatant7.get_action(battle_map)
+        actoid2 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid2, combatant7)
-        actoid3 = combatant7.get_action(battle_map)
+        actoid3 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid3, combatant7)
-        actoid4 = combatant7.get_action(battle_map)
+        actoid4 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid4, combatant7)
-        actoid5 = combatant7.get_action(battle_map)
+        actoid5 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid5, combatant7)
-        actoid6 = combatant7.get_action(battle_map)
+        actoid6 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid6, combatant7)
-        actoid7 = combatant7.get_action(battle_map)
+        actoid7 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid7, combatant7)
-        actoid8 = combatant7.get_action(battle_map)
+        actoid8 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid8, combatant7)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -403,17 +405,17 @@ def test_error_case_9(battle_map, teams, effect_tracker, combatant1, combatant5,
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = combatant5.get_action(battle_map)
+        actoid1 = get_action(combatant5, battle_map)
         action_resolver.resolve_action(actoid1, combatant5)
-        actoid2 = combatant5.get_action(battle_map)
+        actoid2 = get_action(combatant5, battle_map)
         action_resolver.resolve_action(actoid2, combatant5)
 
-        actoid3 = combatant7.get_action(battle_map)
+        actoid3 = get_action(combatant7, battle_map)
         action_resolver.resolve_action(actoid3, combatant7)
 
-        actoid4 = combatant1.get_action(battle_map)
+        actoid4 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
+        actoid5 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
 
     except Exception as e:
@@ -445,21 +447,21 @@ def test_error_case_10(battle_map, teams, effect_tracker, combatant1, combatant2
     combatant1.curr_sorcery_points -= 4
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
-        actoid4 = combatant1.get_action(battle_map)
+        actoid4 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
+        actoid5 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
-        actoid6 = combatant1.get_action(battle_map)
+        actoid6 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid6, combatant1)
-        actoid7 = combatant1.get_action(battle_map)
+        actoid7 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid7, combatant1)
-        actoid8 = combatant1.get_action(battle_map)
+        actoid8 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid8, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -501,7 +503,7 @@ def test_error_case_11(battle_map, teams, effect_tracker, combatant1, test_totem
     combatant7.curr_sorcery_points -= 5
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -549,9 +551,9 @@ def test_error_case_12(battle_map, teams, effect_tracker, combatant1, test_totem
     combatant7.curr_hp = 36
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -588,19 +590,19 @@ def test_error_case_13(battle_map, teams, effect_tracker, combatant1, test_totem
     combatant1.curr_sorcery_points = 0
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
-        actoid4 = combatant1.get_action(battle_map)
+        actoid4 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
+        actoid5 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
-        actoid6 = combatant1.get_action(battle_map)
+        actoid6 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid6, combatant1)
-        actoid7 = combatant1.get_action(battle_map)
+        actoid7 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid7, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -632,11 +634,11 @@ def test_error_case_14(battle_map, teams, effect_tracker, combatant1, combatant5
     combatant1.curr_sorcery_points = 2
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -675,19 +677,19 @@ def test_error_case_15(battle_map, teams, effect_tracker, combatant1, combatant2
     combatant1.curr_sorcery_points = 0
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
-        actoid4 = combatant1.get_action(battle_map)
+        actoid4 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
+        actoid5 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
-        actoid6 = combatant1.get_action(battle_map)
+        actoid6 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid6, combatant1)
-        actoid7 = combatant1.get_action(battle_map)
+        actoid7 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid7, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -720,19 +722,19 @@ def test_error_case_16(battle_map, teams, effect_tracker, combatant1, combatant2
     combatant1.apply_condition(Conditions.PRONE)
 
     try:
-        actoid1 = combatant1.get_action(battle_map)
+        actoid1 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid1, combatant1)
-        actoid2 = combatant1.get_action(battle_map)
+        actoid2 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid2, combatant1)
-        actoid3 = combatant1.get_action(battle_map)
+        actoid3 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid3, combatant1)
-        actoid4 = combatant1.get_action(battle_map)
+        actoid4 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid4, combatant1)
-        actoid5 = combatant1.get_action(battle_map)
+        actoid5 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid5, combatant1)
-        actoid6 = combatant1.get_action(battle_map)
+        actoid6 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid6, combatant1)
-        actoid7 = combatant1.get_action(battle_map)
+        actoid7 = get_action(combatant1, battle_map)
         action_resolver.resolve_action(actoid7, combatant1)
     except Exception as e:
         assert False, f"Raised an exception {e}"

@@ -53,7 +53,11 @@ class AttackFactory(DirectThreatFactory):
                 'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit}
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies(self.combatant)
+        try:
+            return battle_map.get_enemies(self.combatant)
+        except KeyError:
+            battle_map.get_enemies(self.combatant)
+            return None
 
     def create(self, target_combatant):
         return Attack(target_combatant, self)

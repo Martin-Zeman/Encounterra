@@ -37,6 +37,6 @@ def get_available_wildshape_forms(level, action_type):
                 logger.error("Incorrect character level. No wildshape forms added!")
     return []
 
-def preallocate_wildshape_forms(combatant, action_type):
+def preallocate_wildshape_forms(combatant, action_type, factory):
     available_forms = get_available_wildshape_forms(combatant.level, action_type)
-    return [Wildshape(combatant, form, combatant) for form in available_forms]
+    return [Wildshape(combatant, form, factory) for form in available_forms]

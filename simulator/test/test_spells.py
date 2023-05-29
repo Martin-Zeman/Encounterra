@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from simulator.action_resolver import ActionResolver
+from simulator.actions.action_selector import get_action
 from simulator.actions.action_types import Action
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.spells.haste import HasteFactory
@@ -34,13 +35,13 @@ def test_haste(battle_map, teams, effect_tracker, combatant1, combatant3, test_t
         haste = hf.create(combatant3)
         action_resolver.resolve_action(haste, combatant1)
 
-        actoid1 = combatant3.get_action(battle_map)
+        actoid1 = get_action(combatant3, battle_map)
         action_resolver.resolve_action(actoid1, combatant3)
-        actoid2 = combatant3.get_action(battle_map)
+        actoid2 = get_action(combatant3, battle_map)
         assert str(actoid1) == "Morningstar on TotemBarbarian5Lvl" or str(actoid2) == "Morningstar on TotemBarbarian5Lvl"
         assert str(actoid1) == "Hasted Morningstar on TotemBarbarian5Lvl" or str(actoid2) == "Hasted Morningstar on TotemBarbarian5Lvl"
         action_resolver.resolve_action(actoid2, combatant3)
-        actoid3 = combatant3.get_action(battle_map)
+        actoid3 = get_action(combatant3, battle_map)
         assert str(actoid3) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"
