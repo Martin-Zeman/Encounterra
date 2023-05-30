@@ -3,6 +3,7 @@ import numpy as np
 import math
 import sys
 import logging
+from simulator.abilities.wildshape import Wildshape
 from simulator.actions.action_types import Passive
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
@@ -235,14 +236,33 @@ class Map:
                 position = self.get_combatant_position(combatant)
                 self.remove_combatant(combatant)
                 self.set_combatant_coordinates(combatant.current_wildshape_form, position.get()[0])
-                yield self
+                yield subject
             finally:
                 self.teams.replace_combatant(combatant.current_wildshape_form, combatant)
                 position = self.get_combatant_position(combatant.current_wildshape_form)
                 self.remove_combatant(combatant.current_wildshape_form)
                 self.set_combatant_coordinates(combatant, position.get()[0])
         else:
-            yield self
+            yield subject
+
+
+    @contextmanager
+    def replace_combatant_if_action_is_wildshape(self, action, combatant):
+        if isinstance(action, Wildshape):
+            try:
+                self.teams.replace_combatant(combatant, action.form)
+                position = self.get_combatant_position(combatant)
+                self.remove_combatant(combatant)
+                self.set_combatant_coordinates(action.form, position.get()[0])
+                yield action.form
+            finally:
+                self.teams.replace_combatant(action.form, combatant)
+                position = self.get_combatant_position(action.form)
+                self.remove_combatant(action.form)
+                self.set_combatant_coordinates(combatant, position.get()[0])
+        else:
+            yield combatant
+
 
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker

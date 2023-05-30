@@ -99,7 +99,7 @@ def use_resources(combatant, action, battle_map):
     elif isinstance(action_type, Movement):
         match action_type:
             case Movement.STANDARD | Movement.DISENGAGE | Movement.DISENGAGE:
-                target_position = battle_map.get_combatant_position(subject) + action.increment
+                target_position = battle_map.get_combatant_position(subject.get_original_form()) + action.increment  # Position is tracked at the original
                 decrement = 1
                 if subject.is_affected_by(Conditions.PRONE):
                     decrement += 1
