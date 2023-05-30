@@ -50,8 +50,7 @@ class MoonDruid5Lvl(Combatant):
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
-            'attack_state_machine': self.attack_fsm.state,
-            'curr_num_attacks': self.curr_num_attacks  # TODO REMOVE THIS
+            'attack_state_machine': self.attack_fsm.state
         }
 
     def load_resources(self, resources):
@@ -61,4 +60,3 @@ class MoonDruid5Lvl(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
-        self.curr_num_attacks = resources['curr_num_attacks']  # TODO remove this

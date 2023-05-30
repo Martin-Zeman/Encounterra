@@ -35,6 +35,7 @@ class WildshapeFactory(TransformerFactory):
 
 
     def create_all(self, battle_map):
+        # TODO Filter out those who cannot fit to the current position by size
         return self.combatant.available_wildshape_forms
 
     def create(self, form):
@@ -54,6 +55,10 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         CombatantEffect.__init__(self, combatants=[combatant])
         self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.form = form(factory.combatant.effect_tracker, f"{factory.combatant} wildshaped into {form.__name__}")
+        def wildshape_get(self):
+            return combatant
+
+        self.form.get = wildshape_get.__get__(self, type(self.form))
         self.factory = factory
 
     def __str__(self):
@@ -61,6 +66,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
+        battle_map.teams.replace_combatant(self.combatants[0], self.form)
         self.combatants[0].current_wildshape_form = self.form
         self.form.curr_hp = self.form.max_hp
         self.form.saving_throws[SavingThrow.INT] = self.combatants[0].saving_throws[SavingThrow.INT]
@@ -74,6 +80,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s wildshape fades")
+        battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
         self.combatants[0].has_bonus_action = self.form.has_bonus_action

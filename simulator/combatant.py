@@ -59,7 +59,6 @@ class Combatant(ABC):
         self.has_reaction = True
         self.has_haste_action = False
         self.num_attacks = 1
-        self.curr_num_attacks = 1
         self.speed = speed / 5
         self.movement = speed / 5
         self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
@@ -108,6 +107,9 @@ class Combatant(ABC):
     def __str__(self):
         return self.name
 
+    def get(self):
+        return self
+
     def set_round_manager(self, round_manager):
         self.round_manager = round_manager
 
@@ -130,13 +132,6 @@ class Combatant(ABC):
         self.action_types_added.append(action_type)
         if isinstance(action_type, Passive):
             match action_type:
-                case Passive.MULTIATTACK:
-                    try:
-                        self.num_attacks = kwargs["num_attacks"]
-                        self.curr_num_attacks = kwargs["num_attacks"]
-                    except KeyError:
-                        logger.error("Arguments incompatible with action type")
-                        return
                 case Passive.METAMAGIC:
                     self.curr_sorcery_points = kwargs["sorcery_points"]
                     self.max_sorcery_points = kwargs["sorcery_points"]
@@ -182,6 +177,9 @@ class Combatant(ABC):
                     self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.current_wildshape_form = None
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    def wildshape_get(self):
+                        return self if self.current_wildshape_form is None else self.current_wildshape_form
+                    self.get = wildshape_get.__get__(self, Combatant)
                     return self.bonus_action_factories[-1]
                 case Action.POUNCE:
                     factory = TO_FACTORY[action_type]
@@ -250,6 +248,9 @@ class Combatant(ABC):
                     self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.current_wildshape_form = None
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
+                    def wildshape_get(self):
+                        return self if self.current_wildshape_form is None else self.current_wildshape_form
+                    self.get = wildshape_get.__get__(self, Combatant)
                     return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required
@@ -396,7 +397,6 @@ class Combatant(ABC):
         self.has_action = True
         self.has_bonus_action = True
         self.has_reaction = True
-        self.curr_num_attacks = self.num_attacks
         self.movement = self.speed
         self.target_position_cache = None  # This has to be reset every turn as the path can be blocked by other combatants
         # if self.is_dodging:
@@ -415,7 +415,6 @@ class Combatant(ABC):
         self.has_action = True
         self.has_bonus_action = True
         self.has_reaction = True
-        self.curr_num_attacks = self.num_attacks
         self.curr_hp = self.max_hp
         self.target_position_cache = None
         self.movement = self.speed

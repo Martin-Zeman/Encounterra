@@ -236,6 +236,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     :return: the longest path in the DAG as per the threat along its edges and nodes and a mapping of transitions names
     to special Misty Step paths
     """
+    combatant = combatant.get()  # Takes care of possible wildshape
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     threat = {key: [-math.inf, -math.inf] for key in sorted_states}
     sorted_states.pop()  # Get rid of the nop state
@@ -261,7 +262,11 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     # Is it a transition which represents a (bonus) action?
                     pretend_coords = get_pretend_coords(current_coords, pattern, state, max_threat_backwards_transition)
                     action = transition_name_to_action[transition_name]
-                    transition_threat = action.calculate_threat(combatant, battle_map, pretend_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
+                    try:
+                        transition_threat = action.calculate_threat(combatant, battle_map, pretend_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
+                    except KeyError:
+                        transition_threat = action.calculate_threat(combatant, battle_map, pretend_coords) + (
+                            threat[state][1] if threat[state][1] > -math.inf else 0)
                     transition_threat += get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action)
                     movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
                 except KeyError:  # either not in the dict or regex search came up empty
@@ -410,7 +415,7 @@ def get_action(combatant, battle_map):
     if combatant.action_plan:
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
             return combatant.action_plan.pop(0)
-    combatant.action_plan = get_best_actions(combatant, battle_map, distances, shortest_paths)
+    combatant.action_plan = get_best_actions(combatant.get(), battle_map, distances, shortest_paths)
     if not combatant.action_plan:
         return None  # Either no action possible or all actions already used
     return combatant.action_plan.pop(0)
