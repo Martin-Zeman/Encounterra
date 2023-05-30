@@ -23,7 +23,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
     def __init__(self, action_type, caster, effect_tracker):
         super().__init__()
         self.action_type = action_type # TWINNED_HASTE, QUICKENED_HASTE, HASTE
-        self.caster = caster
+        self.combatant = caster
         self.effect_tracker = effect_tracker
 
     def __str__(self):
@@ -33,8 +33,8 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         return "TwinnedHasteFactory"
 
     def get_eligible_targets(self, battle_map):
-        ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
-        ret.append(self.caster)
+        ret = battle_map.get_allies_within_radius(self.combatant, HasteFactory.range)
+        ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         ret = combinations(ret, 2)
         return ret
@@ -88,14 +88,14 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         return f"Twinned Haste on {self.targets[0]} and {self.targets[1]}"
 
     def activate(self, battle_map):
-        self.factory.caster.is_concentrating = True
+        self.factory.combatant.is_concentrating = True
         for target in self.targets:
             target.ac += 2
             target.add_hasted_factories()
             target.has_haste_action = True  # TODO Remove this
 
     def deactivate(self, battle_map):
-        self.factory.caster.is_concentrating = False
+        self.factory.combatant.is_concentrating = False
         for target in self.targets:
             target.ac -= 2
             target.haste_action_factories.clear()
@@ -121,23 +121,23 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         return target1_threat + target2_threat
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        if self.targets[0] is self.factory.caster:
+        if self.targets[0] is self.factory.combatant:
             coords_for_first = battle_map.get_all_accessible_coords(shortest_paths)
         else:
             coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                              distances,
-                                                                             inflate_to_size=self.factory.caster.size,
+                                                                             inflate_to_size=self.factory.combatant.size,
                                                                              rng=TwinnedHasteFactory.range)
 
-        if self.targets[1] is self.factory.caster:
+        if self.targets[1] is self.factory.combatant:
             coords_for_second = battle_map.get_all_accessible_coords(shortest_paths)
         else:
             coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                               distances,
-                                                                              inflate_to_size=self.factory.caster.size,
+                                                                              inflate_to_size=self.factory.combatant.size,
                                                                               rng=TwinnedHasteFactory.range)
         return coords_for_first.intersection(coords_for_second)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.caster, self.targets[0]) <= TwinnedHasteFactory.range and \
-            battle_map.get_cartesian_distance(self.factory.caster, self.targets[1]) <= TwinnedHasteFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= TwinnedHasteFactory.range and \
+            battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range

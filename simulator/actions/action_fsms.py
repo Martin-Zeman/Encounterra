@@ -88,10 +88,7 @@ def generate_action_fsm(combatant, battle_map):
     visited = set()
     transition_name_to_action = dict()
     post_misty_step_actions = None
-
-    # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
-    fafs = get_all_feasible_action_factories(combatant, battle_map)
-    af_to_a = {faf: faf[1].create_all(battle_map) for faf in fafs}
+    # combatant = combatant.get_current_form()  # Takes care of possible wildshape in a previous call to this function
 
     def dfs(previous_state_name, af_to_a_mapping, action_taken=None):
         """
@@ -131,7 +128,12 @@ def generate_action_fsm(combatant, battle_map):
             # State already exists, just hook up the transition
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])
 
-    dfs('0', af_to_a)
+    with battle_map.replace_combatant_if_wildshaped(combatant):
+        # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
+        fafs = get_all_feasible_action_factories(combatant, battle_map)
+        af_to_a = {faf: faf[1].create_all(battle_map) for faf in fafs}
+
+        dfs('0', af_to_a)
 
     # If the combatant has Misty Step, deal with it separately
     for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant, battle_map):

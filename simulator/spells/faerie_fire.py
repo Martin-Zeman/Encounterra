@@ -6,11 +6,9 @@ from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_utils import mean_dmg, dmg_decrement_for_ac_flat
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory, AoEThreat
-from functools import reduce, cache
-from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, roll_saving_throw, reconcile_roll_modifiers, SavingThrow, \
-    Conditions
+from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
+from functools import cache
+from simulator.misc import roll_saving_throw, reconcile_roll_modifiers, SavingThrow, Conditions
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -29,7 +27,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         super().__init__()
         self.dc = dc
         self.action_type = action_type  # QUICKENED_FAERIE_FIRE, FAERIE_FIRE
-        self.caster = caster
+        self.combatant = caster
         self.saving_throw = SavingThrow.DEX
         self.effect_tracker = effect_tracker
 
@@ -40,12 +38,12 @@ class FaerieFireFactory(ThreatModifierFactory):
         return "FaerieFireFactory"
 
     def get_quickened_kwargs(self):
-        return {'effect_tracker': self.effect_tracker, 'caster': self.caster}
+        return {'effect_tracker': self.effect_tracker, 'combatant': self.combatant}
 
 
     def get_eligible_targets(self, battle_map):
-        ret = battle_map.get_allies_within_radius(self.caster, FaerieFireFactory.range)
-        ret.append(self.caster)
+        ret = battle_map.get_allies_within_radius(self.combatant, FaerieFireFactory.range)
+        ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
 
@@ -79,7 +77,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
         return combatant in self.affected_combatants
 
     def activate(self, battle_map):
-        potentially_affected_combatants = battle_map.get_combatants_affected_by_aoe(self.factory.caster, FaerieFireFactory.target, FaerieFireFactory.type, self.coord)
+        potentially_affected_combatants = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.coord)
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
             saved = roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_modifiers(pac.saving_throws_roll_mod[st]))
@@ -116,11 +114,11 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              distances,
-                                                             inflate_to_size=self.factory.caster.size,
-                                                             rng=FaerieFireFactory.range, combatant=self.factory.caster)
+                                                             inflate_to_size=self.factory.combatant.size,
+                                                             rng=FaerieFireFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.caster, np.array([self.coord])) <= FaerieFireFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= FaerieFireFactory.range
 
     def on_enter(self, combatant):
         pass

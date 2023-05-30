@@ -26,7 +26,7 @@ class FireballFactory(DirectThreatFactory):
         self.saving_throw = SavingThrow.DEX
         self.dmg_dice = "8d6"
         self.additional_upcast_dmg = "1d6"
-        self.caster = caster
+        self.combatant = caster
         self.has_spell_sculpting = has_spell_sculpting
 
 
@@ -37,10 +37,10 @@ class FireballFactory(DirectThreatFactory):
         return "FireballFactory"
 
     def get_twinned_kwargs(self):
-        return {'dc': self.dc, 'caster': self.caster, 'has_spell_sculpting': self.has_spell_sculpting}
+        return {'dc': self.dc, 'caster': self.combatant, 'has_spell_sculpting': self.has_spell_sculpting}
 
     def get_quickened_kwargs(self):
-        return {'dc': self.dc, 'caster': self.caster, 'has_spell_sculpting': self.has_spell_sculpting}
+        return {'dc': self.dc, 'caster': self.combatant, 'has_spell_sculpting': self.has_spell_sculpting}
 
     def find_best_args(self, combatant, battle_map):
         coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, FireballFactory.range, SpellStats.TRANSLATE_RADIUS[FireballFactory.target])
@@ -48,7 +48,7 @@ class FireballFactory(DirectThreatFactory):
 
     def create_all(self, battle_map):
         # Here there really is no need to iterate over all coords. Just find the best score
-        return [Fireball(self.find_best_args(self.caster, battle_map), self)]
+        return [Fireball(self.find_best_args(self.combatant, battle_map), self)]
 
     def create(self, coord):
         return Fireball(coord, self)
@@ -57,7 +57,7 @@ class FireballFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        if battle_map.get_cartesian_distance(self.caster, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
+        if battle_map.get_cartesian_distance(self.combatant, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
             return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
         return 0
 
@@ -86,7 +86,7 @@ class Fireball(Actoid, DirectThreat):
 
     @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.caster, combatant_coords, FireballFactory.target, FireballFactory.type, self.coord, combatant_coords)
+        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.combatant, combatant_coords, FireballFactory.target, FireballFactory.type, self.coord, combatant_coords)
         acc = 0
         for aff in affected:
             mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
@@ -99,9 +99,9 @@ class Fireball(Actoid, DirectThreat):
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              distances,
-                                                             inflate_to_size=self.factory.caster.size,
+                                                             inflate_to_size=self.factory.combatant.size,
                                                              rng=FireballFactory.range,
-                                                             combatant=self.factory.caster)
+                                                             combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.caster, np.array([self.coord])) <= FireballFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= FireballFactory.range

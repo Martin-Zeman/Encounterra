@@ -19,8 +19,8 @@ class BlessFactory(ThreatModifierFactory):
     dmg_type = None
 
     def __init__(self, action_type, caster, effect_tracker):
-        self.action_type = action_type # QUICKENED_BLESS, BLESS
-        self.caster = caster
+        self.action_type = action_type  # QUICKENED_BLESS, BLESS
+        self.combatant = caster
         self.effect_tracker = effect_tracker
 
     def __str__(self):
@@ -30,7 +30,7 @@ class BlessFactory(ThreatModifierFactory):
         return "BlessFactory"
 
     def get_eligible_targets(self, battle_map):
-        return combinations(battle_map.get_enemies_within_radius(self.caster, BlessFactory.range), 3)
+        return combinations(battle_map.get_enemies_within_radius(self.combatant, BlessFactory.range), 3)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)
@@ -52,14 +52,14 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
 
     def activate(self, battle_map):
         # todo should check if not already under the influence of another bless
-        self.factory.caster.is_concentrating = True
+        self.factory.combatant.is_concentrating = True
         for target in self.targets:
             for mod in target.saving_throws_dice_mod.values():
                 mod.append('1d')
             target.to_hit_dice_mod.append('1d4')
 
     def deactivate(self, battle_map):
-        self.factory.caster.is_concentrating = False
+        self.factory.combatant.is_concentrating = False
         for target in self.targets:
             for mod in target.saving_throws_dice_mod.values():
                 mod.remove('1d')

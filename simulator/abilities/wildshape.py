@@ -58,7 +58,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         def wildshape_get(self):
             return combatant
 
-        self.form.get = wildshape_get.__get__(self, type(self.form))
+        self.form.get_original_form = wildshape_get.__get__(self, type(self.form))
         self.factory = factory
 
     def __str__(self):
@@ -66,7 +66,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
-        battle_map.teams.replace_combatant(self.combatants[0], self.form)
+        # battle_map.teams.replace_combatant(self.combatants[0], self.form)
         self.combatants[0].current_wildshape_form = self.form
         self.form.curr_hp = self.form.max_hp
         self.form.saving_throws[SavingThrow.INT] = self.combatants[0].saving_throws[SavingThrow.INT]
@@ -80,7 +80,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s wildshape fades")
-        battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
+        # battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
         self.combatants[0].has_bonus_action = self.form.has_bonus_action
@@ -108,7 +108,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         pass
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        return self.form.max_hp - combatant.curr_hp
+        return self.form.max_hp
 
     def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         return 0

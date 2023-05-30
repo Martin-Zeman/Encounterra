@@ -23,7 +23,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
         super().__init__()
         self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
         self.dmg_dice = "2d4"
-        self.caster = caster
+        self.combatant = caster
 
 
     def __str__(self):
@@ -39,7 +39,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
 
     def create_all(self, battle_map):
         # Here there really is no need to iterate over all coords. Just find the best score
-        return [SpikeGrowth(self.find_best_args(self.caster, battle_map), self)]
+        return [SpikeGrowth(self.find_best_args(self.combatant, battle_map), self)]
 
     def create(self, coord):
         return SpikeGrowth(coord, self)
@@ -53,7 +53,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
         except KeyError:
             consider_dist = False
 
-        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= SpikeGrowthFactory.range + SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target]:
+        if not consider_dist or battle_map.get_cartesian_distance(self.combatant, target) <= SpikeGrowthFactory.range + SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target]:
             return avg_roll(self.dmg_dice)
         return 0
 
@@ -108,10 +108,10 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         # TODO This needs more intelligence (also subtract dmg caused to allies)
-        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.caster, combatant_coords, SpikeGrowthFactory.target, SpikeGrowthFactory.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.combatant, combatant_coords, SpikeGrowthFactory.target, SpikeGrowthFactory.type, self.coord)
         acc = 0
         for aff in affected:
-            if battle_map.teams.are_enemies(self.factory.caster, aff):
+            if battle_map.teams.are_enemies(self.factory.combatant, aff):
                 acc += avg_roll(self.factory.dmg_dice)
             else:
                 acc -= avg_roll(self.factory.dmg_dice)
@@ -135,8 +135,8 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              distances,
-                                                             inflate_to_size=self.factory.caster.size,
-                                                             rng=SpikeGrowthFactory.range, combatant=self.factory.caster)
+                                                             inflate_to_size=self.factory.combatant.size,
+                                                             rng=SpikeGrowthFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.caster, np.array([self.coord])) <= SpikeGrowthFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= SpikeGrowthFactory.range

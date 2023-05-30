@@ -29,7 +29,7 @@ class FireboltFactory(DirectThreatFactory):
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
         self.dmg_dice = self.get_dmg_dice(caster.level)
-        self.caster = caster
+        self.combatant = caster
 
     def __str__(self):
         """
@@ -39,10 +39,10 @@ class FireboltFactory(DirectThreatFactory):
 
 
     def get_twinned_kwargs(self):
-        return {'to_hit': self.to_hit, 'caster': self.caster}
+        return {'to_hit': self.to_hit, 'caster': self.combatant}
 
     def get_quickened_kwargs(self):
-        return {'to_hit': self.to_hit, 'caster': self.caster}
+        return {'to_hit': self.to_hit, 'caster': self.combatant}
 
     @staticmethod
     def get_dmg_dice(level):
@@ -60,7 +60,7 @@ class FireboltFactory(DirectThreatFactory):
                 return "1d10"
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies(self.caster)
+        return battle_map.get_enemies(self.combatant)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)
@@ -71,7 +71,7 @@ class FireboltFactory(DirectThreatFactory):
 
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
-        if battle_map.get_cartesian_distance(self.caster, target) <= FireboltFactory.range:
+        if battle_map.get_cartesian_distance(self.combatant, target) <= FireboltFactory.range:
             return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(FireboltFactory.dmg_type))
         return 0
 
@@ -124,7 +124,7 @@ class Firebolt(Actoid, DirectThreat):
 
     @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.caster) else RollModifier.DISADVANTAGE
+        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.target.ac - self.factory.to_hit, 20))]
         return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type))
 
@@ -134,8 +134,8 @@ class Firebolt(Actoid, DirectThreat):
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              distances,
-                                                             inflate_to_size=self.factory.caster.size,
-                                                             rng=FireboltFactory.range, combatant=self.factory.caster)
+                                                             inflate_to_size=self.factory.combatant.size,
+                                                             rng=FireboltFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.caster, self.target) <= FireboltFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= FireboltFactory.range

@@ -107,7 +107,10 @@ class Combatant(ABC):
     def __str__(self):
         return self.name
 
-    def get(self):
+    def get_current_form(self):
+        return self
+
+    def get_original_form(self):
         return self
 
     def set_round_manager(self, round_manager):
@@ -179,7 +182,7 @@ class Combatant(ABC):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     def wildshape_get(self):
                         return self if self.current_wildshape_form is None else self.current_wildshape_form
-                    self.get = wildshape_get.__get__(self, Combatant)
+                    self.get_current_form = wildshape_get.__get__(self, Combatant)
                     return self.bonus_action_factories[-1]
                 case Action.POUNCE:
                     factory = TO_FACTORY[action_type]
@@ -250,7 +253,7 @@ class Combatant(ABC):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
                     def wildshape_get(self):
                         return self if self.current_wildshape_form is None else self.current_wildshape_form
-                    self.get = wildshape_get.__get__(self, Combatant)
+                    self.get_current_form = wildshape_get.__get__(self, Combatant)
                     return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required
@@ -444,12 +447,10 @@ class Combatant(ABC):
         if isinstance(action, ActionEnablerEffect):
             try:
                 action.enable(battle_map)
-                # yield self
                 yield True
             finally:
                 action.disable(battle_map)
         else:
-            # yield self
             yield False
 
     def add_team(self, team_color):

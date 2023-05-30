@@ -149,7 +149,7 @@ class ActionResolver:
                              extra={"team": self.teams.get_team(caster)})
                 curr_target.receive_dmg(dmg, dmg_type)
                 if not curr_target.is_alive():
-                    self.battle_map.remove_combatant(curr_target)
+                    self.battle_map.remove_dead_combatant(curr_target)
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
                         if not potential_target.is_alive():
@@ -193,7 +193,7 @@ class ActionResolver:
                          extra={"team": self.teams.get_team(caster)})
             target.receive_dmg(dmg, spell.factory.dmg_type)
             if not target.is_alive():
-                self.battle_map.remove_combatant(target)
+                self.battle_map.remove_dead_combatant(target)
             return ActionResult.DMG
         else:
             logger.info(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
@@ -210,7 +210,7 @@ class ActionResolver:
                     resolve_dmg_saving_throw(spell, dmg, combatant)
                     if not combatant.is_alive():
                         # TODO revisit if this is really needed
-                        self.battle_map.remove_combatant(combatant)
+                        self.battle_map.remove_dead_combatant(combatant)
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
                 spell.activate(None)
@@ -317,7 +317,7 @@ class ActionResolver:
                 extra={"team": self.teams.get_team(attacker)})
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             if not target.is_alive():
-                self.battle_map.remove_combatant(target)
+                self.battle_map.remove_dead_combatant(target)
             elif attack.factory.on_hit is not None:
                 attack.factory.on_hit.hit(attacker, attack, target, self.effect_tracker)
 
@@ -413,6 +413,9 @@ class ActionResolver:
                     # don't need to add it again in case of a multiattack
                     ability.activate(None)
                     self.effect_tracker.add(ability, combatant)
+            case "Wildshape":
+                ability.activate(self.battle_map)
+                self.effect_tracker.add(ability, combatant)
             case _:
                 logger.error(f"Unknown toggle ability {ability.__class__.__name__}")
 

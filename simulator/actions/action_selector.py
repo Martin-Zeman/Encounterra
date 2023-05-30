@@ -146,6 +146,13 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     if not post_misty_step_actions:
         post_misty_step_actions = []
 
+    # Find which states are post-wildshape if any
+    # post_wildshape_states = set()
+    # for tn in transition_names:
+    #     if tn.startswith("Wildshape") and dag.trigger(tn):
+    #         post_wildshape_states.add(dag.state)
+    #         dag.reset()
+
     if combatant.movement > 0:
         action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, distances, shortest_paths) for tn in transition_names}
     else:
@@ -158,6 +165,8 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 
     added_states = set()  # tracks which states have already been added
     for action_name, coords in action_to_eligible_coords.items():
+        if action_name.startswith("Wildshape"):
+            continue  # Wilshape itself is coord-independent but we're insterested in the coords of the follow-up actons
         for coord in coords:
             transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]
             assert len(transitions) == 1
@@ -206,6 +215,16 @@ def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwar
     return pretend_coords
 
 def get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action):
+    """
+    Goes back through the backwards transitions looking for an ability that would mofidy the threat of the current action
+    :param combatant:
+    :param battle_map:
+    :param state: current state
+    :param action: action to be modified
+    :param max_threat_backwards_transition: backwards transition to the preceeding best action
+    :param transition_name_to_action: dict mapping action names -> actions
+    :return: threat modification
+    """
     threat = 0
     curr_state = state
     while True:
@@ -236,7 +255,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     :return: the longest path in the DAG as per the threat along its edges and nodes and a mapping of transitions names
     to special Misty Step paths
     """
-    combatant = combatant.get()  # Takes care of possible wildshape
+    # combatant = combatant.get_current_form()  # Takes care of possible wildshape
     effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
     threat = {key: [-math.inf, -math.inf] for key in sorted_states}
     sorted_states.pop()  # Get rid of the nop state
@@ -262,12 +281,9 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     # Is it a transition which represents a (bonus) action?
                     pretend_coords = get_pretend_coords(current_coords, pattern, state, max_threat_backwards_transition)
                     action = transition_name_to_action[transition_name]
-                    try:
+                    with battle_map.replace_combatant_if_needed(combatant, action.factory.combatant):  # Can happen in case of wildshape
                         transition_threat = action.calculate_threat(combatant, battle_map, pretend_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
-                    except KeyError:
-                        transition_threat = action.calculate_threat(combatant, battle_map, pretend_coords) + (
-                            threat[state][1] if threat[state][1] > -math.inf else 0)
-                    transition_threat += get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action)
+                        transition_threat += get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action)
                     movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
                 except KeyError:  # either not in the dict or regex search came up empty
                     # or different kind which represents some type of movement
@@ -409,13 +425,14 @@ def get_action(combatant, battle_map):
     :param battle_map:
     :return: the next best actoid
     """
+    # combatant = combatant.get_current_form()  # Takes care of possible wildshape
     if combatant.is_affected_by(Conditions.PRONE):
         return GetUpFactory().create()
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
     if combatant.action_plan:
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
             return combatant.action_plan.pop(0)
-    combatant.action_plan = get_best_actions(combatant.get(), battle_map, distances, shortest_paths)
+    combatant.action_plan = get_best_actions(combatant, battle_map, distances, shortest_paths)
     if not combatant.action_plan:
         return None  # Either no action possible or all actions already used
     return combatant.action_plan.pop(0)

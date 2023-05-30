@@ -28,7 +28,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         self.action_type = action_type  # HUNGER_OF_HADAR, QUICKENED_HUNGER_OF_HADAR
         self.saving_throw = SavingThrow.DEX
         self.dmg_dice = "2d6"
-        self.caster = caster
+        self.combatant = caster
 
 
     def __str__(self):
@@ -44,7 +44,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
 
     def create_all(self, battle_map):
         # Here there really is no need to iterate over all coords. Just find the best score
-        return [HungerOfHadar(self.find_best_args(self.caster, battle_map), self)]
+        return [HungerOfHadar(self.find_best_args(self.combatant, battle_map), self)]
 
     def create(self, coord):
         return HungerOfHadar(coord, self)
@@ -58,7 +58,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         except KeyError:
             consider_dist = False
 
-        if not consider_dist or battle_map.get_cartesian_distance(self.caster, target) <= HungerOfHadarFactory.range + SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target]:
+        if not consider_dist or battle_map.get_cartesian_distance(self.combatant, target) <= HungerOfHadarFactory.range + SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target]:
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
             return avg_roll(self.dmg_dice) + 0.5 * mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw])
         return 0
@@ -118,7 +118,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
     @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.caster, combatant_coords, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.combatant, combatant_coords, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.coord)
         acc = 0
         for aff in affected:
             acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg
@@ -145,8 +145,8 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              distances,
-                                                             inflate_to_size=self.factory.caster.size,
-                                                             rng=HungerOfHadarFactory.range, combatant=self.factory.caster)
+                                                             inflate_to_size=self.factory.combatant.size,
+                                                             rng=HungerOfHadarFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.caster, np.array([self.coord])) <= HungerOfHadarFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= HungerOfHadarFactory.range

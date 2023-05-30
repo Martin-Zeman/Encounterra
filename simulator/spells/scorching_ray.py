@@ -30,7 +30,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         self.to_hit = to_hit
         self.action_type = action_type  # SCORCHING_RAY, QUICKENED_SCORCHING_RAY
         self.dmg_dice = '2d6'
-        self.caster = caster
+        self.combatant = caster
 
     def __str__(self):
         """
@@ -39,11 +39,11 @@ class ScorchingRayFactory(DirectThreatFactory):
         return "ScorchingRayFactory"
 
     def get_quickened_kwargs(self):
-        return {'to_hit': self.to_hit, 'caster': self.caster}
+        return {'to_hit': self.to_hit, 'caster': self.combatant}
 
     def get_eligible_targets(self, battle_map):
         # Range is so big that it doesn't matter
-        return combinations_with_replacement(battle_map.get_enemies(self.caster), 3)
+        return combinations_with_replacement(battle_map.get_enemies(self.combatant), 3)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)
@@ -53,7 +53,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         return ScorchingRay(targets, self)
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
-        if battle_map.get_cartesian_distance(self.caster, target) <= ScorchingRayFactory.range:
+        if battle_map.get_cartesian_distance(self.combatant, target) <= ScorchingRayFactory.range:
             # Cannot target the same combatant twice
             return 3 * mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ScorchingRayFactory.dmg_type))
         else:
@@ -112,7 +112,7 @@ class ScorchingRay(Actoid, DirectThreat):
 
     @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.caster) else RollModifier.DISADVANTAGE
+        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
         dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.targets[0].is_resistant_to(ScorchingRayFactory.dmg_type))
         to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
@@ -130,22 +130,22 @@ class ScorchingRay(Actoid, DirectThreat):
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                         distances,
-                                                                        inflate_to_size=self.factory.caster.size,
+                                                                        inflate_to_size=self.factory.combatant.size,
                                                                         rng=ScorchingRayFactory.range,
-                                                                        combatant=self.factory.caster)
+                                                                        combatant=self.factory.combatant)
         coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                           distances,
-                                                                          inflate_to_size=self.factory.caster.size,
+                                                                          inflate_to_size=self.factory.combatant.size,
                                                                           rng=ScorchingRayFactory.range,
-                                                                          combatant=self.factory.caster)
+                                                                          combatant=self.factory.combatant)
         coords_for_third = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[2]),
                                                                           distances,
-                                                                          inflate_to_size=self.factory.caster.size,
+                                                                          inflate_to_size=self.factory.combatant.size,
                                                                           rng=ScorchingRayFactory.range,
-                                                                          combatant=self.factory.caster)
+                                                                          combatant=self.factory.combatant)
         return coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.caster, self.targets[0]) <= ScorchingRayFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.caster, self.targets[1]) <= ScorchingRayFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.caster, self.targets[2]) <= ScorchingRayFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= ScorchingRayFactory.range \
+            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= ScorchingRayFactory.range \
+            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[2]) <= ScorchingRayFactory.range

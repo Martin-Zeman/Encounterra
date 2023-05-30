@@ -19,7 +19,7 @@ class ShieldFactory(DirectThreatFactory):
 
     def __init__(self, caster):
         self.action_type = Reaction.SHIELD
-        self.caster = caster
+        self.combatant = caster
 
     def __str__(self):
         """
