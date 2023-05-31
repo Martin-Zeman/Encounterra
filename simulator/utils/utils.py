@@ -20,18 +20,18 @@ def get_available_wildshape_forms(level, action_type):
             case lvl if 2 <= lvl <= 5:
                 return [DireWolf, BrownBear, GiantToad, GiantSpider]
             case lvl if 6 <= lvl <= 8:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
+                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
             case lvl if 9 <= lvl <= 11:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
+                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
                 # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion]
             case lvl if 12 <= lvl <= 14:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
+                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
                 # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus]
             case lvl if 15 <= lvl <= 17:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
+                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
                 # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus, GiantCrocodile]
             case lvl if 18 <= lvl <= 20:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger]
+                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
                 # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus, GiantCrocodile, Mammoth]
             case _:
                 logger.error("Incorrect character level. No wildshape forms added!")

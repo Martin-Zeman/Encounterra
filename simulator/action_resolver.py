@@ -392,6 +392,7 @@ class ActionResolver:
         @param combatant: originator of the action
         @return: only relevant return here is DMG/MISS used for sentinel
         """
+        combatant = combatant.get_current_form()  # Takes care of possible wildshape
         if action is None:
             return None
         if not check_feasibility(combatant, action, self.battle_map):

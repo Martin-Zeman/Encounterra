@@ -425,7 +425,7 @@ def get_action(combatant, battle_map):
     :param battle_map:
     :return: the next best actoid
     """
-    # combatant = combatant.get_current_form()  # Takes care of possible wildshape
+    combatant = combatant.get_current_form()  # Takes care of possible wildshape
     if combatant.is_affected_by(Conditions.PRONE):
         return GetUpFactory().create()
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)

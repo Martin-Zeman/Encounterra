@@ -20,17 +20,6 @@ logger = logging.getLogger("EncounTroll")
 
 
 class Combatant(ABC):
-    class State(Enum):
-        FINE = 0
-        BLOODIED = 1
-        NEAR_DEATH = 2
-
-    class ToughnessEstimate(Enum):
-        TRASH = 1
-        LOW = 2
-        MEDIUM = 3
-        BOSS = 4
-
 
     def __init__(self, effect_tracker, name, level, hp, ac, init_bonus, spell_to_hit, speed, resistances, dc):
         self.effect_tracker = effect_tracker
@@ -84,7 +73,6 @@ class Combatant(ABC):
         self.has_pack_tactics = False
         self.has_fanatical_advantage = False
         self.perception = 0
-        self.condition = self.State.FINE
         self.conditions = Conditions.NONE
         self.dc_conditions = []
         self.toughness = None
@@ -356,14 +344,14 @@ class Combatant(ABC):
         :param dmg_type: dmg type
         :return: actual dmg received accounting for resistances
         """
+        # TODO Redo this into lists of dmg and dmg types for compound dmg attacks. Also has to support knocking out of wildshape
         if dmg_type in self.resistances:
             dmg = math.floor(dmg / 2)
             logger.info(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
         self.curr_hp -= dmg
-        if self.curr_hp <= self.max_hp // 3:
-            self.condition = self.State.NEAR_DEATH
-        elif self.curr_hp <= self.max_hp // 2:
-            self.condition = self.State.BLOODIED
+        if self.curr_hp <= 0 and self.get_original_form() is not self:
+            self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
+            self.effect_tracker.deactivate_wildshape(self.get_original_form())
         return dmg
 
     def is_resistant_to(self, dmg_type):

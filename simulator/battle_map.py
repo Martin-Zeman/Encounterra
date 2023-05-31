@@ -611,7 +611,7 @@ class Map:
         :param target_combatant: the target combatant
         :return: True if there's a non-incapacited ally adjacent
         """
-        target_coords = self.combatant_coordinate_cache[target_combatant.get()]
+        target_coords = self.combatant_coordinate_cache[target_combatant]
         adjacent_coords = self.get_adjacent_coords(target_coords)
         for adjacent_coord in adjacent_coords:
             potential_ally = self.grid[adjacent_coord[0], adjacent_coord[1]].combatant
