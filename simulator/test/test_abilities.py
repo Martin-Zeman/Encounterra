@@ -56,6 +56,7 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, com
 def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_moon_druid, combatant3):
     """
     We assert that damage can knock the druid out of the wildshape and that damage carries over to the original form.
+    We also assert that the druid wil attempt to wildshape again after being knocked out the first time.
     """
     CustomLogger(LogLevel.WARNING)
 
@@ -84,6 +85,17 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 41
+        test_moon_druid.new_turn()
+        actoid2 = get_action(test_moon_druid, battle_map)
+        assert str(actoid2) == "Wildshape of MoonDruid into BrownBear"
+        action_resolver.resolve_action(actoid2, test_moon_druid)
+        assert test_moon_druid.get_current_form() is not test_moon_druid
+        assert test_moon_druid.current_wildshape_form is not None
+        assert test_moon_druid.get_current_form().curr_hp == 34
+        test_moon_druid.get_current_form().receive_dmg(37, DamageType.Slashing)
+        assert test_moon_druid.get_current_form() is test_moon_druid
+        assert test_moon_druid.current_wildshape_form is None
+        assert test_moon_druid.curr_hp == 38
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
