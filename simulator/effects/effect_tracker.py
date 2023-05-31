@@ -1,5 +1,6 @@
 import logging
 
+from simulator.abilities.wildshape import Wildshape
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.post_haste_lethargy import PostHasteLethargy
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
@@ -75,6 +76,15 @@ class EffectTracker:
 
     def create_post_haste_lethargy(self, combatant):
         self.effects.append((PostHasteLethargy(combatant), combatant))
+
+# TODO add function for wildshape replacement
+
+    def deactivate_wildshape(self, combatant):
+        for e in self.effects:
+            if e[0].is_affecting(combatant, self.battle_map) and isinstance(e[0], Wildshape):
+                e[0].deactivate(self.battle_map)
+                break  # There should only be one
+        self.effects = [e for e in self.effects if not (e[0].is_affecting(combatant, self.battle_map) and isinstance(e[0], Wildshape))]
 
     def reset(self):
         logger.warning("Resetting effect tracker")

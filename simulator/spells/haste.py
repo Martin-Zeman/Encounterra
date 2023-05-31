@@ -24,7 +24,7 @@ class HasteFactory(ThreatModifierFactory):
     def __init__(self, action_type, caster, effect_tracker):
         super().__init__()
         self.action_type = action_type  # TWINNED_HASTE, QUICKENED_HASTE, HASTE
-        self.caster = caster
+        self.combatant = caster
         self.effect_tracker = effect_tracker
 
     def __str__(self):
@@ -34,10 +34,10 @@ class HasteFactory(ThreatModifierFactory):
         return "HasteFactory"
 
     def get_twinned_kwargs(self):
-        return {'effect_tracker': self.effect_tracker, 'caster': self.caster}
+        return {'effect_tracker': self.effect_tracker, 'caster': self.combatant}
 
     def get_quickened_kwargs(self):
-        return {'effect_tracker': self.effect_tracker, 'caster': self.caster}
+        return {'effect_tracker': self.effect_tracker, 'caster': self.combatant}
 
 
     @staticmethod
@@ -75,8 +75,8 @@ class HasteFactory(ThreatModifierFactory):
         return ret
 
     def get_eligible_targets(self, battle_map):
-        ret = battle_map.get_allies_within_radius(self.caster, HasteFactory.range)
-        ret.append(self.caster)
+        ret = battle_map.get_allies_within_radius(self.combatant, HasteFactory.range)
+        ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
 
@@ -130,13 +130,13 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HASTE else "") + f"Haste on {self.target}"
 
     def activate(self, battle_map):
-        self.factory.caster.is_concentrating = True
+        self.factory.combatant.is_concentrating = True
         self.target.ac += 2
         self.target.add_hasted_factories()
         self.target.has_haste_action = True  # TODO Remove this
 
     def deactivate(self, battle_map):
-        self.factory.caster.is_concentrating = False
+        self.factory.combatant.is_concentrating = False
         self.target.ac -= 2
         self.target.haste_action_factories.clear()
         self.factory.effect_tracker.create_post_haste_lethargy(self.target)
@@ -157,13 +157,13 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         return self.factory.calculate_threat_to_target(battle_map, self.target)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        if self.target is self.factory.caster:
+        if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths)
         else:
             return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
-                                                                 inflate_to_size=self.factory.caster.size,
+                                                                 inflate_to_size=self.factory.combatant.size,
                                                                  rng=HasteFactory.range)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.caster, self.target) <= HasteFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HasteFactory.range

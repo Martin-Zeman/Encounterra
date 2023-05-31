@@ -58,15 +58,19 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         def wildshape_get(self):
             return combatant
 
-        self.form.get = wildshape_get.__get__(self, type(self.form))
+        self.form.get_original_form = wildshape_get.__get__(self, type(self.form))
         self.factory = factory
 
     def __str__(self):
-        return f"Wildshape of {self.factory.combatant} into {self.form}"
+        return f"Wildshape of {self.factory.combatant} into {self.form.__class__.__name__}"
 
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
         battle_map.teams.replace_combatant(self.combatants[0], self.form)
+        position = battle_map.get_combatant_position(self.combatants[0])
+        battle_map.remove_combatant(self.combatants[0])
+        battle_map.set_combatant_coordinates(self.form, position.get()[0])
+        # battle_map.teams.replace_combatant(self.combatants[0], self.form)
         self.combatants[0].current_wildshape_form = self.form
         self.form.curr_hp = self.form.max_hp
         self.form.saving_throws[SavingThrow.INT] = self.combatants[0].saving_throws[SavingThrow.INT]
@@ -77,19 +81,27 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.has_haste_action = self.combatants[0].has_haste_action
         self.form.has_reaction = self.combatants[0].has_reaction
         self.form.is_concentrating = self.combatants[0].is_concentrating
+        # TODO add function for wildshape replacement for effect tracker
+
 
     def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s wildshape fades")
+        # battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
+        position = battle_map.get_combatant_position(self.combatants[0].current_wildshape_form)
+        battle_map.remove_combatant(self.combatants[0].current_wildshape_form)
+        battle_map.set_combatant_coordinates(self.combatants[0], position.get()[0])
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
         self.combatants[0].has_bonus_action = self.form.has_bonus_action
         self.combatants[0].has_haste_action = self.form.has_haste_action
         self.combatants[0].has_reaction = self.form.has_reaction
         self.combatants[0].is_concentrating = self.form.is_concentrating
+        # TODO add function for wildshape replacement for effect tracker
+
 
     def enable(self, battle_map):
-        battle_map.teams.replace_combatant(self.combatants[0], self.form)
+        # battle_map.teams.replace_combatant(self.combatants[0], self.form)
         self.combatants[0].current_wildshape_form = self.form
         self.form.has_action = self.combatants[0].has_action
         self.form.has_bonus_action = self.combatants[0].has_bonus_action
@@ -97,7 +109,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.has_reaction = self.combatants[0].has_reaction
 
     def disable(self, battle_map):
-        battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
+        # battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
         self.combatants[0].has_bonus_action = self.form.has_bonus_action
@@ -108,7 +120,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         pass
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        return self.form.max_hp - combatant.curr_hp
+        return self.form.max_hp
 
     def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         return 0

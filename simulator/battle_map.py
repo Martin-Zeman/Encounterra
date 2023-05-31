@@ -3,6 +3,7 @@ import numpy as np
 import math
 import sys
 import logging
+from simulator.abilities.wildshape import Wildshape
 from simulator.actions.action_types import Passive
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
@@ -204,6 +205,64 @@ class Map:
         finally:
             self.get_hop_distance = orig_dist_hop_func
             self.get_cartesian_distance = orig_dist_cartesian_func
+
+    @contextmanager
+    def replace_combatant_if_needed(self, combatant_old, combatant_new):
+        if combatant_old is not combatant_new:
+            try:
+                self.teams.replace_combatant(combatant_old, combatant_new)
+                position = self.get_combatant_position(combatant_old)
+                self.remove_combatant(combatant_old)
+                self.set_combatant_coordinates(combatant_new, position.get()[0])
+                yield self
+            finally:
+                self.teams.replace_combatant(combatant_new, combatant_old)
+                position = self.get_combatant_position(combatant_new)
+                self.remove_combatant(combatant_new)
+                self.set_combatant_coordinates(combatant_old, position.get()[0])
+        else:
+            yield self
+
+
+    @contextmanager
+    def replace_combatant_if_wildshaped(self, combatant):
+        try:
+            subject = combatant if combatant.current_wildshape_form is None else combatant.current_wildshape_form
+        except AttributeError:
+            subject = combatant
+        if subject is combatant.current_wildshape_form:
+            try:
+                self.teams.replace_combatant(combatant, combatant.current_wildshape_form)
+                position = self.get_combatant_position(combatant)
+                self.remove_combatant(combatant)
+                self.set_combatant_coordinates(combatant.current_wildshape_form, position.get()[0])
+                yield subject
+            finally:
+                self.teams.replace_combatant(combatant.current_wildshape_form, combatant)
+                position = self.get_combatant_position(combatant.current_wildshape_form)
+                self.remove_combatant(combatant.current_wildshape_form)
+                self.set_combatant_coordinates(combatant, position.get()[0])
+        else:
+            yield subject
+
+
+    @contextmanager
+    def replace_combatant_if_action_is_wildshape(self, action, combatant):
+        if isinstance(action, Wildshape):
+            try:
+                self.teams.replace_combatant(combatant, action.form)
+                position = self.get_combatant_position(combatant)
+                self.remove_combatant(combatant)
+                self.set_combatant_coordinates(action.form, position.get()[0])
+                yield action.form
+            finally:
+                self.teams.replace_combatant(action.form, combatant)
+                position = self.get_combatant_position(action.form)
+                self.remove_combatant(action.form)
+                self.set_combatant_coordinates(combatant, position.get()[0])
+        else:
+            yield combatant
+
 
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
@@ -512,10 +571,7 @@ class Map:
             square.set_combatant(combatant)
             return square
         vec_set_comb = np.vectorize(set_comb)
-        try:
-            self.grid[coords.get()[:, 0], coords.get()[:, 1]] = vec_set_comb(self.grid[coords.get()[:, 0], coords.get()[:, 1]])
-        except IndexError:
-            print("FIXME")
+        self.grid[coords.get()[:, 0], coords.get()[:, 1]] = vec_set_comb(self.grid[coords.get()[:, 0], coords.get()[:, 1]])
         self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
@@ -529,7 +585,6 @@ class Map:
         team_func = self.teams.are_enemies if side is Side.ENEMY else self.teams.are_allies
         dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
         min_dist = sys.float_info.max
-        nearest = None
         nearest = None
         target_coord = None
         self_position = self.combatant_coordinate_cache[combatant]
@@ -722,22 +777,6 @@ class Map:
         adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
         return adjacent_coords[0][0]
 
-    # def get_free_adjacent_coords_within_distance(self, my_location: CombatantCoords, target_location: CombatantCoords, shortest_paths, distances, max_dist):
-    #     """
-    #     Get all free and accessible coords withing distance from my_location and max range distance from target location.
-    #     :param my_location: the origin location
-    #     :param target_location: the target location distance
-    #     :param target_location: the array of distances for each square from the PoV of the combatant
-    #     :param distances: the array of distances for each square from the PoV of the combatant
-    #     :param max_dist: the maximum hop distance from my_location
-    #     :return:
-    #     """
-    #     adjacent_coords = self.get_free_coords_in_hop_range(target_location, shortest_paths, my_location.size)
-    #     if not adjacent_coords:
-    #         return None
-    #     adjacent_coords = [np.array([x]) for x in adjacent_coords]
-    #     adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
-    #     return adjacent_coords[0][0]
 
     def calc_dijkstra(self, combatant):
         """
@@ -888,11 +927,10 @@ class Map:
 
     def remove_combatant(self, combatant):
         """
-        Removes a dead combatant from the grid
+        Removes a combatant from the grid
         :param combatant:
         :return:
         """
-        logger.info(f"{combatant} died")
         try:
             old_coords = self.combatant_coordinate_cache[combatant].get()
         except KeyError:
@@ -900,6 +938,15 @@ class Map:
         for coord in old_coords:
             self.grid[coord[0], coord[1]].remove_combatant()
         del self.combatant_coordinate_cache[combatant]
+
+    def remove_dead_combatant(self, combatant):
+        """
+        Removes a dead combatant from the grid
+        :param combatant:
+        :return:
+        """
+        logger.info(f"{combatant} died")
+        self.remove_combatant(combatant)
 
     # def clear(self):
     #     for row in self.grid:

@@ -23,7 +23,7 @@ class MistyStepFactory(DirectThreatFactory):
         super().__init__()
         self.flags |= FactoryFlags.TARGETS_COORDS
         self.action_type = BonusAction.MISTY_STEP
-        self.caster = caster
+        self.combatant = caster
 
 
     def __str__(self):
@@ -33,7 +33,7 @@ class MistyStepFactory(DirectThreatFactory):
         return "MistyStepFactory"
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.caster),
+        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatant),
                                                              rng=MistyStepFactory.range)
 
     def create_all(self, battle_map):

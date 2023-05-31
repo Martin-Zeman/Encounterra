@@ -9,10 +9,6 @@ class Teams:
         BLUE = 1
         RED = 2
 
-        # COLOR_CODES = {
-        #     Color.BLUE: "\x1b[38;5;39m",
-        #     Color.RED: "\x1b[38;5;196m"
-        # }
         def __str__(self):
             match self:
                 case self.BLUE:
@@ -37,6 +33,9 @@ class Teams:
 
 
     def replace_combatant(self, combatant_old, combatant_new):
+        """
+        Helper function for wildshape
+        """
         self.reverse_team_book[combatant_new] = self.reverse_team_book[combatant_old]
         del self.reverse_team_book[combatant_old]
         self.team_book[self.reverse_team_book[combatant_new]].remove(combatant_old)
@@ -63,10 +62,18 @@ class Teams:
         return True if self.reverse_team_book[first] == self.reverse_team_book[second] else False
 
     def are_enemies(self, first, second):
-        return False if self.reverse_team_book[first] == self.reverse_team_book[second] else True
+        try:
+            return False if self.reverse_team_book[first] == self.reverse_team_book[second] else True
+        except KeyError:
+            print("FIXME")
+            return False
 
     def get_team(self, combatant):
-        return self.reverse_team_book[combatant]
+        try:
+            return self.reverse_team_book[combatant]
+        except KeyError:
+            print("FIXME")
+            return self.reverse_team_book[combatant]
 
     def get_allies(self, combatant):
         team_members = copy.copy(self.team_book[self.reverse_team_book[combatant]])
@@ -74,7 +81,10 @@ class Teams:
         return team_members
 
     def get_enemies(self, combatant):
-        self_team = self.reverse_team_book[combatant]
+        try:
+            self_team = self.reverse_team_book[combatant]
+        except KeyError:
+            print("FIXME")
         other_team = self.Color.RED if self_team is self.Color.BLUE else self.Color.BLUE
         try:
             return self.team_book[other_team]
