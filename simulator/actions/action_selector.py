@@ -146,13 +146,6 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     if not post_misty_step_actions:
         post_misty_step_actions = []
 
-    # Find which states are post-wildshape if any
-    # post_wildshape_states = set()
-    # for tn in transition_names:
-    #     if tn.startswith("Wildshape") and dag.trigger(tn):
-    #         post_wildshape_states.add(dag.state)
-    #         dag.reset()
-
     if combatant.movement > 0:
         action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, distances, shortest_paths) for tn in transition_names}
     else:

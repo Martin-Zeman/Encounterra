@@ -40,9 +40,3 @@ def get_available_wildshape_forms(level, action_type):
 def preallocate_wildshape_forms(combatant, action_type, factory):
     available_forms = get_available_wildshape_forms(combatant.level, action_type)
     return [Wildshape(combatant, form, factory) for form in available_forms]
-
-# def get_current_form_decorator(func):
-#     def wrapper(combatant):
-#         combatant = combatant.get_current_form()
-#         return func(combatant)
-#     return wrapper

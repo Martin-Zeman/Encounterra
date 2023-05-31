@@ -70,7 +70,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         position = battle_map.get_combatant_position(self.combatants[0])
         battle_map.remove_combatant(self.combatants[0])
         battle_map.set_combatant_coordinates(self.form, position.get()[0])
-        # battle_map.teams.replace_combatant(self.combatants[0], self.form)
         self.combatants[0].current_wildshape_form = self.form
         self.form.curr_hp = self.form.max_hp
         self.form.saving_throws[SavingThrow.INT] = self.combatants[0].saving_throws[SavingThrow.INT]
@@ -86,7 +85,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s wildshape fades")
-        # battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         position = battle_map.get_combatant_position(self.combatants[0].current_wildshape_form)
         battle_map.remove_combatant(self.combatants[0].current_wildshape_form)
@@ -101,7 +99,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
 
     def enable(self, battle_map):
-        # battle_map.teams.replace_combatant(self.combatants[0], self.form)
         self.combatants[0].current_wildshape_form = self.form
         self.form.has_action = self.combatants[0].has_action
         self.form.has_bonus_action = self.combatants[0].has_bonus_action
@@ -109,7 +106,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.has_reaction = self.combatants[0].has_reaction
 
     def disable(self, battle_map):
-        # battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
         self.combatants[0].has_bonus_action = self.form.has_bonus_action

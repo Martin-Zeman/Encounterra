@@ -62,18 +62,10 @@ class Teams:
         return True if self.reverse_team_book[first] == self.reverse_team_book[second] else False
 
     def are_enemies(self, first, second):
-        try:
-            return False if self.reverse_team_book[first] == self.reverse_team_book[second] else True
-        except KeyError:
-            print("FIXME")
-            return False
+        return False if self.reverse_team_book[first] == self.reverse_team_book[second] else True
 
     def get_team(self, combatant):
-        try:
-            return self.reverse_team_book[combatant]
-        except KeyError:
-            print("FIXME")
-            return self.reverse_team_book[combatant]
+        return self.reverse_team_book[combatant]
 
     def get_allies(self, combatant):
         team_members = copy.copy(self.team_book[self.reverse_team_book[combatant]])
@@ -81,10 +73,7 @@ class Teams:
         return team_members
 
     def get_enemies(self, combatant):
-        try:
-            self_team = self.reverse_team_book[combatant]
-        except KeyError:
-            print("FIXME")
+        self_team = self.reverse_team_book[combatant]
         other_team = self.Color.RED if self_team is self.Color.BLUE else self.Color.BLUE
         try:
             return self.team_book[other_team]

@@ -225,28 +225,6 @@ class Map:
 
 
     @contextmanager
-    def replace_combatant_if_wildshaped(self, combatant):
-        try:
-            subject = combatant if combatant.current_wildshape_form is None else combatant.current_wildshape_form
-        except AttributeError:
-            subject = combatant
-        if subject is combatant.current_wildshape_form:
-            try:
-                self.teams.replace_combatant(combatant, combatant.current_wildshape_form)
-                position = self.get_combatant_position(combatant)
-                self.remove_combatant(combatant)
-                self.set_combatant_coordinates(combatant.current_wildshape_form, position.get()[0])
-                yield subject
-            finally:
-                self.teams.replace_combatant(combatant.current_wildshape_form, combatant)
-                position = self.get_combatant_position(combatant.current_wildshape_form)
-                self.remove_combatant(combatant.current_wildshape_form)
-                self.set_combatant_coordinates(combatant, position.get()[0])
-        else:
-            yield subject
-
-
-    @contextmanager
     def replace_combatant_if_action_is_wildshape(self, action, combatant):
         if isinstance(action, Wildshape):
             try:
