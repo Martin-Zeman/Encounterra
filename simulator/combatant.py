@@ -71,7 +71,6 @@ class Combatant(ABC):
                               SavingThrow.WIS: 0,
                               SavingThrow.CHA: 0}
         self.has_pack_tactics = False
-        self.has_fanatical_advantage = False
         self.perception = 0
         self.conditions = Conditions.NONE
         self.dc_conditions = []
@@ -91,6 +90,7 @@ class Combatant(ABC):
         self.action_types_added = []
         self.archetype = CombatantArchetype.MELEE
         self.last_attack_factory_name = None
+        self.shortest_paths_cache = None
 
     def __str__(self):
         return self.name
@@ -128,6 +128,8 @@ class Combatant(ABC):
                     self.max_sorcery_points = kwargs["sorcery_points"]
                 case Passive.PACK_TACTICS:
                     self.has_pack_tactics = True
+                case Passive.FANATIC_ADVANTAGE:
+                    self.already_used_fanatic_advantage = False
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -417,7 +419,6 @@ class Combatant(ABC):
             self.ac -= 5
         self.shield_spell_active = False
         self.conditions = []
-        self.condition = self.State.FINE
         self.has_haste_action = False
         self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)
         self.saving_throws_dice_mod = dict.fromkeys(self.saving_throws_dice_mod.keys(), [])

@@ -1,5 +1,7 @@
 import copy
+from functools import cache
 
+from simulator.abilities.wildshape import WildshapeFactory
 from simulator.actions.action_types import Action, Reaction, BonusAction
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
@@ -62,3 +64,8 @@ class MoonDruid5Lvl(Combatant):
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
         self.curr_wildshape_uses = resources['curr_wildshape_uses']
+
+    @cache
+    def get_dijkstra_from_cache(self):
+        sizes = WildshapeFactory.get_wildshape_form_sizes(self.level, BonusAction.MOON_WILDSHAPE)
+

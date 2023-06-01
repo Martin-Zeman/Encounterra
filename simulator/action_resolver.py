@@ -312,6 +312,10 @@ class ActionResolver:
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
             total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
+            if attacker.has_passive(Passive.FANATIC_ADVANTAGE) and final_modifier is RollModifier.ADVANTAGE and not attacker.already_used_fanatic_advantage:
+                logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
+                attacker.already_used_fanatic_advantage = True
+                total_dmg += roll_dice([(2, 6)])
             logger.info(
                 f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {total_dmg} of which {attacker.ability_dmg_bonus} is ability dmg",
                 extra={"team": self.teams.get_team(attacker)})

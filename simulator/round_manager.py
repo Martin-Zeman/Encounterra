@@ -1,4 +1,5 @@
 from simulator.action_resolver import *
+from simulator.actions.action_selector import get_action
 from simulator.resources import reset_resources
 from simulator.effects.effect_tracker import EffectTracker
 import logging

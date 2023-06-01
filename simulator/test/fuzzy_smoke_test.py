@@ -10,6 +10,7 @@ from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.combatants.faurung import Faurung
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.teams import Teams
 import logging
 
@@ -19,7 +20,7 @@ logger = logging.getLogger("EncounTroll")
 def test_random_matchup():
     CustomLogger(LogLevel.INFO)
     for _ in range(100):
-        combatant_pool = [Faurung, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl]
+        combatant_pool = [Faurung, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl]
         session = Session()
 
         num_blue_combatants = random.randint(1, 4)

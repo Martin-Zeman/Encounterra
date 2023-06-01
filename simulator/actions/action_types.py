@@ -69,12 +69,12 @@ class HasteAction(Enum):
 
 
 class Passive(Enum):
-    MULTIATTACK = auto()
     SENTINEL = auto()
     POLEARM_MASTER = auto()
     DANGER_SENSE = auto()
     METAMAGIC = auto()
     PACK_TACTICS = auto()
+    FANATIC_ADVANTAGE = auto()
 
 
 class MetaAction(Enum):

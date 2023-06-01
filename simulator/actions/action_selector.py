@@ -179,7 +179,10 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                         dag.add_state(new_state_name)
                     dag.add_transition(new_state_name, "0", new_state_name)  # transition name is the same as state name
                     dag.add_transition(action_name, new_state_name, "nop")
-        dag.remove_transition(action_name, transition.source)  # Remove the original
+        try:
+            dag.remove_transition(action_name, transition.source)  # Remove the original
+        except AttributeError:
+            print("FIXME")
 
     build_priority_transitions(post_priority_transitions, action_to_eligible_coords, dag, added_states, transition_name_to_action)
     prune_dead_dependencies(dag)
@@ -422,6 +425,7 @@ def get_action(combatant, battle_map):
     if combatant.is_affected_by(Conditions.PRONE):
         return GetUpFactory().create()
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
+    combatant.shortest_paths_cache = shortest_paths
     if combatant.action_plan:
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
             return combatant.action_plan.pop(0)

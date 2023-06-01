@@ -4,7 +4,7 @@ from simulator.abilities.on_hit_auto_restrained import OnHitAutoRestrained
 from simulator.actions.action_types import Action, Reaction
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.misc import DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow, Size
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -14,6 +14,7 @@ class GiantConstrictorSnake(Combatant):
 
     def __init__(self, effect_tracker, name="Giant Constrictor Snake"):
         super().__init__(effect_tracker, name, level=1, hp=60, ac=12, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+        self.size = Size.HUGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
         self.constrict_attack = self.add_ability(Action.MELEE_ATTACK,  to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, on_hit=OnHitAutoRestrained(SavingThrow.STR, 16))
         self.constrict = self.add_ability(Action.CONSTRICT,  attack=self.constrict_attack)

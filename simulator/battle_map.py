@@ -242,6 +242,38 @@ class Map:
             yield combatant
 
 
+    def find_wildshaped_coordinate(self, combatant, size: Size):
+        """
+        Since the druid may incrase in size when using wildshape we want to allow the druid to shift their position when doing so
+        in order to fit.
+        :param combatant: the combatant who wants to wildshpae
+        :param size: size of the wildshaped form
+        :return: root coordinate of the wildshaped form
+        """
+        original_coordinate = self.get_combatant_position(combatant).get()[0]
+        map_accessibility_matrix = np.zeros(self.size, self.size)
+        for coord in combatant.shortest_paths_cache.keys():
+            map_accessibility_matrix[coord] = 1
+        wilshape_matrix_shape = (size.value() + 1, size.value() + 1)
+
+        start_row = max(original_coordinate[0] - wilshape_matrix_shape[0], 0)
+        start_col = max(original_coordinate[1] - wilshape_matrix_shape[1], 0)
+
+        end_row = min(original_coordinate[0] + wilshape_matrix_shape[0], self.size - wilshape_matrix_shape[0] + 1)
+        end_col = min(original_coordinate[1] + wilshape_matrix_shape[1], self.size - wilshape_matrix_shape[1] + 1)
+
+        possible_coordinates = []
+        for row in range(start_row, end_row):
+            for col in range(start_col, end_col):
+                possible_coordinates.append((row, col))
+
+        result_coordinates = []
+        for coord in possible_coordinates:
+            if np.all(map_accessibility_matrix[coord[0]:coord[0] + wilshape_matrix_shape[0], coord[1] - wilshape_matrix_shape[1] + 1:coord[1] + 1] > 0):
+                result_coordinates.append(coord)
+
+        return result_coordinates[0]
+
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
 

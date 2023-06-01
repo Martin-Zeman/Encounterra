@@ -1,9 +1,12 @@
 import math
 
+import numpy as np
+
+from simulator.actions.action_types import Action, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
-from simulator.misc import SavingThrow
+from simulator.misc import SavingThrow, Size
 
 from simulator.threat_interfaces import TransformerFactory, DirectThreat
 import logging
@@ -32,6 +35,27 @@ class WildshapeFactory(TransformerFactory):
                 return math.inf
             case _:
                 return 2
+
+    @staticmethod
+    def get_wildshape_form_sizes(level, action_type):
+        if action_type is Action.WILDSHAPE:
+            return [Size.LARGE]
+        elif action_type is BonusAction.MOON_WILDSHAPE:
+            match level:
+                case lvl if 2 <= lvl <= 5:
+                    return [Size.LARGE]
+                case lvl if 6 <= lvl <= 8:
+                    return [Size.LARGE, Size.HUGE]
+                case lvl if 9 <= lvl <= 11:
+                    return [Size.LARGE, Size.HUGE]
+                case lvl if 12 <= lvl <= 14:
+                    return [Size.LARGE, Size.HUGE]
+                case lvl if 15 <= lvl <= 17:
+                    return [Size.LARGE, Size.HUGE]
+                case lvl if 18 <= lvl <= 20:
+                    return [Size.LARGE, Size.HUGE]
+                case _:
+                    logger.error("Incorrect character level. No wildshape forms added!")
 
 
     def create_all(self, battle_map):
@@ -66,6 +90,9 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
+        #
+
+
         battle_map.teams.replace_combatant(self.combatants[0], self.form)
         position = battle_map.get_combatant_position(self.combatants[0])
         battle_map.remove_combatant(self.combatants[0])
@@ -122,7 +149,22 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        return battle_map.get_all_accessible_coords(shortest_paths)
+        # Find all the places on the map where the wildshape form will fit
+        map_accessibility_matrix = np.zeros(battle_map.size, battle_map.size)
+        for coord in shortest_paths.keys():
+            map_accessibility_matrix[coord] = 1
+        wilshape_matrix = np.ones((self.form.size.value() + 1, self.form.size.value() + 1))
+        wilshape_matrix_shape = wilshape_matrix.shape
+        result_matrix = np.zeros(battle_map.size)
+
+        for i in range(battle_map.size - wilshape_matrix_shape[0] + 1):
+            for j in range(battle_map.size - wilshape_matrix_shape[1] + 1):
+                submatrix = map_accessibility_matrix[i:i + wilshape_matrix_shape[0], j:j + wilshape_matrix_shape[1]]
+                subproduct = submatrix * wilshape_matrix
+                if np.all(subproduct > 0):
+                    result_matrix[i:i + wilshape_matrix_shape[0], j:j + wilshape_matrix_shape[1]] = 1
+        coords = np.argwhere(result_matrix == 1)
+        return {c for c in coords if c in shortest_paths.keys()}
 
     def is_current_coord_eligible(self, battle_map):
         return True

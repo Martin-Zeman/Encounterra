@@ -1,6 +1,7 @@
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.goblin import Goblin
+from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.combatants.ogre import Ogre
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
@@ -39,6 +40,7 @@ class Session:
             Bugbear: 1,
             Ogre: 1,
             StoneGiant: 1,
+            MoonDruid5Lvl: 1
         }
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
@@ -56,7 +58,7 @@ class Session:
             case "Faurung":
                 self.combatants.append(Faurung(self.effect_tracker, "Faurung " + str(curr_count)))
             case "TotemBarbarian5Lvl":
-                self.combatants.append(TotemBarbarian5Lvl(self.effect_tracker))
+                self.combatants.append(TotemBarbarian5Lvl(self.effect_tracker, "TotemBarbarian5Lvl" + str(curr_count)))
             case "Cyanwrath":
                 self.combatants.append(Cyanwrath(self.effect_tracker))
             case "DragonclawCultist":
@@ -69,6 +71,10 @@ class Session:
                 self.combatants.append(Ogre(self.effect_tracker, "Ogre " + str(curr_count)))
             case "StoneGiant":
                 self.combatants.append(StoneGiant(self.effect_tracker, "StoneGiant " + str(curr_count)))
+            case "MoonDruid5Lvl":
+                self.combatants.append(MoonDruid5Lvl(self.effect_tracker, "MoonDruid5Lvl " + str(curr_count)))
+            case "DragonclawCultist":
+                self.combatants.append(DragonclawCultist(self.effect_tracker, "DragonclawCultist " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return

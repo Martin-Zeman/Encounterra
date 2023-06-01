@@ -41,6 +41,7 @@ class Teams:
         self.team_book[self.reverse_team_book[combatant_new]].remove(combatant_old)
         self.team_book[self.reverse_team_book[combatant_new]].append(combatant_new)
 
+
     def get_team_color_code(self, combatant):
         return str(self.reverse_team_book[combatant])
 

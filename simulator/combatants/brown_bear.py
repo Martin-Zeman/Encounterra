@@ -3,7 +3,7 @@ import copy
 from simulator.actions.action_types import Action, Reaction
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.misc import DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow, Size
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -13,6 +13,7 @@ class BrownBear(Combatant):
 
     def __init__(self, effect_tracker, name="Brown Bear"):
         super().__init__(effect_tracker, name, level=1, hp=34, ac=11, init_bonus=0, spell_to_hit=0, speed=40, resistances=set(), dc=0)
+        self.size = Size.LARGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)

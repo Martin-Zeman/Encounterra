@@ -20,7 +20,6 @@ class Cyanwrath(Combatant):
         self.add_ability(Passive.MULTIATTACK, num_attacks=2)
         self.add_ability(Passive.POLEARM_MASTER)
         self.add_ability(Passive.SENTINEL)
-        self.melee_reaction_range = 2  # TODO: maybe add a lookup here
 
     def attack_routine(self, battle_map):
         if battle_map.are_in_hop_range(self, self.selected_target, self.melee_reaction_range):
