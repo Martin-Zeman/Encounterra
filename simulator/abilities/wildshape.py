@@ -153,7 +153,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         map_accessibility_matrix = np.zeros(battle_map.size, battle_map.size)
         for coord in shortest_paths.keys():
             map_accessibility_matrix[coord] = 1
-        wilshape_matrix = np.ones((self.form.size.value() + 1, self.form.size.value() + 1))
+        wilshape_matrix = np.ones((self.form.size.value + 1, self.form.size.value + 1))
         wilshape_matrix_shape = wilshape_matrix.shape
         result_matrix = np.zeros(battle_map.size)
 

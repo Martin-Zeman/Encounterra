@@ -6,7 +6,8 @@ from simulator.misc import DistanceMetric, Size, Side, Conditions
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.spell import SpellStats
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, combatant2, combatant3, test_totem_barbarian, combatant5, combatant6, teams, effect_tracker, battle_map
+from simulator.test.fixtures import combatant1, combatant2, combatant3, test_totem_barbarian, combatant5, combatant6, test_moon_druid, \
+    teams, effect_tracker, battle_map
 import numpy as np
 
 
@@ -983,3 +984,35 @@ def test_get_free_coords_sorted_by_distance_from_enemies(battle_map, teams, comb
     battle_map.move_combatant(combatant3, np.array([0, 0]))
     free_coords = battle_map.get_free_coords_sorted_by_distance_from_enemies(combatant1)
     assert np.array_equal(free_coords[0], np.array([14, 14])) or np.array_equal(free_coords[0], np.array([13, 14]))
+
+
+def test_find_wildshaped_coordinate_large_two_options(battle_map, teams, test_moon_druid):
+    """
+    We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a large creature.
+    The cavity is large enough for two possible placements of the large creature. But it picks the closer one.
+    """
+    battle_map.place_circular_element(np.array([2, 6]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([5, 4]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([5, 9]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([7, 6]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([7, 7]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([5, 7]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    test_moon_druid.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.LARGE)
+    assert np.array_equal(coord, np.array([4, 6])) or np.array_equal(coord, np.array([5, 6]))
+
+def test_find_wildshaped_coordinate_huge_one_options(battle_map, teams, test_moon_druid):
+    """
+    We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a huge creature.
+    There's only one option how the huge create can be placed and it's two hops away from the druid.
+    """
+    battle_map.place_circular_element(np.array([1, 4]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([4, 1]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([2, 2]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    test_moon_druid.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    assert np.array_equal(coord, np.array([0, 0]))
