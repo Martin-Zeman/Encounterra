@@ -13,6 +13,7 @@ from simulator.geometry import get_affected_by_cone
 from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
+from scipy.spatial.distance import euclidean
 import heapq
 from enum import Enum
 
@@ -251,26 +252,29 @@ class Map:
         :return: root coordinate of the wildshaped form
         """
         original_coordinate = self.get_combatant_position(combatant).get()[0]
+        original_coordinate = (self.size - original_coordinate[1] - 1, original_coordinate[0])  # Convert to matrix coordinates
         map_accessibility_matrix = np.zeros((self.size, self.size))
         for coord in combatant.shortest_paths_cache.keys():
             map_accessibility_matrix[self.size - coord[1] - 1, coord[0]] = 1
-        map_accessibility_matrix[self.size - original_coordinate[1] - 1, original_coordinate[0]] = 1
+        map_accessibility_matrix[original_coordinate] = 1
 
-        start_y = max(original_coordinate[0] - size.value, 0)
-        start_x = max(original_coordinate[1] - size.value, 0)
+        start_row = original_coordinate[0]
+        end_row = min(original_coordinate[0] + size.value, self.size - 1)
+        start_col = max(original_coordinate[1] - size.value, 0)
+        end_col = original_coordinate[1]
 
-        end_y = min(original_coordinate[0] + size.value, self.size - size.value)
-        end_x = min(original_coordinate[1] + size.value, self.size - size.value)
-
-        possible_coordinates = []
-        for x in range(start_x, end_x + 1):
-            for y in range(start_y, end_y + 1):
-                possible_coordinates.append((x, y))
+        possible_root_coordinates = []
+        for row in range(start_row, end_row + 1):
+            for col in range(start_col, end_col + 1):
+                possible_root_coordinates.append((row, col))
 
         result_coordinates = []
-        for coord in possible_coordinates:
+        for coord in possible_root_coordinates:
             if np.all(map_accessibility_matrix[coord[0] - size.value:coord[0] + 1, coord[1]:coord[1] + size.value + 1] > 0):
                 result_coordinates.append((coord[1], self.size - 1 - coord[0]))  # Convert back to battle_map coords
+
+        original_coordinate = (original_coordinate[1], self.size - 1 - original_coordinate[0])
+        result_coordinates.sort(key=lambda point: euclidean(original_coordinate, point))
 
         return result_coordinates[0]
 

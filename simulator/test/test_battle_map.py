@@ -1001,7 +1001,7 @@ def test_find_wildshaped_coordinate_large_two_options(battle_map, teams, test_mo
     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
     test_moon_druid.shortest_paths_cache = shortest_paths
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.LARGE)
-    assert np.array_equal(coord, np.array([4, 6])) or np.array_equal(coord, np.array([5, 6]))
+    assert np.array_equal(coord, np.array([5, 6]))
 
 def test_find_wildshaped_coordinate_huge_one_options(battle_map, teams, test_moon_druid):
     """
