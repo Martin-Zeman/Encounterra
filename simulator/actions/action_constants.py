@@ -1,6 +1,7 @@
 import logging
 from enum import auto, Enum
 
+from simulator.abilities.constrict import ConstrictFactory
 from simulator.abilities.pounce import PounceFactory
 from simulator.abilities.rage import RageFactory
 from simulator.abilities.reckless_attack import RecklessAttackFactory
@@ -50,6 +51,7 @@ TO_FACTORY = {
     Action.SCORCHING_RAY: ScorchingRayFactory,
     Action.WILDSHAPE: WildshapeFactory,
     Action.POUNCE: PounceFactory,
+    Action.CONSTRICT: ConstrictFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,

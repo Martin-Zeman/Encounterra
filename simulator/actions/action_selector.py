@@ -87,6 +87,7 @@ def build_priority_transitions(post_priority_transitions, action_to_eligible_coo
         for post_transition in post_transitions:
             try:
                 for coord in action_to_eligible_coords[post_transition[0]]:
+                    coord = tuple(coord)
                     coord_state_name = prefix + str(coord)  # Needs to be made unique from the other coord states
                     if coord_state_name not in added_states:
                         added_states.add(coord_state_name)

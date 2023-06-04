@@ -9,7 +9,7 @@ logger = logging.getLogger("EncounTroll")
 class ConstrictFactory(DirectThreatFactory):
 
     def __init__(self, combatant, attack):
-        DirectThreatFactory().__init__()
+        DirectThreatFactory.__init__(self)
         self.combatant = combatant
         self.attack = attack
         self.action_type = Action.CONSTRICT

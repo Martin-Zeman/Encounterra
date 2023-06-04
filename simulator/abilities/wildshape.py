@@ -149,22 +149,23 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        # Find all the places on the map where the wildshape form will fit
-        map_accessibility_matrix = np.zeros(battle_map.size, battle_map.size)
+        map_accessibility_matrix = np.zeros((battle_map.size, battle_map.size))
         for coord in shortest_paths.keys():
             map_accessibility_matrix[coord] = 1
+        original_coordinate = battle_map.get_combatant_position(self.factory.combatant).get()[0]
+        map_accessibility_matrix[original_coordinate] = 1
         wilshape_matrix = np.ones((self.form.size.value + 1, self.form.size.value + 1))
-        wilshape_matrix_shape = wilshape_matrix.shape
-        result_matrix = np.zeros(battle_map.size)
+        wilshape_matrix_size = self.form.size.value + 1
+        result_matrix = np.zeros((battle_map.size, battle_map.size))
 
-        for i in range(battle_map.size - wilshape_matrix_shape[0] + 1):
-            for j in range(battle_map.size - wilshape_matrix_shape[1] + 1):
-                submatrix = map_accessibility_matrix[i:i + wilshape_matrix_shape[0], j:j + wilshape_matrix_shape[1]]
+        for i in range(battle_map.size - wilshape_matrix_size + 1):
+            for j in range(battle_map.size - wilshape_matrix_size + 1):
+                submatrix = map_accessibility_matrix[i:i + wilshape_matrix_size, j:j + wilshape_matrix_size]
                 subproduct = submatrix * wilshape_matrix
                 if np.all(subproduct > 0):
-                    result_matrix[i:i + wilshape_matrix_shape[0], j:j + wilshape_matrix_shape[1]] = 1
+                    result_matrix[i:i + wilshape_matrix_size, j:j + wilshape_matrix_size] = 1
         coords = np.argwhere(result_matrix == 1)
-        return {c for c in coords if c in shortest_paths.keys()}
+        return coords
 
     def is_current_coord_eligible(self, battle_map):
         return True

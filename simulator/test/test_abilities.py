@@ -1,9 +1,13 @@
 import numpy as np
 import pytest
 
+from simulator.abilities.wildshape import WildshapeFactory
 from simulator.action_resolver import ActionResolver
 from simulator.actions.action_selector import get_action
 from simulator.actions.action_types import BonusAction
+from simulator.battle_map import Terrain
+from simulator.combatants.dire_wolf import DireWolf
+from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.misc import DamageType
 from simulator.teams import Teams
@@ -43,11 +47,9 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, com
         actoid5 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid5, test_moon_druid)
         actoid6 = get_action(test_moon_druid, battle_map)
-        action_resolver.resolve_action(actoid6, test_moon_druid)
-        actoid7 = get_action(test_moon_druid, battle_map)
-        assert str(actoid5) == "Bite on Bugbear" or str(actoid6) == "Bite on Bugbear"
-        assert str(actoid5) == "Claws on Bugbear" or str(actoid6) == "Claws on Bugbear"
-        assert str(actoid7) == "None"
+        assert str(actoid4) == "Bite on Bugbear" or str(actoid5) == "Bite on Bugbear"
+        assert str(actoid4) == "Claws on Bugbear" or str(actoid5) == "Claws on Bugbear"
+        assert str(actoid6) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -139,3 +141,49 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
         action_resolver.resolve_action(actoid5, combatant3)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+
+
+def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_moon_druid, combatant3):
+    """
+    We make sure there's a clearing in the terrain which the giant form fits into. It starts at root coordinate [9, 8].
+    """
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(combatant3, Teams.Color.RED)  # For the log coloring...
+    battle_map.place_circular_element(np.array([1, 13]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([5, 13]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([10, 13]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([13, 13]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([13, 9]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 9]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([4, 9]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([1, 9]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([1, 13]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([11, 4]), Terrain.IMPASSABLE_TERRAIN, radius=3)
+    battle_map.place_circular_element(np.array([3, 4]), Terrain.IMPASSABLE_TERRAIN, radius=4)
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 10]))
+    battle_map.set_combatant_coordinates(combatant3, np.array([5, 11]))
+    battle_map.build_adjacency_matrix()
+    distances, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE,
+                                                                            test_moon_druid.wildshape_factory[1])
+
+    wsf = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
+    ws = wsf.create(GiantConstrictorSnake)
+    coords = ws.get_eligible_coords(battle_map, distances, shortest_paths)
+    assert (9, 8) in coords
+    assert (10, 8) in coords
+    assert (11, 8) in coords
+    assert (9, 9) in coords
+    assert (10, 9) in coords
+    assert (11, 9) in coords
+    assert (9, 10) in coords
+    assert (10, 10) in coords
+    assert (11, 10) in coords
+    assert (9, 11) in coords
+    assert (10, 11) in coords
+    assert (11, 11) in coords

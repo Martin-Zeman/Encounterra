@@ -270,6 +270,8 @@ class Map:
 
         result_coordinates = []
         for coord in possible_root_coordinates:
+            if coord[0] - size.value < 0 or coord[1] + size.value >= self.size:
+                continue
             if np.all(map_accessibility_matrix[coord[0] - size.value:coord[0] + 1, coord[1]:coord[1] + size.value + 1] > 0):
                 result_coordinates.append((coord[1], self.size - 1 - coord[0]))  # Convert back to battle_map coords
 
@@ -281,9 +283,9 @@ class Map:
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
 
-    def place_circular_element(self, coord, terrain_type, diameter=1):
+    def place_circular_element(self, coord, terrain_type, radius=0):
         N = self.size
-        if diameter == 1:
+        if radius == 0:
             x = max(0, min(coord[0], N - 1))
             y = max(0, min(coord[1], N - 1))
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
@@ -292,9 +294,9 @@ class Map:
             elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                 self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
                 self.difficult_set.add((coord[0], coord[1]))
-        elif diameter > 1:
-            for x_offset in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
-                for y_offset in range(-math.floor(diameter / 2), math.floor(diameter / 2) + 1):
+        elif radius > 0:
+            for x_offset in range(-radius, radius + 1):
+                for y_offset in range(-radius, radius + 1):
                     x = max(0, min(coord[0] + x_offset, N - 1))
                     y = max(0, min(coord[1] + y_offset, N - 1))
                     try:
@@ -959,7 +961,8 @@ class Map:
         :param combatant:
         :return:
         """
-        logger.info(f"{combatant} died")
+        if combatant.get_original_form() is combatant:
+            logger.info(f"{combatant} died")
         self.remove_combatant(combatant)
 
     # def clear(self):

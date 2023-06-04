@@ -246,7 +246,7 @@ def test_build_combatant_adjacency_mask_medium(battle_map, teams, combatant1):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     battle_map.set_combatant_coordinates(combatant1, np.array([5, 12]))
 
-    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(combatant1)
 
     # Check that the obstacle's not inflated for medium size
@@ -266,7 +266,7 @@ def test_build_combatant_adjacency_mask_large(battle_map, teams, combatant1):
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, np.array([5, 12]))
 
-    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(combatant1)
 
     # Check the inflation of the obstacle
@@ -276,7 +276,7 @@ def test_build_combatant_adjacency_mask_large(battle_map, teams, combatant1):
     assert not np.any(adj_mask[:, 9 * battle_map.size + 13])
 
     # Test a corner case where the obstacle has nowhere to inflate to
-    battle_map.place_circular_element(np.array([0, 0]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([0, 0]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(combatant1)
     assert not np.any(adj_mask[:, 0])
     # the other side's intact
@@ -291,7 +291,7 @@ def test_build_combatant_adjacency_mask_huge(battle_map, teams, combatant1):
     combatant1.size = Size.HUGE
     battle_map.set_combatant_coordinates(combatant1, np.array([4, 11]))
 
-    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(combatant1)
 
     # Check the inflation of the obstacle
@@ -306,7 +306,7 @@ def test_build_combatant_adjacency_mask_huge(battle_map, teams, combatant1):
     assert not np.any(adj_mask[:, 9 * battle_map.size + 13])
 
     # Test a corner case where the obstacle has nowhere to inflate to
-    battle_map.place_circular_element(np.array([0, 0]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([0, 0]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(combatant1)
     assert not np.any(adj_mask[:, 0])
     # the other side's intact
@@ -445,7 +445,7 @@ def test_get_free_coords_in_hop_range_huge_with_terrain(battle_map, combatant1):
     combatant1.size = Size.HUGE
     battle_map.set_combatant_coordinates(combatant1, np.array([8, 2]))
     coords = battle_map.get_combatant_position(combatant1)
-    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj = battle_map.get_free_coords_in_hop_range(coords)
     assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
     # same but including the combatant's own coord
@@ -510,7 +510,7 @@ def test_get_adjacent_coords_medium(battle_map, combatant1, combatant2):
     battle_map.set_combatant_coordinates(combatant1, np.array([5, 7]))
     battle_map.set_combatant_coordinates(combatant2, np.array([6, 7]))
     coords = battle_map.get_combatant_position(combatant1)
-    battle_map.place_circular_element(np.array([5, 6]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([5, 6]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj = battle_map.get_adjacent_coords(coords)
     assert adj == {(4, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (6, 6)}
 
@@ -527,7 +527,7 @@ def test_get_adjacent_coords_large_corner(battle_map, combatant1):
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, np.array([0, 1]))
     coords = battle_map.get_combatant_position(combatant1)
-    battle_map.place_circular_element(np.array([2, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([2, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj = battle_map.get_adjacent_coords(coords)
     assert adj == {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (0, 3), (1, 3)}
 
@@ -537,8 +537,8 @@ def test_get_adjacent_coords_huge_with_terrain(battle_map, combatant1, combatant
     battle_map.set_combatant_coordinates(combatant1, np.array([8, 2]))
     battle_map.set_combatant_coordinates(combatant2, np.array([11, 2]))
     coords = battle_map.get_combatant_position(combatant1)
-    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
-    battle_map.place_circular_element(np.array([8, 5]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([8, 5]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj = battle_map.get_adjacent_coords(coords)
     assert adj == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4),
                    (11, 5)}
@@ -643,8 +643,8 @@ def test_get_path_to_combatant_large_to_medium(battle_map, teams, combatant1, co
 def test_get_path_to_combatant_large_to_medium2(battle_map, teams, combatant1, combatant2):
     teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
-    battle_map.place_circular_element(np.array([7, 14]), Terrain.DIFFICULT_TERRAIN, diameter=1)
-    battle_map.place_circular_element(np.array([9, 14]), Terrain.DIFFICULT_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([7, 14]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 14]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.build_adjacency_matrix()
     combatant1.size = Size.LARGE
     battle_map.set_combatant_coordinates(combatant1, np.array([4, 13]))
@@ -991,11 +991,11 @@ def test_find_wildshaped_coordinate_large_two_options(battle_map, teams, test_mo
     We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a large creature.
     The cavity is large enough for two possible placements of the large creature. But it picks the closer one.
     """
-    battle_map.place_circular_element(np.array([2, 6]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
-    battle_map.place_circular_element(np.array([5, 4]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
-    battle_map.place_circular_element(np.array([5, 9]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
-    battle_map.place_circular_element(np.array([7, 6]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
-    battle_map.place_circular_element(np.array([7, 7]), Terrain.IMPASSABLE_TERRAIN, diameter=1)
+    battle_map.place_circular_element(np.array([2, 6]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([5, 4]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([5, 9]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 6]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([7, 7]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([5, 7]))
     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
@@ -1006,13 +1006,63 @@ def test_find_wildshaped_coordinate_large_two_options(battle_map, teams, test_mo
 def test_find_wildshaped_coordinate_huge_one_options(battle_map, teams, test_moon_druid):
     """
     We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a huge creature.
-    There's only one option how the huge create can be placed and it's two hops away from the druid.
+    There's only one option how the huge creature can be placed and that it's two hops away from the druid.
     """
-    battle_map.place_circular_element(np.array([1, 4]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
-    battle_map.place_circular_element(np.array([4, 1]), Terrain.IMPASSABLE_TERRAIN, diameter=2)
+    battle_map.place_circular_element(np.array([1, 4]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([4, 1]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([2, 2]))
     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
     test_moon_druid.shortest_paths_cache = shortest_paths
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
     assert np.array_equal(coord, np.array([0, 0]))
+
+def test_find_wildshaped_coordinate_huge_three_options_variant_1(battle_map, teams, test_moon_druid):
+    """
+    The druid wants to wildshape into a huge creature. The druid's at the top edge of the map and they're in open terrain there's three
+    options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
+    """
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([9, 14]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    test_moon_druid.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    assert np.array_equal(coord, np.array([9, 12]))
+
+
+def test_find_wildshaped_coordinate_huge_three_options_variant_2(battle_map, teams, test_moon_druid):
+    """
+    The druid wants to wildshape into a huge creature. The druid's at the right edge of the map and they're in open terrain there's three
+    options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
+    """
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([14, 8]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    test_moon_druid.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    assert np.array_equal(coord, np.array([12, 8]))
+
+def test_find_wildshaped_coordinate_huge_four_options(battle_map, teams, test_moon_druid):
+    """
+    The druid wants to wildshape into a huge creature. The druid's near the top right edge of the map and they're in open terrain there's four
+    options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
+    """
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 13]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    test_moon_druid.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    assert np.array_equal(coord, np.array([12, 12]))
+
+
+def test_find_wildshaped_coordinate_huge_nine_options(battle_map, teams, test_moon_druid):
+    """
+    The druid wants to wildshape into a huge creature. The druid's out in open terrain there's nine
+    options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
+    """
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([4, 12]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    test_moon_druid.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    assert np.array_equal(coord, np.array([4, 12]))

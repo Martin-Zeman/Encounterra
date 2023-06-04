@@ -10,7 +10,7 @@ logger = logging.getLogger("EncounTroll")
 class PounceFactory(DirectThreatFactory):
 
     def __init__(self, combatant, primary_attack, secondary_attack, distance):
-        DirectThreatFactory().__init__()
+        DirectThreatFactory.__init__(self)
         self.combatant = combatant
         self.primary_attack = primary_attack
         self.secondary_attack = secondary_attack
