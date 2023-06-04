@@ -164,7 +164,10 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         self.roll_modifier = RollModifier.ADVANTAGE
 
     def __str__(self):
-        return f"RecklessAttack at {self.target_combatant}"
+        return f"Reckless Attack at {self.target_combatant}"
+
+    def shorthand_str(self):
+        return "Reckless Attack"
 
     def activate(self, battle_map):
         self.combatants[0].reckless_attack_active = True

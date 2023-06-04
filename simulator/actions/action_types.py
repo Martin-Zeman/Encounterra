@@ -46,6 +46,7 @@ class BonusAction(Enum):
     QUICKENED_CLOUD_OF_DAGGERS = auto()
     QUICKENED_SCORCHING_RAY = auto()
     QUICKENED_FAERIE_FIRE = auto()
+    QUICKENED_BLESS = auto()
     MOON_WILDSHAPE = auto()
     WEB = auto()
 

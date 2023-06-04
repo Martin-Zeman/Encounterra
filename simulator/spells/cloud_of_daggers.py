@@ -75,6 +75,9 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers at {np.squeeze(self.combatant)}"
 
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers"
+
     def on_start_of_turn(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)

@@ -60,6 +60,9 @@ class Web(Actoid, DirectThreat):
     def __str__(self):
         return f"Web on {self.target_combatant}"
 
+    def shorthand_str(self):
+        return "Web"
+
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
                                                        distances,

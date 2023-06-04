@@ -93,6 +93,9 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def __str__(self):
         return f"Twinned Firebolt on {self.targets[0]} and {self.targets[1]}"
 
+    def shorthand_str(self):
+        return "Twinned Firebolt"
+
     def clear_cache(self):
         self.calculate_threat.cache_clear()
 

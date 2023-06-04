@@ -75,6 +75,9 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SPIKE_GROWTH else "") + f"Spike Growth at {np.squeeze(self.coord)}"
 
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SPIKE_GROWTH else "") + "Spike Growth"
+
 
     def on_start_of_turn(self, combatant):
         pass

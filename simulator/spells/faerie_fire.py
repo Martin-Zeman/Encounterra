@@ -73,6 +73,9 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + f"Faerie Fire at {self.target}"
 
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + "Faerie Fire"
+
     def is_affecting(self, combatant, battle_map):
         return combatant in self.affected_combatants
 

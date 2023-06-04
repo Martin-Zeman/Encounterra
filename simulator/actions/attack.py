@@ -169,6 +169,9 @@ class Attack(Actoid, DirectThreat):
     def __str__(self):
         return ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name + f" on {self.target_combatant}"
 
+    def shorthand_str(self):
+        return ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name
+
     def get_dmg_type(self):
         return self.factory.dmg_type
 

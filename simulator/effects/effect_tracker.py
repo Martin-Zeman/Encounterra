@@ -22,7 +22,7 @@ class EffectTracker:
         # TODO: Do I need the originator?
         self.effects.append((effect, originator))
 
-    def new_turn(self, combatant):
+    def start_of_turn(self, combatant):
         """
         Manages all effects with a fixed duration measurable in rounds which end just before the beginning of one of your turns.
         Also manages effects which can be saved against at the beginning of a combatant's turn.

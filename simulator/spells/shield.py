@@ -51,6 +51,9 @@ class Shield(Actoid, ReactionToThreat):
     def __str__(self):
         return "Shield"
 
+    def shorthand_str(self):
+        return "Shield"
+
     def calculate_threat_mod(self, combatant, battle_map, incoming_action, actor, *args, **kwargs):
         return 0 # TODO Consider removing this from ReactionToThreat altogether
 

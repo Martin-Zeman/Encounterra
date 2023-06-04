@@ -18,3 +18,6 @@ class BreakGrapple(Actoid):
 
     def __str__(self):
         return "Break Grapple"
+
+    def shorthand_str(self):
+        return "Break Grapple"

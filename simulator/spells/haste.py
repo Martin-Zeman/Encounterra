@@ -129,6 +129,9 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HASTE else "") + f"Haste on {self.target}"
 
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HASTE else "") + "Haste"
+
     def activate(self, battle_map):
         self.factory.combatant.is_concentrating = True
         self.target.ac += 2

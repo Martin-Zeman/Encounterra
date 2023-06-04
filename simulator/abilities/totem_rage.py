@@ -74,7 +74,10 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
         self.factory = factory
 
     def __str__(self):
-        return f"TotemRage of {self.factory.combatant}"
+        return f"Totem Rage of {self.factory.combatant}"
+
+    def shorthand_str(self):
+        return "Totem Rage"
 
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} enters into a totem rage")

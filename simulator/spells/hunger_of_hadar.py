@@ -79,7 +79,10 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         self.factory = factory
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + f"HungerOfHadar at {np.squeeze(self.coord)}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + f"Hunger Of Hadar at {np.squeeze(self.coord)}"
+
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + "Hunger Of Hadar"
 
 
     def on_start_of_turn(self, combatant):

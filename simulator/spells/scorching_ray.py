@@ -1,3 +1,4 @@
+from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
@@ -105,7 +106,10 @@ class ScorchingRay(Actoid, DirectThreat):
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return f"Scorching Ray on {self.targets[0]}, {self.targets[1]} and {self.targets[2]}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Scorching Ray on {self.targets[0]}, {self.targets[1]} and {self.targets[2]}"
+
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Scorching Ray"
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()

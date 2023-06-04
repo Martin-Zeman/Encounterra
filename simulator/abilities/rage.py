@@ -111,6 +111,9 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, Attac
     def __str__(self):
         return f"Rage of {self.factory.combatant}"
 
+    def shorthand_str(self):
+        return "Rage"
+
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} enters into a rage")
         self.combatants[0].ability_dmg_bonus += self.rage_bonus

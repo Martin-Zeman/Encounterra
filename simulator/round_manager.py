@@ -130,6 +130,7 @@ class RoundManager:
 
     def print_status(self):
         for combatant in self.combatants:
+            combatant = combatant.get_current_form()
             status = f"alive with {combatant.curr_hp}" if combatant.is_alive() else "dead"
             logger.info(f"Combatant {combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
         logger.info(self.battle_map)

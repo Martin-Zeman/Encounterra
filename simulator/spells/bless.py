@@ -1,5 +1,6 @@
 from functools import cache
 
+from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
@@ -49,6 +50,10 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
         super().__init__(ActoidFlags.IS_SPELL)
         self.targets = targets
         self.factory = factory
+
+
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_BLESS else "") + f"Bless"
 
     def activate(self, battle_map):
         # todo should check if not already under the influence of another bless

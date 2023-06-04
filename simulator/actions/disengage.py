@@ -52,6 +52,14 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
             prefix = "Cunning "
         return prefix + f"Disengage of {self.factory.combatant}"
 
+    def shorthand_str(self):
+        prefix = ""
+        if isinstance(self.factory.action_type, HasteAction):
+            prefix = "Hasted "
+        elif self.factory.action_type is BonusAction.CUNNING_DISENGAGE:
+            prefix = "Cunning "
+        return prefix + f"Disengage"
+
     def activate(self, battle_map):
         self.factory.combatant.has_disengaged = True
 

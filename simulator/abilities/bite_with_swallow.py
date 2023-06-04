@@ -26,6 +26,9 @@ class BiteWithSwallowFactory(MeleeAttackFactory):
 
 class BiteWithSwallow(MeleeAttack):
 
+    def shorthand_str(self):
+        return "Bite"
+
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
                                                        distances,

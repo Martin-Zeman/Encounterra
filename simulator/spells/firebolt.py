@@ -118,6 +118,9 @@ class Firebolt(Actoid, DirectThreat):
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + f"Firebolt on {self.target}"
 
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + "Firebolt"
+
     def clear_cache(self):
         self.calculate_threat.cache_clear()
 

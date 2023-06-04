@@ -125,6 +125,9 @@ class Chaosbolt(Actoid, DirectThreat):
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt on {self.target[0]}"
 
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt"
+
     def clear_cache(self):
         self.calculate_threat.cache_clear()
 

@@ -80,6 +80,9 @@ class Fireball(Actoid, DirectThreat):
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + f"Fireball at {np.squeeze(self.coord)}"
 
+    def shorthand_str(self):
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + "Fireball"
+
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()

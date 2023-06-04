@@ -50,6 +50,9 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
     def __str__(self):
         return f"Dodge of {self.factory.combatant}"
 
+    def shorthand_str(self):
+        return f"Dodge"
+
     def activate(self, battle_map):
         self.combatants[0].is_dodging = True
         self.combatants[0].saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.ADVANTAGE)

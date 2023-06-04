@@ -320,7 +320,7 @@ class ActionResolver:
             modifiers = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
 
         final_modifier = reconcile_roll_modifiers(modifiers)
-        logger.info(f"{attacker} attacks {target} with {attack}" + (f" at {final_modifier.name}" if final_modifier is not RollModifier.STRAIGHT else ""), extra={"team": self.teams.get_team(attacker)})
+        logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()}" + (f" at {final_modifier.name}" if final_modifier is not RollModifier.STRAIGHT else ""), extra={"team": self.teams.get_team(attacker)})
         if final_modifier is RollModifier.STRAIGHT:
             rolled = random.randint(1, 20)
         elif final_modifier is RollModifier.ADVANTAGE:
@@ -419,9 +419,11 @@ class ActionResolver:
             if result is ActionResult.DMG:
                 combatant.is_constricting = True
         elif actoid.factory.action_type is Action.BREAK_GRAPPLE:
+            logger.info(f"{combatant} is trying to break out of grapple")
             grapple = actoid.factory.grapple_condition
             broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc)
             if broken_out and getattr(grapple.attacker, "is_constricting", False):  # TODO this is a simplification
+                logger.info(f"{combatant} is has broken out of grapple")
                 grapple.attacker.is_constricting = False
 
         return False
@@ -440,7 +442,7 @@ class ActionResolver:
             return None
         if not check_feasibility(combatant, action, self.battle_map):
             if action.factory.action_type is Movement.STANDARD:
-                pass  # This can be caused by difficult terrain which is ok
+                combatant.movement = 0 # This can be caused by difficult terrain which is ok but we must avoid endless looping
             else:
                 logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
             return None

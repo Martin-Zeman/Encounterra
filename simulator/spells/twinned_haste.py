@@ -87,6 +87,9 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
     def __str__(self):
         return f"Twinned Haste on {self.targets[0]} and {self.targets[1]}"
 
+    def shorthand_str(self):
+        return "Twinned Haste"
+
     def activate(self, battle_map):
         self.factory.combatant.is_concentrating = True
         for target in self.targets:

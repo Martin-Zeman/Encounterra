@@ -60,6 +60,9 @@ class MistyStep(Actoid, ThreatModifier):
     def __str__(self):
         return f"Misty Step to {self.coord[0]}, {self.coord[1]}"
 
+    def shorthand_str(self):
+        return "Misty Step"
+
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()

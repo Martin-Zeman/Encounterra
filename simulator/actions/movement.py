@@ -49,4 +49,7 @@ class GetUpFromProne(Actoid):
         self.factory = factory
 
     def __str__(self):
-        return "get up from prone"
+        return "Get Up from Prone"
+
+    def shorthand_str(self):
+        return "Get Up from Prone"
