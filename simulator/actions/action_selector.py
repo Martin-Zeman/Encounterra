@@ -9,6 +9,7 @@ from toposort import toposort_flatten
 from simulator.actions.action_constants import PRIORITY_ACTIONS
 from simulator.actions.action_types import Movement
 from simulator.actions.action_fsms import generate_action_fsm
+from simulator.actions.break_grapple import BreakGrappleFactory
 from simulator.actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from simulator.battle_map import convert_path_to_increments
 from simulator.combatant_coords import CombatantCoords
@@ -423,6 +424,9 @@ def get_action(combatant, battle_map):
     :return: the next best actoid
     """
     combatant = combatant.get_current_form()  # Takes care of possible wildshape
+    grapple_cond = combatant.needs_to_break_out_of_grapple()
+    if grapple_cond:
+        return BreakGrappleFactory(grapple_cond).create()
     if combatant.is_affected_by(Conditions.PRONE):
         return GetUpFactory().create()
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)

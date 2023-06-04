@@ -1,6 +1,7 @@
 import logging
 from enum import auto, Enum
 
+from simulator.abilities.bite_with_swallow import BiteWithSwallowFactory
 from simulator.abilities.constrict import ConstrictFactory
 from simulator.abilities.pounce import PounceFactory
 from simulator.abilities.rage import RageFactory
@@ -52,6 +53,7 @@ TO_FACTORY = {
     Action.WILDSHAPE: WildshapeFactory,
     Action.POUNCE: PounceFactory,
     Action.CONSTRICT: ConstrictFactory,
+    Action.BITE_WITH_SWALLOW: BiteWithSwallowFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -71,8 +73,10 @@ TO_FACTORY = {
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
+    Reaction.BITE_WITH_SWALLOW_REACTION: BiteWithSwallowFactory,
 
     HasteAction.HASTE_MELEE_ATTACK: MeleeAttackFactory,
+    HasteAction.HASTE_BITE_WITH_SWALLOW: BiteWithSwallowFactory,
     HasteAction.HASTE_RANGED_ATTACK: RangedAttackFactory,
     HasteAction.HASTE_DISENGAGE: DisengageFactory,
     HasteAction.HASTE_HIDE: None,
@@ -86,5 +90,7 @@ TO_QUICKENED = {
     Action.SCORCHING_RAY: BonusAction.QUICKENED_SCORCHING_RAY
 }
 TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}
-TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE}
+TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, \
+             Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE,\
+             Action.BITE_WITH_SWALLOW: HasteAction.HASTE_BITE_WITH_SWALLOW}
 

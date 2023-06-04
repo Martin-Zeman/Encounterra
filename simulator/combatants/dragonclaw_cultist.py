@@ -23,6 +23,8 @@ class DragonclawCultist(Combatant):
         self.saving_throws[SavingThrow.INT] = 0
         self.saving_throws[SavingThrow.WIS] = 2
         self.saving_throws[SavingThrow.CHA] = 1
+        self.athletics = -1
+        self.acrobatics = 3
 
 
     def build_attack_fms(self):

@@ -5,7 +5,7 @@ from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.cyanwrath import Cyanwrath
-from simulator.combatants.faurung import Faurung
+from simulator.combatants.draconic_sorcerer_5lvl import Faurung
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams

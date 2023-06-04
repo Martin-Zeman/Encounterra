@@ -26,6 +26,8 @@ class GiantConstrictorSnake(Combatant):
         self.saving_throws[SavingThrow.INT] = -1
         self.saving_throws[SavingThrow.WIS] = 0
         self.saving_throws[SavingThrow.CHA] = -1
+        self.athletics = 2
+        self.acrobatics = 2
 
 
     def build_attack_fms(self):

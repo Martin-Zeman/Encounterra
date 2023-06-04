@@ -6,49 +6,49 @@ from simulator.resources import use_resources
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.firebolt import FireboltFactory
 from simulator.teams import Teams
-from simulator.test.fixtures import combatant1, combatant2, teams, effect_tracker, battle_map
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, teams, effect_tracker, battle_map
 
-def test_use_resources_spellslots(battle_map, teams, effect_tracker, combatant1, combatant2):
+def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
     CustomLogger(LogLevel.WARNING)
-    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
-    firebolt_factory = FireboltFactory(1, Action.FIREBOLT, combatant1)
-    firebolt = firebolt_factory.create(combatant2)
-    fireball_factory = FireballFactory(1, Action.FIREBALL, combatant1)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
+    firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
+    firebolt = firebolt_factory.create(test_goblin)
+    fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl)
     fireball = fireball_factory.create(np.array([0, 0]))
 
-    assert combatant1.spellslots.get_spellslots(3) == 2
-    assert combatant1.spellslots.get_spellslots(2) == 3
-    assert combatant1.spellslots.get_spellslots(1) == 4
-    use_resources(combatant1, firebolt, battle_map)
-    assert combatant1.spellslots.get_spellslots(3) == 2
-    assert combatant1.spellslots.get_spellslots(2) == 3
-    assert combatant1.spellslots.get_spellslots(1) == 4
-    use_resources(combatant1, fireball, battle_map)
-    assert combatant1.spellslots.get_spellslots(3) == 1
-    assert combatant1.spellslots.get_spellslots(2) == 3
-    assert combatant1.spellslots.get_spellslots(1) == 4
-    use_resources(combatant1, fireball, battle_map)
-    assert combatant1.spellslots.get_spellslots(3) == 0
-    assert combatant1.spellslots.get_spellslots(2) == 3
-    assert combatant1.spellslots.get_spellslots(1) == 4
-    combatant1.spellslots.reset()
-    assert combatant1.spellslots.get_spellslots(3) == 2
-    assert combatant1.spellslots.get_spellslots(2) == 3
-    assert combatant1.spellslots.get_spellslots(1) == 4
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 2
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
+    use_resources(test_draconic_sorcerer_5lvl, firebolt, battle_map)
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 2
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
+    use_resources(test_draconic_sorcerer_5lvl, fireball, battle_map)
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 1
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
+    use_resources(test_draconic_sorcerer_5lvl, fireball, battle_map)
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 0
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
+    test_draconic_sorcerer_5lvl.spellslots.reset()
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 2
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
+    assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
 
 
-def test_use_resources_already_cast_leveled_spell_this_turn(battle_map, teams, effect_tracker, combatant1, combatant2):
+def test_use_resources_already_cast_leveled_spell_this_turn(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
     CustomLogger(LogLevel.WARNING)
-    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)  # For the log coloring...
-    firebolt_factory = FireboltFactory(1, Action.FIREBOLT, combatant1)
-    firebolt = firebolt_factory.create(combatant2)
-    fireball_factory = FireballFactory(1, Action.FIREBALL, combatant1)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
+    firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
+    firebolt = firebolt_factory.create(test_goblin)
+    fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl)
     fireball = fireball_factory.create(np.array([0, 0]))
 
-    assert not combatant1.already_cast_leveled_spell_this_turn
-    use_resources(combatant1, firebolt, battle_map)
-    assert not combatant1.already_cast_leveled_spell_this_turn
-    use_resources(combatant1, fireball, battle_map)
-    assert combatant1.already_cast_leveled_spell_this_turn
+    assert not test_draconic_sorcerer_5lvl.already_cast_leveled_spell_this_turn
+    use_resources(test_draconic_sorcerer_5lvl, firebolt, battle_map)
+    assert not test_draconic_sorcerer_5lvl.already_cast_leveled_spell_this_turn
+    use_resources(test_draconic_sorcerer_5lvl, fireball, battle_map)
+    assert test_draconic_sorcerer_5lvl.already_cast_leveled_spell_this_turn
 
 

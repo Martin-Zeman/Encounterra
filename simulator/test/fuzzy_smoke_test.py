@@ -7,7 +7,7 @@ from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.cyanwrath import Cyanwrath
-from simulator.combatants.faurung import Faurung
+from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
@@ -20,7 +20,7 @@ logger = logging.getLogger("EncounTroll")
 def test_random_matchup():
     CustomLogger(LogLevel.INFO)
     for _ in range(100):
-        combatant_pool = [Faurung, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl]
+        combatant_pool = [DraconicSorcerer5Lvl, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl]
         session = Session()
 
         num_blue_combatants = random.randint(1, 4)

@@ -5,12 +5,11 @@ from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.combatants.ogre import Ogre
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.combatants.faurung import Faurung
+from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.battle_map import *
 from simulator.round_manager import *
 from simulator.teams import Teams
-# from RL.faurung_env import FaurungEnv
 from enum import Enum
 import logging
 import multiprocessing as mp
@@ -55,8 +54,8 @@ class Session:
             return
 
         match combatant_type.__name__:
-            case "Faurung":
-                self.combatants.append(Faurung(self.effect_tracker, "Faurung " + str(curr_count)))
+            case "DraconicSorcerer5Lvl":
+                self.combatants.append(DraconicSorcerer5Lvl(self.effect_tracker, "Faurung " + str(curr_count)))
             case "TotemBarbarian5Lvl":
                 self.combatants.append(TotemBarbarian5Lvl(self.effect_tracker, "TotemBarbarian5Lvl" + str(curr_count)))
             case "Cyanwrath":

@@ -25,6 +25,8 @@ class DireWolf(Combatant):
         self.saving_throws[SavingThrow.INT] = -4
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = -2
+        self.athletics = 3
+        self.acrobatics = 2
 
 
     def build_attack_fms(self):

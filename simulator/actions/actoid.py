@@ -9,6 +9,7 @@ class ActoidFlags(Flag):
     IS_DASH = auto()
     IS_TOGGLE_ABILITY = auto()
     IS_GET_UP_FROM_PRONE = auto()
+    IS_BREAK_GRAPPLE = auto()
     IS_POSITIONING_INDEPENDENT = auto()
 
 class Actoid:
@@ -28,6 +29,7 @@ class FactoryFlags(Flag):
     IS_RANGED = auto()
     IS_DIRECT_THREAT = auto()
     IS_ATTACK_MODIFIER = auto()
+    IS_RECHARGE = auto()
     DEX_SAVE_APPLIES = auto()
     HAS_AMMO = auto()
     TARGETS_COORDS = auto()

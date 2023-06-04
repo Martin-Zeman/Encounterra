@@ -10,9 +10,9 @@ import logging
 logger = logging.getLogger("EncounTroll")
 
 
-class Faurung(Combatant):
+class DraconicSorcerer5Lvl(Combatant):
 
-    def __init__(self, effect_tracker, name="Faurung"):
+    def __init__(self, effect_tracker, name="DraconicSorcerer5Lvl"):
         super().__init__(effect_tracker, name, level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.staff = self.add_ability(Action.MELEE_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
@@ -37,6 +37,8 @@ class Faurung(Combatant):
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = 7
+        self.athletics = 2
+        self.acrobatics = 2
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

@@ -2,6 +2,7 @@ from enum import Enum, auto
 from abc import ABC, abstractmethod
 
 from simulator.actions.actoid import FactoryFlags
+from simulator.misc import roll_dice
 
 
 class Factory:
@@ -140,6 +141,18 @@ class DirectThreatFactory(ABC, Factory):
         against fireball or bane on attack rolls etc.
         """
         return 0
+
+class RechargeFactory(ABC, Factory):
+
+    def __init__(self, recharge_value):
+        Factory.__init__(self)
+        self.recharge_value = recharge_value
+        self.flags |= FactoryFlags.IS_RECHARGE
+
+    def roll_for_recharge(self):
+        roll = roll_dice([1, 6])
+        if roll >= self.recharge_value:
+            self.combatant.ammo[self.name] = 1
 
 class TransformerFactory(ABC, Factory):
 

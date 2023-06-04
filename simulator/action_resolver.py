@@ -47,11 +47,10 @@ def has_disadvantage_saving_throw(ability, target):
     return False
 
 
-def resolve_dmg_saving_throw(ability, dmg, target_combatant):
+def resolve_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=True):
     # TODO prompt reaction
     # TODO Conditions
     bonus = target_combatant.saving_throws[ability.factory.saving_throw]
-
     modifiers = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
     final_modifier = reconcile_roll_modifiers(modifiers)
 
@@ -70,10 +69,42 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant):
         saved = True
     else:
         saved = False
-    logger.info(
-        f"{type(ability).__name__} deals {dmg if not saved else dmg // 2} to {target_combatant}")
-    target_combatant.receive_dmg(dmg if not saved else dmg // 2, ability.factory.dmg_type)
+    if not saved:
+        target_combatant.receive_dmg(dmg, ability.factory.dmg_type)
+        logger.info(f"{type(ability).__name__} deals {dmg} to {target_combatant}")
+    elif half_on_success:
+        target_combatant.receive_dmg(dmg // 2, ability.factory.dmg_type)
+        logger.info(f"{type(ability).__name__} deals {dmg // 2} to {target_combatant}")
 
+
+def resolve_on_hit_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=True):
+    # TODO prompt reaction
+    # TODO Conditions
+    bonus = target_combatant.saving_throws[ability.st]
+    modifiers = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
+    final_modifier = reconcile_roll_modifiers(modifiers)
+
+    if final_modifier is RollModifier.STRAIGHT:
+        rolled = random.randint(1, 20)
+    elif final_modifier is RollModifier.ADVANTAGE:
+        rolled = max(random.randint(1, 20), random.randint(1, 20))
+    else:
+        rolled = min(random.randint(1, 20), random.randint(1, 20))
+
+    if rolled == 1:
+        saved = False
+    elif rolled == 20:
+        saved = True
+    elif rolled + bonus >= ability.dc:
+        saved = True
+    else:
+        saved = False
+    if not saved:
+        target_combatant.receive_dmg(dmg, ability.dmg_type)
+        logger.info(f"{ability.name} deals extra {dmg} to {target_combatant}")
+    elif half_on_success:
+        target_combatant.receive_dmg(dmg // 2, ability.dmg_type)
+        logger.info(f"{ability.name} deals extra {dmg // 2} to {target_combatant}")
 
 class ActionResolver:
 
@@ -375,16 +406,24 @@ class ActionResolver:
         elif ActoidFlags.IS_MOVEMENT in actoid.actoid_flags:
             if not self.request_movement(combatant, actoid):
                 return False
-        # elif ActoidFlags.IS_DODGE:
-        #     combatant.is_dodging = True
-        #     combatant.saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.ADVANTAGE)
-        #     return ActionResult.FEASIBLE
         elif ActoidFlags.IS_DASH in actoid.actoid_flags:
             combatant.movement += combatant.speed
             return False
         elif actoid.actoid_flags is ActoidFlags.IS_GET_UP_FROM_PRONE:
             logger.info(f"{combatant} gets up from being prone")
             combatant.remove_condition(Conditions.PRONE)  # resources already taken
+            return False
+
+        if actoid.factory.action_type is Action.CONSTRICT:
+            result = self.resolve_attack(actoid.factory.attack, combatant)
+            if result is ActionResult.DMG:
+                combatant.is_constricting = True
+        elif actoid.factory.action_type is Action.BREAK_GRAPPLE:
+            grapple = actoid.factory.grapple_condition
+            broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc)
+            if broken_out and getattr(grapple.attacker, "is_constricting", False):  # TODO this is a simplification
+                grapple.attacker.is_constricting = False
+
         return False
 
 
@@ -409,16 +448,16 @@ class ActionResolver:
         return self.resolve_by_actoid_flags(action, combatant)
 
     def resolve_toggle_ability(self, combatant, ability):
-        match ability.__class__.__name__:
-            case "TotemRage" | "Rage" | "Disengage" | "Dodge":
+        match ability.factory.action_type:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | Action.DODGE:
                 ability.activate(None)
                 self.effect_tracker.add(ability, combatant)
-            case "RecklessAttack":
+            case Action.RECKLESS_ATTACK:
                 if not self.effect_tracker.is_affecting_combatant(combatant, RecklessAttack):
                     # don't need to add it again in case of a multiattack
                     ability.activate(None)
                     self.effect_tracker.add(ability, combatant)
-            case "Wildshape":
+            case Action.WILDSHAPE | BonusAction.MOON_WILDSHAPE:
                 ability.activate(self.battle_map)
                 self.effect_tracker.add(ability, combatant)
             case _:

@@ -60,11 +60,12 @@ class Conditions(Flag):
 
 
 class ConditionWithDC:
-    def __init__(self, conditions, st, dc, attacker):
+    def __init__(self, conditions, st, dc, attacker, needs_action_to_break):
         self.conditions = conditions  # Could multiples such as grapple + restrained go often together
         self.st = st
         self.dc = dc
         self.attacker = attacker
+        self.needs_action_to_break = needs_action_to_break
 
 
 class Size(Enum):
@@ -154,6 +155,19 @@ def roll_dice(dice):
     return dice_sum
 
 def roll_saving_throw(bonus, dc, roll_modifier):
+    d20 = parse_dmg_dice('1d20')
+    if roll_modifier is RollModifier.STRAIGHT:
+        roll = roll_dice(d20)
+    elif roll_modifier is RollModifier.ADVANTAGE:
+        roll = max(roll_dice(d20), roll_dice(d20))
+    else:
+        roll = min(roll_dice(d20), roll_dice(d20))
+
+    if roll == 20:
+        return True
+    return roll + bonus >= dc
+
+def roll_ability_check(bonus, dc, roll_modifier):
     d20 = parse_dmg_dice('1d20')
     if roll_modifier is RollModifier.STRAIGHT:
         return roll_dice(d20) + bonus >= dc

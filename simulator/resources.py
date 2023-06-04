@@ -21,7 +21,7 @@ def use_resources(combatant, action, battle_map):
     if isinstance(action_type, Action):
         subject.has_action = False
         match action_type:
-            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK:
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.BITE_WITH_SWALLOW:
                 subject.ammo[action.factory.name] -= 1
                 subject.attack_fsm.trigger(str(action.factory))
             case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT:
@@ -49,7 +49,7 @@ def use_resources(combatant, action, battle_map):
             case Action.WILDSHAPE:
                 subject.curr_wildshape_uses -= 1
             case Action.POUNCE | Action.CONSTRICT:
-                pass  # Sufficiently tracked by not having a bonus action anymore
+                pass  # Sufficiently tracked by not having an action anymore
             case _:
                 logger.error("use_resources: Unknown action type")
     elif isinstance(action_type, BonusAction):
@@ -90,7 +90,7 @@ def use_resources(combatant, action, battle_map):
     elif isinstance(action_type, Reaction):
         subject.has_reaction = False
         match action_type:
-            case Reaction.REACTION_ATTACK:
+            case Reaction.REACTION_ATTACK |  Reaction.BITE_WITH_SWALLOW_REACTION:
                 pass  # Sufficiently tracked by not having a reaction anymore
             case Reaction.SHIELD:
                 subject.spellslots.use_spellslot(1)

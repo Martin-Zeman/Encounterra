@@ -28,6 +28,8 @@ class StoneGiant(Combatant):
         self.saving_throws[SavingThrow.INT] = 0
         self.saving_throws[SavingThrow.WIS] = 4
         self.saving_throws[SavingThrow.CHA] = -1
+        self.athletics = 12
+        self.acrobatics = 2
 
 
     def build_attack_fms(self):

@@ -70,6 +70,8 @@ class Combatant(ABC):
                               SavingThrow.CON: 0, SavingThrow.INT: 0,
                               SavingThrow.WIS: 0,
                               SavingThrow.CHA: 0}
+        self.athletics = 0
+        self.acrobatics = 0
         self.has_pack_tactics = False
         self.perception = 0
         self.conditions = Conditions.NONE
@@ -141,6 +143,13 @@ class Combatant(ABC):
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.action_factories[-1]
                     self.ammo[just_added[1].name] = just_added[1].ammo
+                    return just_added
+                case Action.BITE_WITH_SWALLOW:
+                    factory = TO_FACTORY[action_type]
+                    self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
+                    just_added = self.action_factories[-1]
+                    self.ammo[just_added[1].name] = just_added[1].ammo
+                    self.is_constricting = False
                     return just_added
                 case Action.FIREBALL:
                     self.action_factories.append(
@@ -249,7 +258,7 @@ class Combatant(ABC):
                     pass  # no resources required
         elif isinstance(action_type, Reaction):
             match action_type:
-                case Reaction.REACTION_ATTACK:
+                case Reaction.REACTION_ATTACK | Reaction.BITE_WITH_SWALLOW_REACTION:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                     self.aoo_factory = self.reaction_factories[-1]
                     self.danger_zone_attack = self.reaction_factories[-1]  # By default this is set to the reaction attack
@@ -370,6 +379,12 @@ class Combatant(ABC):
             if condition in dc_cond.conditions:
                 return True
         return condition in self.conditions
+
+    def needs_to_break_out_of_grapple(self):
+        for dc_cond in self.dc_conditions:
+            if Conditions.GRAPPLED in dc_cond.conditions and dc_cond.needs_action_to_break:
+                return dc_cond
+        return None
 
     def is_affected_by_any(self, *args):
         for condition in args:

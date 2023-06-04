@@ -51,29 +51,29 @@ def test_remove_state():
     # Have to inspect the log output manually
 
 
-def test_generate_action_fsm(combatant1, combatant2, combatant3, test_totem_barbarian, combatant5, combatant6, battle_map, effect_tracker, teams):
+def test_generate_action_fsm(test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, battle_map, effect_tracker, teams):
     battle_map.set_effect_tracker(effect_tracker)
-    teams.add_combatant_to_team(combatant1, Teams.Color.BLUE)
-    teams.add_combatant_to_team(combatant2, Teams.Color.BLUE)
-    teams.add_combatant_to_team(combatant3, Teams.Color.RED)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
-    teams.add_combatant_to_team(combatant5, Teams.Color.RED)
-    teams.add_combatant_to_team(combatant6, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(combatant1, np.array([7, 3]))
-    battle_map.set_combatant_coordinates(combatant2, np.array([5, 11]))
-    battle_map.set_combatant_coordinates(combatant3, np.array([10, 12]))
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 3]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([10, 12]))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 6]))
-    battle_map.set_combatant_coordinates(combatant5, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(combatant6, np.array([13, 6]))
-    fsm, transition_mapping, _ = generate_action_fsm(combatant1, battle_map)
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 0]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([13, 6]))
+    fsm, transition_mapping, _ = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_faurung.png', prog='dot')
 
-    fsm, transition_mapping, _ = generate_action_fsm(combatant2, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(test_goblin, battle_map)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_goblin.png', prog='dot')
 
-    fsm, transition_mapping, _ = generate_action_fsm(combatant3, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(test_bugbear, battle_map)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_bugbear.png', prog='dot')
 
@@ -81,11 +81,11 @@ def test_generate_action_fsm(combatant1, combatant2, combatant3, test_totem_barb
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_totem_barbarian5lvl.png', prog='dot')
 
-    fsm, transition_mapping, _ = generate_action_fsm(combatant5, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(test_stone_giant, battle_map)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_stone_giant.png', prog='dot')
 
-    fsm, transition_mapping, _ = generate_action_fsm(combatant6, battle_map)
+    fsm, transition_mapping, _ = generate_action_fsm(test_ogre, battle_map)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_ogre.png', prog='dot')
 

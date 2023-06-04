@@ -230,9 +230,9 @@ class Map:
         if isinstance(action, Wildshape):
             try:
                 self.teams.replace_combatant(combatant, action.form)
-                position = self.get_combatant_position(combatant)
+                wildshape_coord = self.find_wildshaped_coordinate(combatant, action.form.size)
                 self.remove_combatant(combatant)
-                self.set_combatant_coordinates(action.form, position.get()[0])
+                self.set_combatant_coordinates(action.form, np.array(wildshape_coord))
                 yield action.form
             finally:
                 self.teams.replace_combatant(action.form, combatant)

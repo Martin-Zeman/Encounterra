@@ -11,5 +11,5 @@ class OnHitAutoRestrained(OnHit):
 
     def hit(self, attacker, attack, target, effect_tracker):
         logger.info(f"{target} is grappled and restrained")
-        cond = ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, self.st, self.dc, attacker)
+        cond = ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, self.st, self.dc, attacker, True)
         target.apply_dc_condition(cond)

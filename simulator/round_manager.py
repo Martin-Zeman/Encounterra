@@ -102,20 +102,18 @@ class RoundManager:
                     continue
                 logger.info(f"It's {combatant}'s turn")
                 logger.info(self.battle_map)
-                self.effect_tracker.new_turn(combatant)
+                self.effect_tracker.start_of_turn(combatant)
                 combatant.new_turn()
                 effects = self.effect_tracker.get_all_affecting_combatant(combatant)
                 self.action_resolver.resolve_effects(effects, combatant)
                 if combatant.is_affected_by_any(Conditions.STUNNED, Conditions.PARALYZED, Conditions.PETRIFIED,
                                                 Conditions.UNCONSCIOUS):
                     logger.info(f"{combatant} is affected by a condition which prevents any action. Skipping turn")
-                    self.effect_tracker.new_turn(combatant)
+                    self.effect_tracker.start_of_turn(combatant)
+                    self.effect_tracker.end_of_turn(combatant)
                     continue
                 while True:
-                    # try:
                     action = get_action(combatant, self.battle_map)
-                    # except TypeError as e:
-                        # logger.error(f"{combatant} threw {e} for action {action}")
                     if action is None:
                         break
                     self.action_resolver.resolve_action(action, combatant)
@@ -125,7 +123,7 @@ class RoundManager:
                     if not combatant.is_alive():
                         break  # could have died as a result of AoO
                 if combatant.is_alive():
-                    self.effect_tracker.new_turn(combatant)
+                    self.effect_tracker.end_of_turn(combatant)
                 else:
                     self.effect_tracker.combatant_died(combatant)
             self.print_status()

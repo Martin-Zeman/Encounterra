@@ -32,11 +32,11 @@ class EffectTracker:
         for e in self.effects:
             if getattr(e[0], "new_turn", False) and e[1] is combatant:
                 if not e[0].new_turn(self.battle_map):
-                    continue
+                    continue  # Effect expired
             if getattr(e[0], "start_of_turn", False) and e[1] is combatant:
                 if not e[0].start_of_turn(self.battle_map):
-                    continue
-            effects.append(e)
+                    continue  # Effect's been saved against
+            effects.append(e)  # Effect persists
         self.effects = effects
 
     def end_of_turn(self, combatant):

@@ -24,6 +24,8 @@ class BrownBear(Combatant):
         self.saving_throws[SavingThrow.INT] = -4
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = -2
+        self.athletics = 4
+        self.acrobatics = 0
 
 
     def build_attack_fms(self):

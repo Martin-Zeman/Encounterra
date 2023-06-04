@@ -26,6 +26,8 @@ class TotemBarbarian5Lvl(Combatant):
         self.saving_throws[SavingThrow.INT] = 0
         self.saving_throws[SavingThrow.WIS] = 0
         self.saving_throws[SavingThrow.CHA] = 1
+        self.athletics = 6
+        self.acrobatics = 1
 
 
     def build_attack_fms(self):
