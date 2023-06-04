@@ -3,6 +3,7 @@ from functools import cache
 
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
+from simulator.combatant_coords import CombatantCoords
 from simulator.misc import percent_of_curr_hp
 from simulator.threat_utils import mean_dmg
 import logging
@@ -28,7 +29,7 @@ class RangedAttackFactory(AttackFactory):
 class RangeAttack(Attack):
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
         roll_modifier = RollModifier.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) > self.factory.short_range else roll_modifier
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, roll_modifier=roll_modifier, **kwargs)

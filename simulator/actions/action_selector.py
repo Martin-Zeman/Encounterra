@@ -160,13 +160,15 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 
     added_states = set()  # tracks which states have already been added
     for action_name, coords in action_to_eligible_coords.items():
-        if action_name.startswith("Wildshape"):
-            continue  # Wilshape itself is coord-independent but we're insterested in the coords of the follow-up actons
+        # if action_name.startswith("Wildshape"):
+        #     continue  # Wilshape itself is coord-independent but we're interested in the coords of the follow-up actions
         for coord in coords:
             transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]
             assert len(transitions) == 1
             for transition in transitions:  # Iterate over the original to avoid deleting from the one being iterated over
                 new_state_and_transition_name = "m_" + str(coord)
+                if new_state_and_transition_name.startswith("m_["):
+                    print("FIXME")
                 if new_state_and_transition_name not in added_states:
                     added_states.add(new_state_and_transition_name)
                     dag.add_state(new_state_and_transition_name)
@@ -285,7 +287,10 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
                 except KeyError:  # either not in the dict or regex search came up empty
                     # or different kind which represents some type of movement
-                    movement_type, x, y = re.search(pattern, transition_name).groups()
+                    try:
+                        movement_type, x, y = re.search(pattern, transition_name).groups()
+                    except AttributeError:
+                        print("FIXME")
                     destination = np.array([int(x), int(y)])
                     path = battle_map.get_path_to_coord(combatant, destination, distances, shortest_paths, True)
                     if path is None:  # Note that an empty path is still a valid one
