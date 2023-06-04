@@ -788,3 +788,43 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
         action_resolver.resolve_action(actoid6, test_moon_druid)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+
+def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear, test_goblin):
+    """
+    This test case is based on a scenario encountered during fuzzy testing. It makes sure that find_wildshaped_coordinate does its job.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.place_circular_element(np.array([9, 8]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([13, 6]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [test_moon_druid, test_bugbear, test_goblin]
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 8]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([11, 8]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([12, 13]))
+
+    battle_map.build_adjacency_matrix()
+
+    test_moon_druid.has_haste_action = True
+
+    try:
+        actoid1 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid1, test_moon_druid)
+        actoid2 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid2, test_moon_druid)
+        actoid3 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid3, test_moon_druid)
+        actoid4 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid4, test_moon_druid)
+        actoid5 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid5, test_moon_druid)
+        actoid6 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid6, test_moon_druid)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"

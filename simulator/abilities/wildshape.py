@@ -90,13 +90,9 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
-        #
-
-
         battle_map.teams.replace_combatant(self.combatants[0], self.form)
-        position = battle_map.get_combatant_position(self.combatants[0])
-        battle_map.remove_combatant(self.combatants[0])
-        battle_map.set_combatant_coordinates(self.form, position.get()[0])
+        wildshape_coord = battle_map.find_wildshaped_coordinate(self.combatants[0], self.form.size)
+        battle_map.set_combatant_coordinates(self.form, np.array(wildshape_coord))
         self.combatants[0].current_wildshape_form = self.form
         self.form.curr_hp = self.form.max_hp
         self.form.saving_throws[SavingThrow.INT] = self.combatants[0].saving_throws[SavingThrow.INT]

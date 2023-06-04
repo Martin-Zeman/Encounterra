@@ -214,7 +214,10 @@ class Map:
                 self.teams.replace_combatant(combatant_old, combatant_new)
                 position = self.get_combatant_position(combatant_old)
                 self.remove_combatant(combatant_old)
-                self.set_combatant_coordinates(combatant_new, position.get()[0])
+                try:
+                    self.set_combatant_coordinates(combatant_new, position.get()[0])
+                except Exception as e:
+                    print("FIXME")
                 yield self
             finally:
                 self.teams.replace_combatant(combatant_new, combatant_old)
@@ -230,11 +233,15 @@ class Map:
         if isinstance(action, Wildshape):
             try:
                 self.teams.replace_combatant(combatant, action.form)
-                wildshape_coord = self.find_wildshaped_coordinate(combatant, action.form.size)
+                # wildshape_coord = self.find_wildshaped_coordinate(combatant, action.form.size)
+                position = self.get_combatant_position(combatant)
+                original_size = action.form.size
+                action.form.size = Size.MEDIUM  # TODO this is a hack, making the form medium to make sure it fits
                 self.remove_combatant(combatant)
-                self.set_combatant_coordinates(action.form, np.array(wildshape_coord))
+                self.set_combatant_coordinates(action.form, position.get()[0])
                 yield action.form
             finally:
+                action.form.size = original_size
                 self.teams.replace_combatant(action.form, combatant)
                 position = self.get_combatant_position(action.form)
                 self.remove_combatant(action.form)
