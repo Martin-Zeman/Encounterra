@@ -149,15 +149,18 @@ class Map:
 
     @contextmanager
     def as_if_combatant_position(self, combatant, coords: np.array):
-        original_coords = self.combatant_coordinate_cache[combatant]
-        original_logger_level = logger.level
-        logger.setLevel(logging.WARNING)
-        self.move_combatant(combatant, coords)
-        try:
+        if coords is not None:
+            try:
+                original_coords = self.combatant_coordinate_cache[combatant]
+                original_logger_level = logger.level
+                logger.setLevel(logging.WARNING)
+                self.move_combatant(combatant, coords)
+                yield self
+            finally:
+                self.move_combatant(combatant, original_coords.get()[0])
+                logger.setLevel(original_logger_level)
+        else:
             yield self
-        finally:
-            self.move_combatant(combatant, original_coords.get()[0])
-            logger.setLevel(original_logger_level)
 
     @contextmanager
     def as_if_dist_from_combatant(self, combatant1, combatant2, dist, dist_type=DistanceMetric.HOP):
@@ -1076,24 +1079,6 @@ class Map:
                 best_affected = affected
         logger.info(self)
         return best_placement, max_score, best_affected
-
-    def get_combatants_affected_by_aoe_with_caster_mock_position(self, caster, caster_coords: CombatantCoords, target_template, ability_type, origin, angle=0):
-        """
-        Gets combatants affected by an AoE effect
-        :param caster: the caster of the AoE
-        :param caster_coords: the 'as if' position of the caster
-        :param target_template: RADIUS_X or CONE_Y
-        :param ability_type: SpellStats.Type.HARMFUL or SpellStats.Type.BUFF
-        :param origin: origin of the AoE
-        :param angle: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
-        :return: affected combatants
-        """
-        if caster_coords is not None:
-            with self.as_if_combatant_position(caster, caster_coords.get()[0]):
-                ret = self.get_combatants_affected_by_aoe(caster, target_template, ability_type, origin, angle)
-        else:
-            ret = self.get_combatants_affected_by_aoe(caster, target_template, ability_type, origin, angle)
-        return ret
 
     def get_coords_affected_by_square_aoe(self, origin, length):
         """

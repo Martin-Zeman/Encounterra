@@ -106,8 +106,8 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.combatant, combatant_coords, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.coord)
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.coord)
         acc = 0
         for aff in affected:
             if battle_map.teams.are_enemies(self.factory.combatant, aff):
