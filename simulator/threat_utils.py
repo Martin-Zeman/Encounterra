@@ -18,6 +18,8 @@ from simulator.spells.misty_step import MistyStepFactory
 from simulator.utils.roll_modifiers import RollModifier
 
 
+DZ_CONSTANT = 0.33
+
 @cache
 def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
     """
@@ -204,7 +206,7 @@ def get_danger_zone_threat(battle_map, coords, combatant):
     :return: danger zone threat (positive)
     """
     enemies = battle_map.get_enemies(combatant)
-    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant) / 2 if
+    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant) * DZ_CONSTANT if
         battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
 

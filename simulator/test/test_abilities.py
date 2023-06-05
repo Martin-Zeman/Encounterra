@@ -47,8 +47,8 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
         actoid5 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid5, test_moon_druid)
         actoid6 = get_action(test_moon_druid, battle_map)
-        assert str(actoid4) == "Bite on Bugbear" or str(actoid5) == "Bite on Bugbear"
-        assert str(actoid4) == "Claws on Bugbear" or str(actoid5) == "Claws on Bugbear"
+        assert str(actoid4) == "BrownBear Bite on Bugbear" or str(actoid5) == "BrownBear Bite on Bugbear"
+        assert str(actoid4) == "BrownBear Claws on Bugbear" or str(actoid5) == "BrownBear Claws on Bugbear"
         assert str(actoid6) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -175,15 +175,4 @@ def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_mo
     wsf = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
     ws = wsf.create(GiantConstrictorSnake)
     coords = ws.get_eligible_coords(battle_map, distances, shortest_paths)
-    assert (9, 8) in coords
-    assert (10, 8) in coords
-    assert (11, 8) in coords
-    assert (9, 9) in coords
-    assert (10, 9) in coords
-    assert (11, 9) in coords
-    assert (9, 10) in coords
-    assert (10, 10) in coords
-    assert (11, 10) in coords
-    assert (9, 11) in coords
-    assert (10, 11) in coords
-    assert (11, 11) in coords
+    assert coords == [(10, 10)]

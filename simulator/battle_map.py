@@ -236,7 +236,6 @@ class Map:
         if isinstance(action, Wildshape):
             try:
                 self.teams.replace_combatant(combatant, action.form)
-                # wildshape_coord = self.find_wildshaped_coordinate(combatant, action.form.size)
                 position = self.get_combatant_position(combatant)
                 original_size = action.form.size
                 action.form.size = Size.MEDIUM  # TODO this is a hack, making the form medium to make sure it fits
