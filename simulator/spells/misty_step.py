@@ -68,7 +68,7 @@ class MistyStep(Actoid, ThreatModifier):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return 0  # Misty Step is handled differently
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

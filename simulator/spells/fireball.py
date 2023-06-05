@@ -88,8 +88,8 @@ class Fireball(Actoid, DirectThreat):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe_with_caster_mock_position(self.factory.combatant, combatant_coords, FireballFactory.target, FireballFactory.type, self.coord, combatant_coords)
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FireballFactory.target, FireballFactory.type, self.coord)
         acc = 0
         for aff in affected:
             mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
