@@ -167,7 +167,8 @@ class Attack(Actoid, DirectThreat):
         self.roll_modifier = RollModifier.STRAIGHT
 
     def __str__(self):
-        return ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name + f" on {self.target_combatant}"
+        form_prefix = str(self.factory.combatant.get_current_form()).split()[-1] + " " if self.factory.combatant.get_original_form() is not self.factory.combatant else ""
+        return form_prefix + ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name + f" on {self.target_combatant}"
 
     def shorthand_str(self):
         return ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name

@@ -12,6 +12,7 @@ class SpellStats:
         RADIUS_20 = auto()
         RADIUS_30 = auto()
         BOX_5 = auto()
+        BOX_15 = auto()
         BOX_20 = auto()
         CONE_15 = auto()
         CONE_30 = auto()
@@ -20,7 +21,7 @@ class SpellStats:
 
     TRANSLATE_RADIUS = {Target.RADIUS_10: 2, Target.RADIUS_20: 4, Target.RADIUS_30: 6}
     TRANSLATE_CONE = {Target.CONE_15: 3, Target.CONE_30: 6, Target.CONE_60: 12, Target.CONE_90: 18}
-    TRANSLATE_BOX = {Target.BOX_5: 1, Target.BOX_20: 4}
+    TRANSLATE_BOX = {Target.BOX_5: 1, Target.BOX_15: 3, Target.BOX_20: 4}
 
     class Range(Enum):
         """

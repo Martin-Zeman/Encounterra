@@ -92,6 +92,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
         battle_map.teams.replace_combatant(self.combatants[0], self.form)
         wildshape_coord = battle_map.find_wildshaped_coordinate(self.combatants[0], self.form.size)
+        battle_map.remove_combatant(self.combatants[0])
         battle_map.set_combatant_coordinates(self.form, np.array(wildshape_coord))
         self.combatants[0].current_wildshape_form = self.form
         self.form.curr_hp = self.form.max_hp
@@ -160,8 +161,20 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
                 subproduct = submatrix * wilshape_matrix
                 if np.all(subproduct > 0):
                     result_matrix[i:i + wilshape_matrix_size, j:j + wilshape_matrix_size] = 1
-        coords = np.argwhere(result_matrix == 1)
-        return coords
+        # Here we're only interested in the coords with the lowest distance from the original coordinate
+        all_coords = np.argwhere(result_matrix == 1).tolist()
+        all_coords.sort(key=lambda coord: battle_map.get_hop_distance(self.factory.combatant, np.array([coord])))
+        final_coords = []
+        curr_coord = all_coords[0]
+        min_distance = battle_map.get_hop_distance(self.factory.combatant, np.array([curr_coord]))
+        curr_distance = min_distance
+        idx = 1
+        while curr_distance == min_distance:
+            final_coords.append(tuple(curr_coord))
+            curr_coord = all_coords[idx]
+            curr_distance = battle_map.get_hop_distance(self.factory.combatant, np.array([curr_coord]))
+            idx += 1
+        return final_coords
 
     def is_current_coord_eligible(self, battle_map):
         return True

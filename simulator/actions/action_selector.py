@@ -160,8 +160,8 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
 
     added_states = set()  # tracks which states have already been added
     for action_name, coords in action_to_eligible_coords.items():
-        if action_name.startswith("Wildshape"):
-            continue  # Wilshape itself is coord-independent but we're insterested in the coords of the follow-up actons
+        # if action_name.startswith("Wildshape"):
+        #     continue  # Wilshape itself is coord-independent but we're interested in the coords of the follow-up actions
         for coord in coords:
             transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]
             assert len(transitions) == 1
@@ -278,9 +278,10 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                 try:
                     # Is it a transition which represents a (bonus) action?
                     pretend_coords = get_pretend_coords(current_coords, pattern, state, max_threat_backwards_transition)
+                    pretend_coords = pretend_coords.get()[0] if pretend_coords is not None else None
                     action = transition_name_to_action[transition_name]
-                    with battle_map.replace_combatant_if_needed(combatant, action.factory.combatant):  # Can happen in case of wildshape
-                        transition_threat = action.calculate_threat(combatant, battle_map, pretend_coords) + (threat[state][1] if threat[state][1] > -math.inf else 0)
+                    with battle_map.as_if_combatant_position(combatant, pretend_coords):
+                        transition_threat = action.calculate_threat(combatant, battle_map) + (threat[state][1] if threat[state][1] > -math.inf else 0)
                         transition_threat += get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action)
                     movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
                 except KeyError:  # either not in the dict or regex search came up empty

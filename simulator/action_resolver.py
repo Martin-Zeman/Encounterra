@@ -442,7 +442,7 @@ class ActionResolver:
             return None
         if not check_feasibility(combatant, action, self.battle_map):
             if action.factory.action_type is Movement.STANDARD:
-                combatant.movement = 0 # This can be caused by difficult terrain which is ok but we must avoid endless looping
+                combatant.movement = 0  # This can be caused by difficult terrain which is ok but we must avoid endless looping
             else:
                 logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
             return None

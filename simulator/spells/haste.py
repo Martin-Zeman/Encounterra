@@ -153,7 +153,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
+    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         """
         It's the same as the single target version of the factory
         """
