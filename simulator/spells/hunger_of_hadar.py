@@ -53,15 +53,8 @@ class HungerOfHadarFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        try:
-            consider_dist = kwargs["consider_dist"]
-        except KeyError:
-            consider_dist = False
-
-        if not consider_dist or battle_map.get_cartesian_distance(self.combatant, target) <= HungerOfHadarFactory.range + SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target]:
-            # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            return avg_roll(self.dmg_dice) + 0.5 * mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw])
-        return 0
+        # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
+        return avg_roll(self.dmg_dice) + 0.5 * mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw])
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """

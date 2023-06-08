@@ -48,14 +48,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        try:
-            consider_dist = kwargs["consider_dist"]
-        except KeyError:
-            consider_dist = False
-
-        if not consider_dist or battle_map.get_cartesian_distance(self.combatant, target) <= SpikeGrowthFactory.range + SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target]:
-            return avg_roll(self.dmg_dice)
-        return 0
+        return avg_roll(self.dmg_dice)
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """

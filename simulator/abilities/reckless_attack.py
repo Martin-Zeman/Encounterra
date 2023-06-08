@@ -81,20 +81,10 @@ class RecklessAttackFactory(DirectThreatFactory):
         return dmg_acc
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
-        try:
-            consider_dist = kwargs["consider_dist"]
-        except KeyError:
-            consider_dist = False
-
-        if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
-            dmg = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
-        else:
-            dmg = 0
-        # Haste factories wouldn't change the result here, so we're omitting them
-        total_threat = dmg
+        dmg = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         # even the single target calculation the combatant is still more vulnerable to all potential attackers
         incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
-        return total_threat - incoming_threat_mod_acc
+        return dmg - incoming_threat_mod_acc
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
@@ -102,14 +92,8 @@ class RecklessAttackFactory(DirectThreatFactory):
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
-        try:
-            consider_dist = kwargs["consider_dist"]
-        except KeyError:
-            consider_dist = False
-
         baseline = 0
-        if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
-            baseline = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
+        baseline = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
                                 target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         try:
             mod_range = modified_stats['range']
@@ -142,12 +126,11 @@ class RecklessAttackFactory(DirectThreatFactory):
 
         modified = baseline
         with battle_map.as_if_dist_mod_from_combatant(self.combatant, target, -mod_range):
-            if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
-                to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-                to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
-                total_crit = self.crit_range + mod_crit_range
-                total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
-                modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
+            to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
+            total_crit = self.crit_range + mod_crit_range
+            total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
+            modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
         incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc

@@ -1,5 +1,6 @@
 from simulator.abilities.reckless_attack import RecklessAttack
-from simulator.actions.action_types import BonusAction, Action, Reaction, Passive, Movement
+from simulator.actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
+from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
 from simulator.misc import *
 from simulator.misc import SavingThrow
 from simulator.feasibility import check_feasibility
@@ -271,6 +272,10 @@ class ActionResolver:
                 caster.shield_spell_active = True
                 caster.ac += 5
                 return ActionResult.FEASIBLE
+            case Action.FLAMING_SPHERE:
+                spell.activate(None)
+                self.effect_tracker.add(spell, caster)
+                return ActionResult.FEASIBLE
             case _:
                 logger.error("Unknown spell")
                 return ActionResult.UNFEASIBLE
@@ -394,37 +399,104 @@ class ActionResolver:
         Other cases return None.
         """
         assert actoid is not None
-        if ActoidFlags.IS_TOGGLE_ABILITY in actoid.actoid_flags:
-            # This type can combine with others
-            self.resolve_toggle_ability(combatant, actoid)
-
-        # TODO Rework this using the new Actoid concept
-        if ActoidFlags.IS_SPELL in actoid.actoid_flags:
-            return self.resolve_spell(combatant, actoid)
-        elif ActoidFlags.IS_ATTACK_LIKE in actoid.actoid_flags:
-            return self.resolve_attack(actoid, combatant)
-        elif ActoidFlags.IS_MOVEMENT in actoid.actoid_flags:
-            if not self.request_movement(combatant, actoid):
+        match actoid.factory.action_type:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | Action.DODGE:
+                actoid.activate(None)
+                self.effect_tracker.add(actoid, combatant)
                 return False
-        elif ActoidFlags.IS_DASH in actoid.actoid_flags:
-            combatant.movement += combatant.speed
-            return False
-        elif actoid.actoid_flags is ActoidFlags.IS_GET_UP_FROM_PRONE:
-            logger.info(f"{combatant} gets up from being prone")
-            combatant.remove_condition(Conditions.PRONE)  # resources already taken
-            return False
-
-        if actoid.factory.action_type is Action.CONSTRICT:
-            result = self.resolve_attack(actoid.factory.attack, combatant)
-            if result is ActionResult.DMG:
-                combatant.is_constricting = True
-        elif actoid.factory.action_type is Action.BREAK_GRAPPLE:
-            logger.info(f"{combatant} is trying to break out of grapple")
-            grapple = actoid.factory.grapple_condition
-            broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc)
-            if broken_out and getattr(grapple.attacker, "is_constricting", False):  # TODO this is a simplification
-                logger.info(f"{combatant} is has broken out of grapple")
-                grapple.attacker.is_constricting = False
+            case Action.RECKLESS_ATTACK:
+                if not self.effect_tracker.is_affecting_combatant(combatant, RecklessAttack):
+                    # don't need to add it again in case of a multi-attack
+                    actoid.activate(None)
+                    self.effect_tracker.add(actoid, combatant)
+                    return self.resolve_attack(actoid, combatant)
+            case Action.WILDSHAPE | BonusAction.MOON_WILDSHAPE:
+                actoid.activate(self.battle_map)
+                self.effect_tracker.add(actoid, combatant)
+                return False
+            case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
+                affected = self.battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
+                dmg = roll_spell_dmg(actoid.factory.dmg_dice)
+                for combatant in affected:
+                    logger.info(f"{combatant} is hit by Fireball")
+                    resolve_dmg_saving_throw(actoid, dmg, combatant)
+                    if not combatant.is_alive():
+                        # TODO revisit if this is really needed
+                        self.battle_map.remove_dead_combatant(combatant)
+                return ActionResult.DMG
+            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
+                actoid.activate(None)
+                self.effect_tracker.add(actoid, combatant)
+                return ActionResult.MEDIUM_BUFF
+            case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
+                actoid.activate(self.battle_map)
+                self.effect_tracker.add(actoid, combatant)
+            case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
+                return self.resolve_ranged_spell_attack(combatant, actoid, actoid.target)
+            case Action.TWINNED_FIREBOLT:
+                ret = (self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[0]),
+                       self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[1]))
+                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
+            case BonusAction.MISTY_STEP:
+                self.battle_map.move_combatant(combatant, actoid.coord)
+                return ActionResult.FEASIBLE
+            case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
+                return self.resolve_chaos_bolt(combatant, actoid)
+            case Action.SCORCHING_RAY | BonusAction.QUICKENED_SCORCHING_RAY:
+                ret = (self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[0]),
+                       self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[1]),
+                       self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[2]))
+                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
+            case Reaction.SHIELD:
+                assert not combatant.shield_spell_active
+                combatant.shield_spell_active = True
+                combatant.ac += 5
+                return ActionResult.FEASIBLE
+            case Action.FLAMING_SPHERE:
+                actoid.activate(None)
+                self.effect_tracker.add(actoid, combatant)
+                return ActionResult.FEASIBLE
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
+                 HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK:
+                return self.resolve_attack(actoid, combatant)
+            case Movement.STANDARD:
+                if not self.request_movement(combatant, actoid):
+                    return False
+            case Movement.DASH:
+                combatant.movement += combatant.speed
+                return False
+            case Movement.GET_UP_FROM_PRONE:
+                logger.info(f"{combatant} gets up from being prone")
+                combatant.remove_condition(Conditions.PRONE)  # resources already taken
+                return False
+            case Action.CONSTRICT:
+                result = self.resolve_attack(actoid.factory.attack, combatant)
+                if result is ActionResult.DMG:
+                    combatant.is_constricting = True
+                    return True
+            case Action.BREAK_GRAPPLE:
+                logger.info(f"{combatant} is trying to break out of grapple")
+                grapple = actoid.factory.grapple_condition
+                broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc)
+                if broken_out and getattr(grapple.attacker, "is_constricting", False):  # TODO this is a simplification
+                    logger.info(f"{combatant} is has broken out of grapple")
+                    grapple.attacker.is_constricting = False
+            case BonusAction.FLAMING_SPHERE_RAM:
+                adj = self.battle_map.build_flaming_sphere_adjacency_matrix()
+                _, shortest_paths = self.battle_map.dijkstra(actoid.factory.action_enabler_effect.coord, adj)
+                path = self.battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.coord, actoid.coord)
+                if len(path) <= FlamingSphereRamFactory.RANGE + 1:
+                    pass  # TODO do the dmg
+                path = path[:FlamingSphereRamFactory.RANGE + 1]
+                actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
+            case Action.POUNCE:
+                # TODO
+                return False
+            case Action.WEB:
+                # TODO
+                return False
+            case _:
+                logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 
         return False
 
@@ -449,21 +521,6 @@ class ActionResolver:
         use_resources(combatant, action, self.battle_map)
         return self.resolve_by_actoid_flags(action, combatant)
 
-    def resolve_toggle_ability(self, combatant, ability):
-        match ability.factory.action_type:
-            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | Action.DODGE:
-                ability.activate(None)
-                self.effect_tracker.add(ability, combatant)
-            case Action.RECKLESS_ATTACK:
-                if not self.effect_tracker.is_affecting_combatant(combatant, RecklessAttack):
-                    # don't need to add it again in case of a multiattack
-                    ability.activate(None)
-                    self.effect_tracker.add(ability, combatant)
-            case Action.WILDSHAPE | BonusAction.MOON_WILDSHAPE:
-                ability.activate(self.battle_map)
-                self.effect_tracker.add(ability, combatant)
-            case _:
-                logger.error(f"Unknown toggle ability {ability.__class__.__name__}")
 
     def resolve_effects(self, effects, combatant):
         """

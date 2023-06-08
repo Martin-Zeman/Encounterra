@@ -84,11 +84,6 @@ class AttackFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         try:
-            consider_dist = kwargs["consider_dist"]
-        except KeyError:
-            consider_dist = False
-
-        try:
             roll_modifier = kwargs['roll_modifier']
         except KeyError:
             roll_modifier = RollModifier.STRAIGHT
@@ -97,12 +92,10 @@ class AttackFactory(DirectThreatFactory):
         to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
 
         # TODO: Should I include roll modifiers here? There may be a use-case in the future
-        if not consider_dist or battle_map.get_hop_distance(self.combatant, target) <= self.range:
-            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
-            for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, extra.dmg_dice, 0, target.ac, self.crit_range, target.is_resistant_to(extra.dmg_type))
-            return acc
-        return 0
+        acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
+        for extra in self.extra_dmg:
+            acc += mean_dmg(to_hit_total, extra.dmg_dice, 0, target.ac, self.crit_range, target.is_resistant_to(extra.dmg_type))
+        return acc
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """

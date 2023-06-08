@@ -42,8 +42,6 @@ def reconstruct_from_shortest_path(shortest_path, source, target):
         except KeyError as e:
             # logger.error(e)  # TODO remove this once fixed
             return None
-        except TypeError:
-            print("FIXME")
     else:
         path['numpy'].append(source[0])
         path['tuples'].append(tuple(source[0]))
@@ -360,6 +358,39 @@ class Map:
         # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
 
+    def build_flaming_sphere_adjacency_matrix(self):
+        N = self.size
+        Nsq = N ** 2
+        adj = np.zeros((N, N, N, N), dtype=int)
+        # Take adj to encode (x,y) coordinate to (x,y) coordinate edges
+        # Let's now connect the nodes
+        for i in range(N):
+            for j in range(N):
+                # TODO I don't think the min is needed
+                adj[i, j, max((i - 1), 0), max((j - 1), 0)] = 1
+                adj[i, j, max((i - 1), 0), j] = 1
+                adj[i, j, max((i - 1), 0), min(j + 1, N - 1)] = 1
+
+                adj[i, j, i, max((j - 1), 0)] = 1
+                adj[i, j, i, j] = 1
+                adj[i, j, i, min(j + 1, N - 1)] = 1
+
+                adj[i, j, min(i + 1, N - 1), max((j - 1), 0)] = 1
+                adj[i, j, min(i + 1, N - 1), j] = 1
+                adj[i, j, min(i + 1, N - 1), min(j + 1, N - 1)] = 1
+
+        adj_reshaped = adj.reshape(Nsq, Nsq)  # Back to node-to-node shape
+        # Remove self-connections (optional)
+        adj_reshaped -= np.eye(Nsq, dtype=int)
+        for curr_combatant, coords in self.combatant_coordinate_cache.items():
+            if curr_combatant.is_alive() and curr_combatant.size >= Size.LARGE:
+                for coord in coords.get():
+                    adj[:, :, max(0, coord[0]):(coord[0] + 1), max(0, coord[1]):(coord[1] + 1)].fill(0)
+        for coord in self.impassable_set:
+            adj[:, :, max(0, coord[0]):(coord[0] + 1), max(0, coord[1]):(coord[1] + 1)].fill(0)
+        return adj
+
+
     def build_combatant_adjacency_mask(self, combatant, consider_aoo=False):
         """
         Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
@@ -457,10 +488,11 @@ class Map:
                 min_index = u
         return min_index
 
-    def dijkstra(self, src, mask):
+    def dijkstra(self, src, adj_matrix=None, mask=None):
         """
         Implementation of the Dijkstra algorithm with a preference for the least zig-zaggy path
         :param src: source coordinate
+        :param adj_matrix: adjacency matrix, if None the base_adjacency_matrix will be used
         :param mask: combatant-specific mask for the adjacency matrix
         :return: list of distances to all vertices, list of predecessors for every vertex
         """
@@ -472,7 +504,9 @@ class Map:
         src_idx = src[0] * self.size + src[1]
         dist[src_idx] = 0
         open_set = [False] * Nsq
-        adj = np.multiply(self.base_adjacency_matrix, mask)
+        adj_matrix = self.base_adjacency_matrix if adj_matrix is None else adj_matrix
+        mask = np.ones((self.size ** 2, self.size ** 2), dtype=int) if mask is None else mask
+        adj = np.multiply(adj_matrix, mask)
         shortest_paths = {}
 
         pq = [(0, src_idx)]
@@ -811,7 +845,7 @@ class Map:
         """
         my_location = self.get_combatant_position(combatant)
         mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
+        distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
         return distances, shortest_paths
 
 
@@ -831,7 +865,7 @@ class Map:
         logger.debug(f"Destination {enemy_location.get()[0]}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
+            distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
         enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, distances, rng)
         if enemy_adjacent_location is None:
             return None
@@ -856,13 +890,24 @@ class Map:
         logger.debug(f"Destination {target_coord}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            distances, shortest_paths = self.dijkstra(my_location.get()[0], mask)
+            distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), target_coord)
         if reconstructed_path is None:
             return None
         if logger.root.level <= logging.INFO:
             self.printDijkstra(distances, my_location.get(), np.array([target_coord]), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
+
+
+    def get_effect_path_to_coord(self, current_coord, target_coord, shortest_paths):
+        """
+        Similar to get_path_to_coord but for moving effects such as a spiritual weapon or flaming sphere
+        :param current_coord:
+        :param target_coord:
+        :param shortest_paths: potentially already pre-computed shortest paths to all coords
+        :return: list of np.array increments to the target destination
+        """
+        return reconstruct_from_shortest_path(shortest_paths, current_coord.get(), target_coord)
 
 
     def get_combatant_position(self, combatant):

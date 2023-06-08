@@ -41,7 +41,7 @@ def use_resources(combatant, action, battle_map):
             case Action.CHAOSBOLT:
                 subject.spellslots.use_spellslot(1)
                 subject.already_cast_leveled_spell_this_turn = True
-            case Action.SCORCHING_RAY:
+            case Action.SCORCHING_RAY | Action.FLAMING_SPHERE:
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_FIREBOLT:
@@ -66,7 +66,7 @@ def use_resources(combatant, action, battle_map):
                 subject.spellslots.use_spellslot(1)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
-            case BonusAction.QUICKENED_SCORCHING_RAY:
+            case BonusAction.QUICKENED_SCORCHING_RAY | BonusAction.QUICKENED_FLAMING_SPHERE:
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
@@ -81,7 +81,7 @@ def use_resources(combatant, action, battle_map):
                 subject.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_FIREBOLT:
                 subject.curr_sorcery_points -= 2
-            case BonusAction.CUNNING_DISENGAGE:
+            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM:
                 pass  # Sufficiently tracked by not having a bonus action anymore
             case BonusAction.MOON_WILDSHAPE:
                 subject.curr_wildshape_uses -= 1

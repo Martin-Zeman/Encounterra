@@ -1,22 +1,26 @@
 from functools import cache
 
 from simulator.actions.action_types import BonusAction
-from simulator.combatant_coords import CombatantCoords
-from simulator.effects.action_enabler_effect import ActionEnablerEffect
-from simulator.effects.aoe_square_effect import AoeSquareEffect
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, avg_roll, roll_spell_dmg, Size
+from simulator.misc import DamageType, SavingThrow
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
+from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import numpy as np
 
+from simulator.threat_utils import mean_dmg_dc_attack
+
+
 class FlamingSphereRamFactory(DirectThreatFactory):
-    def __init__(self, action_type, caster, **kwargs):
+
+    RANGE = 6
+
+    def __init__(self, caster, action_enabler_effect, **kwargs):
         super().__init__()
-        self.action_type = action_type  # FLAMING_SPHERE_RAM
+        self.action_type = BonusAction.FLAMING_SPHERE_RAM
         self.dmg_dice = "2d6"
         self.combatant = caster
+        self.action_enabler_effect = action_enabler_effect
+        self.saving_throw = SavingThrow.DEX
+        self.dmg_type = DamageType.Fire
 
 
     def __str__(self):
@@ -26,127 +30,57 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         return "FlamingSphereRamFactory"
 
     def create_all(self, battle_map):
-        # Here there really is no need to iterate over all coords. Just find the best score
-        return [FlamingSphereRam(self.find_best_args(self.combatant, battle_map), self)]
+        enemies = battle_map.teams.get_enemies()
+        result = []
+        for enemy in enemies:
+            coords_around_enemy = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(enemy), rng=1)
+            for coord in coords_around_enemy:
+                result.append(FlamingSphereRam(enemy, coord, self))
+        return result
 
-    def create(self, coord):
-        return FlamingSphereRam(coord, self)
+    def create(self, target_combatant, coord):
+        return FlamingSphereRam(target_combatant, coord, self)
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         """
         Calculates threat to one specific target
         """
-        try:
-            consider_dist = kwargs["consider_dist"]
-        except KeyError:
-            consider_dist = False
-
-        if not consider_dist or battle_map.get_cartesian_distance(self.combatant, target) <= FlamingSphereRamFactory.range + SpellStats.TRANSLATE_RADIUS[FlamingSphereRamFactory.target]:
-            return avg_roll(self.dmg_dice)
-        return 0
+        return mean_dmg_dc_attack(self.combatant.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant(self.dmg_type))
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        return 0 # No need
+        return 0  # No need
 
 
-class FlamingSphereRam(Actoid, AoeSquareEffect, DirectThreat, AoEThreat):
+class FlamingSphereRam(Actoid, DirectThreat):
 
-    def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
-        LimitedDurationEffect.__init__(self, turns=10)
-        AoeSquareEffect.__init__(self, coord, SpellStats.TRANSLATE_BOX[FlamingSphereRamFactory.target])
+    def __init__(self, target_combatant, coord, factory,  **kwargs):
+        super().__init__(actoid_flags=ActoidFlags.IS_DIRECT_THREAT)
         self.factory = factory
+        self.target_combatant = target_combatant  # target of the ramming
+        self.coord = coord  # but still has to end up at an adjacent unoccupied space
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere at {np.squeeze(self.combatant)}"
+        return f"Flaming Sphere Ram into {np.squeeze(self.target_combatant)}"
 
     def shorthand_str(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere"
-
-    def on_start_of_turn(self, combatant):
-        pass
-
-    def on_end_of_turn(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, FlamingSphereRamFactory.dmg_type)
-
-    def on_enter(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, FlamingSphereRamFactory.dmg_type)
-
-    def on_move_within(self, combatant):
-        return 0
-
-    def is_affecting(self, combatant, battle_map):
-        return False
-
-    def activate(self, battle_map):
-        pass  # TODO add FLAMING_SPHERE_RAM bonus action
-
-    def deactivate(self, battle_map):
-        pass # TODO remove FLAMING_SPHERE_RAM bonus action
-
-    def enable(self, battle_map):
-        pass # TODO add FLAMING_SPHERE_RAM bonus action
-
-    def disable(self, battle_map):
-        pass # TODO remove FLAMING_SPHERE_RAM bonus action
-
+        return f"Flaming Sphere Ram"
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
 
     @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, SpellStats.Target.BOX_5, FlamingSphereRamFactory.type, self.coord)
-        acc = 0
-        for aff in affected:
-            if battle_map.teams.are_enemies(self.factory.combatant, aff):
-                acc += avg_roll(self.factory.dmg_dice)
-            else:
-                acc -= avg_roll(self.factory.dmg_dice)
-        return acc
+        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant)
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
-        return 0  # Not relevant for this ability
-
-    def on_start_of_turn(self, combatant):
-        pass
-
-    def on_end_of_turn(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
-
-    def on_enter(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
-
-    def on_move_within(self, combatant):
-        return 0
-
-    def is_affecting(self, combatant, battle_map):
-        return False
-
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
-        return 0  # Not relevant for this ability
-
-    def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
-        return avg_roll(self.factory.dmg_dice)
-
-    def threat_on_enter(self, battle_map, target, *args, **kwargs):
-        return avg_roll(self.factory.dmg_dice)
-
-    def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
-        return 0
-
-    def threat_on_move_within(self, battle_map, target, *args, **kwargs):
-        return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_all_accessible_coords(shortest_paths)
 
     def is_current_coord_eligible(self, battle_map):
         return True
+
+    def move_effect(self, coord):
+        self.factory.action_enabler_effect.coord = coord
