@@ -400,7 +400,7 @@ class ActionResolver:
         """
         assert actoid is not None
         match actoid.factory.action_type:
-            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | Action.DODGE:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE:
                 actoid.activate(None)
                 self.effect_tracker.add(actoid, combatant)
                 return False
@@ -459,7 +459,7 @@ class ActionResolver:
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK:
                 return self.resolve_attack(actoid, combatant)
-            case Movement.STANDARD:
+            case Movement.STANDARD | Movement.DISENGAGE | Movement.CUNNING_DISENGAGE:
                 if not self.request_movement(combatant, actoid):
                     return False
             case Movement.DASH:
