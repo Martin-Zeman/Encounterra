@@ -108,6 +108,8 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
         enemies = battle_map.get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereRamFactory.RANGE)
+        if not enemies:
+            return 0
         acc = 0
         for enemy in enemies:
             acc += mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant_to(self.factory.dmg_type))

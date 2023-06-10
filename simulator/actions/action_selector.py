@@ -8,7 +8,6 @@ from toposort import toposort_flatten
 
 from simulator.actions.action_constants import PRIORITY_ACTIONS
 from simulator.actions.action_types import Movement
-from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.break_grapple import BreakGrappleFactory
 from simulator.actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from simulator.battle_map import convert_path_to_increments

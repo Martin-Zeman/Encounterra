@@ -41,6 +41,11 @@ class MoonDruid5Lvl(Combatant):
         self.attack_fsm.add_transition(str(self.scimitar[1]), '0', 'nop')
         self.attack_fsm.add_transition(str(self.longbow[1]), '0', 'nop')
 
+
+    def new_turn(self):
+        super().new_turn()
+        self.action_plan_strategy.best_wildshape_plan_data = None
+
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)

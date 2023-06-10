@@ -33,6 +33,7 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
 
     try:
         actoid1 = get_action(test_moon_druid, battle_map)
@@ -50,6 +51,37 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
         assert str(actoid4) == "BrownBear Bite on Bugbear" or str(actoid5) == "BrownBear Bite on Bugbear"
         assert str(actoid4) == "BrownBear Claws on Bugbear" or str(actoid5) == "BrownBear Claws on Bugbear"
         assert str(actoid6) == "None"
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
+    """
+    We assert the basic functionality of the wildshape ability. The Druid must be able to wildshape and attack.
+    """
+    CustomLogger(LogLevel.WARNING)
+
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [test_moon_druid, test_bugbear]
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+
+    try:
+        actoid1 = get_action(test_moon_druid, battle_map)
+        assert str(actoid1).startswith("Flaming Sphere")
+        action_resolver.resolve_action(actoid1, test_moon_druid)
+        actoid2 = get_action(test_moon_druid, battle_map)
+        assert str(actoid2) == "Wildshape of MoonDruid5Lvl into BrownBear"
+        action_resolver.resolve_action(actoid2, test_moon_druid)
+        actoid3 = get_action(test_moon_druid, battle_map)
+        assert str(actoid3) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -75,6 +107,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
 
     try:
         actoid1 = get_action(test_moon_druid, battle_map)
@@ -124,6 +157,7 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
 
     try:
         actoid1 = get_action(test_moon_druid, battle_map)

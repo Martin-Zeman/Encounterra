@@ -32,11 +32,9 @@ def use_resources(combatant, action, battle_map):
             case Action.HASTE:
                 subject.spellslots.use_spellslot(3)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.is_concentrating = True
             case Action.TWINNED_HASTE:
                 subject.spellslots.use_spellslot(3)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.is_concentrating = True
                 subject.curr_sorcery_points -= 3
             case Action.CHAOSBOLT:
                 subject.spellslots.use_spellslot(1)
@@ -53,7 +51,6 @@ def use_resources(combatant, action, battle_map):
             case Action.FLAMING_SPHERE:
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.is_concentrating = True
             case _:
                 logger.error("use_resources: Unknown action type")
     elif isinstance(action_type, BonusAction):
@@ -77,7 +74,6 @@ def use_resources(combatant, action, battle_map):
             case BonusAction.QUICKENED_HASTE:
                 subject.spellslots.use_spellslot(3)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.is_concentrating = True
                 subject.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_FIREBALL:
                 subject.spellslots.use_spellslot(3)

@@ -148,6 +148,14 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
+        """
+        Comoutes a list of coordinates that are eligible for wildshape but then reduces it down to those with a distance to the combatant
+        equal to the minimum eligible distance.
+        :param battle_map:
+        :param distances: the distances to all squares (result of Dijkstra)
+        :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
+        :return: eligible coordinates
+        """
         map_accessibility_matrix = np.zeros((battle_map.size, battle_map.size))
         for coord in shortest_paths.keys():
             map_accessibility_matrix[coord] = 1

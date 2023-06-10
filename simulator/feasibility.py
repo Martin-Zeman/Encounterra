@@ -113,6 +113,14 @@ def check_feasibility(combatant, action, battle_map):
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 res &= not combatant.is_constricting
                 return res
+            case Action.FLAMING_SPHERE:
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.is_concentrating
+                res &= battle_map.are_valid_coords(np.array([action.origin]))
+                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                return res
             case _:
                 logger.error("check_feasibility: Unknown action type")
                 return False
@@ -177,6 +185,8 @@ def check_feasibility(combatant, action, battle_map):
                 return res
             case BonusAction.MOON_WILDSHAPE:
                 return res and combatant.curr_wildshape_uses > 0
+            case BonusAction.FLAMING_SPHERE_RAM:
+                return res  # TODO add more conditions
             case _:
                 logger.error("Unknown bonus action")
                 return False

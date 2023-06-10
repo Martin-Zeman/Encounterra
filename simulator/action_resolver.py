@@ -427,10 +427,12 @@ class ActionResolver:
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
                 actoid.activate(None)
                 self.effect_tracker.add(actoid, combatant)
+                combatant.is_concentrating = True
                 return ActionResult.MEDIUM_BUFF
             case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
                 actoid.activate(self.battle_map)
                 self.effect_tracker.add(actoid, combatant)
+                combatant.is_concentrating = True
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
                 return self.resolve_ranged_spell_attack(combatant, actoid, actoid.target)
             case Action.TWINNED_FIREBOLT:
@@ -455,6 +457,7 @@ class ActionResolver:
             case Action.FLAMING_SPHERE:
                 actoid.activate(None)
                 self.effect_tracker.add(actoid, combatant)
+                combatant.is_concentrating = True
                 return ActionResult.FEASIBLE
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK:

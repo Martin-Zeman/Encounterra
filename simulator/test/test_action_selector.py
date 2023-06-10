@@ -163,9 +163,9 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
     dag.trigger("Staff of Defence on Goblin")
     transitions = dag.get_available_transitions()
     # For the second action, coordinates are not taken into account, but Dodge is included
+    assert 'Quickened Haste on DraconicSorcerer5lvl' in transitions
     assert 'Quickened Fireball at [ 6 10]' in transitions
     assert 'Quickened Firebolt on Goblin' in transitions
-    assert 'Quickened Haste on DraconicSorcerer5lvl' in transitions
 
 def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin,
                                                       test_bugbear):
