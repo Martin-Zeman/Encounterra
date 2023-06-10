@@ -11,7 +11,7 @@ logger = logging.getLogger("EncounTroll")
 
 class DisengageFactory(ThreatModifierFactory):
 
-    def __init__(self, combatant, action_type):
+    def __init__(self, action_type, combatant):
         super().__init__()
         self.combatant = combatant
         self.action_type = action_type  # DISENGAGE, CUNNING DISENGAGE

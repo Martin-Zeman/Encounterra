@@ -11,7 +11,7 @@ from simulator.spells.fireball import Fireball
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, teams, effect_tracker, battle_map
-from simulator.actions.action_selector import get_best_actions, build_action_dag, get_action
+from simulator.actions.action_selector import build_action_dag, get_action
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 import types
 import cProfile
@@ -259,7 +259,7 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
     assert len(dag.get_available_transitions()) == 0
 
 
-def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
+def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     CustomLogger(LogLevel.WARNING)
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
@@ -272,18 +272,18 @@ def test_get_best_actions_twin_firebolt_and_fireball(battle_map, teams, effect_t
     battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 4]))  # Have to set it for fireball placement
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    # from simulator.actions.action_selector import get_best_actions
-    # cProfile.runctx('get_best_actions(test_draconic_sorcerer_5lvl, battle_map, distances, shortest_paths)', None, locals(), filename="get_best_actions_stats")
-    # p = pstats.Stats("select_best_action_stats")
+    # from simulator.actions.action_selector import calculate_action_plan
+    # cProfile.runctx('calculate_action_plan(test_draconic_sorcerer_5lvl, battle_map, distances, shortest_paths)', None, locals(), filename="calculate_action_plan_stats")
+    # p = pstats.Stats("select_action_plan_stats")
     # p.strip_dirs().sort_stats("cumtime").print_stats()
-    best_actions = get_best_actions(test_draconic_sorcerer_5lvl, battle_map, distances, shortest_paths)
+    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(battle_map, distances, shortest_paths)
     new_coord = copy.copy(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
-    # for ba in best_actions:
-    #     new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
+    # for a in action_plan:
+    #     new_coord += ba.increment if isinstance(a, MovementIncrement) else np.array([[0, 0]])
     # assert battle_map.get_hop_distance(new_coord, test_bugbear) > (test_bugbear.speed + test_bugbear.danger_zone_attack[1].range)
     # Staying still is actually preferable here
-    assert isinstance(best_actions[0], Fireball) or isinstance(best_actions[0], TwinnedFirebolt)
-    assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], TwinnedFirebolt)
+    assert isinstance(action_plan[0], Fireball) or isinstance(action_plan[0], TwinnedFirebolt)
+    assert isinstance(action_plan[1], Fireball) or isinstance(action_plan[1], TwinnedFirebolt)
 
 
 def test_rage_before_attack(battle_map, teams, effect_tracker, test_bugbear, test_totem_barbarian):

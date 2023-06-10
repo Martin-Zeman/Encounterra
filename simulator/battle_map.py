@@ -6,8 +6,8 @@ import logging
 from simulator.abilities.wildshape import Wildshape
 from simulator.actions.action_types import Passive
 from simulator.combatant_coords import CombatantCoords
+from simulator.proto_combatant import ProtoCombatant
 from simulator.spells.spell import SpellStats
-from simulator.combatant import Combatant
 from simulator.misc import Conditions, Size
 from simulator.geometry import get_affected_by_cone
 from simulator.misc import Side, DistanceMetric
@@ -232,10 +232,10 @@ class Map:
     @contextmanager
     def replace_combatant_if_action_is_wildshape(self, action, combatant):
         if isinstance(action, Wildshape):
+            original_size = action.form.size
             try:
                 self.teams.replace_combatant(combatant, action.form)
                 position = self.get_combatant_position(combatant)
-                original_size = action.form.size
                 action.form.size = Size.MEDIUM  # TODO this is a hack, making the form medium to make sure it fits
                 self.remove_combatant(combatant)
                 self.set_combatant_coordinates(action.form, position.get()[0])
@@ -688,8 +688,8 @@ class Map:
         :param subject2: either a numpy.array or a Combatant type
         :return: distance between subjects in number of hops, None if one of the subjects is dead
         """
-        subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), Combatant) else subject1
-        subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), Combatant) else subject2
+        subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), ProtoCombatant) else subject1
+        subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), ProtoCombatant) else subject2
         try:
             dist_mat = distance_matrix(subject1, subject2)
             min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
@@ -708,8 +708,8 @@ class Map:
         :return: cartesian distance between subjects, None if one of the subjects is dead
         """
         try:
-            subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), Combatant) else subject1
-            subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), Combatant) else subject2
+            subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), ProtoCombatant) else subject1
+            subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), ProtoCombatant) else subject2
         except KeyError:
             return None
         try:

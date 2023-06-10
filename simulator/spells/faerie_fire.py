@@ -71,7 +71,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
         self.affected_combatants = []
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + f"Faerie Fire at {self.target}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + f"Faerie Fire at {self.origin}"
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + "Faerie Fire"
@@ -80,7 +80,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
         return combatant in self.affected_combatants
 
     def activate(self, battle_map):
-        potentially_affected_combatants = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.coord)
+        potentially_affected_combatants = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
             saved = roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_modifiers(pac.saving_throws_roll_mod[st]))
@@ -115,13 +115,13 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
+        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FaerieFireFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= FaerieFireFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FaerieFireFactory.range
 
     def on_enter(self, combatant):
         pass

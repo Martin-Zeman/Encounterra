@@ -41,7 +41,7 @@ def use_resources(combatant, action, battle_map):
             case Action.CHAOSBOLT:
                 subject.spellslots.use_spellslot(1)
                 subject.already_cast_leveled_spell_this_turn = True
-            case Action.SCORCHING_RAY | Action.FLAMING_SPHERE:
+            case Action.SCORCHING_RAY:
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_FIREBOLT:
@@ -50,6 +50,10 @@ def use_resources(combatant, action, battle_map):
                 subject.curr_wildshape_uses -= 1
             case Action.POUNCE | Action.CONSTRICT:
                 pass  # Sufficiently tracked by not having an action anymore
+            case Action.FLAMING_SPHERE:
+                subject.spellslots.use_spellslot(2)
+                subject.already_cast_leveled_spell_this_turn = True
+                subject.is_concentrating = True
             case _:
                 logger.error("use_resources: Unknown action type")
     elif isinstance(action_type, BonusAction):

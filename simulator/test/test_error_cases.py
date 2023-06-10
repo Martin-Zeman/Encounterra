@@ -15,7 +15,7 @@ from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
     test_ogre, test_moon_druid, teams, effect_tracker, battle_map
-from simulator.actions.action_selector import get_best_actions, get_action
+from simulator.actions.action_selector import get_action
 from simulator.utils.utils import preallocate_wildshape_forms
 
 
@@ -38,15 +38,15 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13]))  # Have to set it for fireball placement
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    best_actions = get_best_actions(test_draconic_sorcerer_5lvl, battle_map, distances, shortest_paths)
+    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(battle_map, distances, shortest_paths)
     new_coord = copy.copy(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
-    for ba in best_actions:
+    for ba in action_plan:
         new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
-    fireball = best_actions[0] if isinstance(best_actions[0], Fireball) else best_actions[1]
+    fireball = action_plan[0] if isinstance(action_plan[0], Fireball) else action_plan[1]
     # Staying still is actually preferable here
     assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert isinstance(best_actions[0], Fireball) or isinstance(best_actions[0], Firebolt)
-    assert isinstance(best_actions[1], Fireball) or isinstance(best_actions[1], Firebolt)
+    assert isinstance(action_plan[0], Fireball) or isinstance(action_plan[0], Firebolt)
+    assert isinstance(action_plan[1], Fireball) or isinstance(action_plan[1], Firebolt)
 
 def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear):
     """
@@ -71,13 +71,13 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    best_actions = get_best_actions(test_draconic_sorcerer_5lvl, battle_map, distances, shortest_paths)
-    fireball = best_actions[0] if isinstance(best_actions[0], Fireball) else best_actions[1]
+    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(battle_map, distances, shortest_paths)
+    fireball = action_plan[0] if isinstance(action_plan[0], Fireball) else action_plan[1]
     assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     assert battle_map.get_cartesian_distance(test_bugbear, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     assert battle_map.get_cartesian_distance(test_bugbear_2, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert isinstance(best_actions[0], Fireball) or isinstance(best_actions[1], Fireball)
-    assert isinstance(best_actions[0], TwinnedFirebolt) or isinstance(best_actions[1], TwinnedFirebolt)
+    assert isinstance(action_plan[0], Fireball) or isinstance(action_plan[1], Fireball)
+    assert isinstance(action_plan[0], TwinnedFirebolt) or isinstance(action_plan[1], TwinnedFirebolt)
 
 
 def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre):

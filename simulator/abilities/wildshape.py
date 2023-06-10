@@ -96,6 +96,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         battle_map.set_combatant_coordinates(self.form, np.array(wildshape_coord))
         self.combatants[0].current_wildshape_form = self.form
         self.form.curr_hp = self.form.max_hp
+        self.form.movement = max(0, self.form.speed - (self.combatants[0].speed - self.combatants[0].movement))
         self.form.saving_throws[SavingThrow.INT] = self.combatants[0].saving_throws[SavingThrow.INT]
         self.form.saving_throws[SavingThrow.WIS] = self.combatants[0].saving_throws[SavingThrow.WIS]
         self.form.saving_throws[SavingThrow.CHA] = self.combatants[0].saving_throws[SavingThrow.CHA]
@@ -113,6 +114,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         position = battle_map.get_combatant_position(self.combatants[0].current_wildshape_form)
         battle_map.remove_combatant(self.combatants[0].current_wildshape_form)
         battle_map.set_combatant_coordinates(self.combatants[0], position.get()[0])
+        self.combatants[0].movement = min(self.combatants[0].speed, self.combatants[0].current_wildshape_form.movement)
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
         self.combatants[0].has_bonus_action = self.form.has_bonus_action

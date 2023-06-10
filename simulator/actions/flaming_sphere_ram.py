@@ -30,10 +30,10 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         return "FlamingSphereRamFactory"
 
     def create_all(self, battle_map):
-        enemies = battle_map.teams.get_enemies()
+        enemies = battle_map.teams.get_enemies(self.combatant)
         result = []
         for enemy in enemies:
-            coords_around_enemy = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(enemy), rng=1)
+            coords_around_enemy = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1)
             for coord in coords_around_enemy:
                 result.append(FlamingSphereRam(enemy, coord, self))
         return result
@@ -45,7 +45,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return mean_dmg_dc_attack(self.combatant.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant(self.dmg_type))
+        return mean_dmg_dc_attack(self.combatant.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type))
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
@@ -74,6 +74,9 @@ class FlamingSphereRam(Actoid, DirectThreat):
     @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant)
+
+    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+        return 0  # Doesn't apply here
 
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

@@ -16,6 +16,7 @@ from simulator.actions.ranged_attack import RangedAttackFactory
 from simulator.spells.chaosbolt import ChaosboltFactory
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.firebolt import FireboltFactory
+from simulator.spells.flaming_sphere import FlamingSphereFactory
 from simulator.spells.haste import HasteFactory
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.spells.scorching_ray import ScorchingRayFactory
@@ -54,6 +55,7 @@ TO_FACTORY = {
     Action.POUNCE: PounceFactory,
     Action.CONSTRICT: ConstrictFactory,
     Action.BITE_WITH_SWALLOW: BiteWithSwallowFactory,
+    Action.FLAMING_SPHERE: FlamingSphereFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,

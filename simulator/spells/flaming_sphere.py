@@ -44,12 +44,12 @@ class FlamingSphereFactory(DirectThreatFactory):
 
     def create_all(self, battle_map):
         # Getting coords around enemies
-        enemies = battle_map.teams.get_enemies()
+        enemies = battle_map.teams.get_enemies(self.combatant)
         coords = set()
         for enemy in enemies:
-            coords_around_enemy = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(enemy), rng=1)
+            coords_around_enemy = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1)
             for coord in coords_around_enemy:
-                if coord not in coords and battle_map.get_cartesian_distance(enemy, coord) <= FlamingSphereFactory.range:
+                if coord not in coords and battle_map.get_cartesian_distance(enemy, np.array([coord])) <= FlamingSphereFactory.range:
                     coords.add(coord)
 
         result = []
@@ -65,7 +65,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return mean_dmg_dc_attack(self.combatant.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant(self.dmg_type)) * ROUND_HORIZON
+        return mean_dmg_dc_attack(self.combatant.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type)) * ROUND_HORIZON
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
@@ -83,7 +83,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         self.factory = factory
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere at {np.squeeze(self.coord)}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere at {np.squeeze(self.origin)}"
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere"
@@ -110,18 +110,18 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         enemies = battle_map.get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereRamFactory.RANGE)
         acc = 0
         for enemy in enemies:
-            acc += mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant(self.factory.dmg_type))
+            acc += mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant_to(self.factory.dmg_type))
         return acc / len(enemies) * ROUND_HORIZON
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
+        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FlamingSphereFactory.range,
                                                              combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= FlamingSphereFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FlamingSphereFactory.range
 
     def on_start_of_turn(self, combatant):
         pass
@@ -145,11 +145,11 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
-        return mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant(self.factory.dmg_type))
+        return mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
 
     def threat_on_enter(self, battle_map, target, *args, **kwargs):
         # It's not explicitly written in the rules, but it makes sense
-        return mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant(self.factory.dmg_type))
+        return mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
 
     def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
         return 0

@@ -243,6 +243,7 @@ def check_feasibility_light(combatant, action, battle_map):
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.is_concentrating
                 # res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.CHAOSBOLT:
@@ -263,6 +264,7 @@ def check_feasibility_light(combatant, action, battle_map):
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.is_concentrating
                 res &= combatant.curr_sorcery_points > 2
                 res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
@@ -294,6 +296,12 @@ def check_feasibility_light(combatant, action, battle_map):
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.is_constricting
                 return res
+            case Action.FLAMING_SPHERE:
+                res = combatant.has_action
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.is_concentrating
+                return res
             case _:
                 logger.error("check_feasibility_light: Unknown action type")
                 return False
@@ -322,7 +330,13 @@ def check_feasibility_light(combatant, action, battle_map):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 return res
-            case BonusAction.QUICKENED_HASTE | BonusAction.QUICKENED_FIREBALL:
+            case BonusAction.QUICKENED_HASTE:
+                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.is_concentrating
+                res &= combatant.curr_sorcery_points > 1
+                return res
+            case BonusAction.QUICKENED_FIREBALL:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
@@ -330,7 +344,7 @@ def check_feasibility_light(combatant, action, battle_map):
             case BonusAction.QUICKENED_FIREBOLT:
                 return res and combatant.curr_sorcery_points > 1
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
-            case BonusAction.CUNNING_DISENGAGE:
+            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM:
                 return res
             case BonusAction.MOON_WILDSHAPE:
                 return res and combatant.curr_wildshape_uses > 0

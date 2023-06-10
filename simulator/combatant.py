@@ -6,6 +6,7 @@ import math
 from contextlib import contextmanager
 
 from simulator.actions.actoid import FactoryFlags
+from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC
 from enum import Enum
@@ -15,23 +16,25 @@ from simulator.actions.disengage import DisengageFactory
 from simulator.abilities.rage import RageFactory
 from simulator.actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKENED, TO_TWINNED
 from simulator.actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
+from simulator.proto_combatant import ProtoCombatant
 
 logger = logging.getLogger("EncounTroll")
 
 
-class Combatant(ABC):
+class Combatant(ABC, ProtoCombatant):
 
     def __init__(self, effect_tracker, name, level, hp, ac, init_bonus, spell_to_hit, speed, resistances, dc):
         self.effect_tracker = effect_tracker
         self.name = name
         self.level = level
-        self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(self, Action.DISENGAGE))]
+        self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self))]
         self.dodge_factory = self.action_factories[0]
         self.disengage_factory = self.action_factories[1]
         self.bonus_action_factories = []
         self.reaction_factories = []
         self.danger_zone_attack = None
         self.haste_action_factories = []
+        self.action_plan_strategy = DefaultActionPlanStrategy(self)
         self.passive = []
         self.max_hp = hp
         self.curr_hp = hp
@@ -172,7 +175,7 @@ class Combatant(ABC):
                         (action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
                     return self.action_factories[-1]
                 case Action.DISENGAGE:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
                     return self.action_factories[-1]
                 case Action.WILDSHAPE:
                     self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
@@ -191,6 +194,9 @@ class Combatant(ABC):
                     factory = TO_FACTORY[action_type]
                     self.is_constricting = False
                     self.action_factories.append((action_type, factory(**kwargs)))
+                    return self.action_factories[-1]
+                case Action.FLAMING_SPHERE:
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
                     return self.action_factories[-1]
                 case _:
                     return None
@@ -224,7 +230,7 @@ class Combatant(ABC):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))  # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_DISENGAGE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))  # TODO
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))  # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_HIDE:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))  # TODO
@@ -475,3 +481,14 @@ class Combatant(ABC):
 
     def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
         return None
+
+
+    def calculate_action_plan(self, battle_map, distances, shortest_paths):
+        """
+        A thin wrapper for the calculation of action plan
+        :param battle_map:
+        :param distances: the distances to all squares (result of Dijkstra)
+        :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
+        :return: the action plan
+        """
+        return self.action_plan_strategy.calculate_action_plan(battle_map, distances, shortest_paths)

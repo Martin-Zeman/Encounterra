@@ -72,7 +72,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         self.factory = factory
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + f"Hunger Of Hadar at {np.squeeze(self.coord)}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + f"Hunger Of Hadar at {np.squeeze(self.origin)}"
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + "Hunger Of Hadar"
@@ -114,7 +114,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
     @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.origin)
         acc = 0
         for aff in affected:
             acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg
@@ -139,10 +139,10 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
+        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=HungerOfHadarFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= HungerOfHadarFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= HungerOfHadarFactory.range

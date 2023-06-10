@@ -66,7 +66,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         self.factory = factory
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers at {np.squeeze(self.combatant)}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers at {np.squeeze(self.origin)}"
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers"
@@ -100,7 +100,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
 
     @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.origin)
         acc = 0
         for aff in affected:
             if battle_map.teams.are_enemies(self.factory.combatant, aff):
@@ -125,10 +125,10 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.combatant),  # not actually combatant coords
+        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=CloudOfDaggersFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
-        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= CloudOfDaggersFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= CloudOfDaggersFactory.range
