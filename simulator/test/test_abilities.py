@@ -72,6 +72,7 @@ def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, t
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    test_bugbear.curr_hp = 1000  # Give the target a bunch of HP to make sure it doesn't die
 
     try:
         actoid1 = get_action(test_moon_druid, battle_map)
@@ -82,6 +83,75 @@ def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, t
         action_resolver.resolve_action(actoid2, test_moon_druid)
         actoid3 = get_action(test_moon_druid, battle_map)
         assert str(actoid3) == "None"
+        test_moon_druid.new_turn()
+
+        actoid4 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid4, test_moon_druid)
+        actoid5 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid5, test_moon_druid)
+        actoid6 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid6, test_moon_druid)
+        actoid7 = get_action(test_moon_druid, battle_map)
+        assert str(actoid6) == "BrownBear Bite on Bugbear" or str(actoid7) == "BrownBear Bite on Bugbear"
+        assert str(actoid6) == "BrownBear Claws on Bugbear" or str(actoid7) == "BrownBear Claws on Bugbear"
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
+    """
+    We assert the basic functionality of the wildshape ability. The Druid must be able to wildshape and attack.
+    """
+    CustomLogger(LogLevel.WARNING)
+
+    battle_map.set_effect_tracker(effect_tracker)
+    battle_map.place_circular_element(np.array([0, 0]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([2, 0]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([1, 0]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [test_moon_druid, test_bugbear]
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    test_bugbear.curr_hp = 1000  # Give the target a bunch of HP to make sure it doesn't die
+
+    try:
+        actoid1 = get_action(test_moon_druid, battle_map)
+        assert str(actoid1).startswith("[-1  1]")
+        # assert str(actoid1).startswith("Flaming Sphere")
+        action_resolver.resolve_action(actoid1, test_moon_druid)
+        actoid2 = get_action(test_moon_druid, battle_map)
+        assert str(actoid2).startswith("Flaming Sphere")
+        action_resolver.resolve_action(actoid2, test_moon_druid)
+        actoid3 = get_action(test_moon_druid, battle_map)
+        assert str(actoid3) == "Wildshape of MoonDruid5Lvl into BrownBear"
+        action_resolver.resolve_action(actoid3, test_moon_druid)
+        actoid4 = get_action(test_moon_druid, battle_map)
+        assert str(actoid4) == "None"
+        test_moon_druid.new_turn()
+
+        actoid5 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid5, test_moon_druid)
+        actoid6 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid6, test_moon_druid)
+        actoid7 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid7, test_moon_druid)
+        actoid8 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid8, test_moon_druid)
+        actoid9 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid9, test_moon_druid)
+        actoid10 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid10, test_moon_druid)
+        actoid11 = get_action(test_moon_druid, battle_map)
+        action_resolver.resolve_action(actoid11, test_moon_druid)
+        assert False  # TODO investigate the weird movement afterwards
+        assert str(actoid7) == "BrownBear Bite on Bugbear" or str(actoid8) == "BrownBear Bite on Bugbear"
+        assert str(actoid7) == "BrownBear Claws on Bugbear" or str(actoid8) == "BrownBear Claws on Bugbear"
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

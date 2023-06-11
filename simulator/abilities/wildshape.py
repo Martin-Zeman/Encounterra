@@ -89,6 +89,9 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         return f"Wildshape of {self.factory.combatant} into {self.form.__class__.__name__}"
 
     def activate(self, battle_map):
+        """
+        Activation happens when the ability is selected and is being resolved.
+        """
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
         battle_map.teams.replace_combatant(self.combatants[0], self.form)
         wildshape_coord = battle_map.find_wildshaped_coordinate(self.combatants[0], self.form.size)
@@ -105,10 +108,22 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.has_haste_action = self.combatants[0].has_haste_action
         self.form.has_reaction = self.combatants[0].has_reaction
         self.form.is_concentrating = self.combatants[0].is_concentrating
+        self.form.action_factories.extend([af for af in self.combatants[0].action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in af[1].flags])
+        self.form.bonus_action_factories.extend([baf for baf in self.combatants[0].bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in baf[1].flags])
+        self.form.haste_action_factories.extend([haf for haf in self.combatants[0].haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in haf[1].flags])
+        for af in self.form.action_factories:
+            af[1].combatant = self.form
+        for baf in self.form.bonus_action_factories:
+            baf[1].combatant = self.form
+        for haf in self.form.haste_action_factories:
+            haf[1].combatant = self.form
         # TODO add function for wildshape replacement for effect tracker
 
 
     def deactivate(self, battle_map):
+        """
+        Activation happens when the ability is either cancelled (loss of concentration) or expires
+        """
         logger.info(f"{self.combatants[0]}'s wildshape fades")
         battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         position = battle_map.get_combatant_position(self.combatants[0].current_wildshape_form)
@@ -121,22 +136,55 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.combatants[0].has_haste_action = self.form.has_haste_action
         self.combatants[0].has_reaction = self.form.has_reaction
         self.combatants[0].is_concentrating = self.form.is_concentrating
+        self.form.action_factories = [af for af in self.form.action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in af[1].flags]
+        self.form.bonus_action_factories = [baf for baf in self.form.bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in baf[1].flags]
+        self.form.haste_action_factories = [haf for haf in self.form.haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in haf[1].flags]
+        for af in self.combatants[0].action_factories:
+            af[1].combatant = self.combatants[0]
+        for baf in self.combatants[0].bonus_action_factories:
+            baf[1].combatant = self.combatants[0]
+        for haf in self.combatants[0].haste_action_factories:
+            haf[1].combatant = self.combatants[0]
         # TODO add function for wildshape replacement for effect tracker
 
 
     def enable(self, battle_map):
+        """
+        Enabling happens when the ability is being explored during action FSM creation as an action enabler.
+        """
         self.combatants[0].current_wildshape_form = self.form
         self.form.has_action = self.combatants[0].has_action
         self.form.has_bonus_action = self.combatants[0].has_bonus_action
         self.form.has_haste_action = self.combatants[0].has_haste_action
         self.form.has_reaction = self.combatants[0].has_reaction
+        self.form.action_factories.extend([af for af in self.combatants[0].action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in af[1].flags])
+        self.form.bonus_action_factories.extend([baf for baf in self.combatants[0].bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in baf[1].flags])
+        self.form.haste_action_factories.extend([haf for haf in self.combatants[0].haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in haf[1].flags])
+        for af in self.form.action_factories:
+            af[1].combatant = self.form
+        for baf in self.form.bonus_action_factories:
+            baf[1].combatant = self.form
+        for haf in self.form.haste_action_factories:
+            haf[1].combatant = self.form
 
     def disable(self, battle_map):
+        """
+        Disabling happens when the ability is finished being explored during action FSM creation as an action enabler.
+        """
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
         self.combatants[0].has_bonus_action = self.form.has_bonus_action
         self.combatants[0].has_haste_action = self.form.has_haste_action
         self.combatants[0].has_reaction = self.form.has_reaction
+        self.form.action_factories = [af for af in self.form.action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in af[1].flags]
+        self.form.bonus_action_factories = [baf for baf in self.form.bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in baf[1].flags]
+        self.form.haste_action_factories = [haf for haf in self.form.haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in haf[1].flags]
+        for af in self.combatants[0].action_factories:
+            af[1].combatant = self.combatants[0]
+        for baf in self.combatants[0].bonus_action_factories:
+            baf[1].combatant = self.combatants[0]
+        for haf in self.combatants[0].haste_action_factories:
+            haf[1].combatant = self.combatants[0]
 
     def clear_cache(self):
         pass
@@ -149,7 +197,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         """
-        Comoutes a list of coordinates that are eligible for wildshape but then reduces it down to those with a distance to the combatant
+        Computes a list of coordinates that are eligible for wildshape but then reduces it down to those with a distance to the combatant
         equal to the minimum eligible distance.
         :param battle_map:
         :param distances: the distances to all squares (result of Dijkstra)
@@ -160,17 +208,16 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         for coord in shortest_paths.keys():
             map_accessibility_matrix[coord] = 1
         original_coordinate = battle_map.get_combatant_position(self.factory.combatant).get()[0]
-        map_accessibility_matrix[original_coordinate] = 1
-        wilshape_matrix = np.ones((self.form.size.value + 1, self.form.size.value + 1))
+        map_accessibility_matrix[original_coordinate[0], original_coordinate[1]] = 1
+        map_accessibility_matrix = np.transpose(map_accessibility_matrix)
         wilshape_matrix_size = self.form.size.value + 1
         result_matrix = np.zeros((battle_map.size, battle_map.size))
 
         for i in range(battle_map.size - wilshape_matrix_size + 1):
             for j in range(battle_map.size - wilshape_matrix_size + 1):
                 submatrix = map_accessibility_matrix[i:i + wilshape_matrix_size, j:j + wilshape_matrix_size]
-                subproduct = submatrix * wilshape_matrix
-                if np.all(subproduct > 0):
-                    result_matrix[i:i + wilshape_matrix_size, j:j + wilshape_matrix_size] = 1
+                if np.all(submatrix > 0):
+                    result_matrix[j:j + wilshape_matrix_size, i:i + wilshape_matrix_size] = 1  # Take care that axes are swapped here
         # Here we're only interested in the coords with the lowest distance from the original coordinate
         all_coords = np.argwhere(result_matrix == 1).tolist()
         all_coords.sort(key=lambda coord: battle_map.get_hop_distance(self.factory.combatant, np.array([coord])))

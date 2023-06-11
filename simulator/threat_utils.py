@@ -206,7 +206,7 @@ def get_danger_zone_threat(battle_map, coords, combatant):
     :return: danger zone threat (positive)
     """
     enemies = battle_map.get_enemies(combatant)
-    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant) * DZ_CONSTANT if
+    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant, consider_dist=False) * DZ_CONSTANT if
         battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
 
@@ -255,7 +255,7 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
         if not disengaged:
             enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
             for e in enemies:
-                t = e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier)
+                t = e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier, consider_dist=False)
                 assert t >= 0
                 threat_acc -= t
 

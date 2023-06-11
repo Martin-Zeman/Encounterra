@@ -59,11 +59,11 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         self.best_wildshape_plan_data = None
 
 
-    def combine_action_plans(self, regular_action_plan, ws_action_plain, non_wildshape_action, battle_map, distances, shortest_paths):
+    def combine_action_plans(self, regular_action_plan, ws_action_plan, non_wildshape_action, battle_map, distances, shortest_paths):
         """
         A helper function which combines the regular best action plan with the best wildshape plan.
         :param regular_action_plan: the best overall action plan
-        :param ws_action_plain: the best action plan which starts with a wildshape
+        :param ws_action_plan: the best action plan which starts with a wildshape
         :param non_wildshape_action: the first non-wildshape action from the regular action plan
         :param battle_map:
         :param distances: potentially already pre-computed distances to all coords
@@ -71,15 +71,16 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         :return: combined action plan
         """
         current_position = tuple(battle_map.get_combatant_position(self.combatant).get()[0])
-        regular_movement_increments = [e.increment for e in regular_action_plan if hasattr(e, "increment")]
-        regular_destination = current_position + tuple(np.sum(regular_movement_increments, axis=0)) if regular_movement_increments else (0, 0)
-        ws_movement_increments = [e.increment for e in ws_action_plain if hasattr(e, "increment")]
-        ws_destination = current_position + tuple(np.sum(ws_movement_increments, axis=0)) if ws_movement_increments else (0, 0)
-        if ws_destination != regular_destination and ws_destination in non_wildshape_action.get_eligible_coords(battle_map, distances, shortest_paths):
+        # regular_movement_increments = [e.increment for e in regular_action_plan if hasattr(e, "increment")]
+        # regular_destination = current_position + tuple(np.sum(regular_movement_increments, axis=0)) if regular_movement_increments else (0, 0)
+        ws_movement_increments = [e.increment for e in ws_action_plan if hasattr(e, "increment")]
+        sum_of_ws_increments = tuple(np.sum(ws_movement_increments, axis=0)) if ws_movement_increments else (0, 0)
+        ws_destination = (current_position[0] + sum_of_ws_increments[0], current_position[1] + sum_of_ws_increments[1])
+        if ws_destination in non_wildshape_action.get_eligible_coords(battle_map, distances, shortest_paths):
             combined_plan = []
-            combined_plan.extend(ws_action_plain[:len(ws_movement_increments)])
+            combined_plan.extend(ws_action_plan[:len(ws_movement_increments)])
             combined_plan.append(non_wildshape_action)
-            combined_plan.append(get_moon_wildshape_action(ws_action_plain))
+            combined_plan.append(get_moon_wildshape_action(ws_action_plan))
             return combined_plan
         return regular_action_plan
 

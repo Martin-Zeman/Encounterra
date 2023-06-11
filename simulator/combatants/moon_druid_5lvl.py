@@ -45,6 +45,8 @@ class MoonDruid5Lvl(Combatant):
     def new_turn(self):
         super().new_turn()
         self.action_plan_strategy.best_wildshape_plan_data = None
+        if self.current_wildshape_form is not None:
+            self.current_wildshape_form.new_turn()
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

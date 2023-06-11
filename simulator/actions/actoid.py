@@ -35,3 +35,4 @@ class FactoryFlags(Flag):
     TARGETS_COORDS = auto()
     TARGETS_SELF = auto()
     USES_CALCULATE_THREAT_IN_MOD = auto()  # This is a very technical one which helps prevent endless recursion
+    TRANSITIONS_TO_WILDSHAPE = auto()

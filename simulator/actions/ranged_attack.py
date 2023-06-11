@@ -28,7 +28,7 @@ class RangedAttackFactory(AttackFactory):
 
 class RangeAttack(Attack):
 
-    @cache
+    # @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
         roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
         roll_modifier = RollModifier.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) > self.factory.short_range else roll_modifier

@@ -148,9 +148,9 @@ class Map:
     @contextmanager
     def as_if_combatant_position(self, combatant, coords: np.array):
         if coords is not None:
+            original_coords = self.combatant_coordinate_cache[combatant]
+            original_logger_level = logger.level
             try:
-                original_coords = self.combatant_coordinate_cache[combatant]
-                original_logger_level = logger.level
                 logger.setLevel(logging.WARNING)
                 self.move_combatant(combatant, coords)
                 yield self
@@ -215,10 +215,7 @@ class Map:
                 self.teams.replace_combatant(combatant_old, combatant_new)
                 position = self.get_combatant_position(combatant_old)
                 self.remove_combatant(combatant_old)
-                try:
-                    self.set_combatant_coordinates(combatant_new, position.get()[0])
-                except Exception as e:
-                    print("FIXME")
+                self.set_combatant_coordinates(combatant_new, position.get()[0])
                 yield self
             finally:
                 self.teams.replace_combatant(combatant_new, combatant_old)
@@ -248,6 +245,24 @@ class Map:
                 self.set_combatant_coordinates(combatant, position.get()[0])
         else:
             yield combatant
+
+
+    @contextmanager
+    def replace_combatant_if_action_by_wildshaped(self, action, combatant):
+        if combatant is not action.factory.combatant:
+            try:
+                self.teams.replace_combatant(combatant, action.factory.combatant)
+                position = self.get_combatant_position(combatant)
+                self.remove_combatant(combatant)
+                self.set_combatant_coordinates(action.factory.combatant, position.get()[0])
+                yield action.factory.combatant, True
+            finally:
+                self.teams.replace_combatant(action.factory.combatant, combatant)
+                position = self.get_combatant_position(action.factory.combatant)
+                self.remove_combatant(action.factory.combatant)
+                self.set_combatant_coordinates(combatant, position.get()[0])
+        else:
+            yield combatant, False
 
 
     def find_wildshaped_coordinate(self, combatant, size: Size):

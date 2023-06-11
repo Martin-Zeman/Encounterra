@@ -204,17 +204,22 @@ def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwar
     :param max_threat_backwards_transition: backwards transition dict which state -> predecessor state
     :return: the coordinate to be considered as the combatant's position when calculating the next transition threat
     """
-    pretend_coords = None
-    try:
-        # Get the coord transition that preceded this state
-        previous_transition_name = max_threat_backwards_transition[state][0]
-        _, x, y = re.search(search_pattern, previous_transition_name).groups()
-        pretend_coords = CombatantCoords(np.array([int(x), int(y)]))
-    except KeyError:
-        pretend_coords = current_coords
-    except AttributeError:
-        pass
-    return pretend_coords
+    curr_state = state
+    while True:
+        try:
+            previous_transition_name = max_threat_backwards_transition[curr_state][0]
+            _, x, y = re.search(search_pattern, previous_transition_name).groups()
+            curr_state = max_threat_backwards_transition[curr_state][1]
+            pretend_coords = CombatantCoords(np.array([int(x), int(y)]))
+            return pretend_coords
+        except KeyError:
+            break
+        except AttributeError:
+            curr_state = max_threat_backwards_transition[curr_state][1]
+        except Exception as e:
+            logger.error(f"Unexpected exception occurred in get_pretend_coords: {e}")
+            break
+    return current_coords
 
 def get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action):
     """
@@ -340,8 +345,8 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
     current_coords = battle_map.get_combatant_position(combatant)
 
     # Optimization: calculate_threat is cached, so we need to clear the cache before the computation
-    for action in transition_name_to_action.values():
-        action.clear_cache()
+    # for action in transition_name_to_action.values():
+    #     action.clear_cache()
 
     for state in sorted_states:
         if state != '0' and not dag.dependencies[state]:
@@ -355,9 +360,10 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     # Is it a transition which represents a (bonus) action?
                     pretend_coords = get_pretend_coords(current_coords, pattern, state, max_threat_backwards_transition)
                     pretend_coords = pretend_coords.get()[0] if pretend_coords is not None else None
+
                     action = transition_name_to_action[transition_name]
-                    with battle_map.as_if_combatant_position(combatant, pretend_coords):
-                        transition_threat = action.calculate_threat(combatant, battle_map) + (threat[state][1] if threat[state][1] > -math.inf else 0)
+                    with battle_map.as_if_combatant_position(combatant, pretend_coords), battle_map.replace_combatant_if_action_by_wildshaped(action, combatant) as (_, did_transform):
+                        transition_threat = action.calculate_threat(combatant, battle_map, consider_dist=(not did_transform)) + (threat[state][1] if threat[state][1] > -math.inf else 0)
                         transition_threat += get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action)
                     movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
                 except KeyError:  # either not in the dict or regex search came up empty
@@ -411,7 +417,7 @@ def get_action(combatant, battle_map):
     if combatant.action_plan:
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
             return combatant.action_plan.pop(0)
-    combatant.action_plan = combatant.action_plan_strategy.calculate_action_plan(battle_map, distances, shortest_paths)
+    combatant.action_plan = combatant.calculate_action_plan(battle_map, distances, shortest_paths)
     if not combatant.action_plan:
         return None  # Either no action possible or all actions already used
     return combatant.action_plan.pop(0)

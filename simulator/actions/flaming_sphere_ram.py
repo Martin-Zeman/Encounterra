@@ -2,7 +2,7 @@ from functools import cache
 
 from simulator.actions.action_types import BonusAction
 from simulator.misc import DamageType, SavingThrow
-from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import numpy as np
 
@@ -15,6 +15,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 
     def __init__(self, caster, action_enabler_effect, **kwargs):
         super().__init__()
+        self.flags |= FactoryFlags.TRANSITIONS_TO_WILDSHAPE
         self.action_type = BonusAction.FLAMING_SPHERE_RAM
         self.dmg_dice = "2d6"
         self.combatant = caster
