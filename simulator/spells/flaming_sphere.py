@@ -27,10 +27,11 @@ class FlamingSphereFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = DamageType.Fire
 
-    def __init__(self, action_type, caster, **kwargs):
+    def __init__(self, action_type, dc, caster, **kwargs):
         super().__init__()
         self.action_type = action_type  # FLAMING_SPHERE, QUICKENED_FLAMING_SPHERE
         self.dmg_dice = "2d6"
+        self.dc = dc
         self.combatant = caster
         self.saving_throw = SavingThrow.DEX
 
@@ -65,7 +66,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return mean_dmg_dc_attack(self.combatant.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type)) * ROUND_HORIZON
+        return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type)) * ROUND_HORIZON
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
@@ -89,13 +90,13 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere"
 
     def activate(self, battle_map):
-        self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self)))
+        self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self.factory.dc, self)))
 
     def deactivate(self, battle_map):
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
 
     def enable(self, battle_map):
-        self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self)))
+        self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self.factory.dc, self)))
 
     def disable(self, battle_map):
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
@@ -107,12 +108,12 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
-        enemies = battle_map.get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereRamFactory.RANGE)
+        enemies = battle_map.get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)
         if not enemies:
             return 0
         acc = 0
         for enemy in enemies:
-            acc += mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant_to(self.factory.dmg_type))
+            acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant_to(self.factory.dmg_type))
         return acc / len(enemies) * ROUND_HORIZON
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
@@ -147,14 +148,20 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
-        return mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
+        return mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
 
     def threat_on_enter(self, battle_map, target, *args, **kwargs):
         # It's not explicitly written in the rules, but it makes sense
-        return mean_dmg_dc_attack(self.factory.combatant.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
+        return mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
 
     def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
         return 0
 
     def threat_on_move_within(self, battle_map, target, *args, **kwargs):
         return 0
+
+    def get_affected_coords(self, battle_map):
+        """
+        We model the fact that it deals damage to adjacent squares
+        """
+        return battle_map.get_coords_affected_by_square_aoe((self.origin[0] - 1, self.origin[1] - 1), self.length + 2)

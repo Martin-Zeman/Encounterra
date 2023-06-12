@@ -13,12 +13,13 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 
     RANGE = 6
 
-    def __init__(self, caster, action_enabler_effect, **kwargs):
+    def __init__(self, caster, dc, action_enabler_effect, **kwargs):
         super().__init__()
         self.flags |= FactoryFlags.TRANSITIONS_TO_WILDSHAPE
         self.action_type = BonusAction.FLAMING_SPHERE_RAM
         self.dmg_dice = "2d6"
         self.combatant = caster
+        self.dc = dc
         self.action_enabler_effect = action_enabler_effect
         self.saving_throw = SavingThrow.DEX
         self.dmg_type = DamageType.Fire
@@ -46,7 +47,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return mean_dmg_dc_attack(self.combatant.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type))
+        return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type))
 
     def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
         """
@@ -87,4 +88,4 @@ class FlamingSphereRam(Actoid, DirectThreat):
         return True
 
     def move_effect(self, coord):
-        self.factory.action_enabler_effect.coord = coord
+        self.factory.action_enabler_effect.origin = coord

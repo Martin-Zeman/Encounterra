@@ -486,12 +486,17 @@ class ActionResolver:
                     grapple.attacker.is_constricting = False
             case BonusAction.FLAMING_SPHERE_RAM:
                 adj = self.battle_map.build_flaming_sphere_adjacency_matrix()
-                _, shortest_paths = self.battle_map.dijkstra(actoid.factory.action_enabler_effect.coord, adj)
-                path = self.battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.coord, actoid.coord)
+                _, shortest_paths = self.battle_map.dijkstra(actoid.factory.action_enabler_effect.origin, adj)
+                path = self.battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
                 if len(path) <= FlamingSphereRamFactory.RANGE + 1:
-                    pass  # TODO do the dmg
-                path = path[:FlamingSphereRamFactory.RANGE + 1]
+                    dmg = roll_spell_dmg(actoid.factory.dmg_dice)
+                    logger.info(f"{ actoid.target_combatant} is hit by Flaming Sphere")
+                    resolve_dmg_saving_throw(actoid, dmg, actoid.target_combatant)
+                    if not actoid.target_combatant.is_alive():
+                        self.battle_map.remove_dead_combatant(actoid.target_combatant)   # TODO revisit if this is really needed
+                path = path['tuples'][:FlamingSphereRamFactory.RANGE + 1]
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
+                return ActionResult.DMG
             case Action.POUNCE:
                 # TODO
                 return False

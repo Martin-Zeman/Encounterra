@@ -750,7 +750,7 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
     CustomLogger(LogLevel.WARNING)
     test_totem_barbarian_2 = copy.deepcopy(test_totem_barbarian)
     battle_map.place_circular_element(np.array([6, 14]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([0, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    # battle_map.place_circular_element(np.array([0, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([4, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([10, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)

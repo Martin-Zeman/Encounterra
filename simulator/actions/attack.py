@@ -18,7 +18,7 @@ class AttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None, extra_dmg=None):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None, extra_dmg=[]):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
@@ -29,7 +29,7 @@ class AttackFactory(DirectThreatFactory):
         self.dmg_dice = dmg_dice
         self.dmg_bonus = dmg_bonus
         self.dmg_type = dmg_type
-        self.extra_dmg = []  # List of tuples of type (dmg_dice, dmg_type)
+        self.extra_dmg = extra_dmg  # List of tuples of type (dmg_dice, dmg_type)
         self.range = attack_range
         self.short_range = attack_range // 4
         self.action_type = action_type  # MELEE_ATTACK, RANGED_ATTACK, BONUS_MELEE_ATTACK, BONUS_RANGED_ATTACK REACTION_ATTACK, HASTE_MELEE...
@@ -74,7 +74,7 @@ class AttackFactory(DirectThreatFactory):
             acc += mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
                                   self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, extra.dmg_dice, 0, pt.ac, total_crit, pt.is_resistant_to(extra.dmg_type))
+                acc += mean_dmg(to_hit_total, extra[0], 0, pt.ac, total_crit, pt.is_resistant_to(extra[1]))
             return acc
 
         dmg_acc = reduce(mean_dmg_mod, potential_targets)
@@ -86,7 +86,7 @@ class AttackFactory(DirectThreatFactory):
         try:
             consider_dist = kwargs["consider_dist"]
         except KeyError:
-            consider_dist = True
+            consider_dist = False
         try:
             roll_modifier = kwargs['roll_modifier']
         except KeyError:
@@ -99,7 +99,7 @@ class AttackFactory(DirectThreatFactory):
         if not consider_dist or battle_map.get_hop_distance(self.combatant, target) <= self.range:
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, extra.dmg_dice, 0, target.ac, self.crit_range, target.is_resistant_to(extra.dmg_type))
+                acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
             return acc
         return 0
 
@@ -109,7 +109,7 @@ class AttackFactory(DirectThreatFactory):
         """
         baseline = mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         for extra in self.extra_dmg:
-            baseline += mean_dmg(self.to_hit, extra.dmg_dice, 0, target.ac, self.crit_range, target.is_resistant_to(extra.dmg_type))
+            baseline += mean_dmg(self.to_hit, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
         try:
             mod_dmg_flat = modified_stats['dmg_bonus_flat']
         except KeyError:
@@ -150,7 +150,7 @@ class AttackFactory(DirectThreatFactory):
         try:
             modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
-                modified += mean_dmg(to_hit_total, extra.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(extra.dmg_type))
+                modified += mean_dmg(to_hit_total, extra[0], 0, total_target_ac, total_crit, target.is_resistant_to(extra[1]))
         except:
             logger.error("Error in mean_dmg of calculate_threat_to_target_delta of AttackFactory")
             modified = baseline

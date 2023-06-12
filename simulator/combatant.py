@@ -196,7 +196,7 @@ class Combatant(ABC, ProtoCombatant):
                     self.action_factories.append((action_type, factory(**kwargs)))
                     return self.action_factories[-1]
                 case Action.FLAMING_SPHERE:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self.dc, self)))
                     return self.action_factories[-1]
                 case _:
                     return None

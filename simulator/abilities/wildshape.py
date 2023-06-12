@@ -210,26 +210,26 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         original_coordinate = battle_map.get_combatant_position(self.factory.combatant).get()[0]
         map_accessibility_matrix[original_coordinate[0], original_coordinate[1]] = 1
         map_accessibility_matrix = np.transpose(map_accessibility_matrix)
-        wilshape_matrix_size = self.form.size.value + 1
+        wilshape_size_increment = self.form.size.value
         result_matrix = np.zeros((battle_map.size, battle_map.size))
 
-        for i in range(battle_map.size - wilshape_matrix_size + 1):
-            for j in range(battle_map.size - wilshape_matrix_size + 1):
-                submatrix = map_accessibility_matrix[i:i + wilshape_matrix_size, j:j + wilshape_matrix_size]
+        for col in range(battle_map.size - wilshape_size_increment):
+            for row in range(battle_map.size - wilshape_size_increment):
+                submatrix = map_accessibility_matrix[row:row + wilshape_size_increment + 1, col:col + wilshape_size_increment + 1]
                 if np.all(submatrix > 0):
-                    result_matrix[j:j + wilshape_matrix_size, i:i + wilshape_matrix_size] = 1  # Take care that axes are swapped here
+                    result_matrix[col, row] = 1  # Take care that axes are swapped here
         # Here we're only interested in the coords with the lowest distance from the original coordinate
         all_coords = np.argwhere(result_matrix == 1).tolist()
-        all_coords.sort(key=lambda coord: battle_map.get_hop_distance(self.factory.combatant, np.array([coord])))
+        all_coords.sort(key=lambda coord: distances[coord[0] * battle_map.size + coord[1]])
         final_coords = []
         curr_coord = all_coords[0]
-        min_distance = battle_map.get_hop_distance(self.factory.combatant, np.array([curr_coord]))
+        min_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
         curr_distance = min_distance
         idx = 1
         while curr_distance == min_distance:
             final_coords.append(tuple(curr_coord))
             curr_coord = all_coords[idx]
-            curr_distance = battle_map.get_hop_distance(self.factory.combatant, np.array([curr_coord]))
+            curr_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
             idx += 1
         return final_coords
 

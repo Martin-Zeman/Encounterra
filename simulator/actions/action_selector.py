@@ -362,7 +362,7 @@ def longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_a
                     pretend_coords = pretend_coords.get()[0] if pretend_coords is not None else None
 
                     action = transition_name_to_action[transition_name]
-                    with battle_map.as_if_combatant_position(combatant, pretend_coords), battle_map.replace_combatant_if_action_by_wildshaped(action, combatant) as (_, did_transform):
+                    with battle_map.as_if_combatant_position(combatant, pretend_coords), battle_map.replace_combatant_if_action_by_wildshaped(action, combatant) as did_transform:
                         transition_threat = action.calculate_threat(combatant, battle_map, consider_dist=(not did_transform)) + (threat[state][1] if threat[state][1] > -math.inf else 0)
                         transition_threat += get_threat_modification_by_previous_action(combatant, battle_map, state, action, max_threat_backwards_transition, transition_name_to_action)
                     movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0

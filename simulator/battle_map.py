@@ -33,7 +33,7 @@ def reconstruct_from_shortest_path(shortest_path, source, target):
     current_position = target
     # The square of the enemy itself is inaccessible, have to take the closest free adjacent one
     path = {'tuples': [], 'numpy': []}
-    while not np.array_equal(current_position, source[0]):
+    while not np.array_equal(current_position, source):
         path['numpy'].append(current_position)
         path['tuples'].append(tuple(current_position))
         # have to convert to tuple cause numpy array is non-hashable
@@ -43,8 +43,8 @@ def reconstruct_from_shortest_path(shortest_path, source, target):
             # logger.error(e)  # TODO remove this once fixed
             return None
     else:
-        path['numpy'].append(source[0])
-        path['tuples'].append(tuple(source[0]))
+        path['numpy'].append(source)
+        path['tuples'].append(tuple(source))
     path['numpy'].reverse()
     path['tuples'].reverse()
     return path
@@ -255,14 +255,14 @@ class Map:
                 position = self.get_combatant_position(combatant)
                 self.remove_combatant(combatant)
                 self.set_combatant_coordinates(action.factory.combatant, position.get()[0])
-                yield action.factory.combatant, True
+                yield True
             finally:
                 self.teams.replace_combatant(action.factory.combatant, combatant)
                 position = self.get_combatant_position(action.factory.combatant)
                 self.remove_combatant(action.factory.combatant)
                 self.set_combatant_coordinates(combatant, position.get()[0])
         else:
-            yield combatant, False
+            yield False
 
 
     def find_wildshaped_coordinate(self, combatant, size: Size):
@@ -398,12 +398,12 @@ class Map:
         # Remove self-connections (optional)
         adj_reshaped -= np.eye(Nsq, dtype=int)
         for curr_combatant, coords in self.combatant_coordinate_cache.items():
-            if curr_combatant.is_alive() and curr_combatant.size >= Size.LARGE:
+            if curr_combatant.is_alive() and curr_combatant.size.value >= Size.LARGE.value:
                 for coord in coords.get():
                     adj[:, :, max(0, coord[0]):(coord[0] + 1), max(0, coord[1]):(coord[1] + 1)].fill(0)
         for coord in self.impassable_set:
             adj[:, :, max(0, coord[0]):(coord[0] + 1), max(0, coord[1]):(coord[1] + 1)].fill(0)
-        return adj
+        return adj_reshaped
 
 
     def build_combatant_adjacency_mask(self, combatant, consider_aoo=False):
@@ -884,7 +884,7 @@ class Map:
         enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, distances, rng)
         if enemy_adjacent_location is None:
             return None
-        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), enemy_adjacent_location)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get()[0], enemy_adjacent_location)
         if reconstructed_path is None:
             return None
         if logger.root.level <= logging.INFO:
@@ -906,7 +906,7 @@ class Map:
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
-        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get(), target_coord)
+        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get()[0], target_coord)
         if reconstructed_path is None:
             return None
         if logger.root.level <= logging.INFO:
@@ -917,12 +917,12 @@ class Map:
     def get_effect_path_to_coord(self, current_coord, target_coord, shortest_paths):
         """
         Similar to get_path_to_coord but for moving effects such as a spiritual weapon or flaming sphere
-        :param current_coord:
-        :param target_coord:
+        :param current_coord: current coordinate tuple
+        :param target_coord: target coordinate tuple
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of np.array increments to the target destination
         """
-        return reconstruct_from_shortest_path(shortest_paths, current_coord.get(), target_coord)
+        return reconstruct_from_shortest_path(shortest_paths, current_coord, target_coord)
 
 
     def get_combatant_position(self, combatant):
