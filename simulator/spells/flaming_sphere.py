@@ -48,16 +48,13 @@ class FlamingSphereFactory(DirectThreatFactory):
         enemies = battle_map.teams.get_enemies(self.combatant)
         coords = set()
         for enemy in enemies:
-            coords_around_enemy = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1)
-            for coord in coords_around_enemy:
-                if coord not in coords and battle_map.get_cartesian_distance(enemy, np.array([coord])) <= FlamingSphereFactory.range:
-                    coords.add(coord)
+            # Just take the one that is on the far side of the enemy from the combatant's PoV
+            coords_around_enemy = list(battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1))
+            coords_around_enemy.sort(key=lambda coord: battle_map.get_cartesian_distance(np.array([coord]), self.combatant), reverse=True)
+            coords.add(coords_around_enemy[0])
 
-        result = []
-        for coord in coords:
-            result.append(FlamingSphere(coord, self))
         # Here there really is no need to iterate over all coords. Just find the best score
-        return result
+        return [FlamingSphere(coord, self) for coord in coords]
 
     def create(self, coord):
         return FlamingSphere(coord, self)

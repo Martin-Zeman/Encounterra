@@ -35,9 +35,10 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         enemies = battle_map.teams.get_enemies(self.combatant)
         result = []
         for enemy in enemies:
-            coords_around_enemy = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1)
-            for coord in coords_around_enemy:
-                result.append(FlamingSphereRam(enemy, coord, self))
+            # Just take the one that is on the far side of the enemy from the combatant's PoV
+            coords_around_enemy = list(battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1))
+            coords_around_enemy.sort(key=lambda coord: battle_map.get_cartesian_distance(np.array([coord]), self.combatant), reverse=True)
+            result.append(FlamingSphereRam(enemy, coords_around_enemy[0], self))
         return result
 
     def create(self, target_combatant, coord):
