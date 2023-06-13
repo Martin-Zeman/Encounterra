@@ -4,6 +4,7 @@ from simulator.action_resolver import resolve_dmg_saving_throw
 from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
+from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions
@@ -73,6 +74,9 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + f"Hunger Of Hadar at {np.squeeze(self.origin)}"
+
+    def get_effect_type(self):
+        return EffectType.HUNGER_OF_HADAR
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + "Hunger Of Hadar"

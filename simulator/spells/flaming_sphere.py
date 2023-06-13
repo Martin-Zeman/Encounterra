@@ -6,6 +6,7 @@ from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.aoe_square_effect import AoeSquareEffect
+from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, avg_roll, roll_spell_dmg, Size, ROUND_HORIZON, SavingThrow
@@ -45,7 +46,7 @@ class FlamingSphereFactory(DirectThreatFactory):
 
     def create_all(self, battle_map):
         # Getting coords around enemies
-        enemies = battle_map.teams.get_enemies(self.combatant)
+        enemies = battle_map.get_enemies(self.combatant)
         coords = set()
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV
@@ -82,6 +83,9 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere at {np.squeeze(self.origin)}"
+
+    def get_effect_type(self):
+        return EffectType.FLAMING_SPHERE
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere"
@@ -128,11 +132,13 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def on_end_of_turn(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
+        logger.info(f"{combatant} is burned by Flaming Sphere for {dmg} damage")
         combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
 
     def on_enter(self, combatant):
         # It's not explicitly written in the rules, but it makes sense
         dmg = roll_spell_dmg(self.factory.dmg_dice)
+        logger.info(f"{combatant} is burned by Flaming Sphere for {dmg} damage")
         combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
 
     def on_move_within(self, combatant):

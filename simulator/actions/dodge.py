@@ -3,6 +3,7 @@ from functools import cache
 from simulator.actions.action_types import Action
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
+from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.threat_utils import calculate_threat_in_mod
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
@@ -49,6 +50,9 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
 
     def __str__(self):
         return f"Dodge of {self.factory.combatant}"
+
+    def get_effect_type(self):
+        return EffectType.DODGE
 
     def shorthand_str(self):
         return f"Dodge"

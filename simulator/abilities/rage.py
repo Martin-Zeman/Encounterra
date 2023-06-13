@@ -1,3 +1,4 @@
+from simulator.effects.effect import EffectType
 from simulator.misc import DamageType, get_attacks
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
@@ -113,6 +114,9 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, Attac
 
     def shorthand_str(self):
         return "Rage"
+
+    def get_effect_type(self):
+        return EffectType.RAGE
 
     def activate(self, battle_map):
         logger.info(f"{self.combatants[0]} enters into a rage")

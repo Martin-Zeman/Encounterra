@@ -1,6 +1,7 @@
 from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
+from simulator.effects.effect import EffectType
 from simulator.misc import *
 from simulator.misc import SavingThrow
 from simulator.feasibility import check_feasibility
@@ -455,6 +456,7 @@ class ActionResolver:
                 combatant.ac += 5
                 return ActionResult.FEASIBLE
             case Action.FLAMING_SPHERE:
+                logger.info(f"{combatant} casts {actoid}")
                 actoid.activate(None)
                 self.effect_tracker.add(actoid, combatant)
                 combatant.is_concentrating = True
@@ -490,7 +492,7 @@ class ActionResolver:
                 path = self.battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
                 if len(path) <= FlamingSphereRamFactory.RANGE + 1:
                     dmg = roll_spell_dmg(actoid.factory.dmg_dice)
-                    logger.info(f"{ actoid.target_combatant} is hit by Flaming Sphere")
+                    logger.info(f"{ actoid.target_combatant} is rammed by Flaming Sphere")
                     resolve_dmg_saving_throw(actoid, dmg, actoid.target_combatant)
                     if not actoid.target_combatant.is_alive():
                         self.battle_map.remove_dead_combatant(actoid.target_combatant)   # TODO revisit if this is really needed
@@ -538,19 +540,19 @@ class ActionResolver:
         :return:
         """
         for effect in effects:
-            match effect.__class__.__name__:
-                case "Haste" | "TwinnedHaste":
+            match effect.get_effect_type():
+                case EffectType.HASTE | EffectType.TWINNED_HASTE:
                     # resolves the part of the haste spell which needs to be applied every turn
                     combatant.movement = combatant.speed * 2
                     combatant.has_haste_action = True
-                case "PostHasteLethargy":
+                case EffectType.POST_HASTE_LETHARGY:
                     combatant.movement = 0
                     combatant.has_action = False
                     combatant.has_bonus_action = False
                     combatant.has_reaction = False
-                case "Shield":
-                    pass
-                case "TotemRage" | "Rage":
+                case EffectType.RAGE | EffectType.TOTEM_RAGE | EffectType.WILDSHAPE | EffectType.DODGE | EffectType.DISENGAGE |\
+                     EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
+                    EffectType.HUNGER_OF_HADAR:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error("Unknown effect")

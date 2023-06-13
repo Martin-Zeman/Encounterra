@@ -1,3 +1,5 @@
+import logging
+
 from toposort import toposort_flatten
 
 from simulator.actions.action_fsms import generate_action_fsm
@@ -5,6 +7,7 @@ from simulator.actions.action_plan_strategy import ActionPlanStrategy
 from simulator.actions.action_selector import longest_path, build_action_dag, translate_longest_pth_to_actions
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 
+logger = logging.getLogger("EncounTroll")
 
 class DefaultActionPlanStrategy(ActionPlanStrategy):
 
@@ -27,6 +30,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
                                                                distances, shortest_paths)
         if longest_pth is None:
             return None
+        logger.info(f"{self.combatant}'s plan {longest_pth}")# FIXME
         # print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
         return translate_longest_pth_to_actions(self.combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth,
                                                 transition_name_to_ms_path)

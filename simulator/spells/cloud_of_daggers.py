@@ -3,6 +3,7 @@ from functools import cache
 from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
+from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, avg_roll, roll_spell_dmg
@@ -67,6 +68,9 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
 
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers at {np.squeeze(self.origin)}"
+
+    def get_effect_type(self):
+        return EffectType.CLOUD_OF_DAGGERS
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers"

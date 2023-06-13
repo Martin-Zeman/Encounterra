@@ -763,7 +763,10 @@ class Map:
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         assert rng > 0
-        inflated = self.inflate_coords(coords, inflate_to_size)
+        try:
+            inflated = self.inflate_coords(coords, inflate_to_size)
+        except AttributeError:
+            print("FIXME")
 
         adjacent_coords = set()
         for coord in inflated:

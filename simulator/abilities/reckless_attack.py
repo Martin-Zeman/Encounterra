@@ -1,6 +1,7 @@
 import math
 
 from simulator.effects.combatant_effect import CombatantEffect
+from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.misc import reconcile_roll_modifiers
@@ -161,6 +162,9 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
 
     def __str__(self):
         return f"Reckless Attack at {self.target_combatant}"
+
+    def get_effect_type(self):
+        return EffectType.RECKLESS_ATTACK
 
     def shorthand_str(self):
         return "Reckless Attack"

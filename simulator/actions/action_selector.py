@@ -111,8 +111,9 @@ def prune_dead_dependencies(dag):
         for state in dag.states:
             try:
                 if not dag.dependencies[state]:
+                    logger.info(f"Pruning state {state}")  # TODO Remove me, FIXME
                     for successor_state in dag.forward_transitions[state]:
-                        dag.dependencies[successor_state].discard(state)
+                        dag.dependencies[successor_state].remove(state)
                         # TODO delete key if set empty?
                     removed = True
             except KeyError:
@@ -313,7 +314,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                     dag.add_transition(action_name, new_state_name, "nop")
         try:
             dag.remove_transition(action_name, transition.source)  # Remove the original
-        except AttributeError:
+        except AttributeError as e:
             print("FIXME")
 
     build_priority_transitions(post_priority_transitions, action_to_eligible_coords, dag, added_states, transition_name_to_action)

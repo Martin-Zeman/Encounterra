@@ -6,6 +6,7 @@ from simulator.actions.action_types import Action, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
+from simulator.effects.effect import EffectType
 from simulator.misc import SavingThrow, Size
 
 from simulator.threat_interfaces import TransformerFactory, DirectThreat
@@ -87,6 +88,9 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def __str__(self):
         return f"Wildshape of {self.factory.combatant} into {self.form.__class__.__name__}"
+
+    def get_effect_type(self):
+        return EffectType.WILDSHAPE
 
     def activate(self, battle_map):
         """

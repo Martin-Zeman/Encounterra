@@ -32,7 +32,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         return "FlamingSphereRamFactory"
 
     def create_all(self, battle_map):
-        enemies = battle_map.teams.get_enemies(self.combatant)
+        enemies = battle_map.get_enemies(self.combatant)
         result = []
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV

@@ -2,7 +2,7 @@ from itertools import combinations
 
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
-from simulator.effects.effect import Effect
+from simulator.effects.effect import Effect, EffectType
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
@@ -31,6 +31,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         Important for FSM building
         """
         return "TwinnedHasteFactory"
+
 
     def get_eligible_targets(self, battle_map):
         ret = battle_map.get_allies_within_radius(self.combatant, HasteFactory.range)
@@ -86,6 +87,9 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
 
     def __str__(self):
         return f"Twinned Haste on {self.targets[0]} and {self.targets[1]}"
+
+    def get_effect_type(self):
+        return EffectType.TWINNED_HASTE
 
     def shorthand_str(self):
         return "Twinned Haste"

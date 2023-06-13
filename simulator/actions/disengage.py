@@ -3,6 +3,7 @@ from functools import cache
 from simulator.actions.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.effects.combatant_effect import CombatantEffect
+from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 import logging
@@ -43,6 +44,9 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         LimitedDurationEffect.__init__(self, turns=1)
         self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.factory = factory
+
+    def get_effect_type(self):
+        return EffectType.DISENGAGE
 
     def __str__(self):
         prefix = ""

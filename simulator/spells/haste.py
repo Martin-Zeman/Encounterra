@@ -1,4 +1,5 @@
 from simulator.combatant_coords import CombatantCoords
+from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.actions.action_types import BonusAction
@@ -131,6 +132,9 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HASTE else "") + "Haste"
+
+    def get_effect_type(self):
+        return EffectType.HASTE
 
     def activate(self, battle_map):
         self.factory.combatant.is_concentrating = True
