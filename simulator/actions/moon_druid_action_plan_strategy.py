@@ -78,12 +78,16 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         ws_movement_increments = [e.increment for e in ws_action_plan if hasattr(e, "increment")]
         sum_of_ws_increments = tuple(np.sum(ws_movement_increments, axis=0)) if ws_movement_increments else (0, 0)
         ws_destination = (current_position[0] + sum_of_ws_increments[0], current_position[1] + sum_of_ws_increments[1])
-        if ws_destination in non_wildshape_action.get_eligible_coords(battle_map, distances, shortest_paths):
-            combined_plan = []
-            combined_plan.extend(ws_action_plan[:len(ws_movement_increments)])
-            combined_plan.append(non_wildshape_action)
-            combined_plan.append(get_moon_wildshape_action(ws_action_plan))
-            return combined_plan
+        try:
+            if ws_destination in non_wildshape_action.get_eligible_coords(battle_map, distances, shortest_paths):
+                combined_plan = []
+                combined_plan.extend(ws_action_plan[:len(ws_movement_increments)])
+                combined_plan.append(non_wildshape_action)
+                combined_plan.append(get_moon_wildshape_action(ws_action_plan))
+                return combined_plan
+        except TypeError:
+            print("FIXME")
+            non_wildshape_action.get_eligible_coords(battle_map, distances, shortest_paths)
         return regular_action_plan
 
     def calculate_action_plan(self, battle_map, distances, shortest_paths):
@@ -116,13 +120,13 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
             return None
         need_to_combine, non_wildshape_action = evaluate_combination_eligibility(longest_pth, transition_name_to_action)
         regular_plan = translate_longest_pth_to_actions(self.combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)
-        logger.info(f"Moon druid's regular plan {regular_plan}")# FIXME
+        # logger.info(f"Moon druid's regular plan {regular_plan}")# FIXME
         if need_to_combine:
             if self.best_wildshape_plan_data is not None:
                 wildshape_plan = translate_longest_pth_to_actions(self.combatant, battle_map, distances, shortest_paths, self.best_wildshape_plan_data[2], self.best_wildshape_plan_data[0], self.best_wildshape_plan_data[1])
-                logger.info(f"Moon druid's wildshaped plan {wildshape_plan}")#FIXME
+                # logger.info(f"Moon druid's wildshaped plan {wildshape_plan}")#FIXME
                 if non_wildshape_action is None:
                     return [get_moon_wildshape_action(wildshape_plan)]  # The case where there's only the wildshape remaining from the plan
                 regular_plan = self.combine_action_plans(regular_plan, wildshape_plan, transition_name_to_action[non_wildshape_action], battle_map, distances, shortest_paths)
-        logger.info(f"Moon druid's final plan {regular_plan}")#FIXME
+        # logger.info(f"Moon druid's final plan {regular_plan}")#FIXME
         return regular_plan

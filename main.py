@@ -1,4 +1,5 @@
 from simulator.combatants.bugbear import Bugbear
+from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.combatants.ogre import Ogre
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.logging.custom_logger import CustomLogger, LogLevel
@@ -16,13 +17,13 @@ if __name__ == '__main__':
     session = Session()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
     session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
-    # session.add_combatant(StoneGiant, Teams.Color.RED)
+    session.add_combatant(MoonDruid5Lvl, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)
-    session.add_combatant(Bugbear, Teams.Color.RED)
+    # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(Goblin, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.BLUE)
-    session.add_combatant(Bugbear, Teams.Color.RED)
+    # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
     # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)

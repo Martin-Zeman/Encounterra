@@ -100,6 +100,8 @@ def check_feasibility(combatant, action, battle_map):
                                                                                  Conditions.RESTRAINED)
             case Action.DODGE | Action.POUNCE:
                 return combatant.has_action
+            case Action.BREAK_GRAPPLE:
+                return combatant.has_action and combatant.is_affected_by_any(Conditions.GRAPPLED)
             case Action.CONSTRICT:
                 return combatant.has_action and not combatant.is_constricting
             case Action.WILDSHAPE:

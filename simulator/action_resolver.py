@@ -482,7 +482,7 @@ class ActionResolver:
             case Action.BREAK_GRAPPLE:
                 logger.info(f"{combatant} is trying to break out of grapple")
                 grapple = actoid.factory.grapple_condition
-                broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc)
+                broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollModifier.STRAIGHT)
                 if broken_out and getattr(grapple.attacker, "is_constricting", False):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
                     grapple.attacker.is_constricting = False
@@ -505,6 +505,8 @@ class ActionResolver:
             case Action.WEB:
                 # TODO
                 return False
+            case Action.BITE_WITH_SWALLOW:
+                return self.resolve_attack(actoid, combatant)  # TODO
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

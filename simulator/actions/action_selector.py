@@ -196,6 +196,30 @@ def translate_longest_pth_to_actions(combatant, battle_map, distances, shortest_
                     logger.error(f"Unknown movement type {movement_type}")
     return actions
 
+def extract_movement(combatant, battle_map, distances, shortest_paths, longest_pth):
+    """
+    Extracts the movement part of an action plan
+    :param combatant: the combatant for whom the actions are translated
+    :param battle_map:
+    :param distances: potentially already pre-computed distances to all coords
+    :param shortest_paths: potentially already pre-computed shortest paths to all coords
+    :param longest_pth: list of best actions as strings
+    :return: list of movement increments or None
+    """
+    pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+    actions = []
+    for action in longest_pth:
+        if action == "dummy":
+            continue
+        match = re.search(pattern, action)
+        if match:
+            _, x, y = match.groups()
+            path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
+            movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
+            actions.extend(list(movement_generator))  # Unpack the movement generator
+            break
+    return actions if actions else None
+
 def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwards_transition):
     """
     A helper function which determines if we use the coordinates of the previous transition of the current coordinates or None
@@ -409,9 +433,9 @@ def get_action(combatant, battle_map):
     """
     combatant = combatant.get_current_form()  # Takes care of possible wildshape
     grapple_cond = combatant.needs_to_break_out_of_grapple()
-    if grapple_cond:
+    if grapple_cond and combatant.has_action:
         return BreakGrappleFactory(grapple_cond).create()
-    if combatant.is_affected_by(Conditions.PRONE):
+    if combatant.is_affected_by(Conditions.PRONE) and combatant.movement >= combatant.speed / 2:
         return GetUpFactory().create()
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
     combatant.shortest_paths_cache = shortest_paths

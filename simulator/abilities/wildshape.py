@@ -1,4 +1,5 @@
 import math
+import random
 
 import numpy as np
 
@@ -194,7 +195,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         pass
 
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        return self.form.max_hp
+        return self.form.max_hp * random.uniform(1.0, 1.20)  # We try to encourage trying out different wildshape forms
 
     def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
         return 0

@@ -46,7 +46,7 @@ def use_resources(combatant, action, battle_map):
                 subject.curr_sorcery_points -= 1
             case Action.WILDSHAPE:
                 subject.curr_wildshape_uses -= 1
-            case Action.POUNCE | Action.CONSTRICT:
+            case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE:
                 pass  # Sufficiently tracked by not having an action anymore
             case Action.FLAMING_SPHERE:
                 subject.spellslots.use_spellslot(2)
