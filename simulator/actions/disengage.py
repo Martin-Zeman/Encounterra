@@ -65,6 +65,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         return prefix + f"Disengage"
 
     def activate(self, battle_map):
+        logger.info(f"{self.combatants[0]} disengages")
         self.factory.combatant.has_disengaged = True
 
     def deactivate(self, battle_map):
@@ -85,8 +86,8 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         return 0  # Threat that a Disengage would potentially mitigate is calculated in a different way
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        return None  # We don't want to have any coords pre-pended in the DAG
-        # return battle_map.get_all_accessible_coords(shortest_paths)
+        # return None  # We don't want to have any coords pre-pended in the DAG
+        return battle_map.get_all_accessible_coords(shortest_paths)
 
     def is_current_coord_eligible(self, battle_map):
         return True

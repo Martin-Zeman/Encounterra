@@ -426,10 +426,12 @@ class Combatant(ABC, ProtoCombatant):
         self.action_plan = None
 
     def reset(self):
-        if hasattr(self, 'current_wildshape_form'):
-            # TODO consider moving this to the druid
-            self.current_wildshape_form = None
-            self.curr_wildshape_uses = self.max_wildshape_uses
+        # if hasattr(self, 'current_wildshape_form'):
+        # NOTE: Currently this is left to the effect_tracker
+        #     # TODO consider moving this to the druid
+        #     logger.info(f"Resetting wildshape form FIXME")
+        #     self.current_wildshape_form = None
+        #     self.curr_wildshape_uses = self.max_wildshape_uses
         self.has_action = True
         self.has_bonus_action = True
         self.has_reaction = True
@@ -444,6 +446,7 @@ class Combatant(ABC, ProtoCombatant):
             self.ac -= 5
         self.shield_spell_active = False
         self.conditions = Conditions.NONE
+        self.dc_conditions.clear()
         self.has_haste_action = False
         self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)
         self.saving_throws_dice_mod = dict.fromkeys(self.saving_throws_dice_mod.keys(), [])

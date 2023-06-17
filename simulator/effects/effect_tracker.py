@@ -20,6 +20,12 @@ class EffectTracker:
 
     def add(self, effect, originator):
         # TODO: Do I need the originator?
+        # Refresh existing effect if available
+        for idx in range(len(self.effects)):
+            if type(self.effects[idx][0]) == type(effect):
+                logger.info(f"Refreshing {effect}")
+                self.effects[idx][0] = effect
+                break
         self.effects.append((effect, originator))
 
     def start_of_turn(self, combatant):
@@ -87,7 +93,6 @@ class EffectTracker:
         self.effects = [e for e in self.effects if not (e[0].is_affecting(combatant, self.battle_map) and isinstance(e[0], Wildshape))]
 
     def reset(self):
-        logger.warning("Resetting effect tracker")
         for effect in self.effects:
             effect[0].deactivate(self.battle_map)
         self.effects.clear()

@@ -36,7 +36,10 @@ class Teams:
         """
         Helper function for wildshape
         """
-        self.reverse_team_book[combatant_new] = self.reverse_team_book[combatant_old]
+        try:
+            self.reverse_team_book[combatant_new] = self.reverse_team_book[combatant_old]
+        except KeyError:
+            print("FIXME")
         del self.reverse_team_book[combatant_old]
         self.team_book[self.reverse_team_book[combatant_new]].remove(combatant_old)
         self.team_book[self.reverse_team_book[combatant_new]].append(combatant_new)

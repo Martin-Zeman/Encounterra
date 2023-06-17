@@ -72,11 +72,11 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=Tru
     else:
         saved = False
     if not saved:
-        target_combatant.receive_dmg(dmg, ability.factory.dmg_type)
         logger.info(f"{type(ability).__name__} deals {dmg} to {target_combatant}")
+        target_combatant.receive_dmg(dmg, ability.factory.dmg_type)
     elif half_on_success:
-        target_combatant.receive_dmg(dmg // 2, ability.factory.dmg_type)
         logger.info(f"{type(ability).__name__} deals {dmg // 2} to {target_combatant}")
+        target_combatant.receive_dmg(dmg // 2, ability.factory.dmg_type)
 
 
 def resolve_on_hit_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=True):
@@ -348,15 +348,17 @@ class ActionResolver:
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
+            extra_dmg = [(multiplier * roll_dice(parse_dmg_dice(e[0])), e[1]) for e in attack.factory.extra_dmg]
             total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
             if attacker.has_passive(Passive.FANATIC_ADVANTAGE) and final_modifier is RollModifier.ADVANTAGE and not attacker.already_used_fanatic_advantage:
                 logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
                 attacker.already_used_fanatic_advantage = True
                 total_dmg += roll_dice([(2, 6)])
             logger.info(
-                f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {total_dmg} of which {attacker.ability_dmg_bonus} is ability dmg",
-                extra={"team": self.teams.get_team(attacker)})
+                f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {total_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)}", extra={"team": self.teams.get_team(attacker)})
             target.receive_dmg(total_dmg, attack.get_dmg_type())
+            for extra in extra_dmg:
+                target.receive_dmg(extra[0], extra[1])
             if not target.is_alive():
                 self.battle_map.remove_dead_combatant(target)
             elif attack.factory.on_hit is not None:
@@ -486,6 +488,8 @@ class ActionResolver:
                 if broken_out and getattr(grapple.attacker, "is_constricting", False):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
                     grapple.attacker.is_constricting = False
+                else:
+                    logger.info(f"{combatant} remains grappled")
             case BonusAction.FLAMING_SPHERE_RAM:
                 adj = self.battle_map.build_flaming_sphere_adjacency_matrix()
                 _, shortest_paths = self.battle_map.dijkstra(actoid.factory.action_enabler_effect.origin, adj)
