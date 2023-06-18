@@ -20,7 +20,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None, extra_dmg=[]):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
@@ -33,6 +33,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.dmg_dice = dmg_dice
         self.dmg_bonus = dmg_bonus
         self.dmg_type = dmg_type
+        self.extra_dmg = extra_dmg  # List of tuples of type (dmg_dice, dmg_type)
         self.range = attack_range
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.ammo = math.inf

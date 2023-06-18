@@ -59,7 +59,6 @@ class StoneGiant(Combatant):
 
     def new_turn(self):
         super().new_turn()
-        self.movement_generator = None
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

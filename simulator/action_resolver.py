@@ -355,7 +355,7 @@ class ActionResolver:
                 attacker.already_used_fanatic_advantage = True
                 total_dmg += roll_dice([(2, 6)])
             logger.info(
-                f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {total_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)}", extra={"team": self.teams.get_team(attacker)})
+                f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {total_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)} damage", extra={"team": self.teams.get_team(attacker)})
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             for extra in extra_dmg:
                 target.receive_dmg(extra[0], extra[1])
@@ -464,7 +464,7 @@ class ActionResolver:
                 combatant.is_concentrating = True
                 return ActionResult.FEASIBLE
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
-                 HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK:
+                 HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK:
                 return self.resolve_attack(actoid, combatant)
             case Movement.STANDARD | Movement.DISENGAGE | Movement.CUNNING_DISENGAGE:
                 if not self.request_movement(combatant, actoid):
@@ -488,6 +488,7 @@ class ActionResolver:
                 if broken_out and getattr(grapple.attacker, "is_constricting", False):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
                     grapple.attacker.is_constricting = False
+                    combatant.break_out_of_grapple()
                 else:
                     logger.info(f"{combatant} remains grappled")
             case BonusAction.FLAMING_SPHERE_RAM:
@@ -510,7 +511,10 @@ class ActionResolver:
                 # TODO
                 return False
             case Action.BITE_WITH_SWALLOW:
-                return self.resolve_attack(actoid, combatant)  # TODO
+                result = self.resolve_attack(actoid, combatant)  # TODO
+                if result is ActionResult.DMG:
+                    combatant.is_constricting = True
+                return result
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

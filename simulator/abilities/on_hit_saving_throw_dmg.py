@@ -1,6 +1,6 @@
 from simulator.abilities.on_hit_effect import OnHit
 from simulator.action_resolver import resolve_on_hit_dmg_saving_throw
-from simulator.misc import Conditions, ConditionWithDC, roll_saving_throw, reconcile_roll_modifiers, parse_dmg_dice, roll_dice
+from simulator.misc import parse_dmg_dice, roll_dice
 import logging
 
 logger = logging.getLogger("EncounTroll")

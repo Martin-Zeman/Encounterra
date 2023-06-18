@@ -14,21 +14,18 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
 
     def get_movement_for_next_turn(self, battle_map, distances, shortest_paths):
         # logger.info(f"{self.combatant} still has movement left")  # TODO FIXME
-        exported_resources = self.combatant.export_resources()
-        self.combatant.has_action = True
-        self.combatant.has_bonus_action = True
-        get_aoe_and_aoo_threat_for_increment.cache_clear()
-        fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(self.combatant, battle_map)
-        dag = build_action_dag(self.combatant, battle_map, fsm, transition_name_to_action, distances, shortest_paths,
-                               post_misty_step_actions)
-        if dag is None:
-            return None
-        sorted_states = toposort_flatten(dag.dependencies)
-        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, battle_map, dag, sorted_states, transition_name_to_action,
-                                                               distances, shortest_paths)
-        if longest_pth is None:
-            return None
-        self.combatant.load_resources(exported_resources)
+        with self.combatant.as_if_new_turn() as combatant:
+            get_aoe_and_aoo_threat_for_increment.cache_clear()
+            fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(combatant, battle_map)
+            dag = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, distances, shortest_paths,
+                                   post_misty_step_actions)
+            if dag is None:
+                return None
+            sorted_states = toposort_flatten(dag.dependencies)
+            longest_pth, transition_name_to_ms_path = longest_path(combatant, battle_map, dag, sorted_states, transition_name_to_action,
+                                                                   distances, shortest_paths)
+            if longest_pth is None:
+                return None
         return extract_movement(self.combatant, battle_map, distances, shortest_paths, longest_pth)
 
     def calculate_action_plan(self, battle_map, distances, shortest_paths):

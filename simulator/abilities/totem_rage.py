@@ -93,7 +93,10 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
     def deactivate(self, battle_map):
         logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
-        self.combatants[0].resistances.remove(DamageType.Slashing)
+        try:
+            self.combatants[0].resistances.remove(DamageType.Slashing)
+        except KeyError:
+            print("FIXME")
         self.combatants[0].resistances.remove(DamageType.Bludgeoning)
         self.combatants[0].resistances.remove(DamageType.Fire)
         self.combatants[0].resistances.remove(DamageType.Lightning)

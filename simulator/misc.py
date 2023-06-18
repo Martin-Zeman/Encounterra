@@ -59,13 +59,18 @@ class Conditions(Flag):
     UNCONSCIOUS = auto()
 
 
+class PhaseOfTurn(Enum):
+    START_OF_TURN = auto()
+    END_OF_TURN = auto()
+    ACTION = auto()
+
 class ConditionWithDC:
-    def __init__(self, conditions, st, dc, attacker, needs_action_to_break):
+    def __init__(self, conditions, st, dc, attacker, phase):
         self.conditions = conditions  # Could multiples such as grapple + restrained go often together
         self.st = st
         self.dc = dc
         self.attacker = attacker
-        self.needs_action_to_break = needs_action_to_break
+        self.phase = phase
 
 
 class Size(Enum):

@@ -48,6 +48,10 @@ class MoonDruid5Lvl(Combatant):
         if self.current_wildshape_form is not None:
             self.current_wildshape_form.new_turn()
 
+    def reset(self):
+        super().reset()
+        self.curr_wildshape_uses = self.max_wildshape_uses
+
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)

@@ -16,7 +16,7 @@ if __name__ == '__main__':
     CustomLogger(LogLevel.INFO)
     session = Session()
     # session.add_combatant(Cyanwrath, Teams.Color.RED)
-    session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
+    session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
     session.add_combatant(MoonDruid5Lvl, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)

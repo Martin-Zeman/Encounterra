@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 import pytest
 
@@ -311,3 +313,23 @@ def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_mo
     ws = wsf.create(GiantConstrictorSnake)
     coords = ws.get_eligible_coords(battle_map, distances, shortest_paths)
     assert coords == [(9, 9)]
+
+def test_wilshape_copy_two_druids(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
+    """
+    We make sure there's a clearing in the terrain which the giant form fits into. It starts at root coordinate [9, 8].
+    """
+    test_moon_druid_2 = copy.deepcopy(test_moon_druid)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [test_moon_druid, test_bugbear]
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    test_moon_druid_2.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_2, BonusAction.MOON_WILDSHAPE, test_moon_druid_2.wildshape_factory[1])
+    assert test_moon_druid.available_wildshape_forms[0] is not test_moon_druid_2.available_wildshape_forms[0]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)

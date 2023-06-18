@@ -309,14 +309,12 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
         action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible(battle_map)}
 
-    for transition in transition_names:  # Filter out actions which don't have any eligible coords
-        if transition not in action_to_eligible_coords.keys():
-            dag.remove_transition(transition, '0')
+    for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
+        if transition_name not in action_to_eligible_coords.keys():
+            dag.remove_transition(transition_name, '0')
 
     added_states = set()  # tracks which states have already been added
     for action_name, coords in action_to_eligible_coords.items():
-        # if action_name.startswith("Wildshape"):
-        #     continue  # Wilshape itself is coord-independent but we're interested in the coords of the follow-up actions
         for coord in coords:
             transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]
             assert len(transitions) == 1
@@ -336,10 +334,10 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
                         dag.add_state(new_state_name)
                     dag.add_transition(new_state_name, "0", new_state_name)  # transition name is the same as state name
                     dag.add_transition(action_name, new_state_name, "nop")
-        try:
-            dag.remove_transition(action_name, transition.source)  # Remove the original
-        except AttributeError as e:
-            print("FIXME")
+                try:
+                    dag.remove_transition(action_name, transition.source)  # Remove the original
+                except AttributeError as e:
+                    print("FIXME")
 
     build_priority_transitions(post_priority_transitions, action_to_eligible_coords, dag, added_states, transition_name_to_action)
     prune_dead_dependencies(dag)

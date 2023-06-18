@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
-from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC
+from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC, PhaseOfTurn
 from enum import Enum
 from abc import ABC, abstractmethod
 from simulator.actions.dodge import DodgeFactory
@@ -63,9 +63,7 @@ class Combatant(ABC, ProtoCombatant):
         self.selected_enemy = None
         self.selected_ally = None
         self.planned_movement = None
-        self.movement_generator = None
         self.melee_reaction_range = 1
-        self.target_position_cache = None
         self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
         # maps saving_throw_type -> (bonus, RollModifier)
@@ -94,8 +92,8 @@ class Combatant(ABC, ProtoCombatant):
         self.to_hit_dice_mod = []
         self.action_types_added = []
         self.archetype = CombatantArchetype.MELEE
-        self.last_attack_factory_name = None
         self.shortest_paths_cache = None
+        self.wears_metal = False
 
     def __str__(self):
         return self.name
@@ -388,9 +386,16 @@ class Combatant(ABC, ProtoCombatant):
 
     def needs_to_break_out_of_grapple(self):
         for dc_cond in self.dc_conditions:
-            if Conditions.GRAPPLED in dc_cond.conditions and dc_cond.needs_action_to_break:
+            if Conditions.GRAPPLED in dc_cond.conditions and dc_cond.phase is PhaseOfTurn.ACTION:
                 return dc_cond
         return None
+
+    def break_out_of_grapple(self):
+        # TODO this is a simplification, there can potentially be multiple grapples by multiple targets
+        for idx, dc_cond in enumerate(self.dc_conditions):
+            if Conditions.GRAPPLED in dc_cond.conditions and dc_cond.phase is PhaseOfTurn.ACTION:
+                del self.dc_conditions[idx]
+                break
 
     def is_affected_by_any(self, *args):
         for condition in args:
@@ -412,7 +417,6 @@ class Combatant(ABC, ProtoCombatant):
         self.has_bonus_action = True
         self.has_reaction = True
         self.movement = self.speed
-        self.target_position_cache = None  # This has to be reset every turn as the path can be blocked by other combatants
         # if self.is_dodging:
         #     self.saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.STRAIGHT)
         # self.is_dodging = False # TODO make sure the effect tracker takes care of this
@@ -421,7 +425,6 @@ class Combatant(ABC, ProtoCombatant):
             self.ac -= 5
         self.shield_spell_active = False
         self.has_haste_action = False
-        self.last_attack_factory_name = None
         self.attack_fsm.set_state('0')
         self.action_plan = None
 
@@ -436,7 +439,6 @@ class Combatant(ABC, ProtoCombatant):
         self.has_bonus_action = True
         self.has_reaction = True
         self.curr_hp = self.max_hp
-        self.target_position_cache = None
         self.movement = self.speed
         self.is_dodging = False
         if self.spellslots:
@@ -457,7 +459,6 @@ class Combatant(ABC, ProtoCombatant):
         for f in self.bonus_action_factories:
             if FactoryFlags.HAS_AMMO in f[1].flags:
                 self.ammo[f[1].name] = f[1].ammo
-        self.last_attack_factory_name = None
 
 
     @contextmanager
@@ -470,6 +471,21 @@ class Combatant(ABC, ProtoCombatant):
                 action.disable(battle_map)
         else:
             yield False
+
+    def export_resources(self):
+        return None
+
+    def load_resources(self, resources):
+        pass
+
+    @contextmanager
+    def as_if_new_turn(self):
+        exported_resources = self.export_resources()
+        try:
+            self.new_turn()
+        finally:
+            yield self
+        self.load_resources(exported_resources)
 
     def add_team(self, team_color):
         self.team_color = team_color
