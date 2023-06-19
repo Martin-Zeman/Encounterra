@@ -66,7 +66,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         """
         return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type)) * ROUND_HORIZON
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -147,7 +147,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def is_affecting(self, combatant, battle_map):
         return False
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):

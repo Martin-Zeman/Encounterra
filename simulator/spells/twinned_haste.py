@@ -9,6 +9,8 @@ from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 from functools import reduce, cache
 from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
 from simulator.spells.haste import HasteFactory
+from simulator.utils.roll_types import ThreatModifierType
+
 
 class TwinnedHasteFactory(ThreatModifierFactory):
     level = 3
@@ -70,7 +72,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             enemy_attacks = get_attacks(enemy)
             if not enemy_attacks:
                 continue
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(battle_map, target, {"target_ac": 2}), enemy_attacks, 0)
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(battle_map, target, {ThreatModifierType.TARGET_AC: 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
 
             # TODO include the ST-based abilities here

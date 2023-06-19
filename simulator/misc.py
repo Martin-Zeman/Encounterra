@@ -7,7 +7,7 @@ from functools import reduce, cache
 
 from simulator.actions.actoid import FactoryFlags
 import logging
-from simulator.utils.roll_modifiers import RollModifier
+from simulator.utils.roll_types import RollType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -105,22 +105,22 @@ class CombatantArchetype(Enum):
 
 SIGN = {"+": 1, "-": -1}
 
-def reconcile_roll_modifiers(modifiers):
+def reconcile_roll_types(types):
     """
 
     @param modifiers: set of modifiers
     @return: resulting modifier
     """
     try:
-        modifiers.remove(RollModifier.STRAIGHT)  # TODO Do I need this?
+        types.remove(RollType.STRAIGHT)  # TODO Do I need this?
     except KeyError:
         pass
-    if len(modifiers) > 1:
-        return RollModifier.STRAIGHT
+    if len(types) > 1:
+        return RollType.STRAIGHT
     try:
-        ret = modifiers.pop()
+        ret = types.pop()
     except KeyError:
-        ret = RollModifier.STRAIGHT
+        ret = RollType.STRAIGHT
     return ret
 
 @cache
@@ -159,11 +159,11 @@ def roll_dice(dice):
             dice_sum += random.randint(1, d[1])
     return dice_sum
 
-def roll_saving_throw(bonus, dc, roll_modifier):
+def roll_saving_throw(bonus, dc, roll_type):
     d20 = parse_dmg_dice('1d20')
-    if roll_modifier is RollModifier.STRAIGHT:
+    if roll_type is RollType.STRAIGHT:
         roll = roll_dice(d20)
-    elif roll_modifier is RollModifier.ADVANTAGE:
+    elif roll_type is RollType.ADVANTAGE:
         roll = max(roll_dice(d20), roll_dice(d20))
     else:
         roll = min(roll_dice(d20), roll_dice(d20))
@@ -172,11 +172,11 @@ def roll_saving_throw(bonus, dc, roll_modifier):
         return True
     return roll + bonus >= dc
 
-def roll_ability_check(bonus, dc, roll_modifier):
+def roll_ability_check(bonus, dc, roll_type):
     d20 = parse_dmg_dice('1d20')
-    if roll_modifier is RollModifier.STRAIGHT:
+    if roll_type is RollType.STRAIGHT:
         return roll_dice(d20) + bonus >= dc
-    elif roll_modifier is RollModifier.ADVANTAGE:
+    elif roll_type is RollType.ADVANTAGE:
         return max(roll_dice(d20), roll_dice(d20)) + bonus >= dc
     else:
         return min(roll_dice(d20), roll_dice(d20)) + bonus >= dc

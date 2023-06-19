@@ -15,8 +15,7 @@ from simulator.actions.actoid import FactoryFlags
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag
 from simulator.spells.misty_step import MistyStepFactory
-from simulator.utils.roll_modifiers import RollModifier
-
+from simulator.utils.roll_types import RollType, ThreatModifierType
 
 DZ_CONSTANT = 0.33
 
@@ -95,41 +94,41 @@ def mean_dmg_bonus_increment_for_to_hit_bonus_dice(to_hit, dmg_dice, dmg_bonus, 
     return mean_dmg(to_hit + (1.0 + bonus_dice_size) / 2.0, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
 
 
-def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_modifier, factory_flags):
+def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_type, factory_flags):
     """
-    Estimates the change in mean dmg from enemies within radius given a roll modifier assuming they'd all attack the combatant
+    Estimates the change in mean dmg from enemies within radius given a roll roll_type assuming they'd all attack the combatant
     @param combatant: the potential receiver of the dmg
     @param threat_radius: radius within which enemies are to be considered
     @param battle_map:
-    @param roll_modifier: the roll modifier to be considered (advantage or disadvantage)
+    @param roll_type: the roll type to be considered (advantage or disadvantage)
     @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
     @return: estimated change in dmg, negative for advantage, positive for disadvantage
     """
     potential_attackers = battle_map.get_enemies_within_hop_distance(combatant, threat_radius)
     incoming_threat_mod_acc = 0
-    min_or_max = max if roll_modifier is RollModifier.ADVANTAGE else min
+    min_or_max = max if roll_type is RollType.ADVANTAGE else min
     for pa in potential_attackers:
         max_incoming_threat = 0
         for f in pa.action_factories:
             if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
                 max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
-                    "roll_modifier": roll_modifier}))
+                    ThreatModifierType.ROLL_TYPE: roll_type}))
         incoming_threat_mod_acc += max_incoming_threat
 
         max_incoming_threat = 0
         for f in pa.bonus_action_factories:
             if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
                 max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
-                    "roll_modifier": roll_modifier}))
+                    ThreatModifierType.ROLL_TYPE: roll_type}))
         incoming_threat_mod_acc += max_incoming_threat
 
         max_incoming_threat = 0
         for f in pa.haste_action_factories:
             if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
                 max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
-                    "roll_modifier": roll_modifier}))
+                    ThreatModifierType.ROLL_TYPE: roll_type}))
         incoming_threat_mod_acc += max_incoming_threat
-    if roll_modifier is RollModifier.ADVANTAGE:
+    if roll_type is RollType.ADVANTAGE:
         assert incoming_threat_mod_acc >= 0
     else:
         assert incoming_threat_mod_acc <= 0
@@ -248,14 +247,14 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
     :param disengaged: If True then don't include the AoOs
     :return: accumulated threat (negative)
     """
-    roll_modifier = RollModifier.DISADVANTAGE if dodged else RollModifier.STRAIGHT
+    roll_type = RollType.DISADVANTAGE if dodged else RollType.STRAIGHT
     threat_acc = 0
     with battle_map.as_if_combatant_position(combatant, curr_coords_data[0]):
         # account for AoO
         if not disengaged:
             enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
             for e in enemies:
-                t = e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_modifier=roll_modifier, consider_dist=False)
+                t = e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_type=roll_type, consider_dist=False)
                 assert t >= 0
                 threat_acc -= t
 

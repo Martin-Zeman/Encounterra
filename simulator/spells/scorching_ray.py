@@ -11,7 +11,7 @@ from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
 
-from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER_CRIT, ROLL_MODIFIER
+from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -61,39 +61,30 @@ class ScorchingRayFactory(DirectThreatFactory):
             return 0
 
 
-    def calculate_threat_to_target_delta_single_target(self, target, modified_stats):
+    def calculate_threat_to_target_delta_single_target(self, target, modifiers):
         """
         Helper function
         """
-        try:
-            mod_to_hit_flat = modified_stats['to_hit_flat']
-        except KeyError:
-            mod_to_hit_flat = 0
-        try:
-            mod_to_hit_die = modified_stats['to_hit_die']
-        except KeyError:
-            mod_to_hit_die = '0d0'
-        try:
-            roll_modifier = modified_stats['roll_modifier']
-        except KeyError:
-            roll_modifier = RollModifier.STRAIGHT
+        mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
+        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
+        roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-        to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
-        total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
+        to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
+        total_crit = ROLL_TYPE_CRIT[roll_type]
 
         # We assume the maximum threat in case where all three rays are aimed at the target
         return 3*(mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(ScorchingRayFactory.dmg_type)) - \
             mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ScorchingRayFactory.dmg_type)))
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
         # We assume the maximum threat in case where all three rays are aimed at the target
-        return 3 * self.calculate_threat_to_target_delta_single_target(target, modified_stats)
+        return 3 * self.calculate_threat_to_target_delta_single_target(target, modifiers)
 
 
 class ScorchingRay(Actoid, DirectThreat):
@@ -103,7 +94,7 @@ class ScorchingRay(Actoid, DirectThreat):
         self.targets = targets
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
-        self.roll_modifier = RollModifier.STRAIGHT
+        self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Scorching Ray on {self.targets[0]}, {self.targets[1]} and {self.targets[2]}"
@@ -116,19 +107,19 @@ class ScorchingRay(Actoid, DirectThreat):
 
     @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
-        to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
+        roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
+        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
         dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.targets[0].is_resistant_to(ScorchingRayFactory.dmg_type))
-        to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
+        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
         dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.targets[1].is_resistant_to(ScorchingRayFactory.dmg_type))
-        to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.targets[2].ac - self.factory.to_hit, 20))]
+        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[2].ac - self.factory.to_hit, 20))]
         dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, 1, self.targets[2].is_resistant_to(ScorchingRayFactory.dmg_type))
         return dmg_acc
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
-        ret = self.factory.calculate_threat_to_target_delta_single_target(self.targets[0], modified_stats)
-        ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[1], modified_stats)
-        ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[2], modified_stats)
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+        ret = self.factory.calculate_threat_to_target_delta_single_target(self.targets[0], modifiers)
+        ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[1], modifiers)
+        ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[2], modifiers)
         return ret
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

@@ -8,7 +8,7 @@ from simulator.misc import percent_of_curr_hp
 from simulator.threat_utils import mean_dmg
 import logging
 
-from simulator.utils.roll_modifiers import RollModifier
+from simulator.utils.roll_types import RollType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -30,9 +30,9 @@ class RangeAttack(Attack):
 
     # @cache
     def calculate_threat(self, combatant, battle_map, combatant_coords: CombatantCoords = None, *args, **kwargs):
-        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
-        roll_modifier = RollModifier.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) > self.factory.short_range else roll_modifier
-        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, roll_modifier=roll_modifier, **kwargs)
+        roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
+        roll_type = RollType.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) > self.factory.short_range else roll_type
+        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, roll_type=roll_type, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target_combatant),

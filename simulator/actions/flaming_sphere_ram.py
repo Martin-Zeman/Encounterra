@@ -50,7 +50,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type))
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -78,7 +78,7 @@ class FlamingSphereRam(Actoid, DirectThreat):
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant)
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         return 0  # Doesn't apply here
 
 

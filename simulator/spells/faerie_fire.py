@@ -8,7 +8,7 @@ from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 from functools import cache
-from simulator.misc import roll_saving_throw, reconcile_roll_modifiers, SavingThrow, Conditions
+from simulator.misc import roll_saving_throw, reconcile_roll_types, SavingThrow, Conditions
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -83,7 +83,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
         potentially_affected_combatants = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
-            saved = roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_modifiers(pac.saving_throws_roll_mod[st]))
+            saved = roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_types(pac.saving_throws_roll_type_mod[st]))
             if not saved:
                 pac.remove_condition(Conditions.INVISIBLE)
                 self.affected_combatants.append(pac)
@@ -99,7 +99,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return 0  # TODO
 
-    def calculate_threat_mod(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_mod(self, battle_map, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):

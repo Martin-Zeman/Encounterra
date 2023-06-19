@@ -8,7 +8,7 @@ from enum import Enum, auto
 import math
 import logging
 
-from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER_CRIT, ROLL_MODIFIER
+from simulator.utils.roll_types import RollType, ROLL_TYPE_CRIT, ROLL_TYPE, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -59,7 +59,7 @@ class AttackFactory(DirectThreatFactory):
     def create(self, target_combatant):
         return Attack(target_combatant, self)
 
-    def calculate_threat_approx(self, combatant, battle_map, roll_modifier=RollModifier.STRAIGHT):
+    def calculate_threat_approx(self, combatant, battle_map, roll_type=RollType.STRAIGHT):
         """
         Helper function which calculates the average potential threat over all potential targets including all possible mods
         """
@@ -68,9 +68,9 @@ class AttackFactory(DirectThreatFactory):
             return 0
         def mean_dmg_mod(acc, pt):
             to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
-            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - to_hit_total, 20))]
+            to_hit_total += ROLL_TYPE[roll_type][max(0, min(pt.ac - to_hit_total, 20))]
             total_crit = self.crit_range + self.mod_crit_range
-            total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
+            total_crit *= ROLL_TYPE_CRIT[roll_type]
             acc += mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
                                   self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
@@ -88,14 +88,14 @@ class AttackFactory(DirectThreatFactory):
         except KeyError:
             consider_dist = False
         try:
-            roll_modifier = kwargs['roll_modifier']
+            roll_type = kwargs['roll_type']
         except KeyError:
-            roll_modifier = RollModifier.STRAIGHT
+            roll_type = RollType.STRAIGHT
 
         to_hit_total = self.to_hit
-        to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
+        to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
 
-        # TODO: Should I include roll modifiers here? There may be a use-case in the future
+        # TODO: Should I include roll types here? There may be a use-case in the future
         if not consider_dist or battle_map.get_hop_distance(self.combatant, target) <= self.range:
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
@@ -103,50 +103,29 @@ class AttackFactory(DirectThreatFactory):
             return acc
         return 0
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
         baseline = mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         for extra in self.extra_dmg:
             baseline += mean_dmg(self.to_hit, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
-        try:
-            mod_dmg_flat = modified_stats['dmg_bonus_flat']
-        except KeyError:
-            mod_dmg_flat = 0
-        try:
-            mod_dmg_die = modified_stats['dmg_bonus_die']
-        except KeyError:
-            mod_dmg_die = '0d0'
-        try:
-            mod_to_hit_flat = modified_stats['to_hit_flat']
-        except KeyError:
-            mod_to_hit_flat = 0
-        try:
-            mod_to_hit_die = modified_stats['to_hit_die']
-        except KeyError:
-            mod_to_hit_die = '0d0'
-        try:
-            mod_crit_range = modified_stats['crit_range']
-        except KeyError:
-            mod_crit_range = 0
-        try:
-            target_ac = modified_stats['target_ac']
-        except KeyError:
-            target_ac = 0
-        try:
-            roll_modifier = modified_stats['roll_modifier']
-        except KeyError:
-            roll_modifier = RollModifier.STRAIGHT
+        mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
+        mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
+        mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
+        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
+        mod_crit_range = modifiers.get(ThreatModifierType.CRIT_RANGE, 0)
+        target_ac = modifiers.get(ThreatModifierType.TARGET_AC, 0)
+        roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         total_target_ac = target.ac + target_ac
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
         try:
-            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(total_target_ac - to_hit_total, 20))]
+            to_hit_total += ROLL_TYPE[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         except KeyError:  # Can happen for extreme differences between the AC and the to_hit
             pass  # The effect is negligible in that case
         total_crit = self.crit_range + mod_crit_range
-        total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
+        total_crit *= ROLL_TYPE_CRIT[roll_type]
         try:
             modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
@@ -163,7 +142,7 @@ class Attack(Actoid, DirectThreat):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.target_combatant = target_combatant
         self.factory = factory
-        self.roll_modifier = RollModifier.STRAIGHT
+        self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
         form_prefix = str(self.factory.combatant.get_current_form()).split()[-1] + " " if self.factory.combatant.get_original_form() is not self.factory.combatant else ""
@@ -182,8 +161,8 @@ class Attack(Actoid, DirectThreat):
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, **kwargs)
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modified_stats, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modifiers, *args, **kwargs)

@@ -10,6 +10,8 @@ import sys
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory, AttackThreatModifier
 import logging
 
+from simulator.utils.roll_types import ThreatModifierType
+
 logger = logging.getLogger("EncounTroll")
 
 class RageFactory(ThreatModifierFactory):
@@ -80,7 +82,7 @@ class RageFactory(ThreatModifierFactory):
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
         attacks = get_attacks(self.combatant)
         for attack in attacks:
-            dmg_inc = attack.calculate_threat_to_target_delta(battle_map, self, {"dmg_bonus_flat": rage_bonus})
+            dmg_inc = attack.calculate_threat_to_target_delta(battle_map, self, {ThreatModifierType.DMG_BONUS_FLAT: rage_bonus})
             max_threat = max(dmg_inc, max_threat)
 
         total_threat += max_threat
@@ -146,7 +148,7 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, Attac
         """
         rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         if FactoryFlags.IS_MELEE in attack.factory.flags:
-            return attack.calculate_threat_delta(battle_map, {"dmg_bonus_flat": rage_bonus})
+            return attack.calculate_threat_delta(battle_map, {ThreatModifierType.DMG_BONUS_FLAT: rage_bonus})
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

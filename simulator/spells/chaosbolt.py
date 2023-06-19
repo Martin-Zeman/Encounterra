@@ -1,5 +1,4 @@
 from simulator.actions.action_types import BonusAction
-from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType
 import logging
@@ -7,9 +6,9 @@ from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from simulator.misc import percent_of_curr_hp
-from functools import partial, cache
+from functools import  cache
 
-from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
+from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -67,12 +66,12 @@ class ChaosboltFactory(DirectThreatFactory):
         Calculates threat to a specific target
         """
         # try:
-        #     roll_modifier = kwargs['roll_modifier']
+        #     roll_type = kwargs['roll_type']
         # except KeyError:
-        #     roll_modifier = RollModifier.STRAIGHT
+        #     roll_type = RollType.STRAIGHT
         #
         # to_hit_total = self.to_hit
-        # to_hit_total = to_hit_total + ROLL_MODIFIER[roll_modifier][target.ac - to_hit_total]
+        # to_hit_total = to_hit_total + ROLL_TYPE[roll_type][target.ac - to_hit_total]
 
         # TODO Consider including the potential of hitting others
         acc = 0
@@ -88,24 +87,17 @@ class ChaosboltFactory(DirectThreatFactory):
                 p_acc *= P_SAME
         return acc
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        try:
-            to_hit_bonus = modified_stats['to_hit']
-        except KeyError:
-            to_hit_bonus = 0
-
-        try:
-            roll_modifier = modified_stats['roll_modifier']
-        except KeyError:
-            roll_modifier = RollModifier.STRAIGHT
+        to_hit_bonus = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
+        roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         if battle_map.get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
             to_hit_total = self.to_hit + to_hit_bonus
-            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
-            total_crit = ROLL_MODIFIER_CRIT[roll_modifier]
+            to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
+            total_crit = ROLL_TYPE_CRIT[roll_type]
 
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
             return mean_dmg(to_hit_total, dmg_dice, 0, target.ac, total_crit) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
@@ -120,7 +112,7 @@ class Chaosbolt(Actoid, DirectThreat):
         self.target = target
         self.factory = factory
         self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
-        self.roll_modifier = RollModifier.STRAIGHT
+        self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt on {self.target[0]}"
@@ -134,8 +126,8 @@ class Chaosbolt(Actoid, DirectThreat):
 
     @cache
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
-        roll_modifier = RollModifier.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollModifier.DISADVANTAGE
-        to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(self.target.ac - self.factory.to_hit, 20))]
+        roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
+        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
         potential_targets = battle_map.get_enemies_within_radius(combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
         potential_targets.remove(self.target)
         P_SAME = 4 / 43  # 8/86 = 4 / 43
@@ -143,16 +135,16 @@ class Chaosbolt(Actoid, DirectThreat):
         dmg_dice = "+".join([self.factory.dmg_dice, self.factory.additional_dmg_dice])
         acc = mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac)
         for pt in potential_targets:
-            to_hit_total = self.factory.to_hit + ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - self.factory.to_hit, 20))]
+            to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(pt.ac - self.factory.to_hit, 20))]
             acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac) * p_acc
             p_acc *= P_SAME
         return acc
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         """
-        The delta in threat when modified_stats are applied on this ability.
+        The delta in threat when modifiers are applied on this ability.
         """
-        return self.factory.calculate_threat_to_target_delta(battle_map, self.target, modified_stats, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target, modifiers, *args, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),

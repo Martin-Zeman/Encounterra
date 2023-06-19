@@ -197,7 +197,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.form.max_hp * random.uniform(0.8, 1.20)  # We try to encourage trying out different wildshape forms
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         return 0
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

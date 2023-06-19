@@ -27,6 +27,8 @@ class Action(Enum):
     BREAK_GRAPPLE = auto()
     FLAMING_SPHERE = auto()
     WEB = auto()
+    HOLD_PERSON = auto()
+    TWINNED_HOLD_PERSON = auto()
 
 
 class BonusAction(Enum):
@@ -50,6 +52,7 @@ class BonusAction(Enum):
     QUICKENED_FAERIE_FIRE = auto()
     QUICKENED_BLESS = auto()
     QUICKENED_FLAMING_SPHERE = auto()
+    QUICKENED_HOLD_PERSON = auto()
     FLAMING_SPHERE_RAM = auto()
     MOON_WILDSHAPE = auto()
 

@@ -18,6 +18,8 @@ from simulator.spells.fireball import FireballFactory
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.flaming_sphere import FlamingSphereFactory
 from simulator.spells.haste import HasteFactory
+from simulator.spells.hold_person import HoldPersonFactory
+from simulator.spells.twinned_hold_person import TwinnedHoldPersonFactory
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.spells.scorching_ray import ScorchingRayFactory
 from simulator.spells.shield import ShieldFactory
@@ -56,6 +58,8 @@ TO_FACTORY = {
     Action.CONSTRICT: ConstrictFactory,
     Action.BITE_WITH_SWALLOW: BiteWithSwallowFactory,
     Action.FLAMING_SPHERE: FlamingSphereFactory,
+    Action.HOLD_PERSON: HoldPersonFactory,
+    Action.TWINNED_HOLD_PERSON: TwinnedHoldPersonFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -72,6 +76,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_HASTE: HasteFactory,
     BonusAction.QUICKENED_SCORCHING_RAY: ScorchingRayFactory,
     BonusAction.MOON_WILDSHAPE: WildshapeFactory,
+    BonusAction.QUICKENED_HOLD_PERSON: HoldPersonFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
@@ -89,9 +94,10 @@ TO_QUICKENED = {
     Action.FIREBOLT: BonusAction.QUICKENED_FIREBOLT,
     Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT,
     Action.HASTE: BonusAction.QUICKENED_HASTE,
-    Action.SCORCHING_RAY: BonusAction.QUICKENED_SCORCHING_RAY
+    Action.SCORCHING_RAY: BonusAction.QUICKENED_SCORCHING_RAY,
+    Action.HOLD_PERSON: BonusAction.QUICKENED_HOLD_PERSON
 }
-TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE}
+TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE, Action.HOLD_PERSON: Action.TWINNED_HOLD_PERSON}
 TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, \
              Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE,\
              Action.BITE_WITH_SWALLOW: HasteAction.HASTE_BITE_WITH_SWALLOW}

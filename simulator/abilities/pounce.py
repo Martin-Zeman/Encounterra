@@ -41,14 +41,14 @@ class PounceFactory(DirectThreatFactory):
         p_fail = 1 - get_saving_throw_success_prob(self.primary_attack.on_hit.dc, target.saving_throws[self.primary_attack.on_hit.st])
         return self.primary_attack.calculate_threat_to_target(battle_map, target) + p_fail * self.secondary_attack.calculate_threat_to_target(battle_map, target)
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
         p_fail = 1 - get_saving_throw_success_prob(self.primary_attack.on_hit.dc, target.saving_throws[self.primary_attack.on_hit.st])
-        return self.primary_attack.calculate_threat_to_target_delta(battle_map, target, modified_stats) + p_fail * self.secondary_attack.calculate_threat_to_target_delta(battle_map, target, modified_stats)
+        return self.primary_attack.calculate_threat_to_target_delta(battle_map, target, modifiers) + p_fail * self.secondary_attack.calculate_threat_to_target_delta(battle_map, target, modifiers)
 
 
 
@@ -81,8 +81,8 @@ class Pounce(Actoid, DirectThreat):
         """
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant)
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         """
-        The delta in threat when modified_stats are applied on this ability.
+        The delta in threat when modifiers are applied on this ability.
         """
-        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modified_stats)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modifiers)

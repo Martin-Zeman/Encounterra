@@ -27,13 +27,13 @@ class ShieldFactory(DirectThreatFactory):
         """
         return "ShieldFactory"
 
-    def calculate_threat_approx_mod(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_approx_mod(self, battle_map, modifiers, *args, **kwargs):
         return 0  # no need
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         return 0
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         return 0
 
     def create(self):

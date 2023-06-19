@@ -44,13 +44,13 @@ class ConstrictFactory(DirectThreatFactory):
         # TODO include the threat of the RESTRAINED and GRAPPLED in the calculation
         return self.attack.calculate_threat_to_target(battle_map, target)
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
-        return self.attack.calculate_threat_to_target_delta(battle_map, target, modified_stats)
+        return self.attack.calculate_threat_to_target_delta(battle_map, target, modifiers)
 
 
 
@@ -83,8 +83,8 @@ class Constrict(Actoid, DirectThreat):
         """
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant)
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         """
-        The delta in threat when modified_stats are applied on this ability.
+        The delta in threat when modifiers are applied on this ability.
         """
-        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modified_stats)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modifiers)

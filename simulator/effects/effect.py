@@ -16,6 +16,7 @@ class EffectType(Enum):
     SPIKE_GROWTH = auto()
     CLOUD_OF_DAGGERS = auto()
     HUNGER_OF_HADAR = auto()
+    HOLD_PERSON = auto()
 
 
 class Effect(ABC):

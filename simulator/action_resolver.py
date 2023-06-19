@@ -30,19 +30,19 @@ class ActionResult(Enum):
     TRAINEE_DEAD = auto()
 
 def has_advantage_saving_throw(ability, target):
-    if RollModifier.ADVANTAGE in target.saving_throws_roll_mod[ability.factory.saving_throw]:
+    if RollType.ADVANTAGE in target.saving_throws_roll_type_mod[ability.factory.saving_throw]:
         return True
     if ability.factory.saving_throw is SavingThrow.DEX and target.has_passive(
             Passive.DANGER_SENSE) and not target.is_affected_by_any(Conditions.INCAPACITATED,
                                                                               Conditions.BLINDED,
                                                                               Conditions.DEAFENED):
-        return RollModifier.ADVANTAGE
+        return RollType.ADVANTAGE
     if ability.factory.saving_throw is SavingThrow.DEX and target.is_dodging:
-        return RollModifier.ADVANTAGE
-    return RollModifier.STRAIGHT
+        return RollType.ADVANTAGE
+    return RollType.STRAIGHT
 
 def has_disadvantage_saving_throw(ability, target):
-    if RollModifier.DISADVANTAGE in target.saving_throws_roll_mod[ability.factory.saving_throw]:
+    if RollType.DISADVANTAGE in target.saving_throws_roll_type_mod[ability.factory.saving_throw]:
         return True
     if ability.factory.saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
         return True
@@ -53,12 +53,12 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=Tru
     # TODO prompt reaction
     # TODO Conditions
     bonus = target_combatant.saving_throws[ability.factory.saving_throw]
-    modifiers = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
-    final_modifier = reconcile_roll_modifiers(modifiers)
+    types = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
+    final_modifier = reconcile_roll_types(types)
 
-    if final_modifier is RollModifier.STRAIGHT:
+    if final_modifier is RollType.STRAIGHT:
         rolled = random.randint(1, 20)
-    elif final_modifier is RollModifier.ADVANTAGE:
+    elif final_modifier is RollType.ADVANTAGE:
         rolled = max(random.randint(1, 20), random.randint(1, 20))
     else:
         rolled = min(random.randint(1, 20), random.randint(1, 20))
@@ -83,12 +83,12 @@ def resolve_on_hit_dmg_saving_throw(ability, dmg, target_combatant, half_on_succ
     # TODO prompt reaction
     # TODO Conditions
     bonus = target_combatant.saving_throws[ability.st]
-    modifiers = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
-    final_modifier = reconcile_roll_modifiers(modifiers)
+    types = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
+    final_modifier = reconcile_roll_types(types)
 
-    if final_modifier is RollModifier.STRAIGHT:
+    if final_modifier is RollType.STRAIGHT:
         rolled = random.randint(1, 20)
-    elif final_modifier is RollModifier.ADVANTAGE:
+    elif final_modifier is RollType.ADVANTAGE:
         rolled = max(random.randint(1, 20), random.randint(1, 20))
     else:
         rolled = min(random.randint(1, 20), random.randint(1, 20))
@@ -117,38 +117,38 @@ class ActionResolver:
         self.effect_tracker = effect_tracker
 
     def has_advantage_ranged(self, attack, attacker, target):
-        if attack.roll_modifier is RollModifier.ADVANTAGE:
-            return RollModifier.ADVANTAGE
+        if attack.roll_type is RollType.ADVANTAGE:
+            return RollType.ADVANTAGE
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
-            return RollModifier.ADVANTAGE
+            return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
-            return RollModifier.ADVANTAGE
-        return RollModifier.STRAIGHT
+            return RollType.ADVANTAGE
+        return RollType.STRAIGHT
 
     def has_disadvantage_spell_ranged(self, attack, attacker, target):
-        if attack.roll_modifier is RollModifier.DISADVANTAGE:
-            return RollModifier.DISADVANTAGE
+        if attack.roll_type is RollType.DISADVANTAGE:
+            return RollType.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
-            return RollModifier.DISADVANTAGE
+            return RollType.DISADVANTAGE
         if target.is_dodging:
-            return RollModifier.DISADVANTAGE
+            return RollType.DISADVANTAGE
         if self.battle_map.is_enemy_adjacent(attacker):
-            return RollModifier.DISADVANTAGE
-        return RollModifier.STRAIGHT
+            return RollType.DISADVANTAGE
+        return RollType.STRAIGHT
 
     def has_disadvantage_ranged(self, attack, attacker, target):
-        if attack.roll_modifier is RollModifier.DISADVANTAGE:
-            return RollModifier.DISADVANTAGE
+        if attack.roll_type is RollType.DISADVANTAGE:
+            return RollType.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
-            return RollModifier.DISADVANTAGE
+            return RollType.DISADVANTAGE
         if target.is_dodging:
-            return RollModifier.DISADVANTAGE
+            return RollType.DISADVANTAGE
         if self.battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
-            return RollModifier.DISADVANTAGE
+            return RollType.DISADVANTAGE
         if self.battle_map.is_enemy_adjacent(attacker):
-            return RollModifier.DISADVANTAGE
-        return RollModifier.STRAIGHT
+            return RollType.DISADVANTAGE
+        return RollType.STRAIGHT
 
     def resolve_chaos_bolt(self, caster, spell):
         # TODO Conditions
@@ -157,12 +157,12 @@ class ActionResolver:
         potential_targets = self.teams.get_allies(curr_target)
         while jump:
             jump = False
-            modifiers = {self.has_advantage_ranged(spell, caster, curr_target), self.has_disadvantage_spell_ranged(spell, caster, curr_target)}
-            final_modifier = reconcile_roll_modifiers(modifiers)
+            types = {self.has_advantage_ranged(spell, caster, curr_target), self.has_disadvantage_spell_ranged(spell, caster, curr_target)}
+            final_modifier = reconcile_roll_types(types)
 
-            if final_modifier is RollModifier.STRAIGHT:
+            if final_modifier is RollType.STRAIGHT:
                 rolled = random.randint(1, 20)
-            elif final_modifier is RollModifier.ADVANTAGE:
+            elif final_modifier is RollType.ADVANTAGE:
                 rolled = max(random.randint(1, 20), random.randint(1, 20))
             else:
                 rolled = min(random.randint(1, 20), random.randint(1, 20))
@@ -201,10 +201,10 @@ class ActionResolver:
 
     def resolve_ranged_spell_attack(self, caster, spell, target):
         # TODO Conditions
-        modifiers = {self.has_advantage_ranged(spell, caster, target), self.has_disadvantage_spell_ranged(spell, caster, target)}
-        final_modifier = reconcile_roll_modifiers(modifiers)
+        types = {self.has_advantage_ranged(spell, caster, target), self.has_disadvantage_spell_ranged(spell, caster, target)}
+        final_modifier = reconcile_roll_types(types)
 
-        if final_modifier is RollModifier.STRAIGHT:
+        if final_modifier is RollType.STRAIGHT:
             rolled = random.randint(1, 20)
         elif final_modifier is final_modifier.ADVANTAGE:
             logger.info(f"{caster} rolls for {spell} with advantage", extra={"team": self.teams.get_team(caster)})
@@ -282,34 +282,34 @@ class ActionResolver:
                 return ActionResult.UNFEASIBLE
 
     def has_advantage_melee(self, attack, attacker, target):
-        if attack.roll_modifier is RollModifier.ADVANTAGE:
-            return RollModifier.ADVANTAGE
+        if attack.roll_type is RollType.ADVANTAGE:
+            return RollType.ADVANTAGE
         if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent_to_target(attacker, target):
-            return RollModifier.ADVANTAGE
+            return RollType.ADVANTAGE
         if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
             # TODO Consider moving this to the attack factory
-            return RollModifier.ADVANTAGE
+            return RollType.ADVANTAGE
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
-            return RollModifier.ADVANTAGE
+            return RollType.ADVANTAGE
         if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) == 1:
-            return RollModifier.ADVANTAGE
+            return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
-            return RollModifier.ADVANTAGE
-        return RollModifier.STRAIGHT
+            return RollType.ADVANTAGE
+        return RollType.STRAIGHT
 
     def has_disadvantage_melee(self, attack, attacker, target):
-        if attack.roll_modifier is RollModifier.DISADVANTAGE:
-            return RollModifier.DISADVANTAGE
+        if attack.roll_type is RollType.DISADVANTAGE:
+            return RollType.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
-            return RollModifier.DISADVANTAGE
+            return RollType.DISADVANTAGE
         if target.is_dodging:
-            return RollModifier.DISADVANTAGE
+            return RollType.DISADVANTAGE
         if attacker.is_affected_by(Conditions.PRONE):
-            return RollModifier.DISADVANTAGE
+            return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
-            return RollModifier.DISADVANTAGE
-        return RollModifier.STRAIGHT
+            return RollType.DISADVANTAGE
+        return RollType.STRAIGHT
 
     def resolve_attack(self, attack, attacker):  # TODO remove combatant from attack and have it as a separate parameter
         """
@@ -321,15 +321,15 @@ class ActionResolver:
         target = attack.target_combatant
         assert target
         if FactoryFlags.IS_MELEE in attack.factory.flags:
-            modifiers = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
+            types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
         else:
-            modifiers = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
+            types = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
 
-        final_modifier = reconcile_roll_modifiers(modifiers)
-        logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()}" + (f" at {final_modifier.name}" if final_modifier is not RollModifier.STRAIGHT else ""), extra={"team": self.teams.get_team(attacker)})
-        if final_modifier is RollModifier.STRAIGHT:
+        final_modifier = reconcile_roll_types(types)
+        logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()}" + (f" at {final_modifier.name}" if final_modifier is not RollType.STRAIGHT else ""), extra={"team": self.teams.get_team(attacker)})
+        if final_modifier is RollType.STRAIGHT:
             rolled = random.randint(1, 20)
-        elif final_modifier is RollModifier.ADVANTAGE:
+        elif final_modifier is RollType.ADVANTAGE:
             logger.info(f"{attacker} rolls for {attack} with advantage", extra={"team": self.teams.get_team(attacker)})
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
@@ -350,7 +350,7 @@ class ActionResolver:
             dmg_dice_sum = roll_dice(dice)
             extra_dmg = [(multiplier * roll_dice(parse_dmg_dice(e[0])), e[1]) for e in attack.factory.extra_dmg]
             total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
-            if attacker.has_passive(Passive.FANATIC_ADVANTAGE) and final_modifier is RollModifier.ADVANTAGE and not attacker.already_used_fanatic_advantage:
+            if attacker.has_passive(Passive.FANATIC_ADVANTAGE) and final_modifier is RollType.ADVANTAGE and not attacker.already_used_fanatic_advantage:
                 logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
                 attacker.already_used_fanatic_advantage = True
                 total_dmg += roll_dice([(2, 6)])
@@ -484,7 +484,7 @@ class ActionResolver:
             case Action.BREAK_GRAPPLE:
                 logger.info(f"{combatant} is trying to break out of grapple")
                 grapple = actoid.factory.grapple_condition
-                broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollModifier.STRAIGHT)
+                broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollType.STRAIGHT)
                 if broken_out and getattr(grapple.attacker, "is_constricting", False):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
                     grapple.attacker.is_constricting = False

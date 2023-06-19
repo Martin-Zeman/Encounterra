@@ -61,7 +61,7 @@ class FireballFactory(DirectThreatFactory):
             return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
         return 0
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -96,7 +96,7 @@ class Fireball(Actoid, DirectThreat):
             acc += (1 if battle_map.teams.are_enemies(combatant, aff) else -1) * mean_dmg
         return acc
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

@@ -57,7 +57,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
         return avg_roll(self.dmg_dice) + 0.5 * mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw])
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -126,7 +126,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
             acc += 0.5 * mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(DamageType.Acid))
         return acc
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):

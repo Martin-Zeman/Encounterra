@@ -51,7 +51,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         """
         return avg_roll(self.dmg_dice)
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -113,7 +113,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
                 acc -= avg_roll(self.factory.dmg_dice)
         return acc
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):

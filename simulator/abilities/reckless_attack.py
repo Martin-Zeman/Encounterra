@@ -4,14 +4,14 @@ from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from simulator.misc import reconcile_roll_modifiers
-from functools import reduce, cache
+from simulator.misc import reconcile_roll_types
+from functools import reduce
 from simulator.misc import avg_roll
 from simulator.threat_utils import mean_dmg, calculate_threat_in_mod
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
 
-from simulator.utils.roll_modifiers import RollModifier, ROLL_MODIFIER, ROLL_MODIFIER_CRIT
+from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
 
 
 class RecklessAttackFactory(DirectThreatFactory):
@@ -63,7 +63,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         targets = self.get_eligible_targets(battle_map)
         return [RecklessAttack(t, self) for t in targets]
 
-    def calculate_threat_out_approx(self, combatant, battle_map, roll_modifier=RollModifier.ADVANTAGE):
+    def calculate_threat_out_approx(self, combatant, battle_map, roll_type=RollType.ADVANTAGE):
         """
         Helper function which calculates the average potential threat_out over all potential targets including all possible mods
         """
@@ -72,9 +72,9 @@ class RecklessAttackFactory(DirectThreatFactory):
             return 0
         def mean_dmg_mod(acc, pt):
             to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
-            to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(pt.ac - to_hit_total, 20))]
+            to_hit_total += ROLL_TYPE[roll_type][max(0, min(pt.ac - to_hit_total, 20))]
             total_crit = self.crit_range + self.mod_crit_range
-            total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
+            total_crit *= ROLL_TYPE_CRIT[roll_type]
             return acc + mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
                                   self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
 
@@ -89,12 +89,12 @@ class RecklessAttackFactory(DirectThreatFactory):
             consider_dist = True
         dmg = 0
         if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
-            dmg = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
+            dmg = mean_dmg(self.to_hit + ROLL_TYPE[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_TYPE_CRIT[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         # even the single target calculation the combatant is still more vulnerable to all potential attackers
-        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
+        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return dmg - incoming_threat_mod_acc
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
@@ -107,47 +107,26 @@ class RecklessAttackFactory(DirectThreatFactory):
 
         baseline = 0
         if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
-            baseline = mean_dmg(self.to_hit + ROLL_MODIFIER[RollModifier.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
-                                    target.ac, self.crit_range * ROLL_MODIFIER_CRIT[RollModifier.ADVANTAGE], target.is_resistant_to(self.dmg_type))
-        try:
-            mod_range = modified_stats['range']
-        except KeyError:
-            mod_range = 0
-        try:
-            mod_dmg_flat = modified_stats['dmg_bonus_flat']
-        except KeyError:
-            mod_dmg_flat = 0
-        try:
-            mod_dmg_die = modified_stats['dmg_bonus_die']
-        except KeyError:
-            mod_dmg_die = '0d0'
-        try:
-            mod_to_hit_flat = modified_stats['to_hit_flat']
-        except KeyError:
-            mod_to_hit_flat = 0
-        try:
-            mod_to_hit_die = modified_stats['to_hit_die']
-        except KeyError:
-            mod_to_hit_die = '0d0'
-        try:
-            mod_crit_range = modified_stats['crit_range']
-        except KeyError:
-            mod_crit_range = 0
-        try:
-            roll_modifier = reconcile_roll_modifiers({RollModifier.ADVANTAGE, modified_stats['roll_modifier']})
-        except KeyError:
-            roll_modifier = RollModifier.ADVANTAGE
+            baseline = mean_dmg(self.to_hit + ROLL_TYPE[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
+                                    target.ac, self.crit_range * ROLL_TYPE_CRIT[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
+        mod_range = modifiers.get(ThreatModifierType.RANGE, 0)
+        mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
+        # mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
+        mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
+        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
+        mod_crit_range = modifiers.get(ThreatModifierType.CRIT_RANGE, 0)
+        roll_type = reconcile_roll_types({RollType.ADVANTAGE, modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.ADVANTAGE)})
 
         modified = baseline
         with battle_map.as_if_dist_mod_from_combatant(self.combatant, target, -mod_range):
             if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
                 to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-                to_hit_total += ROLL_MODIFIER[roll_modifier][max(0, min(target.ac - to_hit_total, 20))]
+                to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
                 total_crit = self.crit_range + mod_crit_range
-                total_crit *= ROLL_MODIFIER_CRIT[roll_modifier]
+                total_crit *= ROLL_TYPE_CRIT[roll_type]
                 modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
-        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollModifier.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
+        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc
 
 
@@ -159,7 +138,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         LimitedDurationEffect.__init__(self, turns=1)
         self.target_combatant = target_combatant
         self.factory = factory
-        self.roll_modifier = RollModifier.ADVANTAGE
+        self.roll_type = RollType.ADVANTAGE
 
     def __str__(self):
         return f"Reckless Attack at {self.target_combatant}"
@@ -186,11 +165,11 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def calculate_threat(self, combatant, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, **kwargs)
 
-    def calculate_threat_delta(self, battle_map, modified_stats, *args, **kwargs):
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
         """
-        The delta in threat when modified_stats are applied on this ability.
+        The delta in threat when modifiers are applied on this ability.
         """
-        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modified_stats, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modifiers, *args, **kwargs)
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),

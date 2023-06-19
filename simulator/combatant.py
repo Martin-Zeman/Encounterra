@@ -66,7 +66,7 @@ class Combatant(ABC, ProtoCombatant):
         self.melee_reaction_range = 1
         self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
-        # maps saving_throw_type -> (bonus, RollModifier)
+        # maps saving_throw_type -> (bonus, RollType)
         self.saving_throws = {SavingThrow.STR: 0, SavingThrow.DEX: 0,
                               SavingThrow.CON: 0, SavingThrow.INT: 0,
                               SavingThrow.WIS: 0,
@@ -87,7 +87,7 @@ class Combatant(ABC, ProtoCombatant):
         self.size = Size.MEDIUM
         self.saving_throws_flat_mod = {SavingThrow.STR: [0], SavingThrow.DEX: [0], SavingThrow.CON: [0], SavingThrow.INT: [0], SavingThrow.WIS: [0], SavingThrow.CHA: [0]}
         self.saving_throws_dice_mod = {SavingThrow.STR: [], SavingThrow.DEX: [], SavingThrow.CON: [], SavingThrow.INT: [], SavingThrow.WIS: [], SavingThrow.CHA: []}
-        self.saving_throws_roll_mod = {SavingThrow.STR: set(), SavingThrow.DEX: set(), SavingThrow.CON: set(), SavingThrow.INT: set(), SavingThrow.WIS: set(), SavingThrow.CHA: set()}
+        self.saving_throws_roll_type_mod = {SavingThrow.STR: set(), SavingThrow.DEX: set(), SavingThrow.CON: set(), SavingThrow.INT: set(), SavingThrow.WIS: set(), SavingThrow.CHA: set()}
         self.to_hit_flat_mod = [0]
         self.to_hit_dice_mod = []
         self.action_types_added = []
@@ -418,7 +418,7 @@ class Combatant(ABC, ProtoCombatant):
         self.has_reaction = True
         self.movement = self.speed
         # if self.is_dodging:
-        #     self.saving_throws_roll_mod[SavingThrow.DEX].add(RollModifier.STRAIGHT)
+        #     self.saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.STRAIGHT)
         # self.is_dodging = False # TODO make sure the effect tracker takes care of this
         self.already_cast_leveled_spell_this_turn = False
         if self.shield_spell_active:
@@ -452,7 +452,7 @@ class Combatant(ABC, ProtoCombatant):
         self.has_haste_action = False
         self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)
         self.saving_throws_dice_mod = dict.fromkeys(self.saving_throws_dice_mod.keys(), [])
-        self.saving_throws_roll_mod = dict.fromkeys(self.saving_throws_roll_mod.keys(), set())
+        self.saving_throws_roll_type_mod = dict.fromkeys(self.saving_throws_roll_type_mod.keys(), set())
         for f in self.action_factories:
             if FactoryFlags.HAS_AMMO in f[1].flags:
                 self.ammo[f[1].name] = f[1].ammo

@@ -46,7 +46,7 @@ class MistyStepFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
         return 0  # Misty Step is handled differently
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modified_stats, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
         return 0
 
 
