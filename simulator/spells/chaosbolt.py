@@ -104,6 +104,10 @@ class ChaosboltFactory(DirectThreatFactory):
         else:
             return 0
 
+    def calculate_max_threat(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+
 
 class Chaosbolt(Actoid, DirectThreat):
 
@@ -125,10 +129,10 @@ class Chaosbolt(Actoid, DirectThreat):
 
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
-        potential_targets = battle_map.get_enemies_within_radius(combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
+        potential_targets = battle_map.get_enemies_within_radius(self.factory.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
         potential_targets.remove(self.target)
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME

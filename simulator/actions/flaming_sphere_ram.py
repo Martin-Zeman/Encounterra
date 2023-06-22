@@ -75,7 +75,7 @@ class FlamingSphereRam(Actoid, DirectThreat):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant)
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):

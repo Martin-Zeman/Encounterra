@@ -22,7 +22,6 @@ class MeleeAttackFactory(AttackFactory):
         return [MeleeAttack(t, self) for t in targets]
 
 
-
 class MeleeAttack(Attack):
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):

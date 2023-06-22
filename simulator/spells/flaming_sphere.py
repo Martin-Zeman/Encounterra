@@ -72,6 +72,10 @@ class FlamingSphereFactory(DirectThreatFactory):
         """
         return 0  # No need
 
+    def calculate_max_threat(self, battle_map):
+        targets = battle_map.get_enemies(self.combatant)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+
 
 class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquareEffect, AoEThreat):
 
@@ -107,7 +111,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
         enemies = battle_map.get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)
         if not enemies:

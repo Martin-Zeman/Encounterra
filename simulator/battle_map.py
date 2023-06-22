@@ -1080,36 +1080,30 @@ class Map:
         bb[1] = np.minimum(bb[1] + inflation, np.array([self.size - 1, self.size - 1]))
         return bb
 
-    def find_best_placement_harmful_circular(self, caster, spell_range, radius):
+    def find_best_placement_harmful_circular(self, caster, spell_range, radius, factory):
         """
         Finds the best placement of a spherical harmful AoE effect
         :param caster: the caster
         :param spell_range: range of the spell/ability
         :param radius: radius of the harmful AoE effect
+        :param factory: factory of the harmful effect, is used to determine the threat score
         :return: best coordinate,achieved score and set of affected combatants
         """
         # Find a BB for all the enemy combatants inflated by the range and then iterate over all squares finding one with the best hit score
         bb = self.get_harmful_bounding_box(caster, radius)
         max_score = -sys.maxsize - 1
         best_placement = None
-        best_affected = None
         caster_coords = self.combatant_coordinate_cache[caster].get()
         for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
             curr_coord = np.array([[x, y]])
-            affected = []
             if self.get_cartesian_distance(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
                 continue  # Skip those outside of spell range and those taken up by the caster
-            score = 0
-            for combatant, coords in self.combatant_coordinate_cache.items():
-                if self.get_cartesian_distance(coords.get(), curr_coord) <= radius:
-                    score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
-                    affected.append(combatant)
-            if score > max_score:
-                max_score = score
+            threat_score = factory.create(curr_coord[0]).calculate_threat(self)
+            if threat_score > max_score:
+                max_score = threat_score
                 best_placement = curr_coord
-                best_affected = affected
         # logger.info(f"HARMFUL EFFECT PLACEMENT {best_placement} with score {max_score}")
-        return best_placement, max_score, best_affected
+        return best_placement, max_score
 
     def find_best_placement_harmful_square(self, caster, spell_range, length):
         """

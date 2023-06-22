@@ -43,7 +43,7 @@ class FireballFactory(DirectThreatFactory):
         return {'dc': self.dc, 'caster': self.combatant, 'has_spell_sculpting': self.has_spell_sculpting}
 
     def find_best_args(self, combatant, battle_map):
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, FireballFactory.range, SpellStats.TRANSLATE_RADIUS[FireballFactory.target])
+        coord, _ = battle_map.find_best_placement_harmful_circular(combatant, FireballFactory.range, SpellStats.TRANSLATE_RADIUS[FireballFactory.target], self)
         return coord[0]
 
     def create_all(self, battle_map):
@@ -67,6 +67,9 @@ class FireballFactory(DirectThreatFactory):
         """
         return 0  # No need
 
+    def calculate_max_threat(self, battle_map):
+        return Fireball(self.find_best_args(self.combatant, battle_map), self).calculate_threat(battle_map)
+
 class Fireball(Actoid, DirectThreat):
 
     def __init__(self, coord, factory,  **kwargs):
@@ -88,12 +91,12 @@ class Fireball(Actoid, DirectThreat):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FireballFactory.target, FireballFactory.type, self.coord)
         acc = 0
         for aff in affected:
             mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
-            acc += (1 if battle_map.teams.are_enemies(combatant, aff) else -1) * mean_dmg
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -1) * mean_dmg
         return acc
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):

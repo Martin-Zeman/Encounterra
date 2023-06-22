@@ -43,42 +43,8 @@ class HasteFactory(ThreatModifierFactory):
         return {'effect_tracker': self.effect_tracker, 'caster': self.combatant}
 
 
-    @staticmethod
-    def get_allies_sorted_by_threat(combatant, battle_map):
-        allies = battle_map.get_allies_within_radius(combatant, HasteFactory.range)
-        allies.append(combatant)
-        enemies = battle_map.get_enemies(combatant)
-        threat_per_ally = 0
-        ret = []
-        for ally in allies:
-            # This doesn't take different attack ranges into account
-            max_attack_dmg = 0
-            attacks = get_haste_eligile_attacks(ally)
-            for attack in attacks:
-                potential_targets = battle_map.get_enemies_within_hop_distance(ally, ally.speed + attack.range + 1)
-                if not potential_targets:
-                    continue
-                dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets, 0)
-                dmg_acc /= len(potential_targets)
-                max_attack_dmg = max(dmg_acc, max_attack_dmg)
-            threat_per_ally += max_attack_dmg
-            attack_dmg_decrement_acc = 0
-            for enemy in enemies:
-                enemy_attacks = get_attacks(enemy)
-                if not enemy_attacks:
-                    continue
-                attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, ally.ac, 2, at.crit_range,
-                                          ally.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
-
-                attack_dmg_decrement_acc /= len(enemy_attacks)
-                # TODO include the ST-based abilities here
-            threat_per_ally -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
-            ret.append([ally, threat_per_ally])
-        ret.sort(key=lambda e: e[1], reverse=True)
-        return ret
-
     def get_eligible_targets(self, battle_map):
-        ret = battle_map.get_allies_within_radius(self.combatant, HasteFactory.range)
+        ret = battle_map.get_allies_within_radius(self.combatant, HasteFactory.range)  # TODO do I want to keep this?
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
@@ -121,6 +87,10 @@ class HasteFactory(ThreatModifierFactory):
         max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
         return max_attack_dmg * ROUND_HORIZON
 
+    def calculate_max_threat(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+
 class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
 
     def __init__(self, target, factory):
@@ -159,7 +129,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         """
         It's the same as the single target version of the factory
         """

@@ -59,27 +59,27 @@ class AttackFactory(DirectThreatFactory):
     def create(self, target_combatant):
         return Attack(target_combatant, self)
 
-    def calculate_threat_approx(self, combatant, battle_map, roll_type=RollType.STRAIGHT):
-        """
-        Helper function which calculates the average potential threat over all potential targets including all possible mods
-        """
-        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
-        if not potential_targets:
-            return 0
-        def mean_dmg_mod(acc, pt):
-            to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
-            to_hit_total += ROLL_TYPE[roll_type][max(0, min(pt.ac - to_hit_total, 20))]
-            total_crit = self.crit_range + self.mod_crit_range
-            total_crit *= ROLL_TYPE_CRIT[roll_type]
-            acc += mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
-                                  self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
-            for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, extra[0], 0, pt.ac, total_crit, pt.is_resistant_to(extra[1]))
-            return acc
-
-        dmg_acc = reduce(mean_dmg_mod, potential_targets)
-        dmg_acc /= len(potential_targets)
-        return dmg_acc
+    # def calculate_threat_approx(self, combatant, battle_map, roll_type=RollType.STRAIGHT):
+    #     """
+    #     Helper function which calculates the average potential threat over all potential targets including all possible mods
+    #     """
+    #     potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
+    #     if not potential_targets:
+    #         return 0
+    #     def mean_dmg_mod(acc, pt):
+    #         to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
+    #         to_hit_total += ROLL_TYPE[roll_type][max(0, min(pt.ac - to_hit_total, 20))]
+    #         total_crit = self.crit_range + self.mod_crit_range
+    #         total_crit *= ROLL_TYPE_CRIT[roll_type]
+    #         acc += mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
+    #                               self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
+    #         for extra in self.extra_dmg:
+    #             acc += mean_dmg(to_hit_total, extra[0], 0, pt.ac, total_crit, pt.is_resistant_to(extra[1]))
+    #         return acc
+    #
+    #     dmg_acc = reduce(mean_dmg_mod, potential_targets)
+    #     dmg_acc /= len(potential_targets)
+    #     return dmg_acc
 
 
     def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
@@ -115,6 +115,7 @@ class AttackFactory(DirectThreatFactory):
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
         mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
         mod_crit_range = modifiers.get(ThreatModifierType.CRIT_RANGE, 0)
+        auto_crit = modifiers.get(ThreatModifierType.AUTO_CRIT, False)
         target_ac = modifiers.get(ThreatModifierType.TARGET_AC, 0)
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
@@ -126,6 +127,7 @@ class AttackFactory(DirectThreatFactory):
             pass  # The effect is negligible in that case
         total_crit = self.crit_range + mod_crit_range
         total_crit *= ROLL_TYPE_CRIT[roll_type]
+        total_crit = 20 if auto_crit else total_crit
         try:
             modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
@@ -134,6 +136,10 @@ class AttackFactory(DirectThreatFactory):
             logger.error("Error in mean_dmg of calculate_threat_to_target_delta of AttackFactory")
             modified = baseline
         return modified - baseline
+
+    def calculate_max_threat(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
 
 
 class Attack(Actoid, DirectThreat):
@@ -158,7 +164,7 @@ class Attack(Actoid, DirectThreat):
     #     self.calculate_threat.cache_clear()
 
     # @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, **kwargs)
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):

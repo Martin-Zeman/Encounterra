@@ -93,6 +93,10 @@ class FireboltFactory(DirectThreatFactory):
         return mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(FireboltFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     FireboltFactory.dmg_type))
 
+    def calculate_max_threat(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+
 
 class Firebolt(Actoid, DirectThreat):
     def __init__(self, target, factory, **kwargs):
@@ -113,7 +117,7 @@ class Firebolt(Actoid, DirectThreat):
 
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
         return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type))

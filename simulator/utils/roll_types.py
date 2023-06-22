@@ -39,5 +39,6 @@ class ThreatModifierType(Enum):
     DMG_BONUS_FLAT = auto()
     DMG_BONUS_DIE = auto()
     CRIT_RANGE = auto()
+    AUTO_CRIT = auto()
     TARGET_AC = auto()
 

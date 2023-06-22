@@ -55,8 +55,10 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        return 0 # No need
+        return 0  # No need
 
+    def calculate_max_threat(self, battle_map):
+        return CloudOfDaggers(self.find_best_args(self.combatant, battle_map), self).calculate_threat(battle_map)
 
 class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThreat, AoEThreat):
 
@@ -103,14 +105,11 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.origin)
         acc = 0
         for aff in affected:
-            if battle_map.teams.are_enemies(self.factory.combatant, aff):
-                acc += avg_roll(self.factory.dmg_dice)
-            else:
-                acc -= avg_roll(self.factory.dmg_dice)
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -1) * avg_roll(self.factory.dmg_dice)
         return acc
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):

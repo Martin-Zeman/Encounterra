@@ -61,6 +61,9 @@ class FaerieFireFactory(ThreatModifierFactory):
         """
         return 0 # TODO
 
+    def calculate_max_threat(self, battle_map):
+        return 0  # TODO
+
 class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect):
 
     def __init__(self, coord, factory,  **kwargs):
@@ -96,7 +99,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         return 0  # TODO
 
     def calculate_threat_mod(self, battle_map, modifiers, *args, **kwargs):

@@ -115,6 +115,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
         mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
         mod_crit_range = modifiers.get(ThreatModifierType.CRIT_RANGE, 0)
+        auto_crit = modifiers.get(ThreatModifierType.AUTO_CRIT, False)
         roll_type = reconcile_roll_types({RollType.ADVANTAGE, modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.ADVANTAGE)})
 
         modified = baseline
@@ -124,10 +125,15 @@ class RecklessAttackFactory(DirectThreatFactory):
                 to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
                 total_crit = self.crit_range + mod_crit_range
                 total_crit *= ROLL_TYPE_CRIT[roll_type]
+                total_crit = 20 if auto_crit else total_crit
                 modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
         incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc
+
+    def calculate_max_threat(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
 
 
 class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
@@ -162,7 +168,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     #     self.calculate_threat.cache_clear()
 
     # @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, **kwargs)
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):

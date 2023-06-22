@@ -135,12 +135,12 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, Attac
     def clear_cache(self):
         pass
 
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         """
         Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to
         all remaining HP (better than regular rage)
         """
-        return combatant.curr_hp / 2
+        return self.factory.combatant.curr_hp / 2
 
     def calculate_threat_for_attack(self, combatant, battle_map, attack, *args, **kwargs):
         """

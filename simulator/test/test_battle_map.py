@@ -1,5 +1,5 @@
 import pytest
-from simulator.actions.action_types import Passive
+from simulator.actions.action_types import Passive, Action
 from simulator.battle_map import Terrain, CombatantCoords
 from simulator.combatants.goblin import Goblin
 from simulator.misc import DistanceMetric, Size, Side, Conditions
@@ -873,19 +873,15 @@ def test_find_best_placement_harmful_circular(battle_map, teams, test_draconic_s
     battle_map.set_combatant_coordinates(test_bugbear, np.array([10, 5]))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 7]))
     # Fireball-like
-    coord, score, affected = battle_map.find_best_placement_harmful_circular(test_draconic_sorcerer_5lvl, FireballFactory.range, 4)
+    fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl)
+    coord, score = battle_map.find_best_placement_harmful_circular(test_draconic_sorcerer_5lvl, FireballFactory.range, 4, fireball_factory)
     assert np.array_equal(coord, np.array([[7, 3]]))
-    assert score == 2
-    assert test_goblin in affected
-    assert test_bugbear in affected
-    assert test_totem_barbarian not in affected
+    assert score == 28.0
 
     #Now move the ally in between the targets so that only one can be hit
     battle_map.move_combatant(test_totem_barbarian,  np.array([6, 4]))
-    coord, score, affected = battle_map.find_best_placement_harmful_circular(test_draconic_sorcerer_5lvl, FireballFactory.range, 4)
-    assert score == 1
-    assert (test_goblin in affected) != (test_bugbear in affected)
-    assert test_totem_barbarian not in affected
+    coord, score = battle_map.find_best_placement_harmful_circular(test_draconic_sorcerer_5lvl, FireballFactory.range, 4, fireball_factory)
+    assert score == 14.0
 
 
 def test_find_best_placement_harmful_square(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant):

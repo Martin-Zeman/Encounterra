@@ -74,6 +74,9 @@ class WildshapeFactory(TransformerFactory):
         """
         return max([hp for hp in self.combatant.available_wildshape_forms.curr_hp])
 
+    def calculate_max_threat(self, battle_map):
+        return self.calculate_threat(battle_map)
+
 class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def __init__(self, combatant, form, factory):
@@ -194,7 +197,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def clear_cache(self):
         pass
 
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         return self.form.max_hp * random.uniform(0.8, 1.20)  # We try to encourage trying out different wildshape forms
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):

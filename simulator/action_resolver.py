@@ -122,7 +122,11 @@ class ActionResolver:
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
+        if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED):
+            return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
+            return RollType.ADVANTAGE
+        if attacker.is_affected_by_any(Conditions.INVISIBLE):
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
@@ -134,6 +138,10 @@ class ActionResolver:
         if target.is_dodging:
             return RollType.DISADVANTAGE
         if self.battle_map.is_enemy_adjacent(attacker):
+            return RollType.DISADVANTAGE
+        if target.is_affected_by_any(Conditions.PRONE):
+            return RollType.DISADVANTAGE
+        if attacker.is_affected_by_any(Conditions.POISONED):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -147,6 +155,10 @@ class ActionResolver:
         if self.battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
             return RollType.DISADVANTAGE
         if self.battle_map.is_enemy_adjacent(attacker):
+            return RollType.DISADVANTAGE
+        if target.is_affected_by_any(Conditions.PRONE):
+            return RollType.DISADVANTAGE
+        if attacker.is_affected_by_any(Conditions.POISONED):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -296,6 +308,10 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
             return RollType.ADVANTAGE
+        if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.PRONE):
+            return RollType.ADVANTAGE
+        if attacker.is_affected_by_any(Conditions.INVISIBLE):
+            return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
     def has_disadvantage_melee(self, attack, attacker, target):
@@ -308,6 +324,8 @@ class ActionResolver:
         if attacker.is_affected_by(Conditions.PRONE):
             return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
+            return RollType.DISADVANTAGE
+        if attacker.is_affected_by_any(Conditions.POISONED):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 

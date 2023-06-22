@@ -35,7 +35,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant, battle_map):
         # TODO maybe find a smarter placement for this
-        coord, _, _ = battle_map.find_best_placement_harmful_circular(combatant, SpikeGrowthFactory.range, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target])
+        coord, _ = battle_map.find_best_placement_harmful_circular(combatant, SpikeGrowthFactory.range, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target], self)
         return coord
 
     def create_all(self, battle_map):
@@ -55,7 +55,10 @@ class SpikeGrowthFactory(DirectThreatFactory):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        return 0 # No need
+        return 0  # No need
+
+    def calculate_max_threat(self, battle_map):
+        return SpikeGrowth(self.find_best_args(self.combatant, battle_map), self).calculate_threat(battle_map)
 
 
 class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
@@ -106,15 +109,12 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         # TODO This needs more intelligence (also subtract dmg caused to allies)
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, SpikeGrowthFactory.target, SpikeGrowthFactory.type, self.coord)
         acc = 0
         for aff in affected:
-            if battle_map.teams.are_enemies(self.factory.combatant, aff):
-                acc += avg_roll(self.factory.dmg_dice)
-            else:
-                acc -= avg_roll(self.factory.dmg_dice)
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -1) * avg_roll(self.factory.dmg_dice)
         return acc
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):

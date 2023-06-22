@@ -44,6 +44,10 @@ class BlessFactory(ThreatModifierFactory):
         """
         return 0
 
+    def calculate_max_threat(self, battle_map):
+        targets = battle_map.get_enemies(self.combatant)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+
 
 class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
     def __init__(self, targets, factory):
@@ -78,7 +82,7 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         # TODO Multiply the threat increment by 3 for 3 rounds
         # TODO iterate over all abilities of the targets and try plugging the mods into their factories
         return 0

@@ -488,10 +488,10 @@ def test_ranged_spell_with_enemy_adjacent(battle_map, teams, effect_tracker, tes
 
     ff = FireboltFactory(6, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
     firebolt = ff.create(test_bugbear)
-    threat_enemy_adjacent = firebolt.calculate_threat(test_draconic_sorcerer_5lvl, battle_map)
+    threat_enemy_adjacent = firebolt.calculate_threat(battle_map)
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([2, 14]))
     firebolt.clear_cache()
-    threat_no_enemy_adjacent = firebolt.calculate_threat(test_draconic_sorcerer_5lvl, battle_map)
+    threat_no_enemy_adjacent = firebolt.calculate_threat(battle_map)
     assert threat_no_enemy_adjacent > threat_enemy_adjacent
 
 def test_ranged_attack_with_enemy_adjacent(battle_map, teams, effect_tracker, test_goblin, test_bugbear):
@@ -507,9 +507,9 @@ def test_ranged_attack_with_enemy_adjacent(battle_map, teams, effect_tracker, te
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13]))
 
     shortbow_attack = test_goblin.shortbow_attack[1].create(test_bugbear)
-    threat_enemy_adjacent = shortbow_attack.calculate_threat(test_goblin, battle_map)
+    threat_enemy_adjacent = shortbow_attack.calculate_threat(battle_map)
     battle_map.move_combatant(test_goblin, np.array([2, 14]))
     # shortbow_attack.clear_cache()
-    threat_no_enemy_adjacent = shortbow_attack.calculate_threat(test_goblin, battle_map)
+    threat_no_enemy_adjacent = shortbow_attack.calculate_threat(battle_map)
     assert threat_no_enemy_adjacent > threat_enemy_adjacent
 

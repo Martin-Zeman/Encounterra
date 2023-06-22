@@ -61,17 +61,15 @@ class HoldPersonFactory(ThreatModifierFactory):
 
         threat_acc = 0
         # Haste factories wouldn't change the result here, so we're omitting them
+        # This is an approximation, we're only looking at the best action overall, not the action + bonus_action combo
         max_action_threat = 0
         for f in target.action_factories:
             if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_action_threat = max(max_action_threat, f[1].calculate_threat_to_target(battle_map, self.combatant))
-        threat_acc += max_action_threat
-
-        max_bonus_action_threat = 0
+                max_action_threat = max(max_action_threat, f[1].calculate_max_threat(battle_map))
         for f in target.bonus_action_factories:
             if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_bonus_action_threat = max(max_bonus_action_threat, f[1].calculate_threat_to_target(battle_map, self.combatant))
-        threat_acc += max_bonus_action_threat
+                max_action_threat = max(max_action_threat, f[1].calculate_max_threat(battle_map))
+        threat_acc += max_action_threat
 
         threat_acc += calculate_threat_in_mod(self.combatant, 6, battle_map, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE)
         # TODO do something similar for the crit range
@@ -82,6 +80,10 @@ class HoldPersonFactory(ThreatModifierFactory):
             total_threat += threat_acc * p_success
             p_success *= p_success
         return total_threat
+
+    def calculate_max_threat(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
 
 
 class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier):
@@ -116,7 +118,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
 
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         return self.factory.calculate_threat_to_target(battle_map, self.target)
 
 

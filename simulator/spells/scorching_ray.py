@@ -60,7 +60,6 @@ class ScorchingRayFactory(DirectThreatFactory):
         else:
             return 0
 
-
     def calculate_threat_to_target_delta_single_target(self, target, modifiers):
         """
         Helper function
@@ -86,6 +85,10 @@ class ScorchingRayFactory(DirectThreatFactory):
         # We assume the maximum threat in case where all three rays are aimed at the target
         return 3 * self.calculate_threat_to_target_delta_single_target(target, modifiers)
 
+    def calculate_max_threat(self, battle_map):
+        targets = self.get_eligible_targets(battle_map)
+        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+
 
 class ScorchingRay(Actoid, DirectThreat):
 
@@ -106,7 +109,7 @@ class ScorchingRay(Actoid, DirectThreat):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
         dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.targets[0].is_resistant_to(ScorchingRayFactory.dmg_type))

@@ -5,11 +5,11 @@ from simulator.spells.spell import SpellStats
 import logging
 from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat_interfaces import ThreatModifier, DirectThreatFactory
+from simulator.threat_interfaces import ThreatModifier, DirectThreatFactory, Factory
 
 logger = logging.getLogger("EncounTroll")
 
-class MistyStepFactory(DirectThreatFactory):
+class MistyStepFactory(Factory):
     level = 2
     range = SpellStats.Range.FEET_30.value
     target = SpellStats.Target.SELF
@@ -43,11 +43,6 @@ class MistyStepFactory(DirectThreatFactory):
     def create(self, coord):
         return MistyStep(coord, self)
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
-        return 0  # Misty Step is handled differently
-
-    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
-        return 0
 
 
 class MistyStep(Actoid, ThreatModifier):
@@ -68,7 +63,7 @@ class MistyStep(Actoid, ThreatModifier):
         self.calculate_threat.cache_clear()
 
     @cache
-    def calculate_threat(self, combatant, battle_map, *args, **kwargs):
+    def calculate_threat(self, battle_map, *args, **kwargs):
         return 0  # Misty Step is handled differently
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
