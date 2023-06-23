@@ -1,5 +1,6 @@
 from simulator.actions.action_types import Action
 from simulator.actions.actoid import FactoryFlags, Actoid, ActoidFlags
+from simulator.misc import Conditions
 from simulator.threat_interfaces import DirectThreatFactory, DirectThreat
 import logging
 
@@ -8,7 +9,7 @@ logger = logging.getLogger("EncounTroll")
 
 class ConstrictFactory(DirectThreatFactory):
     """
-    The constricting_target variable is the reason why this is modeled as a separate ability rather than an attack with an on_hit effect
+    The constricted_target variable is the reason why this is modeled as a separate ability rather than an attack with an on_hit effect
     """
 
     def __init__(self, combatant, attack):
@@ -23,17 +24,17 @@ class ConstrictFactory(DirectThreatFactory):
         return "ConstrictFactory"
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies(self.combatant)
+        return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create(self, target_combatant):
-        if self.combatant.constricting_target is None or self.combatant.constricting_target is target_combatant:
+        if self.combatant.constricted_target is None or self.combatant.constricted_target is target_combatant:
             return Constrict(target_combatant, self)
         return None
 
 
     def create_all(self, battle_map):
-        if self.combatant.constricting_target is not None:
-            return [Constrict(self.combatant.constricting_target)]
+        if self.combatant.constricted_target is not None:
+            return [Constrict(self.combatant.constricted_target)]
         targets = self.get_eligible_targets(battle_map)
         return [Constrict(t, self) for t in targets]
 

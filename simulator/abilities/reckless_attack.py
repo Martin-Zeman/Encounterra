@@ -4,7 +4,7 @@ from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from simulator.misc import reconcile_roll_types
+from simulator.misc import reconcile_roll_types, Conditions
 from functools import reduce
 from simulator.misc import avg_roll
 from simulator.threat_utils import mean_dmg, calculate_threat_in_mod
@@ -57,7 +57,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies(self.combatant)
+        return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

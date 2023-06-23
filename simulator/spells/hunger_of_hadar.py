@@ -7,7 +7,7 @@ from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions
+from simulator.misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions, ConditionWithoutDC
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_utils import mean_dmg_dc_attack
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
@@ -83,22 +83,25 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
 
     def on_start_of_turn(self, combatant):
-        combatant.apply_condition(Conditions.BLINDED)
+        combatant.apply_condition(ConditionWithoutDC(Conditions.BLINDED, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.dmg_type)
 
     def on_end_of_turn(self, combatant):
-        combatant.apply_condition(Conditions.BLINDED)
+        combatant.apply_condition(ConditionWithoutDC(Conditions.BLINDED, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         self.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant)
         self.dmg_type = DamageType.Cold
 
     def on_enter(self, combatant):
-        combatant.apply_condition(Conditions.BLINDED)
+        combatant.apply_condition(ConditionWithoutDC(Conditions.BLINDED, self))
 
     def on_move_within(self, combatant):
         pass
+
+    def on_exit(self, combatant):
+        combatant.remove_condition(Conditions.BLINDED, self)
 
     def is_affecting(self, combatant, battle_map):
         coords = self.get_affected_coords(battle_map)

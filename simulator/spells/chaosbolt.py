@@ -1,6 +1,6 @@
 from simulator.actions.action_types import BonusAction
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType
+from simulator.misc import DamageType, Conditions
 import logging
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.threat_utils import mean_dmg
@@ -54,7 +54,7 @@ class ChaosboltFactory(DirectThreatFactory):
         return Chaosbolt([target_combatant], self)
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies(self.combatant)
+        return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

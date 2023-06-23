@@ -1,6 +1,6 @@
 from simulator.actions.action_types import BonusAction
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, RollType, avg_roll
+from simulator.misc import DamageType, RollType, avg_roll, Conditions
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 
@@ -59,7 +59,7 @@ class FireboltFactory(DirectThreatFactory):
                 return "1d10"
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies(self.combatant)
+        return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

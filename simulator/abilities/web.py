@@ -1,5 +1,6 @@
 from simulator.actions.action_types import Action
 from simulator.actions.actoid import FactoryFlags, Actoid, ActoidFlags
+from simulator.misc import Conditions
 from simulator.threat_interfaces import DirectThreatFactory, DirectThreat, RechargeFactory
 from simulator.threat_utils import get_saving_throw_success_prob
 import logging
@@ -21,7 +22,7 @@ class WebFactory(DirectThreatFactory, RechargeFactory):
         return "WebFactory"
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies_without_hop_distance(self.combatant, self.distance - 1)
+        return [e for e in battle_map.get_enemies_without_hop_distance(self.combatant, self.distance - 1) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create(self, target_combatant):
         return Web(target_combatant, self)

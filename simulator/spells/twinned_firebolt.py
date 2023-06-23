@@ -1,7 +1,7 @@
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, avg_roll
+from simulator.misc import DamageType, avg_roll, Conditions
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import  cache
 
@@ -39,7 +39,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         return "TwinnedFireboltFactory"
 
     def get_eligible_targets(self, battle_map):
-        return combinations(battle_map.get_enemies(self.combatant), 2)
+        return combinations([e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

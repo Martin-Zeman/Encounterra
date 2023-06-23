@@ -89,6 +89,9 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, SpikeGrowthFactory.dmg_type)
 
+    def on_exit(self, combatant):
+        pass
+
     def on_move_within(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, SpikeGrowthFactory.dmg_type)

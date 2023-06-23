@@ -57,12 +57,20 @@ class Conditions(Flag):
     RESTRAINED = auto()
     STUNNED = auto()
     UNCONSCIOUS = auto()
+    SWALLOWED = auto()  # Meta-Condition
 
 
 class PhaseOfTurn(Enum):
     START_OF_TURN = auto()
     END_OF_TURN = auto()
     ACTION = auto()
+
+
+class ConditionWithoutDC:
+    def __init__(self, conditions, origin):
+        self.conditions = conditions  # Could multiples such as grapple + restrained go often together
+        self.origin = origin
+
 
 class ConditionWithDC:
     def __init__(self, conditions, st, dc, attacker, phase):

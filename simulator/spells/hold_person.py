@@ -3,7 +3,7 @@ from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON
+from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 
@@ -108,10 +108,10 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
         return EffectType.HOLD_PERSON
 
     def activate(self, battle_map):
-        self.target.apply_condition(Conditions.PARALYZED)
+        self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
 
     def deactivate(self, battle_map):
-        self.target.remove_condition(Conditions.PARALYZED)
+        self.target.remove_condition(Conditions.PARALYZED, self)
 
     def is_affecting(self, combatant, battle_map):
         return combatant is self.target

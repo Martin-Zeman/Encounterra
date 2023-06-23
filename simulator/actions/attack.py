@@ -1,7 +1,7 @@
 from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce, cache
-from simulator.misc import avg_roll
+from simulator.misc import avg_roll, Conditions
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
@@ -54,7 +54,7 @@ class AttackFactory(DirectThreatFactory):
                 'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit}
 
     def get_eligible_targets(self, battle_map):
-        return battle_map.get_enemies(self.combatant)
+        return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create(self, target_combatant):
         return Attack(target_combatant, self)

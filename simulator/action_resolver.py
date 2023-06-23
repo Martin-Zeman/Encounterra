@@ -482,7 +482,8 @@ class ActionResolver:
                 combatant.is_concentrating = True
                 return ActionResult.FEASIBLE
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
-                 HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK:
+                 HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
+                | Action.BITE_AND_SWALLOW:
                 return self.resolve_attack(actoid, combatant)
             case Movement.STANDARD | Movement.DISENGAGE | Movement.CUNNING_DISENGAGE:
                 if not self.request_movement(combatant, actoid):
@@ -497,15 +498,15 @@ class ActionResolver:
             case Action.CONSTRICT:
                 result = self.resolve_attack(actoid.factory.attack, combatant)
                 if result is ActionResult.DMG:
-                    combatant.constricting_target = True
+                    combatant.constricted_target = True
                     return True
             case Action.BREAK_GRAPPLE:
                 logger.info(f"{combatant} is trying to break out of grapple")
                 grapple = actoid.factory.grapple_condition
                 broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollType.STRAIGHT)
-                if broken_out and getattr(grapple.attacker, "constricting_target", None):  # TODO this is a simplification
+                if broken_out and getattr(grapple.attacker, "constricted_target", None):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
-                    grapple.attacker.constricting_target = None
+                    grapple.attacker.constricted_target = None
                     combatant.break_out_of_grapple()
                 else:
                     logger.info(f"{combatant} remains grappled")
@@ -531,10 +532,8 @@ class ActionResolver:
             case Action.PRE_SWALLOW_BITE:
                 result = self.resolve_attack(actoid, combatant)  # TODO
                 if result is ActionResult.DMG:
-                    combatant.constricting_target = actoid.target_combatant if actoid.target_combatant.is_alive() else None
+                    combatant.constricted_target = actoid.target_combatant if actoid.target_combatant.is_alive() else None
                 return result
-            case Action.BITE_AND_SWALLOW:
-                pass # TODO
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

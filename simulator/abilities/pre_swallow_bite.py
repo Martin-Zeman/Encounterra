@@ -16,15 +16,20 @@ class PreSwallowBiteFactory(MeleeAttackFactory):
         self.flags |= FactoryFlags.IS_MELEE
 
     def create(self, target_combatant):
-        return BiteWithSwallow(target_combatant, self)
+        if self.combatant.constricted_target is None or self.combatant.constricted_target is target_combatant:
+            return PreSwallowBite(target_combatant, self)
+        return None
+
 
     def create_all(self, battle_map):
+        if self.combatant.constricted_target is not None:
+            return [PreSwallowBite(self.combatant.constricted_target)]
         targets = self.get_eligible_targets(battle_map)
-        return [BiteWithSwallow(t, self) for t in targets]
+        return [PreSwallowBite(t, self) for t in targets]
 
 
 
-class BiteWithSwallow(MeleeAttack):
+class PreSwallowBite(MeleeAttack):
 
     def shorthand_str(self):
         return "Bite"

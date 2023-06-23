@@ -763,7 +763,7 @@ def test_is_ally_adjacent_to_target(battle_map, teams, test_draconic_sorcerer_5l
     battle_map.set_combatant_coordinates(test_goblin, np.array([1, 5]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([1, 4]))
     assert battle_map.is_ally_adjacent_to_target(test_draconic_sorcerer_5lvl, test_bugbear)
-    test_goblin.apply_condition(Conditions.INCAPACITATED)
+    test_goblin.apply_condition(Conditions.INCAPACITATED, None)
     assert not battle_map.is_ally_adjacent_to_target(test_draconic_sorcerer_5lvl, test_bugbear)
     test_goblin.remove_condition(Conditions.INCAPACITATED)
     battle_map.move_combatant(test_goblin, np.array([1, 6]))

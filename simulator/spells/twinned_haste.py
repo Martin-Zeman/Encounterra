@@ -7,7 +7,7 @@ from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 from functools import reduce, cache
-from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
+from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions
 from simulator.spells.haste import HasteFactory
 from simulator.utils.roll_types import ThreatModifierType
 
@@ -36,7 +36,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
 
 
     def get_eligible_targets(self, battle_map):
-        ret = battle_map.get_allies_within_radius(self.combatant, HasteFactory.range)
+        ret = [a for a in battle_map.get_allies_within_radius(self.combatant, HasteFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         ret = combinations(ret, 2)

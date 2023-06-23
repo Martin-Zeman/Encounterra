@@ -1,6 +1,7 @@
 import logging
 from enum import auto, Enum
 
+from simulator.abilities.bite_and_swallow import BiteAndSwallowFactory
 from simulator.abilities.pre_swallow_bite import PreSwallowBiteFactory
 from simulator.abilities.constrict import ConstrictFactory
 from simulator.abilities.pounce import PounceFactory

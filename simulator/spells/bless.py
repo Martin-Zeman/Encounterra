@@ -2,6 +2,7 @@ from functools import cache
 
 from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
+from simulator.misc import Conditions
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.actions.actoid import Actoid, ActoidFlags
@@ -31,7 +32,7 @@ class BlessFactory(ThreatModifierFactory):
         return "BlessFactory"
 
     def get_eligible_targets(self, battle_map):
-        return combinations(battle_map.get_enemies_within_radius(self.combatant, BlessFactory.range), 3)
+        return combinations([e for e in battle_map.get_enemies_within_radius(self.combatant, BlessFactory.range) if not e.is_affected_by(Conditions.SWALLOWED)], 3)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

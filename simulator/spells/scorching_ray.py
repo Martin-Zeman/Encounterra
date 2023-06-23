@@ -2,7 +2,7 @@ from simulator.actions.action_types import BonusAction
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, percent_of_curr_hp, avg_roll
+from simulator.misc import DamageType, percent_of_curr_hp, avg_roll, Conditions
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce, cache
 
@@ -44,7 +44,7 @@ class ScorchingRayFactory(DirectThreatFactory):
 
     def get_eligible_targets(self, battle_map):
         # Range is so big that it doesn't matter
-        return combinations_with_replacement(battle_map.get_enemies(self.combatant), 3)
+        return combinations_with_replacement([e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 3)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

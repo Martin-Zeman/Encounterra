@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
-from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC, PhaseOfTurn
+from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
 from enum import Enum
 from abc import ABC, abstractmethod
 from simulator.actions.dodge import DodgeFactory
@@ -55,14 +55,10 @@ class Combatant(ABC, ProtoCombatant):
         self.movement = speed / 5
         self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
         self.resistances = resistances
-        self.multiattack_in_progress = False
         self.attack_fsm = None
         self.action_fsm = None
         self.action_plan = None
         self.team_color = ""
-        self.selected_enemy = None
-        self.selected_ally = None
-        self.planned_movement = None
         self.melee_reaction_range = 1
         self.action_resolver = None
         self.disadvantage_on_incoming_attacks = False
@@ -75,9 +71,8 @@ class Combatant(ABC, ProtoCombatant):
         self.acrobatics = 0
         self.has_pack_tactics = False
         self.perception = 0
-        self.conditions = Conditions.NONE
+        self.conditions = []
         self.dc_conditions = []
-        self.toughness = None
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.has_disengaged = False  # TODO Get rid of this
         self.spellslots = None
@@ -94,6 +89,8 @@ class Combatant(ABC, ProtoCombatant):
         self.archetype = CombatantArchetype.MELEE
         self.shortest_paths_cache = None
         self.wears_metal = False
+        self.constricted_target = None
+        self.swallowed_target = None
 
     def __str__(self):
         return self.name
@@ -139,21 +136,12 @@ class Combatant(ABC, ProtoCombatant):
             return None
         elif isinstance(action_type, Action):
             match action_type:
-                case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK:
+                case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | Action.BITE_AND_SWALLOW:
                     factory = TO_FACTORY[action_type]
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.action_factories[-1]
                     self.ammo[just_added[1].name] = just_added[1].ammo
                     return just_added
-                case Action.PRE_SWALLOW_BITE:
-                    factory = TO_FACTORY[action_type]
-                    self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
-                    just_added = self.action_factories[-1]
-                    self.ammo[just_added[1].name] = just_added[1].ammo
-                    self.constricting_target = None
-                    return just_added
-                case Action.BITE_AND_SWALLOW:
-                    pass # TODO
                 case Action.FIREBALL:
                     self.action_factories.append(
                         (action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
@@ -192,7 +180,7 @@ class Combatant(ABC, ProtoCombatant):
                     return self.action_factories[-1]
                 case Action.CONSTRICT:
                     factory = TO_FACTORY[action_type]
-                    self.constricting_target = None
+                    self.constricted_target = None
                     self.action_factories.append((action_type, factory(**kwargs)))
                     return self.action_factories[-1]
                 case Action.FLAMING_SPHERE:
@@ -374,15 +362,21 @@ class Combatant(ABC, ProtoCombatant):
     def is_resistant_to(self, dmg_type):
         return dmg_type in self.resistances
 
-    def apply_condition(self, condition: Conditions):
-        self.conditions |= condition
+    def apply_condition(self, condition: ConditionWithoutDC):
+        self.conditions.append(condition)
 
-    def remove_condition(self, condition: Conditions):
-        self.conditions ^= condition
+    def remove_condition(self, condition: Conditions, origin=None):
+        for cond in self.conditions:
+            if (not origin or cond.origin is origin) and condition in cond.conditions:
+                del cond
+                return
 
     def is_affected_by(self, condition: Conditions):
         for dc_cond in self.dc_conditions:
             if condition in dc_cond.conditions:
+                return True
+        for cond in self.conditions:
+            if condition in cond.conditions:
                 return True
         return condition in self.conditions
 
@@ -404,8 +398,9 @@ class Combatant(ABC, ProtoCombatant):
             for dc_cond in self.dc_conditions:
                 if condition in dc_cond.conditions:
                     return True
-            if condition in self.conditions:
-                return True
+            for cond in self.conditions:
+                if condition in cond.conditions:
+                    return True
         return False
 
     def apply_dc_condition(self, condition: ConditionWithDC):
@@ -449,7 +444,7 @@ class Combatant(ABC, ProtoCombatant):
         if self.shield_spell_active:
             self.ac -= 5
         self.shield_spell_active = False
-        self.conditions = Conditions.NONE
+        self.conditions.clear()
         self.dc_conditions.clear()
         self.has_haste_action = False
         self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)

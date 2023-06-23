@@ -57,9 +57,6 @@ class StoneGiant(Combatant):
         self.ammo = resources['ammo']
 
 
-    def new_turn(self):
-        super().new_turn()
-
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)
