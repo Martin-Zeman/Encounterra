@@ -21,7 +21,7 @@ def use_resources(combatant, action, battle_map):
     if isinstance(action_type, Action):
         subject.has_action = False
         match action_type:
-            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.BITE_WITH_SWALLOW:
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | Action.BITE_AND_SWALLOW:
                 subject.ammo[action.factory.name] -= 1
                 subject.attack_fsm.trigger(str(action.factory))
             case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT:
@@ -90,7 +90,7 @@ def use_resources(combatant, action, battle_map):
     elif isinstance(action_type, Reaction):
         subject.has_reaction = False
         match action_type:
-            case Reaction.REACTION_ATTACK |  Reaction.BITE_WITH_SWALLOW_REACTION:
+            case Reaction.REACTION_ATTACK | Reaction.PRE_SWALLOW_BITE_REACTION:
                 pass  # Sufficiently tracked by not having a reaction anymore
             case Reaction.SHIELD:
                 subject.spellslots.use_spellslot(1)

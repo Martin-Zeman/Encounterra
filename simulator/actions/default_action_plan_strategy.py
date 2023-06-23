@@ -17,6 +17,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         with self.combatant.as_if_new_turn() as combatant:
             get_aoe_and_aoo_threat_for_increment.cache_clear()
             fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(combatant, battle_map)
+            fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(combatant, battle_map)
             dag = build_action_dag(combatant, battle_map, fsm, transition_name_to_action, distances, shortest_paths,
                                    post_misty_step_actions)
             if dag is None:

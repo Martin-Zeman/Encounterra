@@ -145,13 +145,15 @@ class Combatant(ABC, ProtoCombatant):
                     just_added = self.action_factories[-1]
                     self.ammo[just_added[1].name] = just_added[1].ammo
                     return just_added
-                case Action.BITE_WITH_SWALLOW:
+                case Action.PRE_SWALLOW_BITE:
                     factory = TO_FACTORY[action_type]
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.action_factories[-1]
                     self.ammo[just_added[1].name] = just_added[1].ammo
-                    self.is_constricting = False
+                    self.constricting_target = None
                     return just_added
+                case Action.BITE_AND_SWALLOW:
+                    pass # TODO
                 case Action.FIREBALL:
                     self.action_factories.append(
                         (action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
@@ -190,7 +192,7 @@ class Combatant(ABC, ProtoCombatant):
                     return self.action_factories[-1]
                 case Action.CONSTRICT:
                     factory = TO_FACTORY[action_type]
-                    self.is_constricting = False
+                    self.constricting_target = None
                     self.action_factories.append((action_type, factory(**kwargs)))
                     return self.action_factories[-1]
                 case Action.FLAMING_SPHERE:
@@ -262,7 +264,7 @@ class Combatant(ABC, ProtoCombatant):
                     pass  # no resources required
         elif isinstance(action_type, Reaction):
             match action_type:
-                case Reaction.REACTION_ATTACK | Reaction.BITE_WITH_SWALLOW_REACTION:
+                case Reaction.REACTION_ATTACK | Reaction.PRE_SWALLOW_BITE_REACTION:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                     self.aoo_factory = self.reaction_factories[-1]
                     self.danger_zone_attack = self.reaction_factories[-1]  # By default this is set to the reaction attack

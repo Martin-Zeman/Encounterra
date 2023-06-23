@@ -1,7 +1,7 @@
 import logging
 from enum import auto, Enum
 
-from simulator.abilities.bite_with_swallow import BiteWithSwallowFactory
+from simulator.abilities.pre_swallow_bite import PreSwallowBiteFactory
 from simulator.abilities.constrict import ConstrictFactory
 from simulator.abilities.pounce import PounceFactory
 from simulator.abilities.rage import RageFactory
@@ -56,7 +56,8 @@ TO_FACTORY = {
     Action.WILDSHAPE: WildshapeFactory,
     Action.POUNCE: PounceFactory,
     Action.CONSTRICT: ConstrictFactory,
-    Action.BITE_WITH_SWALLOW: BiteWithSwallowFactory,
+    Action.PRE_SWALLOW_BITE: PreSwallowBiteFactory,
+    Action.BITE_AND_SWALLOW: BiteAndSwallowFactory,
     Action.FLAMING_SPHERE: FlamingSphereFactory,
     Action.HOLD_PERSON: HoldPersonFactory,
     Action.TWINNED_HOLD_PERSON: TwinnedHoldPersonFactory,
@@ -80,10 +81,11 @@ TO_FACTORY = {
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
-    Reaction.BITE_WITH_SWALLOW_REACTION: BiteWithSwallowFactory,
+    Reaction.PRE_SWALLOW_BITE_REACTION: PreSwallowBiteFactory,
 
     HasteAction.HASTE_MELEE_ATTACK: MeleeAttackFactory,
-    HasteAction.HASTE_BITE_WITH_SWALLOW: BiteWithSwallowFactory,
+    HasteAction.HASTE_PRE_SWALLOW_BITE: PreSwallowBiteFactory,
+    HasteAction.HASTE_BITE_AND_SWALLOW: BiteAndSwallowFactory,
     HasteAction.HASTE_RANGED_ATTACK: RangedAttackFactory,
     HasteAction.HASTE_DISENGAGE: DisengageFactory,
     HasteAction.HASTE_HIDE: None,
@@ -100,5 +102,5 @@ TO_QUICKENED = {
 TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE, Action.HOLD_PERSON: Action.TWINNED_HOLD_PERSON}
 TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, \
              Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE,\
-             Action.BITE_WITH_SWALLOW: HasteAction.HASTE_BITE_WITH_SWALLOW}
+             Action.BITE_AND_SWALLOW: HasteAction.HASTE_BITE_AND_SWALLOW, Action.PRE_SWALLOW_BITE: HasteAction.HASTE_PRE_SWALLOW_BITE}
 

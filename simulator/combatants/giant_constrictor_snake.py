@@ -41,7 +41,7 @@ class GiantConstrictorSnake(Combatant):
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state,
-            'is_constricting': self.is_constricting,
+            'constricting_target': self.constricting_target,
             'ammo': copy.deepcopy(self.ammo)
         }
 
@@ -50,7 +50,7 @@ class GiantConstrictorSnake(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_fsm_state'])
-        self.is_constricting = resources['is_constricting']
+        self.constricting_target = resources['constricting_target']
         self.ammo = resources['ammo']
 
     def prompt_aoo(self, moving_combatant):

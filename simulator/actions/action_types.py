@@ -5,7 +5,8 @@ class Action(Enum):
     MELEE_ATTACK = auto()
     RANGED_ATTACK = auto()
     RECKLESS_ATTACK = auto()
-    BITE_WITH_SWALLOW = auto()
+    PRE_SWALLOW_BITE = auto()
+    BITE_AND_SWALLOW = auto()
     DODGE = auto()
     DASH = auto()
     DISENGAGE = auto()
@@ -60,7 +61,7 @@ class BonusAction(Enum):
 class Reaction(Enum):
     REACTION_ATTACK = auto()
     SHIELD = auto()
-    BITE_WITH_SWALLOW_REACTION = auto()
+    PRE_SWALLOW_BITE_REACTION = auto()
 
 
 class Movement(Enum):
@@ -78,7 +79,8 @@ class HasteAction(Enum):
     HASTE_DASH = auto()
     HASTE_DISENGAGE = auto()
     HASTE_HIDE = auto()
-    HASTE_BITE_WITH_SWALLOW = auto()
+    HASTE_PRE_SWALLOW_BITE = auto()
+    HASTE_BITE_AND_SWALLOW = auto()
 
 
 class Passive(Enum):

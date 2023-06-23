@@ -8,7 +8,7 @@ logger = logging.getLogger("EncounTroll")
 
 class ConstrictFactory(DirectThreatFactory):
     """
-    The is_constricting variable is the reason why this is modeled as a separate ability rather than an attack with an on_hit effect
+    The constricting_target variable is the reason why this is modeled as a separate ability rather than an attack with an on_hit effect
     """
 
     def __init__(self, combatant, attack):
@@ -26,13 +26,14 @@ class ConstrictFactory(DirectThreatFactory):
         return battle_map.get_enemies(self.combatant)
 
     def create(self, target_combatant):
-        if self.combatant.is_constricting:
-            return None
-        return Constrict(target_combatant, self)
+        if self.combatant.constricting_target is None or self.combatant.constricting_target is target_combatant:
+            return Constrict(target_combatant, self)
+        return None
+
 
     def create_all(self, battle_map):
-        if self.combatant.is_constricting:
-            return None
+        if self.combatant.constricting_target is not None:
+            return [Constrict(self.combatant.constricting_target)]
         targets = self.get_eligible_targets(battle_map)
         return [Constrict(t, self) for t in targets]
 

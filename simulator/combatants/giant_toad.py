@@ -15,7 +15,7 @@ class GiantToad(Combatant):
     def __init__(self, effect_tracker, name="Giant Toad"):
         super().__init__(effect_tracker, name, level=1, hp=39, ac=11, init_bonus=1, spell_to_hit=0, speed=20, resistances=set(), dc=0)
         self.size = Size.LARGE
-        self.bite = self.add_ability(Action.BITE_WITH_SWALLOW,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,\
+        self.bite = self.add_ability(Action.PRE_SWALLOW_BITE,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,\
                                      on_hit=OnHitAutoRestrained(SavingThrow.STR, 13), extra_dmg=[('1d10', DamageType.Poison)])
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,\
                          on_hit=OnHitAutoRestrained(SavingThrow.STR, 13), extra_dmg=[('1d10', DamageType.Poison)])
@@ -42,7 +42,7 @@ class GiantToad(Combatant):
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state,
-            'is_constricting': self.is_constricting,
+            'constricting_target': self.constricting_target,
             'ammo': copy.deepcopy(self.ammo)
         }
 
@@ -51,12 +51,12 @@ class GiantToad(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_fsm_state'])
-        self.is_constricting = resources['is_constricting']
+        self.constricting_target = resources['constricting_target']
         self.ammo = resources['ammo']
 
     def prompt_aoo(self, moving_combatant):
         # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
-        if self.has_reaction and not self.is_constricting:
+        if self.has_reaction and not self.constricting_target:
             aoo = self.aoo_factory[1].create(moving_combatant)
             logger.info(f"{self.name} took an AoO {aoo} against {moving_combatant}",
                          extra={"team": self.team_color})

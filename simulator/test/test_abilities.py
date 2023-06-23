@@ -39,7 +39,7 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
 
     try:
         actoid1 = get_action(test_moon_druid, battle_map)
-        assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad" or str(actoid1) == "Wildshape of MoonDruid5Lvl into BrownBear" or str(actoid1) == "Wildshape of MoonDruid5Lvl into DireWolf"
+        assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         actoid2 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid2, test_moon_druid)
@@ -48,15 +48,8 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
         actoid4 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid4, test_moon_druid)
         actoid5 = get_action(test_moon_druid, battle_map)
-        if str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad":
-            assert str(actoid4) == "GiantToad Bite on Bugbear"
-            assert str(actoid5) == "None"
-        elif str(actoid1) == "Wildshape of MoonDruid5Lvl into BrownBear":
-            assert str(actoid4) == "BrownBear Bite on Bugbear" or str(actoid5) == "BrownBear Bite on Bugbear"
-            assert str(actoid4) == "BrownBear Claw on Bugbear" or str(actoid5) == "BrownBear Claw on Bugbear"
-        elif str(actoid1) == "Wildshape of MoonDruid5Lvl into DireWolf":
-            assert str(actoid4) == "DireWolf Bite on Bugbear"
-            assert str(actoid5) == "None"
+        assert str(actoid4) == "GiantToad Bite on Bugbear"
+        assert str(actoid5) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -85,35 +78,23 @@ def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, t
         assert str(actoid1).startswith("Flaming Sphere")
         action_resolver.resolve_action(actoid1, test_moon_druid)
         actoid2 = get_action(test_moon_druid, battle_map)
-        assert str(actoid2) == "Wildshape of MoonDruid5Lvl into GiantToad" or str(actoid2) == "Wildshape of MoonDruid5Lvl into BrownBear" or str(actoid2) == "Wildshape of MoonDruid5Lvl into DireWolf"
+        assert str(actoid2) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid2, test_moon_druid)
         actoid3 = get_action(test_moon_druid, battle_map)
-        assert str(actoid3) == "None"
-        test_moon_druid.new_turn()
-
+        action_resolver.resolve_action(actoid3, test_moon_druid)
+        assert str(actoid3) == "[1 1]"
         actoid4 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid4, test_moon_druid)
+        assert str(actoid4) == "[1 1]"
+        test_moon_druid.new_turn()
         actoid5 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid5, test_moon_druid)
         actoid6 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid6, test_moon_druid)
         actoid7 = get_action(test_moon_druid, battle_map)
-        action_resolver.resolve_action(actoid7, test_moon_druid)
-        actoid8 = get_action(test_moon_druid, battle_map)
-        action_resolver.resolve_action(actoid8, test_moon_druid)
-        actoid9 = get_action(test_moon_druid, battle_map)
-        action_resolver.resolve_action(actoid9, test_moon_druid)
-        if str(actoid2) == "Wildshape of MoonDruid5Lvl into GiantToad":
-            assert str(actoid6) == "GiantToad Bite on Bugbear"
-            assert str(actoid5) == "None"
-        elif str(actoid2) == "Wildshape of MoonDruid5Lvl into BrownBear":
-            assert str(actoid6) == "BrownBear Bite on Bugbear" or str(actoid7) == "BrownBear Bite on Bugbear"
-            assert str(actoid6) == "BrownBear Claw on Bugbear" or str(actoid7) == "BrownBear Claw on Bugbear"
-        elif str(actoid2) == "Wildshape of MoonDruid5Lvl into DireWolf":
-            assert str(actoid6) == "DireWolf Bite on Bugbear"
-            assert str(actoid5) == "None"
-        assert str(actoid7) == "Flaming Sphere Ram into Bugbear" or str(actoid8) == "Flaming Sphere Ram into Bugbear" or str(actoid9) == "Flaming Sphere Ram into Bugbear"
-        # assert str(actoid7) == "None"
+        assert str(actoid5) == "GiantToad Bite on Bugbear" or str(actoid6) == "GiantToad Bite on Bugbear"
+        assert str(actoid5) == "Flaming Sphere Ram into Bugbear" or str(actoid6) == "Flaming Sphere Ram into Bugbear"
+        assert str(actoid7) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -231,33 +212,23 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     try:
         actoid1 = get_action(test_moon_druid, battle_map)
         assert test_moon_druid.curr_hp == 42
-        assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad" or str(actoid1) == "Wildshape of MoonDruid5Lvl into BrownBear" or str(actoid1) == "Wildshape of MoonDruid5Lvl into DireWolf"
+        assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
-        if str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad":
-            assert test_moon_druid.get_current_form().curr_hp == 39
-        elif str(actoid1) == "Wildshape of MoonDruid5Lvl into BrownBear":
-            assert test_moon_druid.get_current_form().curr_hp == 34
-        elif str(actoid1) == "Wildshape of MoonDruid5Lvl into DireWolf":
-            assert test_moon_druid.get_current_form().curr_hp == 37
-        test_moon_druid.get_current_form().receive_dmg(test_moon_druid.get_current_form().curr_hp + 1, DamageType.Slashing)
+        assert test_moon_druid.get_current_form().curr_hp == 39
+        test_moon_druid.get_current_form().receive_dmg(40, DamageType.Slashing)
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 41
         test_moon_druid.new_turn()
         actoid2 = get_action(test_moon_druid, battle_map)
-        assert str(actoid2) == "Wildshape of MoonDruid5Lvl into GiantToad" or str(actoid2) == "Wildshape of MoonDruid5Lvl into BrownBear" or str(actoid2) == "Wildshape of MoonDruid5Lvl into DireWolf"
+        assert str(actoid2) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid2, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
-        if str(actoid2) == "Wildshape of MoonDruid5Lvl into GiantToad":
-            assert test_moon_druid.get_current_form().curr_hp == 39
-        elif str(actoid2) == "Wildshape of MoonDruid5Lvl into BrownBear":
-            assert test_moon_druid.get_current_form().curr_hp == 34
-        elif str(actoid2) == "Wildshape of MoonDruid5Lvl into DireWolf":
-            assert test_moon_druid.get_current_form().curr_hp == 37
-        test_moon_druid.get_current_form().receive_dmg(test_moon_druid.get_current_form().curr_hp + 3, DamageType.Slashing)
+        assert test_moon_druid.get_current_form().curr_hp == 39
+        test_moon_druid.get_current_form().receive_dmg(42, DamageType.Slashing)
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 38
@@ -290,7 +261,7 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
 
     try:
         actoid1 = get_action(test_moon_druid, battle_map)
-        assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad" or str(actoid1) == "Wildshape of MoonDruid5Lvl into BrownBear" or str(actoid1) == "Wildshape of MoonDruid5Lvl into DireWolf"
+        assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         actoid2 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid2, test_moon_druid)
@@ -300,8 +271,7 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
         action_resolver.resolve_action(actoid4, test_moon_druid)
 
         actoid5 = get_action(test_bugbear, battle_map)
-        assert str(actoid5) == "Morningstar on MoonDruid5Lvl wildshaped into GiantToad" or str(actoid5) == "Morningstar on MoonDruid5Lvl wildshaped into BrownBear"\
-               or str(actoid5) == "Morningstar on MoonDruid5Lvl wildshaped into DireWolf" or str(actoid5) == "Get Up from Prone" or str(actoid5) == "Break Grapple"
+        assert str(actoid5) == "Morningstar on MoonDruid5Lvl wildshaped into GiantToad"
         action_resolver.resolve_action(actoid5, test_bugbear)
     except Exception as e:
         assert False, f"Raised an exception {e}"

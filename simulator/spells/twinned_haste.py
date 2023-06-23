@@ -131,7 +131,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
         if self.targets[0] is self.factory.combatant:
-            coords_for_first = battle_map.get_all_accessible_coords(shortest_paths)
+            coords_for_first = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         else:
             coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                              distances,
@@ -139,7 +139,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
                                                                              rng=TwinnedHasteFactory.range)
 
         if self.targets[1] is self.factory.combatant:
-            coords_for_second = battle_map.get_all_accessible_coords(shortest_paths)
+            coords_for_second = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         else:
             coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                               distances,

@@ -67,7 +67,7 @@ class MistyStep(Actoid, ThreatModifier):
         return 0  # Misty Step is handled differently
 
     def get_eligible_coords(self, battle_map, distances, shortest_paths):
-        return battle_map.get_all_accessible_coords(shortest_paths)
+        return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
     def is_current_coord_eligible(self, battle_map):
         return True

@@ -810,13 +810,16 @@ class Map:
                     coords_in_range.add((x, y))
         return coords_in_range
 
-    def get_all_accessible_coords(self, shortest_paths):
+    def get_all_accessible_coords(self, shortest_paths, combatant):
         """
         Returns all free and square coordinates accessible by a combatant given the shortest paths dict (output of Dijkstra)
         :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
+        :param combatant: the subject combatant
         :return: free and accessible coordinates as a set of tuples (x, y)
         """
-        return set(shortest_paths.keys())
+        ret = set(shortest_paths.keys())
+        ret.add(tuple(self.get_combatant_position(combatant).get()[0]))
+        return ret
 
 
     def get_adjacent_coords(self, coords: CombatantCoords):
