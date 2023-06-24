@@ -113,13 +113,13 @@ def test_get_path_to_combatant_medium_to_medium_two_overlapping_aoe(battle_map, 
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
     cod = codf.create(np.array([7, 3]))
     effect_tracker.add(cod, cod.factory.combatant)
-    hoh = codf.create(np.array([7, 3]))
-    effect_tracker.add(hoh, hoh.factory.combatant)
+    cod2 = codf.create(np.array([7, 3]))
+    effect_tracker.add(cod2, cod2.factory.combatant)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
-    effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
+    effect_to_coords = {e: e.get_affected_coords(battle_map) for e in effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(battle_map, path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat == pytest.approx(-20.0 - 2.649 * DZ_CONSTANT, 0.0001)

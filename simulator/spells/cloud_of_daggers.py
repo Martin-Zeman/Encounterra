@@ -91,6 +91,9 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def on_move_within(self, combatant):
         return 0
 
+    def on_exit(self, combatant):
+        return 0
+
     def is_affecting(self, combatant, battle_map):
         coords = self.get_affected_coords(battle_map)
         return battle_map.get_hop_distance(combatant, coords) == 0

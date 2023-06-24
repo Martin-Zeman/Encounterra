@@ -21,12 +21,12 @@ class EffectTracker:
     def add(self, effect, originator):
         # TODO: Do I need the originator?
         # Refresh existing effect if available
-        for idx in range(len(self.effects)):
-            if type(self.effects[idx][0]) == type(effect) and originator is self.effects[idx][1]:
-                logger.info(f"Refreshing {effect}")
-                self.effects[idx][0] = effect
-                break
-        self.effects.append([effect, originator])
+        # for idx in range(len(self.effects)):
+        #     if type(self.effects[idx][0]) == type(effect) and originator is self.effects[idx][1]:
+        #         logger.info(f"Refreshing {effect}")
+        #         self.effects[idx][0] = effect
+        #         break
+        self.effects.append((effect, originator))
 
     def start_of_turn(self, combatant):
         """

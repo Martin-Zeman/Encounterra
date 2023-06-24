@@ -7,7 +7,7 @@ from simulator.actions.action_types import BonusAction
 from simulator.actions.movement import MovementIncrement
 from simulator.battle_map import Terrain
 from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.misc import Conditions
+from simulator.misc import Conditions, ConditionWithoutDC
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
 from simulator.spells.spell import SpellStats
@@ -546,7 +546,7 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
     test_draconic_sorcerer_5lvl.curr_sorcery_points -= 5
-    test_draconic_sorcerer_5lvl.apply_condition(Conditions.PRONE)
+    test_draconic_sorcerer_5lvl.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
 
     test_stone_giant.ammo[test_stone_giant.rock[1].name] = 0
     test_stone_giant.curr_hp = 46
@@ -722,7 +722,7 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
-    test_draconic_sorcerer_5lvl.apply_condition(Conditions.PRONE)
+    test_draconic_sorcerer_5lvl.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
 
     try:
         actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)

@@ -148,6 +148,9 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def on_move_within(self, combatant):
         return 0
 
+    def on_exit(self, combatant):
+        return 0
+
     def is_affecting(self, combatant, battle_map):
         return False
 

@@ -73,7 +73,7 @@ def check_feasibility(combatant, action, battle_map):
                 return res
             case Action.MELEE_ATTACK:
                 res = combatant.has_action
-                res |= str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
@@ -81,7 +81,7 @@ def check_feasibility(combatant, action, battle_map):
                 return res
             case Action.RANGED_ATTACK:
                 res = combatant.has_action
-                res |= str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_cartesian_distance(combatant, action.target_combatant) <= action.factory.range
@@ -89,7 +89,7 @@ def check_feasibility(combatant, action, battle_map):
                 return res
             case Action.RECKLESS_ATTACK:
                 res = combatant.has_action
-                res |= str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
@@ -108,7 +108,7 @@ def check_feasibility(combatant, action, battle_map):
                 return combatant.has_action and combatant.curr_wildshape_uses > 0
             case Action.PRE_SWALLOW_BITE:
                 res = combatant.has_action
-                res |= str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
@@ -117,7 +117,7 @@ def check_feasibility(combatant, action, battle_map):
                 return res
             case Action.BITE_AND_SWALLOW:
                 res = combatant.has_action
-                res |= str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
@@ -292,13 +292,13 @@ def check_feasibility_light(combatant, action, battle_map):
                 return res
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK:
                 res = combatant.has_action
-                res |= str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.RECKLESS_ATTACK:
                 res = combatant.has_action
-                res |= str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.DASH | Action.DISENGAGE:
@@ -312,13 +312,13 @@ def check_feasibility_light(combatant, action, battle_map):
                 return combatant.has_action and combatant.curr_wildshape_uses > 0
             case Action.PRE_SWALLOW_BITE:
                 res = combatant.has_action
-                res |= str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.BITE_AND_SWALLOW:
                 res = combatant.has_action
-                res |= str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.swallowed_target
