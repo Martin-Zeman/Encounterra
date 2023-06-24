@@ -13,3 +13,6 @@ class OnHitAutoRestrained(OnHit):
         logger.info(f"{target} is grappled and restrained")
         cond = ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, self.st, self.dc, attacker, PhaseOfTurn.ACTION)
         target.apply_dc_condition(cond)
+
+    def calculate_threat(self, attacker, target, battle_map, *args, **kwargs):
+        return 0  # TODO

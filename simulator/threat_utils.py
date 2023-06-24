@@ -40,6 +40,33 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
 
 
 @cache
+def calc_p_hit(to_hit, ac):
+    """
+    Calculates the probability of hitting
+    @param to_hit: to hit bonus
+    @param dmg_dice: damage dice in a string form
+    @param dmg_bonus: bonus to damage
+    @param ac: target's AC
+    @param crit_range: 1 - default for nat 20, 2 for [19, 20], 3 for [18..20], etc.
+    @param is_resistant: True if the target is resistant to the dmg type
+    @return: mean damage not accounting for critical failures
+    """
+    rv = randint(1, 21, to_hit)
+    return 1.0 - rv.cdf(ac - 1)
+@cache
+def mean_dmg_auto_hit(dmg_dice, is_resistant=False):
+    """
+    Calculates mean dmg of an attack-like ability
+    @param dmg_dice: damage dice in a string form
+    @param is_resistant: True if the target is resistant to the dmg type
+    @return: mean damage
+    """
+    dice = parse_dmg_dice(dmg_dice)
+    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
+    return avg_dmg_die_roll if not is_resistant else (avg_dmg_die_roll / 2)
+
+
+@cache
 def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increment, crit_range=1,  is_resistant=False):
     """
     Calculates the increase in mean dmg for an attack-like ability using a flat to-hit bonus

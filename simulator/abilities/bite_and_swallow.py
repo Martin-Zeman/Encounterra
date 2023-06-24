@@ -1,9 +1,7 @@
 import math
 from simulator.actions.actoid import FactoryFlags
-from simulator.actions.attack import AttackFactory, Attack
 from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
-from simulator.misc import percent_of_curr_hp, Size
-from simulator.threat_utils import mean_dmg
+from simulator.misc import Size
 import logging
 
 
@@ -41,3 +39,13 @@ class BiteAndSwallow(MeleeAttack):
 
     def is_current_coord_eligible(self, battle_map):
         return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)
+
+    def calculate_threat(self, battle_map, *args, **kwargs):
+        # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
+        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, **kwargs)
+
+    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+        """
+        Calculates the threat delta of the factory to a specific target given stat modifications
+        """
+        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modifiers, *args, **kwargs)

@@ -3,6 +3,8 @@ from simulator.action_resolver import resolve_on_hit_dmg_saving_throw
 from simulator.misc import parse_dmg_dice, roll_dice
 import logging
 
+from simulator.threat_utils import mean_dmg_dc_attack
+
 logger = logging.getLogger("EncounTroll")
 
 class OnHitSavingThrowDmg(OnHit):
@@ -18,3 +20,7 @@ class OnHitSavingThrowDmg(OnHit):
         dice = parse_dmg_dice(self.dmg_dice)
         dmg = roll_dice(dice)
         resolve_on_hit_dmg_saving_throw(self, dmg, target, self.half_on_success)
+
+    def calculate_threat(self, attacker, target, battle_map, *args, **kwargs):
+        # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
+        return mean_dmg_dc_attack(self.dc, self.dmg_dice, self.half_on_success, target.saving_throws[self.st])

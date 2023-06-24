@@ -23,7 +23,7 @@ class PreSwallowBiteFactory(MeleeAttackFactory):
 
     def create_all(self, battle_map):
         if self.combatant.constricted_target is not None:
-            return [PreSwallowBite(self.combatant.constricted_target)]
+            return [PreSwallowBite(self.combatant.constricted_target, self)]
         targets = self.get_eligible_targets(battle_map)
         return [PreSwallowBite(t, self) for t in targets]
 

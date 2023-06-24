@@ -18,7 +18,7 @@ class GiantToad(Combatant):
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.PRE_SWALLOW_BITE,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,\
                                      on_hit=OnHitAutoRestrained(SavingThrow.STR, 13), extra_dmg=[('1d10', DamageType.Poison)])
-        self.add_ability(Action.BITE_AND_SWALLOW, name="Bite and Swallow", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2,\
+        self.bite_and_swallow = self.add_ability(Action.BITE_AND_SWALLOW, name="Bite and Swallow", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2,\
                                      dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, on_hit=OnHitSwallow(), extra_dmg=[('1d10', DamageType.Poison)])
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,\
                          on_hit=OnHitAutoRestrained(SavingThrow.STR, 13), extra_dmg=[('1d10', DamageType.Poison)])
@@ -36,6 +36,7 @@ class GiantToad(Combatant):
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_transition(str(self.bite[1]), '0', 'nop')  # Melee
+        self.attack_fsm.add_transition(str(self.bite_and_swallow[1]), '0', 'nop')  # Melee
 
     def new_turn(self):
         super().new_turn()

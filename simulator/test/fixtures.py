@@ -1,5 +1,6 @@
 import pytest
 
+from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.combatants.ogre import Ogre
 from simulator.combatants.stone_giant import StoneGiant
@@ -50,3 +51,7 @@ def test_ogre(effect_tracker):
 @pytest.fixture()
 def test_moon_druid(effect_tracker):
     return MoonDruid5Lvl(effect_tracker, "MoonDruid5Lvl")
+
+@pytest.fixture()
+def test_giant_toad(effect_tracker):
+    return GiantToad(effect_tracker, "GiantToad")

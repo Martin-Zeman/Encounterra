@@ -4,16 +4,16 @@ import numpy as np
 import pytest
 
 from simulator.abilities.wildshape import WildshapeFactory
-from simulator.action_resolver import ActionResolver
+from simulator.action_resolver import ActionResolver, ActionResult
 from simulator.actions.action_selector import get_action
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Terrain
 from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
 from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.misc import DamageType
+from simulator.misc import DamageType, Conditions
 from simulator.teams import Teams
-from simulator.test.fixtures import test_moon_druid, test_bugbear, teams, effect_tracker, battle_map
+from simulator.test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map
 from simulator.utils.utils import preallocate_wildshape_forms
 
 
@@ -329,3 +329,45 @@ def test_wilshape_copy_two_druids(battle_map, teams, effect_tracker, test_moon_d
     test_moon_druid_2.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_2, BonusAction.MOON_WILDSHAPE, test_moon_druid_2.wildshape_factory[1])
     assert test_moon_druid.available_wildshape_forms[0] is not test_moon_druid_2.available_wildshape_forms[0]
     action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+
+
+def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, test_bugbear):
+    """
+    We assert the basic functionality of the wildshape ability. The Druid must be able to wildshape and attack.
+    """
+    CustomLogger(LogLevel.WARNING)
+
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([2, 2]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [test_giant_toad, test_bugbear]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    test_bugbear.ac = 0  # Making sure the attacks hit, only nat 1 can make the test fail
+    test_bugbear.curr_hp = 100  # Making sure it doesn't die in case of a crit
+
+    try:
+        actoid1 = get_action(test_giant_toad, battle_map)
+        assert str(actoid1) == "Bite on Bugbear"
+        result = action_resolver.resolve_action(actoid1, test_giant_toad)
+        if result is ActionResult.DMG:
+            assert test_bugbear.is_affected_by(Conditions.GRAPPLED)
+            assert test_bugbear.is_affected_by(Conditions.RESTRAINED)
+            assert test_giant_toad.constricted_target is test_bugbear
+            actoid2 = get_action(test_giant_toad, battle_map)
+            assert str(actoid2) == "None"
+            test_giant_toad.new_turn()
+            actoid3 = get_action(test_giant_toad, battle_map)
+            action_resolver.resolve_action(actoid3, test_giant_toad)
+        # actoid4 = get_action(test_giant_toad, battle_map)
+        # action_resolver.resolve_action(actoid4, test_giant_toad)
+        # actoid5 = get_action(test_giant_toad, battle_map)
+        # assert str(actoid4) == "Bite on Bugbear"
+        # assert str(actoid5) == "None"
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
