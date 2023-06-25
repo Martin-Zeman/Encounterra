@@ -233,7 +233,7 @@ class ActionResolver:
                              extra={"team": self.teams.get_team(caster)})
                 curr_target.receive_dmg(dmg, dmg_type)
                 if not curr_target.is_alive():
-                    self.battle_map.remove_dead_combatant(curr_target)
+                    self.battle_map.remove_dead_combatant(curr_target.get_original_form())  # could be a wildshaped druid
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
                         if not potential_target.is_alive():
@@ -277,7 +277,7 @@ class ActionResolver:
                          extra={"team": self.teams.get_team(caster)})
             target.receive_dmg(dmg, spell.factory.dmg_type)
             if not target.is_alive():
-                self.battle_map.remove_dead_combatant(target)
+                self.battle_map.remove_dead_combatant(target.get_original_form())  # could be a wildshaped druid
             return ActionResult.DMG
         else:
             logger.info(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
@@ -294,7 +294,7 @@ class ActionResolver:
                     resolve_dmg_saving_throw(spell, dmg, combatant)
                     if not combatant.is_alive():
                         # TODO revisit if this is really needed
-                        self.battle_map.remove_dead_combatant(combatant)
+                        self.battle_map.remove_dead_combatant(combatant.get_original_form())  # could be a wildshaped druid
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
                 spell.activate(None)
@@ -382,7 +382,7 @@ class ActionResolver:
             for extra in extra_dmg:
                 target.receive_dmg(extra[0], extra[1])
             if not target.is_alive():
-                self.battle_map.remove_dead_combatant(target)
+                self.battle_map.remove_dead_combatant(target.get_original_form())  # could be a wildshaped druid
             elif attack.factory.on_hit is not None:
                 attack.factory.on_hit.hit(attacker, attack, target, self.effect_tracker)
 
@@ -447,7 +447,7 @@ class ActionResolver:
                     resolve_dmg_saving_throw(actoid, dmg, combatant)
                     if not combatant.is_alive():
                         # TODO revisit if this is really needed
-                        self.battle_map.remove_dead_combatant(combatant)
+                        self.battle_map.remove_dead_combatant(combatant.get_original_form())  # could be a wildshaped druid
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
                 actoid.activate(None)
@@ -523,7 +523,8 @@ class ActionResolver:
                     logger.info(f"{ actoid.target_combatant} is rammed by Flaming Sphere")
                     resolve_dmg_saving_throw(actoid, dmg, actoid.target_combatant)
                     if not actoid.target_combatant.is_alive():
-                        self.battle_map.remove_dead_combatant(actoid.target_combatant)   # TODO revisit if this is really needed
+                        # could be a wildshaped druid
+                        self.battle_map.remove_dead_combatant(actoid.target_combatant.get_original_form())   # TODO revisit if this is really needed
                 path = path['tuples'][:FlamingSphereRamFactory.RANGE + 1]
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
                 return ActionResult.DMG
