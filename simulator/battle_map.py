@@ -88,7 +88,10 @@ class GridSquare:
         self.occupancy = Occupancy.FREE
 
     def set_combatant(self, combatant):
-        assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
+        try:
+            assert (self.occupancy is Occupancy.FREE or self.combatant is combatant) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
+        except AssertionError:
+            print("FIXME")
         self.combatant = combatant
         self.occupancy = Occupancy.OCCUPIED_BY_COMBATANT
 
@@ -250,17 +253,17 @@ class Map:
     @contextmanager
     def replace_combatant_if_action_by_wildshaped(self, action, combatant):
         if combatant is not action.factory.combatant:
+            original_position = self.get_combatant_position(combatant)
             try:
                 self.teams.replace_combatant(combatant, action.factory.combatant)
-                position = self.get_combatant_position(combatant)
+                wildshape_position = self.find_wildshaped_coordinate(combatant, action.factory.combatant.size)
                 self.remove_combatant(combatant)
-                self.set_combatant_coordinates(action.factory.combatant, position.get()[0])
+                self.set_combatant_coordinates(action.factory.combatant, np.array(wildshape_position))
                 yield True
             finally:
                 self.teams.replace_combatant(action.factory.combatant, combatant)
-                position = self.get_combatant_position(action.factory.combatant)
                 self.remove_combatant(action.factory.combatant)
-                self.set_combatant_coordinates(combatant, position.get()[0])
+                self.set_combatant_coordinates(combatant, original_position.get()[0])
         else:
             yield False
 

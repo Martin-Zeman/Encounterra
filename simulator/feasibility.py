@@ -3,7 +3,7 @@ from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.abilities.totem_rage import TotemRage
 from simulator.actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction
 from simulator.combatant_coords import CombatantCoords
-from simulator.misc import Conditions
+from simulator.misc import Conditions, Size
 import logging
 import numpy as np
 
@@ -322,6 +322,8 @@ def check_feasibility_light(combatant, action, battle_map):
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.swallowed_target
+                res &= combatant.constricted_target is not None and combatant.constricted_target.size.value <= Size.MEDIUM.value
+                return res
             case Action.FLAMING_SPHERE:
                 res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(2) > 0

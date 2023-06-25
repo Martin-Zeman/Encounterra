@@ -1,5 +1,12 @@
+import inspect
+import pkgutil
+
+from simulator.combatant import Combatant
+from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.bugbear import Bugbear
+from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.combatants.ogre import Ogre
@@ -13,6 +20,8 @@ from simulator.teams import Teams
 from enum import Enum
 import logging
 import multiprocessing as mp
+
+from simulator.utils.utils import get_combatant_classes
 
 logger = logging.getLogger("EncounTroll")
 
@@ -30,17 +39,7 @@ class Session:
         self.battle_map = None
         self.map_size = 15
         self.statistic_collector = None
-        self.character_type_counter = {
-            DraconicSorcerer5Lvl: 1,
-            TotemBarbarian5Lvl: 1,
-            DragonclawCultist: 1,
-            Cyanwrath: 1,
-            Goblin: 1,
-            Bugbear: 1,
-            Ogre: 1,
-            StoneGiant: 1,
-            MoonDruid5Lvl: 1
-        }
+        self.character_type_counter = {cls: 1 for cls in get_combatant_classes()}
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
         self.round_manager = None
@@ -74,6 +73,12 @@ class Session:
                 self.combatants.append(MoonDruid5Lvl(self.effect_tracker, "MoonDruid5Lvl " + str(curr_count)))
             case "DragonclawCultist":
                 self.combatants.append(DragonclawCultist(self.effect_tracker, "DragonclawCultist " + str(curr_count)))
+            case "GiantToad":
+                self.combatants.append(GiantToad(self.effect_tracker, "GiantToad " + str(curr_count)))
+            case "BrownBear":
+                self.combatants.append(BrownBear(self.effect_tracker, "BrownBear " + str(curr_count)))
+            case "DireWolf":
+                self.combatants.append(DireWolf(self.effect_tracker, "DireWolf " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return

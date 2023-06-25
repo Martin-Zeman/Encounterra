@@ -122,11 +122,31 @@ class ActionResolver:
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
-        if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED):
+        if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
             return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
             return RollType.ADVANTAGE
-        if attacker.is_affected_by_any(Conditions.INVISIBLE):
+        if attacker.is_affected_by(Conditions.INVISIBLE):
+            return RollType.ADVANTAGE
+        return RollType.STRAIGHT
+
+    def has_advantage_melee(self, attack, attacker, target):
+        if attack.roll_type is RollType.ADVANTAGE:
+            return RollType.ADVANTAGE
+        if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent_to_target(attacker, target):
+            return RollType.ADVANTAGE
+        if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
+            return RollType.ADVANTAGE
+        if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
+            logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
+            return RollType.ADVANTAGE
+        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) == 1:
+            return RollType.ADVANTAGE
+        if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
+            return RollType.ADVANTAGE
+        if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
+            return RollType.ADVANTAGE
+        if attacker.is_affected_by(Conditions.INVISIBLE):
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
@@ -139,9 +159,11 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if self.battle_map.is_enemy_adjacent(attacker):
             return RollType.DISADVANTAGE
-        if target.is_affected_by_any(Conditions.PRONE):
+        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
             return RollType.DISADVANTAGE
-        if attacker.is_affected_by_any(Conditions.POISONED):
+        if target.is_affected_by(Conditions.INVISIBLE):
+            return RollType.DISADVANTAGE
+        if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -156,9 +178,26 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if self.battle_map.is_enemy_adjacent(attacker):
             return RollType.DISADVANTAGE
-        if target.is_affected_by_any(Conditions.PRONE):
+        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
             return RollType.DISADVANTAGE
-        if attacker.is_affected_by_any(Conditions.POISONED):
+        if target.is_affected_by(Conditions.INVISIBLE):
+            return RollType.DISADVANTAGE
+        if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED):
+            return RollType.DISADVANTAGE
+        return RollType.STRAIGHT
+
+    def has_disadvantage_melee(self, attack, attacker, target):
+        if attack.roll_type is RollType.DISADVANTAGE:
+            return RollType.DISADVANTAGE
+        if target.disadvantage_on_incoming_attacks:
+            return RollType.DISADVANTAGE
+        if target.is_dodging:
+            return RollType.DISADVANTAGE
+        if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED):
+            return RollType.DISADVANTAGE
+        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
+            return RollType.DISADVANTAGE
+        if target.is_affected_by(Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -293,41 +332,6 @@ class ActionResolver:
                 logger.error("Unknown spell")
                 return ActionResult.UNFEASIBLE
 
-    def has_advantage_melee(self, attack, attacker, target):
-        if attack.roll_type is RollType.ADVANTAGE:
-            return RollType.ADVANTAGE
-        if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent_to_target(attacker, target):
-            return RollType.ADVANTAGE
-        if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
-            # TODO Consider moving this to the attack factory
-            return RollType.ADVANTAGE
-        if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
-            logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
-            return RollType.ADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) == 1:
-            return RollType.ADVANTAGE
-        if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
-            return RollType.ADVANTAGE
-        if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.PRONE):
-            return RollType.ADVANTAGE
-        if attacker.is_affected_by_any(Conditions.INVISIBLE):
-            return RollType.ADVANTAGE
-        return RollType.STRAIGHT
-
-    def has_disadvantage_melee(self, attack, attacker, target):
-        if attack.roll_type is RollType.DISADVANTAGE:
-            return RollType.DISADVANTAGE
-        if target.disadvantage_on_incoming_attacks:
-            return RollType.DISADVANTAGE
-        if target.is_dodging:
-            return RollType.DISADVANTAGE
-        if attacker.is_affected_by(Conditions.PRONE):
-            return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
-            return RollType.DISADVANTAGE
-        if attacker.is_affected_by_any(Conditions.POISONED):
-            return RollType.DISADVANTAGE
-        return RollType.STRAIGHT
 
     def resolve_attack(self, attack, attacker):  # TODO remove combatant from attack and have it as a separate parameter
         """

@@ -14,14 +14,14 @@ class BiteAndSwallowFactory(MeleeAttackFactory):
         self.flags |= FactoryFlags.IS_MELEE
 
     def create(self, target_combatant):
-        if self.combatant.constricted_target is target_combatant and target_combatant.size <= Size.MEDIUM:
+        if self.combatant.constricted_target is target_combatant and target_combatant.size.value <= Size.MEDIUM.value:
             return BiteAndSwallow(target_combatant, self)
         return None
 
     def create_all(self, battle_map):
-        if self.combatant.constricted_target is not None and self.combatant.constricted_target.size <= Size.MEDIUM:
-            return [BiteAndSwallow(self.combatant.constricted_target)]
-        return None
+        # if self.combatant.constricted_target is not None and self.combatant.constricted_target.size <= Size.MEDIUM:
+        return [BiteAndSwallow(self.combatant.constricted_target, self)]
+        # return None
 
 
 

@@ -112,7 +112,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.origin)
         acc = 0
         for aff in affected:
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -1) * avg_roll(self.factory.dmg_dice)
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)
         return acc
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):

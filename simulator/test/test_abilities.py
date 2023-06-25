@@ -363,11 +363,12 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
             assert str(actoid2) == "None"
             test_giant_toad.new_turn()
             actoid3 = get_action(test_giant_toad, battle_map)
-            action_resolver.resolve_action(actoid3, test_giant_toad)
-        # actoid4 = get_action(test_giant_toad, battle_map)
-        # action_resolver.resolve_action(actoid4, test_giant_toad)
-        # actoid5 = get_action(test_giant_toad, battle_map)
-        # assert str(actoid4) == "Bite on Bugbear"
-        # assert str(actoid5) == "None"
+            assert str(actoid3) == "Bite and Swallow on Bugbear"
+            swallowed = action_resolver.resolve_action(actoid3, test_giant_toad)
+            if swallowed is ActionResult.DMG:
+                assert test_giant_toad.constricted_target is None
+                assert test_giant_toad.swallowed_target is test_bugbear
+                assert test_bugbear.is_affected_by(Conditions.RESTRAINED)
+                assert test_bugbear.is_affected_by(Conditions.BLINDED)
     except Exception as e:
         assert False, f"Raised an exception {e}"

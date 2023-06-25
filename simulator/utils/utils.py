@@ -1,7 +1,11 @@
+import importlib
+import inspect
 import logging
+import pkgutil
 
 from simulator.abilities.wildshape import Wildshape
 from simulator.actions.action_types import Action, BonusAction
+from simulator.combatant import Combatant
 from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
@@ -11,6 +15,24 @@ from simulator.combatants.quetzalcoatlus import Quetzalcoatlus
 from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 
 logger = logging.getLogger("EncounTroll")
+
+def get_combatant_classes():
+    # Import the top-level module
+    module = importlib.import_module('simulator.combatants')
+
+    # Recursively iterate over all submodules
+    classes = []
+    for _, module_name, is_pkg in pkgutil.walk_packages(module.__path__):
+        full_module_name = f'simulator.combatants.{module_name}'
+        sub_module = importlib.import_module(full_module_name)
+
+        for name, obj in inspect.getmembers(sub_module):
+            # Check if the attribute is a class and a subclass of Combatant
+            if inspect.isclass(obj) and issubclass(obj, Combatant) and obj != Combatant:
+                # Add the subclass to the list
+                classes.append(obj)
+
+    return classes
 
 def get_available_wildshape_forms(level, action_type):
     if action_type is Action.WILDSHAPE:

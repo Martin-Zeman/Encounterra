@@ -43,6 +43,7 @@ class GiantToad(Combatant):
         if self.swallowed_target:
             dice = parse_dmg_dice('3d6')
             dmg_dice_sum = roll_dice(dice)
+            logger.info(f"{self.name} is digesting {self.swallowed_target} for {dmg_dice_sum} dmg", extra={"team": self.team_color})
             self.swallowed_target.receive_dmg(dmg_dice_sum, DamageType.Acid)
 
 

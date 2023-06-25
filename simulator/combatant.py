@@ -366,9 +366,9 @@ class Combatant(ABC, ProtoCombatant):
         self.conditions.append(condition)
 
     def remove_condition(self, condition: Conditions, origin=None):
-        for cond in self.conditions:
+        for idx, cond in enumerate(self.conditions):
             if (not origin or cond.origin is origin) and condition in cond.conditions:
-                del cond
+                del self.conditions[idx]
                 return
 
     def is_affected_by(self, condition: Conditions):

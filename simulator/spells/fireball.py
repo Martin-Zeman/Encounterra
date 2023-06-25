@@ -96,7 +96,7 @@ class Fireball(Actoid, DirectThreat):
         acc = 0
         for aff in affected:
             mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -1) * mean_dmg
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
         return acc
 
     def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
