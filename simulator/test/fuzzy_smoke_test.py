@@ -28,10 +28,13 @@ def test_random_matchup():
         session = Session()
 
         num_blue_combatants = random.randint(1, 4)
-        num_red_combatants = random.randint(1, 4)
+        # num_red_combatants = random.randint(1, 4)
+        num_red_combatants = random.randint(1, 1)
 
-        blue_team = random.sample(combatant_pool, num_blue_combatants)
+        # blue_team = random.sample(combatant_pool, num_blue_combatants)
+        blue_team = [GiantToad]
         red_team = random.sample(combatant_pool, num_red_combatants)
+        # red_team = random.sample(combatant_pool, num_red_combatants)
         logger.info(f"Starting a fuzzy test with:")
         logger.info(f"Blue team: {blue_team}")
         logger.info(f"Red team: {red_team}")

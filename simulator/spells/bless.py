@@ -32,7 +32,10 @@ class BlessFactory(ThreatModifierFactory):
         return "BlessFactory"
 
     def get_eligible_targets(self, battle_map):
-        return combinations([e for e in battle_map.get_enemies_within_radius(self.combatant, BlessFactory.range) if not e.is_affected_by(Conditions.SWALLOWED)], 3)
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return [self.combatant]
+        return combinations([a for a in battle_map.get_allies_within_radius(self.combatant, BlessFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)], 3)
 
     def create_all(self, battle_map):
         targets = self.get_eligible_targets(battle_map)

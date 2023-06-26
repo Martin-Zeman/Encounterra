@@ -232,8 +232,7 @@ class ActionResolver:
                 logger.info(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
                              extra={"team": self.teams.get_team(caster)})
                 curr_target.receive_dmg(dmg, dmg_type)
-                if not curr_target.is_alive():
-                    self.battle_map.remove_dead_combatant(curr_target.get_original_form())  # could be a wildshaped druid
+                self.battle_map.remove_combatant_if_dead(curr_target)  # could be a wildshaped druid
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
                         if not potential_target.is_alive():
@@ -276,8 +275,7 @@ class ActionResolver:
             logger.info(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
             target.receive_dmg(dmg, spell.factory.dmg_type)
-            if not target.is_alive():
-                self.battle_map.remove_dead_combatant(target.get_original_form())  # could be a wildshaped druid
+            self.battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid
             return ActionResult.DMG
         else:
             logger.info(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
@@ -292,9 +290,7 @@ class ActionResolver:
                 for combatant in affected:
                     logger.info(f"{combatant} is hit by Fireball")
                     resolve_dmg_saving_throw(spell, dmg, combatant)
-                    if not combatant.is_alive():
-                        # TODO revisit if this is really needed
-                        self.battle_map.remove_dead_combatant(combatant.get_original_form())  # could be a wildshaped druid
+                    self.battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
                 spell.activate(None)
@@ -370,7 +366,9 @@ class ActionResolver:
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
+            logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
             extra_dmg = [(multiplier * roll_dice(parse_dmg_dice(e[0])), e[1]) for e in attack.factory.extra_dmg]
+            logger.info(f"and {extra_dmg} on the extra dmg dice", extra={"team": self.teams.get_team(attacker)})
             total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
             if attacker.has_passive(Passive.FANATIC_ADVANTAGE) and final_modifier is RollType.ADVANTAGE and not attacker.already_used_fanatic_advantage:
                 logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
@@ -381,9 +379,8 @@ class ActionResolver:
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             for extra in extra_dmg:
                 target.receive_dmg(extra[0], extra[1])
-            if not target.is_alive():
-                self.battle_map.remove_dead_combatant(target.get_original_form())  # could be a wildshaped druid
-            elif attack.factory.on_hit is not None:
+                target = self.battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
+            if target and attack.factory.on_hit is not None:
                 attack.factory.on_hit.hit(attacker, attack, target, self.effect_tracker)
 
             return ActionResult.DMG
@@ -445,9 +442,7 @@ class ActionResolver:
                 for combatant in affected:
                     logger.info(f"{combatant} is hit by Fireball")
                     resolve_dmg_saving_throw(actoid, dmg, combatant)
-                    if not combatant.is_alive():
-                        # TODO revisit if this is really needed
-                        self.battle_map.remove_dead_combatant(combatant.get_original_form())  # could be a wildshaped druid
+                    self.battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
                 actoid.activate(None)
@@ -508,9 +503,9 @@ class ActionResolver:
                 logger.info(f"{combatant} is trying to break out of grapple")
                 grapple = actoid.factory.grapple_condition
                 broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollType.STRAIGHT)
-                if broken_out and getattr(grapple.attacker, "constricted_target", None):  # TODO this is a simplification
+                if broken_out and getattr(grapple.initiator, "constricted_target", None):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
-                    grapple.attacker.constricted_target = None
+                    grapple.initiator.constricted_target = None
                     combatant.break_out_of_grapple()
                 else:
                     logger.info(f"{combatant} remains grappled")
@@ -522,9 +517,7 @@ class ActionResolver:
                     dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                     logger.info(f"{ actoid.target_combatant} is rammed by Flaming Sphere")
                     resolve_dmg_saving_throw(actoid, dmg, actoid.target_combatant)
-                    if not actoid.target_combatant.is_alive():
-                        # could be a wildshaped druid
-                        self.battle_map.remove_dead_combatant(actoid.target_combatant.get_original_form())   # TODO revisit if this is really needed
+                    self.battle_map.remove_combatant_if_dead(actoid.target_combatant)   # TODO revisit if this is really needed
                 path = path['tuples'][:FlamingSphereRamFactory.RANGE + 1]
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
                 return ActionResult.DMG
@@ -550,7 +543,7 @@ class ActionResolver:
         The core of action resolution
         @param action_type: action type
         @param args: packed arguments of the action, can take on different interpretations based on the action_type
-        @param combatant: originator of the action
+        @param combatant: initiator of the action
         @return: only relevant return here is DMG/MISS used for sentinel
         """
         combatant = combatant.get_current_form()  # Takes care of possible wildshape

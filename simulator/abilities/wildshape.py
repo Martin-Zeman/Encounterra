@@ -133,6 +133,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         Activation happens when the ability is either cancelled (loss of concentration) or expires
         """
         logger.info(f"{self.combatants[0]}'s wildshape fades")
+        self.combatants[0].current_wildshape_form.on_die(battle_map)
         battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         position = battle_map.get_combatant_position(self.combatants[0].current_wildshape_form)
         battle_map.remove_combatant(self.combatants[0].current_wildshape_form)

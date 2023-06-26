@@ -33,6 +33,9 @@ class MistyStepFactory(Factory):
         return "MistyStepFactory"
 
     def get_eligible_targets(self, battle_map):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return []  # Can't see while being swallowed
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatant),
                                                              rng=MistyStepFactory.range)
 

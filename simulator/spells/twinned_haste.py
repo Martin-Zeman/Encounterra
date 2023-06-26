@@ -36,6 +36,9 @@ class TwinnedHasteFactory(ThreatModifierFactory):
 
 
     def get_eligible_targets(self, battle_map):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return [self.combatant, None]
         ret = [a for a in battle_map.get_allies_within_radius(self.combatant, HasteFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]

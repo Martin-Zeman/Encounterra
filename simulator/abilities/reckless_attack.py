@@ -57,6 +57,9 @@ class RecklessAttackFactory(DirectThreatFactory):
 
 
     def get_eligible_targets(self, battle_map):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return [swallower]
         return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create_all(self, battle_map):

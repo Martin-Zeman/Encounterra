@@ -22,6 +22,9 @@ class WebFactory(DirectThreatFactory, RechargeFactory):
         return "WebFactory"
 
     def get_eligible_targets(self, battle_map):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return []  # Can hardly spin a web while being swallowed
         return [e for e in battle_map.get_enemies_without_hop_distance(self.combatant, self.distance - 1) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create(self, target_combatant):

@@ -67,17 +67,17 @@ class PhaseOfTurn(Enum):
 
 
 class ConditionWithoutDC:
-    def __init__(self, conditions, origin):
+    def __init__(self, conditions, initiator):
         self.conditions = conditions  # Could multiples such as grapple + restrained go often together
-        self.origin = origin
+        self.initiator = initiator
 
 
 class ConditionWithDC:
-    def __init__(self, conditions, st, dc, attacker, phase):
+    def __init__(self, conditions, st, dc, initiator, phase):
         self.conditions = conditions  # Could multiples such as grapple + restrained go often together
         self.st = st
         self.dc = dc
-        self.attacker = attacker
+        self.initiator = initiator
         self.phase = phase
 
 

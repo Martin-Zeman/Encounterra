@@ -18,15 +18,15 @@ class EffectTracker:
     def set_battle_map(self, battle_map):
         self.battle_map = battle_map
 
-    def add(self, effect, originator):
-        # TODO: Do I need the originator?
+    def add(self, effect, initiator):
+        # TODO: Do I need the initiator?
         # Refresh existing effect if available
         # for idx in range(len(self.effects)):
-        #     if type(self.effects[idx][0]) == type(effect) and originator is self.effects[idx][1]:
+        #     if type(self.effects[idx][0]) == type(effect) and initiator is self.effects[idx][1]:
         #         logger.info(f"Refreshing {effect}")
         #         self.effects[idx][0] = effect
         #         break
-        self.effects.append((effect, originator))
+        self.effects.append((effect, initiator))
 
     def start_of_turn(self, combatant):
         """

@@ -24,6 +24,9 @@ class ConstrictFactory(DirectThreatFactory):
         return "ConstrictFactory"
 
     def get_eligible_targets(self, battle_map):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return []  # Doesn't make sense to constrict anyone from the inside
         return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create(self, target_combatant):

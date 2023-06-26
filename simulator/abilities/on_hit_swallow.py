@@ -11,10 +11,11 @@ class OnHitSwallow(OnHit):
 
     def hit(self, attacker, attack, target, effect_tracker):
         logger.info(f"{target} is swallowed")
-        target.remove_condition(Conditions.GRAPPLED)
+        target.remove_all_conditions_of_type(Conditions.GRAPPLED)
         target.apply_condition(ConditionWithoutDC(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))
         attacker.swallowed_target = target
         attacker.constricted_target = None
+        effect_tracker.battle_map.remove_combatant(target)
 
     def calculate_threat(self, attacker, target, battle_map, *args, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite

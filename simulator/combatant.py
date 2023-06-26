@@ -91,6 +91,7 @@ class Combatant(ABC, ProtoCombatant):
         self.wears_metal = False
         self.constricted_target = None
         self.swallowed_target = None
+        self.swallowed = [False, None]
 
     def __str__(self):
         return self.name
@@ -106,6 +107,9 @@ class Combatant(ABC, ProtoCombatant):
 
     def is_alive(self):
         return self.curr_hp > 0
+
+    def on_die(self, battle_map):
+        pass
 
     def roll_initiative(self):
         self.curr_init = random.randint(1, 20) + self.init_bonus
@@ -363,13 +367,20 @@ class Combatant(ABC, ProtoCombatant):
         return dmg_type in self.resistances
 
     def apply_condition(self, condition: ConditionWithoutDC):
+        self.swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.swallowed # This is an optimization to speed up conditions look-up since it's done frequently
         self.conditions.append(condition)
 
-    def remove_condition(self, condition: Conditions, origin=None):
+    def remove_condition(self, condition: Conditions, initiator=None):
         for idx, cond in enumerate(self.conditions):
-            if (not origin or cond.origin is origin) and condition in cond.conditions:
+            if (not initiator or cond.initiator is initiator) and condition in cond.conditions:
+                self.swallowed = [False, None] if condition is Conditions.SWALLOWED else self.swallowed
                 del self.conditions[idx]
                 return
+
+    def remove_all_conditions_of_type(self, condition: Conditions):
+        self.swallowed = [False, None] if condition is Conditions.SWALLOWED else self.swallowed
+        self.dc_conditions = [dccond for dccond in self.dc_conditions if condition not in dccond.conditions]
+        self.conditions = [cond for cond in self.conditions if condition not in cond.conditions]
 
     def is_affected_by(self, condition: Conditions):
         for dc_cond in self.dc_conditions:
@@ -379,6 +390,17 @@ class Combatant(ABC, ProtoCombatant):
             if condition in cond.conditions:
                 return True
         return condition in self.conditions
+
+
+    def get_swallower(self):
+        return self.swallowed[1]
+        # for dc_cond in self.dc_conditions:
+        #     if Conditions.SWALLOWED in dc_cond.conditions:
+        #         return dc_cond.initiator
+        # for cond in self.conditions:
+        #     if Conditions.SWALLOWED in cond.conditions:
+        #         return cond.initiator
+        # return None
 
     def needs_to_break_out_of_grapple(self):
         for dc_cond in self.dc_conditions:
@@ -404,10 +426,15 @@ class Combatant(ABC, ProtoCombatant):
         return False
 
     def apply_dc_condition(self, condition: ConditionWithDC):
+        self.swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.swallowed  # This is an optimization to speed up conditions look-up since it's done frequently
         self.dc_conditions.append(condition)
 
-    def remove_dc_condition(self, condition: ConditionWithDC):
-        self.dc_conditions.remove(condition)
+    def remove_dc_condition(self, condition: ConditionWithDC, initiator=None):
+        for idx, cond in enumerate(self.dc_conditions):
+            if (not initiator or cond.initiator is initiator) and condition in cond.dc_conditions:
+                self.swallowed = [False, None] if Conditions.SWALLOWED in condition.conditions else self.swallowed
+                del self.dc_conditions[idx]
+                return
 
     def new_turn(self):
         self.has_action = True

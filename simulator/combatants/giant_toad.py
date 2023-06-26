@@ -1,11 +1,13 @@
 import copy
 
+import numpy as np
+
 from simulator.abilities.on_hit_auto_restrained import OnHitAutoRestrained
 from simulator.abilities.on_hit_swallow import OnHitSwallow
 from simulator.actions.action_types import Action, Reaction
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.misc import DamageType, SavingThrow, Size, parse_dmg_dice, roll_dice
+from simulator.misc import DamageType, SavingThrow, Size, parse_dmg_dice, roll_dice, Conditions
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -45,6 +47,21 @@ class GiantToad(Combatant):
             dmg_dice_sum = roll_dice(dice)
             logger.info(f"{self.name} is digesting {self.swallowed_target} for {dmg_dice_sum} dmg", extra={"team": self.team_color})
             self.swallowed_target.receive_dmg(dmg_dice_sum, DamageType.Acid)
+
+    def on_die(self, battle_map):
+        if self.swallowed_target:
+            logger.info(f"{self.swallowed_target} is spat out and no longer swallowed", extra={"team": self.team_color})
+            self.swallowed_target.remove_all_conditions_of_type(Conditions.SWALLOWED)  # This should remmove all the accompanying comditions too
+            self.swallowed_target = None
+            free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
+                                                          None,
+                                                          inflate_to_size=self.swallowed_target.size,
+                                                          rng=1, combatant=self.swallowed_target)
+            if not free_coords:
+                logger.error("No space around the dead Giant Toad to spit out the swallowed combatant")
+                return
+            else:
+                battle_map.set_combatant_coordinates(self.swallowed_target, np.array(free_coords[0]))
 
 
     def export_resources(self):

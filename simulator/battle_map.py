@@ -137,7 +137,7 @@ class Map:
             for x in range(self.size):
                 square = self.grid[x, y]
                 combatant = square.combatant
-                if combatant:
+                if combatant and not combatant.swallowed[1]:
                     row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + str(combatant)[-1] + "\x1b[0m\t"
                 elif square.terrain is Terrain.DIFFICULT_TERRAIN:
                     row_text += "\x1b[38;5;226m00\x1b[0m\t"
@@ -211,26 +211,15 @@ class Map:
             self.get_hop_distance = orig_dist_hop_func
             self.get_cartesian_distance = orig_dist_cartesian_func
 
-    @contextmanager
-    def replace_combatant_if_needed(self, combatant_old, combatant_new):
-        if combatant_old is not combatant_new:
-            try:
-                self.teams.replace_combatant(combatant_old, combatant_new)
-                position = self.get_combatant_position(combatant_old)
-                self.remove_combatant(combatant_old)
-                self.set_combatant_coordinates(combatant_new, position.get()[0])
-                yield self
-            finally:
-                self.teams.replace_combatant(combatant_new, combatant_old)
-                position = self.get_combatant_position(combatant_new)
-                self.remove_combatant(combatant_new)
-                self.set_combatant_coordinates(combatant_old, position.get()[0])
-        else:
-            yield self
-
 
     @contextmanager
     def replace_combatant_if_action_is_wildshape(self, action, combatant):
+        """
+        Replaces the combatant with the wildshaped form given by the action
+        :param action:
+        :param combatant:
+        :return:
+        """
         if isinstance(action, Wildshape):
             original_size = action.form.size
             try:
@@ -238,7 +227,7 @@ class Map:
                 position = self.get_combatant_position(combatant)
                 action.form.size = Size.MEDIUM  # TODO this is a hack, making the form medium to make sure it fits
                 self.remove_combatant(combatant)
-                self.set_combatant_coordinates(action.form, position.get()[0])
+                self.set_combatant_coordinates(action.form, position.get()[0])  # TODO shouldn't this also use find_wildshaped_coordinate
                 yield action.form
             finally:
                 action.form.size = original_size
@@ -252,6 +241,12 @@ class Map:
 
     @contextmanager
     def replace_combatant_if_action_by_wildshaped(self, action, combatant):
+        """
+        Replaces the combatant's position with the position of a wilshaped form if the actor of the action is a wildshaped for
+        :param action:
+        :param combatant:
+        :return:
+        """
         if combatant is not action.factory.combatant:
             original_position = self.get_combatant_position(combatant)
             try:
@@ -309,6 +304,13 @@ class Map:
         self.effect_tracker = effect_tracker
 
     def place_circular_element(self, coord, terrain_type, radius=0):
+        """
+        Places a terrain element of a 'circular' type onto the map
+        :param coord: origin coordinate of the terrain element
+        :param terrain_type: difficult terrain or impassable terrain
+        :param radius: radius of the lement
+        :return: root coordinate of the wildshaped form
+        """
         N = self.size
         if radius == 0:
             x = max(0, min(coord[0], N - 1))
@@ -936,7 +938,10 @@ class Map:
 
     def get_combatant_position(self, combatant):
         try:
-            return self.combatant_coordinate_cache[combatant]
+            if not combatant.swallowed[0]:
+                return self.combatant_coordinate_cache[combatant]
+            else:
+                return self.combatant_coordinate_cache[combatant.swallowed[1]]
         except KeyError as e:
             logger.error(e)
             return None
@@ -981,8 +986,8 @@ class Map:
         :return: list of numpy.array coordinates
         """
         assert min_dist > 0
-        self_coord = self.combatant_coordinate_cache[combatant]
-        target_coord = self.combatant_coordinate_cache[target_combatant]
+        self_coord = self.get_combatant_position(combatant)
+        target_coord = self.get_combatant_position(target_combatant)
         coords = []
         for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
             potential_self_coord = CombatantCoords(np.array([x, y]), combatant)
@@ -1033,16 +1038,25 @@ class Map:
             self.grid[coord[0], coord[1]].remove_combatant()
         del self.combatant_coordinate_cache[combatant]
 
-    def remove_dead_combatant(self, combatant):
+    def remove_combatant_if_dead(self, combatant):
         """
         Removes a dead combatant from the grid
         :param combatant:
-        :return:
+        :return: new target which can be either None in case both forms are dead or the combatant's original form
         """
-        if combatant.get_original_form() is combatant:
+        if combatant.get_original_form() is combatant and not combatant.is_alive():
             logger.info(f"{combatant} died")
-        self.remove_combatant(combatant)
-
+            combatant.on_die(self)
+            self.remove_combatant(combatant)
+            return None
+        else:
+            if not combatant.get_original_form().is_alive():
+                combatant.get_original_form.on_die(self)
+                logger.info(f"{combatant.get_original_form()} died")
+                self.remove_combatant(combatant.get_original_form())
+                return None
+            else:
+                return combatant.get_original_form()
     # def clear(self):
     #     for row in self.grid:
     #         for square in row:
