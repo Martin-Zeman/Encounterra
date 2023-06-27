@@ -372,3 +372,40 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
                 assert test_bugbear.is_affected_by(Conditions.BLINDED)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+
+def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect_tracker, test_giant_toad, test_moon_druid):
+    """
+    We assert that the druid doesn't plan a wildshape action when grappled and unable to move to a place where there's the space to do so.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [test_moon_druid, test_giant_toad]
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([1, 14]))
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([0, 12]))
+    battle_map.build_adjacency_matrix()
+    test_moon_druid.ac = 0  # Make sure the bite hits (expect for nat 1)
+    for af in test_giant_toad.action_factories:
+        try:
+            af[1].to_hit = 100
+        except AttributeError:
+            pass
+    test_moon_druid.athletics = -20  # Make sure it can't break the grapple
+    test_moon_druid.acrobatics = -20  # Make sure it can't break the grapple
+
+    try:
+        actoid1 = get_action(test_giant_toad, battle_map)
+        action_resolver.resolve_action(actoid1, test_giant_toad)
+        if test_moon_druid.is_affected_by(Conditions.GRAPPLED):
+            actoid2 = get_action(test_moon_druid, battle_map)
+            action_resolver.resolve_action(actoid2, test_moon_druid)
+            if test_moon_druid.is_affected_by(Conditions.GRAPPLED):  # Still grappled
+                actoid3 = get_action(test_moon_druid, battle_map)
+                assert str(actoid3) == "None"
+    except Exception as e:
+        assert False, f"Raised an exception {e}"

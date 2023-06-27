@@ -303,7 +303,7 @@ def build_action_dag(combatant, battle_map, action_fsm, transition_name_to_actio
     if not post_misty_step_actions:
         post_misty_step_actions = []
 
-    if combatant.movement > 0:
+    if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED):
         action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(battle_map, distances, shortest_paths) for tn in transition_names}
     else:
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])

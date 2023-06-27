@@ -29,7 +29,7 @@ def test_random_matchup():
 
         num_blue_combatants = random.randint(1, 4)
         # num_red_combatants = random.randint(1, 4)
-        num_red_combatants = random.randint(1, 1)
+        num_red_combatants = random.randint(1, 2)
 
         # blue_team = random.sample(combatant_pool, num_blue_combatants)
         blue_team = [GiantToad]

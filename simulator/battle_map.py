@@ -298,7 +298,7 @@ class Map:
         original_coordinate = (original_coordinate[1], self.size - 1 - original_coordinate[0])
         result_coordinates.sort(key=lambda point: euclidean(original_coordinate, point))
 
-        return result_coordinates[0]
+        return result_coordinates[0] if result_coordinates else None
 
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker

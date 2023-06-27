@@ -243,4 +243,4 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         return final_coords
 
     def is_current_coord_eligible(self, battle_map):
-        return True
+        return True if battle_map.find_wildshaped_coordinate(self.factory.combatant, self.form.size) else False

@@ -212,10 +212,13 @@ class ActionResolver:
             final_modifier = reconcile_roll_types(types)
 
             if final_modifier is RollType.STRAIGHT:
+                logger.info(f"{caster} rolls for {spell}", extra={"team": self.teams.get_team(caster)})
                 rolled = random.randint(1, 20)
             elif final_modifier is RollType.ADVANTAGE:
+                logger.info(f"{caster} rolls for {spell} at advantage", extra={"team": self.teams.get_team(caster)})
                 rolled = max(random.randint(1, 20), random.randint(1, 20))
             else:
+                logger.info(f"{caster} rolls for {spell} at disadvantage", extra={"team": self.teams.get_team(caster)})
                 rolled = min(random.randint(1, 20), random.randint(1, 20))
 
             multiplier = 1
@@ -255,12 +258,13 @@ class ActionResolver:
         final_modifier = reconcile_roll_types(types)
 
         if final_modifier is RollType.STRAIGHT:
+            logger.info(f"{caster} rolls for {spell}", extra={"team": self.teams.get_team(caster)})
             rolled = random.randint(1, 20)
         elif final_modifier is final_modifier.ADVANTAGE:
-            logger.info(f"{caster} rolls for {spell} with advantage", extra={"team": self.teams.get_team(caster)})
+            logger.info(f"{caster} rolls for {spell} at advantage", extra={"team": self.teams.get_team(caster)})
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
-            logger.info(f"{caster} rolls for {spell} with disadvantage", extra={"team": self.teams.get_team(caster)})
+            logger.info(f"{caster} rolls for {spell} at disadvantage", extra={"team": self.teams.get_team(caster)})
             rolled = min(random.randint(1, 20), random.randint(1, 20))
 
         multiplier = 1
@@ -344,14 +348,14 @@ class ActionResolver:
             types = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
 
         final_modifier = reconcile_roll_types(types)
-        logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()}" + (f" at {final_modifier.name}" if final_modifier is not RollType.STRAIGHT else ""), extra={"team": self.teams.get_team(attacker)})
         if final_modifier is RollType.STRAIGHT:
+            logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()}", extra={"team": self.teams.get_team(attacker)})
             rolled = random.randint(1, 20)
         elif final_modifier is RollType.ADVANTAGE:
-            logger.info(f"{attacker} rolls for {attack} with advantage", extra={"team": self.teams.get_team(attacker)})
+            logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()} at advantage", extra={"team": self.teams.get_team(attacker)})
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
-            logger.info(f"{attacker} rolls for {attack} with disadvantage", extra={"team": self.teams.get_team(attacker)})
+            logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()} at disadvantage", extra={"team": self.teams.get_team(attacker)})
             rolled = min(random.randint(1, 20), random.randint(1, 20))
 
         multiplier = 1
@@ -366,9 +370,9 @@ class ActionResolver:
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
-            logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
+            # logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
             extra_dmg = [(multiplier * roll_dice(parse_dmg_dice(e[0])), e[1]) for e in attack.factory.extra_dmg]
-            logger.info(f"and {extra_dmg} on the extra dmg dice", extra={"team": self.teams.get_team(attacker)})
+            # logger.info(f"and {extra_dmg} on the extra dmg dice", extra={"team": self.teams.get_team(attacker)})
             total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
             if attacker.has_passive(Passive.FANATIC_ADVANTAGE) and final_modifier is RollType.ADVANTAGE and not attacker.already_used_fanatic_advantage:
                 logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
@@ -505,10 +509,12 @@ class ActionResolver:
                 broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollType.STRAIGHT)
                 if broken_out and getattr(grapple.initiator, "constricted_target", None):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
+                    print(f"{combatant} is has broken out of grapple")
                     grapple.initiator.constricted_target = None
                     combatant.break_out_of_grapple()
                 else:
                     logger.info(f"{combatant} remains grappled")
+                    print(f"{combatant} remains grappled")
             case BonusAction.FLAMING_SPHERE_RAM:
                 adj = self.battle_map.build_flaming_sphere_adjacency_matrix()
                 _, shortest_paths = self.battle_map.dijkstra(actoid.factory.action_enabler_effect.origin, adj)
