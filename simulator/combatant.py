@@ -91,7 +91,7 @@ class Combatant(ABC, ProtoCombatant):
         self.wears_metal = False
         self.constricted_target = None
         self.swallowed_target = None
-        self.swallowed = [False, None]
+        self.is_swallowed = [False, None]
 
     def __str__(self):
         return self.name
@@ -367,18 +367,18 @@ class Combatant(ABC, ProtoCombatant):
         return dmg_type in self.resistances
 
     def apply_condition(self, condition: ConditionWithoutDC):
-        self.swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.swallowed # This is an optimization to speed up conditions look-up since it's done frequently
+        self.is_swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed # This is an optimization to speed up conditions look-up since it's done frequently
         self.conditions.append(condition)
 
     def remove_condition(self, condition: Conditions, initiator=None):
         for idx, cond in enumerate(self.conditions):
             if (not initiator or cond.initiator is initiator) and condition in cond.conditions:
-                self.swallowed = [False, None] if condition is Conditions.SWALLOWED else self.swallowed
+                self.is_swallowed = [False, None] if condition is Conditions.SWALLOWED else self.is_swallowed
                 del self.conditions[idx]
                 return
 
     def remove_all_conditions_of_type(self, condition: Conditions):
-        self.swallowed = [False, None] if condition is Conditions.SWALLOWED else self.swallowed
+        self.is_swallowed = [False, None] if condition is Conditions.SWALLOWED else self.is_swallowed
         self.dc_conditions = [dccond for dccond in self.dc_conditions if condition not in dccond.conditions]
         self.conditions = [cond for cond in self.conditions if condition not in cond.conditions]
 
@@ -393,7 +393,7 @@ class Combatant(ABC, ProtoCombatant):
 
 
     def get_swallower(self):
-        return self.swallowed[1]
+        return self.is_swallowed[1]
         # for dc_cond in self.dc_conditions:
         #     if Conditions.SWALLOWED in dc_cond.conditions:
         #         return dc_cond.initiator
@@ -426,13 +426,13 @@ class Combatant(ABC, ProtoCombatant):
         return False
 
     def apply_dc_condition(self, condition: ConditionWithDC):
-        self.swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.swallowed  # This is an optimization to speed up conditions look-up since it's done frequently
+        self.is_swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed  # This is an optimization to speed up conditions look-up since it's done frequently
         self.dc_conditions.append(condition)
 
     def remove_dc_condition(self, condition: ConditionWithDC, initiator=None):
         for idx, cond in enumerate(self.dc_conditions):
             if (not initiator or cond.initiator is initiator) and condition in cond.dc_conditions:
-                self.swallowed = [False, None] if Conditions.SWALLOWED in condition.conditions else self.swallowed
+                self.is_swallowed = [False, None] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed
                 del self.dc_conditions[idx]
                 return
 

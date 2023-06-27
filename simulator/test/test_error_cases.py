@@ -14,7 +14,7 @@ from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
-    test_ogre, test_moon_druid, teams, effect_tracker, battle_map
+    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map
 from simulator.actions.action_selector import get_action
 from simulator.utils.utils import preallocate_wildshape_forms
 
@@ -826,5 +826,37 @@ def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_
         action_resolver.resolve_action(actoid5, test_moon_druid)
         actoid6 = get_action(test_moon_druid, battle_map)
         action_resolver.resolve_action(actoid6, test_moon_druid)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_19(battle_map, teams, effect_tracker, test_giant_toad):
+    """
+    Two giants toads, one of which is hasted. Bite and swallow wasn't being excluded despite not having a grappled target
+    """
+    # TODO It's not working
+    test_giant_toad_2 = copy.deepcopy(test_giant_toad)
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    effect_tracker.set_battle_map(battle_map)
+    combatants = [test_giant_toad, test_giant_toad_2]
+    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_giant_toad_2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([4, 8]))
+    battle_map.set_combatant_coordinates(test_giant_toad_2, np.array([4, 10]))
+
+    battle_map.build_adjacency_matrix()
+
+    test_giant_toad.add_hasted_factories()
+    test_giant_toad.has_haste_action = True
+
+    try:
+        actoid1 = get_action(test_giant_toad, battle_map)
+        action_resolver.resolve_action(actoid1, test_giant_toad)
+        actoid2 = get_action(test_giant_toad, battle_map)
+        action_resolver.resolve_action(actoid2, test_giant_toad)
+        actoid3 = get_action(test_giant_toad, battle_map)
+        action_resolver.resolve_action(actoid3, test_giant_toad)
     except Exception as e:
         assert False, f"Raised an exception {e}"

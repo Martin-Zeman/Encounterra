@@ -137,7 +137,7 @@ class Map:
             for x in range(self.size):
                 square = self.grid[x, y]
                 combatant = square.combatant
-                if combatant and not combatant.swallowed[1]:
+                if combatant and not combatant.is_swallowed[1]:
                     row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + str(combatant)[-1] + "\x1b[0m\t"
                 elif square.terrain is Terrain.DIFFICULT_TERRAIN:
                     row_text += "\x1b[38;5;226m00\x1b[0m\t"
@@ -938,10 +938,10 @@ class Map:
 
     def get_combatant_position(self, combatant):
         try:
-            if not combatant.swallowed[0]:
+            if not combatant.is_swallowed[0]:
                 return self.combatant_coordinate_cache[combatant]
             else:
-                return self.combatant_coordinate_cache[combatant.swallowed[1]]
+                return self.combatant_coordinate_cache[combatant.is_swallowed[1]]
         except KeyError as e:
             logger.error(e)
             return None
