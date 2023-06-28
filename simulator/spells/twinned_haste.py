@@ -1,5 +1,6 @@
 from itertools import combinations
 
+from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect, EffectType
@@ -35,30 +36,32 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         return "TwinnedHasteFactory"
 
 
-    def get_eligible_targets(self, battle_map):
+    def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [self.combatant, None]
+        battle_map = Map.get()
         ret = [a for a in battle_map.get_allies_within_radius(self.combatant, HasteFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         ret = combinations(ret, 2)
         return ret
 
-    def create_all(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
+    def create_all(self):
+        targets = self.get_eligible_targets()
         return [TwinnedHaste(t, self) for t in targets]
 
     def create(self, targets):
         return TwinnedHaste(targets, self)
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
         if target.haste_action_factories:  # No benefit if already hasted
             return 0
+        battle_map = Map.get()
         enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
@@ -75,7 +78,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             enemy_attacks = get_attacks(enemy)
             if not enemy_attacks:
                 continue
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(battle_map, target, {ThreatModifierType.TARGET_AC: 2}), enemy_attacks, 0)
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(target, {ThreatModifierType.TARGET_AC: 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
 
             # TODO include the ST-based abilities here
@@ -99,14 +102,14 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
     def shorthand_str(self):
         return "Twinned Haste"
 
-    def activate(self, battle_map):
+    def activate(self):
         self.factory.combatant.is_concentrating = True
         for target in self.targets:
             target.ac += 2
             target.add_hasted_factories()
             target.has_haste_action = True  # TODO Remove this
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         self.factory.combatant.is_concentrating = False
         for target in self.targets:
             target.ac -= 2
@@ -114,25 +117,22 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
             self.factory.effect_tracker.create_post_haste_lethargy(target)
             target.has_haste_action = False  # TODO Remove this
 
-    def is_affecting(self, combatant, battle_map):
+    def is_affecting(self, combatant):
         return combatant in self.targets
 
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
         assert not(self.targets[0] is None and self.targets[1] is None), "Both of the twinned haste targets are None. This should not happen, there should always be at least self as target"
-        target1_threat = self.factory.calculate_threat_to_target(battle_map, self.targets[0]) if self.targets[0] is not None else 0
-        target2_threat = self.factory.calculate_threat_to_target(battle_map, self.targets[1]) if self.targets[1] is not None else 0
+        target1_threat = self.factory.calculate_threat_to_target(self.targets[0]) if self.targets[0] is not None else 0
+        target2_threat = self.factory.calculate_threat_to_target(self.targets[1]) if self.targets[1] is not None else 0
         return target1_threat + target2_threat
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         if self.targets[0] is self.factory.combatant:
             coords_for_first = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         else:
@@ -150,6 +150,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
                                                                               rng=TwinnedHasteFactory.range)
         return coords_for_first.intersection(coords_for_second)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= TwinnedHasteFactory.range and \
             battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range

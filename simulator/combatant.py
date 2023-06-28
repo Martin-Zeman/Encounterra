@@ -7,6 +7,7 @@ from contextlib import contextmanager
 
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from simulator.battle_map import Map
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
 from enum import Enum
@@ -108,7 +109,7 @@ class Combatant(ABC, ProtoCombatant):
     def is_alive(self):
         return self.curr_hp > 0
 
-    def on_die(self, battle_map):
+    def on_die(self):
         pass
 
     def roll_initiative(self):
@@ -486,13 +487,13 @@ class Combatant(ABC, ProtoCombatant):
 
 
     @contextmanager
-    def as_if_used_action_enabler(self, action, battle_map):
+    def as_if_used_action_enabler(self, action):
         if isinstance(action, ActionEnablerEffect):
             try:
-                action.enable(battle_map)
+                action.enable()
                 yield True
             finally:
-                action.disable(battle_map)
+                action.disable()
         else:
             yield False
 
@@ -531,12 +532,11 @@ class Combatant(ABC, ProtoCombatant):
         return None
 
 
-    def calculate_action_plan(self, battle_map, distances, shortest_paths):
+    def calculate_action_plan(self, distances, shortest_paths):
         """
         A thin wrapper for the calculation of action plan
-        :param battle_map:
         :param distances: the distances to all squares (result of Dijkstra)
         :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
         :return: the action plan
         """
-        return self.action_plan_strategy.calculate_action_plan(battle_map, distances, shortest_paths)
+        return self.action_plan_strategy.calculate_action_plan(distances, shortest_paths)

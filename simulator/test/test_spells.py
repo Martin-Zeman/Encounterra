@@ -17,7 +17,6 @@ def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, t
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
@@ -26,22 +25,21 @@ def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, t
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([5, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
     try:
         hf = HasteFactory(Action.HASTE, test_draconic_sorcerer_5lvl, effect_tracker)
         haste = hf.create(test_bugbear)
         action_resolver.resolve_action(haste, test_draconic_sorcerer_5lvl)
 
-        actoid1 = get_action(test_bugbear, battle_map)
+        actoid1 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid1, test_bugbear)
-        actoid2 = get_action(test_bugbear, battle_map)
+        actoid2 = get_action(test_bugbear)
         assert str(actoid1) == "Morningstar on TotemBarbarian5Lvl" or str(actoid2) == "Morningstar on TotemBarbarian5Lvl"
         assert str(actoid1) == "Hasted Morningstar on TotemBarbarian5Lvl" or str(actoid2) == "Hasted Morningstar on TotemBarbarian5Lvl"
         action_resolver.resolve_action(actoid2, test_bugbear)
-        actoid3 = get_action(test_bugbear, battle_map)
+        actoid3 = get_action(test_bugbear)
         assert str(actoid3) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"

@@ -2,6 +2,7 @@ from functools import cache
 
 from simulator.actions.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -26,14 +27,14 @@ class DisengageFactory(ThreatModifierFactory):
     def get_kwargs(self):
         return {'combatant': self.combatant, 'action_type': self.action_type}
 
-    def create_all(self, battle_map):
+    def create_all(self):
         return [Disengage(self.combatant, self)]
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         Calculates the direct AoO threat the disengage would avoid
         """
-        return target.aoo_factory[1].calculate_threat_to_target(battle_map, self.combatant)
+        return target.aoo_factory[1].calculate_threat_to_target(self.combatant)
 
 
 class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
@@ -64,30 +65,27 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
             prefix = "Cunning "
         return prefix + f"Disengage"
 
-    def activate(self, battle_map):
+    def activate(self):
         logger.info(f"{self.combatants[0]} disengages")
         self.factory.combatant.has_disengaged = True
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         logger.info(f"{self.combatants[0]}'s disengage fades")
         self.factory.combatant.has_disengaged = False
 
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         """
         Calculate how much dmg would the Disengage potentially mitigate. This will be the same as the one for the factory.
         """
         # adjacent_enemies = battle_map.get_adjacent_enemies(combatant)
-        # return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(battle_map, combatant), adjacent_enemies, 0)
+        # return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(combatant), adjacent_enemies, 0)
         return 0  # Threat that a Disengage would potentially mitigate is calculated in a different way
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         # return None  # We don't want to have any coords pre-pended in the DAG
         return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
         return True

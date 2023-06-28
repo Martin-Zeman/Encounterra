@@ -1,4 +1,5 @@
 from simulator.actions.action_types import BonusAction
+from simulator.battle_map import Map
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -46,7 +47,8 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         return {'dc': self.dc, 'caster': self.combatant}
 
 
-    def create_all(self, battle_map):
+    def create_all(self):
+        battle_map = Map.get()
         targets = battle_map.get_enemies(self.combatant)
         return [TwinnedHoldPerson(t, self) for t in targets]
 
@@ -54,9 +56,10 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         return TwinnedHoldPerson(target_combatant, self)
 
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
+        battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= TwinnedHoldPersonFactory.range:
             return 0 * get_saving_throw_success_prob(self.dc, target.saving_throws[self.saving_throw])# TODO
         return 0
@@ -77,32 +80,30 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HOLD_PERSON else "") + "Hold Person"
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-
     def get_effect_type(self):
         return EffectType.HOLD_PERSON
 
-    def activate(self, battle_map):
+    def activate(self,):
         self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         self.target.remove_condition(Conditions.PARALYZED, self)
 
-    def is_affecting(self, combatant, battle_map):
+    def is_affecting(self, combatant):
         return combatant is self.target
 
 
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(battle_map, self.target)
+    def calculate_threat(self, *args, **kwargs):
+        return self.factory.calculate_threat_to_target(self.target)
 
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=HoldPersonFactory.range, combatant=self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HoldPersonFactory.range

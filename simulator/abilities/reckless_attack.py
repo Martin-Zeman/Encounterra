@@ -1,5 +1,6 @@
 import math
 
+from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -56,20 +57,22 @@ class RecklessAttackFactory(DirectThreatFactory):
         return "RecklessAttackFactory" + self.name
 
 
-    def get_eligible_targets(self, battle_map):
+    def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [swallower]
+        battle_map = Map.get()
         return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
-    def create_all(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
+    def create_all(self):
+        targets = self.get_eligible_targets()
         return [RecklessAttack(t, self) for t in targets]
 
-    def calculate_threat_out_approx(self, combatant, battle_map, roll_type=RollType.ADVANTAGE):
+    def calculate_threat_out_approx(self, combatant, roll_type=RollType.ADVANTAGE):
         """
         Helper function which calculates the average potential threat_out over all potential targets including all possible mods
         """
+        battle_map = Map.get()
         potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         if not potential_targets:
             return 0
@@ -85,19 +88,20 @@ class RecklessAttackFactory(DirectThreatFactory):
         dmg_acc /= len(potential_targets)
         return dmg_acc
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         try:
             consider_dist = kwargs["consider_dist"]
         except KeyError:
             consider_dist = True
         dmg = 0
+        battle_map = Map.get()
         if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
             dmg = mean_dmg(self.to_hit + ROLL_TYPE[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_TYPE_CRIT[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         # even the single target calculation the combatant is still more vulnerable to all potential attackers
-        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
+        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return dmg - incoming_threat_mod_acc
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications.
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
@@ -109,6 +113,7 @@ class RecklessAttackFactory(DirectThreatFactory):
             consider_dist = True
 
         baseline = 0
+        battle_map = Map.get()
         if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
             baseline = mean_dmg(self.to_hit + ROLL_TYPE[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
                                     target.ac, self.crit_range * ROLL_TYPE_CRIT[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
@@ -131,12 +136,12 @@ class RecklessAttackFactory(DirectThreatFactory):
                 total_crit = 20 if auto_crit else total_crit
                 modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
-        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, battle_map, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
+        incoming_threat_mod_acc = calculate_threat_in_mod(self.combatant, 6, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
         return modified - baseline - incoming_threat_mod_acc
 
-    def calculate_max_threat(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
-        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+    def calculate_max_threat(self):
+        targets = self.get_eligible_targets()
+        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
 
 
 class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
@@ -158,34 +163,33 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def shorthand_str(self):
         return "Reckless Attack"
 
-    def activate(self, battle_map):
+    def activate(self):
         self.combatants[0].reckless_attack_active = True
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         self.combatants[0].reckless_attack_active = False
 
     def get_dmg_type(self):
         return self.factory.dmg_type
 
-    # def clear_cache(self):
-    #     self.calculate_threat.cache_clear()
 
-    # @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, **kwargs)
+    def calculate_threat(self, *args, **kwargs):
+        return self.factory.calculate_threat_to_target(self.target_combatant, **kwargs)
 
-    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         The delta in threat when modifiers are applied on this ability.
         """
-        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modifiers, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(self.target_combatant, modifiers, *args, **kwargs)
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
                                                        distances,
                                                        inflate_to_size=self.factory.combatant.size,
                                                        rng=self.factory.range,
                                                        combatant=self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)

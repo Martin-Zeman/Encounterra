@@ -6,5 +6,5 @@ class CombatantEffect(Effect):
     def __init__(self, combatants):
         self.combatants = combatants
 
-    def is_affecting(self, combatant, battle_map):
+    def is_affecting(self, combatant):
         return combatant in self.combatants

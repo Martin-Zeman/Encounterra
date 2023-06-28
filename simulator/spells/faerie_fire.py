@@ -1,5 +1,6 @@
 import numpy as np
 
+from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -41,31 +42,32 @@ class FaerieFireFactory(ThreatModifierFactory):
         return {'effect_tracker': self.effect_tracker, 'combatant': self.combatant}
 
 
-    def get_eligible_targets(self, battle_map):
+    def get_eligible_targets(self):
         # TODO
         swallower = self.combatant.get_swallower()
         if swallower:
             return []
+        battle_map = Map.get()
         ret = [a for a in battle_map.get_allies_within_radius(self.combatant, FaerieFireFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
 
-    def create_all(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
+    def create_all(self):
+        targets = self.get_eligible_targets()
         return [FaerieFire(t, self) for t in targets]
 
     def create(self, target_combatant):
         return FaerieFire(target_combatant, self)
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
         return 0 # TODO
 
-    def calculate_max_threat(self, battle_map):
+    def calculate_max_threat(self):
         return 0  # TODO
 
 class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect):
@@ -83,10 +85,11 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + "Faerie Fire"
 
-    def is_affecting(self, combatant, battle_map):
+    def is_affecting(self, combatant):
         return combatant in self.affected_combatants
 
-    def activate(self, battle_map):
+    def activate(self):
+        battle_map = Map.get()
         potentially_affected_combatants = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
@@ -96,38 +99,37 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
                 self.affected_combatants.append(pac)
 
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         pass  # TODO remove concentration?
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
 
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         return 0  # TODO
 
-    def calculate_threat_mod(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_mod(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
-    def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
+    def threat_on_end_of_turn(self, target, *args, **kwargs):
         return 0
 
-    def threat_on_enter(self, battle_map, target, *args, **kwargs):
+    def threat_on_enter(self, target, *args, **kwargs):
         return 0
 
-    def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
+    def threat_on_start_of_turn(self, target, *args, **kwargs):
         return 0
 
-    def threat_on_move_within(self, battle_map, target, *args, **kwargs):
+    def threat_on_move_within(self, target, *args, **kwargs):
         return 0
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FaerieFireFactory.range, combatant=self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FaerieFireFactory.range
 
     def on_enter(self, combatant):

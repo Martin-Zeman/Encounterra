@@ -1,6 +1,7 @@
 from functools import cache
 
 from simulator.actions.action_types import BonusAction
+from simulator.battle_map import Map
 from simulator.misc import DamageType, SavingThrow
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
@@ -31,7 +32,8 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         return "FlamingSphereRamFactory"
 
-    def create_all(self, battle_map):
+    def create_all(self):
+        battle_map = Map.get()
         enemies = battle_map.get_enemies(self.combatant)
         result = []
         for enemy in enemies:
@@ -44,13 +46,13 @@ class FlamingSphereRamFactory(DirectThreatFactory):
     def create(self, target_combatant, coord):
         return FlamingSphereRam(target_combatant, coord, self)
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         Calculates threat to one specific target
         """
         return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type))
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -71,21 +73,19 @@ class FlamingSphereRam(Actoid, DirectThreat):
     def shorthand_str(self):
         return f"Flaming Sphere Ram"
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
 
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant)
+    def calculate_threat(self, *args, **kwargs):
+        return self.factory.calculate_threat_to_target(self.target_combatant)
 
-    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Doesn't apply here
 
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
         return True
 
     def move_effect(self, coord):

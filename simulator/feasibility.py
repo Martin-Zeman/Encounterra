@@ -2,6 +2,7 @@ from simulator.abilities.rage import Rage
 from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.abilities.totem_rage import TotemRage
 from simulator.actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction
+from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import Conditions, Size
 import logging
@@ -10,7 +11,8 @@ import numpy as np
 logger = logging.getLogger("EncounTroll")
 
 
-def check_feasibility(combatant, action, battle_map):
+def check_feasibility(combatant, action):
+    battle_map = Map.get()
     action_type = action.factory.action_type
     if isinstance(action_type, Action):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
@@ -264,14 +266,14 @@ def check_feasibility(combatant, action, battle_map):
         return False
 
 
-def check_feasibility_light(combatant, action, battle_map):
+def check_feasibility_light(combatant, action):
     """
     Checks feasibility in terms of resources and combat rules. Doesn't check arguments of actions.
     :param combatant: initiator of the action
     :param action: action to be considered in form of a tuple (action_type, action_factory)
-    :param battle_map:
     :return: True if feasible, false otherwise
     """
+    battle_map = Map.get()
     action_type = action[0]
     if isinstance(action_type, Action):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
@@ -442,5 +444,5 @@ def check_feasibility_light(combatant, action, battle_map):
         return False
 
 
-def get_feasible_factories(actions, combatant, battle_map):
-    return [a for a in actions if check_feasibility_light(combatant, a, battle_map)]
+def get_feasible_factories(actions, combatant):
+    return [a for a in actions if check_feasibility_light(combatant, a)]

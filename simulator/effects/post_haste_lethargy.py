@@ -10,8 +10,8 @@ class PostHasteLethargy(CombatantEffect, LimitedDurationEffect):
     def get_effect_type(self):
         return EffectType.POST_HASTE_LETHARGY
 
-    def activate(self, battle_map):
+    def activate(self):
         pass
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         pass

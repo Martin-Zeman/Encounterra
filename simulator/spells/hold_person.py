@@ -1,4 +1,5 @@
 from simulator.actions.action_types import BonusAction
+from simulator.battle_map import Map
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -45,7 +46,8 @@ class HoldPersonFactory(ThreatModifierFactory):
         return {'dc': self.dc, 'caster': self.combatant}
 
 
-    def create_all(self, battle_map):
+    def create_all(self):
+        battle_map = Map.get()
         targets = battle_map.get_enemies(self.combatant)
         return [HoldPerson(t, self) for t in targets]
 
@@ -53,9 +55,10 @@ class HoldPersonFactory(ThreatModifierFactory):
         return HoldPerson(target_combatant, self)
 
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
+        battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
             return 0
 
@@ -65,13 +68,13 @@ class HoldPersonFactory(ThreatModifierFactory):
         max_action_threat = 0
         for f in target.action_factories:
             if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_action_threat = max(max_action_threat, f[1].calculate_max_threat(battle_map))
+                max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
         for f in target.bonus_action_factories:
             if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_action_threat = max(max_action_threat, f[1].calculate_max_threat(battle_map))
+                max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
         threat_acc += max_action_threat
 
-        threat_acc += calculate_threat_in_mod(self.combatant, 6, battle_map, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE)
+        threat_acc += calculate_threat_in_mod(self.combatant, 6, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE)
         # TODO do something similar for the crit range
 
         p_success = get_saving_throw_success_prob(self.dc, target.saving_throws[self.saving_throw])
@@ -81,9 +84,9 @@ class HoldPersonFactory(ThreatModifierFactory):
             p_success *= p_success
         return total_threat
 
-    def calculate_max_threat(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
-        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+    def calculate_max_threat(self):
+        targets = self.get_eligible_targets()
+        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
 
 
 class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier):
@@ -101,32 +104,30 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HOLD_PERSON else "") + "Hold Person"
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
 
     def get_effect_type(self):
         return EffectType.HOLD_PERSON
 
-    def activate(self, battle_map):
+    def activate(self):
         self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         self.target.remove_condition(Conditions.PARALYZED, self)
 
-    def is_affecting(self, combatant, battle_map):
+    def is_affecting(self, combatant):
         return combatant is self.target
 
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(battle_map, self.target)
+    def calculate_threat(self, *args, **kwargs):
+        return self.factory.calculate_threat_to_target(self.target)
 
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=HoldPersonFactory.range, combatant=self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HoldPersonFactory.range

@@ -21,7 +21,6 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     CustomLogger(LogLevel.WARNING)
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
@@ -29,14 +28,14 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 4]))  # Have to set it for fireball placement
 
-    # fsm, transition_mapping, _ = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
+    # fsm, transition_mapping, _ = generate_action_fsm(test_draconic_sorcerer_5lvl)
     # assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_faurung_pre_coords.png', prog='dot')
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
-    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
-    dag = build_action_dag(test_draconic_sorcerer_5lvl, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl)
+    dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # dfs.get_graph().draw('state_diagram_faurung_with_coords',format='svg', prog='dot')
 
     # Tests the Misty Step movement + Firebolt
@@ -59,7 +58,6 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
 def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
         battle_map.build_adjacency_matrix()
         battle_map.set_effect_tracker(effect_tracker)
-        effect_tracker.set_battle_map(battle_map)
         teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
         teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
         # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
@@ -70,8 +68,8 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         # Pre-calculate Dijkstra for the combatant
         distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
         get_aoe_and_aoo_threat_for_increment.cache_clear()
-        fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
-        dag = build_action_dag(test_draconic_sorcerer_5lvl, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+        fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl)
+        dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
         transitions = dag.get_available_transitions()
         # Tests regular movement + quickened fireball
         assert dag.state == '0'
@@ -99,7 +97,6 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
 def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
@@ -110,8 +107,8 @@ def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracke
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
-    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
-    dag = build_action_dag(test_draconic_sorcerer_5lvl, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl)
+    dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests regular movement + fireball
     assert dag.state == '0'
     dag.trigger("m_(2, 3)")
@@ -133,7 +130,6 @@ def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracke
 def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
@@ -144,8 +140,8 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
-    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
-    dag = build_action_dag(test_draconic_sorcerer_5lvl, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl)
+    dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests regular movement + staff of defence attack
     assert dag.state == '0'
     dag.trigger("m_(9, 10)")
@@ -171,7 +167,6 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
                                                       test_bugbear):
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
@@ -182,8 +177,8 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
-    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
-    dag = build_action_dag(test_draconic_sorcerer_5lvl, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl)
+    dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests Misty Step movement + staff of defence attack
     assert dag.state == '0'
     dag.trigger("ms_(9, 10)")
@@ -197,7 +192,6 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
 def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
@@ -208,8 +202,8 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
-    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
-    dag = build_action_dag(test_draconic_sorcerer_5lvl, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl)
+    dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests Dodge + movement + a quickened spell
     assert dag.state == '0'
     dag.trigger("Dodge of DraconicSorcerer5lvl")
@@ -229,7 +223,6 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
 def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
@@ -240,8 +233,8 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     get_aoe_and_aoo_threat_for_increment.cache_clear()
-    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl, battle_map)
-    dag = build_action_dag(test_draconic_sorcerer_5lvl, battle_map, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
+    fsm, transition_name_to_action, misty_step_state = generate_action_fsm(test_draconic_sorcerer_5lvl)
+    dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths, misty_step_state)
     # Tests Disengage + movement + a quickened spell
     assert dag.state == '0'
     dag.trigger("Disengage of DraconicSorcerer5lvl")
@@ -263,7 +256,6 @@ def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, eff
     CustomLogger(LogLevel.WARNING)
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
@@ -276,7 +268,7 @@ def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, eff
     # cProfile.runctx('calculate_action_plan(test_draconic_sorcerer_5lvl, battle_map, distances, shortest_paths)', None, locals(), filename="calculate_action_plan_stats")
     # p = pstats.Stats("select_action_plan_stats")
     # p.strip_dirs().sort_stats("cumtime").print_stats()
-    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(battle_map, distances, shortest_paths)
+    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     new_coord = copy.copy(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
     # for a in action_plan:
     #     new_coord += ba.increment if isinstance(a, MovementIncrement) else np.array([[0, 0]])
@@ -293,41 +285,39 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, test_bugbear, tes
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([13, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_bugbear, test_totem_barbarian]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
     try:
-        actoid1 = get_action(test_totem_barbarian, battle_map)
+        actoid1 = get_action(test_totem_barbarian)
         assert str(actoid1) == 'Totem Rage of TotemBarbarian5Lvl'
         action_resolver.resolve_action(actoid1, test_totem_barbarian)
-        actoid2 = get_action(test_totem_barbarian, battle_map)
+        actoid2 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid2, test_totem_barbarian)
-        actoid3 = get_action(test_totem_barbarian, battle_map)
+        actoid3 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid3, test_totem_barbarian)
-        actoid4 = get_action(test_totem_barbarian, battle_map)
+        actoid4 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid4, test_totem_barbarian)
-        actoid5 = get_action(test_totem_barbarian, battle_map)
+        actoid5 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid5, test_totem_barbarian)
-        actoid6 = get_action(test_totem_barbarian, battle_map)
+        actoid6 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid6, test_totem_barbarian)
-        actoid7 = get_action(test_totem_barbarian, battle_map)
+        actoid7 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid7, test_totem_barbarian)
-        actoid8 = get_action(test_totem_barbarian, battle_map)
+        actoid8 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid8, test_totem_barbarian)
-        actoid9 = get_action(test_totem_barbarian, battle_map)
+        actoid9 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid9, test_totem_barbarian)
-        actoid10 = get_action(test_totem_barbarian, battle_map)
+        actoid10 = get_action(test_totem_barbarian)
         assert str(actoid10) == 'Reckless Attack at Bugbear'
         action_resolver.resolve_action(actoid10, test_totem_barbarian)
-        actoid11 = get_action(test_totem_barbarian, battle_map)
+        actoid11 = get_action(test_totem_barbarian)
         assert str(actoid11) == 'Reckless Attack at Bugbear'
         action_resolver.resolve_action(actoid11, test_totem_barbarian)
     except Exception as e:
@@ -342,31 +332,29 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, test_bugbea
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_bugbear, test_totem_barbarian]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
     try:
-        actoid1 = get_action(test_bugbear, battle_map)
+        actoid1 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid1, test_bugbear)
-        actoid2 = get_action(test_bugbear, battle_map)
+        actoid2 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid2, test_bugbear)
-        actoid3 = get_action(test_bugbear, battle_map)
+        actoid3 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid3, test_bugbear)
-        actoid4 = get_action(test_bugbear, battle_map)
+        actoid4 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid4, test_bugbear)
-        actoid5 = get_action(test_bugbear, battle_map)
+        actoid5 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid5, test_bugbear)
-        actoid6 = get_action(test_bugbear, battle_map)
+        actoid6 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid6, test_bugbear)
-        actoid7 = get_action(test_bugbear, battle_map)
+        actoid7 = get_action(test_bugbear)
         assert str(actoid7) == "Morningstar on TotemBarbarian5Lvl"
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -378,7 +366,6 @@ def test_goblin_using_cunning_disengage(battle_map, teams, effect_tracker, test_
     CustomLogger(LogLevel.WARNING)
     test_bugbear_2 = copy.deepcopy(test_bugbear)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear_2, Teams.Color.RED)  # For the log coloring...
@@ -387,27 +374,26 @@ def test_goblin_using_cunning_disengage(battle_map, teams, effect_tracker, test_
     battle_map.set_combatant_coordinates(test_bugbear_2, np.array([8, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_goblin, test_bugbear, test_bugbear_2]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
     try:
-        actoid1 = get_action(test_goblin, battle_map)
+        actoid1 = get_action(test_goblin)
         assert str(actoid1) == "Cunning Disengage of Goblin"
         action_resolver.resolve_action(actoid1, test_goblin)
-        actoid2 = get_action(test_goblin, battle_map)
+        actoid2 = get_action(test_goblin)
         action_resolver.resolve_action(actoid2, test_goblin)
-        actoid3 = get_action(test_goblin, battle_map)
+        actoid3 = get_action(test_goblin)
         action_resolver.resolve_action(actoid3, test_goblin)
-        actoid4 = get_action(test_goblin, battle_map)
+        actoid4 = get_action(test_goblin)
         action_resolver.resolve_action(actoid4, test_goblin)
-        actoid5 = get_action(test_goblin, battle_map)
+        actoid5 = get_action(test_goblin)
         action_resolver.resolve_action(actoid5, test_goblin)
-        actoid6 = get_action(test_goblin, battle_map)
+        actoid6 = get_action(test_goblin)
         action_resolver.resolve_action(actoid6, test_goblin)
-        actoid7 = get_action(test_goblin, battle_map)
+        actoid7 = get_action(test_goblin)
         action_resolver.resolve_action(actoid7, test_goblin)
-        actoid8 = get_action(test_goblin, battle_map)
+        actoid8 = get_action(test_goblin)
         assert str(actoid8) == "Shortbow on Bugbear"
     except Exception as e:
         assert False, f"Raised an exception {e}"

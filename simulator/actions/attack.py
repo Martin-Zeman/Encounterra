@@ -1,6 +1,8 @@
 from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import reduce, cache
+
+from simulator.battle_map import Map
 from simulator.misc import avg_roll, Conditions
 from simulator.threat_utils import mean_dmg, calc_p_hit
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
@@ -52,16 +54,17 @@ class AttackFactory(DirectThreatFactory):
                 'dmg_bonus': self.dmg_bonus, 'dmg_type': self.dmg_type, 'attack_range': self.range, 'action_type': self.action_type,
                 'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit}
 
-    def get_eligible_targets(self, battle_map):
+    def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [swallower]
+        battle_map = Map.get()
         return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create(self, target_combatant):
         return Attack(target_combatant, self)
 
-    # def calculate_threat_approx(self, combatant, battle_map, roll_type=RollType.STRAIGHT):
+    # def calculate_threat_approx(self, combatant, roll_type=RollType.STRAIGHT):
     #     """
     #     Helper function which calculates the average potential threat over all potential targets including all possible mods
     #     """
@@ -84,7 +87,7 @@ class AttackFactory(DirectThreatFactory):
     #     return dmg_acc
 
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         try:
             consider_dist = kwargs["consider_dist"]
         except KeyError:
@@ -98,16 +101,17 @@ class AttackFactory(DirectThreatFactory):
         to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
 
         # TODO: Should I include roll types here? There may be a use-case in the future
+        battle_map = Map.get()
         if not consider_dist or battle_map.get_hop_distance(self.combatant, target) <= self.range:
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
                 acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
             if self.on_hit:
-                acc += calc_p_hit(to_hit_total, target.ac) * self.on_hit.calculate_threat(self.combatant, target, battle_map)
+                acc += calc_p_hit(to_hit_total, target.ac) * self.on_hit.calculate_threat(self.combatant, target)
             return acc
         return 0
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
@@ -115,7 +119,7 @@ class AttackFactory(DirectThreatFactory):
         for extra in self.extra_dmg:
             baseline += mean_dmg(self.to_hit, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
         if self.on_hit:
-            baseline += calc_p_hit(self.to_hit, target.ac) * self.on_hit.calculate_threat(self.combatant, target, battle_map)
+            baseline += calc_p_hit(self.to_hit, target.ac) * self.on_hit.calculate_threat(self.combatant, target)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
         mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
@@ -139,15 +143,15 @@ class AttackFactory(DirectThreatFactory):
             for extra in self.extra_dmg:
                 modified += mean_dmg(to_hit_total, extra[0], 0, total_target_ac, total_crit, target.is_resistant_to(extra[1]))
             if self.on_hit:
-                modified += calc_p_hit(to_hit_total, target.ac) * self.on_hit.calculate_threat(self.combatant, target, battle_map)
+                modified += calc_p_hit(to_hit_total, target.ac) * self.on_hit.calculate_threat(self.combatant, target)
         except:
             logger.error("Error in mean_dmg of calculate_threat_to_target_delta of AttackFactory")
             modified = baseline
         return modified - baseline
 
-    def calculate_max_threat(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
-        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+    def calculate_max_threat(self):
+        targets = self.get_eligible_targets()
+        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
 
 
 class Attack(Actoid, DirectThreat):
@@ -168,15 +172,12 @@ class Attack(Actoid, DirectThreat):
     def get_dmg_type(self):
         return self.factory.dmg_type
 
-    # def clear_cache(self):
-    #     self.calculate_threat.cache_clear()
 
-    # @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, **kwargs)
+    def calculate_threat(self, *args, **kwargs):
+        return self.factory.calculate_threat_to_target(self.target_combatant, **kwargs)
 
-    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modifiers, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(self.target_combatant, modifiers, *args, **kwargs)

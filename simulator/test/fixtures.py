@@ -22,6 +22,7 @@ def effect_tracker():
 
 @pytest.fixture()
 def battle_map(teams):
+    Map.reset_singleton()
     return Map(15, teams)
 
 @pytest.fixture()

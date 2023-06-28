@@ -19,15 +19,15 @@ def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_dracon
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 2
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
-    use_resources(test_draconic_sorcerer_5lvl, firebolt, battle_map)
+    use_resources(test_draconic_sorcerer_5lvl, firebolt)
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 2
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
-    use_resources(test_draconic_sorcerer_5lvl, fireball, battle_map)
+    use_resources(test_draconic_sorcerer_5lvl, fireball)
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 1
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
-    use_resources(test_draconic_sorcerer_5lvl, fireball, battle_map)
+    use_resources(test_draconic_sorcerer_5lvl, fireball)
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(3) == 0
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(2) == 3
     assert test_draconic_sorcerer_5lvl.spellslots.get_spellslots(1) == 4
@@ -46,9 +46,9 @@ def test_use_resources_already_cast_leveled_spell_this_turn(battle_map, teams, e
     fireball = fireball_factory.create(np.array([0, 0]))
 
     assert not test_draconic_sorcerer_5lvl.already_cast_leveled_spell_this_turn
-    use_resources(test_draconic_sorcerer_5lvl, firebolt, battle_map)
+    use_resources(test_draconic_sorcerer_5lvl, firebolt)
     assert not test_draconic_sorcerer_5lvl.already_cast_leveled_spell_this_turn
-    use_resources(test_draconic_sorcerer_5lvl, fireball, battle_map)
+    use_resources(test_draconic_sorcerer_5lvl, fireball)
     assert test_draconic_sorcerer_5lvl.already_cast_leveled_spell_this_turn
 
 

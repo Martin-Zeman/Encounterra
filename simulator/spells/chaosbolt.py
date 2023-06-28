@@ -1,4 +1,5 @@
 from simulator.actions.action_types import BonusAction
+from simulator.battle_map import Map
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, Conditions
 import logging
@@ -41,10 +42,11 @@ class ChaosboltFactory(DirectThreatFactory):
         return "ChaosboltFactory"
 
     @staticmethod
-    def get_sorted_chain(battle_map, potential_targets, threat_calc_func):
+    def get_sorted_chain(potential_targets, threat_calc_func):
         hp_percentages = [percent_of_curr_hp(pt, threat_calc_func(pt.ac)) for pt in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
+        battle_map = Map.get()
         for i in range(1, len(potential_targets)):
             if battle_map.get_cartesian_distance(potential_targets[i - 1][0], potential_targets[i][0]) > SpellStats.Range.FEET_30:
                 break
@@ -53,18 +55,19 @@ class ChaosboltFactory(DirectThreatFactory):
     def create(self, target_combatant):
         return Chaosbolt([target_combatant], self)
 
-    def get_eligible_targets(self, battle_map):
+    def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [swallower]
+        battle_map = Map.get()
         return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
-    def create_all(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
+    def create_all(self):
+        targets = self.get_eligible_targets()
         return [Chaosbolt(t, self) for t in targets]
 
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         Calculates threat to a specific target
         """
@@ -78,6 +81,7 @@ class ChaosboltFactory(DirectThreatFactory):
 
         # TODO Consider including the potential of hitting others
         acc = 0
+        battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
             other_potential_targets = battle_map.get_enemies_within_radius(self.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
             other_potential_targets.remove(self.target)
@@ -90,13 +94,14 @@ class ChaosboltFactory(DirectThreatFactory):
                 p_acc *= P_SAME
         return acc
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
         to_hit_bonus = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
+        battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
             to_hit_total = self.to_hit + to_hit_bonus
             to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
@@ -107,9 +112,9 @@ class ChaosboltFactory(DirectThreatFactory):
         else:
             return 0
 
-    def calculate_max_threat(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
-        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+    def calculate_max_threat(self):
+        targets = self.get_eligible_targets()
+        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
 
 
 class Chaosbolt(Actoid, DirectThreat):
@@ -127,12 +132,9 @@ class Chaosbolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt"
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
 
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
+        battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
         potential_targets = battle_map.get_enemies_within_radius(self.factory.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
@@ -147,18 +149,20 @@ class Chaosbolt(Actoid, DirectThreat):
             p_acc *= P_SAME
         return acc
 
-    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         The delta in threat when modifiers are applied on this ability.
         """
-        return self.factory.calculate_threat_to_target_delta(battle_map, self.target, modifiers, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=ChaosboltFactory.range,
                                                              combatant=self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= ChaosboltFactory.range

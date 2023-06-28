@@ -7,7 +7,7 @@ class LimitedDurationEffect(Effect):
        self.turns = turns
 
 
-    def new_turn(self, battle_map):
+    def new_turn(self):
         """
 
         :return: False if the effect expired and can be removed, True otherwise
@@ -15,6 +15,6 @@ class LimitedDurationEffect(Effect):
         self.turns -= 1
         if self.turns <= 0:
             # logger.info(f"{self.__class__.__name__} expires")
-            self.deactivate(battle_map)
+            self.deactivate()
             return False
         return True

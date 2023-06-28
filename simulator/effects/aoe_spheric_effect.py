@@ -1,5 +1,6 @@
 import numpy as np
 
+from simulator.battle_map import Map
 from simulator.effects.aoe_effect import AoeEffect
 from simulator.geometry import get_square_center
 
@@ -10,7 +11,8 @@ class AoeSphericEffect(AoeEffect):
         self.origin = coord
         self.radius = radius
 
-    def get_affected_coords(self, battle_map):
+    def get_affected_coords(self):
+        battle_map = Map.get()
         grid_size = battle_map.size
         coords = []
         origin_center = get_square_center(self.origin)

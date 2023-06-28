@@ -12,6 +12,7 @@ from transitions import Machine
 from transitions.extensions import GraphMachine
 
 from simulator.actions.actoid import FactoryFlags
+from simulator.battle_map import Map
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag
 from simulator.spells.misty_step import MistyStepFactory
@@ -121,16 +122,16 @@ def mean_dmg_bonus_increment_for_to_hit_bonus_dice(to_hit, dmg_dice, dmg_bonus, 
     return mean_dmg(to_hit + (1.0 + bonus_dice_size) / 2.0, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
 
 
-def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_type, factory_flags):
+def calculate_threat_in_mod(combatant, threat_radius, roll_type, factory_flags):
     """
     Estimates the change in mean dmg from enemies within radius given a roll roll_type assuming they'd all attack the combatant
     @param combatant: the potential receiver of the dmg
     @param threat_radius: radius within which enemies are to be considered
-    @param battle_map:
     @param roll_type: the roll type to be considered (advantage or disadvantage)
     @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
     @return: estimated change in dmg, negative for advantage, positive for disadvantage
     """
+    battle_map = Map.get()
     potential_attackers = battle_map.get_enemies_within_hop_distance(combatant, threat_radius)
     incoming_threat_mod_acc = 0
     min_or_max = max if roll_type is RollType.ADVANTAGE else min
@@ -138,21 +139,21 @@ def calculate_threat_in_mod(combatant, threat_radius, battle_map, roll_type, fac
         max_incoming_threat = 0
         for f in pa.action_factories:
             if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(combatant, {
                     ThreatModifierType.ROLL_TYPE: roll_type}))
         incoming_threat_mod_acc += max_incoming_threat
 
         max_incoming_threat = 0
         for f in pa.bonus_action_factories:
             if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(combatant, {
                     ThreatModifierType.ROLL_TYPE: roll_type}))
         incoming_threat_mod_acc += max_incoming_threat
 
         max_incoming_threat = 0
         for f in pa.haste_action_factories:
             if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_MOD:  # Checks for any overlap in flags
-                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(battle_map, combatant, {
+                max_incoming_threat = min_or_max(max_incoming_threat, f[1].calculate_threat_to_target_delta(combatant, {
                     ThreatModifierType.ROLL_TYPE: roll_type}))
         incoming_threat_mod_acc += max_incoming_threat
     if roll_type is RollType.ADVANTAGE:
@@ -176,17 +177,17 @@ def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags)
     for pa in potential_attackers:
         for f in pa.action_factories:
             if factory_flags & f[1].flags:  # Checks for any overlap in flags
-                incoming_threat_acc += f[1].calculate_threat_to_target(battle_map, combatant)
+                incoming_threat_acc += f[1].calculate_threat_to_target(combatant)
                 counter += 1
 
         for f in pa.bonus_action_factories:
             if factory_flags & f[1].flags:  # Checks for any overlap in flags
-                incoming_threat_acc += f[1].calculate_threat_to_target(battle_map, combatant)
+                incoming_threat_acc += f[1].calculate_threat_to_target(combatant)
                 counter += 1
 
         for f in pa.haste_action_factories:
             if factory_flags & f[1].flags:  # Checks for any overlap in flags
-                incoming_threat_acc += f[1].calculate_threat_to_target(battle_map, combatant)
+                incoming_threat_acc += f[1].calculate_threat_to_target(combatant)
                 counter += 1
     incoming_threat_acc /= counter
     return incoming_threat_acc
@@ -221,54 +222,53 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=Fal
     final_avg_dmg = fail_dmg + avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else fail_dmg
     return final_avg_dmg if not is_resistant else final_avg_dmg / 2
 
-def get_danger_zone_threat(battle_map, coords, combatant):
+def get_danger_zone_threat(coords, combatant):
     """
     Adds potential threat projected by the virtue of being near an enemy. It adds up all the projected threat for all
     enemies within their projection range.
     move.
-    :param battle_map:
     :param coords: as np.array of size nx2 where n is the number of coords the combatant takes up
     :param combatant:
     :return: danger zone threat (positive)
     """
+    battle_map = Map.get()
     enemies = battle_map.get_enemies(combatant)
-    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(battle_map, combatant, consider_dist=False) * DZ_CONSTANT if
+    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
         battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
 
-def get_threat_for_staying_at_coord(battle_map, coords, combatant):
+def get_threat_for_staying_at_coord(coords, combatant):
     """
     Estimates te threat associated with staying at a coordinate. This is really an estimate since the character may still
     move.
-    :param battle_map:
     :param coords: as np.array of size nx2 where n is the number of coords the combatant takes up
     :param combatant:
     :return: estimated threat (positive)
     """
     threat_acc = 0
-    effect_to_coords = {e: e.get_affected_coords(battle_map) for e in battle_map.effect_tracker.get_aoe_effects()}
+    battle_map = Map.get()
+    effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     for effect, affected_coords in effect_to_coords.items():
         if battle_map.get_hop_distance(affected_coords, coords) == 0:
-            t = effect.threat_on_start_of_turn(battle_map, combatant)
+            t = effect.threat_on_start_of_turn(combatant)
             assert t >= 0
             threat_acc += t
-            t = effect.threat_on_end_of_turn(battle_map, combatant)
+            t = effect.threat_on_end_of_turn(combatant)
             assert t >= 0
             threat_acc += t
-    dzt = get_danger_zone_threat(battle_map, coords, combatant)
+    dzt = get_danger_zone_threat(coords, combatant)
     assert dzt >= 0
     threat_acc += dzt
     return threat_acc
 
 
-@cached(cache={}, key=lambda curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
-def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged=False, dodged=False):
+@cached(cache={}, key=lambda curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
+def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     A helper caching function which accumulates threats from AoE and AoO along a path.
     Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
     :param curr_coords_data: current coordinate as np.array
     :param increment: the current coordinate increment
-    :param battle_map:
     :param combatant: the moving combatant
     :param effect_to_coords: mapping of AoE effects to their coordinates
     :param disengaged: If True then don't include the AoOs
@@ -276,12 +276,13 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
     """
     roll_type = RollType.DISADVANTAGE if dodged else RollType.STRAIGHT
     threat_acc = 0
+    battle_map = Map.get()
     with battle_map.as_if_combatant_position(combatant, curr_coords_data[0]):
         # account for AoO
         if not disengaged:
             enemies = battle_map.get_aoo_eligible_combatants(combatant, increment)
             for e in enemies:
-                t = e.aoo_factory[1].calculate_threat_to_target(battle_map, combatant, roll_type=roll_type, consider_dist=False)
+                t = e.aoo_factory[1].calculate_threat_to_target(combatant, roll_type=roll_type, consider_dist=False)
                 assert t >= 0
                 threat_acc -= t
 
@@ -290,21 +291,20 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map
             pre_increment_dist = battle_map.get_hop_distance(curr_coords_data, affected_coords)
             post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
             if pre_increment_dist == 1 and post_increment_dist == 0:
-                t = effect.threat_on_enter(battle_map, combatant)
+                t = effect.threat_on_enter(combatant)
                 assert t >= 0
                 threat_acc -= t
             elif pre_increment_dist == 0 and post_increment_dist == 0:
-                t = effect.threat_on_move_within(battle_map, combatant)
+                t = effect.threat_on_move_within(combatant)
                 assert t >= 0
                 threat_acc -= t
     return threat_acc
 
 
-def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, disengaged=False, dodged=False):
+def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
     at the final destination. Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
-    :param battle_map:
     :param path: path as a sequence of np.array coordinates
     :param combatant: the moving combatant
     :param effect_to_coords: mapping of AoE effects to their coordinates
@@ -313,24 +313,24 @@ def accumulate_threat_along_path(battle_map, path, combatant, effect_to_coords, 
     :return: accumulated threat (negative)
     """
     threat_acc = 0
+    battle_map = Map.get()
     curr_coords = battle_map.get_combatant_position(combatant)
     curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
     for increment in path:
-        t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, disengaged, dodged)
+        t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged)
         assert t <= 0
         threat_acc += t
         curr_coords_data += increment
     # account for the final destination
-    t = get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
+    t = get_threat_for_staying_at_coord(curr_coords_data if path else curr_coords.get(), combatant)
     assert t >= 0
     threat_acc -= t
     return threat_acc
 
-def calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_coords):
+def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
     at the final destination. Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
-    :param battle_map:
     :param path: path as a sequence of np.array coordinates
     :param combatant: the moving combatant
     :param effect_to_coords: mapping of AoE effects to their coordinates
@@ -344,6 +344,7 @@ def calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_
     max_threat_path = None
 
     # First build the Misty Step DAG
+    battle_map = Map.get()
     curr_coords = battle_map.get_combatant_position(combatant)
     if path:
         # We build a DAG with two branches where one branch represents moving before using Misty Step and the other after
@@ -357,7 +358,7 @@ def calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_
         previous_ms_state = states[-1]
         transition_to_threat = dict()
         for increment in path:
-            curr_threat = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, battle_map, combatant, effect_to_coords, False, False)
+            curr_threat = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, False, False)
             curr_coords_data += increment
             coords.append(copy.copy(curr_coords_data[0]))
             new_state_name = str(tuple(curr_coords_data[0]))
@@ -408,6 +409,6 @@ def calc_threat_for_path_with_misty_step(battle_map, path, combatant, effect_to_
         threat_acc += threat[states[-1]]  # the last ms state was added last which represents the longest (best) path
         # graph_ms_dag.get_graph().draw('misty_step_dag.png', prog='dot')
     # account for the final destination
-    threat_acc -= get_threat_for_staying_at_coord(battle_map, curr_coords_data if path else curr_coords.get(), combatant)
+    threat_acc -= get_threat_for_staying_at_coord(curr_coords_data if path else curr_coords.get(), combatant)
     return threat_acc, max_threat_path
 

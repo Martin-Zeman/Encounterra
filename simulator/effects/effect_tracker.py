@@ -15,9 +15,6 @@ class EffectTracker:
         self.effects = []
         self.battle_map = None
 
-    def set_battle_map(self, battle_map):
-        self.battle_map = battle_map
-
     def add(self, effect, initiator):
         # TODO: Do I need the initiator?
         # Refresh existing effect if available
@@ -37,10 +34,10 @@ class EffectTracker:
         effects = []
         for e in self.effects:
             if getattr(e[0], "new_turn", False) and e[1] is combatant:
-                if not e[0].new_turn(self.battle_map):
+                if not e[0].new_turn():
                     continue  # Effect expired
             if getattr(e[0], "start_of_turn", False) and e[1] is combatant:
-                if not e[0].start_of_turn(self.battle_map):
+                if not e[0].start_of_turn():
                     continue  # Effect's been saved against
             effects.append(e)  # Effect persists
         self.effects = effects
@@ -49,7 +46,7 @@ class EffectTracker:
         effects = []
         for e in self.effects:
             if getattr(e[0], "end_of_turn", False) and e[1] is combatant:
-                if not e[0].end_of_turn(self.battle_map):
+                if not e[0].end_of_turn():
                     continue
             effects.append(e)
         self.effects = effects
@@ -60,7 +57,7 @@ class EffectTracker:
         :param combatant:
         :return: set of all effects affecting a combatant
         """
-        return {e[0] for e in self.effects if e[0].is_affecting(combatant, self.battle_map)}
+        return {e[0] for e in self.effects if e[0].is_affecting(combatant)}
 
     def is_affecting_combatant(self, combatant, effect_type):
         """
@@ -70,7 +67,7 @@ class EffectTracker:
         :return: True if the combatant is affected, False otherwise
         """
         for e in self.effects:
-            if type(e[0]) is effect_type and e[0].is_affecting(combatant, self.battle_map):
+            if type(e[0]) is effect_type and e[0].is_affecting(combatant):
                 return True
         return False
 
@@ -87,12 +84,12 @@ class EffectTracker:
 
     def deactivate_wildshape(self, combatant):
         for e in self.effects:
-            if e[0].is_affecting(combatant, self.battle_map) and isinstance(e[0], Wildshape):
-                e[0].deactivate(self.battle_map)
+            if e[0].is_affecting(combatant) and isinstance(e[0], Wildshape):
+                e[0].deactivate()
                 break  # There should only be one
-        self.effects = [e for e in self.effects if not (e[0].is_affecting(combatant, self.battle_map) and isinstance(e[0], Wildshape))]
+        self.effects = [e for e in self.effects if not (e[0].is_affecting(combatant) and isinstance(e[0], Wildshape))]
 
     def reset(self):
         for effect in self.effects:
-            effect[0].deactivate(self.battle_map)
+            effect[0].deactivate()
         self.effects.clear()

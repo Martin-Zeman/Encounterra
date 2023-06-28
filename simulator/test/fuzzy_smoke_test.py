@@ -1,6 +1,7 @@
 import random
 import pytest
 
+from simulator.battle_map import Map
 from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.dire_wolf import DireWolf
@@ -24,6 +25,7 @@ logger = logging.getLogger("EncounTroll")
 def test_random_matchup():
     CustomLogger(LogLevel.INFO)
     for _ in range(100):
+        Map.reset_singleton()
         combatant_pool = [DraconicSorcerer5Lvl, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl, GiantToad, DireWolf, BrownBear]
         session = Session()
 
