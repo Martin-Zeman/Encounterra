@@ -10,7 +10,7 @@ logger = logging.getLogger("EncounTroll")
 
 class OnHitSwallow(OnHit):
 
-    def hit(self, attacker, attack, target, effect_tracker):
+    def hit(self, attacker, attack, target):
         logger.info(f"{target} is swallowed")
         target.remove_all_conditions_of_type(Conditions.GRAPPLED)
         target.apply_condition(ConditionWithoutDC(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))

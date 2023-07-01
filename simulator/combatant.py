@@ -452,6 +452,8 @@ class Combatant(ABC, ProtoCombatant):
         self.has_haste_action = False
         self.attack_fsm.set_state('0')
         self.action_plan = None
+        if self.constricted_target and not self.constricted_target.is_alive():
+            self.constricted_target = None
 
     def reset(self):
         # if hasattr(self, 'current_wildshape_form'):

@@ -1,5 +1,6 @@
 import pytest
 
+from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.combatants.ogre import Ogre
@@ -56,3 +57,7 @@ def test_moon_druid(effect_tracker):
 @pytest.fixture()
 def test_giant_toad(effect_tracker):
     return GiantToad(effect_tracker, "GiantToad")
+
+@pytest.fixture()
+def test_dragonclaw_cultist(effect_tracker):
+    return DragonclawCultist(effect_tracker, "DragonclawCultist")

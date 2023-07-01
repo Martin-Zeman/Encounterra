@@ -73,6 +73,7 @@ def build_priority_transitions(post_priority_transitions, action_to_eligible_coo
     :param transition_name_to_action: dict mapping action names -> actions
     :return: None but the the dag is modified
     """
+    newly_added_states = []
     for transition, post_transitions in post_priority_transitions.items():
         if not post_transitions:  # If there are no follow-up actions possible, connect directly to nop and return
             dag.add_transition(transition, "0", "nop")
@@ -83,6 +84,7 @@ def build_priority_transitions(post_priority_transitions, action_to_eligible_coo
         if new_source_state not in added_states:
             added_states.add(new_source_state)
             dag.add_state(new_source_state)
+            newly_added_states.append(new_source_state)
         dag.add_transition(transition, "0", new_source_state)
         for post_transition in post_transitions:
             try:
@@ -97,6 +99,11 @@ def build_priority_transitions(post_priority_transitions, action_to_eligible_coo
                     dag.add_transition(post_transition[0], coord_state_name, post_transition[1])
             except KeyError:
                 pass  # Some may not be available for the secondary plan
+
+    # Some states may have been left unconnected due to their follow-up actions not having eligible coords -> connect them to nop
+    for newly_added_state in newly_added_states:
+        if newly_added_state not in dag.forward_transitions.keys():
+            dag.add_transition("dummy", newly_added_state, "nop")
 
 def prune_dead_dependencies(dag):
     """
@@ -374,6 +381,7 @@ def longest_path(combatant, dag, sorted_states, transition_name_to_action, dista
     for state in sorted_states:
         if state != '0' and not dag.dependencies[state]:
             continue  # This essentially prunes unreachable states
+
         for transition_name, target_state in dag.forward_transitions[state]:
             if transition_name == "dummy":
                 transition_threat = threat[state][1] if threat[state][1] > -math.inf else 0

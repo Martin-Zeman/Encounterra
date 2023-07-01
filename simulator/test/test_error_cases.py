@@ -10,11 +10,12 @@ from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.misc import Conditions, ConditionWithoutDC
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
+from simulator.spells.haste import HasteFactory
 from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
-    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map
+    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist
 from simulator.actions.action_selector import get_action
 from simulator.utils.utils import preallocate_wildshape_forms
 
@@ -821,7 +822,7 @@ def test_error_case_19(battle_map, teams, effect_tracker, test_giant_toad):
     """
     Two giants toads, one of which is hasted. Bite and swallow wasn't being excluded despite not having a grappled target
     """
-    # TODO It's not working
+    # TODO It's not reproducing the error
     test_giant_toad_2 = copy.deepcopy(test_giant_toad)
     CustomLogger(LogLevel.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
@@ -842,5 +843,86 @@ def test_error_case_19(battle_map, teams, effect_tracker, test_giant_toad):
         action_resolver.resolve_action(actoid1, test_giant_toad)
         actoid2 = get_action(test_giant_toad)
         action_resolver.resolve_action(actoid2, test_giant_toad)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_20(battle_map, teams, effect_tracker, test_totem_barbarian, test_draconic_sorcerer_5lvl, test_dragonclaw_cultist):
+    """
+    Aims to solve a bug where hasted actions are modeled incorrectly
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_totem_barbarian, test_draconic_sorcerer_5lvl, test_dragonclaw_cultist]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_dragonclaw_cultist, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([13, 9]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([10, 14]))
+    battle_map.set_combatant_coordinates(test_dragonclaw_cultist, np.array([1, 10]))
+
+    battle_map.build_adjacency_matrix()
+
+    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl, battle_map.effect_tracker)
+    haste = haste_factory.create(test_draconic_sorcerer_5lvl)
+
+    try:
+        action_resolver.resolve_action(haste, test_draconic_sorcerer_5lvl)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
+        actoid6 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid6, test_draconic_sorcerer_5lvl)
+        actoid7 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid7, test_draconic_sorcerer_5lvl)
+        actoid8 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid8, test_draconic_sorcerer_5lvl)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_21(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid):
+    """
+    Moon druid being prone, exhausting all their movement but still trying to move.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_totem_barbarian, test_moon_druid]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 9]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([0, 9]))
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+
+    battle_map.build_adjacency_matrix()
+
+    test_moon_druid.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_totem_barbarian))
+
+    try:
+        actoid1 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid1, test_moon_druid)
+        actoid2 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid2, test_moon_druid)
+        actoid3 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid3, test_moon_druid)
+        actoid4 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid4, test_moon_druid)
+        actoid5 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid5, test_moon_druid)
+        actoid6 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid6, test_moon_druid)
+        actoid7 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid7, test_moon_druid)
+        actoid8 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid8, test_moon_druid)
     except Exception as e:
         assert False, f"Raised an exception {e}"

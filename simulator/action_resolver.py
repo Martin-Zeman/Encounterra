@@ -392,7 +392,7 @@ class ActionResolver:
                 target.receive_dmg(extra[0], extra[1])
             target = battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
             if target and attack.factory.on_hit is not None:
-                attack.factory.on_hit.hit(attacker, attack, target, self.effect_tracker)
+                attack.factory.on_hit.hit(attacker, attack, target)
 
             return ActionResult.DMG
         else:
@@ -458,6 +458,7 @@ class ActionResolver:
                     battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
+                logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 self.effect_tracker.add(actoid, combatant)
                 combatant.is_concentrating = True
