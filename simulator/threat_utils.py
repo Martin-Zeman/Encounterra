@@ -14,7 +14,7 @@ from transitions.extensions import GraphMachine
 from simulator.actions.actoid import FactoryFlags
 from simulator.battle_map import Map
 from simulator.utils.state_machine_template import StateMachineTemplate
-from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag
+from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag, Conditions
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.utils.roll_types import RollType, ThreatModifierType
 
@@ -232,7 +232,7 @@ def get_danger_zone_threat(coords, combatant):
     :return: danger zone threat (positive)
     """
     battle_map = Map.get()
-    enemies = battle_map.get_enemies(combatant)
+    enemies = [e for e in battle_map.get_enemies(combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
     acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
         battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
