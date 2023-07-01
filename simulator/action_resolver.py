@@ -290,53 +290,54 @@ class ActionResolver:
             logger.info(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
 
-    def resolve_spell(self, caster, spell):
-        battle_map = Map.get()
-        logger.info(f"{caster} casts {spell}", extra={"team": caster.team_color})
-        match spell.factory.action_type:
-            case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
-                affected = battle_map.get_combatants_affected_by_aoe(caster, spell.factory.target, spell.factory.type, spell.coord)
-                dmg = roll_spell_dmg(spell.factory.dmg_dice)
-                for combatant in affected:
-                    logger.info(f"{combatant} is hit by Fireball")
-                    resolve_dmg_saving_throw(spell, dmg, combatant)
-                    battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
-                return ActionResult.DMG
-            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
-                spell.activate()
-                self.effect_tracker.add(spell, caster)
-                return ActionResult.MEDIUM_BUFF
-            case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
-                spell.activate()
-                self.effect_tracker.add(spell, caster)
-            case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
-                return self.resolve_ranged_spell_attack(caster, spell, spell.target)
-            case Action.TWINNED_FIREBOLT:
-                ret = (self.resolve_ranged_spell_attack(caster, spell, spell.targets[0]),
-                       self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]))
-                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
-            case BonusAction.MISTY_STEP:
-                battle_map.move_combatant(caster, spell.coord)
-                return ActionResult.FEASIBLE
-            case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
-                return self.resolve_chaos_bolt(caster, spell)
-            case Action.SCORCHING_RAY | BonusAction.QUICKENED_SCORCHING_RAY:
-                ret = (self.resolve_ranged_spell_attack(caster, spell, spell.targets[0]),
-                       self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]),
-                       self.resolve_ranged_spell_attack(caster, spell, spell.targets[2]))
-                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
-            case Reaction.SHIELD:
-                assert not caster.shield_spell_active
-                caster.shield_spell_active = True
-                caster.ac += 5
-                return ActionResult.FEASIBLE
-            case Action.FLAMING_SPHERE:
-                spell.activate()
-                self.effect_tracker.add(spell, caster)
-                return ActionResult.FEASIBLE
-            case _:
-                logger.error("Unknown spell")
-                return ActionResult.UNFEASIBLE
+    # def resolve_spell(self, caster, spell):
+    #     battle_map = Map.get()
+    #     logger.info(f"{caster} casts {spell}", extra={"team": caster.team_color})
+    #     match spell.factory.action_type:
+    #         case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
+    #             logger.info(f"{caster} casts {spell}")
+    #             affected = battle_map.get_combatants_affected_by_aoe(caster, spell.factory.target, spell.factory.type, spell.coord)
+    #             dmg = roll_spell_dmg(spell.factory.dmg_dice)
+    #             for combatant in affected:
+    #                 logger.info(f"{combatant} is hit by Fireball")
+    #                 resolve_dmg_saving_throw(spell, dmg, combatant)
+    #                 battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
+    #             return ActionResult.DMG
+    #         case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
+    #             spell.activate()
+    #             self.effect_tracker.add(spell, caster)
+    #             return ActionResult.MEDIUM_BUFF
+    #         case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
+    #             spell.activate()
+    #             self.effect_tracker.add(spell, caster)
+    #         case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
+    #             return self.resolve_ranged_spell_attack(caster, spell, spell.target)
+    #         case Action.TWINNED_FIREBOLT:
+    #             ret = (self.resolve_ranged_spell_attack(caster, spell, spell.targets[0]),
+    #                    self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]))
+    #             return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
+    #         case BonusAction.MISTY_STEP:
+    #             battle_map.move_combatant(caster, spell.coord)
+    #             return ActionResult.FEASIBLE
+    #         case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
+    #             return self.resolve_chaos_bolt(caster, spell)
+    #         case Action.SCORCHING_RAY | BonusAction.QUICKENED_SCORCHING_RAY:
+    #             ret = (self.resolve_ranged_spell_attack(caster, spell, spell.targets[0]),
+    #                    self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]),
+    #                    self.resolve_ranged_spell_attack(caster, spell, spell.targets[2]))
+    #             return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
+    #         case Reaction.SHIELD:
+    #             assert not caster.shield_spell_active
+    #             caster.shield_spell_active = True
+    #             caster.ac += 5
+    #             return ActionResult.FEASIBLE
+    #         case Action.FLAMING_SPHERE:
+    #             spell.activate()
+    #             self.effect_tracker.add(spell, caster)
+    #             return ActionResult.FEASIBLE
+    #         case _:
+    #             logger.error("Unknown spell")
+    #             return ActionResult.UNFEASIBLE
 
 
     def resolve_attack(self, attack, attacker):  # TODO remove combatant from attack and have it as a separate parameter
@@ -435,7 +436,7 @@ class ActionResolver:
         battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:
-            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | HasteAction.HASTE_DISENGAGE:
                 actoid.activate()
                 self.effect_tracker.add(actoid, combatant)
                 return False
@@ -450,10 +451,10 @@ class ActionResolver:
                 self.effect_tracker.add(actoid, combatant)
                 return False
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
+                logger.info(f"{combatant} casts {actoid}")
                 affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
                 dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                 for combatant in affected:
-                    logger.info(f"{combatant} is hit by Fireball")
                     resolve_dmg_saving_throw(actoid, dmg, combatant)
                     battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
@@ -464,25 +465,31 @@ class ActionResolver:
                 combatant.is_concentrating = True
                 return ActionResult.MEDIUM_BUFF
             case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
+                logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 self.effect_tracker.add(actoid, combatant)
                 combatant.is_concentrating = True
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
+                logger.info(f"{combatant} casts {actoid}")
                 return self.resolve_ranged_spell_attack(combatant, actoid, actoid.target)
             case Action.TWINNED_FIREBOLT:
+                logger.info(f"{combatant} casts {actoid}")
                 ret = (self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[0]),
                        self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[1]))
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
+                logger.info(f"{combatant} casts {actoid}")
                 battle_map.move_combatant(combatant, actoid.coord)
                 return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
+                logger.info(f"{combatant} casts {actoid}")
                 return self.resolve_chaos_bolt(combatant, actoid)
             case Action.SCORCHING_RAY | BonusAction.QUICKENED_SCORCHING_RAY:
-                ret = (self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[0]),
-                       self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[1]),
-                       self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[2]))
-                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
+                logger.info(f"{combatant} casts {actoid}")
+                ret1 = self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[0])
+                ret2 = self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[1]) if actoid.targets[1].is_alive() else ActionResult.NOP
+                ret3 = self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[2]) if actoid.targets[2].is_alive() else ActionResult.NOP
+                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in (ret1, ret2, ret3)]) else ActionResult.MISS
             case Reaction.SHIELD:
                 assert not combatant.shield_spell_active
                 combatant.shield_spell_active = True
@@ -509,6 +516,7 @@ class ActionResolver:
                 combatant.remove_condition(Conditions.PRONE)  # resources already taken
                 return False
             case Action.CONSTRICT:
+                logger.info(f"{combatant} is trying to constrict {actoid.target_combatant}")
                 result = self.resolve_attack(actoid.factory.attack, combatant)
                 if result is ActionResult.DMG:
                     combatant.constricted_target = True

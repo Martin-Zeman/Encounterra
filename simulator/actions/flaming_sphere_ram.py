@@ -2,7 +2,7 @@ from functools import cache
 
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
-from simulator.misc import DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import numpy as np
@@ -34,7 +34,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 
     def create_all(self):
         battle_map = Map.get()
-        enemies = battle_map.get_enemies(self.combatant)
+        enemies = [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
         result = []
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV

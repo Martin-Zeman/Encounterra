@@ -692,8 +692,11 @@ class Map:
         :param subject2: either a numpy.array or a Combatant type
         :return: distance between subjects in number of hops, None if one of the subjects is dead
         """
-        subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), ProtoCombatant) else subject1
-        subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), ProtoCombatant) else subject2
+        try:
+            subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), ProtoCombatant) else subject1
+            subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), ProtoCombatant) else subject2
+        except KeyError:
+            print("FIXME")
         try:
             dist_mat = distance_matrix(subject1, subject2)
             min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
@@ -1035,10 +1038,7 @@ class Map:
             return None
         else:
             if not combatant.get_original_form().is_alive():
-                try:
-                    combatant.get_original_form.on_die()
-                except AttributeError:
-                    print("FIXME")
+                combatant.get_original_form().on_die()
                 logger.info(f"{combatant.get_original_form()} died")
                 self.remove_combatant(combatant.get_original_form())
                 return None

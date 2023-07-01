@@ -2,20 +2,23 @@ import copy
 import numpy as np
 import pytest
 
+from simulator.abilities.wildshape import WildshapeFactory
 from simulator.action_resolver import ActionResolver
-from simulator.actions.action_types import BonusAction
+from simulator.actions.action_types import BonusAction, Action
 from simulator.actions.movement import MovementIncrement
 from simulator.battle_map import Terrain
+from simulator.combatants.giant_toad import GiantToad
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.misc import Conditions, ConditionWithoutDC
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
+from simulator.spells.flaming_sphere import FlamingSphereFactory
 from simulator.spells.haste import HasteFactory
 from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
-    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist
+    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear
 from simulator.actions.action_selector import get_action
 from simulator.utils.utils import preallocate_wildshape_forms
 
@@ -924,5 +927,92 @@ def test_error_case_21(battle_map, teams, effect_tracker, test_totem_barbarian, 
         action_resolver.resolve_action(actoid7, test_moon_druid)
         actoid8 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid8, test_moon_druid)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid, test_draconic_sorcerer_5lvl):
+    """
+    Hasted moon druid in a Giant Toad form swallows a barbarian
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_totem_barbarian, test_moon_druid, test_draconic_sorcerer_5lvl]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([7, 13]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8]))
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    battle_map.build_adjacency_matrix()
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    test_moon_druid.shortest_paths_cache = shortest_paths
+
+    ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
+    ws = ws_factory.create(GiantToad)
+    fs_factory = FlamingSphereFactory(Action.FLAMING_SPHERE, test_moon_druid.dc, test_moon_druid)
+    fs = fs_factory.create(np.array((6, 13)))
+    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl, battle_map.effect_tracker)
+    test_totem_barbarian.ac = 0
+
+    # TODO Failed to reproduce
+    try:
+        action_resolver.resolve_action(fs, test_moon_druid)
+        action_resolver.resolve_action(ws, test_moon_druid)
+        test_moon_druid.new_turn()
+        bite = test_moon_druid.get_current_form().bite[1].create(test_totem_barbarian)
+        action_resolver.resolve_action(bite, test_moon_druid)
+        if test_totem_barbarian.is_affected_by(Conditions.GRAPPLED):
+            test_moon_druid.new_turn()
+            haste = haste_factory.create(test_moon_druid.get_current_form())
+            action_resolver.resolve_action(haste, test_draconic_sorcerer_5lvl)
+            actoid1 = get_action(test_moon_druid)
+            action_resolver.resolve_action(actoid1, test_moon_druid)
+            actoid2 = get_action(test_moon_druid)
+            action_resolver.resolve_action(actoid2, test_moon_druid)
+            actoid3 = get_action(test_moon_druid)
+            action_resolver.resolve_action(actoid3, test_moon_druid)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+def test_error_case_23(battle_map, teams, effect_tracker, test_ogre, test_stone_giant, test_brown_bear, test_bugbear):
+    """
+    Ogre tries to go into impassable terrain
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_ogre, test_stone_giant, test_brown_bear, test_bugbear]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_brown_bear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_ogre, np.array([5, 8]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([6, 11]))
+    battle_map.set_combatant_coordinates(test_brown_bear, np.array([0, 9]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([13, 14]))
+    battle_map.place_circular_element(np.array([12, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([11, 8]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([12, 3]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([3, 5]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.build_adjacency_matrix()
+
+    try:
+        actoid1 = get_action(test_ogre)
+        action_resolver.resolve_action(actoid1, test_ogre)
+        actoid2 = get_action(test_ogre)
+        action_resolver.resolve_action(actoid2, test_ogre)
+        actoid3 = get_action(test_ogre)
+        action_resolver.resolve_action(actoid3, test_ogre)
+        actoid4 = get_action(test_ogre)
+        action_resolver.resolve_action(actoid4, test_ogre)
+        actoid5 = get_action(test_ogre)
+        action_resolver.resolve_action(actoid5, test_ogre)
+        actoid6 = get_action(test_ogre)
+        action_resolver.resolve_action(actoid6, test_ogre)
+        actoid7 = get_action(test_ogre)
+        action_resolver.resolve_action(actoid7, test_ogre)
     except Exception as e:
         assert False, f"Raised an exception {e}"

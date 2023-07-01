@@ -10,6 +10,7 @@ from simulator.effects.effect_tracker import EffectTracker
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from simulator.combatants.goblin import Goblin
+from simulator.combatants.brown_bear import BrownBear
 from simulator.teams import Teams
 from simulator.battle_map import Map
 
@@ -61,3 +62,7 @@ def test_giant_toad(effect_tracker):
 @pytest.fixture()
 def test_dragonclaw_cultist(effect_tracker):
     return DragonclawCultist(effect_tracker, "DragonclawCultist")
+
+@pytest.fixture()
+def test_brown_bear(effect_tracker):
+    return BrownBear(effect_tracker, "BrownBear")
