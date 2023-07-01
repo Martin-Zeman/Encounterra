@@ -70,12 +70,17 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
-    fireball = action_plan[0] if isinstance(action_plan[0], Fireball) else action_plan[1]
-    assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert battle_map.get_cartesian_distance(test_bugbear, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert battle_map.get_cartesian_distance(test_bugbear_2, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert isinstance(action_plan[0], Fireball) or isinstance(action_plan[1], Fireball)
-    assert isinstance(action_plan[0], TwinnedFirebolt) or isinstance(action_plan[1], TwinnedFirebolt)
+    try:
+        fireball = next(a for a in action_plan if isinstance(a, Fireball))
+        assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert battle_map.get_cartesian_distance(test_bugbear, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert battle_map.get_cartesian_distance(test_bugbear_2, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    except StopIteration:
+        assert False, "No Fireball planned"
+    try:
+        next(a for a in action_plan if isinstance(a, TwinnedFirebolt))
+    except StopIteration:
+        assert False, "No TwinnedFirebolt planned"
 
 
 def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre):

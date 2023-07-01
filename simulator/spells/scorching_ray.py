@@ -61,8 +61,10 @@ class ScorchingRayFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, target, *args, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= ScorchingRayFactory.range:
+            roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
+            to_hit_total = self.to_hit + ROLL_TYPE[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             # Cannot target the same combatant twice
-            return 3 * mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ScorchingRayFactory.dmg_type))
+            return 3 * mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT[roll_type], target.is_resistant_to(ScorchingRayFactory.dmg_type))
         else:
             return 0
 
@@ -115,12 +117,13 @@ class ScorchingRay(Actoid, DirectThreat):
     def calculate_threat(self, *args, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
+        crit_multiplier = ROLL_TYPE_CRIT[roll_type]
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
-        dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, 1, self.targets[0].is_resistant_to(ScorchingRayFactory.dmg_type))
+        dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, crit_multiplier, self.targets[0].is_resistant_to(ScorchingRayFactory.dmg_type))
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
-        dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, 1, self.targets[1].is_resistant_to(ScorchingRayFactory.dmg_type))
+        dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, crit_multiplier, self.targets[1].is_resistant_to(ScorchingRayFactory.dmg_type))
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[2].ac - self.factory.to_hit, 20))]
-        dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, 1, self.targets[2].is_resistant_to(ScorchingRayFactory.dmg_type))
+        dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, crit_multiplier, self.targets[2].is_resistant_to(ScorchingRayFactory.dmg_type))
         return dmg_acc
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

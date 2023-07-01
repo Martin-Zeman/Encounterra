@@ -77,7 +77,9 @@ class FireboltFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, target, *args, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= FireboltFactory.range:
-            return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(FireboltFactory.dmg_type))
+            roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
+            to_hit_total = self.to_hit + ROLL_TYPE[roll_type][max(0, min(target.ac - self.to_hit, 20))]
+            return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT[roll_type], target.is_resistant_to(FireboltFactory.dmg_type))
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -123,7 +125,7 @@ class Firebolt(Actoid, DirectThreat):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
-        return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, 1, self.target.is_resistant_to(FireboltFactory.dmg_type))
+        return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, ROLL_TYPE_CRIT[roll_type], self.target.is_resistant_to(FireboltFactory.dmg_type))
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)

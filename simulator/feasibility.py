@@ -432,6 +432,8 @@ def check_feasibility_light(combatant, action):
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
+            case HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK |HasteAction.HASTE_DASH | HasteAction.HASTE_DISENGAGE | HasteAction.HASTE_HIDE:
+                return res
             case _:
                 logger.error("Unknown haste action")
         return res
