@@ -1,4 +1,5 @@
 from simulator.actions.action_types import Action, BonusAction, Reaction, Passive
+from simulator.battle_map import Map
 from simulator.combatant import Combatant
 from simulator.actions.movement import MovementGenerator
 from simulator.misc import DamageType
@@ -21,7 +22,8 @@ class Cyanwrath(Combatant):
         self.add_ability(Passive.POLEARM_MASTER)
         self.add_ability(Passive.SENTINEL)
 
-    def attack_routine(self, battle_map):
+    def attack_routine(self):
+        battle_map = Map.get()
         if battle_map.are_in_hop_range(self, self.selected_target, self.melee_reaction_range):
             logger.info("Is in range")
             if self.has_action and self.curr_num_attacks and not self.multiattack_in_progress:
@@ -45,7 +47,8 @@ class Cyanwrath(Combatant):
             logger.info("Is out of range")
             return (MetaAction.DONE,)
 
-    def get_action(self, battle_map):
+    def get_action(self):
+        battle_map = Map.get()
         while self.has_action or self.has_bonus_action or self.movement or self.has_haste_action:
             # logger.info(f"Has action {self.has_action}, has_bonus action {self.has_bonus_action}, movement {self.movement}")
 

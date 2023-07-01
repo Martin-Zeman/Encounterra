@@ -11,7 +11,7 @@ class EndOfTurnEffect(Effect):
        self.dc = dc
 
 
-    def end_of_turn(self, battle_map):
+    def end_of_turn(self):
         """
 
         :return: False if the saved against the effect and can be removed, True otherwise
@@ -19,6 +19,6 @@ class EndOfTurnEffect(Effect):
         saved = roll_saving_throw(self.combatant.saving_throws[self.st], self.dc, reconcile_roll_types(self.combatant.saving_throws_roll_type_mod[self.st]))
         if saved:
             # logger.info(f"{self.__class__.__name__} expires")
-            self.deactivate(battle_map)
+            self.deactivate()
             return False
         return True

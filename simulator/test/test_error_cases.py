@@ -31,14 +31,13 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.place_circular_element(np.array([5, 4]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 14]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13]))  # Have to set it for fireball placement
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(battle_map, distances, shortest_paths)
+    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     new_coord = copy.copy(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
     for ba in action_plan:
         new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
@@ -61,7 +60,6 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.place_circular_element(np.array([9, 4]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([7, 14]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear_2, Teams.Color.RED)
@@ -71,13 +69,18 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(battle_map, distances, shortest_paths)
-    fireball = action_plan[0] if isinstance(action_plan[0], Fireball) else action_plan[1]
-    assert battle_map.get_cartesian_distance(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert battle_map.get_cartesian_distance(test_bugbear, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert battle_map.get_cartesian_distance(test_bugbear_2, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-    assert isinstance(action_plan[0], Fireball) or isinstance(action_plan[1], Fireball)
-    assert isinstance(action_plan[0], TwinnedFirebolt) or isinstance(action_plan[1], TwinnedFirebolt)
+    action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
+    try:
+        fireball = next(a for a in action_plan if isinstance(a, Fireball))
+        assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert battle_map.get_cartesian_distance(test_bugbear, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert battle_map.get_cartesian_distance(test_bugbear_2, np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    except StopIteration:
+        assert False, "No Fireball planned"
+    try:
+        next(a for a in action_plan if isinstance(a, TwinnedFirebolt))
+    except StopIteration:
+        assert False, "No TwinnedFirebolt planned"
 
 
 def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre):
@@ -91,9 +94,8 @@ def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.place_circular_element(np.array([1, 3]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([1, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, combatant7]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # Bugbear 1
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl
@@ -109,23 +111,23 @@ def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
-        actoid4 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
-        actoid5 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
-        actoid6 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid6 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid6, test_draconic_sorcerer_5lvl)
-        actoid7 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid7 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid7, test_draconic_sorcerer_5lvl)
-        actoid8 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid8 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid8, test_draconic_sorcerer_5lvl)
-        actoid9 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid9 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid9, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -141,9 +143,8 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.place_circular_element(np.array([4, 5]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([5, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_draconic_sorcerer_5lvl_2]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant
@@ -156,11 +157,11 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
 
     try:
         # The Danger Zone of the Stone Giant spans the whole map so it doesn't pay off to move and suffer the AoO
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         assert actoid3 is None
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -176,9 +177,8 @@ def test_error_case_5(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.place_circular_element(np.array([8, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([13, 8]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_stone_giant, test_ogre, test_draconic_sorcerer_5lvl_2]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # Goblin
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)  # TotemBarbarian5Lvl
@@ -194,21 +194,21 @@ def test_error_case_5(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
-        actoid4 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
-        actoid5 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
-        actoid6 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid6 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid6, test_draconic_sorcerer_5lvl)
-        actoid7 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid7 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid7, test_draconic_sorcerer_5lvl)
-        actoid8 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid8 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid8, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -221,9 +221,8 @@ def test_error_case_6(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     CustomLogger(LogLevel.WARNING)
     combatant7 = copy.deepcopy(test_totem_barbarian)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_bugbear, test_totem_barbarian, test_ogre, combatant7]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # Bugbear
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)  # TotemBarbarian5Lvl 1
@@ -237,25 +236,25 @@ def test_error_case_6(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = get_action(test_totem_barbarian, battle_map)
+        actoid1 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid1, test_totem_barbarian)
-        actoid2 = get_action(test_totem_barbarian, battle_map)
+        actoid2 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid2, test_totem_barbarian)
-        actoid3 = get_action(test_totem_barbarian, battle_map)
+        actoid3 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid3, test_totem_barbarian)
-        actoid4 = get_action(test_totem_barbarian, battle_map)
+        actoid4 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid4, test_totem_barbarian)
-        actoid5 = get_action(test_totem_barbarian, battle_map)
+        actoid5 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid5, test_totem_barbarian)
-        actoid6 = get_action(test_totem_barbarian, battle_map)
+        actoid6 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid6, test_totem_barbarian)
-        actoid7 = get_action(test_totem_barbarian, battle_map)
+        actoid7 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid7, test_totem_barbarian)
-        actoid8 = get_action(test_totem_barbarian, battle_map)
+        actoid8 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid8, test_totem_barbarian)
-        actoid9 = get_action(test_totem_barbarian, battle_map)
+        actoid9 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid9, test_totem_barbarian)
-        actoid10 = get_action(test_totem_barbarian, battle_map)
+        actoid10 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid10, test_totem_barbarian)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -272,9 +271,8 @@ def test_error_case_7(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.place_circular_element(np.array([13, 1]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([10, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_draconic_sorcerer_5lvl_2]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # Goblin
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl
@@ -284,55 +282,55 @@ def test_error_case_7(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = get_action(test_goblin, battle_map)
+        actoid1 = get_action(test_goblin)
         action_resolver.resolve_action(actoid1, test_goblin)
-        actoid2 = get_action(test_goblin, battle_map)
+        actoid2 = get_action(test_goblin)
         action_resolver.resolve_action(actoid2, test_goblin)
-        actoid3 = get_action(test_goblin, battle_map)
+        actoid3 = get_action(test_goblin)
         action_resolver.resolve_action(actoid3, test_goblin)
-        actoid4 = get_action(test_goblin, battle_map)
+        actoid4 = get_action(test_goblin)
         action_resolver.resolve_action(actoid4, test_goblin)
-        actoid5 = get_action(test_goblin, battle_map)
+        actoid5 = get_action(test_goblin)
         action_resolver.resolve_action(actoid5, test_goblin)
-        actoid6 = get_action(test_goblin, battle_map)
+        actoid6 = get_action(test_goblin)
         action_resolver.resolve_action(actoid6, test_goblin)
 
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
-        actoid4 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
-        actoid5 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
-        actoid6 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid6 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid6, test_draconic_sorcerer_5lvl)
-        actoid7 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid7 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid7, test_draconic_sorcerer_5lvl)
-        actoid8 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid8 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid8, test_draconic_sorcerer_5lvl)
 
-        actoid1 = get_action(test_totem_barbarian, battle_map)
+        actoid1 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid1, test_totem_barbarian)
-        actoid2 = get_action(test_totem_barbarian, battle_map)
+        actoid2 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid2, test_totem_barbarian)
-        actoid3 = get_action(test_totem_barbarian, battle_map)
+        actoid3 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid3, test_totem_barbarian)
-        actoid4 = get_action(test_totem_barbarian, battle_map)
+        actoid4 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid4, test_totem_barbarian)
-        actoid5 = get_action(test_totem_barbarian, battle_map)
+        actoid5 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid5, test_totem_barbarian)
-        actoid6 = get_action(test_totem_barbarian, battle_map)
+        actoid6 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid6, test_totem_barbarian)
-        actoid7 = get_action(test_totem_barbarian, battle_map)
+        actoid7 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid7, test_totem_barbarian)
-        actoid8 = get_action(test_totem_barbarian, battle_map)
+        actoid8 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid8, test_totem_barbarian)
-        actoid9 = get_action(test_totem_barbarian, battle_map)
+        actoid9 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid9, test_totem_barbarian)
-        actoid10 = get_action(test_totem_barbarian, battle_map)
+        actoid10 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid10, test_totem_barbarian)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -348,9 +346,8 @@ def test_error_case_8(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([14, 13]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre, combatant7]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)  # Ogre
@@ -362,21 +359,21 @@ def test_error_case_8(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = get_action(combatant7, battle_map)
+        actoid1 = get_action(combatant7)
         action_resolver.resolve_action(actoid1, combatant7)
-        actoid2 = get_action(combatant7, battle_map)
+        actoid2 = get_action(combatant7)
         action_resolver.resolve_action(actoid2, combatant7)
-        actoid3 = get_action(combatant7, battle_map)
+        actoid3 = get_action(combatant7)
         action_resolver.resolve_action(actoid3, combatant7)
-        actoid4 = get_action(combatant7, battle_map)
+        actoid4 = get_action(combatant7)
         action_resolver.resolve_action(actoid4, combatant7)
-        actoid5 = get_action(combatant7, battle_map)
+        actoid5 = get_action(combatant7)
         action_resolver.resolve_action(actoid5, combatant7)
-        actoid6 = get_action(combatant7, battle_map)
+        actoid6 = get_action(combatant7)
         action_resolver.resolve_action(actoid6, combatant7)
-        actoid7 = get_action(combatant7, battle_map)
+        actoid7 = get_action(combatant7)
         action_resolver.resolve_action(actoid7, combatant7)
-        actoid8 = get_action(combatant7, battle_map)
+        actoid8 = get_action(combatant7)
         action_resolver.resolve_action(actoid8, combatant7)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -392,9 +389,8 @@ def test_error_case_9(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.place_circular_element(np.array([13, 14]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([6, 0]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre, combatant7, combatant8]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre 1
@@ -408,17 +404,17 @@ def test_error_case_9(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     try:
-        actoid1 = get_action(test_stone_giant, battle_map)
+        actoid1 = get_action(test_stone_giant)
         action_resolver.resolve_action(actoid1, test_stone_giant)
-        actoid2 = get_action(test_stone_giant, battle_map)
+        actoid2 = get_action(test_stone_giant)
         action_resolver.resolve_action(actoid2, test_stone_giant)
 
-        actoid3 = get_action(combatant7, battle_map)
+        actoid3 = get_action(combatant7)
         action_resolver.resolve_action(actoid3, combatant7)
 
-        actoid4 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
-        actoid5 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
 
     except Exception as e:
@@ -434,9 +430,8 @@ def test_error_case_10(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.place_circular_element(np.array([5, 4]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([13, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant 1
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 3]))  # DraconicSorcerer5Lvl 1
@@ -450,21 +445,21 @@ def test_error_case_10(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.curr_sorcery_points -= 4
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
-        actoid4 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
-        actoid5 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
-        actoid6 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid6 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid6, test_draconic_sorcerer_5lvl)
-        actoid7 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid7 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid7, test_draconic_sorcerer_5lvl)
-        actoid8 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid8 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid8, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -482,9 +477,8 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.place_circular_element(np.array([4, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([9, 9]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_ogre, combatant7, combatant8]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl 1
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
@@ -506,7 +500,7 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     combatant7.curr_sorcery_points -= 5
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -523,9 +517,8 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.place_circular_element(np.array([1, 10]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([6, 7]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_ogre, combatant7]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)  # TotemBarbarian5Lvl 1
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant 1
@@ -554,9 +547,9 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     combatant7.curr_hp = 36
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -573,9 +566,8 @@ def test_error_case_13(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.place_circular_element(np.array([3, 12]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([9, 11]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_stone_giant_2]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl 1
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
@@ -593,19 +585,19 @@ def test_error_case_13(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
-        actoid4 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
-        actoid5 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
-        actoid6 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid6 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid6, test_draconic_sorcerer_5lvl)
-        actoid7 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid7 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid7, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -621,9 +613,8 @@ def test_error_case_14(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.place_circular_element(np.array([10, 13]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([10, 2]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre 1
@@ -637,11 +628,11 @@ def test_error_case_14(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 2
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -658,9 +649,8 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.place_circular_element(np.array([10, 12]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([13, 6]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_stone_giant, test_ogre]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # Goblin 1
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)  # TotemBarbarian5Lvl 1
@@ -680,19 +670,19 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
-        actoid4 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
-        actoid5 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
-        actoid6 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid6 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid6, test_draconic_sorcerer_5lvl)
-        actoid7 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid7 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid7, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -708,9 +698,8 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.place_circular_element(np.array([8, 8]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([10, 11]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl 1
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)  # Ogre 1
@@ -725,19 +714,19 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
 
     try:
-        actoid1 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid3, test_draconic_sorcerer_5lvl)
-        actoid4 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid4 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid4, test_draconic_sorcerer_5lvl)
-        actoid5 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid5 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid5, test_draconic_sorcerer_5lvl)
-        actoid6 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid6 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid6, test_draconic_sorcerer_5lvl)
-        actoid7 = get_action(test_draconic_sorcerer_5lvl, battle_map)
+        actoid7 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid7, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -754,10 +743,9 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
     battle_map.place_circular_element(np.array([4, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([10, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_totem_barbarian, test_goblin, test_draconic_sorcerer_5lvl, test_totem_barbarian_2]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_totem_barbarian_2, Teams.Color.RED)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
@@ -774,17 +762,17 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
     test_moon_druid.has_haste_action = True
 
     try:
-        actoid1 = get_action(test_moon_druid, battle_map)
+        actoid1 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid, battle_map)
+        actoid2 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid, battle_map)
+        actoid3 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid, battle_map)
+        actoid4 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid4, test_moon_druid)
-        actoid5 = get_action(test_moon_druid, battle_map)
+        actoid5 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid5, test_moon_druid)
-        actoid6 = get_action(test_moon_druid, battle_map)
+        actoid6 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid6, test_moon_druid)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -798,10 +786,9 @@ def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_
     battle_map.place_circular_element(np.array([9, 8]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([13, 6]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_bugbear, test_goblin]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
@@ -814,17 +801,17 @@ def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_
     test_moon_druid.has_haste_action = True
 
     try:
-        actoid1 = get_action(test_moon_druid, battle_map)
+        actoid1 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid, battle_map)
+        actoid2 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid, battle_map)
+        actoid3 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid, battle_map)
+        actoid4 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid4, test_moon_druid)
-        actoid5 = get_action(test_moon_druid, battle_map)
+        actoid5 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid5, test_moon_druid)
-        actoid6 = get_action(test_moon_druid, battle_map)
+        actoid6 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid6, test_moon_druid)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -838,9 +825,8 @@ def test_error_case_19(battle_map, teams, effect_tracker, test_giant_toad):
     test_giant_toad_2 = copy.deepcopy(test_giant_toad)
     CustomLogger(LogLevel.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_giant_toad, test_giant_toad_2]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_giant_toad_2, Teams.Color.RED)
     battle_map.set_combatant_coordinates(test_giant_toad, np.array([4, 8]))
@@ -852,11 +838,9 @@ def test_error_case_19(battle_map, teams, effect_tracker, test_giant_toad):
     test_giant_toad.has_haste_action = True
 
     try:
-        actoid1 = get_action(test_giant_toad, battle_map)
+        actoid1 = get_action(test_giant_toad)
         action_resolver.resolve_action(actoid1, test_giant_toad)
-        actoid2 = get_action(test_giant_toad, battle_map)
+        actoid2 = get_action(test_giant_toad)
         action_resolver.resolve_action(actoid2, test_giant_toad)
-        actoid3 = get_action(test_giant_toad, battle_map)
-        action_resolver.resolve_action(actoid3, test_giant_toad)
     except Exception as e:
         assert False, f"Raised an exception {e}"

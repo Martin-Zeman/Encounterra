@@ -1,5 +1,6 @@
 from functools import cache
 
+from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 import logging
@@ -32,15 +33,16 @@ class MistyStepFactory(Factory):
         """
         return "MistyStepFactory"
 
-    def get_eligible_targets(self, battle_map):
+    def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:
             return []  # Can't see while being swallowed
+        battle_map = Map.get()
         return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatant),
                                                              rng=MistyStepFactory.range)
 
-    def create_all(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
+    def create_all(self):
+        targets = self.get_eligible_targets()
         return [MistyStep(t, self) for t in targets]
 
     def create(self, coord):
@@ -62,15 +64,12 @@ class MistyStep(Actoid, ThreatModifier):
         return "Misty Step"
 
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         return 0  # Misty Step is handled differently
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
         return True

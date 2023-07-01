@@ -1,6 +1,7 @@
 from functools import cache
 
 from simulator.actions.action_types import BonusAction
+from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.effect import EffectType
@@ -33,32 +34,33 @@ class SpikeGrowthFactory(DirectThreatFactory):
         """
         return "SpikeGrowthFactory"
 
-    def find_best_args(self, combatant, battle_map):
+    def find_best_args(self, combatant):
         # TODO maybe find a smarter placement for this
+        battle_map = Map.get()
         coord, _ = battle_map.find_best_placement_harmful_circular(combatant, SpikeGrowthFactory.range, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target], self)
         return coord
 
-    def create_all(self, battle_map):
+    def create_all(self):
         # Here there really is no need to iterate over all coords. Just find the best score
-        return [SpikeGrowth(self.find_best_args(self.combatant, battle_map), self)]
+        return [SpikeGrowth(self.find_best_args(self.combatant), self)]
 
     def create(self, coord):
         return SpikeGrowth(coord, self)
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         Calculates threat to one specific target
         """
         return avg_roll(self.dmg_dice)
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
         return 0  # No need
 
-    def calculate_max_threat(self, battle_map):
-        return SpikeGrowth(self.find_best_args(self.combatant, battle_map), self).calculate_threat(battle_map)
+    def calculate_max_threat(self):
+        return SpikeGrowth(self.find_best_args(self.combatant), self).calculate_threat()
 
 
 class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
@@ -96,50 +98,49 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, SpikeGrowthFactory.dmg_type)
 
-    def is_affecting(self, combatant, battle_map):
-        coords = self.get_affected_coords(battle_map)
+    def is_affecting(self, combatant):
+        battle_map = Map.get()
+        coords = self.get_affected_coords()
         return battle_map.get_hop_distance(combatant, coords) == 0
 
 
-    def activate(self, battle_map):
+    def activate(self):
         pass
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         pass  # TODO remove concentration?
 
-
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         # TODO This needs more intelligence (also subtract dmg caused to allies)
+        battle_map = Map.get()
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, SpikeGrowthFactory.target, SpikeGrowthFactory.type, self.coord)
         acc = 0
         for aff in affected:
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)
         return acc
 
-    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
-    def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
+    def threat_on_end_of_turn(self, target, *args, **kwargs):
         return 0
 
-    def threat_on_enter(self, battle_map, target, *args, **kwargs):
+    def threat_on_enter(self, target, *args, **kwargs):
         return avg_roll(self.factory.dmg_dice)
 
-    def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
+    def threat_on_start_of_turn(self, target, *args, **kwargs):
         return 0
 
-    def threat_on_move_within(self, battle_map, target, *args, **kwargs):
+    def threat_on_move_within(self, target, *args, **kwargs):
         return avg_roll(self.factory.dmg_dice)
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=SpikeGrowthFactory.range, combatant=self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= SpikeGrowthFactory.range

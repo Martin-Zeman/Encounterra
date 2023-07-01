@@ -3,6 +3,7 @@ from functools import cache
 
 from simulator.actions.action_types import BonusAction
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
+from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.aoe_square_effect import AoeSquareEffect
@@ -44,8 +45,9 @@ class FlamingSphereFactory(DirectThreatFactory):
         return "FlamingSphereFactory"
 
 
-    def create_all(self, battle_map):
+    def create_all(self):
         # Getting coords around enemies
+        battle_map = Map.get()
         enemies = battle_map.get_enemies(self.combatant)
         coords = set()
         for enemy in enemies:
@@ -60,21 +62,22 @@ class FlamingSphereFactory(DirectThreatFactory):
     def create(self, coord):
         return FlamingSphere(coord, self)
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         Calculates threat to one specific target
         """
         return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type)) * ROUND_HORIZON
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
         return 0  # No need
 
-    def calculate_max_threat(self, battle_map):
+    def calculate_max_threat(self):
+        battle_map = Map.get()
         targets = battle_map.get_enemies(self.combatant)
-        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
 
 
 class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquareEffect, AoEThreat):
@@ -94,25 +97,22 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere"
 
-    def activate(self, battle_map):
+    def activate(self):
         self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self.factory.dc, self)))
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
 
-    def enable(self, battle_map):
+    def enable(self):
         self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self.factory.dc, self)))
 
-    def disable(self, battle_map):
+    def disable(self):
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
 
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
+        battle_map = Map.get()
         enemies = battle_map.get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)
         if not enemies:
             return 0
@@ -121,14 +121,16 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
             acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant_to(self.factory.dmg_type))
         return acc / len(enemies) * ROUND_HORIZON
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FlamingSphereFactory.range,
                                                              combatant=self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FlamingSphereFactory.range
 
     def on_start_of_turn(self, combatant):
@@ -151,27 +153,28 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def on_exit(self, combatant):
         return 0
 
-    def is_affecting(self, combatant, battle_map):
+    def is_affecting(self, combatant):
         return False
 
-    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
-    def threat_on_end_of_turn(self, battle_map, target, *args, **kwargs):
+    def threat_on_end_of_turn(self, target, *args, **kwargs):
         return mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
 
-    def threat_on_enter(self, battle_map, target, *args, **kwargs):
+    def threat_on_enter(self, target, *args, **kwargs):
         # It's not explicitly written in the rules, but it makes sense
         return mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
 
-    def threat_on_start_of_turn(self, battle_map, target, *args, **kwargs):
+    def threat_on_start_of_turn(self, target, *args, **kwargs):
         return 0
 
-    def threat_on_move_within(self, battle_map, target, *args, **kwargs):
+    def threat_on_move_within(self, target, *args, **kwargs):
         return 0
 
-    def get_affected_coords(self, battle_map):
+    def get_affected_coords(self):
         """
         We model the fact that it deals damage to adjacent squares
         """
+        battle_map = Map.get()
         return battle_map.get_coords_affected_by_square_aoe((self.origin[0] - 1, self.origin[1] - 1), self.length + 2)

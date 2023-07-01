@@ -5,6 +5,7 @@ import numpy as np
 
 from simulator.actions.action_types import Action, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from simulator.battle_map import Map
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
@@ -60,7 +61,7 @@ class WildshapeFactory(TransformerFactory):
                     logger.error("Incorrect character level. No wildshape forms added!")
 
 
-    def create_all(self, battle_map):
+    def create_all(self):
         # TODO Filter out those who cannot fit to the current position by size
         return self.combatant.available_wildshape_forms
 
@@ -68,14 +69,14 @@ class WildshapeFactory(TransformerFactory):
         # Doesn't make much sense here
         return Wildshape(self.combatant, form, self)
 
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         """
         Direct threat changes such as changes in HP. Doesn't account for newly added/lost action factories.
         """
         return max([hp for hp in self.combatant.available_wildshape_forms.curr_hp])
 
-    def calculate_max_threat(self, battle_map):
-        return self.calculate_threat(battle_map)
+    def calculate_max_threat(self):
+        return self.calculate_threat()
 
 class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
@@ -96,10 +97,11 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def get_effect_type(self):
         return EffectType.WILDSHAPE
 
-    def activate(self, battle_map):
+    def activate(self):
         """
         Activation happens when the ability is selected and is being resolved.
         """
+        battle_map = Map.get()
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
         battle_map.teams.replace_combatant(self.combatants[0], self.form)
         wildshape_coord = battle_map.find_wildshaped_coordinate(self.combatants[0], self.form.size)
@@ -128,12 +130,13 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         # TODO add function for wildshape replacement for effect tracker
 
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         """
         Activation happens when the ability is either cancelled (loss of concentration) or expires
         """
+        battle_map = Map.get()
         logger.info(f"{self.combatants[0]}'s wildshape fades")
-        self.combatants[0].current_wildshape_form.on_die(battle_map)
+        self.combatants[0].current_wildshape_form.on_die()
         battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         position = battle_map.get_combatant_position(self.combatants[0].current_wildshape_form)
         battle_map.remove_combatant(self.combatants[0].current_wildshape_form)
@@ -157,7 +160,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         # TODO add function for wildshape replacement for effect tracker
 
 
-    def enable(self, battle_map):
+    def enable(self):
         """
         Enabling happens when the ability is being explored during action FSM creation as an action enabler.
         """
@@ -176,7 +179,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         for haf in self.form.haste_action_factories:
             haf[1].combatant = self.form
 
-    def disable(self, battle_map):
+    def disable(self):
         """
         Disabling happens when the ability is finished being explored during action FSM creation as an action enabler.
         """
@@ -195,24 +198,21 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         for haf in self.combatants[0].haste_action_factories:
             haf[1].combatant = self.combatants[0]
 
-    def clear_cache(self):
-        pass
-
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         return self.form.max_hp# * random.uniform(0.8, 1.20)  # We try to encourage trying out different wildshape forms
 
-    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
         """
         Computes a list of coordinates that are eligible for wildshape but then reduces it down to those with a distance to the combatant
         equal to the minimum eligible distance.
-        :param battle_map:
         :param distances: the distances to all squares (result of Dijkstra)
         :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
         :return: eligible coordinates
         """
+        battle_map = Map.get()
         map_accessibility_matrix = np.zeros((battle_map.size, battle_map.size))
         for coord in shortest_paths.keys():
             map_accessibility_matrix[coord] = 1
@@ -242,5 +242,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
             idx += 1
         return final_coords
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return True if battle_map.find_wildshaped_coordinate(self.factory.combatant, self.form.size) else False

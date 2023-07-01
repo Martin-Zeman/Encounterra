@@ -4,7 +4,7 @@ from simulator.effects.effect import Effect
 class AoeEffect(Effect):
 
     @abstractmethod
-    def get_affected_coords(self, battle_map):
+    def get_affected_coords(self):
         pass
 
     @abstractmethod

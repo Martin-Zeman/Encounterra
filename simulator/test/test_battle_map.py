@@ -1,6 +1,6 @@
 import pytest
 from simulator.actions.action_types import Passive, Action
-from simulator.battle_map import Terrain, CombatantCoords
+from simulator.battle_map import Terrain, CombatantCoords, Map
 from simulator.combatants.goblin import Goblin
 from simulator.misc import DistanceMetric, Size, Side, Conditions, ConditionWithoutDC
 from simulator.spells.fireball import FireballFactory
@@ -9,7 +9,6 @@ from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
     teams, effect_tracker, battle_map
 import numpy as np
-
 
 
 def test_as_if_combatant_position(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):

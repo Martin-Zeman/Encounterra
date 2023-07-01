@@ -26,13 +26,13 @@ class Effect(ABC):
         pass
 
     @abstractmethod
-    def activate(self, battle_map):
+    def activate(self):
         pass
 
     @abstractmethod
-    def deactivate(self, battle_map):
+    def deactivate(self):
         pass
 
     @abstractmethod
-    def is_affecting(self, combatant, battle_map):
+    def is_affecting(self, combatant):
         return False

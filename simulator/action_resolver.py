@@ -1,12 +1,12 @@
 from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
+from simulator.battle_map import Map
 from simulator.effects.effect import EffectType
 from simulator.misc import *
 from simulator.misc import SavingThrow
 from simulator.feasibility import check_feasibility
 from simulator.resources import use_resources
-from simulator.actions.actoid import ActoidFlags
 from enum import Enum, auto
 
 from simulator.spells.chaosbolt import ChaosboltFactory
@@ -110,10 +110,9 @@ def resolve_on_hit_dmg_saving_throw(ability, dmg, target_combatant, half_on_succ
 
 class ActionResolver:
 
-    def __init__(self, combatants, teams, battle_map, effect_tracker):
+    def __init__(self, combatants, teams, effect_tracker):
         self.combatants = combatants
         self.teams = teams
-        self.battle_map = battle_map
         self.effect_tracker = effect_tracker
 
     def has_advantage_ranged(self, attack, attacker, target):
@@ -131,16 +130,17 @@ class ActionResolver:
         return RollType.STRAIGHT
 
     def has_advantage_melee(self, attack, attacker, target):
+        battle_map = Map.get()
         if attack.roll_type is RollType.ADVANTAGE:
             return RollType.ADVANTAGE
-        if attacker.has_pack_tactics and self.battle_map.is_ally_adjacent_to_target(attacker, target):
+        if attacker.has_pack_tactics and battle_map.is_ally_adjacent_to_target(attacker, target):
             return RollType.ADVANTAGE
         if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
             return RollType.ADVANTAGE
         if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) == 1:
+        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) == 1:
             return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
             return RollType.ADVANTAGE
@@ -151,15 +151,16 @@ class ActionResolver:
         return RollType.STRAIGHT
 
     def has_disadvantage_spell_ranged(self, attack, attacker, target):
+        battle_map = Map.get()
         if attack.roll_type is RollType.DISADVANTAGE:
             return RollType.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
             return RollType.DISADVANTAGE
         if target.is_dodging:
             return RollType.DISADVANTAGE
-        if self.battle_map.is_enemy_adjacent(attacker):
+        if battle_map.is_enemy_adjacent(attacker):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
+        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) > 1:
             return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
@@ -168,17 +169,18 @@ class ActionResolver:
         return RollType.STRAIGHT
 
     def has_disadvantage_ranged(self, attack, attacker, target):
+        battle_map = Map.get()
         if attack.roll_type is RollType.DISADVANTAGE:
             return RollType.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
             return RollType.DISADVANTAGE
         if target.is_dodging:
             return RollType.DISADVANTAGE
-        if self.battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
+        if battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
             return RollType.DISADVANTAGE
-        if self.battle_map.is_enemy_adjacent(attacker):
+        if battle_map.is_enemy_adjacent(attacker):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
+        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) > 1:
             return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
@@ -187,6 +189,7 @@ class ActionResolver:
         return RollType.STRAIGHT
 
     def has_disadvantage_melee(self, attack, attacker, target):
+        battle_map = Map.get()
         if attack.roll_type is RollType.DISADVANTAGE:
             return RollType.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
@@ -195,7 +198,7 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and self.battle_map.get_hop_distance(attacker, target) > 1:
+        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) > 1:
             return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
@@ -203,6 +206,7 @@ class ActionResolver:
 
     def resolve_chaos_bolt(self, caster, spell):
         # TODO Conditions
+        battle_map = Map.get()
         jump = True
         curr_target = spell.target
         potential_targets = self.teams.get_allies(curr_target)
@@ -235,12 +239,12 @@ class ActionResolver:
                 logger.info(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
                              extra={"team": self.teams.get_team(caster)})
                 curr_target.receive_dmg(dmg, dmg_type)
-                self.battle_map.remove_combatant_if_dead(curr_target)  # could be a wildshaped druid
+                battle_map.remove_combatant_if_dead(curr_target)  # could be a wildshaped druid
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
                         if not potential_target.is_alive():
                             continue
-                        dist = self.battle_map.get_cartesian_distance(curr_target, potential_target)
+                        dist = battle_map.get_cartesian_distance(curr_target, potential_target)
                         if dist and dist <= 6:
                             curr_target = potential_target
                             logger.info(f"Chaos bolt jumping to {potential_target}!", extra={"team": self.teams.get_team(caster)})
@@ -254,6 +258,7 @@ class ActionResolver:
 
     def resolve_ranged_spell_attack(self, caster, spell, target):
         # TODO Conditions
+        battle_map = Map.get()
         types = {self.has_advantage_ranged(spell, caster, target), self.has_disadvantage_spell_ranged(spell, caster, target)}
         final_modifier = reconcile_roll_types(types)
 
@@ -279,29 +284,30 @@ class ActionResolver:
             logger.info(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
             target.receive_dmg(dmg, spell.factory.dmg_type)
-            self.battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid
+            battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid
             return ActionResult.DMG
         else:
             logger.info(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
 
     def resolve_spell(self, caster, spell):
+        battle_map = Map.get()
         logger.info(f"{caster} casts {spell}", extra={"team": caster.team_color})
         match spell.factory.action_type:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
-                affected = self.battle_map.get_combatants_affected_by_aoe(caster, spell.factory.target, spell.factory.type, spell.coord)
+                affected = battle_map.get_combatants_affected_by_aoe(caster, spell.factory.target, spell.factory.type, spell.coord)
                 dmg = roll_spell_dmg(spell.factory.dmg_dice)
                 for combatant in affected:
                     logger.info(f"{combatant} is hit by Fireball")
                     resolve_dmg_saving_throw(spell, dmg, combatant)
-                    self.battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
+                    battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
-                spell.activate(None)
+                spell.activate()
                 self.effect_tracker.add(spell, caster)
                 return ActionResult.MEDIUM_BUFF
             case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
-                spell.activate(self.battle_map)
+                spell.activate()
                 self.effect_tracker.add(spell, caster)
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
                 return self.resolve_ranged_spell_attack(caster, spell, spell.target)
@@ -310,7 +316,7 @@ class ActionResolver:
                        self.resolve_ranged_spell_attack(caster, spell, spell.targets[1]))
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
-                self.battle_map.move_combatant(caster, spell.coord)
+                battle_map.move_combatant(caster, spell.coord)
                 return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
                 return self.resolve_chaos_bolt(caster, spell)
@@ -325,7 +331,7 @@ class ActionResolver:
                 caster.ac += 5
                 return ActionResult.FEASIBLE
             case Action.FLAMING_SPHERE:
-                spell.activate(None)
+                spell.activate()
                 self.effect_tracker.add(spell, caster)
                 return ActionResult.FEASIBLE
             case _:
@@ -340,6 +346,7 @@ class ActionResolver:
         :return: True is hits, false if misses or is not attack
         """
         # TODO Conditions
+        battle_map = Map.get()
         target = attack.target_combatant
         assert target
         if FactoryFlags.IS_MELEE in attack.factory.flags:
@@ -383,7 +390,7 @@ class ActionResolver:
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             for extra in extra_dmg:
                 target.receive_dmg(extra[0], extra[1])
-                target = self.battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
+                target = battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
             if target and attack.factory.on_hit is not None:
                 attack.factory.on_hit.hit(attacker, attack, target, self.effect_tracker)
 
@@ -393,15 +400,16 @@ class ActionResolver:
             return ActionResult.MISS
 
     def request_movement(self, moving_combatant, movement):
+        battle_map = Map.get()
         if movement.incurs_aoo:
-            aoo_candidates = self.battle_map.get_aoo_eligible_combatants(moving_combatant, movement.increment)
+            aoo_candidates = battle_map.get_aoo_eligible_combatants(moving_combatant, movement.increment)
             if aoo_candidates:
                 for candidate in aoo_candidates:
                     aoo = candidate.prompt_aoo(moving_combatant)
                     if aoo and moving_combatant.is_alive():
                         self.resolve_action(aoo, candidate)
 
-            pam_candidates = self.battle_map.get_pam_eligible_combatants(moving_combatant, movement.increment)
+            pam_candidates = battle_map.get_pam_eligible_combatants(moving_combatant, movement.increment)
             if pam_candidates:
                 for candidate in pam_candidates:
                     pam_attack = candidate.prompt_pam(moving_combatant)
@@ -412,7 +420,7 @@ class ActionResolver:
                             logger.info(f"Combatant {moving_combatant} was stopped by sentinel")
 
         if moving_combatant.is_alive():
-            self.battle_map.move_combatant_by_increment(moving_combatant, movement.increment)
+            battle_map.move_combatant_by_increment(moving_combatant, movement.increment)
             return True
         return False
 
@@ -424,37 +432,38 @@ class ActionResolver:
         :return: in case of an attack returns True if the attack hit, false otherwise. Dodge always returns True, unknown parameters false.
         Other cases return None.
         """
+        battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:
             case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE:
-                actoid.activate(None)
+                actoid.activate()
                 self.effect_tracker.add(actoid, combatant)
                 return False
             case Action.RECKLESS_ATTACK:
                 if not self.effect_tracker.is_affecting_combatant(combatant, RecklessAttack):
                     # don't need to add it again in case of a multi-attack
-                    actoid.activate(None)
+                    actoid.activate()
                     self.effect_tracker.add(actoid, combatant)
                     return self.resolve_attack(actoid, combatant)
             case Action.WILDSHAPE | BonusAction.MOON_WILDSHAPE:
-                actoid.activate(self.battle_map)
+                actoid.activate()
                 self.effect_tracker.add(actoid, combatant)
                 return False
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
-                affected = self.battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
+                affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
                 dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                 for combatant in affected:
                     logger.info(f"{combatant} is hit by Fireball")
                     resolve_dmg_saving_throw(actoid, dmg, combatant)
-                    self.battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
+                    battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
-                actoid.activate(None)
+                actoid.activate()
                 self.effect_tracker.add(actoid, combatant)
                 combatant.is_concentrating = True
                 return ActionResult.MEDIUM_BUFF
             case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
-                actoid.activate(self.battle_map)
+                actoid.activate()
                 self.effect_tracker.add(actoid, combatant)
                 combatant.is_concentrating = True
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
@@ -464,7 +473,7 @@ class ActionResolver:
                        self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[1]))
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
-                self.battle_map.move_combatant(combatant, actoid.coord)
+                battle_map.move_combatant(combatant, actoid.coord)
                 return ActionResult.FEASIBLE
             case Action.CHAOSBOLT | BonusAction.QUICKENED_CHAOSBOLT:
                 return self.resolve_chaos_bolt(combatant, actoid)
@@ -480,7 +489,7 @@ class ActionResolver:
                 return ActionResult.FEASIBLE
             case Action.FLAMING_SPHERE:
                 logger.info(f"{combatant} casts {actoid}")
-                actoid.activate(None)
+                actoid.activate()
                 self.effect_tracker.add(actoid, combatant)
                 combatant.is_concentrating = True
                 return ActionResult.FEASIBLE
@@ -516,14 +525,14 @@ class ActionResolver:
                     logger.info(f"{combatant} remains grappled")
                     print(f"{combatant} remains grappled")
             case BonusAction.FLAMING_SPHERE_RAM:
-                adj = self.battle_map.build_flaming_sphere_adjacency_matrix()
-                _, shortest_paths = self.battle_map.dijkstra(actoid.factory.action_enabler_effect.origin, adj)
-                path = self.battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
+                adj = battle_map.build_flaming_sphere_adjacency_matrix()
+                _, shortest_paths = battle_map.dijkstra(actoid.factory.action_enabler_effect.origin, adj)
+                path = battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
                 if len(path) <= FlamingSphereRamFactory.RANGE + 1:
                     dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                     logger.info(f"{ actoid.target_combatant} is rammed by Flaming Sphere")
                     resolve_dmg_saving_throw(actoid, dmg, actoid.target_combatant)
-                    self.battle_map.remove_combatant_if_dead(actoid.target_combatant)   # TODO revisit if this is really needed
+                    battle_map.remove_combatant_if_dead(actoid.target_combatant)   # TODO revisit if this is really needed
                 path = path['tuples'][:FlamingSphereRamFactory.RANGE + 1]
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
                 return ActionResult.DMG
@@ -555,13 +564,13 @@ class ActionResolver:
         combatant = combatant.get_current_form()  # Takes care of possible wildshape
         if action is None:
             return None
-        if not check_feasibility(combatant, action, self.battle_map):
+        if not check_feasibility(combatant, action):
             if action.factory.action_type is Movement.STANDARD:
                 combatant.movement = 0  # This can be caused by difficult terrain which is ok but we must avoid endless looping
             else:
                 logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
             return None
-        use_resources(combatant, action, self.battle_map)
+        use_resources(combatant, action)
         return self.resolve_by_actoid_flags(action, combatant)
 
 

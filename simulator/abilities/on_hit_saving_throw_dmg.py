@@ -21,6 +21,6 @@ class OnHitSavingThrowDmg(OnHit):
         dmg = roll_dice(dice)
         resolve_on_hit_dmg_saving_throw(self, dmg, target, self.half_on_success)
 
-    def calculate_threat(self, attacker, target, battle_map, *args, **kwargs):
+    def calculate_threat(self, attacker, target, *args, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
         return mean_dmg_dc_attack(self.dc, self.dmg_dice, self.half_on_success, target.saving_throws[self.st])

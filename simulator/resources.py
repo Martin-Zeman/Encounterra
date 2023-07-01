@@ -1,5 +1,6 @@
 import logging
 from simulator.actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction
+from simulator.battle_map import Map
 from simulator.misc import Conditions
 
 logger = logging.getLogger("EncounTroll")
@@ -7,7 +8,7 @@ logger = logging.getLogger("EncounTroll")
 
 
 
-def use_resources(combatant, action, battle_map):
+def use_resources(combatant, action):
     # try:
     #     subject = combatant if combatant.current_wildshape_form is None else combatant.current_wildshape_form
     # except AttributeError:
@@ -99,6 +100,7 @@ def use_resources(combatant, action, battle_map):
     elif isinstance(action_type, Movement):
         match action_type:
             case Movement.STANDARD | Movement.DISENGAGE:
+                battle_map = Map.get()
                 target_position = battle_map.get_combatant_position(subject) + action.increment  # Position is tracked at the original
                 decrement = 1
                 if subject.is_affected_by(Conditions.PRONE):

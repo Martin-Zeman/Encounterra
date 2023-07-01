@@ -16,6 +16,8 @@ from simulator.teams import Teams
 from simulator.test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map
 from simulator.utils.utils import preallocate_wildshape_forms
 
+from simulator.test.test_singleton import SingletonClass
+
 
 def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
@@ -24,30 +26,28 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
 
     try:
-        actoid1 = get_action(test_moon_druid, battle_map)
+        actoid1 = get_action(test_moon_druid)
         assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid, battle_map)
+        actoid2 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid, battle_map)
+        actoid3 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid, battle_map)
+        actoid4 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid4, test_moon_druid)
-        actoid5 = get_action(test_moon_druid, battle_map)
+        actoid5 = get_action(test_moon_druid)
         assert str(actoid4) == "GiantToad Bite on Bugbear"
         assert str(actoid5) == "None"
     except Exception as e:
@@ -60,38 +60,36 @@ def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, t
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     test_bugbear.curr_hp = 1000  # Give the target a bunch of HP to make sure it doesn't die
 
     try:
-        actoid1 = get_action(test_moon_druid, battle_map)
+        actoid1 = get_action(test_moon_druid)
         assert str(actoid1).startswith("Flaming Sphere")
         action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid, battle_map)
+        actoid2 = get_action(test_moon_druid)
         assert str(actoid2) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid, battle_map)
+        actoid3 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid3, test_moon_druid)
         assert str(actoid3) == "[1 1]"
-        actoid4 = get_action(test_moon_druid, battle_map)
+        actoid4 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid4, test_moon_druid)
         assert str(actoid4) == "[1 1]"
         test_moon_druid.new_turn()
-        actoid5 = get_action(test_moon_druid, battle_map)
+        actoid5 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid5, test_moon_druid)
-        actoid6 = get_action(test_moon_druid, battle_map)
+        actoid6 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid6, test_moon_druid)
-        actoid7 = get_action(test_moon_druid, battle_map)
+        actoid7 = get_action(test_moon_druid)
         assert str(actoid5) == "GiantToad Bite on Bugbear" or str(actoid6) == "GiantToad Bite on Bugbear"
         assert str(actoid5) == "Flaming Sphere Ram into Bugbear" or str(actoid6) == "Flaming Sphere Ram into Bugbear"
         assert str(actoid7) == "None"
@@ -119,64 +117,62 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
     battle_map.place_circular_element(np.array([2, 4]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([3, 4]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([3, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([1, 0]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([7, 6]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     test_bugbear.curr_hp = 1000  # Give the target a bunch of HP to make sure it doesn't die
 
     try:
-        actoid1 = get_action(test_moon_druid, battle_map)
+        actoid1 = get_action(test_moon_druid)
         assert str(actoid1) =="[0 1]"
         action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid, battle_map)
+        actoid2 = get_action(test_moon_druid)
         assert str(actoid2) == "[0 1]"
         action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid, battle_map)
+        actoid3 = get_action(test_moon_druid)
         assert str(actoid3) == "[1 1]"
         action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid, battle_map)
+        actoid4 = get_action(test_moon_druid)
         assert str(actoid4) == "[1 0]"
         action_resolver.resolve_action(actoid4, test_moon_druid)
-        actoid5 = get_action(test_moon_druid, battle_map)
+        actoid5 = get_action(test_moon_druid)
         assert str(actoid5) == "[1 1]" or str(actoid5) == "[1 0]" or str(actoid5) == '[ 1 -1]'
         action_resolver.resolve_action(actoid5, test_moon_druid)
 
-        actoid7 = get_action(test_moon_druid, battle_map)
+        actoid7 = get_action(test_moon_druid)
         assert str(actoid7).startswith("Flaming Sphere")
         action_resolver.resolve_action(actoid7, test_moon_druid)
-        actoid8 = get_action(test_moon_druid, battle_map)
+        actoid8 = get_action(test_moon_druid)
         assert str(actoid8) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid8, test_moon_druid)
-        actoid9 = get_action(test_moon_druid, battle_map)
+        actoid9 = get_action(test_moon_druid)
         assert str(actoid9) == "None"
         test_moon_druid.new_turn()
 
-        actoid10 = get_action(test_moon_druid, battle_map)
+        actoid10 = get_action(test_moon_druid)
         print()
         print(str(actoid7))
         print("actoid10 " + str(actoid10))
         action_resolver.resolve_action(actoid10, test_moon_druid)
-        actoid11 = get_action(test_moon_druid, battle_map)
+        actoid11 = get_action(test_moon_druid)
         print("actoid11 " + str(actoid11))
         action_resolver.resolve_action(actoid11, test_moon_druid)
-        actoid12 = get_action(test_moon_druid, battle_map)
+        actoid12 = get_action(test_moon_druid)
         print("actoid12 " + str(actoid12))
         action_resolver.resolve_action(actoid12, test_moon_druid)
-        actoid13 = get_action(test_moon_druid, battle_map)
+        actoid13 = get_action(test_moon_druid)
         print("actoid13 " + str(actoid13))
         action_resolver.resolve_action(actoid13, test_moon_druid)
-        actoid14 = get_action(test_moon_druid, battle_map)
+        actoid14 = get_action(test_moon_druid)
         print("actoid14 " + str(actoid14))
         action_resolver.resolve_action(actoid14, test_moon_druid)
-        actoid15 = get_action(test_moon_druid, battle_map)
+        actoid15 = get_action(test_moon_druid)
         print("actoid15 " + str(actoid15))
         action_resolver.resolve_action(actoid15, test_moon_druid)
         # We don't know exactly where the Flaming sphere is gonna be placed so the druid might need to maneuver around the target out of its range
@@ -196,21 +192,19 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
 
     try:
-        actoid1 = get_action(test_moon_druid, battle_map)
+        actoid1 = get_action(test_moon_druid)
         assert test_moon_druid.curr_hp == 42
         assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
@@ -222,7 +216,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 41
         test_moon_druid.new_turn()
-        actoid2 = get_action(test_moon_druid, battle_map)
+        actoid2 = get_action(test_moon_druid)
         assert str(actoid2) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid2, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
@@ -232,7 +226,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 38
-        actoid3 = get_action(test_moon_druid, battle_map)
+        actoid3 = get_action(test_moon_druid)
         assert not str(actoid3).startswith("Wildshape")
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -246,31 +240,29 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
 
     try:
-        actoid1 = get_action(test_moon_druid, battle_map)
+        actoid1 = get_action(test_moon_druid)
         assert str(actoid1) == "Wildshape of MoonDruid5Lvl into GiantToad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid, battle_map)
+        actoid2 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid, battle_map)
+        actoid3 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid, battle_map)
+        actoid4 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid4, test_moon_druid)
 
-        actoid5 = get_action(test_bugbear, battle_map)
+        actoid5 = get_action(test_bugbear)
         assert str(actoid5) == "Morningstar on MoonDruid5Lvl wildshaped into GiantToad"
         action_resolver.resolve_action(actoid5, test_bugbear)
     except Exception as e:
@@ -283,7 +275,6 @@ def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_mo
     We make sure there's a clearing in the terrain which the giant form fits into. It starts at root coordinate [9, 8].
     """
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.place_circular_element(np.array([1, 13]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -301,13 +292,12 @@ def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_mo
     battle_map.build_adjacency_matrix()
     distances, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE,
                                                                             test_moon_druid.wildshape_factory[1])
 
     wsf = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
     ws = wsf.create(GiantConstrictorSnake)
-    coords = ws.get_eligible_coords(battle_map, distances, shortest_paths)
+    coords = ws.get_eligible_coords(distances, shortest_paths)
     assert coords == [(9, 9)]
 
 def test_wilshape_copy_two_druids(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
@@ -316,19 +306,17 @@ def test_wilshape_copy_two_druids(battle_map, teams, effect_tracker, test_moon_d
     """
     test_moon_druid_2 = copy.deepcopy(test_moon_druid)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     test_moon_druid_2.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_2, BonusAction.MOON_WILDSHAPE, test_moon_druid_2.wildshape_factory[1])
     assert test_moon_druid.available_wildshape_forms[0] is not test_moon_druid_2.available_wildshape_forms[0]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
 
 def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, test_bugbear):
@@ -338,31 +326,29 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
     CustomLogger(LogLevel.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.set_combatant_coordinates(test_giant_toad, np.array([2, 2]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_giant_toad, test_bugbear]
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     test_bugbear.ac = 0  # Making sure the attacks hit, only nat 1 can make the test fail
     test_bugbear.curr_hp = 100  # Making sure it doesn't die in case of a crit
 
     try:
-        actoid1 = get_action(test_giant_toad, battle_map)
+        actoid1 = get_action(test_giant_toad)
         assert str(actoid1) == "Bite on Bugbear"
         result = action_resolver.resolve_action(actoid1, test_giant_toad)
         if result is ActionResult.DMG:
             assert test_bugbear.is_affected_by(Conditions.GRAPPLED)
             assert test_bugbear.is_affected_by(Conditions.RESTRAINED)
             assert test_giant_toad.constricted_target is test_bugbear
-            actoid2 = get_action(test_giant_toad, battle_map)
+            actoid2 = get_action(test_giant_toad)
             assert str(actoid2) == "None"
             test_giant_toad.new_turn()
-            actoid3 = get_action(test_giant_toad, battle_map)
+            actoid3 = get_action(test_giant_toad)
             assert str(actoid3) == "Bite and Swallow on Bugbear"
             swallowed = action_resolver.resolve_action(actoid3, test_giant_toad)
             if swallowed is ActionResult.DMG:
@@ -380,10 +366,9 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
     """
     CustomLogger(LogLevel.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    effect_tracker.set_battle_map(battle_map)
     combatants = [test_moon_druid, test_giant_toad]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
-    action_resolver = ActionResolver(combatants, teams, battle_map, effect_tracker)
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([1, 14]))
@@ -399,13 +384,25 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
     test_moon_druid.acrobatics = -20  # Make sure it can't break the grapple
 
     try:
-        actoid1 = get_action(test_giant_toad, battle_map)
+        actoid1 = get_action(test_giant_toad)
         action_resolver.resolve_action(actoid1, test_giant_toad)
         if test_moon_druid.is_affected_by(Conditions.GRAPPLED):
-            actoid2 = get_action(test_moon_druid, battle_map)
+            actoid2 = get_action(test_moon_druid)
             action_resolver.resolve_action(actoid2, test_moon_druid)
             if test_moon_druid.is_affected_by(Conditions.GRAPPLED):  # Still grappled
-                actoid3 = get_action(test_moon_druid, battle_map)
+                actoid3 = get_action(test_moon_druid)
                 assert str(actoid3) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+@pytest.fixture(autouse=True)
+def reset_singleton():
+    SingletonClass._instance = None
+
+def test_singleton_1():
+    obj1 = SingletonClass(10)
+    assert obj1.number == 10
+
+def test_singleton_2():
+    obj1 = SingletonClass(20)
+    assert obj1.number == 20

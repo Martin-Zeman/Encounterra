@@ -27,10 +27,10 @@ class ShieldFactory(DirectThreatFactory):
         """
         return "ShieldFactory"
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         return 0
 
-    def calculate_threat_to_target_delta(self, battle_map, target, modifiers, *args, **kwargs):
+    def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         return 0
 
     def create(self):
@@ -51,11 +51,11 @@ class Shield(Actoid, ReactionToThreat):
     def shorthand_str(self):
         return "Shield"
 
-    def calculate_threat_mod(self, combatant, battle_map, incoming_action, actor, *args, **kwargs):
+    def calculate_threat_mod(self, combatant, incoming_action, actor, *args, **kwargs):
         return 0 # TODO Consider removing this from ReactionToThreat altogether
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
         pass  # No need due to IS_POSITIONING_INDEPENDENT, in addition to that it's a reaction anyway
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
         return True

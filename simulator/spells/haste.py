@@ -1,3 +1,4 @@
+from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -43,30 +44,31 @@ class HasteFactory(ThreatModifierFactory):
         return {'effect_tracker': self.effect_tracker, 'caster': self.combatant}
 
 
-    def get_eligible_targets(self, battle_map):
+    def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [self.combatant]
-
+        battle_map = Map.get()
         ret = [a for a in battle_map.get_allies_within_radius(self.combatant, HasteFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]  # TODO do I want to keep this?
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
 
-    def create_all(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
+    def create_all(self):
+        targets = self.get_eligible_targets()
         return [Haste(t, self) for t in targets]
 
     def create(self, target_combatant):
         return Haste(target_combatant, self)
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
         if target.haste_action_factories:  # No benefit if already hasted
             return 0
+        battle_map = Map.get()
         enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
@@ -85,15 +87,15 @@ class HasteFactory(ThreatModifierFactory):
             if not enemy_attacks:
                 continue
             # attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
-            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(battle_map, target, {ThreatModifierType.TARGET_AC: 2}), enemy_attacks, 0)
+            attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(target, {ThreatModifierType.TARGET_AC: 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
         return max_attack_dmg * ROUND_HORIZON
 
-    def calculate_max_threat(self, battle_map):
-        targets = self.get_eligible_targets(battle_map)
-        return max(targets, key=lambda t: self.calculate_threat_to_target(battle_map, t))
+    def calculate_max_threat(self):
+        targets = self.get_eligible_targets()
+        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
 
 class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
 
@@ -112,34 +114,31 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
     def get_effect_type(self):
         return EffectType.HASTE
 
-    def activate(self, battle_map):
+    def activate(self):
         self.factory.combatant.is_concentrating = True
         self.target.ac += 2
         self.target.add_hasted_factories()
         self.target.has_haste_action = True  # TODO Remove this
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         self.factory.combatant.is_concentrating = False
         self.target.ac -= 2
         self.target.haste_action_factories.clear()
         self.factory.effect_tracker.create_post_haste_lethargy(self.target)
         self.target.has_haste_action = False  # TODO Remove this
 
-    def is_affecting(self, combatant, battle_map):
+    def is_affecting(self, combatant):
         return combatant is self.target
 
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         """
         It's the same as the single target version of the factory
         """
-        return self.factory.calculate_threat_to_target(battle_map, self.target)
+        return self.factory.calculate_threat_to_target(self.target)
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         else:
@@ -148,5 +147,6 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HasteFactory.range)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HasteFactory.range

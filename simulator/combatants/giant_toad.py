@@ -5,6 +5,7 @@ import numpy as np
 from simulator.abilities.on_hit_auto_restrained import OnHitAutoRestrained
 from simulator.abilities.on_hit_swallow import OnHitSwallow
 from simulator.actions.action_types import Action, Reaction
+from simulator.battle_map import Map
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.misc import DamageType, SavingThrow, Size, parse_dmg_dice, roll_dice, Conditions
@@ -48,11 +49,12 @@ class GiantToad(Combatant):
             logger.info(f"{self.name} is digesting {self.swallowed_target} for {dmg_dice_sum} dmg", extra={"team": self.team_color})
             self.swallowed_target.receive_dmg(dmg_dice_sum, DamageType.Acid)
 
-    def on_die(self, battle_map):
+    def on_die(self):
         if self.swallowed_target:
             logger.info(f"{self.swallowed_target} is spat out and no longer swallowed", extra={"team": self.team_color})
             self.swallowed_target.remove_all_conditions_of_type(Conditions.SWALLOWED)  # This should remmove all the accompanying comditions too
             self.swallowed_target = None
+            battle_map = Map.get()
             free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
                                                           None,
                                                           inflate_to_size=self.swallowed_target.size,

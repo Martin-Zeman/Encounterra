@@ -1,9 +1,7 @@
 import copy
 import numpy as np
-import math
 import sys
 import logging
-from simulator.abilities.wildshape import Wildshape
 from simulator.actions.action_types import Passive
 from simulator.combatant_coords import CombatantCoords
 from simulator.proto_combatant import ProtoCombatant
@@ -114,21 +112,34 @@ class GridSquare:
     def is_difficult_terrain(self):
         return self.terrain is Terrain.DIFFICULT_TERRAIN
 
-class Map:
 
-    def __init__(self, size, teams):
-        self.size = size
-        self.teams = teams
-        vGridSquare = np.vectorize(GridSquare)
-        init_grid = np.arange(size**2).reshape((size, size))
-        self.grid = np.empty((size, size), dtype=object)
-        self.grid[:, :] = vGridSquare(init_grid)
-        self.base_adjacency_matrix = np.zeros((size, size))
-        self.difficult_set = set()
-        self.impassable_set = set()
-        self.combatant_coordinate_cache = dict()  # Maps combatant -> coordinate
-        self.effect_tracker = None
-        self.combatant_positioning_hash = None
+class Map:
+    _instance = None
+
+    def __new__(cls, size, teams):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+            cls._instance.size = size
+            cls._instance.teams = teams
+            vGridSquare = np.vectorize(GridSquare)
+            init_grid = np.arange(size ** 2).reshape((size, size))
+            cls._instance.grid = np.empty((size, size), dtype=object)
+            cls._instance.grid[:, :] = vGridSquare(init_grid)
+            cls._instance.base_adjacency_matrix = np.zeros((size, size))
+            cls._instance.difficult_set = set()
+            cls._instance.impassable_set = set()
+            cls._instance.combatant_coordinate_cache = dict()  # Maps combatant -> coordinate
+            cls._instance.effect_tracker = None
+            cls._instance.combatant_positioning_hash = None
+        return cls._instance
+
+    @classmethod
+    def reset_singleton(cls):
+        cls._instance = None
+
+    @classmethod
+    def get(cls):
+        return cls._instance
 
     def __str__(self):
         string_repr = ""
@@ -210,33 +221,6 @@ class Map:
         finally:
             self.get_hop_distance = orig_dist_hop_func
             self.get_cartesian_distance = orig_dist_cartesian_func
-
-
-    @contextmanager
-    def replace_combatant_if_action_is_wildshape(self, action, combatant):
-        """
-        Replaces the combatant with the wildshaped form given by the action
-        :param action:
-        :param combatant:
-        :return:
-        """
-        if isinstance(action, Wildshape):
-            original_size = action.form.size
-            try:
-                self.teams.replace_combatant(combatant, action.form)
-                position = self.get_combatant_position(combatant)
-                action.form.size = Size.MEDIUM  # TODO this is a hack, making the form medium to make sure it fits
-                self.remove_combatant(combatant)
-                self.set_combatant_coordinates(action.form, position.get()[0])  # TODO shouldn't this also use find_wildshaped_coordinate
-                yield action.form
-            finally:
-                action.form.size = original_size
-                self.teams.replace_combatant(action.form, combatant)
-                position = self.get_combatant_position(action.form)
-                self.remove_combatant(action.form)
-                self.set_combatant_coordinates(combatant, position.get()[0])
-        else:
-            yield combatant
 
 
     @contextmanager
@@ -1046,12 +1030,12 @@ class Map:
         """
         if combatant.get_original_form() is combatant and not combatant.is_alive():
             logger.info(f"{combatant} died")
-            combatant.on_die(self)
+            combatant.on_die()
             self.remove_combatant(combatant)
             return None
         else:
             if not combatant.get_original_form().is_alive():
-                combatant.get_original_form.on_die(self)
+                combatant.get_original_form.on_die()
                 logger.info(f"{combatant.get_original_form()} died")
                 self.remove_combatant(combatant.get_original_form())
                 return None

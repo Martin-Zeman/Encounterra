@@ -1,6 +1,7 @@
 import math
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
+from simulator.battle_map import Map
 from simulator.misc import Size
 import logging
 
@@ -18,7 +19,7 @@ class BiteAndSwallowFactory(MeleeAttackFactory):
             return BiteAndSwallow(target_combatant, self)
         return None
 
-    def create_all(self, battle_map):
+    def create_all(self):
         # if self.combatant.constricted_target is not None and self.combatant.constricted_target.size <= Size.MEDIUM:
         return [BiteAndSwallow(self.combatant.constricted_target, self)]
         # return None
@@ -30,8 +31,9 @@ class BiteAndSwallow(MeleeAttack):
     def shorthand_str(self):
         return "Bite"
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
         try:
+            battle_map = Map.get()
             return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
                                                            distances,
                                                            inflate_to_size=self.factory.combatant.size,
@@ -40,15 +42,17 @@ class BiteAndSwallow(MeleeAttack):
         except AttributeError:
             print("FIXME")
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
+        battle_map = Map.get()
         return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)
 
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
-        return self.factory.calculate_threat_to_target(battle_map, self.target_combatant, **kwargs)
+        return self.factory.calculate_threat_to_target(self.target_combatant, **kwargs)
 
-    def calculate_threat_delta(self, battle_map, modifiers, *args, **kwargs):
+    def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
+        battle_map = Map.get()
         return self.factory.calculate_threat_to_target_delta(battle_map, self.target_combatant, modifiers, *args, **kwargs)

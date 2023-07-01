@@ -7,5 +7,5 @@ class OnHit(ABC):
         pass
 
     @abstractmethod
-    def calculate_threat(self, attacker, target, battle_map, *args, **kwargs):
+    def calculate_threat(self, attacker, target, *args, **kwargs):
         pass

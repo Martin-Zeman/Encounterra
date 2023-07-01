@@ -9,14 +9,14 @@ class ActionEnablerEffect(Effect):
     """
 
     @abstractmethod
-    def enable(self, battle_map):
+    def enable(self):
         """
         This function makes modifications to the affected to allow them to perform new actions
         """
         pass
 
     @abstractmethod
-    def disable(self, battle_map):
+    def disable(self):
         """
         This function returns the affected to the previous state
         """

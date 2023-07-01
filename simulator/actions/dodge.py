@@ -2,6 +2,7 @@ from functools import cache
 
 from simulator.actions.action_types import Action
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
+from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -28,15 +29,15 @@ class DodgeFactory(ThreatModifierFactory):
         """
         return "DodgeFactory"
 
-    def create_all(self, battle_map):
+    def create_all(self):
         return [Dodge(self.combatant, self)]
 
-    def calculate_threat_to_target(self, battle_map, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         Calculates the maximum threat reduction the factory can cause by imposing disadvantage on the target enemy
         """
         # The target is irrelevant here
-        return -1 * calculate_threat_in_mod(self.combatant, 6, battle_map, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
+        return -1 * calculate_threat_in_mod(self.combatant, 6, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
 
 
 class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
@@ -57,11 +58,11 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
     def shorthand_str(self):
         return f"Dodge"
 
-    def activate(self, battle_map):
+    def activate(self):
         self.combatants[0].is_dodging = True
         self.combatants[0].saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.ADVANTAGE)
 
-    def deactivate(self, battle_map):
+    def deactivate(self):
         logger.info(f"{self.combatants[0]}'s dodge fades")
         self.combatants[0].is_dodging = False
         try:
@@ -70,20 +71,17 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
             pass  # may not be present if called by reset
 
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-
-    @cache
-    def calculate_threat(self, battle_map, *args, **kwargs):
+    def calculate_threat(self, *args, **kwargs):
         """
         Calculate how much dmg would the dodge potentially mitigate. This will be the same as the one for the factory.
         """
         # return -1 * calculate_threat_in_mod(combatant, 6, battle_map, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
         return 0  # Threat that a Dodge would potentially mitigate is calculated in a different way
 
-    def get_eligible_coords(self, battle_map, distances, shortest_paths):
+    def get_eligible_coords(self, distances, shortest_paths):
+        battle_map = Map.get()
         # return None # We don't want to have any coords pre-pended in the DAG
         return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
-    def is_current_coord_eligible(self, battle_map):
+    def is_current_coord_eligible(self):
         return True

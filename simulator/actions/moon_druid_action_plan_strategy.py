@@ -8,6 +8,7 @@ from simulator.actions.action_fsms import generate_action_fsm, generate_wildshap
 from simulator.actions.action_plan_strategy import ActionPlanStrategy
 from simulator.actions.action_selector import longest_path, build_action_dag, translate_longest_pth_to_actions
 from simulator.actions.action_types import Action, BonusAction
+from simulator.battle_map import Map
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 
 logger = logging.getLogger("EncounTroll")
@@ -61,17 +62,17 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         self.best_wildshape_plan_data = None
 
 
-    def combine_action_plans(self, regular_action_plan, ws_action_plan, non_wildshape_action, battle_map, distances, shortest_paths):
+    def combine_action_plans(self, regular_action_plan, ws_action_plan, non_wildshape_action, distances, shortest_paths):
         """
         A helper function which combines the regular best action plan with the best wildshape plan.
         :param regular_action_plan: the best overall action plan
         :param ws_action_plan: the best action plan which starts with a wildshape
         :param non_wildshape_action: the first non-wildshape action from the regular action plan
-        :param battle_map:
         :param distances: potentially already pre-computed distances to all coords
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: combined action plan
         """
+        battle_map = Map.get()
         current_position = tuple(battle_map.get_combatant_position(self.combatant).get()[0])
         # regular_movement_increments = [e.increment for e in regular_action_plan if hasattr(e, "increment")]
         # regular_destination = current_position + tuple(np.sum(regular_movement_increments, axis=0)) if regular_movement_increments else (0, 0)
@@ -79,7 +80,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         sum_of_ws_increments = tuple(np.sum(ws_movement_increments, axis=0)) if ws_movement_increments else (0, 0)
         ws_destination = (current_position[0] + sum_of_ws_increments[0], current_position[1] + sum_of_ws_increments[1])
         try:
-            if ws_destination in non_wildshape_action.get_eligible_coords(battle_map, distances, shortest_paths):
+            if ws_destination in non_wildshape_action.get_eligible_coords(distances, shortest_paths):
                 combined_plan = []
                 combined_plan.extend(ws_action_plan[:len(ws_movement_increments)])
                 combined_plan.append(non_wildshape_action)
@@ -87,46 +88,45 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
                 return combined_plan
         except TypeError:
             print("FIXME")
-            non_wildshape_action.get_eligible_coords(battle_map, distances, shortest_paths)
+            non_wildshape_action.get_eligible_coords(distances, shortest_paths)
         return regular_action_plan
 
-    def calculate_action_plan(self, battle_map, distances, shortest_paths):
+    def calculate_action_plan(self, distances, shortest_paths):
         """
         The point of this strategy is that it tries to combine the regular best result with the best wildshape result for a better result in
         the long-term. If a concentration spell is combined with a wildshape action then the wildshape action would only be evaluated based
         on its HP and its actions would not be taken into account. That's why a best wildshape plan is pre-computed and combined with the
         actual best plan in case the best plan contains a wildshape following a different kind of action.
-        :param battle_map:
         :param distances: potentially already pre-computed distances to all coords
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of the following types: np.array, action, bonus action
         """
         if self.best_wildshape_plan_data is None:
-            ws_fsm, ws_transition_name_to_action, ws_post_misty_step_actions = generate_wildshape_action_fsm(self.combatant, battle_map)
-            ws_dag = build_action_dag(self.combatant, battle_map, ws_fsm, ws_transition_name_to_action, distances, shortest_paths, ws_post_misty_step_actions)
+            ws_fsm, ws_transition_name_to_action, ws_post_misty_step_actions = generate_wildshape_action_fsm(self.combatant)
+            ws_dag = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths, ws_post_misty_step_actions)
             if ws_dag is not None:
                 ws_sorted_states = toposort_flatten(ws_dag.dependencies)
-                wildshape_path, ws_transition_name_to_ms_path = longest_path(self.combatant, battle_map, ws_dag, ws_sorted_states, ws_transition_name_to_action, distances, shortest_paths)
+                wildshape_path, ws_transition_name_to_ms_path = longest_path(self.combatant, ws_dag, ws_sorted_states, ws_transition_name_to_action, distances, shortest_paths)
                 self.best_wildshape_plan_data = wildshape_path, ws_transition_name_to_ms_path, ws_transition_name_to_action
 
         get_aoe_and_aoo_threat_for_increment.cache_clear()
-        fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(self.combatant, battle_map)
-        dag = build_action_dag(self.combatant, battle_map, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
+        fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(self.combatant)
+        dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
         if dag is None:
             return None
         sorted_states = toposort_flatten(dag.dependencies)
-        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, battle_map, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
+        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
         if longest_pth is None:
             return None
         need_to_combine, non_wildshape_action = evaluate_combination_eligibility(longest_pth, transition_name_to_action)
-        regular_plan = translate_longest_pth_to_actions(self.combatant, battle_map, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)
+        regular_plan = translate_longest_pth_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)
         # logger.info(f"Moon druid's regular plan {regular_plan}")# FIXME
         if need_to_combine:
             if self.best_wildshape_plan_data is not None:
-                wildshape_plan = translate_longest_pth_to_actions(self.combatant, battle_map, distances, shortest_paths, self.best_wildshape_plan_data[2], self.best_wildshape_plan_data[0], self.best_wildshape_plan_data[1])
+                wildshape_plan = translate_longest_pth_to_actions(self.combatant, distances, shortest_paths, self.best_wildshape_plan_data[2], self.best_wildshape_plan_data[0], self.best_wildshape_plan_data[1])
                 # logger.info(f"Moon druid's wildshaped plan {wildshape_plan}")#FIXME
                 if non_wildshape_action is None:
                     return [get_moon_wildshape_action(wildshape_plan)]  # The case where there's only the wildshape remaining from the plan
-                regular_plan = self.combine_action_plans(regular_plan, wildshape_plan, transition_name_to_action[non_wildshape_action], battle_map, distances, shortest_paths)
+                regular_plan = self.combine_action_plans(regular_plan, wildshape_plan, transition_name_to_action[non_wildshape_action], distances, shortest_paths)
         # logger.info(f"Moon druid's final plan {regular_plan}")#FIXME
         return regular_plan
