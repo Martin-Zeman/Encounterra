@@ -17,15 +17,14 @@ class PreSwallowBiteFactory(MeleeAttackFactory):
         self.flags |= FactoryFlags.IS_MELEE
 
     def create(self, target_combatant):
-        if self.combatant.constricted_target is None or self.combatant.constricted_target is target_combatant:
+        if self.combatant.constricted_target is None or (self.combatant.constricted_target is target_combatant and target_combatant.is_alive()):
             return PreSwallowBite(target_combatant, self)
         return None
 
 
     def create_all(self):
-        if self.combatant.constricted_target is not None:
+        if self.combatant.constricted_target is not None and self.combatant.constricted_target.is_alive():
             return [PreSwallowBite(self.combatant.constricted_target, self)]
-        battle_map = Map.get()
         targets = self.get_eligible_targets()
         return [PreSwallowBite(t, self) for t in targets]
 

@@ -390,7 +390,7 @@ class ActionResolver:
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             for extra in extra_dmg:
                 target.receive_dmg(extra[0], extra[1])
-                target = battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
+            target = battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
             if target and attack.factory.on_hit is not None:
                 attack.factory.on_hit.hit(attacker, attack, target, self.effect_tracker)
 

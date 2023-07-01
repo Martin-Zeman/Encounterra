@@ -1035,7 +1035,10 @@ class Map:
             return None
         else:
             if not combatant.get_original_form().is_alive():
-                combatant.get_original_form.on_die()
+                try:
+                    combatant.get_original_form.on_die()
+                except AttributeError:
+                    print("FIXME")
                 logger.info(f"{combatant.get_original_form()} died")
                 self.remove_combatant(combatant.get_original_form())
                 return None

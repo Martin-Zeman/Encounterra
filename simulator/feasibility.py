@@ -14,33 +14,32 @@ logger = logging.getLogger("EncounTroll")
 def check_feasibility(combatant, action):
     battle_map = Map.get()
     action_type = action.factory.action_type
-    if isinstance(action_type, Action):
+    if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+            return False
+        res = combatant.has_action if isinstance(action_type, Action) else combatant.has_haste_action
+        if not res:
             return False
         match action_type:
             case Action.FIREBALL:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.are_valid_coords(action.coord)
                 res &= battle_map.get_cartesian_distance(combatant, np.array([action.coord])) <= action.factory.range
                 return res
             case Action.HASTE:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
             case Action.CHAOSBOLT:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
                 return res
             case Action.SCORCHING_RAY:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
@@ -51,12 +50,10 @@ def check_feasibility(combatant, action):
                 res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
                 return res
             case Action.FIREBOLT:
-                res = combatant.has_action
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 return res
             case Action.TWINNED_FIREBOLT:
-                res = combatant.has_action
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
@@ -64,7 +61,6 @@ def check_feasibility(combatant, action):
                 res &= combatant.curr_sorcery_points > 0
                 return res
             case Action.TWINNED_HASTE:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
@@ -73,16 +69,14 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 res &= combatant.curr_sorcery_points > 2
                 return res
-            case Action.MELEE_ATTACK:
-                res = combatant.has_action
+            case Action.MELEE_ATTACK | HasteAction.HASTE_MELEE_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
-            case Action.RANGED_ATTACK:
-                res = combatant.has_action
+            case Action.RANGED_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
@@ -90,26 +84,23 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
             case Action.RECKLESS_ATTACK:
-                res = combatant.has_action
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 return res
-            case Action.DASH | Action.DISENGAGE:
+            case Action.DASH | Action.DISENGAGE | HasteAction.HASTE_DISENGAGE | HasteAction.HASTE_DASH:
                 # Technically, those actions are possible but make no sense
-                return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
-                                                                                 Conditions.RESTRAINED)
+                return res and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
             case Action.DODGE | Action.POUNCE:
-                return combatant.has_action
+                return res
             case Action.BREAK_GRAPPLE:
-                return combatant.has_action and combatant.is_affected_by_any(Conditions.GRAPPLED)
+                return res and combatant.is_affected_by_any(Conditions.GRAPPLED)
             case Action.CONSTRICT:
-                return combatant.has_action and (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
+                return res and (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
             case Action.WILDSHAPE:
-                return combatant.has_action and combatant.curr_wildshape_uses > 0
+                return res and combatant.curr_wildshape_uses > 0
             case Action.PRE_SWALLOW_BITE:
-                res = combatant.has_action
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
@@ -118,7 +109,6 @@ def check_feasibility(combatant, action):
                 res &= (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
                 return res
             case Action.BITE_AND_SWALLOW:
-                res = combatant.has_action
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
@@ -128,12 +118,28 @@ def check_feasibility(combatant, action):
                 res &= action.target_combatant is combatant.constricted_target
                 return res
             case Action.FLAMING_SPHERE:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.is_concentrating
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                return res
+            case HasteAction.HASTE_BITE_AND_SWALLOW:
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= combatant.ammo[action.factory.name] > 0
+                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                res &= not combatant.swallowed_target
+                res &= action.target_combatant is combatant.constricted_target
+                return res
+            case HasteAction.HASTE_PRE_SWALLOW_BITE:
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= combatant.ammo[action.factory.name] > 0
+                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                res &= (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
                 return res
             case _:
                 logger.error("check_feasibility: Unknown action type")
@@ -231,31 +237,6 @@ def check_feasibility(combatant, action):
                 return combatant.movement >= (combatant.speed / 2)
             case _:
                 logger.error("Unknown movement")
-    elif isinstance(action_type, HasteAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
-            return False
-        res = combatant.has_haste_action
-        match action_type:
-            case HasteAction.HASTE_BITE_AND_SWALLOW:
-                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
-                res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
-                res &= not combatant.swallowed_target
-                res &= action.target_combatant is combatant.constricted_target
-                return res
-            case HasteAction.HASTE_PRE_SWALLOW_BITE:
-                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
-                res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
-                res &= (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
-                return res
-            case _:
-                logger.error("Unknown haste action")
-        return res
     # elif isinstance(action_type, FreeAction):
     #     match action_type:
     #         case _:
@@ -275,72 +256,65 @@ def check_feasibility_light(combatant, action):
     """
     battle_map = Map.get()
     action_type = action[0]
-    if isinstance(action_type, Action):
+    if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+            return False
+        res = combatant.has_action if isinstance(action_type, Action) else combatant.has_haste_action
+        if not res:
             return False
         match action_type:
             case Action.FIREBALL:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
             case Action.HASTE:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.is_concentrating
                 # res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.CHAOSBOLT:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
             case Action.SCORCHING_RAY:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
             case Action.FIREBOLT:
-                return combatant.has_action
+                return res
             case Action.TWINNED_FIREBOLT:
-                return combatant.has_action and combatant.curr_sorcery_points > 0
+                return res and combatant.curr_sorcery_points > 0
             case Action.TWINNED_HASTE:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.is_concentrating
                 res &= combatant.curr_sorcery_points > 2
                 res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
-            case Action.MELEE_ATTACK | Action.RANGED_ATTACK:
-                res = combatant.has_action
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.RECKLESS_ATTACK:
-                res = combatant.has_action
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= combatant.ammo[action[1].name] > 0
                 return res
-            case Action.DASH | Action.DISENGAGE:
-                return combatant.has_action and not combatant.is_affected_by_any(Conditions.GRAPPLED,
-                                                                                 Conditions.RESTRAINED)
+            case Action.DASH | Action.DISENGAGE | HasteAction.HASTE_DASH | HasteAction.HASTE_DISENGAGE:
+                return res and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
             case Action.DODGE | Action.POUNCE:
-                return combatant.has_action
+                return res
             case Action.CONSTRICT:
-                return combatant.has_action# and not combatant.is_constricting
+                return res  # and not combatant.is_constricting
             case Action.WILDSHAPE:
-                return combatant.has_action and combatant.curr_wildshape_uses > 0
+                return res and combatant.curr_wildshape_uses > 0
             case Action.PRE_SWALLOW_BITE:
-                res = combatant.has_action
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.BITE_AND_SWALLOW:
-                res = combatant.has_action
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action[1].name] > 0
@@ -348,10 +322,21 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.constricted_target is not None and combatant.constricted_target.size.value <= Size.MEDIUM.value
                 return res
             case Action.FLAMING_SPHERE:
-                res = combatant.has_action
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.is_concentrating
+                return res
+            case HasteAction.HASTE_BITE_AND_SWALLOW:
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= combatant.ammo[action[1].name] > 0
+                res &= not combatant.swallowed_target
+                res &= combatant.constricted_target is not None and combatant.constricted_target.size.value <= Size.MEDIUM.value
+                return res
+            case HasteAction.HASTE_PRE_SWALLOW_BITE:
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= combatant.ammo[action[1].name] > 0
                 return res
             case _:
                 logger.error("check_feasibility_light: Unknown action type")
@@ -415,32 +400,6 @@ def check_feasibility_light(combatant, action):
         return combatant.movement > 0 and not combatant.is_affected_by_any(
             Conditions.GRAPPLED,
             Conditions.RESTRAINED)
-    elif isinstance(action_type, HasteAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED):
-            return False
-        res = combatant.has_haste_action
-        match action_type:
-            case HasteAction.HASTE_BITE_AND_SWALLOW:
-                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
-                res &= combatant.ammo[action[1].name] > 0
-                res &= not combatant.swallowed_target
-                res &= combatant.constricted_target is not None and combatant.constricted_target.size.value <= Size.MEDIUM.value
-                return res
-            case HasteAction.HASTE_PRE_SWALLOW_BITE:
-                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
-                res &= combatant.ammo[action[1].name] > 0
-                return res
-            case HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK |HasteAction.HASTE_DASH | HasteAction.HASTE_DISENGAGE | HasteAction.HASTE_HIDE:
-                return res
-            case _:
-                logger.error("Unknown haste action")
-        return res
-    # elif isinstance(action_type, FreeAction):
-    #         case _:
-    #             logger.error("Unknown free action")
-    #             return False
     else:
         logger.error("check_feasibility_light: Unknown action type")
         return False
