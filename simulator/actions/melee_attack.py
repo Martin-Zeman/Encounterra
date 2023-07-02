@@ -34,5 +34,7 @@ class MeleeAttack(Attack):
                                                        combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
+        if self.factory.combatant.get_swallower() is self.target_combatant:
+            return True
         battle_map = Map.get()
         return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)

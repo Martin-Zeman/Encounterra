@@ -72,4 +72,6 @@ class MistyStep(Actoid, ThreatModifier):
         return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
     def is_current_coord_eligible(self):
+        if self.factory.combatant.get_swallower():
+            return False
         return True

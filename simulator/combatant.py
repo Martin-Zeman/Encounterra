@@ -456,12 +456,6 @@ class Combatant(ABC, ProtoCombatant):
             self.constricted_target = None
 
     def reset(self):
-        # if hasattr(self, 'current_wildshape_form'):
-        # NOTE: Currently this is left to the effect_tracker
-        #     # TODO consider moving this to the druid
-        #     logger.info(f"Resetting wildshape form FIXME")
-        #     self.current_wildshape_form = None
-        #     self.curr_wildshape_uses = self.max_wildshape_uses
         self.has_action = True
         self.has_bonus_action = True
         self.has_reaction = True

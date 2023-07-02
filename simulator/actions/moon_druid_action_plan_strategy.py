@@ -120,13 +120,10 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
             return None
         need_to_combine, non_wildshape_action = evaluate_combination_eligibility(longest_pth, transition_name_to_action)
         regular_plan = translate_longest_pth_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)
-        # logger.info(f"Moon druid's regular plan {regular_plan}")# FIXME
         if need_to_combine:
             if self.best_wildshape_plan_data is not None:
                 wildshape_plan = translate_longest_pth_to_actions(self.combatant, distances, shortest_paths, self.best_wildshape_plan_data[2], self.best_wildshape_plan_data[0], self.best_wildshape_plan_data[1])
-                # logger.info(f"Moon druid's wildshaped plan {wildshape_plan}")#FIXME
                 if non_wildshape_action is None:
                     return [get_moon_wildshape_action(wildshape_plan)]  # The case where there's only the wildshape remaining from the plan
                 regular_plan = self.combine_action_plans(regular_plan, wildshape_plan, transition_name_to_action[non_wildshape_action], distances, shortest_paths)
-        # logger.info(f"Moon druid's final plan {regular_plan}")#FIXME
         return regular_plan

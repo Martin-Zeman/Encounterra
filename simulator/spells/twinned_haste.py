@@ -151,6 +151,8 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         return coords_for_first.intersection(coords_for_second)
 
     def is_current_coord_eligible(self):
+        if self.factory.combatant.get_swallower():
+            return False  # Technically possible but doesn't make sense to waste the sorcery points
         battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= TwinnedHasteFactory.range and \
             battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range

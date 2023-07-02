@@ -57,7 +57,6 @@ def get_all_feasible_action_factories(combatant):
     :param battle_map:
     :return: all feasible (bonus/haste) action factories for a combatant
     """
-    battle_map = Map.get()
     feasible_action_factories = get_feasible_factories(combatant.action_factories, combatant)
     feasible_bonus_action_factories = [fbaf for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant) if fbaf[0] is not BonusAction.MISTY_STEP]
     feasible_haste_action_factories = get_feasible_factories(combatant.haste_action_factories, combatant)

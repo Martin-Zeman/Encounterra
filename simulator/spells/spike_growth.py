@@ -142,5 +142,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
                                                              rng=SpikeGrowthFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
+        if self.factory.combatant.get_swallower():
+            return False
         battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= SpikeGrowthFactory.range

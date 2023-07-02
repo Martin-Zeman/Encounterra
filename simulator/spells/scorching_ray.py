@@ -152,6 +152,8 @@ class ScorchingRay(Actoid, DirectThreat):
         return coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
 
     def is_current_coord_eligible(self):
+        if all([t is self.factory.combatant.get_swallower() for t in self.targets]):
+            return True
         battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= ScorchingRayFactory.range \
             and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= ScorchingRayFactory.range \

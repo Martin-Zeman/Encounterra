@@ -17,9 +17,12 @@ def check_feasibility(combatant, action):
     if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
-        res = combatant.has_action if isinstance(action_type, Action) else combatant.has_haste_action
-        if not res:
-            return False
+        if isinstance(action_type, Action):
+            res = combatant.has_action
+        else:
+            res = combatant.has_haste_action
+            if not res:
+                return False
         match action_type:
             case Action.FIREBALL:
                 res &= combatant.spellslots.get_spellslots(3) > 0
@@ -259,9 +262,12 @@ def check_feasibility_light(combatant, action):
     if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
-        res = combatant.has_action if isinstance(action_type, Action) else combatant.has_haste_action
-        if not res:
-            return False
+        if isinstance(action_type, Action):
+            res = combatant.has_action
+        else:
+            res = combatant.has_haste_action
+            if not res:
+                return False
         match action_type:
             case Action.FIREBALL:
                 res &= combatant.spellslots.get_spellslots(3) > 0

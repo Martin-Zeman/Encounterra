@@ -65,5 +65,7 @@ class RangeAttack(Attack):
                                                              rng=self.factory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
+        if self.factory.combatant.get_swallower() is self.target_combatant:
+            return True
         battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) <= self.factory.range

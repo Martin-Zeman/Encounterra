@@ -115,6 +115,8 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         return ret
 
     def get_eligible_coords(self, distances, shortest_paths):
+        if self.factory.combatant.get_swallower():
+            return False
         battle_map = Map.get()
         coords_for_fist = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                         distances,
@@ -129,6 +131,8 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         return coords_for_fist.intersection(coords_for_second)
 
     def is_current_coord_eligible(self):
+        if self.factory.combatant.get_swallower():
+            return False  # Technically possible but doesn't make sense to waste the sorcery points
         battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= TwinnedFireboltFactory.range \
             and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedFireboltFactory.range

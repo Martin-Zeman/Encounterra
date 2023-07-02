@@ -105,5 +105,7 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
                                                              rng=HoldPersonFactory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
+        if self.factory.combatant.get_swallower():
+            return False  # Impossible when blinded
         battle_map = Map.get()
         return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HoldPersonFactory.range
