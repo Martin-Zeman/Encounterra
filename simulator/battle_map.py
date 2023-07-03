@@ -195,7 +195,7 @@ class Map:
                 self.get_cartesian_distance = orig_dist_func
 
     @contextmanager
-    def as_if_dist_mod_from_combatant(self, combatant1, combatant2, dist):
+    def as_if_dist_delta_from_combatant(self, combatant1, combatant2, dist):
         """
         Context manager which pretends that the distance betweent two comabatans is modified by dist. Dist > 0 means farther away. Dist < 0
         means closer.

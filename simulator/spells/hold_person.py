@@ -8,7 +8,7 @@ from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWith
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 
-from simulator.threat_utils import get_saving_throw_success_prob, calculate_threat_in_mod
+from simulator.threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
 from simulator.threat_interfaces import ThreatModifierFactory, ThreatModifier
 import logging
 
@@ -74,7 +74,7 @@ class HoldPersonFactory(ThreatModifierFactory):
                 max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
         threat_acc += max_action_threat
 
-        threat_acc += calculate_threat_in_mod(self.combatant, 6, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE)
+        threat_acc += calculate_threat_in_delta(self.combatant, 6, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE)
         # TODO do something similar for the crit range
 
         p_success = get_saving_throw_success_prob(self.dc, target.saving_throws[self.saving_throw])

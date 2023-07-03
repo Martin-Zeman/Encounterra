@@ -6,7 +6,7 @@ from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.threat_utils import calculate_threat_in_mod
+from simulator.threat_utils import calculate_threat_in_delta
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 from simulator.misc import SavingThrow
 import logging
@@ -37,7 +37,7 @@ class DodgeFactory(ThreatModifierFactory):
         Calculates the maximum threat reduction the factory can cause by imposing disadvantage on the target enemy
         """
         # The target is irrelevant here
-        return -1 * calculate_threat_in_mod(self.combatant, 6, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
+        return -1 * calculate_threat_in_delta(self.combatant, 6, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
 
 
 class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
@@ -75,7 +75,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         """
         Calculate how much dmg would the dodge potentially mitigate. This will be the same as the one for the factory.
         """
-        # return -1 * calculate_threat_in_mod(combatant, 6, battle_map, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
+        # return -1 * calculate_threat_in_delta(combatant, 6, battle_map, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
         return 0  # Threat that a Dodge would potentially mitigate is calculated in a different way
 
     def get_eligible_coords(self, distances, shortest_paths):

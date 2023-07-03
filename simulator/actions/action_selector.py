@@ -120,11 +120,12 @@ def prune_dead_dependencies(dag):
                 if not dag.dependencies[state]:
                     logger.info(f"Pruning state {state}")  # TODO Remove me, FIXME
                     for successor_state in dag.forward_transitions[state]:
-                        dag.dependencies[successor_state].remove(state)
-                        # TODO delete key if set empty?
+                        dag.dependencies[successor_state[1]] = [e for e in dag.dependencies[successor_state[1]] if e != state]
                     removed = True
             except KeyError:
                 pass  # Will happen for state 0
+        dag.dependencies = {k:v for k, v in dag.dependencies.items() if v}
+
 
 def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pattern, ms_factory):
     """
@@ -253,7 +254,7 @@ def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwar
             break
     return current_coords
 
-def get_threat_modification_by_previous_action(combatant, state, action, max_threat_backwards_transition, transition_name_to_action):
+def get_threat_delta_by_previous_action(combatant, state, action, max_threat_backwards_transition, transition_name_to_action):
     """
     Goes back through the backwards transitions looking for an ability that would mofidy the threat of the current action
     :param combatant:
@@ -276,7 +277,7 @@ def get_threat_modification_by_previous_action(combatant, state, action, max_thr
             except KeyError:
                 break
         except Exception as e:
-            logger.error(f"Unexpected exception occurred in get_threat_modification_by_previous_action: {e}")
+            logger.error(f"Unexpected exception occurred in get_threat_delta_by_previous_action: {e}")
             break
     return threat
 
@@ -395,7 +396,7 @@ def longest_path(combatant, dag, sorted_states, transition_name_to_action, dista
                     action = transition_name_to_action[transition_name]
                     with battle_map.as_if_combatant_position(combatant, pretend_coords), battle_map.replace_combatant_if_action_by_wildshaped(action, combatant) as did_transform:
                         transition_threat = action.calculate_threat(consider_dist=(not did_transform)) + (threat[state][1] if threat[state][1] > -math.inf else 0)
-                        transition_threat += get_threat_modification_by_previous_action(combatant, state, action, max_threat_backwards_transition, transition_name_to_action)
+                        transition_threat += get_threat_delta_by_previous_action(combatant, state, action, max_threat_backwards_transition, transition_name_to_action)
                     movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
                 except KeyError:  # either not in the dict or regex search came up empty
                     # or different kind which represents some type of movement

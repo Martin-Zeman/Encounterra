@@ -106,9 +106,6 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
     def calculate_threat(self, *args, **kwargs):
         return 0  # TODO
 
-    def calculate_threat_mod(self, modifiers, *args, **kwargs):
-        return 0  # Not relevant for this ability
-
     def threat_on_end_of_turn(self, target, *args, **kwargs):
         return 0
 

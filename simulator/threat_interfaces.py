@@ -90,16 +90,6 @@ class AoEThreat(ABC):
         """
         return 0
 
-class ReactionToThreat(ABC):
-    """
-    An ability that has the potential to mitigate an incoming threat
-    """
-    # TODO Do I really need this?
-
-    @abstractmethod
-    def calculate_threat_mod(self, combatant, incoming_action, actor, *args, **kwargs):
-        return 0
-
 
 class ThreatModifierFactory(ABC, Factory):
     """

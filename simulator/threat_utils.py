@@ -122,7 +122,7 @@ def mean_dmg_bonus_increment_for_to_hit_bonus_dice(to_hit, dmg_dice, dmg_bonus, 
     return mean_dmg(to_hit + (1.0 + bonus_dice_size) / 2.0, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
 
 
-def calculate_threat_in_mod(combatant, threat_radius, roll_type, factory_flags):
+def calculate_threat_in_delta(combatant, threat_radius, roll_type, factory_flags):
     """
     Estimates the change in mean dmg from enemies within radius given a roll roll_type assuming they'd all attack the combatant
     @param combatant: the potential receiver of the dmg

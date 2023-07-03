@@ -2,7 +2,7 @@ from simulator.spells.spell import SpellStats
 from simulator.actions.action_types import Reaction
 import logging
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import ReactionToThreat, DirectThreatFactory
+from simulator.threat_interfaces import DirectThreatFactory
 
 logger = logging.getLogger("EncounTroll")
 
@@ -37,7 +37,7 @@ class ShieldFactory(DirectThreatFactory):
         return Shield(self)
 
 
-class Shield(Actoid, ReactionToThreat):
+class Shield(Actoid):
 
     def __init__(self, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
@@ -50,9 +50,6 @@ class Shield(Actoid, ReactionToThreat):
 
     def shorthand_str(self):
         return "Shield"
-
-    def calculate_threat_mod(self, combatant, incoming_action, actor, *args, **kwargs):
-        return 0 # TODO Consider removing this from ReactionToThreat altogether
 
     def get_eligible_coords(self, distances, shortest_paths):
         pass  # No need due to IS_POSITIONING_INDEPENDENT, in addition to that it's a reaction anyway
