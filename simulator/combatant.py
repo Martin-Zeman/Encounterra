@@ -503,6 +503,7 @@ class Combatant(ABC, ProtoCombatant):
         self.shield_spell_active = False
         self.conditions.clear()
         self.dc_conditions.clear()
+        self.concentration_effect = None
         self.has_haste_action = False
         self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)
         self.saving_throws_dice_mod = dict.fromkeys(self.saving_throws_dice_mod.keys(), [])
