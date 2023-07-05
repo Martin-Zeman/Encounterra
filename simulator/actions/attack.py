@@ -58,8 +58,7 @@ class AttackFactory(DirectThreatFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [swallower]
-        battle_map = Map.get()
-        return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create(self, target_combatant):
         return Attack(target_combatant, self)
@@ -101,8 +100,7 @@ class AttackFactory(DirectThreatFactory):
         to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
 
         # TODO: Should I include roll types here? There may be a use-case in the future
-        battle_map = Map.get()
-        if not consider_dist or battle_map.get_hop_distance(self.combatant, target) <= self.range:
+        if not consider_dist or Map.get().get_hop_distance(self.combatant, target) <= self.range:
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
                 acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))

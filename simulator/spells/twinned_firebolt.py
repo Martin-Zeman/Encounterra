@@ -43,8 +43,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [swallower, None]
-        battle_map = Map.get()
-        return combinations([e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 2)
+        return combinations([e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
     def create_all(self):
         targets = self.get_eligible_targets()
@@ -100,8 +99,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         return "Twinned Firebolt"
 
     def calculate_threat(self, *args, **kwargs):
-        battle_map = Map.get()
-        roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
+        roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
         dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, ROLL_TYPE_CRIT[roll_type], self.targets[0].is_resistant_to(TwinnedFireboltFactory.dmg_type))
         if self.targets[1] is not None:

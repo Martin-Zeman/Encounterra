@@ -88,6 +88,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
 
     def activate(self):
         logger.info(f"{self.combatants[0]} enters into a totem rage")
+        Map.get().effect_tracker.add(self)
         self.combatants[0].ability_dmg_bonus += self.rage_bonus
         self.combatants[0].resistances.update(
             [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Fire, DamageType.Lightning, DamageType.Acid, DamageType.Cold,
@@ -95,6 +96,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
 
     def deactivate(self):
         logger.info(f"{self.combatants[0]}'s rage fades")
+        Map.get().effect_tracker.remove(self)
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         try:
             self.combatants[0].resistances.remove(DamageType.Slashing)
@@ -132,8 +134,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
 
 
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+        return Map.get().get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
     def is_current_coord_eligible(self):
         return True

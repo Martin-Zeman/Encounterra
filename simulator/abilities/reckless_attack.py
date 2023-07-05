@@ -164,10 +164,10 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         return "Reckless Attack"
 
     def activate(self):
-        self.combatants[0].reckless_attack_active = True
+        Map.get().effect_tracker.add(self)
 
     def deactivate(self):
-        self.combatants[0].reckless_attack_active = False
+        Map.get().effect_tracker.remove(self)
 
     def get_dmg_type(self):
         return self.factory.dmg_type
@@ -193,5 +193,4 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower() is self.target_combatant:
             return True
-        battle_map = Map.get()
-        return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)
+        return Map.get().are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)

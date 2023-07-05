@@ -48,8 +48,7 @@ class HasteFactory(ThreatModifierFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [self.combatant]
-        battle_map = Map.get()
-        ret = [a for a in battle_map.get_allies_within_radius(self.combatant, HasteFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]  # TODO do I want to keep this?
+        ret = [a for a in Map.get().get_allies_within_radius(self.combatant, HasteFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]  # TODO do I want to keep this?
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
@@ -115,13 +114,15 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         return EffectType.HASTE
 
     def activate(self):
-        self.factory.combatant.is_concentrating = True
+        Map.get().effect_tracker.add(self)
+        self.factory.combatant.concentration_effect = self
         self.target.ac += 2
         self.target.add_hasted_factories()
         self.target.has_haste_action = True  # TODO Remove this
 
     def deactivate(self):
-        self.factory.combatant.is_concentrating = False
+        Map.get().effect_tracker.remove(self)
+        self.factory.combatant.concentration_effect = None
         self.target.ac -= 2
         self.target.haste_action_factories.clear()
         self.factory.effect_tracker.create_post_haste_lethargy(self.target)
@@ -150,5 +151,4 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
             return False  # Not possible while blinded
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HasteFactory.range
+        return Map.get().get_cartesian_distance(self.factory.combatant, self.target) <= HasteFactory.range

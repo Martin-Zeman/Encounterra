@@ -36,8 +36,7 @@ class BlessFactory(ThreatModifierFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [self.combatant]
-        battle_map = Map.get()
-        return combinations([a for a in battle_map.get_allies_within_radius(self.combatant, BlessFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)], 3)
+        return combinations([a for a in Map.get().get_allies_within_radius(self.combatant, BlessFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)], 3)
 
     def create_all(self):
         targets = self.get_eligible_targets()
@@ -51,8 +50,7 @@ class BlessFactory(ThreatModifierFactory):
         return 0
 
     def calculate_max_threat(self):
-        battle_map = Map.get()
-        targets = battle_map.get_enemies(self.combatant)
+        targets = Map.get().get_enemies(self.combatant)
         return max(targets, key=lambda t: self.calculate_threat_to_target(t))
 
 
@@ -68,14 +66,14 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
 
     def activate(self):
         # todo should check if not already under the influence of another bless
-        self.factory.combatant.is_concentrating = True
+        self.factory.combatant.concentration_effect = self
         for target in self.targets:
             for mod in target.saving_throws_dice_mod.values():
                 mod.append('1d')
             target.to_hit_dice_mod.append('1d4')
 
     def deactivate(self):
-        self.factory.combatant.is_concentrating = False
+        self.factory.combatant.concentration_effect = None
         for target in self.targets:
             for mod in target.saving_throws_dice_mod.values():
                 mod.remove('1d')

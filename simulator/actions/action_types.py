@@ -90,6 +90,8 @@ class Passive(Enum):
     METAMAGIC = auto()
     PACK_TACTICS = auto()
     FANATIC_ADVANTAGE = auto()
+    WAR_CASTER = auto()
+    ELDRITCH_MIND = auto()
 
 
 class MetaAction(Enum):

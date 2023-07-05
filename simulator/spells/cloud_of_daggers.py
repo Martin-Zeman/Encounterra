@@ -36,8 +36,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
 
     def find_best_args(self, combatant):
         # TODO maybe find a smarter placement for this
-        battle_map = Map.get()
-        coord, _, _ = battle_map.find_best_placement_harmful_square(self.combatant, CloudOfDaggersFactory.range, 1)
+        coord, _, _ = Map.get().find_best_placement_harmful_square(self.combatant, CloudOfDaggersFactory.range, 1)
         return coord
 
     def create_all(self):
@@ -97,9 +96,8 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return 0
 
     def is_affecting(self, combatant):
-        battle_map = Map.get()
         coords = self.get_affected_coords()
-        return battle_map.get_hop_distance(combatant, coords) == 0
+        return Map.get().get_hop_distance(combatant, coords) == 0
 
     def activate(self):
         pass

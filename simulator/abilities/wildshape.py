@@ -102,6 +102,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         Activation happens when the ability is selected and is being resolved.
         """
         battle_map = Map.get()
+        battle_map.effect_tracker.add(self)
         logger.info(f"{self.combatants[0]} wildshapes into {self.form}")
         battle_map.teams.replace_combatant(self.combatants[0], self.form)
         wildshape_coord = battle_map.find_wildshaped_coordinate(self.combatants[0], self.form.size)
@@ -117,7 +118,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.has_bonus_action = self.combatants[0].has_bonus_action
         self.form.has_haste_action = self.combatants[0].has_haste_action
         self.form.has_reaction = self.combatants[0].has_reaction
-        self.form.is_concentrating = self.combatants[0].is_concentrating
+        self.form.concentration_effect = self.combatants[0].concentration_effect
         self.form.action_factories.extend([af for af in self.combatants[0].action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in af[1].flags])
         self.form.bonus_action_factories.extend([baf for baf in self.combatants[0].bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in baf[1].flags])
         self.form.haste_action_factories.extend([haf for haf in self.combatants[0].haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in haf[1].flags])
@@ -136,6 +137,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         """
         battle_map = Map.get()
         logger.info(f"{self.combatants[0]}'s wildshape fades")
+        battle_map.effect_tracker.remove(self)
         self.combatants[0].current_wildshape_form.on_die()
         battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         position = battle_map.get_combatant_position(self.combatants[0].current_wildshape_form)
@@ -147,7 +149,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.combatants[0].has_bonus_action = self.form.has_bonus_action
         self.combatants[0].has_haste_action = self.form.has_haste_action
         self.combatants[0].has_reaction = self.form.has_reaction
-        self.combatants[0].is_concentrating = self.form.is_concentrating
+        self.combatants[0].concentration_effect = self.form.concentration_effect
         self.form.action_factories = [af for af in self.form.action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in af[1].flags]
         self.form.bonus_action_factories = [baf for baf in self.form.bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in baf[1].flags]
         self.form.haste_action_factories = [haf for haf in self.form.haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in haf[1].flags]
@@ -243,5 +245,4 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         return final_coords
 
     def is_current_coord_eligible(self):
-        battle_map = Map.get()
-        return True if battle_map.find_wildshaped_coordinate(self.factory.combatant, self.form.size) else False
+        return True if Map.get().find_wildshaped_coordinate(self.factory.combatant, self.form.size) else False

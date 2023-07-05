@@ -72,8 +72,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: combined action plan
         """
-        battle_map = Map.get()
-        current_position = tuple(battle_map.get_combatant_position(self.combatant).get()[0])
+        current_position = tuple(Map.get().get_combatant_position(self.combatant).get()[0])
         # regular_movement_increments = [e.increment for e in regular_action_plan if hasattr(e, "increment")]
         # regular_destination = current_position + tuple(np.sum(regular_movement_increments, axis=0)) if regular_movement_increments else (0, 0)
         ws_movement_increments = [e.increment for e in ws_action_plan if hasattr(e, "increment")]

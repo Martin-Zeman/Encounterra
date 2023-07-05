@@ -47,8 +47,7 @@ class HoldPersonFactory(ThreatModifierFactory):
 
 
     def create_all(self):
-        battle_map = Map.get()
-        targets = battle_map.get_enemies(self.combatant)
+        targets = Map.get().get_enemies(self.combatant)
         return [HoldPerson(t, self) for t in targets]
 
     def create(self, target_combatant):
@@ -58,8 +57,7 @@ class HoldPersonFactory(ThreatModifierFactory):
     def calculate_threat_to_target(self, target, *args, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
-        battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
+        if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
             return 0
 
         threat_acc = 0
@@ -131,5 +129,4 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
             return False  # Not possible while blinded
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HoldPersonFactory.range
+        return Map.get().get_cartesian_distance(self.factory.combatant, self.target) <= HoldPersonFactory.range

@@ -48,8 +48,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         if swallower:
             return [swallower, swallower, swallower]
         # Range is so big that it doesn't matter
-        battle_map = Map.get()
-        return combinations_with_replacement([e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 3)
+        return combinations_with_replacement([e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 3)
 
     def create_all(self):
         targets = self.get_eligible_targets()

@@ -9,21 +9,24 @@ logger = logging.getLogger("EncounTroll")
 
 class EffectTracker:
     """
-    TODO: Could be the class that takes care of exceptional removal of effects (such as rage)
+    Manages all lasting effects.
     """
     def __init__(self):
         self.effects = []
         self.battle_map = None
 
-    def add(self, effect, initiator):
-        # TODO: Do I need the initiator?
+    def add(self, effect):
+        # TODO: Do I need the initiator? Every effect has a factory with a combatant
         # Refresh existing effect if available
         # for idx in range(len(self.effects)):
         #     if type(self.effects[idx][0]) == type(effect) and initiator is self.effects[idx][1]:
         #         logger.info(f"Refreshing {effect}")
         #         self.effects[idx][0] = effect
         #         break
-        self.effects.append((effect, initiator))
+        self.effects.append(effect)
+
+    def remove(self, effect):
+        self.effects.remove(effect)
 
     def start_of_turn(self, combatant):
         """
@@ -33,11 +36,11 @@ class EffectTracker:
         """
         effects = []
         for e in self.effects:
-            if getattr(e[0], "new_turn", False) and e[1] is combatant:
-                if not e[0].new_turn():
+            if getattr(e, "new_turn", False) and e.factory.combatant is combatant:
+                if not e.new_turn():
                     continue  # Effect expired
-            if getattr(e[0], "start_of_turn", False) and e[1] is combatant:
-                if not e[0].start_of_turn():
+            if getattr(e, "start_of_turn", False) and e.factory.combatant is combatant:
+                if not e.start_of_turn():
                     continue  # Effect's been saved against
             effects.append(e)  # Effect persists
         self.effects = effects
@@ -45,8 +48,8 @@ class EffectTracker:
     def end_of_turn(self, combatant):
         effects = []
         for e in self.effects:
-            if getattr(e[0], "end_of_turn", False) and e[1] is combatant:
-                if not e[0].end_of_turn():
+            if getattr(e, "end_of_turn", False) and e.factory.combatant is combatant:
+                if not e.end_of_turn():
                     continue
             effects.append(e)
         self.effects = effects
@@ -57,7 +60,7 @@ class EffectTracker:
         :param combatant:
         :return: set of all effects affecting a combatant
         """
-        return {e[0] for e in self.effects if e[0].is_affecting(combatant)}
+        return {e for e in self.effects if e.is_affecting(combatant)}
 
     def is_affecting_combatant(self, combatant, effect_type):
         """
@@ -67,15 +70,18 @@ class EffectTracker:
         :return: True if the combatant is affected, False otherwise
         """
         for e in self.effects:
-            if type(e[0]) is effect_type and e[0].is_affecting(combatant):
+            if type(e) is effect_type and e.is_affecting(combatant):
                 return True
         return False
 
     def get_aoe_effects(self):
-        return [e[0] for e in self.effects if isinstance(e[0], AoeSquareEffect) or isinstance(e[0], AoeSphericEffect)]
+        return [e for e in self.effects if isinstance(e, AoeSquareEffect) or isinstance(e, AoeSphericEffect)]
+
+    def get_effect_by_initiator(self, initiator):
+        return [e for e in self.effects if e.factory.combatant is initiator]
 
     def combatant_died(self, combatant):
-        self.effects = [e for e in self.effects if e[1] is not combatant]
+        self.effects = [e for e in self.effects if e.factory.combatant is not combatant]
 
     def create_post_haste_lethargy(self, combatant):
         self.effects.append((PostHasteLethargy(combatant), combatant))
@@ -84,10 +90,9 @@ class EffectTracker:
 
     def deactivate_wildshape(self, combatant):
         for e in self.effects:
-            if e[0].is_affecting(combatant) and isinstance(e[0], Wildshape):
-                e[0].deactivate()
+            if e.is_affecting(combatant) and isinstance(e, Wildshape):
+                e.deactivate()
                 break  # There should only be one
-        self.effects = [e for e in self.effects if not (e[0].is_affecting(combatant) and isinstance(e[0], Wildshape))]
 
     def reset(self):
         for effect in self.effects:

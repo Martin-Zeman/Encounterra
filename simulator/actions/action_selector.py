@@ -221,8 +221,7 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
         match = re.search(pattern, action)
         if match:
             _, x, y = match.groups()
-            battle_map = Map.get()
-            path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
+            path = Map.get().get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
             movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
             actions.extend(list(movement_generator))  # Unpack the movement generator
             break
@@ -313,8 +312,7 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED):
         action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
     else:
-        battle_map = Map.get()
-        current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
+        current_position = tuple(Map.get().get_combatant_position(combatant).get()[0])
         action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
@@ -443,8 +441,7 @@ def get_action(combatant):
         return BreakGrappleFactory(grapple_cond).create()
     if combatant.is_affected_by(Conditions.PRONE) and combatant.movement >= combatant.speed / 2:
         return GetUpFactory().create()
-    battle_map = Map.get()
-    distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
+    distances, shortest_paths = Map.get().calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
     combatant.shortest_paths_cache = shortest_paths
     if combatant.action_plan:
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:

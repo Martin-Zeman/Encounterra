@@ -3,6 +3,7 @@ import numpy as np
 from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
+from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.actions.action_types import BonusAction
@@ -47,8 +48,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return []
-        battle_map = Map.get()
-        ret = [a for a in battle_map.get_allies_within_radius(self.combatant, FaerieFireFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]
+        ret = [a for a in Map.get().get_allies_within_radius(self.combatant, FaerieFireFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
@@ -70,14 +70,14 @@ class FaerieFireFactory(ThreatModifierFactory):
     def calculate_max_threat(self):
         return 0  # TODO
 
-class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect):
+class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect, CombatantEffect):
 
     def __init__(self, coord, factory,  **kwargs):
         Actoid.__init__(actoid_flags=ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, turns=10)
         AoeSquareEffect.__init__(self, coord, FaerieFireFactory.target)
+        CombatantEffect.__init__(self, [])
         self.factory = factory
-        self.affected_combatants = []
 
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + f"Faerie Fire at {self.origin}"
@@ -85,22 +85,22 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + "Faerie Fire"
 
-    def is_affecting(self, combatant):
-        return combatant in self.affected_combatants
-
     def activate(self):
-        battle_map = Map.get()
-        potentially_affected_combatants = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
+        Map.get().effect_tracker.add(self)
+        self.factory.combatant.concentration_effect = self
+        potentially_affected_combatants = Map.get().get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
             saved = roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_types(pac.saving_throws_roll_type_mod[st]))
             if not saved:
                 pac.remove_condition(Conditions.INVISIBLE)
-                self.affected_combatants.append(pac)
+                self.combatants.append(pac)
 
 
     def deactivate(self):
-        pass  # TODO remove concentration?
+        Map.get().effect_tracker.remove(self)
+        self.factory.combatant.concentration_effect = None
+        self.combatants.clear()
 
 
     def calculate_threat(self, *args, **kwargs):
@@ -119,8 +119,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect)
         return 0
 
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
+        return Map.get().get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FaerieFireFactory.range, combatant=self.factory.combatant)

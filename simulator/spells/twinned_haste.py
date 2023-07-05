@@ -103,14 +103,16 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         return "Twinned Haste"
 
     def activate(self):
-        self.factory.combatant.is_concentrating = True
+        Map.get().effect_tracker.add(self)
+        self.factory.combatant.concentration_effect = self
         for target in self.targets:
             target.ac += 2
             target.add_hasted_factories()
             target.has_haste_action = True  # TODO Remove this
 
     def deactivate(self):
-        self.factory.combatant.is_concentrating = False
+        Map.get().effect_tracker.remove(self)
+        self.factory.combatant.concentration_effect = None
         for target in self.targets:
             target.ac -= 2
             target.haste_action_factories.clear()

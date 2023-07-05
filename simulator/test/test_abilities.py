@@ -35,7 +35,7 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
+    test_moon_druid.concentration_effect = "FooBar"  # Must be non-None, This way we exclude all the concentration spells from the selection
 
     try:
         actoid1 = get_action(test_moon_druid)
@@ -197,11 +197,14 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
-    battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
+    class DummyEffect:
+        def deactivate(self):
+            pass
+    dummy_effect = DummyEffect()
+    test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
 
     try:
         actoid1 = get_action(test_moon_druid)
@@ -249,7 +252,11 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    test_moon_druid.is_concentrating = True  # This way we exclude all the concentration spells from the selection
+    class DummyEffect:
+        def deactivate(self):
+            pass
+    dummy_effect = DummyEffect()
+    test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
 
     try:
         actoid1 = get_action(test_moon_druid)

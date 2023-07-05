@@ -123,7 +123,7 @@ def check_feasibility(combatant, action):
             case Action.FLAMING_SPHERE:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= not combatant.is_concentrating
+                res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
                 return res
@@ -276,7 +276,7 @@ def check_feasibility_light(combatant, action):
             case Action.HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= not combatant.is_concentrating
+                res &= not combatant.concentration_effect
                 # res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.CHAOSBOLT:
@@ -294,7 +294,7 @@ def check_feasibility_light(combatant, action):
             case Action.TWINNED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= not combatant.is_concentrating
+                res &= not combatant.concentration_effect
                 res &= combatant.curr_sorcery_points > 2
                 res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
@@ -330,7 +330,7 @@ def check_feasibility_light(combatant, action):
             case Action.FLAMING_SPHERE:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= not combatant.is_concentrating
+                res &= not combatant.concentration_effect
                 return res
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
@@ -375,7 +375,7 @@ def check_feasibility_light(combatant, action):
             case BonusAction.QUICKENED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= not combatant.is_concentrating
+                res &= not combatant.concentration_effect
                 res &= combatant.curr_sorcery_points > 1
                 return res
             case BonusAction.QUICKENED_FIREBALL:

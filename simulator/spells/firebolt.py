@@ -63,8 +63,7 @@ class FireboltFactory(DirectThreatFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [swallower]
-        battle_map = Map.get()
-        return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create_all(self):
         targets = self.get_eligible_targets()
@@ -122,8 +121,7 @@ class Firebolt(Actoid, DirectThreat):
 
 
     def calculate_threat(self, *args, **kwargs):
-        battle_map = Map.get()
-        roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
+        roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
         return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, ROLL_TYPE_CRIT[roll_type], self.target.is_resistant_to(FireboltFactory.dmg_type))
 
@@ -140,5 +138,4 @@ class Firebolt(Actoid, DirectThreat):
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower() is self.target:
             return True
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= FireboltFactory.range
+        return Map.get().get_cartesian_distance(self.factory.combatant, self.target) <= FireboltFactory.range

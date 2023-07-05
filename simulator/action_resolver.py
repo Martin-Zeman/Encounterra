@@ -118,7 +118,7 @@ class ActionResolver:
     def has_advantage_ranged(self, attack, attacker, target):
         if attack.roll_type is RollType.ADVANTAGE:
             return RollType.ADVANTAGE
-        if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
+        if Map.get().effect_tracker.is_affecting_combatant(target, RecklessAttack):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
         if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
@@ -135,9 +135,9 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if attacker.has_pack_tactics and battle_map.is_ally_adjacent_to_target(attacker, target):
             return RollType.ADVANTAGE
-        if hasattr(attacker, "reckless_attack_active") and attacker.reckless_attack_active:
+        if battle_map.effect_tracker.is_affecting_combatant(attacker, RecklessAttack):
             return RollType.ADVANTAGE
-        if hasattr(target, "reckless_attack_active") and target.reckless_attack_active:
+        if battle_map.effect_tracker.is_affecting_combatant(target, RecklessAttack):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
         if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) == 1:
@@ -189,7 +189,6 @@ class ActionResolver:
         return RollType.STRAIGHT
 
     def has_disadvantage_melee(self, attack, attacker, target):
-        battle_map = Map.get()
         if attack.roll_type is RollType.DISADVANTAGE:
             return RollType.DISADVANTAGE
         if target.disadvantage_on_incoming_attacks:
@@ -198,7 +197,7 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) > 1:
+        if target.is_affected_by(Conditions.PRONE) and Map.get().get_hop_distance(attacker, target) > 1:
             return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
@@ -258,7 +257,6 @@ class ActionResolver:
 
     def resolve_ranged_spell_attack(self, caster, spell, target):
         # TODO Conditions
-        battle_map = Map.get()
         types = {self.has_advantage_ranged(spell, caster, target), self.has_disadvantage_spell_ranged(spell, caster, target)}
         final_modifier = reconcile_roll_types(types)
 
@@ -284,7 +282,7 @@ class ActionResolver:
             logger.info(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
             target.receive_dmg(dmg, spell.factory.dmg_type)
-            battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid
+            Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid
             return ActionResult.DMG
         else:
             logger.info(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
@@ -298,7 +296,6 @@ class ActionResolver:
         :return: True is hits, false if misses or is not attack
         """
         # TODO Conditions
-        battle_map = Map.get()
         target = attack.target_combatant
         assert target
         if FactoryFlags.IS_MELEE in attack.factory.flags:
@@ -342,7 +339,7 @@ class ActionResolver:
             target.receive_dmg(total_dmg, attack.get_dmg_type())
             for extra in extra_dmg:
                 target.receive_dmg(extra[0], extra[1])
-            target = battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
+            target = Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
             if target and attack.factory.on_hit is not None:
                 attack.factory.on_hit.hit(attacker, attack, target)
 
@@ -389,17 +386,17 @@ class ActionResolver:
         match actoid.factory.action_type:
             case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | HasteAction.HASTE_DISENGAGE:
                 actoid.activate()
-                self.effect_tracker.add(actoid, combatant)
+                # self.effect_tracker.add(actoid, combatant)
                 return False
             case Action.RECKLESS_ATTACK:
                 if not self.effect_tracker.is_affecting_combatant(combatant, RecklessAttack):
                     # don't need to add it again in case of a multi-attack
                     actoid.activate()
-                    self.effect_tracker.add(actoid, combatant)
+                    # self.effect_tracker.add(actoid, combatant)
                     return self.resolve_attack(actoid, combatant)
             case Action.WILDSHAPE | BonusAction.MOON_WILDSHAPE:
                 actoid.activate()
-                self.effect_tracker.add(actoid, combatant)
+                # self.effect_tracker.add(actoid, combatant)
                 return False
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 logger.info(f"{combatant} casts {actoid}")
@@ -412,14 +409,12 @@ class ActionResolver:
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
-                self.effect_tracker.add(actoid, combatant)
-                combatant.is_concentrating = True
+                # self.effect_tracker.add(actoid, combatant)
                 return ActionResult.MEDIUM_BUFF
             case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
-                self.effect_tracker.add(actoid, combatant)
-                combatant.is_concentrating = True
+                # self.effect_tracker.add(actoid, combatant)
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
                 logger.info(f"{combatant} casts {actoid}")
                 return self.resolve_ranged_spell_attack(combatant, actoid, actoid.target)
@@ -449,8 +444,7 @@ class ActionResolver:
             case Action.FLAMING_SPHERE:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
-                self.effect_tracker.add(actoid, combatant)
-                combatant.is_concentrating = True
+                # self.effect_tracker.add(actoid, combatant)
                 return ActionResult.FEASIBLE
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\

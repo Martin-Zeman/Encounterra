@@ -44,8 +44,7 @@ class FireballFactory(DirectThreatFactory):
         return {'dc': self.dc, 'caster': self.combatant, 'has_spell_sculpting': self.has_spell_sculpting}
 
     def find_best_args(self, combatant):
-        battle_map = Map.get()
-        coord, _ = battle_map.find_best_placement_harmful_circular(combatant, FireballFactory.range, SpellStats.TRANSLATE_RADIUS[FireballFactory.target], self)
+        coord, _ = Map.get().find_best_placement_harmful_circular(combatant, FireballFactory.range, SpellStats.TRANSLATE_RADIUS[FireballFactory.target], self)
         return coord[0]
 
     def create_all(self):
@@ -59,8 +58,7 @@ class FireballFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
+        if Map.get().get_cartesian_distance(self.combatant, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
             return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
         return 0
 
@@ -103,8 +101,7 @@ class Fireball(Actoid, DirectThreat):
         return 0  # Not relevant for this ability
 
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
+        return Map.get().get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FireballFactory.range,
@@ -113,5 +110,4 @@ class Fireball(Actoid, DirectThreat):
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
             return False
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= FireballFactory.range
+        return Map.get().get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= FireballFactory.range

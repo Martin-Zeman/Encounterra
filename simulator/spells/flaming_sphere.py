@@ -75,8 +75,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         return 0  # No need
 
     def calculate_max_threat(self):
-        battle_map = Map.get()
-        targets = battle_map.get_enemies(self.combatant)
+        targets = Map.get().get_enemies(self.combatant)
         return max(targets, key=lambda t: self.calculate_threat_to_target(t))
 
 
@@ -98,9 +97,13 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FLAMING_SPHERE else "") + f"Flaming Sphere"
 
     def activate(self):
+        Map.get().effect_tracker.add(self)
+        self.factory.combatant.concentration_effect = self
         self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self.factory.dc, self)))
 
     def deactivate(self):
+        Map.get().effect_tracker.remove(self)
+        self.factory.combatant.concentration_effect = None
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
 
     def enable(self):
@@ -112,8 +115,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def calculate_threat(self, *args, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
-        battle_map = Map.get()
-        enemies = battle_map.get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)
+        enemies = Map.get().get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)
         if not enemies:
             return 0
         acc = 0
@@ -122,8 +124,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return acc / len(enemies) * ROUND_HORIZON
 
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
+        return Map.get().get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FlamingSphereFactory.range,
@@ -132,8 +133,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
             return False  # Not possible while blinded
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FlamingSphereFactory.range
+        return Map.get().get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FlamingSphereFactory.range
 
     def on_start_of_turn(self, combatant):
         pass
@@ -178,5 +178,4 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         """
         We model the fact that it deals damage to adjacent squares
         """
-        battle_map = Map.get()
-        return battle_map.get_coords_affected_by_square_aoe((self.origin[0] - 1, self.origin[1] - 1), self.length + 2)
+        return Map.get().get_coords_affected_by_square_aoe((self.origin[0] - 1, self.origin[1] - 1), self.length + 2)

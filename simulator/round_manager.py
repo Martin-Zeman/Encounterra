@@ -56,15 +56,13 @@ class RoundManager:
         for combatant in self.combatants:
             reset_resources(combatant)
         self.effect_tracker.reset()
-        battle_map = Map.get()
-        battle_map.reset(combatant_initial_positions)
+        Map.get().reset(combatant_initial_positions)
 
 
     def simulate_n(self, n=1, result_queue=None):
         if n > 0:
             team_tally = {color: 0 for color in self.teams.get_team_colors()}
-            battle_map = Map.get()
-            combatant_initial_positions = {c: copy.deepcopy(battle_map.get_combatant_position(c).get()[0]) for c in self.combatants}
+            combatant_initial_positions = {c: copy.deepcopy(Map.get().get_combatant_position(c).get()[0]) for c in self.combatants}
             self.prep_combatants()
             for i in range(n):
                 logger.warning(f"{i}. Iteration")
@@ -87,7 +85,6 @@ class RoundManager:
             logger.error("Wrong input. n has to be 1 or higher!")
 
     def simulate(self):
-        battle_map = Map.get()
         self.roll_initiative()
         self.order_by_initiative()
         done = False
@@ -103,7 +100,7 @@ class RoundManager:
                 if not combatant.is_alive():
                     continue
                 logger.info(f"It's {combatant}'s turn")
-                logger.info(battle_map)
+                logger.info(Map.get())
                 self.effect_tracker.start_of_turn(combatant)
                 combatant.new_turn()
                 effects = self.effect_tracker.get_all_affecting_combatant(combatant)
@@ -135,8 +132,7 @@ class RoundManager:
             combatant = combatant.get_current_form()
             status = f"alive with {combatant.curr_hp} hp" if combatant.is_alive() else "dead"
             logger.info(f"{combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
-        battle_map = Map.get()
-        logger.info(battle_map)
+        logger.info(Map.get())
 
     def print_results(self):
         logger.info("--------------RESULT--------------")

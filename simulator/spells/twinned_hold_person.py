@@ -48,8 +48,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
 
 
     def create_all(self):
-        battle_map = Map.get()
-        targets = battle_map.get_enemies(self.combatant)
+        targets = Map.get().get_enemies(self.combatant)
         return [TwinnedHoldPerson(t, self) for t in targets]
 
     def create(self, target_combatant):
@@ -59,8 +58,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
     def calculate_threat_to_target(self, target, *args, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
-        battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= TwinnedHoldPersonFactory.range:
+        if Map.get().get_cartesian_distance(self.combatant, target) <= TwinnedHoldPersonFactory.range:
             return 0 * get_saving_throw_success_prob(self.dc, target.saving_throws[self.saving_throw])# TODO
         return 0
 
@@ -107,5 +105,4 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
             return False  # Impossible when blinded
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HoldPersonFactory.range
+        return Map.get().get_cartesian_distance(self.factory.combatant, self.target) <= HoldPersonFactory.range

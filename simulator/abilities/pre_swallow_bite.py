@@ -44,5 +44,4 @@ class PreSwallowBite(MeleeAttack):
                                                        combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
-        battle_map = Map.get()
-        return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)
+        return Map.get().are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)

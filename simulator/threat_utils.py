@@ -131,8 +131,7 @@ def calculate_threat_in_delta(combatant, threat_radius, roll_type, factory_flags
     @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
     @return: estimated change in dmg, negative for advantage, positive for disadvantage
     """
-    battle_map = Map.get()
-    potential_attackers = battle_map.get_enemies_within_hop_distance(combatant, threat_radius)
+    potential_attackers = Map.get().get_enemies_within_hop_distance(combatant, threat_radius)
     incoming_threat_mod_acc = 0
     min_or_max = max if roll_type is RollType.ADVANTAGE else min
     for pa in potential_attackers:
@@ -313,8 +312,7 @@ def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=F
     :return: accumulated threat (negative)
     """
     threat_acc = 0
-    battle_map = Map.get()
-    curr_coords = battle_map.get_combatant_position(combatant)
+    curr_coords = Map.get().get_combatant_position(combatant)
     curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
     for increment in path:
         t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged)
@@ -344,8 +342,7 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
     max_threat_path = None
 
     # First build the Misty Step DAG
-    battle_map = Map.get()
-    curr_coords = battle_map.get_combatant_position(combatant)
+    curr_coords = Map.get().get_combatant_position(combatant)
     if path:
         # We build a DAG with two branches where one branch represents moving before using Misty Step and the other after
         # The only transitions between the branches represent Misty Step itself which can be taken at different points of the path

@@ -46,9 +46,8 @@ class ChaosboltFactory(DirectThreatFactory):
         hp_percentages = [percent_of_curr_hp(pt, threat_calc_func(pt.ac)) for pt in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
-        battle_map = Map.get()
         for i in range(1, len(potential_targets)):
-            if battle_map.get_cartesian_distance(potential_targets[i - 1][0], potential_targets[i][0]) > SpellStats.Range.FEET_30:
+            if Map.get().get_cartesian_distance(potential_targets[i - 1][0], potential_targets[i][0]) > SpellStats.Range.FEET_30:
                 break
         return list(zip(*potential_targets[:i]))[0]
 
@@ -59,8 +58,7 @@ class ChaosboltFactory(DirectThreatFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return [swallower]
-        battle_map = Map.get()
-        return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create_all(self):
         targets = self.get_eligible_targets()
@@ -103,8 +101,7 @@ class ChaosboltFactory(DirectThreatFactory):
         to_hit_bonus = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
-        battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
+        if Map.get().get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
             to_hit_total = self.to_hit + to_hit_bonus
             to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
             total_crit = ROLL_TYPE_CRIT[roll_type]
@@ -168,5 +165,4 @@ class Chaosbolt(Actoid, DirectThreat):
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower() is self.target:
             return True
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= ChaosboltFactory.range
+        return Map.get().get_cartesian_distance(self.factory.combatant, self.target) <= ChaosboltFactory.range

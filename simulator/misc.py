@@ -2,9 +2,9 @@ from enum import Enum, Flag, auto
 import random
 import re
 import math
-import numpy as np
 from functools import reduce, cache
 
+from simulator.actions.action_types import Passive
 from simulator.actions.actoid import FactoryFlags
 import logging
 from simulator.utils.roll_types import RollType
@@ -157,7 +157,7 @@ def avg_roll(dice_string):
 
 def roll_dice(dice):
     """
-
+    Basic function for rolling dice
     @param dice: list of tuples of (# of dice (1..inf), dice sizes (4, 6, 8, 10, 12))
     @return:
     """
@@ -166,6 +166,7 @@ def roll_dice(dice):
         for _ in range(d[0]):
             dice_sum += random.randint(1, d[1])
     return dice_sum
+
 
 def roll_saving_throw(bonus, dc, roll_type):
     d20 = parse_dmg_dice('1d20')
@@ -179,6 +180,30 @@ def roll_saving_throw(bonus, dc, roll_type):
     if roll == 20:
         return True
     return roll + bonus >= dc
+
+
+def roll_concentration_check(combatant, dmg):
+    """
+    Calculates a concentration check for a combatant after receiving damage. It assumes the damage has already been taken.
+    @param combatant: The combatant object representing the character.
+    @param dmg: The amount of damage taken by the combatant.
+    @return: True if concentration maintained, False otherwise
+    """
+    if not combatant.concentration_effect:
+        return False
+    if combatant.curr_hp <= 0:
+        combatant.concentration_effect.deactivate()
+        return False
+    dc = max(10, math.floor(dmg / 2))
+    roll_type = RollType.STRAIGHT if not (combatant.has_passive(Passive.WAR_CASTER) or combatant.has_passive(Passive.ELDRITCH_MIND)) else RollType.ADVANTAGE
+    saved = roll_saving_throw(combatant.saving_throws[SavingThrow.CON], dc, roll_type)
+    if not saved:
+        logger.info(f"{combatant} loses concentration on {combatant.concentration_effect}")
+        combatant.concentration_effect.deactivate()
+    else:
+        logger.info(f"{combatant} maintains concentration on {combatant.concentration_effect}")
+    return saved
+
 
 def roll_ability_check(bonus, dc, roll_type):
     d20 = parse_dmg_dice('1d20')
@@ -211,19 +236,6 @@ def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
     dice = parse_dmg_dice(additional_dmg_dice)
     secondary_dmg = roll_dice(dice)
     return primary_dmg + secondary_dmg, numbers
-
-
-def linex_loss(x):
-    return (math.e ** (x - 10)) + 2 * (x - 10) + 10
-
-
-def normal_dist(x, mean, sd):
-    prob_density = (np.pi * sd) * np.exp(-0.5 * ((x - mean) / sd) ** 2)
-    return prob_density
-
-
-def caster_distance_reward_func(dist):
-    return normal_dist(dist, 15, 8) - 13
 
 
 def percentage_hp_loss(start_of_turn_hp, combatant):

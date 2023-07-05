@@ -9,7 +9,8 @@ from simulator.actions.actoid import FactoryFlags
 from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from simulator.battle_map import Map
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
-from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
+from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC, \
+    roll_concentration_check
 from enum import Enum
 from abc import ABC, abstractmethod
 from simulator.actions.dodge import DodgeFactory
@@ -24,7 +25,7 @@ logger = logging.getLogger("EncounTroll")
 
 class Combatant(ABC, ProtoCombatant):
 
-    def __init__(self, effect_tracker, name, level, hp, ac, init_bonus, spell_to_hit, speed, resistances, dc):
+    def __init__(self, effect_tracker, name, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
         self.effect_tracker = effect_tracker
         self.name = name
         self.level = level
@@ -56,6 +57,8 @@ class Combatant(ABC, ProtoCombatant):
         self.movement = speed / 5
         self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
         self.resistances = resistances
+        self.immunities = immunities
+        self.vulnerabities = vulnerabities
         self.attack_fsm = None
         self.action_fsm = None
         self.action_plan = None
@@ -77,7 +80,7 @@ class Combatant(ABC, ProtoCombatant):
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.has_disengaged = False  # TODO Get rid of this
         self.spellslots = None
-        self.is_concentrating = False
+        self.concentration_effect = None
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
         self.size = Size.MEDIUM
@@ -281,13 +284,6 @@ class Combatant(ABC, ProtoCombatant):
                 except KeyError:
                     pass
             return None
-        # elif isinstance(action_type, FreeAction):
-        #     match action_type:
-        #         case FreeAction.RECKLESS_ATTACK:
-        #             self.reckless_attack_active = False
-        #         case _:
-        #             logger.error("Unknown free action")
-        #             return
         elif isinstance(action_type, MetaAction):
             match action_type:
                 case MetaAction.QUICKENED_SPELL:
@@ -354,18 +350,29 @@ class Combatant(ABC, ProtoCombatant):
         :param dmg_type: dmg type
         :return: actual dmg received accounting for resistances
         """
-        # TODO Redo this into lists of dmg and dmg types for compound dmg attacks. Also has to support knocking out of wildshape
-        if dmg_type in self.resistances:
+        if dmg_type in self.immunities:
+            return 0
+        elif dmg_type in self.resistances:
             dmg = math.floor(dmg / 2)
             logger.info(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
+        elif dmg_type in self.vulnerabities:
+            dmg *= 2
+            logger.info(f"{self.name} is vulnerable to {dmg_type} which doubles the damage to {dmg}")
         self.curr_hp -= dmg
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
             self.effect_tracker.deactivate_wildshape(self.get_original_form())
+        roll_concentration_check(self, dmg)
         return dmg
 
     def is_resistant_to(self, dmg_type):
         return dmg_type in self.resistances
+
+    def is_immune_to(self, dmg_type):
+        return dmg_type in self.immunities
+
+    def is_vulnerable_to(self, dmg_type):
+        return dmg_type in self.vulnerabities
 
     def apply_condition(self, condition: ConditionWithoutDC):
         self.is_swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed # This is an optimization to speed up conditions look-up since it's done frequently
