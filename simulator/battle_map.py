@@ -162,7 +162,7 @@ class Map:
     @contextmanager
     def as_if_combatant_position(self, combatant, coords: np.array):
         if coords is not None:
-            original_coords = self.combatant_coordinate_cache[combatant]
+            original_coords = self.get_combatant_position(combatant)
             original_logger_level = logger.level
             try:
                 logger.setLevel(logging.WARNING)

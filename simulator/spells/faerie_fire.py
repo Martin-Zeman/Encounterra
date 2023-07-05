@@ -99,7 +99,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
 
     def deactivate(self):
         Map.get().effect_tracker.remove(self)
-        self.factory.combatant.concentration_effect = None
+        self.factory.combatant.get_current_form().concentration_effect = None
         self.combatants.clear()
 
 

@@ -73,7 +73,7 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
             target.to_hit_dice_mod.append('1d4')
 
     def deactivate(self):
-        self.factory.combatant.concentration_effect = None
+        self.factory.combatant.get_current_form().concentration_effect = None
         for target in self.targets:
             for mod in target.saving_throws_dice_mod.values():
                 mod.remove('1d')

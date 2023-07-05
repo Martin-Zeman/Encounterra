@@ -360,9 +360,6 @@ class Combatant(ABC, ProtoCombatant):
             dmg *= 2
             logger.info(f"{self.name} is vulnerable to {dmg_type} which doubles the damage to {dmg}")
         self.curr_hp -= dmg
-        if self.curr_hp <= 0 and self.get_original_form() is not self:
-            self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
-            self.effect_tracker.deactivate_wildshape(self.get_original_form())
         return dmg
 
     def receive_dmg(self, dmg, dmg_type):
@@ -373,6 +370,9 @@ class Combatant(ABC, ProtoCombatant):
         :return: actual dmg received accounting for resistances, vulnerabilities and immunities
         """
         dmg = self._receive_dmg(dmg, dmg_type)
+        if self.curr_hp <= 0 and self.get_original_form() is not self:
+            self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
+            self.effect_tracker.deactivate_wildshape(self.get_original_form())
         if dmg:
             roll_concentration_check(self, dmg)
         return dmg
@@ -386,6 +386,9 @@ class Combatant(ABC, ProtoCombatant):
         total_dmg = 0
         for d in dmg:
             total_dmg += self._receive_dmg(d[0], d[1])
+        if self.curr_hp <= 0 and self.get_original_form() is not self:
+            self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
+            self.effect_tracker.deactivate_wildshape(self.get_original_form())
         if total_dmg:
             roll_concentration_check(self, total_dmg)
 

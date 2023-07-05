@@ -53,12 +53,12 @@ class GiantToad(Combatant):
         if self.swallowed_target:
             logger.info(f"{self.swallowed_target} is spat out and no longer swallowed", extra={"team": self.team_color})
             self.swallowed_target.remove_all_conditions_of_type(Conditions.SWALLOWED)  # This should remmove all the accompanying comditions too
-            self.swallowed_target = None
             battle_map = Map.get()
             free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
                                                           None,
                                                           inflate_to_size=self.swallowed_target.size,
                                                           rng=1, combatant=self.swallowed_target)
+            self.swallowed_target = None
             if not free_coords:
                 logger.error("No space around the dead Giant Toad to spit out the swallowed combatant")
                 return

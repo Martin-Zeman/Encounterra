@@ -16,8 +16,7 @@ class OnHitSwallow(OnHit):
         target.apply_condition(ConditionWithoutDC(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))
         attacker.swallowed_target = target
         attacker.constricted_target = None
-        battle_map = Map.get()
-        battle_map.remove_combatant(target)
+        Map.get().remove_combatant(target)
 
     def calculate_threat(self, attacker, target, *args, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite

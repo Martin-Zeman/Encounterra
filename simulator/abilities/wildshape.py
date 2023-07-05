@@ -150,6 +150,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.combatants[0].has_haste_action = self.form.has_haste_action
         self.combatants[0].has_reaction = self.form.has_reaction
         self.combatants[0].concentration_effect = self.form.concentration_effect
+        # Remove the extra factories from the form, it may be reused again  TODO: do I really need this?
         self.form.action_factories = [af for af in self.form.action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in af[1].flags]
         self.form.bonus_action_factories = [baf for baf in self.form.bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in baf[1].flags]
         self.form.haste_action_factories = [haf for haf in self.form.haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE not in haf[1].flags]

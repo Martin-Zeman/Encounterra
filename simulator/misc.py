@@ -189,9 +189,11 @@ def roll_concentration_check(combatant, dmg):
     @param dmg: The amount of damage taken by the combatant.
     @return: True if concentration maintained, False otherwise
     """
+    combatant = combatant.get_original_form().get_current_form()  # The dmg received could have knocked combatant out of wildshape
     if not combatant.concentration_effect:
         return False
-    if combatant.curr_hp <= 0:
+    if not combatant.is_alive():
+        logger.info(f"Concentration on {combatant.concentration_effect} is broken as {combatant} is dead")
         combatant.concentration_effect.deactivate()
         return False
     dc = max(10, math.floor(dmg / 2))

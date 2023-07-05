@@ -26,7 +26,10 @@ class EffectTracker:
         self.effects.append(effect)
 
     def remove(self, effect):
-        self.effects.remove(effect)
+        try:
+            self.effects.remove(effect)
+        except ValueError:
+            print("FIXME")
 
     def start_of_turn(self, combatant):
         """
@@ -96,5 +99,8 @@ class EffectTracker:
 
     def reset(self):
         for effect in self.effects:
-            effect.deactivate()
+            try:
+                effect.deactivate()
+            except AttributeError:
+                print("FIXME")
         self.effects.clear()
