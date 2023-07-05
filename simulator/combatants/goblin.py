@@ -11,8 +11,8 @@ logger = logging.getLogger("EncounTroll")
 
 class Goblin(Combatant):
 
-    def __init__(self, effect_tracker, name="Goblin"):
-        super().__init__(effect_tracker, name, level=1, hp=7, ac=15, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+    def __init__(self, name="Goblin"):
+        super().__init__(name, level=1, hp=7, ac=15, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.scimitar_attack = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.shortbow_attack = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=64, crit_range=1)
         self.nimble_disengage = self.add_ability(BonusAction.CUNNING_DISENGAGE)

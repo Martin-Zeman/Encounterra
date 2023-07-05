@@ -11,8 +11,8 @@ logger = logging.getLogger("EncounTroll")
 
 class Quetzalcoatlus(Combatant):
 
-    def __init__(self, effect_tracker, name="Quetzalcoatlus"):
-        super().__init__(effect_tracker, name, level=1, hp=30, ac=13, init_bonus=1, spell_to_hit=0, speed=80, resistances=set(), dc=0)
+    def __init__(self, name="Quetzalcoatlus"):
+        super().__init__(name, level=1, hp=30, ac=13, init_bonus=1, spell_to_hit=0, speed=80, resistances=set(), dc=0)
         self.size = Size.HUGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice="3d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice="3d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)

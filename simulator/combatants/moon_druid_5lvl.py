@@ -15,8 +15,8 @@ logger = logging.getLogger("EncounTroll")
 
 class MoonDruid5Lvl(Combatant):
 
-    def __init__(self, effect_tracker, name="MoonDruid5Lvl"):
-        super().__init__(effect_tracker, name, level=5, hp=42, ac=15, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
+    def __init__(self, name="MoonDruid5Lvl"):
+        super().__init__(name, level=5, hp=42, ac=15, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Action.FLAMING_SPHERE)

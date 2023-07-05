@@ -12,8 +12,8 @@ logger = logging.getLogger("EncounTroll")
 
 class GiantConstrictorSnake(Combatant):
 
-    def __init__(self, effect_tracker, name="Giant Constrictor Snake"):
-        super().__init__(effect_tracker, name, level=1, hp=60, ac=12, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+    def __init__(self, name="Giant Constrictor Snake"):
+        super().__init__(name, level=1, hp=60, ac=12, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.size = Size.HUGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
         self.constrict_attack = self.add_ability(Action.MELEE_ATTACK,  name="ConstrictAttack", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, on_hit=OnHitAutoRestrained(SavingThrow.STR, 16))

@@ -25,8 +25,7 @@ logger = logging.getLogger("EncounTroll")
 
 class Combatant(ABC, ProtoCombatant):
 
-    def __init__(self, effect_tracker, name, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
-        self.effect_tracker = effect_tracker
+    def __init__(self, name, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
         self.name = name
         self.level = level
         self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self))]
@@ -168,7 +167,7 @@ class Combatant(ABC, ProtoCombatant):
                     return self.action_factories[-1]
                 case Action.HASTE:
                     self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                        (action_type, TO_FACTORY[action_type](Action.HASTE, self)))
                     return self.action_factories[-1]
                 case Action.DISENGAGE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
@@ -245,7 +244,7 @@ class Combatant(ABC, ProtoCombatant):
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_HASTE:
                     self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](Action.HASTE, self, self.effect_tracker)))
+                        (action_type, TO_FACTORY[action_type](Action.HASTE, self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.MOON_WILDSHAPE:
                     self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
@@ -372,7 +371,7 @@ class Combatant(ABC, ProtoCombatant):
         dmg = self._receive_dmg(dmg, dmg_type)
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
-            self.effect_tracker.deactivate_wildshape(self.get_original_form())
+            Map.get().effect_tracker.deactivate_wildshape(self.get_original_form())
         if dmg:
             roll_concentration_check(self, dmg)
         return dmg
@@ -388,7 +387,7 @@ class Combatant(ABC, ProtoCombatant):
             total_dmg += self._receive_dmg(d[0], d[1])
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
-            self.effect_tracker.deactivate_wildshape(self.get_original_form())
+            Map.get().effect_tracker.deactivate_wildshape(self.get_original_form())
         if total_dmg:
             roll_concentration_check(self, total_dmg)
 

@@ -378,6 +378,11 @@ def longest_path(combatant, dag, sorted_states, transition_name_to_action, dista
     #     action.clear_cache()
 
     for state in sorted_states:
+        try:
+            if state != '0':
+                foo = dag.dependencies[state]
+        except KeyError:
+            print("FIXME" + foo)
         if state != '0' and not dag.dependencies[state]:
             continue  # This essentially prunes unreachable states
 

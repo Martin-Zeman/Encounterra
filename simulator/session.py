@@ -54,31 +54,31 @@ class Session:
 
         match combatant_type.__name__:
             case "DraconicSorcerer5Lvl":
-                self.combatants.append(DraconicSorcerer5Lvl(self.effect_tracker, "DraconicSorcerer5Lvl " + str(curr_count)))
+                self.combatants.append(DraconicSorcerer5Lvl("DraconicSorcerer5Lvl " + str(curr_count)))
             case "TotemBarbarian5Lvl":
-                self.combatants.append(TotemBarbarian5Lvl(self.effect_tracker, "TotemBarbarian5Lvl" + str(curr_count)))
+                self.combatants.append(TotemBarbarian5Lvl("TotemBarbarian5Lvl" + str(curr_count)))
             case "Cyanwrath":
                 self.combatants.append(Cyanwrath(self.effect_tracker))
             case "DragonclawCultist":
-                self.combatants.append(DragonclawCultist(self.effect_tracker, "DragonclawCultist " + str(curr_count)))
+                self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
             case "Goblin":
-                self.combatants.append(Goblin(self.effect_tracker, "Goblin " + str(curr_count)))
+                self.combatants.append(Goblin("Goblin " + str(curr_count)))
             case "Bugbear":
-                self.combatants.append(Bugbear(self.effect_tracker, "Bugbear " + str(curr_count)))
+                self.combatants.append(Bugbear("Bugbear " + str(curr_count)))
             case "Ogre":
-                self.combatants.append(Ogre(self.effect_tracker, "Ogre " + str(curr_count)))
+                self.combatants.append(Ogre("Ogre " + str(curr_count)))
             case "StoneGiant":
-                self.combatants.append(StoneGiant(self.effect_tracker, "StoneGiant " + str(curr_count)))
+                self.combatants.append(StoneGiant("StoneGiant " + str(curr_count)))
             case "MoonDruid5Lvl":
-                self.combatants.append(MoonDruid5Lvl(self.effect_tracker, "MoonDruid5Lvl " + str(curr_count)))
+                self.combatants.append(MoonDruid5Lvl("MoonDruid5Lvl " + str(curr_count)))
             case "DragonclawCultist":
-                self.combatants.append(DragonclawCultist(self.effect_tracker, "DragonclawCultist " + str(curr_count)))
+                self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
             case "GiantToad":
-                self.combatants.append(GiantToad(self.effect_tracker, "GiantToad " + str(curr_count)))
+                self.combatants.append(GiantToad("GiantToad " + str(curr_count)))
             case "BrownBear":
-                self.combatants.append(BrownBear(self.effect_tracker, "BrownBear " + str(curr_count)))
+                self.combatants.append(BrownBear("BrownBear " + str(curr_count)))
             case "DireWolf":
-                self.combatants.append(DireWolf(self.effect_tracker, "DireWolf " + str(curr_count)))
+                self.combatants.append(DireWolf("DireWolf " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return

@@ -12,8 +12,8 @@ logger = logging.getLogger("EncounTroll")
 
 class DraconicSorcerer5Lvl(Combatant):
 
-    def __init__(self, effect_tracker, name="DraconicSorcerer5Lvl"):
-        super().__init__(effect_tracker, name, level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
+    def __init__(self, name="DraconicSorcerer5Lvl"):
+        super().__init__(name, level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.staff = self.add_ability(Action.MELEE_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,

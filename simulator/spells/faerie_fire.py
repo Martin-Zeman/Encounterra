@@ -25,13 +25,12 @@ class FaerieFireFactory(ThreatModifierFactory):
     dmg_type = None
 
 
-    def __init__(self, dc, action_type, caster, effect_tracker):
+    def __init__(self, dc, action_type, caster):
         super().__init__()
         self.dc = dc
         self.action_type = action_type  # QUICKENED_FAERIE_FIRE, FAERIE_FIRE
         self.combatant = caster
         self.saving_throw = SavingThrow.DEX
-        self.effect_tracker = effect_tracker
 
     def __str__(self):
         """
@@ -40,7 +39,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         return "FaerieFireFactory"
 
     def get_quickened_kwargs(self):
-        return {'effect_tracker': self.effect_tracker, 'combatant': self.combatant}
+        return {'combatant': self.combatant}
 
 
     def get_eligible_targets(self):

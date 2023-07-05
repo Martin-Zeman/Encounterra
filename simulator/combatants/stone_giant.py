@@ -14,8 +14,8 @@ logger = logging.getLogger("EncounTroll")
 
 class StoneGiant(Combatant):
 
-    def __init__(self, effect_tracker, name="Stone Giant"):
-        super().__init__(effect_tracker, name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
+    def __init__(self, name="Stone Giant"):
+        super().__init__(name, level=5, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
         self.size = Size.HUGE
         self.club = self.add_ability(Action.MELEE_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3)
         self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,

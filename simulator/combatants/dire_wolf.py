@@ -12,8 +12,8 @@ logger = logging.getLogger("EncounTroll")
 
 class DireWolf(Combatant):
 
-    def __init__(self, effect_tracker, name="Dire Wolf"):
-        super().__init__(effect_tracker, name, level=1, hp=37, ac=14, init_bonus=2, spell_to_hit=0, speed=50, resistances=set(), dc=0)
+    def __init__(self, name="Dire Wolf"):
+        super().__init__(name, level=1, hp=37, ac=14, init_bonus=2, spell_to_hit=0, speed=50, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, on_hit=OnHitProne(SavingThrow.STR, 13))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="2d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)

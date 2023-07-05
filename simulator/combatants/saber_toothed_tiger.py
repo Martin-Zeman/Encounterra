@@ -12,8 +12,8 @@ logger = logging.getLogger("EncounTroll")
 
 class SaberToothedTiger(Combatant):
 
-    def __init__(self, effect_tracker, name="Saber-Toothed Tiger"):
-        super().__init__(effect_tracker, name, level=1, hp=52, ac=12, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=0)
+    def __init__(self, name="Saber-Toothed Tiger"):
+        super().__init__(name, level=1, hp=52, ac=12, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="1d10", dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)

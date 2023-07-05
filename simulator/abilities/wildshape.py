@@ -84,7 +84,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
-        self.form = form(factory.combatant.effect_tracker, f"{factory.combatant} wildshaped into {form.__name__}")
+        self.form = form(f"{factory.combatant} wildshaped into {form.__name__}")
         def wildshape_get(self):
             return combatant
 
@@ -121,6 +121,8 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.concentration_effect = self.combatants[0].concentration_effect
         self.form.action_factories.extend([af for af in self.combatants[0].action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in af[1].flags])
         self.form.bonus_action_factories.extend([baf for baf in self.combatants[0].bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in baf[1].flags])
+        # FIXME
+        print(f"MY DEBUG Form bonus action factories {self.form.bonus_action_factories}")
         self.form.haste_action_factories.extend([haf for haf in self.combatants[0].haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in haf[1].flags])
         for af in self.form.action_factories:
             af[1].combatant = self.form

@@ -25,11 +25,10 @@ class HasteFactory(ThreatModifierFactory):
     dc = None
     dmg_type = None
 
-    def __init__(self, action_type, caster, effect_tracker):
+    def __init__(self, action_type, caster):
         super().__init__()
         self.action_type = action_type  # TWINNED_HASTE, QUICKENED_HASTE, HASTE
         self.combatant = caster
-        self.effect_tracker = effect_tracker
 
     def __str__(self):
         """
@@ -38,10 +37,10 @@ class HasteFactory(ThreatModifierFactory):
         return "HasteFactory"
 
     def get_twinned_kwargs(self):
-        return {'effect_tracker': self.effect_tracker, 'caster': self.combatant}
+        return {'caster': self.combatant}
 
     def get_quickened_kwargs(self):
-        return {'effect_tracker': self.effect_tracker, 'caster': self.combatant}
+        return {'caster': self.combatant}
 
 
     def get_eligible_targets(self):
@@ -121,11 +120,12 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         self.target.has_haste_action = True  # TODO Remove this
 
     def deactivate(self):
-        Map.get().effect_tracker.remove(self)
+        effect_tracker = Map.get().effect_tracker
+        effect_tracker.remove(self)
         self.factory.combatant.get_current_form().concentration_effect = None
         self.target.ac -= 2
         self.target.haste_action_factories.clear()
-        self.factory.effect_tracker.create_post_haste_lethargy(self.target)
+        effect_tracker.create_post_haste_lethargy(self.target)
         self.target.has_haste_action = False  # TODO Remove this
 
     def is_affecting(self, combatant):
