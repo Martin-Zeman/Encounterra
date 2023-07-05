@@ -121,8 +121,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.concentration_effect = self.combatants[0].concentration_effect
         self.form.action_factories.extend([af for af in self.combatants[0].action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in af[1].flags])
         self.form.bonus_action_factories.extend([baf for baf in self.combatants[0].bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in baf[1].flags])
-        # FIXME
-        print(f"MY DEBUG Form bonus action factories {self.form.bonus_action_factories}")
         self.form.haste_action_factories.extend([haf for haf in self.combatants[0].haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in haf[1].flags])
         for af in self.form.action_factories:
             af[1].combatant = self.form

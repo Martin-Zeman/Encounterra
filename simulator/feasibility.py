@@ -389,10 +389,7 @@ def check_feasibility_light(combatant, action):
             case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM:
                 return res
             case BonusAction.MOON_WILDSHAPE:
-                try:
-                    return res and combatant.curr_wildshape_uses > 0
-                except AttributeError:
-                    print("FIXME")
+                return res and combatant.curr_wildshape_uses > 0
             case _:
                 logger.error("Unknown bonus action")
                 return False

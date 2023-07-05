@@ -125,6 +125,7 @@ class RoundManager:
                     self.effect_tracker.end_of_turn(combatant)
                 else:
                     self.effect_tracker.combatant_died(combatant)
+            logger.info("----------------------------------")
             self.print_status()
 
     def print_status(self):
