@@ -26,7 +26,7 @@ def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     sgf = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_goblin)
     sg = sgf.create(np.array([7, 3]))
-    effect_tracker.add(sg, sg.factory.combatant)
+    effect_tracker.add(sg)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
@@ -46,7 +46,7 @@ def test_get_path_to_combatant_medium_to_medium_one_partial_spike_growth(battle_
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     sgf = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_goblin)
     sg = sgf.create(np.array([7, 6]))
-    effect_tracker.add(sg, sg.factory.combatant)
+    effect_tracker.add(sg)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
@@ -67,7 +67,7 @@ def test_get_path_to_combatant_large_to_medium_one_aoe(battle_map, teams, test_d
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
     cod = codf.create(np.array([4, 2]))
-    effect_tracker.add(cod, cod.factory.combatant)
+    effect_tracker.add(cod)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 1]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([7, 1]))
@@ -87,7 +87,7 @@ def test_get_path_to_combatant_large_to_medium_avoided_aoe(battle_map, teams, te
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     hohf = HungerOfHadarFactory(15, Action.HUNGER_OF_HADAR, test_goblin)
     hoh = hohf.create(np.array([4, 7]))
-    effect_tracker.add(hoh, hoh.factory.combatant)
+    effect_tracker.add(hoh)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 1]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([7, 1]))
@@ -107,9 +107,9 @@ def test_get_path_to_combatant_medium_to_medium_two_overlapping_aoe(battle_map, 
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
     cod = codf.create(np.array([7, 3]))
-    effect_tracker.add(cod, cod.factory.combatant)
+    effect_tracker.add(cod)
     cod2 = codf.create(np.array([7, 3]))
-    effect_tracker.add(cod2, cod2.factory.combatant)
+    effect_tracker.add(cod2)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
@@ -130,9 +130,9 @@ def test_get_path_to_combatant_large_to_medium_two_overlapping_aoe(battle_map, t
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
     cod = codf.create(np.array([7, 3]))
-    effect_tracker.add(cod, cod.factory.combatant)
+    effect_tracker.add(cod)
     hoh = codf.create(np.array([7, 4]))  # Should still be hit due to combatant's size
-    effect_tracker.add(hoh, hoh.factory.combatant)
+    effect_tracker.add(hoh)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 3]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
@@ -153,7 +153,7 @@ def test_get_path_to_combatant_large_to_medium_starting_inside_aoe(battle_map, t
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
     cod = codf.create(np.array([6, 3]))
-    effect_tracker.add(cod, cod.factory.combatant)
+    effect_tracker.add(cod)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 3]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
@@ -350,7 +350,7 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([2, 8]))
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
     cod = codf.create(np.array([2, 7]))
-    effect_tracker.add(cod, cod.factory.combatant)
+    effect_tracker.add(cod)
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_totem_barbarian)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     get_aoe_and_aoo_threat_for_increment.cache_clear()
