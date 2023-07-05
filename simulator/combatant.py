@@ -343,12 +343,13 @@ class Combatant(ABC, ProtoCombatant):
     def has_passive(self, ability):
         return ability in self.passive
 
-    def receive_dmg(self, dmg, dmg_type):
+
+    def _receive_dmg(self, dmg, dmg_type):
         """
-        Inflicts damage to the combatant
-        :param dmg: dmg to be received
-        :param dmg_type: dmg type
-        :return: actual dmg received accounting for resistances
+        Private-like function which takes care of receiving dmg but does not incur a concentration check
+        :param dmg: amount dmg to be received
+        :param dmg_type: damage type
+        :return: actual dmg received accounting for resistances, vulnerabilities and immunities
         """
         if dmg_type in self.immunities:
             return 0
@@ -362,8 +363,31 @@ class Combatant(ABC, ProtoCombatant):
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
             self.effect_tracker.deactivate_wildshape(self.get_original_form())
-        roll_concentration_check(self, dmg)
         return dmg
+
+    def receive_dmg(self, dmg, dmg_type):
+        """
+        Inflicts damage to the combatant
+        :param dmg: amount dmg to be received
+        :param dmg_type: damage type
+        :return: actual dmg received accounting for resistances, vulnerabilities and immunities
+        """
+        dmg = self._receive_dmg(dmg, dmg_type)
+        if dmg:
+            roll_concentration_check(self, dmg)
+        return dmg
+
+    def receive_compound_dmg(self, dmg):
+        """
+        Inflicts damage to the combatant composed of different damage types
+        :param dmg: lift of tuples: [(dmg, dmg_type), ...]
+        :return: actual dmg received accounting for resistances, vulnerabilities and immunities
+        """
+        total_dmg = 0
+        for d in dmg:
+            total_dmg += self._receive_dmg(d[0], d[1])
+        if total_dmg:
+            roll_concentration_check(self, total_dmg)
 
     def is_resistant_to(self, dmg_type):
         return dmg_type in self.resistances

@@ -96,5 +96,5 @@ class EffectTracker:
 
     def reset(self):
         for effect in self.effects:
-            effect[0].deactivate()
+            effect.deactivate()
         self.effects.clear()

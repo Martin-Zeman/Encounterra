@@ -329,16 +329,15 @@ class ActionResolver:
             # logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
             extra_dmg = [(multiplier * roll_dice(parse_dmg_dice(e[0])), e[1]) for e in attack.factory.extra_dmg]
             # logger.info(f"and {extra_dmg} on the extra dmg dice", extra={"team": self.teams.get_team(attacker)})
-            total_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
+            base_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
             if attacker.has_passive(Passive.FANATIC_ADVANTAGE) and final_modifier is RollType.ADVANTAGE and not attacker.already_used_fanatic_advantage:
                 logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
                 attacker.already_used_fanatic_advantage = True
-                total_dmg += roll_dice([(2, 6)])
+                base_dmg += roll_dice([(2, 6)])
             logger.info(
-                f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {total_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)} damage", extra={"team": self.teams.get_team(attacker)})
-            target.receive_dmg(total_dmg, attack.get_dmg_type())
-            for extra in extra_dmg:
-                target.receive_dmg(extra[0], extra[1])
+                f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {base_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)} damage", extra={"team": self.teams.get_team(attacker)})
+            total_compound_dmg = [(base_dmg, attack.get_dmg_type())] + extra_dmg
+            target.receive_compound_dmg(total_compound_dmg)
             target = Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
             if target and attack.factory.on_hit is not None:
                 attack.factory.on_hit.hit(attacker, attack, target)
