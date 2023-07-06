@@ -40,8 +40,8 @@ def test_random_matchup():
         red_team = random.sample(combatant_pool, num_red_combatants)
         # red_team = random.sample(combatant_pool, num_red_combatants)
         logger.info(f"Starting a fuzzy test with:")
-        logger.info(f"Blue team: {blue_team}")
-        logger.info(f"Red team: {red_team}")
+        logger.info(f"Blue team: {[str(c) for c in blue_team]}")
+        logger.info(f"Red team: {[str(c) for c in red_team]}")
 
         for combatant in blue_team:
             session.add_combatant(combatant, Teams.Color.BLUE)
