@@ -1,10 +1,8 @@
 from enum import Enum, Flag, auto
 import random
 import re
-import math
 from functools import reduce, cache
 
-from simulator.actions.action_types import Passive
 from simulator.actions.actoid import FactoryFlags
 import logging
 from simulator.utils.roll_types import RollType
@@ -20,6 +18,10 @@ class SavingThrow(Enum):
     INT = 4
     WIS = 5
     CHA = 6
+
+class SkillCheck(Enum):
+    ATHLETICS = 1
+    ACROBATICS = 2
 
 
 class DamageType(Enum):
@@ -58,6 +60,7 @@ class Conditions(Flag):
     STUNNED = auto()
     UNCONSCIOUS = auto()
     SWALLOWED = auto()  # Meta-Condition
+    GRAPPLING = auto()  # Meta-Condition
 
 
 class PhaseOfTurn(Enum):
@@ -104,12 +107,6 @@ class PlacementScenario(Enum):
     TWO_HALVES = 1
     TOTALLY_RANDOM = 2
     # SURROUNDED = 3
-
-class CombatantArchetype(Enum):
-    MELEE = 0
-    RANGED = 1
-    HYBRID = 2
-
 
 SIGN = {"+": 1, "-": -1}
 
@@ -181,30 +178,6 @@ def roll_saving_throw(bonus, dc, roll_type):
         return True
     return roll + bonus >= dc
 
-
-def roll_concentration_check(combatant, dmg):
-    """
-    Calculates a concentration check for a combatant after receiving damage. It assumes the damage has already been taken.
-    @param combatant: The combatant object representing the character.
-    @param dmg: The amount of damage taken by the combatant.
-    @return: True if concentration maintained, False otherwise
-    """
-    combatant = combatant.get_original_form().get_current_form()  # The dmg received could have knocked combatant out of wildshape
-    if not combatant.concentration_effect:
-        return False
-    if not combatant.is_alive():
-        logger.info(f"Concentration on {combatant.concentration_effect} is broken as {combatant} is dead")
-        combatant.concentration_effect.deactivate()
-        return False
-    dc = max(10, math.floor(dmg / 2))
-    roll_type = RollType.STRAIGHT if not (combatant.has_passive(Passive.WAR_CASTER) or combatant.has_passive(Passive.ELDRITCH_MIND)) else RollType.ADVANTAGE
-    saved = roll_saving_throw(combatant.saving_throws[SavingThrow.CON], dc, roll_type)
-    if not saved:
-        logger.info(f"{combatant} loses concentration on {combatant.concentration_effect}")
-        combatant.concentration_effect.deactivate()
-    else:
-        logger.info(f"{combatant} maintains concentration on {combatant.concentration_effect}")
-    return saved
 
 
 def roll_ability_check(bonus, dc, roll_type):

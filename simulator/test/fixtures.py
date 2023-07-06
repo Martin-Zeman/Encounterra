@@ -28,41 +28,41 @@ def battle_map(teams):
     return Map(15, teams)
 
 @pytest.fixture()
-def test_draconic_sorcerer_5lvl(effect_tracker):
-    return DraconicSorcerer5Lvl(effect_tracker, "DraconicSorcerer5lvl")
+def test_draconic_sorcerer_5lvl():
+    return DraconicSorcerer5Lvl("DraconicSorcerer5lvl")
 
 @pytest.fixture()
-def test_goblin(effect_tracker):
-    return Goblin(effect_tracker, "Goblin")
+def test_goblin():
+    return Goblin("Goblin")
 
 @pytest.fixture()
-def test_bugbear(effect_tracker):
-    return Bugbear(effect_tracker, "Bugbear")
+def test_bugbear():
+    return Bugbear("Bugbear")
 
 @pytest.fixture()
-def test_totem_barbarian(effect_tracker):
-    return TotemBarbarian5Lvl(effect_tracker, "TotemBarbarian5Lvl")
+def test_totem_barbarian():
+    return TotemBarbarian5Lvl("TotemBarbarian5Lvl")
 
 @pytest.fixture()
-def test_stone_giant(effect_tracker):
-    return StoneGiant(effect_tracker, "StoneGiant")
+def test_stone_giant():
+    return StoneGiant("StoneGiant")
 
 @pytest.fixture()
-def test_ogre(effect_tracker):
-    return Ogre(effect_tracker, "Ogre")
+def test_ogre():
+    return Ogre("Ogre")
 
 @pytest.fixture()
-def test_moon_druid(effect_tracker):
-    return MoonDruid5Lvl(effect_tracker, "MoonDruid5Lvl")
+def test_moon_druid():
+    return MoonDruid5Lvl("MoonDruid5Lvl")
 
 @pytest.fixture()
-def test_giant_toad(effect_tracker):
-    return GiantToad(effect_tracker, "GiantToad")
+def test_giant_toad():
+    return GiantToad("GiantToad")
 
 @pytest.fixture()
-def test_dragonclaw_cultist(effect_tracker):
-    return DragonclawCultist(effect_tracker, "DragonclawCultist")
+def test_dragonclaw_cultist():
+    return DragonclawCultist("DragonclawCultist")
 
 @pytest.fixture()
-def test_brown_bear(effect_tracker):
-    return BrownBear(effect_tracker, "BrownBear")
+def test_brown_bear():
+    return BrownBear("BrownBear")

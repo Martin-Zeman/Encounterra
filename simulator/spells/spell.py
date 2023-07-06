@@ -28,8 +28,8 @@ class SpellStats:
         The range values translate directly into hops of 5ft
         """
         SELF = -1
-        TOUCH = 0
-        SIGHT = 1
+        SIGHT = 0
+        TOUCH = 1
         FEET_10 = 2
         FEET_30 = 6
         FEET_60 = 12

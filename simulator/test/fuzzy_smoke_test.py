@@ -5,6 +5,7 @@ from simulator.battle_map import Map
 from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.dire_wolf import DireWolf
+from simulator.combatants.evil_mage import EvilMage
 from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.ogre import Ogre
 from simulator.combatants.stone_giant import StoneGiant
@@ -26,7 +27,8 @@ def test_random_matchup():
     CustomLogger(LogLevel.INFO)
     for _ in range(100):
         Map.reset_singleton()
-        combatant_pool = [DraconicSorcerer5Lvl, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl, GiantToad, DireWolf, BrownBear]
+        combatant_pool = [DraconicSorcerer5Lvl, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl, GiantToad, DireWolf, BrownBear,
+                          EvilMage]
         session = Session()
 
         num_blue_combatants = random.randint(1, 4)
@@ -34,10 +36,8 @@ def test_random_matchup():
         # num_red_combatants = random.randint(1, 2)
 
         blue_team = random.sample(combatant_pool, num_blue_combatants)
-        blue_team.append(MoonDruid5Lvl)
         # blue_team = [GiantToad]
         red_team = random.sample(combatant_pool, num_red_combatants)
-        red_team.append(MoonDruid5Lvl)
         # red_team = random.sample(combatant_pool, num_red_combatants)
         logger.info(f"Starting a fuzzy test with:")
         logger.info(f"Blue team: {blue_team}")

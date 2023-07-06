@@ -68,14 +68,14 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
         self.factory.combatant.concentration_effect = self
         for target in self.targets:
             for mod in target.saving_throws_dice_mod.values():
-                mod.append('1d')
+                mod.append('1d4')
             target.to_hit_dice_mod.append('1d4')
 
     def deactivate(self):
         self.factory.combatant.get_current_form().concentration_effect = None
         for target in self.targets:
             for mod in target.saving_throws_dice_mod.values():
-                mod.remove('1d')
+                mod.remove('1d4')
             target.to_hit_dice_mod.remove('1d4')
 
     def is_affecting(self, combatant):

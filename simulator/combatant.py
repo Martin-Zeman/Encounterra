@@ -5,12 +5,12 @@ import random
 import math
 from contextlib import contextmanager
 
+from simulator.action_resolver import check_concentration
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from simulator.battle_map import Map
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
-from simulator.misc import SavingThrow, Conditions, Size, CombatantArchetype, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC, \
-    roll_concentration_check
+from simulator.misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
 from enum import Enum
 from abc import ABC, abstractmethod
 from simulator.actions.dodge import DodgeFactory
@@ -89,7 +89,6 @@ class Combatant(ABC, ProtoCombatant):
         self.to_hit_flat_mod = [0]
         self.to_hit_dice_mod = []
         self.action_types_added = []
-        self.archetype = CombatantArchetype.MELEE
         self.shortest_paths_cache = None
         self.wears_metal = False
         self.constricted_target = None
@@ -151,23 +150,31 @@ class Combatant(ABC, ProtoCombatant):
                     return just_added
                 case Action.FIREBALL:
                     self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
+                        (action_type, TO_FACTORY[action_type](self.dc, action_type, self, has_spell_sculpting=False)))
                     return self.action_factories[-1]
                 case Action.FIREBOLT:
                     self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.FIREBOLT, self)))
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
+                    return self.action_factories[-1]
+                case Action.SHOCKING_GRASP:
+                    self.action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
                     return self.action_factories[-1]
                 case Action.CHAOSBOLT:
                     self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
                     return self.action_factories[-1]
                 case Action.SCORCHING_RAY:
                     self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.SCORCHING_RAY, self)))
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
+                    return self.action_factories[-1]
+                case Action.MAGIC_MISSILE:
+                    self.action_factories.append(
+                        (action_type, TO_FACTORY[action_type](action_type, self)))
                     return self.action_factories[-1]
                 case Action.HASTE:
                     self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](Action.HASTE, self)))
+                        (action_type, TO_FACTORY[action_type](action_type, self)))
                     return self.action_factories[-1]
                 case Action.DISENGAGE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
@@ -232,19 +239,23 @@ class Combatant(ABC, ProtoCombatant):
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBALL:
                     self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.dc, Action.FIREBALL, self, has_spell_sculpting=False)))
+                        (action_type, TO_FACTORY[action_type](self.dc, action_type, self, has_spell_sculpting=False)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBOLT:
                     self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, Action.FIREBOLT, self)))
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, action_type, self)))
+                    return self.bonus_action_factories[-1]
+                case BonusAction.QUICKENED_SHOCKING_GRASP:
+                    self.bonus_action_factories.append(
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_CHAOSBOLT:
                     self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, Action.CHAOSBOLT, self)))
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_HASTE:
                     self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](Action.HASTE, self)))
+                        (action_type, TO_FACTORY[action_type](action_type, self)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.MOON_WILDSHAPE:
                     self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
@@ -373,7 +384,7 @@ class Combatant(ABC, ProtoCombatant):
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
             Map.get().effect_tracker.deactivate_wildshape(self.get_original_form())
         if dmg:
-            roll_concentration_check(self, dmg)
+            check_concentration(self, dmg)
         return dmg
 
     def receive_compound_dmg(self, dmg):
@@ -389,7 +400,7 @@ class Combatant(ABC, ProtoCombatant):
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
             Map.get().effect_tracker.deactivate_wildshape(self.get_original_form())
         if total_dmg:
-            roll_concentration_check(self, total_dmg)
+            check_concentration(self, total_dmg)
 
     def is_resistant_to(self, dmg_type):
         return dmg_type in self.resistances

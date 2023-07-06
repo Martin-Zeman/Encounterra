@@ -20,6 +20,8 @@ from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.flaming_sphere import FlamingSphereFactory
 from simulator.spells.haste import HasteFactory
 from simulator.spells.hold_person import HoldPersonFactory
+from simulator.spells.magic_missile import MagicMissileFactory
+from simulator.spells.shocking_grasp import ShockingGraspFactory
 from simulator.spells.twinned_hold_person import TwinnedHoldPersonFactory
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.spells.scorching_ray import ScorchingRayFactory
@@ -62,6 +64,10 @@ TO_FACTORY = {
     Action.FLAMING_SPHERE: FlamingSphereFactory,
     Action.HOLD_PERSON: HoldPersonFactory,
     Action.TWINNED_HOLD_PERSON: TwinnedHoldPersonFactory,
+    Action.SHOCKING_GRASP: ShockingGraspFactory,
+    Action.TWINNED_SHOCKING_GRASP: ShockingGraspFactory,
+    Action.MAGIC_MISSILE: MagicMissileFactory,
+
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -79,6 +85,8 @@ TO_FACTORY = {
     BonusAction.QUICKENED_SCORCHING_RAY: ScorchingRayFactory,
     BonusAction.MOON_WILDSHAPE: WildshapeFactory,
     BonusAction.QUICKENED_HOLD_PERSON: HoldPersonFactory,
+    BonusAction.QUICKENED_SHOCKING_GRASP: ShockingGraspFactory,
+    BonusAction.QUICKENED_MAGIC_MISSILE: MagicMissileFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
@@ -98,9 +106,12 @@ TO_QUICKENED = {
     Action.CHAOSBOLT: BonusAction.QUICKENED_CHAOSBOLT,
     Action.HASTE: BonusAction.QUICKENED_HASTE,
     Action.SCORCHING_RAY: BonusAction.QUICKENED_SCORCHING_RAY,
-    Action.HOLD_PERSON: BonusAction.QUICKENED_HOLD_PERSON
+    Action.HOLD_PERSON: BonusAction.QUICKENED_HOLD_PERSON,
+    Action.SHOCKING_GRASP: BonusAction.QUICKENED_SHOCKING_GRASP,
+    Action.MAGIC_MISSILE: BonusAction.QUICKENED_MAGIC_MISSILE
 }
-TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE, Action.HOLD_PERSON: Action.TWINNED_HOLD_PERSON}
+TO_TWINNED = {Action.FIREBOLT: Action.TWINNED_FIREBOLT, Action.HASTE: Action.TWINNED_HASTE, Action.HOLD_PERSON: Action.TWINNED_HOLD_PERSON,
+              Action.SHOCKING_GRASP: Action.TWINNED_SHOCKING_GRASP}
 TO_HASTED = {Action.MELEE_ATTACK: HasteAction.HASTE_MELEE_ATTACK, Action.RANGED_ATTACK: HasteAction.HASTE_RANGED_ATTACK, \
              Action.HIDE: HasteAction.HASTE_HIDE, Action.DASH: HasteAction.HASTE_DASH, Action.DISENGAGE: HasteAction.HASTE_DISENGAGE,\
              Action.BITE_AND_SWALLOW: HasteAction.HASTE_BITE_AND_SWALLOW, Action.PRE_SWALLOW_BITE: HasteAction.HASTE_PRE_SWALLOW_BITE}

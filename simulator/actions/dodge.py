@@ -11,7 +11,7 @@ from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
 from simulator.misc import SavingThrow
 import logging
 
-from simulator.utils.roll_types import RollType
+from simulator.utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -21,7 +21,7 @@ class DodgeFactory(ThreatModifierFactory):
         super().__init__()
         self.combatant = combatant
         self.action_type = Action.DODGE
-        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_MOD
+        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
 
     def __str__(self):
         """
@@ -32,12 +32,15 @@ class DodgeFactory(ThreatModifierFactory):
     def create_all(self):
         return [Dodge(self.combatant, self)]
 
+    def create(self):
+        return Dodge(self.combatant, self)
+
     def calculate_threat_to_target(self, target, *args, **kwargs):
         """
         Calculates the maximum threat reduction the factory can cause by imposing disadvantage on the target enemy
         """
         # The target is irrelevant here
-        return -1 * calculate_threat_in_delta(self.combatant, 6, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
+        return -1 * calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES)[0] / 2
 
 
 class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
@@ -75,7 +78,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         """
         Calculate how much dmg would the dodge potentially mitigate. This will be the same as the one for the factory.
         """
-        # return -1 * calculate_threat_in_delta(combatant, 6, battle_map, RollType.DISADVANTAGE, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
+        # return -1 * calculate_threat_in_delta(combatant, 6, battle_map, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
         return 0  # Threat that a Dodge would potentially mitigate is calculated in a different way
 
     def get_eligible_coords(self, distances, shortest_paths):

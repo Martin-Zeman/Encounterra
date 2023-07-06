@@ -112,12 +112,12 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
 
     def activate(self):
+        self.factory.combatant.concentration_effect = self
         # TODO make the area difficult terrain
-        pass
 
     def deactivate(self):
         # TODO remove difficult terrain
-        pass  # TODO remove concentration?
+        self.factory.combatant.concentration_effect = None
 
 
     def calculate_threat(self, *args, **kwargs):

@@ -82,9 +82,11 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
         return EffectType.HOLD_PERSON
 
     def activate(self,):
+        self.factory.combatant.concentration_effect = self
         self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
 
     def deactivate(self):
+        self.factory.combatant.concentration_effect = None
         self.target.remove_condition(Conditions.PARALYZED, self)
 
     def is_affecting(self, combatant):

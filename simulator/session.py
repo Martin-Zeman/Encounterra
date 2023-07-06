@@ -6,6 +6,7 @@ from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.combatants.evil_mage import EvilMage
 from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
@@ -79,6 +80,8 @@ class Session:
                 self.combatants.append(BrownBear("BrownBear " + str(curr_count)))
             case "DireWolf":
                 self.combatants.append(DireWolf("DireWolf " + str(curr_count)))
+            case "EvilMage":
+                self.combatants.append(EvilMage("EvilMage " + str(curr_count)))
             case _:
                 logger.error("Unknown combatant type")
                 return

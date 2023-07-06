@@ -96,7 +96,6 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
 
     def deactivate(self):
         logger.info(f"{self.combatants[0]}'s rage fades")
-        Map.get().effect_tracker.remove(self)
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         try:
             self.combatants[0].resistances.remove(DamageType.Slashing)

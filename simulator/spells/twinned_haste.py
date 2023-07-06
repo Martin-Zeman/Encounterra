@@ -110,12 +110,12 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
             target.has_haste_action = True  # TODO Remove this
 
     def deactivate(self):
-        Map.get().effect_tracker.remove(self)
+        effect_tracker = Map.get().effect_tracker
         self.factory.combatant.get_current_form().concentration_effect = None
         for target in self.targets:
             target.ac -= 2
             target.haste_action_factories.clear()
-            self.factory.effect_tracker.create_post_haste_lethargy(target)
+            effect_tracker.create_post_haste_lethargy(target)
             target.has_haste_action = False  # TODO Remove this
 
     def is_affecting(self, combatant):

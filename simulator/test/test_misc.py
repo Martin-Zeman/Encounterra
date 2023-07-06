@@ -41,7 +41,7 @@ def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid,
         assert test_moon_druid.concentration_effect is not None
         test_moon_druid.receive_dmg(50, DamageType.Slashing)  # Only a nat 20 can save it
         if not test_moon_druid.concentration_effect:
-            assert len(Map.get().effect_tracker.get_effect_by_initiator(test_moon_druid)) == 0
+            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 0
 
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -80,9 +80,9 @@ def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker,
         test_moon_druid.get_current_form().receive_dmg(50, DamageType.Slashing)  # Only a nat 20 can save it
         if not test_moon_druid.get_current_form().concentration_effect:
             assert not test_moon_druid.concentration_effect
-            assert len(Map.get().effect_tracker.get_effect_by_initiator(test_moon_druid)) == 0
+            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 0
             test_moon_druid.get_current_form().receive_dmg(1, DamageType.Slashing)
-            assert len(Map.get().effect_tracker.get_effect_by_initiator(test_moon_druid)) == 0
+            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 0
 
     except Exception as e:
         assert False, f"Raised an exception {e}"

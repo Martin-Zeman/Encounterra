@@ -121,7 +121,6 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
 
     def deactivate(self):
         effect_tracker = Map.get().effect_tracker
-        effect_tracker.remove(self)
         self.factory.combatant.get_current_form().concentration_effect = None
         self.target.ac -= 2
         self.target.haste_action_factories.clear()

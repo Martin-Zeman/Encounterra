@@ -100,10 +100,10 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return Map.get().get_hop_distance(combatant, coords) == 0
 
     def activate(self):
-        pass
+        self.factory.combatant.concentration_effect = self
 
     def deactivate(self):
-        pass  # TODO remove concentration?
+        self.factory.combatant.concentration_effect = None
 
 
     def calculate_threat(self, *args, **kwargs):

@@ -115,7 +115,9 @@ class RoundManager:
                     action = get_action(combatant)
                     if action is None:
                         break
-                    self.action_resolver.resolve_action(action, combatant)
+                    resolution = self.action_resolver.resolve_action(action, combatant)
+                    if resolution is None:
+                        break
                     if self.is_only_one_team_standing():
                         done = True
                         break

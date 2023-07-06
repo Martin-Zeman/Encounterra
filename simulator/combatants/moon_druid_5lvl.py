@@ -7,7 +7,7 @@ from simulator.actions.moon_druid_action_plan_strategy import MoonDruidActionPla
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.spellslots import Spellslots, Class
-from simulator.misc import CombatantArchetype, DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -20,13 +20,13 @@ class MoonDruid5Lvl(Combatant):
         self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Action.FLAMING_SPHERE)
+        self.add_ability(Action.HOLD_PERSON)
         self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=4, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
         self.danger_zone_attack = self.scimitar
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)
         self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
         self.build_attack_fms()
         self.spellslots = Spellslots(Class.DRUID, self.level)
-        self.archetype = CombatantArchetype.RANGED
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 3

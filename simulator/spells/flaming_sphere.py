@@ -103,7 +103,6 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def deactivate(self):
         logger.info(f"Flaming Sphere disappears")  # TODO remove this
-        Map.get().effect_tracker.remove(self)
         self.factory.combatant.get_current_form().concentration_effect = None
         self.factory.combatant.get_current_form().bonus_action_factories = [baf for baf in self.factory.combatant.get_current_form().bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]  # Doesn't carry over with deactivation of wildshape

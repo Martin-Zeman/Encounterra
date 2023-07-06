@@ -30,6 +30,9 @@ class Action(Enum):
     WEB = auto()
     HOLD_PERSON = auto()
     TWINNED_HOLD_PERSON = auto()
+    SHOCKING_GRASP = auto()
+    TWINNED_SHOCKING_GRASP = auto()
+    MAGIC_MISSILE = auto()
 
 
 class BonusAction(Enum):
@@ -56,6 +59,8 @@ class BonusAction(Enum):
     QUICKENED_HOLD_PERSON = auto()
     FLAMING_SPHERE_RAM = auto()
     MOON_WILDSHAPE = auto()
+    QUICKENED_SHOCKING_GRASP = auto()
+    QUICKENED_MAGIC_MISSILE = auto()
 
 
 class Reaction(Enum):

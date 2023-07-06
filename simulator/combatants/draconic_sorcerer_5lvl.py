@@ -4,7 +4,7 @@ from simulator.actions.action_types import Action, BonusAction, Reaction, Passiv
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.spellslots import Spellslots, Class
-from simulator.misc import CombatantArchetype, DamageType, get_factory_of_type, SavingThrow
+from simulator.misc import DamageType, get_factory_of_type, SavingThrow
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -28,9 +28,9 @@ class DraconicSorcerer5Lvl(Combatant):
         self.add_ability(Passive.METAMAGIC, sorcery_points=self.level)
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
+        self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
         self.spellslots = Spellslots(Class.SORCERER, self.level)
-        self.archetype = CombatantArchetype.RANGED
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 6
@@ -46,7 +46,7 @@ class DraconicSorcerer5Lvl(Combatant):
 
 
     def prompt_aoo(self, moving_combatant):
-        return None
+        return None  # Saving reaction for Shield
 
     def export_resources(self):
         return {

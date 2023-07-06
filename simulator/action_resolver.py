@@ -1,5 +1,8 @@
+import math
+
 from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
+from simulator.actions.dodge import DodgeFactory
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
 from simulator.battle_map import Map
 from simulator.effects.effect import EffectType
@@ -72,10 +75,10 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=Tru
     else:
         saved = False
     if not saved:
-        logger.info(f"{type(ability).__name__} deals {dmg} to {target_combatant}")
+        logger.info(f"{ability.shorthand_str()} deals {dmg} to {target_combatant}")
         target_combatant.receive_dmg(dmg, ability.factory.dmg_type)
     elif half_on_success:
-        logger.info(f"{type(ability).__name__} deals {dmg // 2} to {target_combatant}")
+        logger.info(f"{ability.shorthand_str()} deals {dmg // 2} to {target_combatant}")
         target_combatant.receive_dmg(dmg // 2, ability.factory.dmg_type)
 
 
@@ -147,6 +150,8 @@ class ActionResolver:
         if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
             return RollType.ADVANTAGE
         if attacker.is_affected_by(Conditions.INVISIBLE):
+            return RollType.ADVANTAGE
+        if target.wears_metal and (attack.factory.action_type is Action.SHOCKING_GRASP or attack.factory.action_type is BonusAction.QUICKENED_SHOCKING_GRASP or attack.factory.action_type is Action.TWINNED_SHOCKING_GRASP):
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
@@ -298,10 +303,7 @@ class ActionResolver:
         # TODO Conditions
         target = attack.target_combatant
         assert target
-        if FactoryFlags.IS_MELEE in attack.factory.flags:
-            types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
-        else:
-            types = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
+        types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
 
         final_modifier = reconcile_roll_types(types)
         if final_modifier is RollType.STRAIGHT:
@@ -422,6 +424,21 @@ class ActionResolver:
                 ret = (self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[0]),
                        self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[1]))
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
+            case Action.SHOCKING_GRASP | BonusAction.QUICKENED_SHOCKING_GRASP:
+                logger.info(f"{combatant} casts {actoid}")
+                result = self.resolve_attack(actoid, combatant)
+                if result is ActionResult.DMG:
+                    actoid.target.has_reaction = False
+                return result
+            case Action.TWINNED_SHOCKING_GRASP:
+                logger.info(f"{combatant} casts {actoid}")
+                result = (self.resolve_attack(actoid, combatant),
+                       self.resolve_attack(actoid, combatant))
+                if result[0] is ActionResult.DMG:
+                    actoid.targets[0].has_reaction = False
+                if result[1] is ActionResult.DMG:
+                    actoid.targets[1].has_reaction = False
+                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in result]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
                 logger.info(f"{combatant} casts {actoid}")
                 battle_map.move_combatant(combatant, actoid.coord)
@@ -471,17 +488,15 @@ class ActionResolver:
                 broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollType.STRAIGHT)
                 if broken_out and getattr(grapple.initiator, "constricted_target", None):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
-                    print(f"{combatant} is has broken out of grapple")
                     grapple.initiator.constricted_target = None
                     combatant.break_out_of_grapple()
                 else:
                     logger.info(f"{combatant} remains grappled")
-                    print(f"{combatant} remains grappled")
             case BonusAction.FLAMING_SPHERE_RAM:
                 adj = battle_map.build_flaming_sphere_adjacency_matrix()
                 _, shortest_paths = battle_map.dijkstra(actoid.factory.action_enabler_effect.origin, adj)
                 path = battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
-                if len(path) <= FlamingSphereRamFactory.RANGE + 1:
+                if path and len(path) <= FlamingSphereRamFactory.RANGE + 1:
                     dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                     logger.info(f"{ actoid.target_combatant} is rammed by Flaming Sphere")
                     resolve_dmg_saving_throw(actoid, dmg, actoid.target_combatant)
@@ -505,6 +520,18 @@ class ActionResolver:
 
         return False
 
+    def handle_error_case(self, action, combatant):
+        if action.factory.action_type is Movement.STANDARD:
+            logger.error(f"{combatant} doesn't have enough movement to enter difficult terrain")
+            combatant.movement = 0  # This can be caused by difficult terrain which is ok, but we must avoid endless looping
+            return None
+        elif combatant.has_action:
+            logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
+            df = DodgeFactory(combatant)
+            return df.create()
+        logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
+        return None
+
 
     def resolve_action(self, action, combatant):
         """
@@ -518,11 +545,9 @@ class ActionResolver:
         if action is None:
             return None
         if not check_feasibility(combatant, action):
-            if action.factory.action_type is Movement.STANDARD:
-                combatant.movement = 0  # This can be caused by difficult terrain which is ok but we must avoid endless looping
-            else:
-                logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
-            return None
+            action = self.handle_error_case(action, combatant)
+            if action is None:
+                return None
         use_resources(combatant, action)
         return self.resolve_by_actoid_flags(action, combatant)
 
@@ -551,3 +576,28 @@ class ActionResolver:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error("Unknown effect")
+
+
+def check_concentration(combatant, dmg):
+    """
+    Calculates a concentration check for a combatant after receiving damage. It assumes the damage has already been taken.
+    @param combatant: The combatant object representing the character.
+    @param dmg: The amount of damage taken by the combatant.
+    @return: True if concentration maintained, False otherwise
+    """
+    combatant = combatant.get_original_form().get_current_form()  # The dmg received could have knocked combatant out of wildshape
+    if not combatant.concentration_effect:
+        return False
+    if not combatant.is_alive():
+        logger.info(f"Concentration on {combatant.concentration_effect} is broken as {combatant} is dead")
+        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which removes sets the concentration_effect to None
+        return False
+    dc = max(10, math.floor(dmg / 2))
+    roll_type = RollType.STRAIGHT if not (combatant.has_passive(Passive.WAR_CASTER) or combatant.has_passive(Passive.ELDRITCH_MIND)) else RollType.ADVANTAGE
+    saved = roll_saving_throw(combatant.saving_throws[SavingThrow.CON], dc, roll_type)
+    if not saved:
+        logger.info(f"{combatant} loses concentration on {combatant.concentration_effect}")
+        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which removes sets the concentration_effect to None
+    else:
+        logger.info(f"{combatant} maintains concentration on {combatant.concentration_effect}")
+    return saved

@@ -12,7 +12,7 @@ from simulator.threat_utils import get_saving_throw_success_prob, calculate_thre
 from simulator.threat_interfaces import ThreatModifierFactory, ThreatModifier
 import logging
 
-from simulator.utils.roll_types import RollType
+from simulator.utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -72,8 +72,9 @@ class HoldPersonFactory(ThreatModifierFactory):
                 max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
         threat_acc += max_action_threat
 
-        threat_acc += calculate_threat_in_delta(self.combatant, 6, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE)
-        # TODO do something similar for the crit range
+        mods = {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE, ThreatModifierType.AUTO_CRIT: True}
+        # Neglecting the auto-crit in melee range only
+        threat_acc += calculate_threat_in_delta(self.combatant, 6, mods, FactoryFlags.IS_ATTACK_LIKE)[1]
 
         p_success = get_saving_throw_success_prob(self.dc, target.saving_throws[self.saving_throw])
         total_threat = 0
@@ -107,9 +108,11 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
         return EffectType.HOLD_PERSON
 
     def activate(self):
+        self.factory.combatant.concentration_effect = self
         self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
 
     def deactivate(self):
+        self.factory.combatant.concentration_effect = None
         self.target.remove_condition(Conditions.PARALYZED, self)
 
     def is_affecting(self, combatant):

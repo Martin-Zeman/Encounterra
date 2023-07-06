@@ -137,7 +137,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         """
         battle_map = Map.get()
         logger.info(f"{self.combatants[0]}'s wildshape fades")
-        battle_map.effect_tracker.remove(self)
         self.combatants[0].current_wildshape_form.on_die()
         battle_map.teams.replace_combatant(self.combatants[0].current_wildshape_form, self.combatants[0])
         position = battle_map.get_combatant_position(self.combatants[0].current_wildshape_form)

@@ -16,17 +16,11 @@ class EffectTracker:
         self.battle_map = None
 
     def add(self, effect):
-        # TODO: Do I need the initiator? Every effect has a factory with a combatant
-        # Refresh existing effect if available
-        # for idx in range(len(self.effects)):
-        #     if type(self.effects[idx][0]) == type(effect) and initiator is self.effects[idx][1]:
-        #         logger.info(f"Refreshing {effect}")
-        #         self.effects[idx][0] = effect
-        #         break
         self.effects.append(effect)
 
     def remove(self, effect):
         try:
+            effect.deactivate()
             self.effects.remove(effect)
         except ValueError:
             print("FIXME")
@@ -41,9 +35,11 @@ class EffectTracker:
         for e in self.effects:
             if getattr(e, "new_turn", False) and e.factory.combatant is combatant:
                 if not e.new_turn():
+                    e.deactivate()
                     continue  # Effect expired
             if getattr(e, "start_of_turn", False) and e.factory.combatant is combatant:
                 if not e.start_of_turn():
+                    e.deactivate()
                     continue  # Effect's been saved against
             effects.append(e)  # Effect persists
         self.effects = effects
@@ -53,6 +49,7 @@ class EffectTracker:
         for e in self.effects:
             if getattr(e, "end_of_turn", False) and e.factory.combatant is combatant:
                 if not e.end_of_turn():
+                    e.deactivate()
                     continue
             effects.append(e)
         self.effects = effects
@@ -63,7 +60,10 @@ class EffectTracker:
         :param combatant:
         :return: set of all effects affecting a combatant
         """
-        return {e for e in self.effects if e.is_affecting(combatant)}
+        try:
+            return {e for e in self.effects if e.is_affecting(combatant)}
+        except AttributeError:
+            print("FIXME")
 
     def is_affecting_combatant(self, combatant, effect_type):
         """
@@ -80,22 +80,27 @@ class EffectTracker:
     def get_aoe_effects(self):
         return [e for e in self.effects if isinstance(e, AoeSquareEffect) or isinstance(e, AoeSphericEffect)]
 
-    def get_effect_by_initiator(self, initiator):
+    def get_effects_by_initiator(self, initiator):
         return [e for e in self.effects if e.factory.combatant is initiator]
 
     def combatant_died(self, combatant):
+        for e in self.get_effects_by_initiator(combatant):
+            e.deactivate()
         self.effects = [e for e in self.effects if e.factory.combatant is not combatant]
 
     def create_post_haste_lethargy(self, combatant):
-        self.effects.append((PostHasteLethargy(combatant), combatant))
+        self.effects.append(PostHasteLethargy(combatant))
 
 # TODO add function for wildshape replacement
 
     def deactivate_wildshape(self, combatant):
+        effects = []
         for e in self.effects:
             if e.is_affecting(combatant) and isinstance(e, Wildshape):
                 e.deactivate()
-                break  # There should only be one
+            else:
+                effects.append(e)
+        self.effects = effects
 
     def reset(self):
         for effect in self.effects:

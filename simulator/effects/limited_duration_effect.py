@@ -14,7 +14,5 @@ class LimitedDurationEffect(Effect):
         """
         self.turns -= 1
         if self.turns <= 0:
-            # logger.info(f"{self.__class__.__name__} expires")
-            self.deactivate()
             return False
         return True

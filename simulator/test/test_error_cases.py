@@ -9,7 +9,7 @@ from simulator.actions.movement import MovementIncrement
 from simulator.battle_map import Terrain
 from simulator.combatants.giant_toad import GiantToad
 from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.misc import Conditions, ConditionWithoutDC
+from simulator.misc import Conditions, ConditionWithoutDC, ConditionWithDC, PhaseOfTurn, SavingThrow, SkillCheck
 from simulator.spells.fireball import Fireball
 from simulator.spells.firebolt import Firebolt
 from simulator.spells.flaming_sphere import FlamingSphereFactory
@@ -1014,5 +1014,45 @@ def test_error_case_23(battle_map, teams, effect_tracker, test_ogre, test_stone_
         action_resolver.resolve_action(actoid6, test_ogre)
         actoid7 = get_action(test_ogre)
         action_resolver.resolve_action(actoid7, test_ogre)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_24(battle_map, teams, effect_tracker, test_moon_druid, test_stone_giant, test_brown_bear, test_bugbear, test_giant_toad, test_ogre):
+    """
+    Not enough space to wildshape. There was a bug in the plan combination when the druid has no eligible non-wildshape action.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_moon_druid, test_stone_giant, test_brown_bear, test_bugbear, test_giant_toad, test_ogre]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_brown_bear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_giant_toad, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 11]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([6, 8]))
+    battle_map.set_combatant_coordinates(test_brown_bear, np.array([8, 12]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([9, 11]))
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([10, 13]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([11, 11]))
+    battle_map.build_adjacency_matrix()
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+
+    # Make the grapple easy to break out of
+    test_moon_druid.apply_dc_condition(ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, SkillCheck.ATHLETICS, 1, test_ogre, PhaseOfTurn.ACTION))
+    test_ogre.constricted_target = test_moon_druid
+
+    try:
+        actoid1 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid1, test_moon_druid)
+        actoid2 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid2, test_moon_druid)
+        actoid3 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid3, test_moon_druid)
+        actoid4 = get_action(test_moon_druid)
+        assert str(actoid4).startswith("Wildshape")
     except Exception as e:
         assert False, f"Raised an exception {e}"

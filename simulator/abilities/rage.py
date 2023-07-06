@@ -129,7 +129,6 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, Attac
 
     def deactivate(self):
         logger.info(f"{self.combatants[0]}'s rage fades")
-        Map.get().effect_tracker.remove(self)
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         self.combatants[0].resistances.remove(DamageType.Slashing)
         self.combatants[0].resistances.remove(DamageType.Bludgeoning)

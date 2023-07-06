@@ -16,6 +16,7 @@ logger = logging.getLogger("EncounTroll")
 def evaluate_combination_eligibility(actions, transition_name_to_action):
     """
     A helper function which evaluates whether a non-wildshape action precedes a wildshape action in a list of actions.
+    :param actions: sequence of actions as a list
     :param transition_name_to_action: dict mapping action names -> actions
     :return: True whether a combination is desired and the first non-wildshape action from the list if present
     """
@@ -123,6 +124,6 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
             if self.best_wildshape_plan_data is not None:
                 wildshape_plan = translate_longest_pth_to_actions(self.combatant, distances, shortest_paths, self.best_wildshape_plan_data[2], self.best_wildshape_plan_data[0], self.best_wildshape_plan_data[1])
                 if non_wildshape_action is None:
-                    return [get_moon_wildshape_action(wildshape_plan)]  # The case where there's only the wildshape remaining from the plan
+                    return wildshape_plan  # The case where there's only the wildshape left in the plan
                 regular_plan = self.combine_action_plans(regular_plan, wildshape_plan, transition_name_to_action[non_wildshape_action], distances, shortest_paths)
         return regular_plan

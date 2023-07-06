@@ -27,7 +27,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
         self.flags |= FactoryFlags.HAS_AMMO
         self.flags |= FactoryFlags.IS_MELEE
-        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_MOD
+        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -98,7 +98,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
             dmg = mean_dmg(self.to_hit + ROLL_TYPE[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_TYPE_CRIT[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         # even the single target calculation the combatant is still more vulnerable to all potential attackers
-        incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
+        incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1] / 2  # Heuristic
         return dmg - incoming_threat_delta_acc
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -136,7 +136,7 @@ class RecklessAttackFactory(DirectThreatFactory):
                 total_crit = 20 if auto_crit else total_crit
                 modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
-        incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, RollType.ADVANTAGE, FactoryFlags.IS_ATTACK_LIKE) / 2  # Heuristic
+        incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1] / 2  # Heuristic
         return modified - baseline - incoming_threat_delta_acc
 
     def calculate_max_threat(self):
@@ -167,7 +167,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         Map.get().effect_tracker.add(self)
 
     def deactivate(self):
-        Map.get().effect_tracker.remove(self)
+        pass
 
     def get_dmg_type(self):
         return self.factory.dmg_type

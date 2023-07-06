@@ -9,6 +9,9 @@ import numpy as np
 
 from simulator.threat_utils import mean_dmg_dc_attack
 
+import logging
+
+logger = logging.getLogger("EncounTroll")
 
 class FlamingSphereRamFactory(DirectThreatFactory):
 
