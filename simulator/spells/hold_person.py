@@ -83,9 +83,15 @@ class HoldPersonFactory(ThreatModifierFactory):
             p_success *= p_success
         return total_threat
 
+    def get_eligible_targets(self):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return []  # Must be able to see
+        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
-        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
+        return max([self.calculate_threat_to_target(t) for t in targets])
 
 
 class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier):
@@ -108,6 +114,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
         return EffectType.HOLD_PERSON
 
     def activate(self):
+        Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
         self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
 
@@ -119,7 +126,9 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
         return combatant is self.target
 
     def calculate_threat(self, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(self.target)
+        ret = self.factory.calculate_threat_to_target(self.target)
+        logger.info(f"MY DEBUG {self} threat = {ret}")
+        return ret
 
 
     def get_eligible_coords(self, distances, shortest_paths):

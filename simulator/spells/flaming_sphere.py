@@ -29,7 +29,7 @@ class FlamingSphereFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = DamageType.Fire
 
-    def __init__(self, action_type, dc, caster, **kwargs):
+    def __init__(self, dc, action_type, caster, **kwargs):
         super().__init__()
         self.action_type = action_type  # FLAMING_SPHERE, QUICKENED_FLAMING_SPHERE
         self.dmg_dice = "2d6"
@@ -76,7 +76,7 @@ class FlamingSphereFactory(DirectThreatFactory):
 
     def calculate_max_threat(self):
         targets = Map.get().get_enemies(self.combatant)
-        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
+        return max([self.calculate_threat_to_target(t) for t in targets])
 
 
 class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquareEffect, AoEThreat):

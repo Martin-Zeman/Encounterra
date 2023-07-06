@@ -97,10 +97,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
     def deactivate(self):
         logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
-        try:
-            self.combatants[0].resistances.remove(DamageType.Slashing)
-        except KeyError:
-            print("FIXME")
+        self.combatants[0].resistances.remove(DamageType.Slashing)
         self.combatants[0].resistances.remove(DamageType.Bludgeoning)
         self.combatants[0].resistances.remove(DamageType.Fire)
         self.combatants[0].resistances.remove(DamageType.Lightning)
@@ -128,7 +125,10 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
         """
         rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         if FactoryFlags.IS_MELEE in attack.factory.flags:
-            return attack.calculate_threat_delta({ThreatModifierType.DMG_BONUS_FLAT: rage_bonus})
+            ret = attack.calculate_threat_delta({ThreatModifierType.DMG_BONUS_FLAT: rage_bonus})
+            logger.info(f"MY DEBUG {self} threat = {ret}")
+            return ret
+        logger.info(f"MY DEBUG {self} threat = 0")
         return 0
 
 

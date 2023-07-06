@@ -14,6 +14,7 @@ from enum import Enum, auto
 
 from simulator.spells.chaosbolt import ChaosboltFactory
 from simulator.spells.faerie_fire import FaerieFire
+from simulator.spells.magic_missile import MagicMissileFactory
 
 logger = logging.getLogger("EncounTroll")
 
@@ -407,15 +408,12 @@ class ActionResolver:
                     resolve_dmg_saving_throw(actoid, dmg, combatant)
                     battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
-            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE:
+            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE | Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE\
+                 | Action.FLAMING_SPHERE | Action.HOLD_PERSON | BonusAction.QUICKENED_HOLD_PERSON | Action.SPIKE_GROWTH | BonusAction.QUICKENED_SPIKE_GROWTH:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 # self.effect_tracker.add(actoid, combatant)
-                return ActionResult.MEDIUM_BUFF
-            case Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE:
-                logger.info(f"{combatant} casts {actoid}")
-                actoid.activate()
-                # self.effect_tracker.add(actoid, combatant)
+                return ActionResult.NOP
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
                 logger.info(f"{combatant} casts {actoid}")
                 return self.resolve_ranged_spell_attack(combatant, actoid, actoid.target)
@@ -456,11 +454,6 @@ class ActionResolver:
                 assert not combatant.shield_spell_active
                 combatant.shield_spell_active = True
                 combatant.ac += 5
-                return ActionResult.FEASIBLE
-            case Action.FLAMING_SPHERE:
-                logger.info(f"{combatant} casts {actoid}")
-                actoid.activate()
-                # self.effect_tracker.add(actoid, combatant)
                 return ActionResult.FEASIBLE
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
@@ -503,6 +496,15 @@ class ActionResolver:
                     battle_map.remove_combatant_if_dead(actoid.target_combatant)   # TODO revisit if this is really needed
                 path = path['tuples'][:FlamingSphereRamFactory.RANGE + 1]
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
+                return ActionResult.DMG
+            case Action.MAGIC_MISSILE | BonusAction.QUICKENED_MAGIC_MISSILE:
+                dice = parse_dmg_dice(actoid.factory.dmg_dice)
+                dmg_dice_sum = roll_dice(dice) + actoid.factory.dmg_bonus
+                actoid.targets[0].receive_damage(dmg_dice_sum, MagicMissileFactory.dmg_type)
+                if actoid.targets[1].is_alive():
+                    actoid.targets[1].receive_damage(dmg_dice_sum, MagicMissileFactory.dmg_type)
+                if actoid.targets[2].is_alive():
+                    actoid.targets[2].receive_damage(dmg_dice_sum, MagicMissileFactory.dmg_type)
                 return ActionResult.DMG
             case Action.POUNCE:
                 # TODO

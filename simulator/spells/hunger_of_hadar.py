@@ -112,6 +112,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
 
     def activate(self):
+        Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
         # TODO make the area difficult terrain
 

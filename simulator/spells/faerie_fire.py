@@ -4,6 +4,7 @@ from simulator.battle_map import Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.combatant_effect import CombatantEffect
+from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.actions.action_types import BonusAction
@@ -84,6 +85,9 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FAERIE_FIRE else "") + "Faerie Fire"
 
+    def get_effect_type(self):
+        return EffectType.FAERIE_FIRE
+
     def activate(self):
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
@@ -132,6 +136,9 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
         pass
 
     def on_move_within(self, combatant):
+        pass
+
+    def on_exit(self, combatant):
         pass
 
     def on_start_of_turn(self, combatant):

@@ -81,7 +81,8 @@ class TwinnedFireboltFactory(DirectThreatFactory):
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
-        return max(targets, key=lambda t: self.calculate_threat_to_target(t[0]) + self.calculate_threat_to_target(t[1]))
+        threats = [self.calculate_threat_to_target(t) for t in targets].sort(reverse=True)
+        return (threats[0] if threats else 0) + (threats[1] if len(threats) > 1 else 0)
 
 class TwinnedFirebolt(Actoid, DirectThreat):
 

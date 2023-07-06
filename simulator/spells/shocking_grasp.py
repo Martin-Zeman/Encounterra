@@ -81,12 +81,14 @@ class ShockingGraspFactory(DirectThreatFactory):
         to_hit_total += ROLL_TYPE[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT[roll_type]
 
-        return mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(ShockingGraspFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
+        ret = mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(ShockingGraspFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     ShockingGraspFactory.dmg_type))
+        logger.info(f"MY DEBUG {self} threat = {ret}")
+        return ret
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
-        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
+        return max([self.calculate_threat_to_target(t) for t in targets])
 
 
 class ShockingGrasp(Actoid, DirectThreat):

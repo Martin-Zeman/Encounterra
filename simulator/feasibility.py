@@ -279,17 +279,33 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.concentration_effect
                 # res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
-            case Action.CHAOSBOLT:
+            case Action.CHAOSBOLT | Action.MAGIC_MISSILE:
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
+                return res
+            case Action.FAERIE_FIRE:
+                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
                 return res
             case Action.SCORCHING_RAY:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
-            case Action.FIREBOLT:
+            case Action.HOLD_PERSON | Action.SPIKE_GROWTH:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
                 return res
-            case Action.TWINNED_FIREBOLT:
+            case Action.TWINNED_HOLD_PERSON:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.curr_sorcery_points > 1
+                res &= not combatant.concentration_effect
+                return res
+            case Action.FIREBOLT | Action.SHOCKING_GRASP:
+                return res
+            case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 return res and combatant.curr_sorcery_points > 0
             case Action.TWINNED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
@@ -362,15 +378,27 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
-            case BonusAction.QUICKENED_CHAOSBOLT:
+            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE:
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
+                return res
+            case BonusAction.QUICKENED_FAERIE_FIRE:
+                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.curr_sorcery_points > 1
+                res &= not combatant.concentration_effect
                 return res
             case BonusAction.QUICKENED_SCORCHING_RAY:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
+                return res
+            case BonusAction.QUICKENED_HOLD_PERSON | BonusAction.QUICKENED_SPIKE_GROWTH:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.curr_sorcery_points > 1
+                res &= not combatant.concentration_effect
                 return res
             case BonusAction.QUICKENED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
@@ -383,7 +411,7 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 return res
-            case BonusAction.QUICKENED_FIREBOLT:
+            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
                 return res and combatant.curr_sorcery_points > 1
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
             case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM:

@@ -952,7 +952,7 @@ def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, 
 
     ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
     ws = ws_factory.create(GiantToad)
-    fs_factory = FlamingSphereFactory(Action.FLAMING_SPHERE, test_moon_druid.dc, test_moon_druid)
+    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid)
     fs = fs_factory.create(np.array((6, 13)))
     haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl, battle_map.effect_tracker)
     test_totem_barbarian.ac = 0

@@ -1,17 +1,18 @@
+import logging
 from itertools import combinations
 
 from simulator.battle_map import Map
-from simulator.combatant_coords import CombatantCoords
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect, EffectType
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
-from functools import reduce, cache
+from functools import reduce
 from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions
 from simulator.spells.haste import HasteFactory
 from simulator.utils.roll_types import ThreatModifierType
 
+logger = logging.getLogger("EncounTroll")
 
 class TwinnedHasteFactory(ThreatModifierFactory):
     level = 3
@@ -130,7 +131,9 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         assert not(self.targets[0] is None and self.targets[1] is None), "Both of the twinned haste targets are None. This should not happen, there should always be at least self as target"
         target1_threat = self.factory.calculate_threat_to_target(self.targets[0]) if self.targets[0] is not None else 0
         target2_threat = self.factory.calculate_threat_to_target(self.targets[1]) if self.targets[1] is not None else 0
-        return target1_threat + target2_threat
+        ret = target1_threat + target2_threat
+        logger.info(f"MY DEBUG {self} threat = {ret}")
+        return ret
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()

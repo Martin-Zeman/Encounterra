@@ -92,8 +92,12 @@ class ScorchingRayFactory(DirectThreatFactory):
         return 3 * self.calculate_threat_to_target_delta_single_target(target, modifiers)
 
     def calculate_max_threat(self):
-        targets = self.get_eligible_targets()
-        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            targets = [swallower]
+        else:
+            targets = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return max([self.calculate_threat_to_target(t) for t in targets])
 
 
 class ScorchingRay(Actoid, DirectThreat):

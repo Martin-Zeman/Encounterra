@@ -78,8 +78,10 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         """
         Calculate how much dmg would the dodge potentially mitigate. This will be the same as the one for the factory.
         """
+        ret = -1 * calculate_threat_in_delta(self.combatants[0], 6, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES)[0] / 2
+        logger.info(f"MY DEBUG {self} threat = {ret}")
         # return -1 * calculate_threat_in_delta(combatant, 6, battle_map, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
-        return 0  # Threat that a Dodge would potentially mitigate is calculated in a different way
+        return ret  # Threat that a Dodge would potentially mitigate is calculated in a different way
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()

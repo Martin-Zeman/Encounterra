@@ -70,7 +70,7 @@ class MagicMissileFactory(DirectThreatFactory):
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
-        return max(targets, key=lambda t: self.calculate_threat_to_target(t))
+        return max([self.calculate_threat_to_target(t) for t in targets])
 
 
 class MagicMissile(Actoid, DirectThreat):

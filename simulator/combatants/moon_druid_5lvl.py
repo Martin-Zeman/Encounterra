@@ -21,6 +21,8 @@ class MoonDruid5Lvl(Combatant):
         self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Action.FLAMING_SPHERE)
         self.add_ability(Action.HOLD_PERSON)
+        self.add_ability(Action.FAERIE_FIRE)
+        self.add_ability(Action.SPIKE_GROWTH)
         self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=4, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
         self.danger_zone_attack = self.scimitar
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)

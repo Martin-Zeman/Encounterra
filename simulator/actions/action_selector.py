@@ -14,8 +14,7 @@ from simulator.battle_map import convert_path_to_increments, Map
 from simulator.combatant_coords import CombatantCoords
 from simulator.misc import reconstruct_path_through_dag, Conditions
 from simulator.spells.misty_step import MistyStepFactory
-from simulator.threat_utils import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, \
-    calc_threat_for_path_with_misty_step
+from simulator.threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
 
 logger = logging.getLogger("EncounTroll")
 

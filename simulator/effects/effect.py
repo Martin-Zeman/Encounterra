@@ -17,6 +17,7 @@ class EffectType(Enum):
     CLOUD_OF_DAGGERS = auto()
     HUNGER_OF_HADAR = auto()
     HOLD_PERSON = auto()
+    FAERIE_FIRE = auto()
 
 
 class Effect(ABC):

@@ -149,30 +149,16 @@ class Combatant(ABC, ProtoCombatant):
                     self.ammo[just_added[1].name] = just_added[1].ammo
                     return just_added
                 case Action.FIREBALL:
-                    self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.dc, action_type, self, has_spell_sculpting=False)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, has_spell_sculpting=False)))
                     return self.action_factories[-1]
-                case Action.FIREBOLT:
-                    self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
+                case Action.HOLD_PERSON | Action.FLAMING_SPHERE | Action.FAERIE_FIRE:
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self)))
                     return self.action_factories[-1]
-                case Action.SHOCKING_GRASP:
+                case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.CHAOSBOLT | Action.SCORCHING_RAY:
                     self.action_factories.append(
                         (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
                     return self.action_factories[-1]
-                case Action.CHAOSBOLT:
-                    self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
-                    return self.action_factories[-1]
-                case Action.SCORCHING_RAY:
-                    self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
-                    return self.action_factories[-1]
-                case Action.MAGIC_MISSILE:
-                    self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](action_type, self)))
-                    return self.action_factories[-1]
-                case Action.HASTE:
+                case Action.MAGIC_MISSILE | Action.HASTE:
                     self.action_factories.append(
                         (action_type, TO_FACTORY[action_type](action_type, self)))
                     return self.action_factories[-1]
@@ -196,9 +182,6 @@ class Combatant(ABC, ProtoCombatant):
                     factory = TO_FACTORY[action_type]
                     self.constricted_target = None
                     self.action_factories.append((action_type, factory(**kwargs)))
-                    return self.action_factories[-1]
-                case Action.FLAMING_SPHERE:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self.dc, self)))
                     return self.action_factories[-1]
                 case _:
                     return None

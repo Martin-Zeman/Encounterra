@@ -25,7 +25,7 @@ def use_resources(combatant, action):
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | Action.BITE_AND_SWALLOW:
                 subject.ammo[action.factory.name] -= 1
                 subject.attack_fsm.trigger(str(action.factory))
-            case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT:
+            case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL:
                 subject.spellslots.use_spellslot(3)
@@ -37,13 +37,17 @@ def use_resources(combatant, action):
                 subject.spellslots.use_spellslot(3)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 3
-            case Action.CHAOSBOLT:
-                subject.spellslots.use_spellslot(1)
-                subject.already_cast_leveled_spell_this_turn = True
-            case Action.SCORCHING_RAY:
+            case Action.TWINNED_HOLD_PERSON:
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
-            case Action.TWINNED_FIREBOLT:
+                subject.curr_sorcery_points -= 2
+            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE:
+                subject.spellslots.use_spellslot(1)
+                subject.already_cast_leveled_spell_this_turn = True
+            case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH:
+                subject.spellslots.use_spellslot(2)
+                subject.already_cast_leveled_spell_this_turn = True
+            case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 subject.curr_sorcery_points -= 1
             case Action.WILDSHAPE:
                 subject.curr_wildshape_uses -= 1
@@ -64,11 +68,11 @@ def use_resources(combatant, action):
             case BonusAction.MISTY_STEP:
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
-            case BonusAction.QUICKENED_CHAOSBOLT:
+            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE:
                 subject.spellslots.use_spellslot(1)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
-            case BonusAction.QUICKENED_SCORCHING_RAY | BonusAction.QUICKENED_FLAMING_SPHERE:
+            case BonusAction.QUICKENED_SCORCHING_RAY | BonusAction.QUICKENED_FLAMING_SPHERE | BonusAction.QUICKENED_HOLD_PERSON | BonusAction.QUICKENED_SPIKE_GROWTH:
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
@@ -80,7 +84,7 @@ def use_resources(combatant, action):
                 subject.spellslots.use_spellslot(3)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
-            case BonusAction.QUICKENED_FIREBOLT:
+            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
                 subject.curr_sorcery_points -= 2
             case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM:
                 pass  # Sufficiently tracked by not having a bonus action anymore

@@ -93,13 +93,14 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return 0
 
     def on_exit(self, combatant):
-        return 0
+        pass
 
     def is_affecting(self, combatant):
         coords = self.get_affected_coords()
         return Map.get().get_hop_distance(combatant, coords) == 0
 
     def activate(self):
+        Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
 
     def deactivate(self):

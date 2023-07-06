@@ -15,6 +15,7 @@ from simulator.actions.dodge import DodgeFactory
 from simulator.actions.melee_attack import MeleeAttackFactory
 from simulator.actions.ranged_attack import RangedAttackFactory
 from simulator.spells.chaosbolt import ChaosboltFactory
+from simulator.spells.faerie_fire import FaerieFireFactory
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.flaming_sphere import FlamingSphereFactory
@@ -67,6 +68,7 @@ TO_FACTORY = {
     Action.SHOCKING_GRASP: ShockingGraspFactory,
     Action.TWINNED_SHOCKING_GRASP: ShockingGraspFactory,
     Action.MAGIC_MISSILE: MagicMissileFactory,
+    Action.FAERIE_FIRE: FaerieFireFactory,
 
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
@@ -87,6 +89,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_HOLD_PERSON: HoldPersonFactory,
     BonusAction.QUICKENED_SHOCKING_GRASP: ShockingGraspFactory,
     BonusAction.QUICKENED_MAGIC_MISSILE: MagicMissileFactory,
+    BonusAction.QUICKENED_FAERIE_FIRE: FaerieFireFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,

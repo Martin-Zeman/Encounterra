@@ -1,3 +1,4 @@
+import logging
 from functools import cache
 
 from simulator.actions.action_types import BonusAction
@@ -11,6 +12,8 @@ from simulator.misc import DamageType, avg_roll, roll_spell_dmg
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
 import numpy as np
+
+logger = logging.getLogger("EncounTroll")
 
 class SpikeGrowthFactory(DirectThreatFactory):
     level = 2
@@ -104,6 +107,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
 
 
     def activate(self):
+        Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
 
     def deactivate(self):
@@ -116,6 +120,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         acc = 0
         for aff in affected:
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)
+        logger.info(f"MY DEBUG {self} threat = {acc}")
         return acc
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
@@ -135,7 +140,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
+        return battle_map.get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=SpikeGrowthFactory.range, combatant=self.factory.combatant)
@@ -144,4 +149,4 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         if self.factory.combatant.get_swallower():
             return False
         battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= SpikeGrowthFactory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= SpikeGrowthFactory.range
