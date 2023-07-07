@@ -36,6 +36,7 @@ class Ogre(Combatant):
 
     def export_resources(self):
         return {
+            'movement': self.movement,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
@@ -44,6 +45,7 @@ class Ogre(Combatant):
         }
 
     def load_resources(self, resources):
+        self.movement = resources['movement']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']

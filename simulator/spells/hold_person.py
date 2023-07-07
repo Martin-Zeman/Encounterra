@@ -56,7 +56,7 @@ class HoldPersonFactory(ThreatModifierFactory):
 
 
     def calculate_threat_to_target(self, target, **kwargs):
-       logger.info(f"MY DEBUG {self} calculate_threat_to_target")
+        logger.info(f"MY DEBUG {self} calculate_threat_to_target")
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
         if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:

@@ -62,11 +62,11 @@ def check_feasibility(combatant, action):
                 res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
                 res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
                 return res
-            case Action.FIREBOLT:
+            case Action.FIREBOLT | Action.SHOCKING_GRASP:
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 return res
-            case Action.TWINNED_FIREBOLT:
+            case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
@@ -270,7 +270,7 @@ def check_feasibility(combatant, action):
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.are_valid_coords(action.coord)
                 return res
-            case BonusAction.QUICKENED_FIREBOLT:
+            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.target)
