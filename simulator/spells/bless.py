@@ -41,7 +41,7 @@ class BlessFactory(ThreatModifierFactory):
         targets = self.get_eligible_targets()
         return [Bless(t, self) for t in targets]
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies

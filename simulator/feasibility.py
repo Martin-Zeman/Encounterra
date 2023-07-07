@@ -52,6 +52,16 @@ def check_feasibility(combatant, action):
                 res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
                 res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
                 return res
+            case Action.MAGIC_MISSILE:
+                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[1])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[2])
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
+                return res
             case Action.FIREBOLT:
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
@@ -204,6 +214,16 @@ def check_feasibility(combatant, action):
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
+            case Action.MAGIC_MISSILE:
+                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[1])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[2])
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
+                return res
             case BonusAction.QUICKENED_SCORCHING_RAY:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
@@ -312,8 +332,8 @@ def check_feasibility_light(combatant, action):
     battle_map = Map.get()
     action_type = action[0]
     if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
-            return False
+        # if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+        #     return False
         if isinstance(action_type, Action):
             res = combatant.has_action
         else:
@@ -416,8 +436,8 @@ def check_feasibility_light(combatant, action):
                 logger.error("check_feasibility_light: Unknown action type")
                 return False
     elif isinstance(action_type, BonusAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
-            return False
+        # if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+        #     return False
         res = combatant.has_bonus_action
         match action_type:
             case BonusAction.PAM_BONUS_ATTACK:  # TODO Remove this

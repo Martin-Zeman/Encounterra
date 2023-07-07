@@ -6,7 +6,7 @@ from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.hold_person import HoldPersonFactory
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON
+from simulator.misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 
 from simulator.threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
@@ -61,7 +61,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         return TwinnedHoldPerson(target_combatant, self)
 
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
         if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
@@ -118,13 +118,25 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
         return EffectType.HOLD_PERSON
 
     def activate(self,):
-        Map.get().effect_tracker.add(self)
-        self.factory.combatant.concentration_effect = self
-        self.targets[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
-        self.targets[1].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+        saved1 = roll_saving_throw(self.targets[0].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
+        saved2 = roll_saving_throw(self.targets[1].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
+        if not saved1:
+            self.targets[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+            logger.info(f"{self.targets[0]} failed save against Hold Person")
+        else:
+            logger.info(f"{self.targets[0]} saved against Hold Person")
+        if not saved2:
+            self.targets[1].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+            logger.info(f"{self.targets[1]} failed save against Hold Person")
+        else:
+            logger.info(f"{self.targets[1]} saved against Hold Person")
+        if not saved1 or not saved2:
+            Map.get().effect_tracker.add(self)
+            self.factory.combatant.concentration_effect = self
 
     def deactivate(self):
-        self.factory.combatant.break_concentration()
+        if self.factory.combatant.concentration_effect is self:
+            self.factory.combatant.break_concentration()
         self.targets[0].remove_condition(Conditions.PARALYZED, self)
         self.targets[1].remove_condition(Conditions.PARALYZED, self)
 

@@ -65,7 +65,7 @@ class ChaosboltFactory(DirectThreatFactory):
         return [Chaosbolt(t, self) for t in targets]
 
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates threat to a specific target
         """

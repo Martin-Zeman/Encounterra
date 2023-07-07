@@ -26,7 +26,7 @@ class RangedAttackFactory(AttackFactory):
         targets = self.get_eligible_targets()
         return [RangeAttack(t, self) for t in targets]
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         try:
             consider_dist = kwargs["consider_dist"]
         except KeyError:

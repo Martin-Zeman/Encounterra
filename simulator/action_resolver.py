@@ -501,11 +501,15 @@ class ActionResolver:
             case Action.MAGIC_MISSILE | BonusAction.QUICKENED_MAGIC_MISSILE:
                 dice = parse_dmg_dice(actoid.factory.dmg_dice)
                 dmg_dice_sum = roll_dice(dice) + actoid.factory.dmg_bonus
-                actoid.targets[0].receive_damage(dmg_dice_sum, MagicMissileFactory.dmg_type)
-                if actoid.targets[1].is_alive():
-                    actoid.targets[1].receive_damage(dmg_dice_sum, MagicMissileFactory.dmg_type)
-                if actoid.targets[2].is_alive():
-                    actoid.targets[2].receive_damage(dmg_dice_sum, MagicMissileFactory.dmg_type)
+                hits_received = dict()
+                for t in actoid.targets:
+                    try:
+                        hits_received[t] += 1
+                    except KeyError:
+                        hits_received[t] = 1
+                # They have to hit at the same time in order to incur only one concentration check
+                for target, hits in hits_received.items():
+                    target.receive_compound_dmg([(dmg_dice_sum, MagicMissileFactory.dmg_type)] * hits)
                 return ActionResult.DMG
             case Action.POUNCE:
                 # TODO
@@ -575,7 +579,7 @@ class ActionResolver:
                     combatant.has_reaction = False
                 case EffectType.RAGE | EffectType.TOTEM_RAGE | EffectType.WILDSHAPE | EffectType.DODGE | EffectType.DISENGAGE |\
                      EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
-                    EffectType.HUNGER_OF_HADAR:
+                    EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error("Unknown effect")

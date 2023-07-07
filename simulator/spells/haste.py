@@ -59,7 +59,7 @@ class HasteFactory(ThreatModifierFactory):
     def create(self, target_combatant):
         return Haste(target_combatant, self)
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.

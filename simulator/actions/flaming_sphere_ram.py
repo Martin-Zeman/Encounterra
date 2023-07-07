@@ -49,7 +49,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
     def create(self, target_combatant, coord):
         return FlamingSphereRam(target_combatant, coord, self)
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates threat to one specific target
         """
@@ -60,6 +60,11 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
         return 0  # No need
+
+
+    def calculate_max_threat(self):
+        enemies = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return max([self.calculate_threat_to_target(e) for e in enemies])
 
 
 class FlamingSphereRam(Actoid, DirectThreat):

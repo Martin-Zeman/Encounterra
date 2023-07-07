@@ -62,7 +62,7 @@ class FlamingSphereFactory(DirectThreatFactory):
     def create(self, coord):
         return FlamingSphere(coord, self)
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates threat to one specific target
         """

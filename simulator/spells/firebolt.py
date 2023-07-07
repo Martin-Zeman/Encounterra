@@ -73,7 +73,7 @@ class FireboltFactory(DirectThreatFactory):
         return Firebolt(target_combatant, self)
 
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= FireboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE

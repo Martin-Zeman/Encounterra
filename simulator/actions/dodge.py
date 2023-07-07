@@ -35,7 +35,7 @@ class DodgeFactory(ThreatModifierFactory):
     def create(self):
         return Dodge(self.combatant, self)
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates the maximum threat reduction the factory can cause by imposing disadvantage on the target enemy
         """

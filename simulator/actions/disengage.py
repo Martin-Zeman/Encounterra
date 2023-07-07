@@ -30,7 +30,7 @@ class DisengageFactory(ThreatModifierFactory):
     def create_all(self):
         return [Disengage(self.combatant, self)]
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates the direct AoO threat the disengage would avoid
         """

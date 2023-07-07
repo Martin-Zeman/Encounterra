@@ -440,6 +440,9 @@ def get_action(combatant):
     :return: the next best actoid
     """
     combatant = combatant.get_current_form()  # Takes care of possible wildshape
+    if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
+        logger.info(f"{combatant} in unable to act this turn")
+        return None
     grapple_cond = combatant.needs_to_break_out_of_grapple()
     if grapple_cond and combatant.has_action:
         return BreakGrappleFactory(grapple_cond).create()

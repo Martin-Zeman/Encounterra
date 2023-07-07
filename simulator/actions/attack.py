@@ -86,7 +86,7 @@ class AttackFactory(DirectThreatFactory):
     #     return dmg_acc
 
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         try:
             consider_dist = kwargs["consider_dist"]
         except KeyError:

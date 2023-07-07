@@ -98,7 +98,7 @@ class ThreatModifierFactory(ABC, Factory):
     """
 
     @abstractmethod
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates the threat the factory is capable of dealing to a specific target by modifying other factories.
         This is useful for calculating threat_in from the abilities of enemies
@@ -116,7 +116,7 @@ class DirectThreatFactory(ABC, Factory):
     It also mandates that a factory be able to compute a threat increment based on a dictionary of modified stats
     """
     @abstractmethod
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies

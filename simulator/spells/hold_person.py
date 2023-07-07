@@ -4,7 +4,7 @@ from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC
+from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC, roll_saving_throw
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 
@@ -55,7 +55,8 @@ class HoldPersonFactory(ThreatModifierFactory):
         return HoldPerson(target_combatant, self)
 
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
+        logger.info(f"MY DEBUG {self} calculate_threat_to_target")
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
         if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
@@ -91,6 +92,7 @@ class HoldPersonFactory(ThreatModifierFactory):
         return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def calculate_max_threat(self):
+        logger.info(f"MY DEBUG {self} calculate_max_threat")
         targets = self.get_eligible_targets()
         return max([self.calculate_threat_to_target(t) for t in targets])
 
@@ -115,9 +117,13 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
         return EffectType.HOLD_PERSON
 
     def activate(self):
-        Map.get().effect_tracker.add(self)
-        self.factory.combatant.concentration_effect = self
-        self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+        if not roll_saving_throw(self.target.saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT):
+            logger.info(f"{self.target} failed save against Hold Person")
+            Map.get().effect_tracker.add(self)
+            self.factory.combatant.concentration_effect = self
+            self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+        else:
+            logger.info(f"{self.target} saved against Hold Person")
 
     def deactivate(self):
         self.factory.combatant.break_concentration()

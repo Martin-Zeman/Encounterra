@@ -53,7 +53,7 @@ class MagicMissileFactory(DirectThreatFactory):
     def create(self, targets):
         return MagicMissile(targets, self)
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= MagicMissileFactory.range:
             return 3 * (mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)

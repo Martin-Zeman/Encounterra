@@ -36,7 +36,7 @@ class TotemRageFactory(ThreatModifierFactory):
     def create_all(self):
         return [TotemRage(self.combatant, self)]
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies

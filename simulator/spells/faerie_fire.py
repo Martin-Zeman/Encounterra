@@ -58,7 +58,7 @@ class FaerieFireFactory(ThreatModifierFactory):
     def create(self, coord):
         return FaerieFire(coord, self)
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
@@ -68,7 +68,9 @@ class FaerieFireFactory(ThreatModifierFactory):
         return ret
 
     def calculate_max_threat(self):
-        return FaerieFire(self.find_best_args(self.combatant), self).calculate_threat()
+        ret = FaerieFire(self.find_best_args(self.combatant), self).calculate_threat()
+        logger.info(f"MY DEBUG {self} calculate_max_threat = {ret}")
+        return ret
 
 class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect, CombatantEffect):
 
@@ -89,15 +91,20 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
         return EffectType.FAERIE_FIRE
 
     def activate(self):
-        self.factory.combatant.concentration_effect = self
         potentially_affected_combatants = Map.get().get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
+        failed_count = 0
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
-            saved = roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_types(pac.saving_throws_roll_type_mod[st]))
-            if not saved:
+            if not roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_types(pac.saving_throws_roll_type_mod[st])):
+                logger.info(f"{pac} failed save against Faerie Fire")
+                failed_count += 1
                 pac.remove_condition(Conditions.INVISIBLE)
                 self.combatants.append(pac)
-        Map.get().effect_tracker.add(self)
+            else:
+                logger.info(f"{pac} saved against Faerie Fire")
+        if failed_count:
+            self.factory.combatant.concentration_effect = self
+            Map.get().effect_tracker.add(self)
 
 
     def deactivate(self):
@@ -112,6 +119,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
         for aff in affected:
             threat_delta = calculate_threat_in_delta(aff, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1]
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * threat_delta
+        logger.info(f"MY DEBUG {self} calculate_threat = {acc}")
         return acc
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):

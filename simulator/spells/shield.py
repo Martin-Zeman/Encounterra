@@ -27,7 +27,7 @@ class ShieldFactory(DirectThreatFactory):
         """
         return "ShieldFactory"
 
-    def calculate_threat_to_target(self, target, *args, **kwargs):
+    def calculate_threat_to_target(self, target, **kwargs):
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
