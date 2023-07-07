@@ -29,7 +29,7 @@ def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, t
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
     try:
-        hf = HasteFactory(Action.HASTE, test_draconic_sorcerer_5lvl, effect_tracker)
+        hf = HasteFactory(Action.HASTE, test_draconic_sorcerer_5lvl)
         haste = hf.create(test_bugbear)
         action_resolver.resolve_action(haste, test_draconic_sorcerer_5lvl)
 

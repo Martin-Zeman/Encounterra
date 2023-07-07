@@ -564,3 +564,7 @@ class Combatant(ABC, ProtoCombatant):
         :return: the action plan
         """
         return self.action_plan_strategy.calculate_action_plan(distances, shortest_paths)
+
+    def break_concentration(self):
+        self.get_current_form().concentration_effect = None
+        self.get_original_form().concentration_effect = None

@@ -202,9 +202,13 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     class DummyEffect:
         def deactivate(self):
-            pass
+            test_moon_druid.break_concentration()
+
+        def is_affecting(self, combatant):
+            return False
     dummy_effect = DummyEffect()
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
+    battle_map.effect_tracker.add(dummy_effect)
 
     try:
         actoid1 = get_action(test_moon_druid)
@@ -215,6 +219,9 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.current_wildshape_form is not None
         assert test_moon_druid.get_current_form().curr_hp == 39
         test_moon_druid.get_current_form().receive_dmg(40, DamageType.Slashing)
+        if not test_moon_druid.concentration_effect:  # The damage could have interrupted it
+            test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
+            battle_map.effect_tracker.add(dummy_effect)
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 41

@@ -667,7 +667,8 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_combatant_coordinates(test_ogre, np.array([9, 8]))   # Ogre 2
     battle_map.build_adjacency_matrix()
 
-    test_stone_giant.haste_action_factories = [1]  # Simulates that haste factories are not empty
+    test_stone_giant.add_hasted_factories()
+    test_stone_giant.has_haste_action = True
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
@@ -867,7 +868,7 @@ def test_error_case_20(battle_map, teams, effect_tracker, test_totem_barbarian, 
 
     battle_map.build_adjacency_matrix()
 
-    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl, battle_map.effect_tracker)
+    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl)
     haste = haste_factory.create(test_draconic_sorcerer_5lvl)
 
     try:
@@ -954,7 +955,7 @@ def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, 
     ws = ws_factory.create(GiantToad)
     fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid)
     fs = fs_factory.create(np.array((6, 13)))
-    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl, battle_map.effect_tracker)
+    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl)
     test_totem_barbarian.ac = 0
 
     # TODO Failed to reproduce

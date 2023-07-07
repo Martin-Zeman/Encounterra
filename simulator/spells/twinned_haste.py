@@ -112,7 +112,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
 
     def deactivate(self):
         effect_tracker = Map.get().effect_tracker
-        self.factory.combatant.get_current_form().concentration_effect = None
+        self.factory.combatant.break_concentration()
         for target in self.targets:
             target.ac -= 2
             target.haste_action_factories.clear()

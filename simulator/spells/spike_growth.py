@@ -111,7 +111,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         self.factory.combatant.concentration_effect = self
 
     def deactivate(self):
-        self.factory.combatant.concentration_effect = None
+        self.factory.combatant.break_concentration()
 
     def calculate_threat(self, **kwargs):
         # TODO This needs more intelligence (also subtract dmg caused to allies)

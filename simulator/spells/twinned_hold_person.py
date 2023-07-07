@@ -27,7 +27,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
 
     def __init__(self, dc, action_type, caster):
         super().__init__()
-        self.flags |= FactoryFlags.IS_ATTACK_LIKE
+        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
         self.dc = dc
         self.action_type = action_type  # HOLD_PERSON, QUICKENED_HOLD_PERSON
         self.combatant = caster
@@ -124,7 +124,7 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
         self.targets[1].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
 
     def deactivate(self):
-        self.factory.combatant.concentration_effect = None
+        self.factory.combatant.break_concentration()
         self.targets[0].remove_condition(Conditions.PARALYZED, self)
         self.targets[1].remove_condition(Conditions.PARALYZED, self)
 

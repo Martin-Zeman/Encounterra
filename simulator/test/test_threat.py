@@ -468,9 +468,9 @@ def test_ranged_spell_with_enemy_adjacent(battle_map, teams, effect_tracker, tes
 
     ff = FireboltFactory(6, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
     firebolt = ff.create(test_bugbear)
-    threat_enemy_adjacent = firebolt.calculate_threat(battle_map)
+    threat_enemy_adjacent = firebolt.calculate_threat()
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([2, 14]))
-    threat_no_enemy_adjacent = firebolt.calculate_threat(battle_map)
+    threat_no_enemy_adjacent = firebolt.calculate_threat()
     assert threat_no_enemy_adjacent > threat_enemy_adjacent
 
 def test_ranged_attack_with_enemy_adjacent(battle_map, teams, effect_tracker, test_goblin, test_bugbear):

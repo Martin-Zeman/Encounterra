@@ -74,15 +74,16 @@ def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker,
     try:
         action_resolver.resolve_action(fs, test_moon_druid)
         action_resolver.resolve_action(ws, test_moon_druid)
+        assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 2
         test_moon_druid.get_current_form().curr_hp = 200
         assert test_moon_druid.get_current_form().concentration_effect is not None
         assert test_moon_druid.concentration_effect is not None
         test_moon_druid.get_current_form().receive_dmg(50, DamageType.Slashing)  # Only a nat 20 can save it
         if not test_moon_druid.get_current_form().concentration_effect:
             assert not test_moon_druid.concentration_effect
-            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 0
+            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 1
             test_moon_druid.get_current_form().receive_dmg(1, DamageType.Slashing)
-            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 0
+            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 1
 
     except Exception as e:
         assert False, f"Raised an exception {e}"

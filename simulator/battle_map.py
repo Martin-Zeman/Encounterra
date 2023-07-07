@@ -739,8 +739,11 @@ class Map:
 
         inflated = set()
         for coord in coords.get():
-            for x, y in [(x, y) for x in range(coord[0] - offset, coord[0] + 1) for y in range(coord[1] - offset, coord[1] + 1)]:
-                inflated.add((max(0, x), max(0, y)))
+            try:
+                for x, y in [(x, y) for x in range(coord[0] - offset, coord[0] + 1) for y in range(coord[1] - offset, coord[1] + 1)]:
+                    inflated.add((max(0, x), max(0, y)))
+            except TypeError:
+                print("FIXME")
         return inflated
 
     def get_free_coords_in_hop_range(self, coords: CombatantCoords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
@@ -1151,10 +1154,13 @@ class Map:
         :return: affected coordinates as a np.array of nx2 where n is the number of coordinates returned
         """
         coords = []
-        for x, y in [(origin[0] + i, origin[1] + j) for i in range(0, length) for j in range(0, length)]:
-            if x < 0 or x >= self.size or y < 0 or y >= self.size:
-                continue
-            coords.append(np.array([x, y]))
+        try:
+            for x, y in [(origin[0] + i, origin[1] + j) for i in range(0, length) for j in range(0, length)]:
+                if x < 0 or x >= self.size or y < 0 or y >= self.size:
+                    continue
+                coords.append(np.array([x, y]))
+        except TypeError:
+            print("FIXME")
         return np.stack([c for c in coords])
 
     def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):
