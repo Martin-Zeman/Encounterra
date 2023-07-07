@@ -88,7 +88,7 @@ class Fireball(Actoid, DirectThreat):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + "Fireball"
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FireballFactory.target, FireballFactory.type, self.coord)
         acc = 0

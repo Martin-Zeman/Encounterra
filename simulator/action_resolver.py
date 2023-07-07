@@ -383,6 +383,7 @@ class ActionResolver:
         :return: in case of an attack returns True if the attack hit, false otherwise. Dodge always returns True, unknown parameters false.
         Other cases return None.
         """
+        logger.info(f"MY DEBUG resolve_by_actoid_flags {combatant} uses {actoid}")
         battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:

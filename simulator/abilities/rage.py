@@ -135,7 +135,7 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, Attac
         self.combatants[0].resistances.remove(DamageType.Piercing)
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         """
         Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to
         all remaining HP (better than regular rage)

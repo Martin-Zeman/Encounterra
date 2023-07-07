@@ -106,7 +106,7 @@ class ShockingGrasp(Actoid, DirectThreat):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SHOCKING_GRASP else "") + "Shocking Grasp"
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target)
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

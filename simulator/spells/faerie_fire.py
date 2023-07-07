@@ -73,7 +73,7 @@ class FaerieFireFactory(ThreatModifierFactory):
 class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect, CombatantEffect):
 
     def __init__(self, coord, factory,  **kwargs):
-        Actoid.__init__(actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, turns=10)
         AoeSquareEffect.__init__(self, coord, FaerieFireFactory.target)
         CombatantEffect.__init__(self, [])
@@ -105,7 +105,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
         self.combatants.clear()
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         return 0  # TODO
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):

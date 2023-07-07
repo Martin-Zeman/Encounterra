@@ -103,7 +103,7 @@ class RoundManager:
                 logger.info(Map.get())
                 self.effect_tracker.start_of_turn(combatant)
                 combatant.new_turn()
-                effects = self.effect_tracker.get_all_affecting_combatant(combatant)
+                effects = self.effect_tracker.get_affecting_effects(combatant)
                 self.action_resolver.resolve_effects(effects, combatant)
                 if combatant.is_affected_by_any(Conditions.STUNNED, Conditions.PARALYZED, Conditions.PETRIFIED,
                                                 Conditions.UNCONSCIOUS):
@@ -122,11 +122,10 @@ class RoundManager:
                         done = True
                         break
                     if not combatant.is_alive():
+                        self.effect_tracker.combatant_died(combatant)
                         break  # could have died as a result of AoO
                 if combatant.is_alive():
                     self.effect_tracker.end_of_turn(combatant)
-                else:
-                    self.effect_tracker.combatant_died(combatant)
             logger.info("----------------------------------")
             self.print_status()
 

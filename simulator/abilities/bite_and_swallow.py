@@ -47,7 +47,7 @@ class BiteAndSwallow(MeleeAttack):
         battle_map = Map.get()
         return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
         return self.factory.calculate_threat_to_target(self.target_combatant, **kwargs)
 

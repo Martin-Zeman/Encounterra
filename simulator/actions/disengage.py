@@ -74,7 +74,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         self.factory.combatant.has_disengaged = False
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         """
         Calculate how much dmg would the Disengage potentially mitigate. This will be the same as the one for the factory.
         """

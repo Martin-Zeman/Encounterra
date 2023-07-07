@@ -133,7 +133,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
         return combatant is self.target
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         """
         It's the same as the single target version of the factory
         """

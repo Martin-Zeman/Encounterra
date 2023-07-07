@@ -69,8 +69,15 @@ class MagicMissileFactory(DirectThreatFactory):
         return 0
 
     def calculate_max_threat(self):
-        targets = self.get_eligible_targets()
-        return max([self.calculate_threat_to_target(t) for t in targets])
+        if self.combatant.get_swallower():
+            return 0  # Must be able to see
+        targets = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        for t in targets:
+            threat = self.calculate_threat_to_target(t)
+            # We just need one enemy within range which assures we can deal the damage (which is target-agnostic)
+            if threat:
+                return threat
+        return 0
 
 
 class MagicMissile(Actoid, DirectThreat):
@@ -89,7 +96,7 @@ class MagicMissile(Actoid, DirectThreat):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Magic Missile"
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         dmg_acc = mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
         dmg_acc += mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[1].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
         dmg_acc += mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[2].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus

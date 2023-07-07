@@ -64,7 +64,7 @@ class MistyStep(Actoid, ThreatModifier):
         return "Misty Step"
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         return 0  # Misty Step is handled differently
 
     def get_eligible_coords(self, distances, shortest_paths):

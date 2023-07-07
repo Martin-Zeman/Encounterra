@@ -82,7 +82,7 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
         return combatant in self.targets
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         # TODO Multiply the threat increment by 3 for 3 rounds
         # TODO iterate over all abilities of the targets and try plugging the mods into their factories
         return 0

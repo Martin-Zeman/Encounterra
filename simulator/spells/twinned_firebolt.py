@@ -80,8 +80,11 @@ class TwinnedFireboltFactory(DirectThreatFactory):
                     TwinnedFireboltFactory.dmg_type))
 
     def calculate_max_threat(self):
-        targets = self.get_eligible_targets()
-        threats = [self.calculate_threat_to_target(t) for t in targets].sort(reverse=True)
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return self.calculate_threat_to_target(swallower)
+        targets = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        threats = sorted([self.calculate_threat_to_target(t) for t in targets], reverse=True)
         return (threats[0] if threats else 0) + (threats[1] if len(threats) > 1 else 0)
 
 class TwinnedFirebolt(Actoid, DirectThreat):
@@ -99,7 +102,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return "Twinned Firebolt"
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
         dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, ROLL_TYPE_CRIT[roll_type], self.targets[0].is_resistant_to(TwinnedFireboltFactory.dmg_type))

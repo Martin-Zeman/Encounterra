@@ -41,32 +41,32 @@ def test_get_hop_distance_overlapping_large_huge(battle_map, test_draconic_sorce
         battle_map.set_combatant_coordinates(test_goblin, np.array([7, 8]))
 
 
-def test_as_if_dist_from_combatant(teams, effect_tracker, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
+def test_as_if_dist_from_combatant(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    test_bugbear = Goblin(effect_tracker, "Goblin 2")
-    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    test_goblin2 = Goblin("Goblin 2")
+    teams.add_combatant_to_team(test_goblin2, Teams.Color.RED)
 
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 7]))
+    battle_map.set_combatant_coordinates(test_goblin2, np.array([4, 7]))
     # establish baseline
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
+    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
     # now test that new distance applies only to combatant 1 and 2 but 1 and 3 are unchanged
     with battle_map.as_if_dist_from_combatant(test_draconic_sorcerer_5lvl, test_goblin, 10, dist_type=DistanceMetric.HOP):
         assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 10
-        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
+        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
     # test return to previous state
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
+    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
     # now test the combatant 1 and 3
-    with battle_map.as_if_dist_from_combatant(test_draconic_sorcerer_5lvl, test_bugbear, 20, dist_type=DistanceMetric.HOP):
+    with battle_map.as_if_dist_from_combatant(test_draconic_sorcerer_5lvl, test_goblin2, 20, dist_type=DistanceMetric.HOP):
         assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 20
+        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 20
     # test return to previous state
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
+    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
 
     # Now let's also test cartesian distance
     battle_map.set_combatant_coordinates(test_goblin, np.array([6, 8]))
@@ -77,43 +77,43 @@ def test_as_if_dist_from_combatant(teams, effect_tracker, battle_map, test_draco
     assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin) == pytest.approx(1.41, 0.01)
 
 
-def test_as_if_dist_delta_from_combatant(teams, effect_tracker, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
+def test_as_if_dist_delta_from_combatant(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    test_bugbear = Goblin(effect_tracker, "Goblin 2")
-    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    test_goblin2 = Goblin("Goblin 2")
+    teams.add_combatant_to_team(test_goblin2, Teams.Color.RED)
 
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 7]))
+    battle_map.set_combatant_coordinates(test_goblin2, np.array([4, 7]))
     # establish baseline
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
+    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
     # now test that new distance applies only to combatant 1 and 2 but 1 and 3 are unchanged
     with battle_map.as_if_dist_delta_from_combatant(test_draconic_sorcerer_5lvl, test_goblin, 2):
         assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 7
         assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin) == 7
-        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
-        assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
+        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
+        assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
     # test return to previous state
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
+    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
     # now test the combatant 1 and 3
-    with battle_map.as_if_dist_delta_from_combatant(test_draconic_sorcerer_5lvl, test_bugbear, -1):  # This closer
+    with battle_map.as_if_dist_delta_from_combatant(test_draconic_sorcerer_5lvl, test_goblin2, -1):  # This closer
         assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
         assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1 # 1 is min
-        assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1 # 1 is min
+        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1 # 1 is min
+        assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1 # 1 is min
     # test return to previous state
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
-    with battle_map.as_if_dist_delta_from_combatant(test_draconic_sorcerer_5lvl, test_bugbear, 3):
+    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
+    with battle_map.as_if_dist_delta_from_combatant(test_draconic_sorcerer_5lvl, test_goblin2, 3):
         assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
         assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 4 # 1 is min
-        assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 4 # 1 is min
+        assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 4 # 1 is min
+        assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 4 # 1 is min
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
-    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_bugbear) == 1
+    assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
     
 
 def test_hop_distance_diagonal(battle_map, test_draconic_sorcerer_5lvl, test_goblin):

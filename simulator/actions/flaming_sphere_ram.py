@@ -77,7 +77,7 @@ class FlamingSphereRam(Actoid, DirectThreat):
         return f"Flaming Sphere Ram"
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target_combatant)
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

@@ -125,7 +125,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
     def is_affecting(self, combatant):
         return combatant is self.target
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         ret = self.factory.calculate_threat_to_target(self.target)
         logger.info(f"MY DEBUG {self} threat = {ret}")
         return ret

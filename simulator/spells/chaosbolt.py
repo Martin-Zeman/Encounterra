@@ -69,14 +69,6 @@ class ChaosboltFactory(DirectThreatFactory):
         """
         Calculates threat to a specific target
         """
-        # try:
-        #     roll_type = kwargs['roll_type']
-        # except KeyError:
-        #     roll_type = RollType.STRAIGHT
-        #
-        # to_hit_total = self.to_hit
-        # to_hit_total = to_hit_total + ROLL_TYPE[roll_type][target.ac - to_hit_total]
-
         # TODO Consider including the potential of hitting others
         acc = 0
         battle_map = Map.get()
@@ -132,7 +124,7 @@ class Chaosbolt(Actoid, DirectThreat):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt"
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]

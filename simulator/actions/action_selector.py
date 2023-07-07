@@ -449,6 +449,7 @@ def get_action(combatant):
     combatant.shortest_paths_cache = shortest_paths
     if combatant.action_plan:
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
+            logger.info(f"MY DEBUG get_action using movement")
             return combatant.action_plan.pop(0)
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)
     if not combatant.action_plan:

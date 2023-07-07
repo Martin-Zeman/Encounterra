@@ -1,3 +1,5 @@
+from itertools import combinations
+
 from simulator.battle_map import Map
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
@@ -45,6 +47,11 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
     def get_quickened_kwargs(self):
         return {'dc': self.dc, 'caster': self.combatant}
 
+    def get_eligible_targets(self):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return []  # Let's not waste a twinned version on this
+        return combinations([e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
     def create_all(self):
         targets = Map.get().get_enemies(self.combatant)
@@ -83,15 +90,12 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
             p_success *= p_success
         return total_threat
 
-    def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
-        if swallower:
-            return []  # Must be able to see
-        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
     def calculate_max_threat(self):
-        targets = self.get_eligible_targets()
-        threats = [self.calculate_threat_to_target(t) for t in targets].sort(reverse=True)
+        if self.combatant.get_swallower():
+            return 0
+        targets = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        threats = sorted([self.calculate_threat_to_target(t) for t in targets], reverse=True)
         return (threats[0] if threats else 0) + (threats[1] if len(threats) > 1 else 0)
 
 
@@ -128,7 +132,7 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
         return combatant in self.targets
 
 
-    def calculate_threat(self, *args, **kwargs):
+    def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.targets[0]) + self.factory.calculate_threat_to_target(self.targets[1])
 
 

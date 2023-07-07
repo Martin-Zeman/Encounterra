@@ -1105,7 +1105,7 @@ class Map:
             curr_coord = np.array([[x, y]])
             if self.get_cartesian_distance(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
                 continue  # Skip those outside of spell range and those taken up by the caster
-            threat_score = factory.create(curr_coord[0]).calculate_threat(self)
+            threat_score = factory.create(curr_coord[0]).calculate_threat()
             if threat_score > max_score:
                 max_score = threat_score
                 best_placement = curr_coord

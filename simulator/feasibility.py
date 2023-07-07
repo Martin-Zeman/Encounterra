@@ -144,6 +144,37 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
                 res &= (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
                 return res
+            case Action.HOLD_PERSON:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
+                return res
+            case Action.TWINNED_HOLD_PERSON:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.curr_sorcery_points > 1
+                res &= not combatant.concentration_effect
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
+                res &= battle_map.teams.are_enemies(combatant, action.targets[0])
+                return res
+            case Action.SPIKE_GROWTH:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= battle_map.are_valid_coords(np.array([action.origin]))
+                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                return res
+            case Action.FAERIE_FIRE:
+                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= battle_map.are_valid_coords(np.array([action.origin]))
+                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                return res
             case _:
                 logger.error("check_feasibility: Unknown action type")
                 return False
@@ -190,6 +221,27 @@ def check_feasibility(combatant, action):
                 res &= battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_allies(combatant, action.target)
+                return res
+            case BonusAction.QUICKENED_HOLD_PERSON:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
+                return res
+            case BonusAction.QUICKENED_SPIKE_GROWTH:
+                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= battle_map.are_valid_coords(np.array([action.origin]))
+                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                return res
+            case BonusAction.QUICKENED_FAERIE_FIRE:
+                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= battle_map.are_valid_coords(np.array([action.origin]))
+                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FIREBALL:
                 res &= combatant.spellslots.get_spellslots(3) > 0
