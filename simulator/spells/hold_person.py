@@ -8,7 +8,7 @@ from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWith
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 
-from simulator.threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
+from simulator.threat_utils import get_saving_throw_fail_prob, calculate_threat_in_delta
 from simulator.threat_interfaces import ThreatModifierFactory, ThreatModifier
 import logging
 
@@ -56,7 +56,7 @@ class HoldPersonFactory(ThreatModifierFactory):
 
 
     def calculate_threat_to_target(self, target, **kwargs):
-        logger.info(f"MY DEBUG {self} calculate_threat_to_target")
+       logger.info(f"MY DEBUG {self} calculate_threat_to_target")
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
         if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
@@ -78,18 +78,19 @@ class HoldPersonFactory(ThreatModifierFactory):
         # Neglecting the auto-crit in melee range only
         threat_acc += calculate_threat_in_delta(target, 6, mods, FactoryFlags.IS_ATTACK_LIKE)[1]
 
-        p_success = get_saving_throw_success_prob(self.dc, target.saving_throws[self.saving_throw])
+        p_fail = get_saving_throw_fail_prob(self.dc, target.saving_throws[self.saving_throw])
+        p_fail_acc = p_fail
         total_threat = 0
         for _ in range(ROUND_HORIZON):
-            total_threat += threat_acc * p_success
-            p_success *= p_success
+            total_threat += threat_acc * p_fail_acc
+            p_fail_acc *= p_fail
         return total_threat
 
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:
             return []  # Must be able to see
-        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)]
 
     def calculate_max_threat(self):
         logger.info(f"MY DEBUG {self} calculate_max_threat")
@@ -101,7 +102,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
     def __init__(self, target, factory, **kwargs):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, turns=10)
-        EndOfTurnEffect.__init__(self, factory.combatant, factory.saving_throw, factory.dc)
+        EndOfTurnEffect.__init__(self, target, factory.saving_throw, factory.dc)
         self.target = target
         self.factory = factory
 
@@ -118,7 +119,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
 
     def activate(self):
         if not roll_saving_throw(self.target.saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT):
-            logger.info(f"{self.target} failed save against Hold Person")
+            logger.info(f"{self.target} failed the save against Hold Person")
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
             self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))

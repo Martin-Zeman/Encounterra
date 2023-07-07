@@ -33,11 +33,10 @@ class EffectTracker:
         """
         effects = []
         for e in self.effects:
-            if getattr(e, "new_turn", False) and e.factory.combatant is combatant:
+            if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
                 if not e.new_turn():
                     e.deactivate()
                     continue  # Effect expired
-            if getattr(e, "start_of_turn", False) and e.factory.combatant is combatant:
                 if not e.start_of_turn():
                     e.deactivate()
                     continue  # Effect's been saved against
@@ -47,10 +46,10 @@ class EffectTracker:
     def end_of_turn(self, combatant):
         effects = []
         for e in self.effects:
-            if getattr(e, "end_of_turn", False) and e.factory.combatant is combatant:
+            if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
                 if not e.end_of_turn():
                     e.deactivate()
-                    continue
+                    continue  # Effect's been saved against
             effects.append(e)
         self.effects = effects
 

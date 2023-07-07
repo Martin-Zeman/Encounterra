@@ -26,6 +26,7 @@ class Ogre(Combatant):
         self.saving_throws[SavingThrow.CHA] = -2
         self.athletics = 4
         self.acrobatics = -1
+        self.is_humanoid = False
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

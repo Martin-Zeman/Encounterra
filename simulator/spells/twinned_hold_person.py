@@ -51,7 +51,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return []  # Let's not waste a twinned version on this
-        return combinations([e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 2)
+        return combinations([e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
     def create_all(self):
         targets = Map.get().get_enemies(self.combatant)
@@ -122,12 +122,12 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
         saved2 = roll_saving_throw(self.targets[1].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
         if not saved1:
             self.targets[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
-            logger.info(f"{self.targets[0]} failed save against Hold Person")
+            logger.info(f"{self.targets[0]} failed the save against Hold Person")
         else:
             logger.info(f"{self.targets[0]} saved against Hold Person")
         if not saved2:
             self.targets[1].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
-            logger.info(f"{self.targets[1]} failed save against Hold Person")
+            logger.info(f"{self.targets[1]} failed the save against Hold Person")
         else:
             logger.info(f"{self.targets[1]} saved against Hold Person")
         if not saved1 or not saved2:

@@ -91,6 +91,7 @@ class Combatant(ABC, ProtoCombatant):
         self.action_types_added = []
         self.shortest_paths_cache = None
         self.wears_metal = False
+        self.is_humanoid = True
         self.constricted_target = None
         self.swallowed_target = None
         self.is_swallowed = [False, None]

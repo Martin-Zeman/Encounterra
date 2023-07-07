@@ -42,12 +42,10 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         if dag is None:
             movement = None
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
-                logger.info(f"MY DEBUG calculate_action_plan movement for next turn")
                 movement = self.get_movement_for_next_turn(distances, shortest_paths)
             return movement
         sorted_states = toposort_flatten(dag.dependencies)
         longest_pth, transition_name_to_ms_path = longest_path(self.combatant, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
-        logger.info(f"MY DEBUG calculate_action_plan longest_pth={longest_pth}")
         if longest_pth is None:
             return None
         # logger.info(f"{self.combatant}'s plan {longest_pth}")# TODO FIXME

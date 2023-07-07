@@ -27,6 +27,7 @@ class DireWolf(Combatant):
         self.saving_throws[SavingThrow.CHA] = -2
         self.athletics = 3
         self.acrobatics = 2
+        self.is_humanoid = False
 
 
     def build_attack_fms(self):

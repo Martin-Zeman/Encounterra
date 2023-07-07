@@ -37,3 +37,12 @@ class Effect(ABC):
     @abstractmethod
     def is_affecting(self, combatant):
         return False
+
+    def end_of_turn(self):
+        return True
+
+    def start_of_turn(self):
+        return True
+
+    def new_turn(self):
+        return True

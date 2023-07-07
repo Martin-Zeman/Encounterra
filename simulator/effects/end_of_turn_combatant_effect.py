@@ -18,7 +18,7 @@ class EndOfTurnEffect(Effect):
         """
         saved = roll_saving_throw(self.combatant.saving_throws[self.st], self.dc, reconcile_roll_types(self.combatant.saving_throws_roll_type_mod[self.st]))
         if saved:
-            # logger.info(f"{self.__class__.__name__} expires")
-            # self.deactivate()
+            logger.info(f"{self.combatant} saved against {self}")
             return False
+        logger.info(f"{self.combatant} failed the save against {self}")
         return True

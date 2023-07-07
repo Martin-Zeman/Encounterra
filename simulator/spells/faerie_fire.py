@@ -96,7 +96,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
             if not roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_types(pac.saving_throws_roll_type_mod[st])):
-                logger.info(f"{pac} failed save against Faerie Fire")
+                logger.info(f"{pac} failed the save against Faerie Fire")
                 failed_count += 1
                 pac.remove_condition(Conditions.INVISIBLE)
                 self.combatants.append(pac)

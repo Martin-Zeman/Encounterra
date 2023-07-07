@@ -34,6 +34,7 @@ class GiantToad(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
         self.athletics = 2
         self.acrobatics = 1
+        self.is_humanoid = False
 
 
     def build_attack_fms(self):

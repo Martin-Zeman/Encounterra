@@ -549,6 +549,8 @@ class Map:
             return eligible_combatants
         for curr_combatant, coords in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
+                if curr_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
+                    continue
                 try:
                     pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
                     post_increment_dist = self.get_hop_distance(combatant_coords.get() + increment, coords.get())
@@ -563,6 +565,8 @@ class Map:
         eligible_combatants = []
         for curr_combatant, pos in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and curr_combatant.is_alive() and self.teams.are_enemies(curr_combatant, combatant):
+                if curr_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
+                    continue
                 pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
                 post_increment_dist = self.get_hop_distance(self.combatant_coordinate_cache[combatant].get() + increment, pos.get())
                 if pre_increment_dist == curr_combatant.melee_reaction_range and post_increment_dist > curr_combatant.melee_reaction_range and curr_combatant.has_reaction:
@@ -1143,7 +1147,6 @@ class Map:
                 max_score = score
                 best_placement = curr_coord
                 best_affected = affected
-        logger.info(self)
         return best_placement, max_score, best_affected
 
     def get_coords_affected_by_square_aoe(self, origin, length):
