@@ -674,14 +674,14 @@ class Map:
         return False
 
 
-    def is_ally_adjacent_to_target(self, combatant, target_combatant):
+    def is_ally_adjacent_to_target(self, combatant, target):
         """
         Used for pack tactics to determine if an ally that is not incapacitated is adjacent to a combatant
         :param combatant: the combatant to test if they benefit from pack tactics
-        :param target_combatant: the target combatant
+        :param target: the target combatant
         :return: True if there's a non-incapacited ally adjacent
         """
-        target_coords = self.combatant_coordinate_cache[target_combatant]
+        target_coords = self.combatant_coordinate_cache[target]
         adjacent_coords = self.get_adjacent_coords(target_coords)
         for adjacent_coord in adjacent_coords:
             potential_ally = self.grid[adjacent_coord[0], adjacent_coord[1]].combatant
@@ -872,11 +872,11 @@ class Map:
         return distances, shortest_paths
 
 
-    def get_path_to_combatant(self, combatant, target_combatant, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
+    def get_path_to_combatant(self, combatant, target, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
         """
         Calculates a path to a target combatant
         :param combatant:Combatant who wants to move
-        :param target_combatant:
+        :param target:
         :param distances: potentially already pre-computed distances to all coords
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :param rng: the range of what is considered adjacent
@@ -884,7 +884,7 @@ class Map:
         """
         my_location = self.get_combatant_position(combatant)
         logger.debug(f"Origin {my_location.get()[0]}")
-        enemy_location = self.get_combatant_position(target_combatant)
+        enemy_location = self.get_combatant_position(target)
         logger.debug(f"Destination {enemy_location.get()[0]}")
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
@@ -973,10 +973,10 @@ class Map:
         elligible_coords.sort(key=by_distance_to_nearest_enemy, reverse=True)
         return elligible_coords
 
-    def get_free_coords_at_distance_from_target(self, target_combatant, combatant, min_dist, max_dist=sys.maxsize):
+    def get_free_coords_at_distance_from_target(self, target, combatant, min_dist, max_dist=sys.maxsize):
         """
         Returns a list of coordinates that are unoccupied and at a given distance range from a target, sorted by ascending proximity to self
-        :param target_combatant: target to which the distance is measured
+        :param target: target to which the distance is measured
         :param combatant: sorted by ascending proximity to this combatant
         :param min_dist: minimum desired distance
         :param max_dist: maximum desired distance
@@ -984,7 +984,7 @@ class Map:
         """
         assert min_dist > 0
         self_coord = self.get_combatant_position(combatant)
-        target_coord = self.get_combatant_position(target_combatant)
+        target_coord = self.get_combatant_position(target)
         coords = []
         for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
             potential_self_coord = CombatantCoords(np.array([x, y]), combatant)

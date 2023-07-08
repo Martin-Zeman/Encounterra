@@ -19,8 +19,8 @@ class RangedAttackFactory(AttackFactory):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg)
         self.flags |= FactoryFlags.IS_RANGED
 
-    def create(self, target_combatant):
-        return RangeAttack(target_combatant, self)
+    def create(self, target):
+        return RangeAttack(target, self)
 
     def create_all(self):
         targets = self.get_eligible_targets()
@@ -54,18 +54,18 @@ class RangeAttack(Attack):
     def calculate_threat(self, combatant_coords: CombatantCoords = None, *args, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        roll_type = RollType.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) > self.factory.short_range else roll_type
-        return self.factory.calculate_threat_to_target(self.target_combatant, roll_type=roll_type, **kwargs)
+        roll_type = RollType.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target) > self.factory.short_range else roll_type
+        return self.factory.calculate_threat_to_target(self.target, roll_type=roll_type, **kwargs)
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target_combatant),
+        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=self.factory.range, combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
-        if self.factory.combatant.get_swallower() is self.target_combatant:
+        if self.factory.combatant.get_swallower() is self.target:
             return True
         battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.target_combatant) <= self.factory.range
+        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= self.factory.range

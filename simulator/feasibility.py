@@ -86,21 +86,21 @@ def check_feasibility(combatant, action):
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.RANGED_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_cartesian_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.RECKLESS_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.DASH | Action.DISENGAGE | HasteAction.HASTE_DISENGAGE | HasteAction.HASTE_DASH:
                 # Technically, those actions are possible but make no sense
@@ -110,25 +110,25 @@ def check_feasibility(combatant, action):
             case Action.BREAK_GRAPPLE:
                 return res and combatant.is_affected_by_any(Conditions.GRAPPLED)
             case Action.CONSTRICT:
-                return res and (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
+                return res and (action.target is combatant.constricted_target) if combatant.constricted_target else True
             case Action.WILDSHAPE:
                 return res and combatant.curr_wildshape_uses > 0
             case Action.PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
-                res &= (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
+                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
+                res &= (action.target is combatant.constricted_target) if combatant.constricted_target else True
                 return res
             case Action.BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
-                res &= action.target_combatant is combatant.constricted_target
+                res &= action.target is combatant.constricted_target
                 return res
             case Action.FLAMING_SPHERE:
                 res &= combatant.spellslots.get_spellslots(2) > 0
@@ -141,18 +141,18 @@ def check_feasibility(combatant, action):
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
-                res &= action.target_combatant is combatant.constricted_target
+                res &= action.target is combatant.constricted_target
                 return res
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.factory.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
-                res &= (action.target_combatant is combatant.constricted_target) if combatant.constricted_target else True
+                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
+                res &= (action.target is combatant.constricted_target) if combatant.constricted_target else True
                 return res
             case Action.HOLD_PERSON:
                 res &= combatant.spellslots.get_spellslots(2) > 0
@@ -194,8 +194,8 @@ def check_feasibility(combatant, action):
         res = combatant.has_bonus_action
         match action_type:
             case BonusAction.PAM_BONUS_ATTACK:
-                res &= action.target_combatant.is_alive() and battle_map.get_hop_distance(combatant, action.target_combatant) <= action.range
-                res &= battle_map.teams.are_enemies(combatant, action.target_combatant)
+                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case BonusAction.RAGE:
                 return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, Rage)

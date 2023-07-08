@@ -15,8 +15,8 @@ class MeleeAttackFactory(AttackFactory):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg)
         self.flags |= FactoryFlags.IS_MELEE
 
-    def create(self, target_combatant):
-        return MeleeAttack(target_combatant, self)
+    def create(self, target):
+        return MeleeAttack(target, self)
 
     def create_all(self):
         targets = self.get_eligible_targets()
@@ -27,14 +27,14 @@ class MeleeAttack(Attack):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
+        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                        distances,
                                                        inflate_to_size=self.factory.combatant.size,
                                                        rng=self.factory.range,
                                                        combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
-        if self.factory.combatant.get_swallower() is self.target_combatant:
+        if self.factory.combatant.get_swallower() is self.target:
             return True
         battle_map = Map.get()
-        return battle_map.are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)
+        return battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range)

@@ -69,8 +69,8 @@ class FireboltFactory(DirectThreatFactory):
         targets = self.get_eligible_targets()
         return [Firebolt(t, self) for t in targets]
 
-    def create(self, target_combatant):
-        return Firebolt(target_combatant, self)
+    def create(self, target):
+        return Firebolt(target, self)
 
 
     def calculate_threat_to_target(self, target, **kwargs):

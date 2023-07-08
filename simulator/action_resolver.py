@@ -53,11 +53,11 @@ def has_disadvantage_saving_throw(ability, target):
     return False
 
 
-def resolve_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=True):
+def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True):
     # TODO prompt reaction
     # TODO Conditions
-    bonus = target_combatant.saving_throws[ability.factory.saving_throw]
-    types = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
+    bonus = target.saving_throws[ability.factory.saving_throw]
+    types = {has_advantage_saving_throw(ability, target), has_disadvantage_saving_throw(ability, target)}
     final_modifier = reconcile_roll_types(types)
 
     if final_modifier is RollType.STRAIGHT:
@@ -76,18 +76,18 @@ def resolve_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=Tru
     else:
         saved = False
     if not saved:
-        logger.info(f"{ability.shorthand_str()} deals {dmg} to {target_combatant}")
-        target_combatant.receive_dmg(dmg, ability.factory.dmg_type)
+        logger.info(f"{ability.shorthand_str()} deals {dmg} to {target}")
+        target.receive_dmg(dmg, ability.factory.dmg_type)
     elif half_on_success:
-        logger.info(f"{ability.shorthand_str()} deals {dmg // 2} to {target_combatant}")
-        target_combatant.receive_dmg(dmg // 2, ability.factory.dmg_type)
+        logger.info(f"{ability.shorthand_str()} deals {dmg // 2} to {target}")
+        target.receive_dmg(dmg // 2, ability.factory.dmg_type)
 
 
-def resolve_on_hit_dmg_saving_throw(ability, dmg, target_combatant, half_on_success=True):
+def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
     # TODO prompt reaction
     # TODO Conditions
-    bonus = target_combatant.saving_throws[ability.st]
-    types = {has_advantage_saving_throw(ability, target_combatant), has_disadvantage_saving_throw(ability, target_combatant)}
+    bonus = target.saving_throws[ability.st]
+    types = {has_advantage_saving_throw(ability, target), has_disadvantage_saving_throw(ability, target)}
     final_modifier = reconcile_roll_types(types)
 
     if final_modifier is RollType.STRAIGHT:
@@ -106,11 +106,11 @@ def resolve_on_hit_dmg_saving_throw(ability, dmg, target_combatant, half_on_succ
     else:
         saved = False
     if not saved:
-        target_combatant.receive_dmg(dmg, ability.dmg_type)
-        logger.info(f"{ability.name} deals extra {dmg} to {target_combatant}")
+        target.receive_dmg(dmg, ability.dmg_type)
+        logger.info(f"{ability.name} deals extra {dmg} to {target}")
     elif half_on_success:
-        target_combatant.receive_dmg(dmg // 2, ability.dmg_type)
-        logger.info(f"{ability.name} deals extra {dmg // 2} to {target_combatant}")
+        target.receive_dmg(dmg // 2, ability.dmg_type)
+        logger.info(f"{ability.name} deals extra {dmg // 2} to {target}")
 
 class ActionResolver:
 
@@ -302,7 +302,7 @@ class ActionResolver:
         :return: True is hits, false if misses or is not attack
         """
         # TODO Conditions
-        target = attack.target_combatant
+        target = attack.target
         assert target
         types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
 
@@ -471,7 +471,7 @@ class ActionResolver:
                 combatant.remove_condition(Conditions.PRONE)  # resources already taken
                 return False
             case Action.CONSTRICT:
-                logger.info(f"{combatant} is trying to constrict {actoid.target_combatant}")
+                logger.info(f"{combatant} is trying to constrict {actoid.target}")
                 result = self.resolve_attack(actoid.factory.attack, combatant)
                 if result is ActionResult.DMG:
                     combatant.constricted_target = True
@@ -492,9 +492,9 @@ class ActionResolver:
                 path = battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
                 if path and len(path) <= FlamingSphereRamFactory.RANGE + 1:
                     dmg = roll_spell_dmg(actoid.factory.dmg_dice)
-                    logger.info(f"{ actoid.target_combatant} is rammed by Flaming Sphere")
-                    resolve_dmg_saving_throw(actoid, dmg, actoid.target_combatant)
-                    battle_map.remove_combatant_if_dead(actoid.target_combatant)   # TODO revisit if this is really needed
+                    logger.info(f"{ actoid.target} is rammed by Flaming Sphere")
+                    resolve_dmg_saving_throw(actoid, dmg, actoid.target)
+                    battle_map.remove_combatant_if_dead(actoid.target)   # TODO revisit if this is really needed
                 path = path['tuples'][:FlamingSphereRamFactory.RANGE + 1]
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
                 return ActionResult.DMG
@@ -520,7 +520,7 @@ class ActionResolver:
             case Action.PRE_SWALLOW_BITE:
                 result = self.resolve_attack(actoid, combatant)  # TODO
                 if result is ActionResult.DMG:
-                    combatant.constricted_target = actoid.target_combatant if actoid.target_combatant.is_alive() else None
+                    combatant.constricted_target = actoid.target if actoid.target.is_alive() else None
                 return result
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")

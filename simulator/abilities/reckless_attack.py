@@ -155,16 +155,16 @@ class RecklessAttackFactory(DirectThreatFactory):
 
 class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
 
-    def __init__(self, target_combatant, factory):
+    def __init__(self, target, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT | ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[factory.combatant])
         LimitedDurationEffect.__init__(self, turns=1)
-        self.target_combatant = target_combatant
+        self.target = target
         self.factory = factory
         self.roll_type = RollType.ADVANTAGE
 
     def __str__(self):
-        return f"Reckless Attack at {self.target_combatant}"
+        return f"Reckless Attack at {self.target}"
 
     def get_effect_type(self):
         return EffectType.RECKLESS_ATTACK
@@ -183,25 +183,25 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
 
 
     def calculate_threat(self, **kwargs):
-        return self.factory.calculate_threat_to_target(self.target_combatant, **kwargs)
+        return self.factory.calculate_threat_to_target(self.target, **kwargs)
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         The delta in threat when modifiers are applied on this ability.
         """
-        ret = self.factory.calculate_threat_to_target_delta(self.target_combatant, modifiers, *args, **kwargs)
+        ret = self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
         logger.info(f"MY DEBUG {self} threat = {ret}")
         return ret
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
+        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                        distances,
                                                        inflate_to_size=self.factory.combatant.size,
                                                        rng=self.factory.range,
                                                        combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
-        if self.factory.combatant.get_swallower() is self.target_combatant:
+        if self.factory.combatant.get_swallower() is self.target:
             return True
-        return Map.get().are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)
+        return Map.get().are_in_hop_range(self.factory.combatant, self.target, self.factory.range)

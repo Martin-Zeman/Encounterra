@@ -57,8 +57,8 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         targets = Map.get().get_enemies(self.combatant)
         return [TwinnedHoldPerson(t, self) for t in targets]
 
-    def create(self, target_combatant):
-        return TwinnedHoldPerson(target_combatant, self)
+    def create(self, target):
+        return TwinnedHoldPerson(target, self)
 
 
     def calculate_threat_to_target(self, target, **kwargs):

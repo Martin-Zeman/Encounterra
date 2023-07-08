@@ -60,8 +60,8 @@ class AttackFactory(DirectThreatFactory):
             return [swallower]
         return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
-    def create(self, target_combatant):
-        return Attack(target_combatant, self)
+    def create(self, target):
+        return Attack(target, self)
 
     # def calculate_threat_approx(self, combatant, roll_type=RollType.STRAIGHT):
     #     """
@@ -154,15 +154,15 @@ class AttackFactory(DirectThreatFactory):
 
 class Attack(Actoid, DirectThreat):
 
-    def __init__(self, target_combatant, factory):
+    def __init__(self, target, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
-        self.target_combatant = target_combatant
+        self.target = target
         self.factory = factory
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
         form_prefix = str(self.factory.combatant.get_current_form()).split()[-1] + " " if self.factory.combatant.get_original_form() is not self.factory.combatant else ""
-        return form_prefix + ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name + f" on {self.target_combatant}"
+        return form_prefix + ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name + f" on {self.target}"
 
     def shorthand_str(self):
         return ("Hasted " if isinstance(self.factory.action_type, HasteAction) else "") + self.factory.name
@@ -172,10 +172,10 @@ class Attack(Actoid, DirectThreat):
 
 
     def calculate_threat(self, **kwargs):
-        return self.factory.calculate_threat_to_target(self.target_combatant, **kwargs)
+        return self.factory.calculate_threat_to_target(self.target, **kwargs)
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        return self.factory.calculate_threat_to_target_delta(self.target_combatant, modifiers, *args, **kwargs)
+        return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)

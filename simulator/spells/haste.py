@@ -56,8 +56,8 @@ class HasteFactory(ThreatModifierFactory):
         targets = self.get_eligible_targets()
         return [Haste(t, self) for t in targets]
 
-    def create(self, target_combatant):
-        return Haste(target_combatant, self)
+    def create(self, target):
+        return Haste(target, self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         """

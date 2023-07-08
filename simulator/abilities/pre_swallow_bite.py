@@ -16,9 +16,9 @@ class PreSwallowBiteFactory(MeleeAttackFactory):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg)
         self.flags |= FactoryFlags.IS_MELEE
 
-    def create(self, target_combatant):
-        if self.combatant.constricted_target is None or (self.combatant.constricted_target is target_combatant and target_combatant.is_alive()):
-            return PreSwallowBite(target_combatant, self)
+    def create(self, target):
+        if self.combatant.constricted_target is None or (self.combatant.constricted_target is target and target.is_alive()):
+            return PreSwallowBite(target, self)
         return None
 
 
@@ -37,11 +37,11 @@ class PreSwallowBite(MeleeAttack):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target_combatant),
+        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                        distances,
                                                        inflate_to_size=self.factory.combatant.size,
                                                        rng=self.factory.range,
                                                        combatant=self.factory.combatant)
 
     def is_current_coord_eligible(self):
-        return Map.get().are_in_hop_range(self.factory.combatant, self.target_combatant, self.factory.range)
+        return Map.get().are_in_hop_range(self.factory.combatant, self.target, self.factory.range)

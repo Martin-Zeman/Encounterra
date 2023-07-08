@@ -67,9 +67,9 @@ class RageFactory(ThreatModifierFactory):
     def create_all(self):
         return [Rage(self.combatant, self)]
 
-    def create(self, target_combatant):
+    def create(self, target):
         # Doesn't make much sense here
-        return Rage(target_combatant, self)
+        return Rage(target, self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         """

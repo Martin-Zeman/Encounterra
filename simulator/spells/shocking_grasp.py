@@ -55,8 +55,8 @@ class ShockingGraspFactory(DirectThreatFactory):
         targets = self.get_eligible_targets()
         return [ShockingGrasp(t, self) for t in targets]
 
-    def create(self, target_combatant):
-        return ShockingGrasp(target_combatant, self)
+    def create(self, target):
+        return ShockingGrasp(target, self)
 
 
     def calculate_threat_to_target(self, target, **kwargs):

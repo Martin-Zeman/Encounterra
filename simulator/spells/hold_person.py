@@ -51,8 +51,8 @@ class HoldPersonFactory(ThreatModifierFactory):
         targets = Map.get().get_enemies(self.combatant)
         return [HoldPerson(t, self) for t in targets]
 
-    def create(self, target_combatant):
-        return HoldPerson(target_combatant, self)
+    def create(self, target):
+        return HoldPerson(target, self)
 
 
     def calculate_threat_to_target(self, target, **kwargs):

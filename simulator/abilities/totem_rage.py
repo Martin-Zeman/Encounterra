@@ -29,9 +29,9 @@ class TotemRageFactory(ThreatModifierFactory):
         """
         return "TotemRageFactory"
 
-    def create(self, target_combatant):
+    def create(self, target):
         # Doesn't make much sense here
-        return TotemRage(target_combatant, self)
+        return TotemRage(target, self)
 
     def create_all(self):
         return [TotemRage(self.combatant, self)]

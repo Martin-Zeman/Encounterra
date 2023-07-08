@@ -51,8 +51,8 @@ class ChaosboltFactory(DirectThreatFactory):
                 break
         return list(zip(*potential_targets[:i]))[0]
 
-    def create(self, target_combatant):
-        return Chaosbolt([target_combatant], self)
+    def create(self, target):
+        return Chaosbolt([target], self)
 
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()

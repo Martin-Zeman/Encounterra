@@ -46,8 +46,8 @@ class FlamingSphereRamFactory(DirectThreatFactory):
             result.append(FlamingSphereRam(enemy, coords_around_enemy[0], self))
         return result
 
-    def create(self, target_combatant, coord):
-        return FlamingSphereRam(target_combatant, coord, self)
+    def create(self, target, coord):
+        return FlamingSphereRam(target, coord, self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         """
@@ -69,21 +69,21 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 
 class FlamingSphereRam(Actoid, DirectThreat):
 
-    def __init__(self, target_combatant, coord, factory,  **kwargs):
+    def __init__(self, target, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_DIRECT_THREAT)
         self.factory = factory
-        self.target_combatant = target_combatant  # target of the ramming
+        self.target = target  # target of the ramming
         self.coord = coord  # but still has to end up at an adjacent unoccupied space
 
     def __str__(self):
-        return f"Flaming Sphere Ram into {np.squeeze(self.target_combatant)}"
+        return f"Flaming Sphere Ram into {np.squeeze(self.target)}"
 
     def shorthand_str(self):
         return f"Flaming Sphere Ram"
 
 
     def calculate_threat(self, **kwargs):
-        return self.factory.calculate_threat_to_target(self.target_combatant)
+        return self.factory.calculate_threat_to_target(self.target)
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Doesn't apply here
