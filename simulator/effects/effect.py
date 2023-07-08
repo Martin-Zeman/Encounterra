@@ -18,6 +18,7 @@ class EffectType(Enum):
     HUNGER_OF_HADAR = auto()
     HOLD_PERSON = auto()
     FAERIE_FIRE = auto()
+    DIGESTION = auto()
 
 
 class Effect(ABC):

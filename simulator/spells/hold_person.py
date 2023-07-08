@@ -62,7 +62,7 @@ class HoldPersonFactory(ThreatModifierFactory):
         if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
             return 0
 
-        threat_acc = 0
+        prevented_threat_out_acc = 0
         # Haste factories wouldn't change the result here, so we're omitting them
         # This is an approximation, we're only looking at the best action overall, not the action + bonus_action combo
         max_action_threat = 0
@@ -72,17 +72,18 @@ class HoldPersonFactory(ThreatModifierFactory):
         for f in target.bonus_action_factories:
             if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
                 max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
-        threat_acc += max_action_threat
+        prevented_threat_out_acc += max_action_threat
 
         mods = {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE, ThreatModifierType.AUTO_CRIT: True}
         # Neglecting the auto-crit in melee range only
-        threat_acc += calculate_threat_in_delta(target, 6, mods, FactoryFlags.IS_ATTACK_LIKE)[1]
+        threat_in_delta = min(target.curr_hp, calculate_threat_in_delta(target, 6, mods, FactoryFlags.IS_ATTACK_LIKE)[1])
+        threat_round_total = prevented_threat_out_acc + threat_in_delta
 
         p_fail = get_saving_throw_fail_prob(self.dc, target.saving_throws[self.saving_throw])
         p_fail_acc = p_fail
         total_threat = 0
         for _ in range(ROUND_HORIZON):
-            total_threat += threat_acc * p_fail_acc
+            total_threat += threat_round_total * p_fail_acc
             p_fail_acc *= p_fail
         return total_threat
 

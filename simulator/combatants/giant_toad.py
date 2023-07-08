@@ -6,6 +6,7 @@ from simulator.abilities.on_hit_auto_restrained import OnHitAutoRestrained
 from simulator.abilities.on_hit_swallow import OnHitSwallow
 from simulator.actions.action_types import Action, Reaction
 from simulator.battle_map import Map
+from simulator.effects.effect import EffectType
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
 from simulator.misc import DamageType, SavingThrow, Size, parse_dmg_dice, roll_dice, Conditions, SkillCheck
@@ -42,19 +43,20 @@ class GiantToad(Combatant):
         self.attack_fsm.add_transition(str(self.bite[1]), '0', 'nop')  # Melee
         self.attack_fsm.add_transition(str(self.bite_and_swallow[1]), '0', 'nop')  # Melee
 
-    def new_turn(self):
-        super().new_turn()
-        if self.swallowed_target:
-            dice = parse_dmg_dice('3d6')
-            dmg_dice_sum = roll_dice(dice)
-            logger.info(f"{self.name} is digesting {self.swallowed_target} for {dmg_dice_sum} dmg", extra={"team": self.team_color})
-            self.swallowed_target.receive_dmg(dmg_dice_sum, DamageType.Acid)
+    # def new_turn(self):
+    #     super().new_turn()
+    #     if self.swallowed_target:
+    #         dice = parse_dmg_dice('3d6')
+    #         dmg_dice_sum = roll_dice(dice)
+    #         logger.info(f"{self.name} is digesting {self.swallowed_target} for {dmg_dice_sum} dmg", extra={"team": self.team_color})
+    #         self.swallowed_target.receive_dmg(dmg_dice_sum, DamageType.Acid)
 
     def on_die(self):
         if self.swallowed_target:
             logger.info(f"{self.swallowed_target} is spat out and no longer swallowed", extra={"team": self.team_color})
             self.swallowed_target.remove_all_conditions_of_type(Conditions.SWALLOWED)  # This should remmove all the accompanying comditions too
             battle_map = Map.get()
+            battle_map.effect_tracker.remove_effect_by_type(self.swallowed_target, EffectType.DIGESTION)
             free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
                                                           None,
                                                           inflate_to_size=self.swallowed_target.size,

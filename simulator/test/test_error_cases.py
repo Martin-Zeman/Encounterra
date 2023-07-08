@@ -41,6 +41,16 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13]))  # Have to set it for fireball placement
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
+
+    class DummyEffect:
+        def deactivate(self):
+            test_draconic_sorcerer_5lvl.break_concentration()
+
+        def is_affecting(self, combatant):
+            return False
+    dummy_effect = DummyEffect()
+    test_draconic_sorcerer_5lvl.concentration_effect = dummy_effect  # Make sure the sorcerer won't opt for Hold Person
+
     action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     new_coord = copy.copy(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
     for ba in action_plan:

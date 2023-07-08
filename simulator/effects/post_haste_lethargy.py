@@ -8,7 +8,7 @@ class PostHasteLethargy(CombatantEffect, LimitedDurationEffect):
         LimitedDurationEffect.__init__(self, turns=1)
 
     def get_effect_type(self):
-        return EffectType.POST_HASTE_LETHARGY
+        return EffectType.DIGESTION
 
     def activate(self):
         pass

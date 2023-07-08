@@ -253,7 +253,10 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     class DummyEffect:
         def deactivate(self):
-            pass
+            test_moon_druid.break_concentration()
+
+        def is_affecting(self, combatant):
+            return False
     dummy_effect = DummyEffect()
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
 
@@ -269,7 +272,10 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
         action_resolver.resolve_action(actoid4, test_moon_druid)
 
         actoid5 = get_action(test_bugbear)
-        assert str(actoid5) == "Morningstar on MoonDruid5Lvl wildshaped into GiantToad"
+        if test_bugbear.is_affected_by(Conditions.GRAPPLED):
+            assert str(actoid5) == "Break Grapple"
+        else:
+            assert str(actoid5) == "Morningstar on MoonDruid5Lvl wildshaped into GiantToad"
         action_resolver.resolve_action(actoid5, test_bugbear)
     except Exception as e:
         assert False, f"Raised an exception {e}"

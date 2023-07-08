@@ -10,6 +10,7 @@ from simulator.actions.actoid import FactoryFlags
 from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from simulator.battle_map import Map
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
+from simulator.effects.effect import EffectType
 from simulator.misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
 from enum import Enum
 from abc import ABC, abstractmethod
@@ -366,7 +367,7 @@ class Combatant(ABC, ProtoCombatant):
         dmg = self._receive_dmg(dmg, dmg_type)
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
-            Map.get().effect_tracker.deactivate_wildshape(self.get_original_form())
+            Map.get().effect_tracker.remove_effect_by_type(self.get_original_form(), EffectType.WILDSHAPE)
         if dmg:
             check_concentration(self, dmg)
         return dmg
@@ -382,7 +383,7 @@ class Combatant(ABC, ProtoCombatant):
             total_dmg += self._receive_dmg(d[0], d[1])
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
-            Map.get().effect_tracker.deactivate_wildshape(self.get_original_form())
+            Map.get().effect_tracker.remove_effect_by_type(self.get_original_form(), EffectType.WILDSHAPE)
         if total_dmg:
             check_concentration(self, total_dmg)
 

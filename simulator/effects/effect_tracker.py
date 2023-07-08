@@ -2,6 +2,7 @@ import logging
 
 from simulator.abilities.wildshape import Wildshape
 from simulator.effects.aoe_square_effect import AoeSquareEffect
+from simulator.effects.effect import EffectType
 from simulator.effects.post_haste_lethargy import PostHasteLethargy
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 
@@ -92,10 +93,10 @@ class EffectTracker:
 
 # TODO add function for wildshape replacement
 
-    def deactivate_wildshape(self, combatant):
+    def remove_effect_by_type(self, combatant, type):
         effects = []
         for e in self.effects:
-            if e.is_affecting(combatant) and isinstance(e, Wildshape):
+            if e.is_affecting(combatant) and e.get_effect_type() is type:
                 e.deactivate()
             else:
                 effects.append(e)

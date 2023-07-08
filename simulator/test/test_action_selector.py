@@ -263,6 +263,15 @@ def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, eff
     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))  # Have to set it for fireball placement
     battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 4]))  # Have to set it for fireball placement
 
+    class DummyEffect:
+        def deactivate(self):
+            test_draconic_sorcerer_5lvl.break_concentration()
+
+        def is_affecting(self, combatant):
+            return False
+    dummy_effect = DummyEffect()
+    test_draconic_sorcerer_5lvl.concentration_effect = dummy_effect  # Make sure the sorcerer won't opt for Hold Person
+
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     assert any(isinstance(obj, TwinnedFirebolt) for obj in action_plan)
