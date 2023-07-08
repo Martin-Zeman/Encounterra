@@ -64,7 +64,7 @@ class GiantToad(Combatant):
                 logger.error("No space around the dead Giant Toad to spit out the swallowed combatant")
                 return
             else:
-                battle_map.set_combatant_coordinates(self.swallowed_target, np.array(free_coords[0]))
+                battle_map.set_combatant_coordinates(self.swallowed_target, np.array(next(iter(free_coords))))
 
 
     def export_resources(self):

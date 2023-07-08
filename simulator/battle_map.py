@@ -237,7 +237,10 @@ class Map:
                 self.teams.replace_combatant(combatant, action.factory.combatant)
                 wildshape_position = self.find_wildshaped_coordinate(combatant, action.factory.combatant.size)
                 self.remove_combatant(combatant)
-                self.set_combatant_coordinates(action.factory.combatant, np.array(wildshape_position))
+                try:
+                    self.set_combatant_coordinates(action.factory.combatant, np.array(wildshape_position))
+                except Exception as e:
+                    print("FIXME")
                 yield True
             finally:
                 self.teams.replace_combatant(action.factory.combatant, combatant)
@@ -621,7 +624,7 @@ class Map:
         :param new_coords:
         :return:
         """
-        old_coords = self.combatant_coordinate_cache[combatant].get()
+        old_coords = self.get_combatant_position(combatant).get()
         for old_coord in old_coords:
             self.grid[old_coord[0], old_coord[1]].remove_combatant()
         new_coords = CombatantCoords(new_coords, combatant)

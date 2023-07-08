@@ -1,5 +1,6 @@
 import pytest
 
+from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
@@ -66,3 +67,7 @@ def test_dragonclaw_cultist():
 @pytest.fixture()
 def test_brown_bear():
     return BrownBear("BrownBear")
+
+@pytest.fixture()
+def test_dire_wolf():
+    return DireWolf("DireWolf")

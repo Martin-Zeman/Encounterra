@@ -18,7 +18,7 @@ from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
-    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear
+    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear, test_dire_wolf
 from simulator.actions.action_selector import get_action
 from simulator.utils.utils import preallocate_wildshape_forms
 
@@ -1055,5 +1055,46 @@ def test_error_case_24(battle_map, teams, effect_tracker, test_moon_druid, test_
         action_resolver.resolve_action(actoid3, test_moon_druid)
         actoid4 = get_action(test_moon_druid)
         assert str(actoid4).startswith("Wildshape")
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_25(battle_map, teams, effect_tracker, test_dire_wolf, test_giant_toad, test_bugbear, test_totem_barbarian, test_ogre, test_brown_bear):
+    """
+    Immediate crash when Dire Wolf action planning
+    """
+    CustomLogger(LogLevel.WARNING)
+    test_totem_barbarian_2 = copy.deepcopy(test_totem_barbarian)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_dire_wolf, test_giant_toad, test_bugbear, test_totem_barbarian, test_totem_barbarian_2, test_ogre, test_brown_bear]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    battle_map.place_circular_element(np.array([3, 3]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 6]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([0, 12]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([8, 3]), Terrain.DIFFICULT_TERRAIN, radius=1)
+
+    teams.add_combatant_to_team(test_dire_wolf, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian_2, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_brown_bear, Teams.Color.RED)
+
+    battle_map.set_combatant_coordinates(test_dire_wolf, np.array([6, 9]))
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([8, 10]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 12]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 14]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian_2, np.array([5, 13]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([12, 13]))
+    battle_map.set_combatant_coordinates(test_brown_bear, np.array([4, 9]))
+
+    battle_map.build_adjacency_matrix()
+
+
+    try:
+        actoid1 = get_action(test_dire_wolf)
+        action_resolver.resolve_action(actoid1, test_dire_wolf)
     except Exception as e:
         assert False, f"Raised an exception {e}"
