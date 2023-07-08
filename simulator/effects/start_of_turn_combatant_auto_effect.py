@@ -9,3 +9,9 @@ class StartOfTurnAutoEffect(Effect):
 
     def is_affecting(self, combatant):
         return combatant is self.target
+
+    def activate(self):
+        pass
+
+    def deactivate(self):
+        pass
