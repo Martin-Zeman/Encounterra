@@ -64,12 +64,12 @@ class FaerieFireFactory(ThreatModifierFactory):
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
         ret = calculate_threat_in_delta(target, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1]
-        logger.info(f"MY DEBUG {self} threat = {ret}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target = {ret}")
         return ret
 
     def calculate_max_threat(self):
         ret = FaerieFire(self.find_best_args(self.combatant), self).calculate_threat()
-        logger.info(f"MY DEBUG {self} calculate_max_threat = {ret}")
+        logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
         return ret
 
 class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect, CombatantEffect):
@@ -119,7 +119,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
         for aff in affected:
             threat_delta = calculate_threat_in_delta(aff, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1]
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * threat_delta
-        logger.info(f"MY DEBUG {self} calculate_threat = {acc}")
+        logger.warning(f"MY DEBUG {self} calculate_threat = {acc}")
         return acc
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):

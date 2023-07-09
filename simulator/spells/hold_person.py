@@ -56,7 +56,6 @@ class HoldPersonFactory(ThreatModifierFactory):
 
 
     def calculate_threat_to_target(self, target, **kwargs):
-        logger.info(f"MY DEBUG {self} calculate_threat_to_target")
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
         if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
@@ -85,6 +84,7 @@ class HoldPersonFactory(ThreatModifierFactory):
         for _ in range(ROUND_HORIZON):
             total_threat += threat_round_total * p_fail_acc
             p_fail_acc *= p_fail
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target ={total_threat}")
         return total_threat
 
     def get_eligible_targets(self):
@@ -94,9 +94,10 @@ class HoldPersonFactory(ThreatModifierFactory):
         return [e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)]
 
     def calculate_max_threat(self):
-        logger.info(f"MY DEBUG {self} calculate_max_threat")
         targets = self.get_eligible_targets()
-        return max([self.calculate_threat_to_target(t) for t in targets])
+        ret = max([self.calculate_threat_to_target(t) for t in targets])
+        logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
+        return ret
 
 
 class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier):
@@ -136,7 +137,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
 
     def calculate_threat(self, **kwargs):
         ret = self.factory.calculate_threat_to_target(self.target)
-        logger.info(f"MY DEBUG {self} threat = {ret}")
+        logger.warning(f"MY DEBUG {self} calculate_threat = {ret}")
         return ret
 
 

@@ -12,6 +12,7 @@ from simulator.abilities.wildshape import WildshapeFactory
 from simulator.actions.action_types import Action, BonusAction, HasteAction, Reaction
 from simulator.actions.disengage import DisengageFactory
 from simulator.actions.dodge import DodgeFactory
+from simulator.actions.hide import HideFactory
 from simulator.actions.melee_attack import MeleeAttackFactory
 from simulator.actions.ranged_attack import RangedAttackFactory
 from simulator.spells.chaosbolt import ChaosboltFactory
@@ -35,7 +36,6 @@ logger = logging.getLogger("EncounTroll")
 PRIORITY_ACTIONS = {
     Action.DODGE: ("Dodge", "do_"),
     Action.DISENGAGE: ("Disengage", "di_"),
-    BonusAction.CUNNING_DODGE: ("Cunning Dodge", "do_"),
     BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "di_"),
     BonusAction.TOTEM_RAGE: ("TotemRage", "m_"),
     BonusAction.RAGE: ("Rage", "m_"),
@@ -53,7 +53,7 @@ TO_FACTORY = {
     Action.FIREBOLT: FireboltFactory,
     Action.CHAOSBOLT: ChaosboltFactory,
     Action.HASTE: HasteFactory,
-    Action.HIDE: None,
+    Action.HIDE: HideFactory,
     Action.TWINNED_FIREBOLT: TwinnedFireboltFactory,
     Action.TWINNED_HASTE: TwinnedHasteFactory,
     Action.SCORCHING_RAY: ScorchingRayFactory,
@@ -77,9 +77,8 @@ TO_FACTORY = {
     BonusAction.RAGE: RageFactory,
     BonusAction.TOTEM_RAGE: TotemRageFactory,
     BonusAction.MISTY_STEP: MistyStepFactory,
-    BonusAction.CUNNING_DODGE: DodgeFactory,
     BonusAction.CUNNING_DISENGAGE: DisengageFactory,
-    BonusAction.CUNNING_HIDE: None,
+    BonusAction.CUNNING_HIDE: HideFactory,
     BonusAction.QUICKENED_FIREBALL: FireballFactory,
     BonusAction.QUICKENED_FIREBOLT: FireboltFactory,
     BonusAction.QUICKENED_CHAOSBOLT: ChaosboltFactory,
@@ -100,7 +99,7 @@ TO_FACTORY = {
     HasteAction.HASTE_BITE_AND_SWALLOW: BiteAndSwallowFactory,
     HasteAction.HASTE_RANGED_ATTACK: RangedAttackFactory,
     HasteAction.HASTE_DISENGAGE: DisengageFactory,
-    HasteAction.HASTE_HIDE: None,
+    HasteAction.HASTE_HIDE: HideFactory,
     HasteAction.HASTE_DASH: None
 }
 TO_QUICKENED = {

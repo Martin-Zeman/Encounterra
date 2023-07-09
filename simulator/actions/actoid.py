@@ -10,7 +10,6 @@ class ActoidFlags(Flag):
     IS_TOGGLE_ABILITY = auto()
     IS_GET_UP_FROM_PRONE = auto()
     IS_BREAK_GRAPPLE = auto()
-    IS_POSITIONING_INDEPENDENT = auto()
 
 class Actoid:
     """

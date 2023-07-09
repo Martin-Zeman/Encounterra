@@ -2,7 +2,7 @@ import pytest
 from simulator.actions.action_types import Passive, Action
 from simulator.battle_map import Terrain, CombatantCoords, Map
 from simulator.combatants.goblin import Goblin
-from simulator.misc import DistanceMetric, Size, Side, Conditions, ConditionWithoutDC
+from simulator.misc import DistanceMetric, Size, Side, Conditions, ConditionWithoutDC, Visibility
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.spell import SpellStats
 from simulator.teams import Teams
@@ -1061,3 +1061,80 @@ def test_find_wildshaped_coordinate_huge_nine_options(battle_map, teams, test_mo
     test_moon_druid.shortest_paths_cache = shortest_paths
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
     assert np.array_equal(coord, np.array([4, 12]))
+
+
+def test_get_visibility(battle_map, test_goblin):
+    battle_map.place_circular_element(np.array([5, 5]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    # Basic fully blocking scenarios
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([6, 5])) is Visibility.NONE
+    assert battle_map.get_visibility(CombatantCoords(np.array([5, 6]), test_goblin), np.array([5, 4])) is Visibility.NONE
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([6, 6])) is Visibility.NONE
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 6]), test_goblin), np.array([6, 4])) is Visibility.NONE
+    # From (4, 5)
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([5, 4])) is Visibility.FULL
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([5, 6])) is Visibility.FULL
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([6, 6])) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([6, 4])) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([7, 7])) is Visibility.FULL
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([7, 6])) is Visibility.THREE_QUARTERS_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([8, 6])) is Visibility.NONE
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([9, 6])) is Visibility.NONE
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([8, 7])) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([8, 8])) is Visibility.FULL
+    # From (3, 5) we should be able to see a bit more
+    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([6, 6])) is Visibility.FULL
+    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([7, 7])) is Visibility.FULL
+    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([7, 6])) is Visibility.FULL
+    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([8, 6])) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([9, 6])) is Visibility.THREE_QUARTERS_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([8, 7])) is Visibility.FULL
+    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([8, 8])) is Visibility.FULL
+    # Testing diagonal cases
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([5, 6])) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([6, 5])) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([7, 5])) is Visibility.FULL
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([7, 6])) is Visibility.THREE_QUARTERS_COVER
+    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([8, 6])) is Visibility.HALF_COVER
+
+def test_get_visibility_dict_simple(battle_map, teams, test_goblin, test_bugbear, test_ogre):
+    battle_map.place_circular_element(np.array([7, 7]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_goblin, np.array([14, 14]))  # Let's put it somewhere else just to test this
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 9]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 4]))
+    battle_map.build_adjacency_matrix()
+    visibility = battle_map.get_visibility_dict(test_goblin, np.array([3, 7]))
+    assert visibility[test_bugbear] is Visibility.NONE
+    assert visibility[test_ogre] is Visibility.HALF_COVER
+
+
+def test_get_visibility_dict_complex(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre):
+    """
+    This test case is based on a scenario encountered during fuzzy testing.
+    """
+    pass
+    # CustomLogger(LogLevel.WARNING)
+    # combatant7 = copy.deepcopy(test_bugbear)
+    # battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    # battle_map.place_circular_element(np.array([14, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    # battle_map.place_circular_element(np.array([1, 3]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    # battle_map.place_circular_element(np.array([1, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    # battle_map.set_effect_tracker(effect_tracker)
+    # combatants = [test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, combatant7]
+    # action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    # teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl
+    # teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # Bugbear 1
+    # teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl
+    # teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant
+    # teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre
+    # teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # Bugbear 2
+    # battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([14, 13]))
+    # battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 11]))
+    # battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([3, 12]))
+    # battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 11]))
+    # battle_map.set_combatant_coordinates(test_ogre, np.array([3, 9]))
+    # battle_map.set_combatant_coordinates(combatant7, np.array([9, 12]))
+    # battle_map.build_adjacency_matrix()

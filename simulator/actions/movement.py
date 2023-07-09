@@ -9,7 +9,6 @@ logger = logging.getLogger("EncounTroll")
 class MovementIncrement(Actoid):
     def __init__(self, increment, incurs_aoo, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_MOVEMENT)
-        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.increment = increment
         self.incurs_aoo = incurs_aoo
         self.factory = factory

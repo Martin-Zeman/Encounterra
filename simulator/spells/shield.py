@@ -41,7 +41,6 @@ class Shield(Actoid):
 
     def __init__(self, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
-        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.action_type = Reaction.SHIELD
         self.factory = factory
 
@@ -52,7 +51,7 @@ class Shield(Actoid):
         return "Shield"
 
     def get_eligible_coords(self, distances, shortest_paths):
-        pass  # No need due to IS_POSITIONING_INDEPENDENT, in addition to that it's a reaction anyway
+        pass  # No need
 
     def is_current_coord_eligible(self):
         return True

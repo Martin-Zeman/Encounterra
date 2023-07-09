@@ -251,6 +251,7 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    test_bugbear.curr_hp = 100 # Making sure it survives the attacks
     class DummyEffect:
         def deactivate(self):
             test_moon_druid.break_concentration()

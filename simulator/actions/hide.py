@@ -11,7 +11,7 @@ import logging
 
 logger = logging.getLogger("EncounTroll")
 
-class DisengageFactory(ThreatModifierFactory):
+class HideFactory(ThreatModifierFactory):
 
     def __init__(self, action_type, combatant):
         super().__init__()
@@ -28,48 +28,47 @@ class DisengageFactory(ThreatModifierFactory):
         return {'combatant': self.combatant, 'action_type': self.action_type}
 
     def create_all(self):
-        return [Disengage(self.combatant, self)]
+        return [Hide(self.combatant, self)]
 
     def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates the direct AoO threat the disengage would avoid
         """
-        return target.aoo_factory[1].calculate_threat_to_target(self.combatant)
+        return 0  # TODO
 
 
-class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
+class Hide(Actoid, CombatantEffect, ThreatModifier):
 
     def __init__(self, combatant, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
-        LimitedDurationEffect.__init__(self, turns=1)
         self.factory = factory
 
     def get_effect_type(self):
-        return EffectType.DISENGAGE
+        return EffectType.HIDE
 
     def __str__(self):
         prefix = ""
-        if isinstance(self.factory.action_type, HasteAction):
-            prefix = "Hasted "
-        elif self.factory.action_type is BonusAction.CUNNING_DISENGAGE:
+        if self.factory.action_type is BonusAction.CUNNING_HIDE:
             prefix = "Cunning "
-        return prefix + f"Disengage of {self.factory.combatant}"
+        elif self.factory.action_type is HasteAction.HASTE_HIDE:
+            prefix = "Hasted "
+        return prefix + f"Hide of {self.factory.combatant}"
 
     def shorthand_str(self):
         prefix = ""
-        if isinstance(self.factory.action_type, HasteAction):
-            prefix = "Hasted "
-        elif self.factory.action_type is BonusAction.CUNNING_DISENGAGE:
+        if self.factory.action_type is BonusAction.CUNNING_HIDE:
             prefix = "Cunning "
-        return prefix + f"Disengage"
+        elif self.factory.action_type is HasteAction.HASTE_HIDE:
+            prefix = "Hasted "
+        return prefix + f"Hide"
 
     def activate(self):
-        logger.info(f"{self.combatants[0]} disengages")
+        logger.info(f"{self.combatants[0]} attempts to hide")
         self.factory.combatant.has_disengaged = True
 
     def deactivate(self):
-        logger.info(f"{self.combatants[0]}'s disengage fades")
+        logger.info(f"{self.combatants[0]} is no longer hidden")
         self.factory.combatant.has_disengaged = False
 
 
@@ -77,14 +76,14 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         """
         Calculate how much dmg would the Disengage potentially mitigate. This will be the same as the one for the factory.
         """
-        # adjacent_enemies = battle_map.get_adjacent_enemies(combatant)
-        # return reduce(lambda acc, ae: ae.aoo_factory[1].calculate_threat_to_target(combatant), adjacent_enemies, 0)
-        return 0  # Threat that a Disengage would potentially mitigate is calculated in a different way
+        return 0  # TODO account for the potential sneak attack + advantage
 
     def get_eligible_coords(self, distances, shortest_paths):
+        # TODO Find a hiding spot
         battle_map = Map.get()
         # return None  # We don't want to have any coords pre-pended in the DAG
         return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
     def is_current_coord_eligible(self):
+        # TODO is this a hiding spot
         return True

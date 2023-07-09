@@ -42,8 +42,8 @@ class BonusAction(Enum):
     RAGE = auto()
     TOTEM_RAGE = auto()
     MISTY_STEP = auto()
-    CUNNING_DODGE = auto()
     CUNNING_DISENGAGE = auto()
+    CUNNING_DASH = auto()
     CUNNING_HIDE = auto()
     QUICKENED_FIREBALL = auto()
     QUICKENED_FIREBOLT = auto()
@@ -67,6 +67,7 @@ class Reaction(Enum):
     REACTION_ATTACK = auto()
     SHIELD = auto()
     PRE_SWALLOW_BITE_REACTION = auto()
+    UNCANNY_DODGE = auto()
 
 
 class Movement(Enum):
@@ -97,6 +98,9 @@ class Passive(Enum):
     FANATIC_ADVANTAGE = auto()
     WAR_CASTER = auto()
     ELDRITCH_MIND = auto()
+    SNEAK_ATTACK = auto()
+    CUNNING_ACTION = auto()
+    ASSASSINATE = auto()
 
 
 class MetaAction(Enum):

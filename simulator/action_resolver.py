@@ -383,7 +383,6 @@ class ActionResolver:
         :return: in case of an attack returns True if the attack hit, false otherwise. Dodge always returns True, unknown parameters false.
         Other cases return None.
         """
-        logger.info(f"MY DEBUG resolve_by_actoid_flags {combatant} uses {actoid}")
         battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:
@@ -579,7 +578,7 @@ class ActionResolver:
                     combatant.has_reaction = False
                 case EffectType.RAGE | EffectType.TOTEM_RAGE | EffectType.WILDSHAPE | EffectType.DODGE | EffectType.DISENGAGE |\
                      EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
-                    EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON:
+                    EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | EffectType.DIGESTION:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error("Unknown effect")

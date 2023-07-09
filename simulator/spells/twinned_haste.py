@@ -132,7 +132,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
         target1_threat = self.factory.calculate_threat_to_target(self.targets[0]) if self.targets[0] is not None else 0
         target2_threat = self.factory.calculate_threat_to_target(self.targets[1]) if self.targets[1] is not None else 0
         ret = target1_threat + target2_threat
-        logger.info(f"MY DEBUG {self} threat = {ret}")
+        logger.warning(f"MY DEBUG {self} calculate_threat = {ret}")
         return ret
 
     def get_eligible_coords(self, distances, shortest_paths):

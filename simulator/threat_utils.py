@@ -1,7 +1,5 @@
 import copy
-import math
 import sys
-import time
 from functools import cache, reduce
 
 import numpy as np
@@ -9,15 +7,13 @@ from cachetools import cached
 from cachetools.keys import hashkey
 from scipy.stats import randint
 from toposort import toposort_flatten
-from transitions import Machine
-from transitions.extensions import GraphMachine
 
 from simulator.actions.actoid import FactoryFlags
 from simulator.battle_map import Map
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag, Conditions
 from simulator.spells.misty_step import MistyStepFactory
-from simulator.utils.roll_types import RollType, ThreatModifierType
+from simulator.utils.roll_types import RollType
 
 DZ_CONSTANT = 0.33
 

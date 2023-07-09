@@ -73,7 +73,6 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
         LimitedDurationEffect.__init__(self, turns=10)
-        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         self.factory = factory
 
@@ -126,9 +125,9 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
         rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         if FactoryFlags.IS_MELEE in attack.factory.flags:
             ret = attack.calculate_threat_delta({ThreatModifierType.DMG_BONUS_FLAT: rage_bonus})
-            logger.info(f"MY DEBUG {self} threat = {ret}")
+            logger.warning(f"MY DEBUG {self} calculate_threat_for_attack = {ret}")
             return ret
-        logger.info(f"MY DEBUG {self} threat = 0")
+        logger.warning(f"MY DEBUG {self} calculate_threat_for_attack = 0")
         return 0
 
 

@@ -83,7 +83,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def __init__(self, combatant, form, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_TOGGLE_ABILITY)
         CombatantEffect.__init__(self, combatants=[combatant])
-        self.actoid_flags |= ActoidFlags.IS_POSITIONING_INDEPENDENT
         self.form = form(f"{factory.combatant} wildshaped into {form.__name__}")
         def wildshape_get(self):
             return combatant

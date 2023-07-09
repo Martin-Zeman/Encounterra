@@ -100,10 +100,11 @@ class RecklessAttackFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
             dmg = mean_dmg(self.to_hit + ROLL_TYPE[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_TYPE_CRIT[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
-        logger.info(f"MY DEBUG {self} dmg = {dmg}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target dmg = {dmg}")
         # even the single target calculation the combatant is still more vulnerable to all potential attackers
         incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1] / 2  # Heuristic
-        logger.info(f"MY DEBUG {self} incoming_threat_delta_acc = {incoming_threat_delta_acc}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target incoming_threat_delta_acc = {incoming_threat_delta_acc}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target total = {dmg - incoming_threat_delta_acc}")
         return dmg - incoming_threat_delta_acc
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -122,7 +123,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
             baseline = mean_dmg(self.to_hit + ROLL_TYPE[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
                                     target.ac, self.crit_range * ROLL_TYPE_CRIT[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
-        logger.info(f"MY DEBUG {self} baseline threat = {baseline}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta baseline threat = {baseline}")
         mod_range = modifiers.get(ThreatModifierType.RANGE, 0)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
         # mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
@@ -142,10 +143,11 @@ class RecklessAttackFactory(DirectThreatFactory):
                 total_crit = 20 if auto_crit else total_crit
                 modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
 
-        logger.info(f"MY DEBUG {self} modified threat = {modified}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta modified threat = {modified}")
 
         incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1] / 2  # Heuristic
-        logger.info(f"MY DEBUG {self} incoming_threat_delta_acc = {incoming_threat_delta_acc}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta incoming_threat_delta_acc = {incoming_threat_delta_acc}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta total = {modified - baseline - incoming_threat_delta_acc}")
         return modified - baseline - incoming_threat_delta_acc
 
     def calculate_max_threat(self):
@@ -190,7 +192,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         The delta in threat when modifiers are applied on this ability.
         """
         ret = self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
-        logger.info(f"MY DEBUG {self} threat = {ret}")
+        logger.warning(f"MY DEBUG {self} calculate_threat_delta = {ret}")
         return ret
 
     def get_eligible_coords(self, distances, shortest_paths):

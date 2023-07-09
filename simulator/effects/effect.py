@@ -11,6 +11,7 @@ class EffectType(Enum):
     TWINNED_HASTE = auto()
     DODGE = auto()
     DISENGAGE = auto()
+    HIDE = auto()
     RECKLESS_ATTACK = auto()
     FLAMING_SPHERE = auto()
     SPIKE_GROWTH = auto()

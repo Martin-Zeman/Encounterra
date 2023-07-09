@@ -254,3 +254,14 @@ def reconstruct_path_through_dag(leaf_state, initial_state, max_threat_backwards
             print("FIXME")
     return reconstructed_path
 
+
+class Visibility(Enum):
+    NONE = 0
+    THREE_QUARTERS_COVER = 1
+    HALF_COVER = 2
+    FULL = 3
+
+
+THREE_QUARTERS_COVER_ERROR_THRESHOLD = 0.25
+HALF_COVER_ERROR_THRESHOLD = 0.35
+FULL_VISIBILITY_ERROR_THRESHOLD = 0.45

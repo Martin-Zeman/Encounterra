@@ -138,6 +138,10 @@ class Combatant(ABC, ProtoCombatant):
                     self.has_pack_tactics = True
                 case Passive.FANATIC_ADVANTAGE:
                     self.already_used_fanatic_advantage = False
+                case Passive.CUNNING_ACTION:
+                    self.add_ability(BonusAction.CUNNING_DISENGAGE)
+                    self.add_ability(BonusAction.CUNNING_DASH)
+                    self.add_ability(BonusAction.CUNNING_HIDE)
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -213,14 +217,8 @@ class Combatant(ABC, ProtoCombatant):
                 case BonusAction.MISTY_STEP:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     return self.bonus_action_factories[-1]
-                case BonusAction.CUNNING_DODGE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))  # TODO
-                    return self.bonus_action_factories[-1]
-                case BonusAction.CUNNING_DISENGAGE:
+                case BonusAction.CUNNING_DISENGAGE | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))  # TODO
-                    return self.bonus_action_factories[-1]
-                case BonusAction.CUNNING_HIDE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type]))  # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBALL:
                     self.bonus_action_factories.append(

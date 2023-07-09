@@ -6,7 +6,8 @@ from simulator.actions.action_types import Passive
 from simulator.combatant_coords import CombatantCoords
 from simulator.proto_combatant import ProtoCombatant
 from simulator.spells.spell import SpellStats
-from simulator.misc import Conditions, Size
+from simulator.misc import Conditions, Size, Visibility, THREE_QUARTERS_COVER_ERROR_THRESHOLD, HALF_COVER_ERROR_THRESHOLD, \
+    FULL_VISIBILITY_ERROR_THRESHOLD
 from simulator.geometry import get_affected_by_cone
 from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
@@ -106,6 +107,9 @@ class GridSquare:
     def is_empty(self):
         return self.occupancy is Occupancy.FREE and self.terrain is not Terrain.IMPASSABLE_TERRAIN
 
+    def is_impassable(self):
+        return self.terrain is Terrain.IMPASSABLE_TERRAIN
+
     def is_empty_or_self(self, combatant):
         return ((self.occupancy is Occupancy.FREE) or (self.combatant is combatant)) and self.terrain is not Terrain.IMPASSABLE_TERRAIN
 
@@ -161,18 +165,24 @@ class Map:
 
     @contextmanager
     def as_if_combatant_position(self, combatant, coords: np.array):
+        """
+        Replaces the combatant's position with the given position
+        :param combatant:
+        :param coords: new coordinates for the combatant
+        :return: the original coordiantes if new given coordiantes are valid, None otherwise
+        """
         if coords is not None:
             original_coords = self.get_combatant_position(combatant)
             original_logger_level = logger.level
             try:
                 logger.setLevel(logging.WARNING)
                 self.move_combatant(combatant, coords)
-                yield self
+                yield original_coords.get()[0]
             finally:
                 self.move_combatant(combatant, original_coords.get()[0])
                 logger.setLevel(original_logger_level)
         else:
-            yield self
+            yield None
 
     @contextmanager
     def as_if_dist_from_combatant(self, combatant1, combatant2, dist, dist_type=DistanceMetric.HOP):
@@ -224,18 +234,19 @@ class Map:
 
 
     @contextmanager
-    def replace_combatant_if_action_by_wildshaped(self, action, combatant):
+    def replace_combatant_if_action_by_wildshaped(self, action, combatant, orig_coords):
         """
         Replaces the combatant's position with the position of a wilshaped form if the actor of the action is a wildshaped for
         :param action:
         :param combatant:
-        :return:
+        :param orig_coords: the very original coordinates where the combatant actually is (before as_if... operator)
+        :return: True if action is a wildshape action, False otherwise
         """
         if combatant is not action.factory.combatant:
-            original_position = self.get_combatant_position(combatant)
+            before_wildshape_position = self.get_combatant_position(combatant)
             try:
                 self.teams.replace_combatant(combatant, action.factory.combatant)
-                wildshape_position = self.find_wildshaped_coordinate(combatant, action.factory.combatant.size)
+                wildshape_position = self.find_wildshaped_coordinate(combatant, action.factory.combatant.size, orig_coords)
                 self.remove_combatant(combatant)
                 try:
                     self.set_combatant_coordinates(action.factory.combatant, np.array(wildshape_position))
@@ -245,30 +256,33 @@ class Map:
             finally:
                 self.teams.replace_combatant(action.factory.combatant, combatant)
                 self.remove_combatant(action.factory.combatant)
-                self.set_combatant_coordinates(combatant, original_position.get()[0])
+                self.set_combatant_coordinates(combatant, before_wildshape_position.get()[0])
         else:
             yield False
 
 
-    def find_wildshaped_coordinate(self, combatant, size: Size):
+    def find_wildshaped_coordinate(self, combatant, size: Size, orig_coords=None):
         """
         Since the druid may incrase in size when using wildshape we want to allow the druid to shift their position when doing so
         in order to fit. We have to contend that the battle_map vs matrix coords are swapped and y-axis is inverted w.r.t. rows.
         :param combatant: the combatant who wants to wildshpae
         :param size: size of the wildshaped form
+        :param orig_coords: Optionally, the very original coordinates where the combatant actually is (before as_if... operator)
         :return: root coordinate of the wildshaped form
         """
-        original_coordinate = self.get_combatant_position(combatant).get()[0]
-        original_coordinate = (self.size - original_coordinate[1] - 1, original_coordinate[0])  # Convert to matrix coordinates
+        before_wildshape_coordinate = self.get_combatant_position(combatant).get()[0]
+        before_wildshape_coordinate = (self.size - before_wildshape_coordinate[1] - 1, before_wildshape_coordinate[0])  # Convert to matrix coordinates
         map_accessibility_matrix = np.zeros((self.size, self.size))
         for coord in combatant.shortest_paths_cache.keys():
             map_accessibility_matrix[self.size - coord[1] - 1, coord[0]] = 1
-        map_accessibility_matrix[original_coordinate] = 1
+        map_accessibility_matrix[before_wildshape_coordinate] = 1
+        if orig_coords is not None:
+            map_accessibility_matrix[orig_coords] = 1
 
-        start_row = original_coordinate[0]
-        end_row = min(original_coordinate[0] + size.value, self.size - 1)
-        start_col = max(original_coordinate[1] - size.value, 0)
-        end_col = original_coordinate[1]
+        start_row = before_wildshape_coordinate[0]
+        end_row = min(before_wildshape_coordinate[0] + size.value, self.size - 1)
+        start_col = max(before_wildshape_coordinate[1] - size.value, 0)
+        end_col = before_wildshape_coordinate[1]
 
         possible_root_coordinates = []
         for row in range(start_row, end_row + 1):
@@ -282,7 +296,7 @@ class Map:
             if np.all(map_accessibility_matrix[coord[0] - size.value:coord[0] + 1, coord[1]:coord[1] + size.value + 1] > 0):
                 result_coordinates.append((coord[1], self.size - 1 - coord[0]))  # Convert back to battle_map coords
 
-        original_coordinate = (original_coordinate[1], self.size - 1 - original_coordinate[0])
+        original_coordinate = (before_wildshape_coordinate[1], self.size - 1 - before_wildshape_coordinate[0])
         result_coordinates.sort(key=lambda point: euclidean(original_coordinate, point))
 
         return result_coordinates[0] if result_coordinates else None
@@ -1218,6 +1232,84 @@ class Map:
         enemies.sort(key=lambda e: self.get_cartesian_distance(e, combatant))
         distances.sort()
         return enemies, distances
+
+    def calc_bresenham(self, coord1: np.array, coord2: np.array):
+        """
+        An implementation of Bresenham's line algorithm.
+        :param coord1:
+        :param coord2:
+        :return: list of coordinates of all impassable squares that lie on the rasterized line between coord1 and coord2
+        """
+        x1, y1 = coord1
+        x2, y2 = coord2
+        dx = abs(x2 - x1)
+        dy = abs(y2 - y1)
+        sx = 1 if x1 < x2 else -1
+        sy = 1 if y1 < y2 else -1
+        err = dx - dy
+
+        obstacles = []
+        while x1 != x2 or y1 != y2:
+            if self.grid[x1][y1].is_impassable():
+                obstacles.append(np.array([x1, y1]))
+
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                x1 += sx
+            if e2 < dx:
+                err += dx
+                y1 += sy
+        return obstacles
+
+    def get_visibility(self, coord1: CombatantCoords, coord2: np.array):
+        """
+        A wrapper for Bresenham's line algorithm. For the sake of realism the rasterization is calculated also for two adjacent coords to
+        determine potential visual obstacles. The approximation error to determine different levels of Visibility.
+        :param coord1: CombatantCoords as we test the visibility from root and two corners of the whole combatant
+        :param coord2: here only the root coord is needed
+        :return: the degree of Visibility between the two coordinates
+        """
+        coord1 = coord1.get()
+        obstacles = self.calc_bresenham(coord1[0], coord2)
+        max_x = np.max(coord1[:, 0])
+        max_y = np.max(coord1[:, 1])
+        min_x = np.min(coord1[:, 0])
+        min_y = np.min(coord1[:, 1])
+        # Find the index of the element with the highest x-coordinate and lowest y-coordinate
+        index = np.where((coord1[:, 0] == max_x) & (coord1[:, 1] == min_y))[0]
+        bottom_right = coord1[index][0]
+        obstacles.extend(self.calc_bresenham(bottom_right + np.array([1, 0]), coord2))
+        index = np.where((coord1[:, 0] == min_x) & (coord1[:, 1] == max_y))[0]
+        top_left = coord1[index][0]
+        obstacles.extend(self.calc_bresenham(top_left + np.array([0, 1]), coord2))
+        min_obstacle_error = sys.maxsize
+        for obstacle in obstacles:
+            curr_error = np.linalg.norm(np.cross(coord2 - coord1, coord1 - obstacle)) / np.linalg.norm(coord2 - coord1)
+            min_obstacle_error = min(min_obstacle_error, curr_error)
+
+        if min_obstacle_error <= THREE_QUARTERS_COVER_ERROR_THRESHOLD:
+            return Visibility.NONE
+        elif min_obstacle_error <= HALF_COVER_ERROR_THRESHOLD:
+            return Visibility.THREE_QUARTERS_COVER
+        elif min_obstacle_error <= FULL_VISIBILITY_ERROR_THRESHOLD:
+            return Visibility.HALF_COVER
+        return Visibility.FULL
+
+    def get_visibility_dict(self, combatant, coords: np.array):
+        """
+        Calculates the visibility for all enemies of a given combatant given a theoretical root coord to which the combatant is to be moved.
+        :param combatant:
+        :param coords: theoretical root coordinate for combatant
+        :return: dict mapping enemy -> Visibility
+        """
+        combatant_coords = CombatantCoords(coords, combatant)
+        enemies = self.get_enemies(combatant)
+        result = dict()
+        for enemy in enemies:
+            enemy_coords = self.get_combatant_position(enemy).get()
+            result[enemy] = self.get_visibility(combatant_coords, enemy_coords[0])
+        return result
 
     def get_adjacent_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) == 1]
