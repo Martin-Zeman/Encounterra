@@ -23,7 +23,7 @@ class ShockingGraspFactory(DirectThreatFactory):
     dc = None
     dmg_type = DamageType.Lightning
 
-    def __init__(self, to_hit, action_type, caster):
+    def __init__(self, to_hit, action_type, caster, crit_range=1):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_MELEE
@@ -31,6 +31,7 @@ class ShockingGraspFactory(DirectThreatFactory):
         self.action_type = action_type  # SHOCKING_GRASP, QUICKENED_SHOCKING_GRASP
         self.dmg_dice = '1d8'
         self.combatant = caster
+        self.crit_range = crit_range
 
     def __str__(self):
         """
@@ -83,13 +84,13 @@ class ShockingGraspFactory(DirectThreatFactory):
 
         ret = mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(ShockingGraspFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     ShockingGraspFactory.dmg_type))
-        logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta = {ret}")
+        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta = {ret}")
         return ret
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
         ret = max([self.calculate_threat_to_target(t) for t in targets])
-        logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
+        # logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
         return ret
 
 

@@ -84,7 +84,7 @@ class HoldPersonFactory(ThreatModifierFactory):
         for _ in range(ROUND_HORIZON):
             total_threat += threat_round_total * p_fail_acc
             p_fail_acc *= p_fail
-        logger.warning(f"MY DEBUG {self} calculate_threat_to_target ={total_threat}")
+        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target ={total_threat}")
         return total_threat
 
     def get_eligible_targets(self):
@@ -96,7 +96,7 @@ class HoldPersonFactory(ThreatModifierFactory):
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
         ret = max([self.calculate_threat_to_target(t) for t in targets])
-        logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
+        # logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
         return ret
 
 
@@ -137,7 +137,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
 
     def calculate_threat(self, **kwargs):
         ret = self.factory.calculate_threat_to_target(self.target)
-        logger.warning(f"MY DEBUG {self} calculate_threat = {ret}")
+        # logger.warning(f"MY DEBUG {self} calculate_threat = {ret}")
         return ret
 
 

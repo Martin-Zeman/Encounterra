@@ -16,6 +16,8 @@ from scipy.spatial.distance import euclidean
 import heapq
 from enum import Enum
 
+from simulator.utils.utils import calc_min_obstacle_error
+
 logger = logging.getLogger("EncounTroll")
 
 SQRT_OF_TWO = 1.41421
@@ -1262,37 +1264,57 @@ class Map:
                 y1 += sy
         return obstacles
 
-    def get_visibility(self, coord1: CombatantCoords, coord2: np.array):
+    def get_visibility(self, coord1: CombatantCoords, coord2: CombatantCoords):
         """
-        A wrapper for Bresenham's line algorithm. For the sake of realism the rasterization is calculated also for two adjacent coords to
-        determine potential visual obstacles. The approximation error to determine different levels of Visibility.
-        :param coord1: CombatantCoords as we test the visibility from root and two corners of the whole combatant
-        :param coord2: here only the root coord is needed
+        New algorithm: I could do this in terms of angles. I find the contours of the coord2. Then stretch a bounding box between the
+        observer's mid-point and the farthest point of coord2. Inside this bounding box I find all obstacles (plus maybe other
+        combatants) and store them as objects. I then find the contours for all obstacles. I draw a line between the origin and contour
+        points of all the obstacles as well as the coord2 itself. Then I sort them by the oriented angle between them and the first contour
+        line of the obstacle. Then I go obstacle contour pair by contour pair and add up the angles of the circular sectors they represent.
+        I need to identify four different cases.
+        From this I calculate the overall visible percentage.:
+        1) The circular sector is fully within the coord2 sector -> deduct its angle
+        2) The circular sector if partially within the coord2 sector
+            a) obstacle start - (coord 2 start - obstacle end) -> deduct the () part
+            b) (obstacle start -> coord 2 end) -> obstacle end -> deduct the () part
+        3) The circular sector fully encompasses the coord2 sector -> no visibility
+        4) There's no intersection -> nothing
+
+
+        This function acts as a wrapper for Bresenham's line algorithm, providing a realistic rasterization calculation for the top left and
+        bottom right corners of the coord1 combatant. This calculation helps identify potential visual obstacles and determine different
+        levels of visibility based on the approximation error. The function takes CombatantCoords as input, testing the visibility from the
+         root and two corners of the entire combatant.
+        :param coord1:
+        :param coord2:
         :return: the degree of Visibility between the two coordinates
         """
         coord1 = coord1.get()
-        obstacles = self.calc_bresenham(coord1[0], coord2)
-        max_x = np.max(coord1[:, 0])
-        max_y = np.max(coord1[:, 1])
-        min_x = np.min(coord1[:, 0])
-        min_y = np.min(coord1[:, 1])
-        # Find the index of the element with the highest x-coordinate and lowest y-coordinate
-        index = np.where((coord1[:, 0] == max_x) & (coord1[:, 1] == min_y))[0]
-        bottom_right = coord1[index][0]
-        obstacles.extend(self.calc_bresenham(bottom_right + np.array([1, 0]), coord2))
-        index = np.where((coord1[:, 0] == min_x) & (coord1[:, 1] == max_y))[0]
-        top_left = coord1[index][0]
-        obstacles.extend(self.calc_bresenham(top_left + np.array([0, 1]), coord2))
-        min_obstacle_error = sys.maxsize
-        for obstacle in obstacles:
-            curr_error = np.linalg.norm(np.cross(coord2 - coord1, coord1 - obstacle)) / np.linalg.norm(coord2 - coord1)
-            min_obstacle_error = min(min_obstacle_error, curr_error)
+        coord2 = coord2.get()
 
-        if min_obstacle_error <= THREE_QUARTERS_COVER_ERROR_THRESHOLD:
+        input_1 = coord1.get_bottom_left()
+        input_2 = coord2.get_bottom_left()
+        obstacles = self.calc_bresenham(input_1, input_2)
+        min_obstacle_error1 = calc_min_obstacle_error(obstacles, input_1, input_2)
+        input_1 = coord1.get_bottom_right()
+        input_2 = coord2.get_bottom_right()
+        obstacles = self.calc_bresenham(input_1, input_2)
+        min_obstacle_error2 = calc_min_obstacle_error(obstacles, input_1, input_2)
+        input_1 = coord1.get_top_left()
+        input_2 = coord2.get_top_left()
+        obstacles = self.calc_bresenham(input_1, input_2)
+        min_obstacle_error3 = calc_min_obstacle_error(obstacles, input_1, input_2)
+        input_1 = coord1.get_top_right()
+        input_2 = coord2.get_top_right()
+        obstacles = self.calc_bresenham(input_1, input_2)
+        min_obstacle_error4 = calc_min_obstacle_error(obstacles, input_1, input_2)
+        mean_obstacle_error = (min_obstacle_error1 + min_obstacle_error2 + min_obstacle_error3 + min_obstacle_error4) / 4
+
+        if mean_obstacle_error <= THREE_QUARTERS_COVER_ERROR_THRESHOLD:
             return Visibility.NONE
-        elif min_obstacle_error <= HALF_COVER_ERROR_THRESHOLD:
+        elif mean_obstacle_error <= HALF_COVER_ERROR_THRESHOLD:
             return Visibility.THREE_QUARTERS_COVER
-        elif min_obstacle_error <= FULL_VISIBILITY_ERROR_THRESHOLD:
+        elif mean_obstacle_error <= FULL_VISIBILITY_ERROR_THRESHOLD:
             return Visibility.HALF_COVER
         return Visibility.FULL
 

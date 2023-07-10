@@ -57,10 +57,10 @@ class MagicMissileFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= MagicMissileFactory.range:
             ret = 3 * (mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)
-            logger.warning(f"MY DEBUG {self} calculate_threat_to_target = {ret}")
+            # logger.warning(f"MY DEBUG {self} calculate_threat_to_target = {ret}")
             return ret
         else:
-            logger.warning(f"MY DEBUG {self} calculate_threat_to_target = 0")
+            # logger.warning(f"MY DEBUG {self} calculate_threat_to_target = 0")
             return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -79,9 +79,9 @@ class MagicMissileFactory(DirectThreatFactory):
             threat = self.calculate_threat_to_target(t)
             # We just need one enemy within range which assures we can deal the damage (which is target-agnostic)
             if threat:
-                logger.warning(f"MY DEBUG {self} calculate_max_threat = {threat}")
+                # logger.warning(f"MY DEBUG {self} calculate_max_threat = {threat}")
                 return threat
-        logger.warning(f"MY DEBUG {self} calculate_max_threat = 0")
+        # logger.warning(f"MY DEBUG {self} calculate_max_threat = 0")
         return 0
 
 
@@ -105,7 +105,7 @@ class MagicMissile(Actoid, DirectThreat):
         dmg_acc = mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
         dmg_acc += mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[1].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
         dmg_acc += mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[2].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
-        logger.warning(f"MY DEBUG {self} calculate_threat = {dmg_acc}")
+        # logger.warning(f"MY DEBUG {self} calculate_threat = {dmg_acc}")
         return dmg_acc
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

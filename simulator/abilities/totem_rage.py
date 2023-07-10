@@ -125,9 +125,9 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
         rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         if FactoryFlags.IS_MELEE in attack.factory.flags:
             ret = attack.calculate_threat_delta({ThreatModifierType.DMG_BONUS_FLAT: rage_bonus})
-            logger.warning(f"MY DEBUG {self} calculate_threat_for_attack = {ret}")
+            # logger.warning(f"MY DEBUG {self} calculate_threat_for_attack = {ret}")
             return ret
-        logger.warning(f"MY DEBUG {self} calculate_threat_for_attack = 0")
+        # logger.warning(f"MY DEBUG {self} calculate_threat_for_attack = 0")
         return 0
 
 

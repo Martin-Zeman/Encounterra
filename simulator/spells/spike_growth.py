@@ -120,7 +120,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         acc = 0
         for aff in affected:
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)
-        logger.warning(f"MY DEBUG {self} calculate_threat = {acc}")
+        # logger.warning(f"MY DEBUG {self} calculate_threat = {acc}")
         return acc
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

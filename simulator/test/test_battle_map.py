@@ -1115,7 +1115,23 @@ def test_get_visibility_dict_complex(battle_map, teams, effect_tracker, test_dra
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    pass
+    battle_map.place_circular_element(np.array([7, 14]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 11]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 0]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 14]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([13, 14]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 13]))
+    battle_map.build_adjacency_matrix()
+    visibility = battle_map.get_visibility_dict(test_stone_giant, np.array([1, 11]))
+    assert visibility[test_draconic_sorcerer_5lvl] is Visibility.FULL
+    assert visibility[test_bugbear] is Visibility.FULL
+    assert visibility[test_ogre] is Visibility.THREE_QUARTERS_COVER
+
     # CustomLogger(LogLevel.WARNING)
     # combatant7 = copy.deepcopy(test_bugbear)
     # battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, radius=1)

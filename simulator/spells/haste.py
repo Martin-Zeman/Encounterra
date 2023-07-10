@@ -78,7 +78,7 @@ class HasteFactory(ThreatModifierFactory):
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_attack_dmg = max(dmg_acc, max_attack_dmg)
-        logger.warning(f"MY DEBUG {self} calculate_threat_to_target max_attack_dmg = {max_attack_dmg}")
+        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target max_attack_dmg = {max_attack_dmg}")
         attack_dmg_decrement_acc = 0
         assert len(enemies) > 0
         for enemy in enemies:
@@ -90,8 +90,8 @@ class HasteFactory(ThreatModifierFactory):
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
-        logger.warning(f"MY DEBUG {self} calculate_threat_to_target attack_dmg_decrement_acc = {attack_dmg_decrement_acc}")
-        logger.warning(f"MY DEBUG {self} calculate_threat_to_target total = {max_attack_dmg * ROUND_HORIZON}")
+        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target attack_dmg_decrement_acc = {attack_dmg_decrement_acc}")
+        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target total = {max_attack_dmg * ROUND_HORIZON}")
         return max_attack_dmg * ROUND_HORIZON
 
     def calculate_max_threat(self):

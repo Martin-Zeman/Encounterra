@@ -20,7 +20,8 @@ class CombatantCoords:
             case Size.TINY | Size.SMALL | Size.MEDIUM:
                 self.coords = np.array([coord])
             case Size.LARGE:
-                self.coords = np.array([coord, coord + (0, 1), coord + (1, 0), coord + 1])
+                self.coords = np.array([coord, coord + (0, 1),
+                                        coord + (1, 0), coord + 1])
             case Size.HUGE:
                 self.coords = np.array([coord, coord + (0, 1), coord + (0, 2),
                                        coord + (1, 0), coord + (1, 1), coord + (1, 2),
@@ -38,6 +39,24 @@ class CombatantCoords:
 
     def set(self, coords):
         self.coords = coords
+
+    def get_bottom_left(self):
+        return self.coords[0]
+
+    def get_bottom_right(self):
+        size = self.size.value
+        if size <= Size.MEDIUM.value:
+            return self.coords[0] + (1, 0)
+        return self.coords[(size + 1) * size] + (1, 0)
+
+    def get_top_left(self):
+        size = self.size.value
+        if size <= Size.MEDIUM.value:
+            return self.coords[0] + (0, 1)
+        return self.coords[size] + (0, 1)
+
+    def get_top_right(self):
+        return self.coords[-1] + (1, 1)
 
     def __add__(self, other):
         return CombatantCoords(self.coords[0] + other, self.combatant)

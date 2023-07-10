@@ -2,6 +2,9 @@ import importlib
 import inspect
 import logging
 import pkgutil
+import sys
+
+import numpy as np
 
 from simulator.abilities.wildshape import Wildshape
 from simulator.actions.action_types import Action, BonusAction
@@ -15,6 +18,8 @@ from simulator.combatants.quetzalcoatlus import Quetzalcoatlus
 from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 
 logger = logging.getLogger("EncounTroll")
+
+HALF_SQUARE_DIAGONAL = 0.707106
 
 def get_combatant_classes():
     # Import the top-level module
@@ -62,3 +67,19 @@ def get_available_wildshape_forms(level, action_type):
 def preallocate_wildshape_forms(combatant, action_type, factory):
     available_forms = get_available_wildshape_forms(combatant.level, action_type)
     return [Wildshape(combatant, form, factory) for form in available_forms]
+
+
+def calc_min_obstacle_error(obstacles, coord1: np.array, coord2: np.array):
+    """
+    A helpful utility that determines the minimum distance to center of any obstacles encountered during the rasterization process between
+    coord1 and coord2.
+    :param obstacles:
+    :param coord1:
+    :param coord2:
+    :return: the minimum error
+    """
+    min_obstacle_error = sys.maxsize
+    for obstacle in obstacles:
+        curr_error = np.linalg.norm(np.cross(coord2 - coord1, coord1 - obstacle + (0.5, 0.5))) / np.linalg.norm(coord2 - coord1)
+        min_obstacle_error = min(min_obstacle_error, curr_error)
+    return min(min_obstacle_error, HALF_SQUARE_DIAGONAL)
