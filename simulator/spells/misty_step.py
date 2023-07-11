@@ -1,7 +1,7 @@
 from functools import cache
 
 from simulator.battle_map import Map
-from simulator.combatant_coords import CombatantCoords
+from simulator.combatant_coords import Coords
 from simulator.spells.spell import SpellStats
 import logging
 from simulator.actions.action_types import BonusAction

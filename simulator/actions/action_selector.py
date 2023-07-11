@@ -11,7 +11,7 @@ from simulator.actions.action_types import Movement
 from simulator.actions.break_grapple import BreakGrappleFactory
 from simulator.actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from simulator.battle_map import convert_path_to_increments, Map
-from simulator.combatant_coords import CombatantCoords
+from simulator.combatant_coords import Coords
 from simulator.misc import reconstruct_path_through_dag, Conditions
 from simulator.spells.misty_step import MistyStepFactory
 from simulator.threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
@@ -241,7 +241,7 @@ def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwar
             previous_transition_name = max_threat_backwards_transition[curr_state][0]
             _, x, y = re.search(search_pattern, previous_transition_name).groups()
             curr_state = max_threat_backwards_transition[curr_state][1]
-            pretend_coords = CombatantCoords(np.array([int(x), int(y)]))
+            pretend_coords = Coords(np.array([int(x), int(y)]))
             return pretend_coords
         except KeyError:
             break

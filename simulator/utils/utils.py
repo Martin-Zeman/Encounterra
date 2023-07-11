@@ -1,6 +1,7 @@
 import importlib
 import inspect
 import logging
+import math
 import pkgutil
 import sys
 
@@ -19,7 +20,7 @@ from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 
 logger = logging.getLogger("EncounTroll")
 
-HALF_SQUARE_DIAGONAL = 0.707106
+HALF_SQUARE_DIAGONAL = math.sqrt(2) / 2
 
 def get_combatant_classes():
     # Import the top-level module

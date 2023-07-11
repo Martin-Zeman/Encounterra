@@ -1,6 +1,6 @@
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
-from simulator.combatant_coords import CombatantCoords
+from simulator.combatant_coords import Coords
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, percent_of_curr_hp, avg_roll, Conditions

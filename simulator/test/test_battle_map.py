@@ -1,6 +1,6 @@
 import pytest
 from simulator.actions.action_types import Passive, Action
-from simulator.battle_map import Terrain, CombatantCoords, Map
+from simulator.battle_map import Terrain, Coords, Map
 from simulator.combatants.goblin import Goblin
 from simulator.misc import DistanceMetric, Size, Side, Conditions, ConditionWithoutDC, Visibility
 from simulator.spells.fireball import FireballFactory
@@ -551,22 +551,22 @@ def test_get_nearest_free_adjacent_coord(battle_map, teams, test_draconic_sorcer
     distances, _ = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     target_coords = battle_map.get_combatant_position(test_goblin)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
     assert np.array_equal(nearest, np.array([4, 7]), equal_nan=False)
 
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([3, 9]))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
     assert np.array_equal(nearest, np.array([4, 9]), equal_nan=False)
 
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([8, 6]))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
     assert np.array_equal(nearest, np.array([7, 6]), equal_nan=False)
 
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([7, 11]))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
     assert np.array_equal(nearest, np.array([7, 9]), equal_nan=False)
 
 def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
@@ -585,7 +585,7 @@ def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, test_drac
     distances, _ = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     target_coords = battle_map.get_combatant_position(test_bugbear)
-    nearest = battle_map.get_nearest_free_adjacent_coords(my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
     assert not np.array_equal(nearest, np.array([7, 10]), equal_nan=False)
 
 
@@ -843,8 +843,8 @@ def test_reset(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin):
     test_goblin.size = Size.HUGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    test_draconic_sorcerer_5lvl_initial_position = CombatantCoords(np.array([4, 5]), test_draconic_sorcerer_5lvl)
-    test_goblin_initial_position = CombatantCoords(np.array([1, 7]), test_goblin)
+    test_draconic_sorcerer_5lvl_initial_position = Coords(np.array([4, 5]), test_draconic_sorcerer_5lvl.size)
+    test_goblin_initial_position = Coords(np.array([1, 7]), test_goblin.size)
     initial_positions = {test_draconic_sorcerer_5lvl: test_draconic_sorcerer_5lvl_initial_position.get()[0], test_goblin: test_goblin_initial_position.get()[0]}
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl_initial_position.get()[0])
     battle_map.set_combatant_coordinates(test_goblin, test_goblin_initial_position.get()[0])
@@ -852,8 +852,8 @@ def test_reset(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin):
     assert np.array_equal(test_goblin_initial_position.get(), battle_map.get_combatant_position(test_goblin).get())
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([5, 6]))
     battle_map.move_combatant(test_goblin, np.array([2, 8]))
-    assert np.array_equal(CombatantCoords(np.array([5, 6]), test_draconic_sorcerer_5lvl).get(), battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
-    assert np.array_equal(CombatantCoords(np.array([2, 8]), test_goblin).get(), battle_map.get_combatant_position(test_goblin).get())
+    assert np.array_equal(Coords(np.array([5, 6]), test_draconic_sorcerer_5lvl.size).get(), battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
+    assert np.array_equal(Coords(np.array([2, 8]), test_goblin.size).get(), battle_map.get_combatant_position(test_goblin).get())
     battle_map.reset(initial_positions)
     assert np.array_equal(test_draconic_sorcerer_5lvl_initial_position.get(), battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
     assert np.array_equal(test_goblin_initial_position.get(), battle_map.get_combatant_position(test_goblin).get())
@@ -1066,35 +1066,35 @@ def test_find_wildshaped_coordinate_huge_nine_options(battle_map, teams, test_mo
 def test_get_visibility(battle_map, test_goblin):
     battle_map.place_circular_element(np.array([5, 5]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     # Basic fully blocking scenarios
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([6, 5])) is Visibility.NONE
-    assert battle_map.get_visibility(CombatantCoords(np.array([5, 6]), test_goblin), np.array([5, 4])) is Visibility.NONE
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([6, 6])) is Visibility.NONE
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 6]), test_goblin), np.array([6, 4])) is Visibility.NONE
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([6, 5]))) is Visibility.NONE
+    assert battle_map.get_visibility(Coords(np.array([5, 6]), test_goblin.size), Coords(np.array([5, 4]))) is Visibility.NONE
+    assert battle_map.get_visibility(Coords(np.array([4, 4]), test_goblin.size), Coords(np.array([6, 6]))) is Visibility.NONE
+    assert battle_map.get_visibility(Coords(np.array([4, 6]), test_goblin.size), Coords(np.array([6, 4]))) is Visibility.NONE
     # From (4, 5)
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([5, 4])) is Visibility.FULL
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([5, 6])) is Visibility.FULL
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([6, 6])) is Visibility.HALF_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([6, 4])) is Visibility.HALF_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([7, 7])) is Visibility.FULL
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([7, 6])) is Visibility.THREE_QUARTERS_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([8, 6])) is Visibility.NONE
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([9, 6])) is Visibility.NONE
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([8, 7])) is Visibility.HALF_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 5]), test_goblin), np.array([8, 8])) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([5, 4]))) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([5, 6]))) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([6, 6]))) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([6, 4]))) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([7, 7]))) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([7, 6]))) is Visibility.THREE_QUARTERS_COVER
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([8, 6]))) is Visibility.NONE
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([9, 6]))) is Visibility.NONE
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([8, 7]))) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(Coords(np.array([4, 5]), test_goblin.size), Coords(np.array([8, 8]))) is Visibility.FULL
     # From (3, 5) we should be able to see a bit more
-    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([6, 6])) is Visibility.FULL
-    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([7, 7])) is Visibility.FULL
-    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([7, 6])) is Visibility.FULL
-    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([8, 6])) is Visibility.HALF_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([9, 6])) is Visibility.THREE_QUARTERS_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([8, 7])) is Visibility.FULL
-    assert battle_map.get_visibility(CombatantCoords(np.array([3, 5]), test_goblin), np.array([8, 8])) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([3, 5]), test_goblin.size), Coords(np.array([6, 6]))) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([3, 5]), test_goblin.size), Coords(np.array([7, 7]))) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([3, 5]), test_goblin.size), Coords(np.array([7, 6]))) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([3, 5]), test_goblin.size), Coords(np.array([8, 6]))) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(Coords(np.array([3, 5]), test_goblin.size), Coords(np.array([9, 6]))) is Visibility.THREE_QUARTERS_COVER
+    assert battle_map.get_visibility(Coords(np.array([3, 5]), test_goblin.size), Coords(np.array([8, 7]))) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([3, 5]), test_goblin.size), Coords(np.array([8, 8]))) is Visibility.FULL
     # Testing diagonal cases
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([5, 6])) is Visibility.HALF_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([6, 5])) is Visibility.HALF_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([7, 5])) is Visibility.FULL
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([7, 6])) is Visibility.THREE_QUARTERS_COVER
-    assert battle_map.get_visibility(CombatantCoords(np.array([4, 4]), test_goblin), np.array([8, 6])) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(Coords(np.array([4, 4]), test_goblin.size), Coords(np.array([5, 6]))) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(Coords(np.array([4, 4]), test_goblin.size), Coords(np.array([6, 5]))) is Visibility.HALF_COVER
+    assert battle_map.get_visibility(Coords(np.array([4, 4]), test_goblin.size), Coords(np.array([7, 5]))) is Visibility.FULL
+    assert battle_map.get_visibility(Coords(np.array([4, 4]), test_goblin.size), Coords(np.array([7, 6]))) is Visibility.THREE_QUARTERS_COVER
+    assert battle_map.get_visibility(Coords(np.array([4, 4]), test_goblin.size), Coords(np.array([8, 6]))) is Visibility.HALF_COVER
 
 def test_get_visibility_dict_simple(battle_map, teams, test_goblin, test_bugbear, test_ogre):
     battle_map.place_circular_element(np.array([7, 7]), Terrain.IMPASSABLE_TERRAIN, radius=1)

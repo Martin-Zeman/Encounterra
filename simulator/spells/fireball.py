@@ -2,7 +2,7 @@ from functools import cache
 
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
-from simulator.combatant_coords import CombatantCoords
+from simulator.combatant_coords import Coords
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -101,7 +101,7 @@ class Fireball(Actoid, DirectThreat):
         return 0  # Not relevant for this ability
 
     def get_eligible_coords(self, distances, shortest_paths):
-        return Map.get().get_free_coords_in_cartesian_range(CombatantCoords(self.coord),  # not actually combatant coords
+        return Map.get().get_free_coords_in_cartesian_range(Coords(self.coord),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FireballFactory.range,

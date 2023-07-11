@@ -1,7 +1,7 @@
 import numpy as np
 
 from simulator.battle_map import Map
-from simulator.combatant_coords import CombatantCoords
+from simulator.combatant_coords import Coords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
@@ -135,7 +135,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
         return 0
 
     def get_eligible_coords(self, distances, shortest_paths):
-        return Map.get().get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
+        return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FaerieFireFactory.range, combatant=self.factory.combatant)

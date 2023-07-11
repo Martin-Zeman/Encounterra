@@ -2,7 +2,7 @@ from functools import cache
 
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
-from simulator.combatant_coords import CombatantCoords
+from simulator.combatant_coords import Coords
 from simulator.misc import Conditions
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect

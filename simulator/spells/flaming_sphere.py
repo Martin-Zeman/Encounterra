@@ -4,7 +4,7 @@ from functools import cache
 from simulator.actions.action_types import BonusAction
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
 from simulator.battle_map import Map
-from simulator.combatant_coords import CombatantCoords
+from simulator.combatant_coords import Coords
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.effect import EffectType
@@ -125,7 +125,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return acc / len(enemies) * ROUND_HORIZON
 
     def get_eligible_coords(self, distances, shortest_paths):
-        return Map.get().get_free_coords_in_cartesian_range(CombatantCoords(self.origin),  # not actually combatant coords
+        return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FlamingSphereFactory.range,

@@ -3,12 +3,13 @@ import numpy as np
 import sys
 import logging
 from simulator.actions.action_types import Passive
-from simulator.combatant_coords import CombatantCoords
+from simulator.combatant_coords import Coords
+from simulator.obstacle import Obstacle
 from simulator.proto_combatant import ProtoCombatant
 from simulator.spells.spell import SpellStats
 from simulator.misc import Conditions, Size, Visibility, THREE_QUARTERS_COVER_ERROR_THRESHOLD, HALF_COVER_ERROR_THRESHOLD, \
     FULL_VISIBILITY_ERROR_THRESHOLD
-from simulator.geometry import get_affected_by_cone
+from simulator.geometry import get_affected_by_cone, get_bounding_box, find_outlines, angle_between_vectors
 from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
@@ -16,7 +17,6 @@ from scipy.spatial.distance import euclidean
 import heapq
 from enum import Enum
 
-from simulator.utils.utils import calc_min_obstacle_error
 
 logger = logging.getLogger("EncounTroll")
 
@@ -134,6 +134,7 @@ class Map:
             cls._instance.base_adjacency_matrix = np.zeros((size, size))
             cls._instance.difficult_set = set()
             cls._instance.impassable_set = set()
+            cls._instance.obstacles = []  # Same as impassable_set but using a different data type
             cls._instance.combatant_coordinate_cache = dict()  # Maps combatant -> coordinate
             cls._instance.effect_tracker = None
             cls._instance.combatant_positioning_hash = None
@@ -311,8 +312,8 @@ class Map:
         Places a terrain element of a 'circular' type onto the map
         :param coord: origin coordinate of the terrain element
         :param terrain_type: difficult terrain or impassable terrain
-        :param radius: radius of the lement
-        :return: root coordinate of the wildshaped form
+        :param radius: radius of the element
+        :return:
         """
         N = self.size
         if radius == 0:
@@ -321,6 +322,7 @@ class Map:
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                 self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
                 self.impassable_set.add((coord[0], coord[1]))
+                self.obstacles.append(Obstacle(coord))
             elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                 self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
                 self.difficult_set.add((coord[0], coord[1]))
@@ -333,6 +335,7 @@ class Map:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                             self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
                             self.impassable_set.add((x, y))
+                            self.obstacles.append(Obstacle(coord,radius))
                             try:
                                 self.difficult_set.remove((x, y))
                             except KeyError:
@@ -600,12 +603,12 @@ class Map:
             return False
         return empty
 
-    def are_empty(self, coords: CombatantCoords):
+    def are_empty(self, coords: Coords):
         vec_is_empty = np.vectorize(GridSquare.is_empty)
         return np.all(vec_is_empty(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
 
-    # @dispatch(CombatantCoords)
-    def are_empty_or_self(self, coords: CombatantCoords, combatant):
+    # @dispatch(Coords)
+    def are_empty_or_self(self, coords: Coords, combatant):
         """
         The version of are_empty for larger combatants since when they're moving some squares are still going to be taken up by themselves
         """
@@ -643,7 +646,7 @@ class Map:
         old_coords = self.get_combatant_position(combatant).get()
         for old_coord in old_coords:
             self.grid[old_coord[0], old_coord[1]].remove_combatant()
-        new_coords = CombatantCoords(new_coords, combatant)
+        new_coords = Coords(new_coords, combatant.size)
         new_coords_data = new_coords.get()
         assert self.size > np.amax(new_coords_data) and np.amin(new_coords_data) > -1, f"Invalid coord {new_coords_data}"
         for new_coord in new_coords_data:
@@ -652,7 +655,7 @@ class Map:
         logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
 
     def set_combatant_coordinates(self, combatant, coords: np.array):
-        coords = CombatantCoords(coords, combatant)
+        coords = Coords(coords, combatant.size)
         def set_comb(square):
             square.set_combatant(combatant)
             return square
@@ -748,9 +751,9 @@ class Map:
             res = None
         return res
 
-    def inflate_coords(self, coords: CombatantCoords, inflate_to_size):
+    def inflate_coords(self, coords: Coords, inflate_to_size):
         """
-        A helper function which inflates the given CombatantCoords to a given size (they may already by inflated but may need further inflation
+        A helper function which inflates the given Coords to a given size (they may already by inflated but may need further inflation
         due to the size of the other combatant).
         :param coords: target combatant coordinates
         :param inflate_to_size: size of the other combatant
@@ -769,7 +772,7 @@ class Map:
                 print("FIXME")
         return inflated
 
-    def get_free_coords_in_hop_range(self, coords: CombatantCoords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
+    def get_free_coords_in_hop_range(self, coords: Coords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
         by a combatant of 'inflate_to_size' size.
@@ -799,7 +802,7 @@ class Map:
         return adjacent_coords
 
 
-    def get_free_coords_in_cartesian_range(self, coords: CombatantCoords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
+    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
         by a combatant of 'inflate_to_size' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
@@ -840,7 +843,7 @@ class Map:
         return ret
 
 
-    def get_adjacent_coords(self, coords: CombatantCoords):
+    def get_adjacent_coords(self, coords: Coords):
         """
         Returns accessible squares adjacent to a given coordinate
         :param coords: target combatant coordinates
@@ -858,17 +861,18 @@ class Map:
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
-    def get_nearest_free_adjacent_coords(self, my_location: CombatantCoords, target_location: CombatantCoords, distances, rng=1):
+    def get_nearest_free_adjacent_coords(self, combatant, my_location: Coords, target_location: Coords, distances, rng=1):
         """
         Get nearest free adjacent coordinates accounting for the combatant's size. Potentially increasing what is considered adjacent to rng.
-        :param my_location: the combatant location
+        :param combatant:
+        :param my_location: combatant's location
         :param target_location: the target location
         :param distances: distances for all coords in the grid
         :param rng: the range of what is considered adjacent
         :return:
         """
         adjacent_coords = self.get_free_coords_in_hop_range(target_location, distances, my_location.size, rng,
-                                                            combatant=my_location.combatant)
+                                                            combatant=combatant)
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]
@@ -905,7 +909,7 @@ class Map:
         if not distances or not shortest_paths:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
             distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
-        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(my_location, enemy_location, distances, rng)
+        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(combatant, my_location, enemy_location, distances, rng)
         if enemy_adjacent_location is None:
             return None
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get()[0], enemy_adjacent_location)
@@ -1003,7 +1007,7 @@ class Map:
         target_coord = self.get_combatant_position(target)
         coords = []
         for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
-            potential_self_coord = CombatantCoords(np.array([x, y]), combatant)
+            potential_self_coord = Coords(np.array([x, y]), combatant.size)
             dist = self.get_hop_distance(target_coord.get(), potential_self_coord.get())
             is_empty = self.grid[x, y].is_empty()
             if is_empty and min_dist <= dist <= max_dist:
@@ -1021,7 +1025,7 @@ class Map:
         coords = []
         distances = []
         for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
-            potential_self_coord = CombatantCoords(np.array([x, y]), combatant)
+            potential_self_coord = Coords(np.array([x, y]), combatant.size)
             is_empty = self.are_empty(potential_self_coord)
             if not is_empty:
                 continue
@@ -1264,7 +1268,7 @@ class Map:
                 y1 += sy
         return obstacles
 
-    def get_visibility(self, coord1: CombatantCoords, coord2: CombatantCoords):
+    def get_visibility(self, coord1: Coords, coord2: Coords):
         """
         New algorithm: I could do this in terms of angles. I find the contours of the coord2. Then stretch a bounding box between the
         observer's mid-point and the farthest point of coord2. Inside this bounding box I find all obstacles (plus maybe other
@@ -1283,40 +1287,61 @@ class Map:
 
         This function acts as a wrapper for Bresenham's line algorithm, providing a realistic rasterization calculation for the top left and
         bottom right corners of the coord1 combatant. This calculation helps identify potential visual obstacles and determine different
-        levels of visibility based on the approximation error. The function takes CombatantCoords as input, testing the visibility from the
+        levels of visibility based on the approximation error. The function takes Coords as input, testing the visibility from the
          root and two corners of the entire combatant.
         :param coord1:
         :param coord2:
         :return: the degree of Visibility between the two coordinates
         """
-        coord1 = coord1.get()
-        coord2 = coord2.get()
+        bottom_left, top_right = get_bounding_box(coord1, coord2)
+        relevant_obstacles = []
+        for obstacle in self.obstacles:
+            obstacle_tr = obstacle.coord + obstacle.radius
+            obstacle_bl = obstacle.coord - obstacle.radius
+            if obstacle_tr[0] >= bottom_left[0] and obstacle_bl[0] <= top_right[0] and obstacle_bl[1] <= top_right[1] and obstacle_tr[1] >= bottom_left[0]:
+                relevant_obstacles.append(obstacle)
 
-        input_1 = coord1.get_bottom_left()
-        input_2 = coord2.get_bottom_left()
-        obstacles = self.calc_bresenham(input_1, input_2)
-        min_obstacle_error1 = calc_min_obstacle_error(obstacles, input_1, input_2)
-        input_1 = coord1.get_bottom_right()
-        input_2 = coord2.get_bottom_right()
-        obstacles = self.calc_bresenham(input_1, input_2)
-        min_obstacle_error2 = calc_min_obstacle_error(obstacles, input_1, input_2)
-        input_1 = coord1.get_top_left()
-        input_2 = coord2.get_top_left()
-        obstacles = self.calc_bresenham(input_1, input_2)
-        min_obstacle_error3 = calc_min_obstacle_error(obstacles, input_1, input_2)
-        input_1 = coord1.get_top_right()
-        input_2 = coord2.get_top_right()
-        obstacles = self.calc_bresenham(input_1, input_2)
-        min_obstacle_error4 = calc_min_obstacle_error(obstacles, input_1, input_2)
-        mean_obstacle_error = (min_obstacle_error1 + min_obstacle_error2 + min_obstacle_error3 + min_obstacle_error4) / 4
+        obs_to_outline = {o: find_outlines(coord1, o) for o in relevant_obstacles}
+        target_outline = find_outlines(coord1, coord2)
+        target_angle = angle_between_vectors(target_outline[0], target_outline[1])
+        for obstacle, obs_outline in obs_to_outline.items():
+            if np.dot(obs_outline[0], target_outline[0]) > 0:
+                if np.dot(obs_outline[1], target_outline[1]) > 0:
+                    pass # target_outline[0] to obs_outline[1] is hidden
+                else:
+                    pass # the entire target is hidden
+            else:
+                if np.dot(obs_outline[0], target_outline[1]) > 0:
+                    pass  # obs_outline[0] to target_outline[1] is hidden
+                else:
+                    pass  # none of the target is hidden
+        pass
 
-        if mean_obstacle_error <= THREE_QUARTERS_COVER_ERROR_THRESHOLD:
-            return Visibility.NONE
-        elif mean_obstacle_error <= HALF_COVER_ERROR_THRESHOLD:
-            return Visibility.THREE_QUARTERS_COVER
-        elif mean_obstacle_error <= FULL_VISIBILITY_ERROR_THRESHOLD:
-            return Visibility.HALF_COVER
-        return Visibility.FULL
+        # input_1 = coord1.get_bottom_left()
+        # input_2 = coord2.get_bottom_left()
+        # obstacles = self.calc_bresenham(input_1, input_2)
+        # min_obstacle_error1 = calc_min_obstacle_error(obstacles, input_1, input_2)
+        # input_1 = coord1.get_bottom_right()
+        # input_2 = coord2.get_bottom_right()
+        # obstacles = self.calc_bresenham(input_1, input_2)
+        # min_obstacle_error2 = calc_min_obstacle_error(obstacles, input_1, input_2)
+        # input_1 = coord1.get_top_left()
+        # input_2 = coord2.get_top_left()
+        # obstacles = self.calc_bresenham(input_1, input_2)
+        # min_obstacle_error3 = calc_min_obstacle_error(obstacles, input_1, input_2)
+        # input_1 = coord1.get_top_right()
+        # input_2 = coord2.get_top_right()
+        # obstacles = self.calc_bresenham(input_1, input_2)
+        # min_obstacle_error4 = calc_min_obstacle_error(obstacles, input_1, input_2)
+        # mean_obstacle_error = (min_obstacle_error1 + min_obstacle_error2 + min_obstacle_error3 + min_obstacle_error4) / 4
+        #
+        # if mean_obstacle_error <= THREE_QUARTERS_COVER_ERROR_THRESHOLD:
+        #     return Visibility.NONE
+        # elif mean_obstacle_error <= HALF_COVER_ERROR_THRESHOLD:
+        #     return Visibility.THREE_QUARTERS_COVER
+        # elif mean_obstacle_error <= FULL_VISIBILITY_ERROR_THRESHOLD:
+        #     return Visibility.HALF_COVER
+        # return Visibility.FULL
 
     def get_visibility_dict(self, combatant, coords: np.array):
         """
@@ -1325,7 +1350,7 @@ class Map:
         :param coords: theoretical root coordinate for combatant
         :return: dict mapping enemy -> Visibility
         """
-        combatant_coords = CombatantCoords(coords, combatant)
+        combatant_coords = Coords(coords, combatant.size)
         enemies = self.get_enemies(combatant)
         result = dict()
         for enemy in enemies:
@@ -1357,6 +1382,6 @@ class Map:
     def get_enemies_within_their_movement_range(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= e.movement + 1]
 
-    def is_difficult_terrain_at(self, coords: CombatantCoords):
+    def is_difficult_terrain_at(self, coords: Coords):
         vec_is_difficult_terrain = np.vectorize(GridSquare.is_difficult_terrain)
         return np.any(vec_is_difficult_terrain(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))

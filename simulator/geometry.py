@@ -3,6 +3,9 @@ import math
 
 import numpy as np
 
+from simulator.combatant_coords import Coords
+from simulator.obstacle import Obstacle
+
 
 def get_square_center(coord):
     return coord + np.array([0.5, 0.5])
@@ -62,7 +65,7 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     return coords
 
 
-def do_squares_overlap(origin1, length1, origin2, length2):
+def do_squares_overlap(origin1: np.array, length1, origin2: np.array, length2):
     """
     Given two squares represented by their origin (bottom-left corner) and their length, return if they overlap
     :param origin1: origin of the first square
@@ -73,5 +76,46 @@ def do_squares_overlap(origin1, length1, origin2, length2):
     """
     return (origin1[0] < (origin2[0] + length2) and (origin1[0] + length1) > origin2[0]) and (origin1[1] < (origin2[1] + length2) and (origin1[1] + length1) > origin2[1])
 
-# def get_cartesian_distance(coord1, coord2):
-#     return np.linalg.norm(coord1 - coord2)
+
+def angle_between_vectors(vector_1: np.array, vector_2: np.array):
+    """
+    Calculates the angle (in degrees) between two points and a given center point
+    :param point1: The first vector
+    :param point2: The second vector
+    :return: The convex angle (in degrees) formed by the two vectors.
+    """
+    dot_prod = np.dot(vector_1, vector_2)
+    mag_1 = np.dot(vector_1, vector_1)**0.5
+    mag_2 = np.dot(vector_2, vector_2)**0.5
+    angle_rad = math.acos(dot_prod / mag_2 / mag_1)
+    angle_deg = math.degrees(angle_rad) % 360
+    return angle_deg if (angle_deg - 180 < 0) else 360 - angle_deg
+
+
+def find_outlines(observer: Coords, target: Coords | Obstacle):
+    """
+    Calculates the right and left-most points of a target from the perspective of the observer.
+    :param observer: observer coordinates
+    :param target: target coordinates
+    :return: normalized vectors to the left and right most points from the observer's perspective ordered in counter-clockwise manner
+    (using the convex angle they define)
+    """
+    observer_center = observer.get_center()
+    target_center = target.get_center()
+    vectors = sorted([(c, angle_between_vectors(target_center - observer_center, c - observer_center)) for c in target.get_corners()], key=lambda x: x[1], reverse=True)
+    assert len(vectors) > 1
+    if np.cross(vectors[0][0], vectors[1][0]) > 0:
+        return vectors[0][0] / np.linalg.norm(vectors[0][0]), vectors[1][0] / np.linalg.norm(vectors[1][0])
+    return vectors[1][0] / np.linalg.norm(vectors[1][0]), vectors[0][0] / np.linalg.norm(vectors[0][0])
+
+def get_bounding_box(combatant1: Coords, combatant2: Coords):
+    """
+    Calculates a bounding box which encloses both combatants
+    :param combatant1:
+    :param combatant2:
+    :return: bottom left corner, top right corner
+    """
+    combined = np.concatenate((combatant1.get(), combatant2.get()), axis=0)
+    bottom_left = np.min(combined, axis=0)
+    top_right = np.max(combined, axis=0)
+    return bottom_left, top_right

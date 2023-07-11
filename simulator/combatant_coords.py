@@ -4,18 +4,17 @@ from simulator.misc import Size
 
 logger = logging.getLogger("EncounTroll")
 
-class CombatantCoords:
+class Coords:
     """
     Represents a set of coordinates taken up by a combatant
     """
-    def __init__(self, coord: np.array, combatant=None):
+    def __init__(self, coord: np.array, size: Size=Size.MEDIUM):
         """
         Initializes the combatant coords with a root coordinate
         :param coord: the root coord of the combatant, it gets turned into n x 2 matrix where one row represents one coordinate
         :return: None
         """
-        self.combatant = combatant
-        self.size = combatant.size if combatant else Size.MEDIUM
+        self.size = size
         match self.size:
             case Size.TINY | Size.SMALL | Size.MEDIUM:
                 self.coords = np.array([coord])
@@ -40,23 +39,12 @@ class CombatantCoords:
     def set(self, coords):
         self.coords = coords
 
-    def get_bottom_left(self):
-        return self.coords[0]
-
-    def get_bottom_right(self):
+    def get_corners(self):
         size = self.size.value
-        if size <= Size.MEDIUM.value:
-            return self.coords[0] + (1, 0)
-        return self.coords[(size + 1) * size] + (1, 0)
+        return [self.coords[0], self.coords[0] + (size + 1, 0), self.coords[0] + (0, size + 1), self.coords[0] + (size + 1, size + 1)]
 
-    def get_top_left(self):
-        size = self.size.value
-        if size <= Size.MEDIUM.value:
-            return self.coords[0] + (0, 1)
-        return self.coords[size] + (0, 1)
-
-    def get_top_right(self):
-        return self.coords[-1] + (1, 1)
+    def get_center(self):
+        return self.coords[0] + (np.array((self.size.value + 1, self.size.value + 1)) / 2)
 
     def __add__(self, other):
-        return CombatantCoords(self.coords[0] + other, self.combatant)
+        return Coords(self.coords[0] + other, self.size)
