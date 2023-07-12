@@ -92,9 +92,9 @@ def angle_between_vectors(vector_1: np.array, vector_2: np.array):
     return angle_deg if (angle_deg - 180 < 0) else 360 - angle_deg
 
 
-def find_outlines(observer: Coords, target: Coords | Obstacle):
+def find_fov_vectors(observer: Coords, target: Coords | Obstacle):
     """
-    Calculates the right and left-most points of a target from the perspective of the observer.
+    Calculates the field of view vector from right and leftmost points of a target from the perspective of the observer
     :param observer: observer coordinates
     :param target: target coordinates
     :return: normalized vectors to the left and right most points from the observer's perspective ordered in counter-clockwise manner
@@ -102,7 +102,7 @@ def find_outlines(observer: Coords, target: Coords | Obstacle):
     """
     observer_center = observer.get_center()
     target_center = target.get_center()
-    vectors = sorted([(c, angle_between_vectors(target_center - observer_center, c - observer_center)) for c in target.get_corners()], key=lambda x: x[1], reverse=True)
+    vectors = sorted([(c - observer_center, angle_between_vectors(target_center - observer_center, c - observer_center)) for c in target.get_corners()], key=lambda x: x[1], reverse=True)
     assert len(vectors) > 1
     if np.cross(vectors[0][0], vectors[1][0]) > 0:
         return vectors[0][0] / np.linalg.norm(vectors[0][0]), vectors[1][0] / np.linalg.norm(vectors[1][0])

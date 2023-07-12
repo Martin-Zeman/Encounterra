@@ -9,7 +9,7 @@ from simulator.proto_combatant import ProtoCombatant
 from simulator.spells.spell import SpellStats
 from simulator.misc import Conditions, Size, Visibility, THREE_QUARTERS_COVER_ERROR_THRESHOLD, HALF_COVER_ERROR_THRESHOLD, \
     FULL_VISIBILITY_ERROR_THRESHOLD
-from simulator.geometry import get_affected_by_cone, get_bounding_box, find_outlines, angle_between_vectors
+from simulator.geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors
 from simulator.misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
@@ -1268,54 +1268,64 @@ class Map:
                 y1 += sy
         return obstacles
 
-    def get_visibility(self, coord1: Coords, coord2: Coords):
+    def get_visibility(self, observer: Coords, target: Coords):
         """
-        New algorithm: I could do this in terms of angles. I find the contours of the coord2. Then stretch a bounding box between the
-        observer's mid-point and the farthest point of coord2. Inside this bounding box I find all obstacles (plus maybe other
-        combatants) and store them as objects. I then find the contours for all obstacles. I draw a line between the origin and contour
-        points of all the obstacles as well as the coord2 itself. Then I sort them by the oriented angle between them and the first contour
-        line of the obstacle. Then I go obstacle contour pair by contour pair and add up the angles of the circular sectors they represent.
-        I need to identify four different cases.
-        From this I calculate the overall visible percentage.:
-        1) The circular sector is fully within the coord2 sector -> deduct its angle
-        2) The circular sector if partially within the coord2 sector
-            a) obstacle start - (coord 2 start - obstacle end) -> deduct the () part
-            b) (obstacle start -> coord 2 end) -> obstacle end -> deduct the () part
-        3) The circular sector fully encompasses the coord2 sector -> no visibility
-        4) There's no intersection -> nothing
+        The visibility is calculated terms of how much of the field of view of the target is blocked by obstacles. I find the leftmost and
+        the rightmost vertex of coord2. I then stretch a bounding box between the observer coordinates and the farthest point of the
+        observer. Inside this bounding box I find all obstacles (plus maybe other combatants) and store them as objects. I then find the
+        leftmost and rightmost vertices for all obstacles. Each pair of vertices together with the observer's mid point define a pair of
+        vectors. Then I go obstacle vector pair by vector pair and classify their field of view angles. I need to identify six different
+        cases:
+        A) The obstacle is too far to the right, the target is fully visible
+        B) The right side of the target is partially hidden behind the obstacle
+        C) The obstacle is somewhere in the center of the target but parts of the target can still be seen on left and right
+        D) The left side of the target is partially hidden behind the obstacle
+        E) The obstacle is too far to the left, the target is fully visible
+        F) The target is fully blocked by the obstacle
+        From this I calculate the overall visible percentage.
 
 
         This function acts as a wrapper for Bresenham's line algorithm, providing a realistic rasterization calculation for the top left and
         bottom right corners of the coord1 combatant. This calculation helps identify potential visual obstacles and determine different
         levels of visibility based on the approximation error. The function takes Coords as input, testing the visibility from the
          root and two corners of the entire combatant.
-        :param coord1:
-        :param coord2:
+        :param observer:
+        :param target:
         :return: the degree of Visibility between the two coordinates
         """
-        bottom_left, top_right = get_bounding_box(coord1, coord2)
-        relevant_obstacles = []
+        bottom_left, top_right = get_bounding_box(observer, target)
+        objects = []
         for obstacle in self.obstacles:
             obstacle_tr = obstacle.coord + obstacle.radius
             obstacle_bl = obstacle.coord - obstacle.radius
             if obstacle_tr[0] >= bottom_left[0] and obstacle_bl[0] <= top_right[0] and obstacle_bl[1] <= top_right[1] and obstacle_tr[1] >= bottom_left[0]:
-                relevant_obstacles.append(obstacle)
+                objects.append(obstacle)
+        objects.append(target)
 
-        obs_to_outline = {o: find_outlines(coord1, o) for o in relevant_obstacles}
-        target_outline = find_outlines(coord1, coord2)
-        target_angle = angle_between_vectors(target_outline[0], target_outline[1])
-        for obstacle, obs_outline in obs_to_outline.items():
-            if np.dot(obs_outline[0], target_outline[0]) > 0:
-                if np.dot(obs_outline[1], target_outline[1]) > 0:
-                    pass # target_outline[0] to obs_outline[1] is hidden
-                else:
-                    pass # the entire target is hidden
-            else:
-                if np.dot(obs_outline[0], target_outline[1]) > 0:
-                    pass  # obs_outline[0] to target_outline[1] is hidden
-                else:
-                    pass  # none of the target is hidden
-        pass
+        vec_to_object = [(vec, o) for o in objects for vec in find_fov_vectors(observer, o)]
+        central_vector = target.get_center() - observer.get_center()
+        vec_to_object.sort(key=lambda x: angle_between_vectors(central_vector, x[0]) * np.sign(np.cross(x[0], central_vector)), reverse=True)
+
+        for vo in vec_to_object:
+            print(f"vector {vo[0]} belonging to {'obstacle' if vo[1] is not target else 'target'} with center at {vo[1].get_center()}")
+
+        # target_vectors = find_fov_vectors(observer, target)
+        # target_angle = angle_between_vectors(target_vectors[0], target_vectors[1])
+        # blocked_angle = 0
+        # for obstacle, obs_outline in obs_to_vectors.items():
+        #     if np.dot(obs_outline[0], target_vectors[0]) > 0:
+        #         if np.dot(obs_outline[1], target_vectors[0]) > 0:
+        #             pass  # Case A, there's no overlap
+        #         elif np.dot(obs_outline[1], target_vectors[1]) > 0:
+        #             target_angle -= angle_between_vectors(target_vectors[0], obs_outline[1])  # Case B, target_outline[0] to obs_outline[1] is hidden
+        #         else:
+        #             return Visibility.NONE  # Case F, target is completely hidden
+        #     else:
+        #         if np.dot(obs_outline[0], target_vectors[1]) > 0:
+        #             pass  # obs_outline[0] to target_outline[1] is hidden
+        #         else:
+        #             pass  # none of the target is hidden
+        # pass
 
         # input_1 = coord1.get_bottom_left()
         # input_2 = coord2.get_bottom_left()

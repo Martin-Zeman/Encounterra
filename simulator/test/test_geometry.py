@@ -86,28 +86,28 @@ def test_angle_between_vectors():
     assert angle_between_vectors(np.array([4, 4]), np.array([4, 6]), np.array([6, 6])) == pytest.approx(45.0, 0.0001)
 
 
-def test_find_outlines(test_stone_giant, test_ogre, test_bugbear):
+def test_find_fov_vectors(test_stone_giant, test_ogre, test_bugbear):
     # Directly side by side
-    outlines = find_outlines(Coords(np.array([3, 7]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
+    outlines = find_fov_vectors(Coords(np.array([3, 7]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([6, 6]), point) for point in outlines])
     assert any([np.array_equal(np.array([6, 9]), point) for point in outlines])
     # Same but observer and target swapped
-    outlines = find_outlines(Coords(np.array([6, 6]), test_stone_giant.size), Coords(np.array([3, 7]), test_bugbear.size))
+    outlines = find_fov_vectors(Coords(np.array([6, 6]), test_stone_giant.size), Coords(np.array([3, 7]), test_bugbear.size))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([4, 7]), point) for point in outlines])
     assert any([np.array_equal(np.array([4, 8]), point) for point in outlines])
     # At a slight angle
-    outlines = find_outlines(Coords(np.array([0, 0]), test_stone_giant.size), Coords(np.array([5, 2]), test_ogre.size))
+    outlines = find_fov_vectors(Coords(np.array([0, 0]), test_stone_giant.size), Coords(np.array([5, 2]), test_ogre.size))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([5, 4]), point) for point in outlines])
     assert any([np.array_equal(np.array([7, 2]), point) for point in outlines])
     # Testing the breaking point between the selection of (6, 9) and (6, 6)
-    outlines = find_outlines(Coords(np.array([5, 2]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
+    outlines = find_fov_vectors(Coords(np.array([5, 2]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([6, 9]), point) for point in outlines])
     assert any([np.array_equal(np.array([9, 6]), point) for point in outlines])
-    outlines = find_outlines(Coords(np.array([6, 2]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
+    outlines = find_fov_vectors(Coords(np.array([6, 2]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([6, 6]), point) for point in outlines])
     assert any([np.array_equal(np.array([9, 6]), point) for point in outlines])
