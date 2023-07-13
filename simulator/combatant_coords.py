@@ -40,11 +40,12 @@ class Coords:
         self.coords = coords
 
     def get_corners(self):
-        size = self.size.value
+        size = max(0, self.size.value)
         return [self.coords[0], self.coords[0] + (size + 1, 0), self.coords[0] + (0, size + 1), self.coords[0] + (size + 1, size + 1)]
 
     def get_center(self):
-        return self.coords[0] + (np.array((self.size.value + 1, self.size.value + 1)) / 2)
+        size = max(0, self.size.value)
+        return self.coords[0] + (np.array((size + 1, size + 1)) / 2)
 
     def __add__(self, other):
         return Coords(self.coords[0] + other, self.size)

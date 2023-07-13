@@ -327,6 +327,8 @@ class Map:
                 self.grid[x][y].terrain = Terrain.DIFFICULT_TERRAIN
                 self.difficult_set.add((coord[0], coord[1]))
         elif radius > 0:
+            if terrain_type == Terrain.IMPASSABLE_TERRAIN:
+                self.obstacles.append(Obstacle(coord, radius))
             for x_offset in range(-radius, radius + 1):
                 for y_offset in range(-radius, radius + 1):
                     x = max(0, min(coord[0] + x_offset, N - 1))
@@ -335,7 +337,6 @@ class Map:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                             self.grid[x][y].terrain = Terrain.IMPASSABLE_TERRAIN
                             self.impassable_set.add((x, y))
-                            self.obstacles.append(Obstacle(coord,radius))
                             try:
                                 self.difficult_set.remove((x, y))
                             except KeyError:
@@ -1284,11 +1285,6 @@ class Map:
         F) The target is fully blocked by the obstacle
         From this I calculate the overall visible percentage.
 
-
-        This function acts as a wrapper for Bresenham's line algorithm, providing a realistic rasterization calculation for the top left and
-        bottom right corners of the coord1 combatant. This calculation helps identify potential visual obstacles and determine different
-        levels of visibility based on the approximation error. The function takes Coords as input, testing the visibility from the
-         root and two corners of the entire combatant.
         :param observer:
         :param target:
         :return: the degree of Visibility between the two coordinates
@@ -1296,7 +1292,7 @@ class Map:
         bottom_left, top_right = get_bounding_box(observer, target)
         objects = []
         for obstacle in self.obstacles:
-            obstacle_tr = obstacle.coord + obstacle.radius
+            obstacle_tr = obstacle.coord + obstacle.radius + (1, 1)
             obstacle_bl = obstacle.coord - obstacle.radius
             if obstacle_tr[0] >= bottom_left[0] and obstacle_bl[0] <= top_right[0] and obstacle_bl[1] <= top_right[1] and obstacle_tr[1] >= bottom_left[0]:
                 objects.append(obstacle)
@@ -1306,52 +1302,43 @@ class Map:
         central_vector = target.get_center() - observer.get_center()
         vec_to_object.sort(key=lambda x: angle_between_vectors(central_vector, x[0]) * np.sign(np.cross(x[0], central_vector)), reverse=True)
 
+        entered_target_fov = False
+        opened = set()
+        start_of_hidden_fov = None
+        hidden_fov = 0
         for vo in vec_to_object:
-            print(f"vector {vo[0]} belonging to {'obstacle' if vo[1] is not target else 'target'} with center at {vo[1].get_center()}")
+            if vo[1] is not target:
+                if vo[1] not in opened:
+                    if not opened:
+                        start_of_hidden_fov = vo[0]
+                    opened.add(vo[1])
+                else:
+                    opened.remove(vo[1])
+                    if not opened and entered_target_fov:
+                        hidden_fov += angle_between_vectors(start_of_hidden_fov, vo[0])
+                        # start_of_hidden_fov = None
+            elif entered_target_fov:
+                if opened:
+                    hidden_fov += angle_between_vectors(start_of_hidden_fov, vo[0])
+                break
+            else:
+                entered_target_fov = True
+                start_of_hidden_fov = vo[0]  # Override the potential start of hidden FoV, we don't care about area outside the target FoV
 
-        # target_vectors = find_fov_vectors(observer, target)
-        # target_angle = angle_between_vectors(target_vectors[0], target_vectors[1])
-        # blocked_angle = 0
-        # for obstacle, obs_outline in obs_to_vectors.items():
-        #     if np.dot(obs_outline[0], target_vectors[0]) > 0:
-        #         if np.dot(obs_outline[1], target_vectors[0]) > 0:
-        #             pass  # Case A, there's no overlap
-        #         elif np.dot(obs_outline[1], target_vectors[1]) > 0:
-        #             target_angle -= angle_between_vectors(target_vectors[0], obs_outline[1])  # Case B, target_outline[0] to obs_outline[1] is hidden
-        #         else:
-        #             return Visibility.NONE  # Case F, target is completely hidden
-        #     else:
-        #         if np.dot(obs_outline[0], target_vectors[1]) > 0:
-        #             pass  # obs_outline[0] to target_outline[1] is hidden
-        #         else:
-        #             pass  # none of the target is hidden
-        # pass
+        target_vectors = find_fov_vectors(observer, target)
+        target_fov = angle_between_vectors(target_vectors[0], target_vectors[1])
+        visible_fov = target_fov - hidden_fov
+        visible_percentage = int(visible_fov / (target_fov * 0.01))
 
-        # input_1 = coord1.get_bottom_left()
-        # input_2 = coord2.get_bottom_left()
-        # obstacles = self.calc_bresenham(input_1, input_2)
-        # min_obstacle_error1 = calc_min_obstacle_error(obstacles, input_1, input_2)
-        # input_1 = coord1.get_bottom_right()
-        # input_2 = coord2.get_bottom_right()
-        # obstacles = self.calc_bresenham(input_1, input_2)
-        # min_obstacle_error2 = calc_min_obstacle_error(obstacles, input_1, input_2)
-        # input_1 = coord1.get_top_left()
-        # input_2 = coord2.get_top_left()
-        # obstacles = self.calc_bresenham(input_1, input_2)
-        # min_obstacle_error3 = calc_min_obstacle_error(obstacles, input_1, input_2)
-        # input_1 = coord1.get_top_right()
-        # input_2 = coord2.get_top_right()
-        # obstacles = self.calc_bresenham(input_1, input_2)
-        # min_obstacle_error4 = calc_min_obstacle_error(obstacles, input_1, input_2)
-        # mean_obstacle_error = (min_obstacle_error1 + min_obstacle_error2 + min_obstacle_error3 + min_obstacle_error4) / 4
-        #
-        # if mean_obstacle_error <= THREE_QUARTERS_COVER_ERROR_THRESHOLD:
-        #     return Visibility.NONE
-        # elif mean_obstacle_error <= HALF_COVER_ERROR_THRESHOLD:
-        #     return Visibility.THREE_QUARTERS_COVER
-        # elif mean_obstacle_error <= FULL_VISIBILITY_ERROR_THRESHOLD:
-        #     return Visibility.HALF_COVER
-        # return Visibility.FULL
+        match visible_percentage:
+            case pct if 50 < pct:
+                return Visibility.FULL
+            case pct if 25 < pct <= 50:
+                return Visibility.HALF_COVER
+            case pct if 0 < pct <= 25:
+                return Visibility.THREE_QUARTERS_COVER
+            case _:
+                return Visibility.NONE
 
     def get_visibility_dict(self, combatant, coords: np.array):
         """

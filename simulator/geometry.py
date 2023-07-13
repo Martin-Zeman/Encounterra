@@ -87,7 +87,7 @@ def angle_between_vectors(vector_1: np.array, vector_2: np.array):
     dot_prod = np.dot(vector_1, vector_2)
     mag_1 = np.dot(vector_1, vector_1)**0.5
     mag_2 = np.dot(vector_2, vector_2)**0.5
-    angle_rad = math.acos(dot_prod / mag_2 / mag_1)
+    angle_rad = math.acos(max(-1.0, min(dot_prod / mag_2 / mag_1, 1.0)))
     angle_deg = math.degrees(angle_rad) % 360
     return angle_deg if (angle_deg - 180 < 0) else 360 - angle_deg
 
