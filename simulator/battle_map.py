@@ -1351,8 +1351,7 @@ class Map:
         enemies = self.get_enemies(combatant)
         result = dict()
         for enemy in enemies:
-            enemy_coords = self.get_combatant_position(enemy).get()
-            result[enemy] = self.get_visibility(combatant_coords, enemy_coords[0])
+            result[enemy] = self.get_visibility(combatant_coords, self.get_combatant_position(enemy))
         return result
 
     def get_adjacent_enemies(self, combatant):
