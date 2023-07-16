@@ -1348,11 +1348,7 @@ class Map:
         :return: dict mapping enemy -> Visibility
         """
         combatant_coords = Coords(coords, combatant.size)
-        enemies = self.get_enemies(combatant)
-        result = dict()
-        for enemy in enemies:
-            result[enemy] = self.get_visibility(combatant_coords, self.get_combatant_position(enemy))
-        return result
+        return {e: self.get_visibility(combatant_coords, self.get_combatant_position(e)) for e in self.get_enemies(combatant)}
 
     def get_adjacent_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) == 1]
