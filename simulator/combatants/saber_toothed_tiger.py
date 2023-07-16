@@ -30,6 +30,7 @@ class SaberToothedTiger(Combatant):
         self.athletics = 4
         self.acrobatics = 2
         self.is_humanoid = False
+        self.passive_perception = 13
 
 
     def build_attack_fms(self):

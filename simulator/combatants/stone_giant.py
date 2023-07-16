@@ -31,6 +31,7 @@ class StoneGiant(Combatant):
         self.athletics = 12
         self.acrobatics = 2
         self.is_humanoid = False
+        self.passive_perception = 14
 
 
     def build_attack_fms(self):

@@ -26,6 +26,7 @@ class Quetzalcoatlus(Combatant):
         self.athletics = 2
         self.acrobatics = 1
         self.is_humanoid = False
+        self.passive_perception = 12
 
 
     def build_attack_fms(self):

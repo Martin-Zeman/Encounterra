@@ -7,7 +7,7 @@ class ActoidFlags(Flag):
     IS_MOVEMENT = auto()
     IS_SPELL = auto()
     IS_DASH = auto()
-    IS_TOGGLE_ABILITY = auto()
+    IS_HIDE = auto()
     IS_GET_UP_FROM_PRONE = auto()
     IS_BREAK_GRAPPLE = auto()
 

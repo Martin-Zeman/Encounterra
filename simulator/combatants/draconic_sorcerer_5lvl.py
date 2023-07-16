@@ -39,6 +39,7 @@ class DraconicSorcerer5Lvl(Combatant):
         self.saving_throws[SavingThrow.CHA] = 7
         self.athletics = 2
         self.acrobatics = 2
+        self.passive_perception = 11
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

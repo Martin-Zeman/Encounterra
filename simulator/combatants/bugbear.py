@@ -25,6 +25,7 @@ class Bugbear(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
         self.athletics = 2
         self.acrobatics = 2
+        self.passive_perception = 10
 
 
     def build_attack_fms(self):

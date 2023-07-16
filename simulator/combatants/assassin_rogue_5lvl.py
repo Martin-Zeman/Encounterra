@@ -16,6 +16,7 @@ class AssassinRogue5Lvl(Combatant):
         self.rapier = self.add_ability(Action.MELEE_ATTACK, name="Rapier", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1)
         self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=7, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=64, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1)
+        self.add_ability(Passive.CUNNING_ACTION)
         self.danger_zone_attack = self.shortbow
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = -1
@@ -26,6 +27,7 @@ class AssassinRogue5Lvl(Combatant):
         self.saving_throws[SavingThrow.CHA] = 1
         self.athletics = -1
         self.acrobatics = 7
+        self.passive_perception = 11
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

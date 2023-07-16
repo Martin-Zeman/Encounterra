@@ -37,6 +37,7 @@ class MoonDruid5Lvl(Combatant):
         self.saving_throws[SavingThrow.CHA] = 1
         self.athletics = 2
         self.acrobatics = 1
+        self.passive_perception = 17
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

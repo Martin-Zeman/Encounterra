@@ -73,8 +73,9 @@ class Combatant(ABC, ProtoCombatant):
                               SavingThrow.CHA: 0}
         self.athletics = 0
         self.acrobatics = 0
+        self.stealth = 0
         self.has_pack_tactics = False
-        self.perception = 0
+        self.passive_perception = 10
         self.conditions = []
         self.dc_conditions = []
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks

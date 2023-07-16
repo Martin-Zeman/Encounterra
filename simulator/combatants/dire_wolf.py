@@ -27,6 +27,7 @@ class DireWolf(Combatant):
         self.saving_throws[SavingThrow.CHA] = -2
         self.athletics = 3
         self.acrobatics = 2
+        self.passive_perception = 13
         self.is_humanoid = False
 
 

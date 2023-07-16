@@ -1350,6 +1350,12 @@ class Map:
         combatant_coords = Coords(coords, combatant.size)
         return {e: self.get_visibility(combatant_coords, self.get_combatant_position(e)) for e in self.get_enemies(combatant)}
 
+    def cache_visibility_dict_for_all_coords(self, combatant, shortest_paths):
+        current_position = self.get_combatant_position(combatant)
+        for coord in shortest_paths.keys():
+            self.visibility_dict_for_all_coords = {coord: self.get_visibility_dict(combatant, np.array(coord))}
+        self.visibility_dict_for_all_coords[tuple(current_position)] = self.get_visibility_dict(combatant, current_position)
+
     def get_adjacent_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) == 1]
 

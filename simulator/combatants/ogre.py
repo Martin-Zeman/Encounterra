@@ -27,6 +27,7 @@ class Ogre(Combatant):
         self.athletics = 4
         self.acrobatics = -1
         self.is_humanoid = False
+        self.passive_perception = 8
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

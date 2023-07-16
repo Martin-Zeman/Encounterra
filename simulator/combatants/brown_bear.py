@@ -26,6 +26,7 @@ class BrownBear(Combatant):
         self.saving_throws[SavingThrow.CHA] = -2
         self.athletics = 4
         self.acrobatics = 0
+        self.passive_perception = 13
         self.is_humanoid = False
 
 

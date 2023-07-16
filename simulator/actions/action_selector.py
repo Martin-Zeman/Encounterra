@@ -295,6 +295,8 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     :param post_misty_step_actions: list of actions that are eligible after taking the Misty Step action
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
+    battle_map = Map.get()
+    battle_map.cache_visibility_dict_for_all_coords(combatant, shortest_paths)
     post_priority_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action)
     for priority_transition in post_priority_transitions.keys():  # TODO Do I need to have them removed for all states or just 0?
         for origin_state in action_fsm.states.keys():
@@ -311,7 +313,7 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
         action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
     else:
-        current_position = tuple(Map.get().get_combatant_position(combatant).get()[0])
+        current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
         action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords

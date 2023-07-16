@@ -36,6 +36,7 @@ class GiantToad(Combatant):
         self.athletics = 2
         self.acrobatics = 1
         self.is_humanoid = False
+        self.passive_perception = 10
 
 
     def build_attack_fms(self):

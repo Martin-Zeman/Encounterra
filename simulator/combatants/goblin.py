@@ -27,6 +27,7 @@ class Goblin(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
         self.athletics = -1
         self.acrobatics = 2
+        self.passive_perception = 9
 
 
     def build_attack_fms(self):

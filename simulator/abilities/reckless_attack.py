@@ -158,7 +158,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT | ActoidFlags.IS_TOGGLE_ABILITY)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         CombatantEffect.__init__(self, combatants=[factory.combatant])
         LimitedDurationEffect.__init__(self, turns=1)
         self.target = target
