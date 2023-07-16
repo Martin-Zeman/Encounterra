@@ -5,6 +5,7 @@ import random
 import math
 from contextlib import contextmanager
 
+from simulator.abilities.on_hit_sneak_attack import OnHitSneakAttack
 from simulator.action_resolver import check_concentration
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
@@ -143,6 +144,20 @@ class Combatant(ABC, ProtoCombatant):
                     self.add_ability(BonusAction.CUNNING_DISENGAGE)
                     self.add_ability(BonusAction.CUNNING_DASH)
                     self.add_ability(BonusAction.CUNNING_HIDE)
+                case Passive.SNEAK_ATTACK:
+                    self.already_used_sneak_attack_this_turn = False
+                    for af in self.action_factories:
+                        if FactoryFlags.IS_ATTACK_LIKE in af.flags and (FactoryFlags.IS_FINESSE in af.flags or FactoryFlags.IS_RANGED in af.flags):
+                            af.on_hit = OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), af.dmg_type, af.crit_range)
+                    for af in self.bonus_action_factories:
+                        if FactoryFlags.IS_ATTACK_LIKE in af.flags and (FactoryFlags.IS_FINESSE in af.flags or FactoryFlags.IS_RANGED in af.flags):
+                            af.on_hit = OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), af.dmg_type, af.crit_range)
+                    for af in self.haste_action_factories:
+                        if FactoryFlags.IS_ATTACK_LIKE in af.flags and (FactoryFlags.IS_FINESSE in af.flags or FactoryFlags.IS_RANGED in af.flags):
+                            af.on_hit = OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), af.dmg_type, af.crit_range)
+                    for af in self.reaction_factories:
+                        if FactoryFlags.IS_ATTACK_LIKE in af.flags and (FactoryFlags.IS_FINESSE in af.flags or FactoryFlags.IS_RANGED in af.flags):
+                            af.on_hit = OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), af.dmg_type, af.crit_range)
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)

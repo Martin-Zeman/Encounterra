@@ -14,6 +14,7 @@ class OnHitAutoRestrained(OnHit):
         cond = ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, self.skill, self.dc, attacker, PhaseOfTurn.ACTION)
         target.apply_dc_condition(cond)
         attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker))
+        return None
 
     def calculate_threat(self, attacker, target, *args, **kwargs):
         return 0  # TODO

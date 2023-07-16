@@ -1,0 +1,48 @@
+from simulator.abilities.on_hit_effect import OnHit
+from simulator.misc import roll_saving_throw, reconcile_roll_types, Conditions, ConditionWithoutDC, parse_dmg_dice, roll_dice, avg_roll
+import logging
+
+logger = logging.getLogger("EncounTroll")
+
+class OnHitSneakAttack(OnHit):
+
+    @staticmethod
+    def get_dmg_dice(level):
+        match level:
+            case lvl if 1 <= lvl <= 2:
+                return "1d6"
+            case lvl if 3 <= lvl <= 4:
+                return "2d6"
+            case lvl if 5 <= lvl <= 6:
+                return "3d6"
+            case lvl if 7 <= lvl <= 8:
+                return "4d6"
+            case lvl if 9 <= lvl <= 10:
+                return "5d6"
+            case lvl if 11 <= lvl <= 12:
+                return "6d6"
+            case lvl if 13 <= lvl <= 14:
+                return "7d6"
+            case lvl if 15 <= lvl <= 16:
+                return "8d6"
+            case lvl if 17 <= lvl <= 18:
+                return "9d6"
+            case lvl if 19 <= lvl <= 20:
+                return "10d6"
+            case _:
+                logger.error("Incorrect caster level of Sneak Attack")
+                return "1d6"
+    def __init__(self, dmg_dize, dmg_type, crit_range):
+        self.dmg_dice = dmg_dize
+        self.dmg_type = dmg_type
+        self.crit_range = crit_range
+
+    def hit(self, attacker, attack, target):
+        if not getattr(attacker, "already_used_sneak_attack_this_turn", True):
+            dice = parse_dmg_dice(self.dmg_dice)
+            attacker.already_used_sneak_attack_this_turn = True
+            return roll_dice(dice), self.dmg_type
+
+    def calculate_threat(self, attacker, target, *args, **kwargs):
+        avg_dmg_roll = avg_roll(self.dmg_dice)
+        return avg_dmg_roll + 0.05 * self.crit_range * avg_dmg_roll

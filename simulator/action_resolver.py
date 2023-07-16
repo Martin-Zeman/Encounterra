@@ -340,10 +340,13 @@ class ActionResolver:
             logger.info(
                 f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {base_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)} damage", extra={"team": self.teams.get_team(attacker)})
             total_compound_dmg = [(base_dmg, attack.get_dmg_type())] + extra_dmg
+            if target and attack.factory.on_hit is not None:
+                on_hit_dmg = attack.factory.on_hit.hit(attacker, attack, target)
+                on_hit_dmg[0] *= multiplier
+            if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
+                total_compound_dmg.append(on_hit_dmg)
             target.receive_compound_dmg(total_compound_dmg)
             target = Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
-            if target and attack.factory.on_hit is not None:
-                attack.factory.on_hit.hit(attacker, attack, target)
 
             return ActionResult.DMG
         else:

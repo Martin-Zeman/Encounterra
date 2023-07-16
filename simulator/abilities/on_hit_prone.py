@@ -14,6 +14,7 @@ class OnHitProne(OnHit):
         if not saved:
             logger.info(f"{target} is knocked prone")
             target.apply_condition(ConditionWithoutDC(Conditions.PRONE, attacker))
+        return None
 
     def calculate_threat(self, attacker, target, *args, **kwargs):
         return 0  # TODO

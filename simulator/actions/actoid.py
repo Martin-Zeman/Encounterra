@@ -25,6 +25,7 @@ class FactoryFlags(Flag):
     IS_ATTACK_LIKE = auto()
     IS_HASTE_ELIGIBLE_ATTACK = auto()
     IS_MELEE = auto()
+    IS_FINESSE = auto()
     IS_RANGED = auto()
     IS_DIRECT_THREAT = auto()
     IS_ATTACK_MODIFIER = auto()

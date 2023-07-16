@@ -20,6 +20,7 @@ class OnHitSwallow(OnHit):
         battle_map = Map.get()
         battle_map.effect_tracker.add(Digestion(target))
         battle_map.remove_combatant(target)
+        return None
 
     def calculate_threat(self, attacker, target, *args, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
