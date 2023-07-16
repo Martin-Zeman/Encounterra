@@ -120,16 +120,19 @@ class ActionResolver:
         self.effect_tracker = effect_tracker
 
     def has_advantage_ranged(self, attack, attacker, target):
+        battle_map = Map.get()
         if attack.roll_type is RollType.ADVANTAGE:
             return RollType.ADVANTAGE
-        if Map.get().effect_tracker.is_affecting_combatant(target, RecklessAttack):
+        if battle_map.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
         if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
             return RollType.ADVANTAGE
-        if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
+        if self.effect_tracker.is_affecting_combatant(target, EffectType.FAERIE_FIRE):
             return RollType.ADVANTAGE
         if attacker.is_affected_by(Conditions.INVISIBLE):
+            return RollType.ADVANTAGE
+        if battle_map.effect_tracker.is_combatant_hidden_from(attacker, target):
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
@@ -139,20 +142,22 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if attacker.has_pack_tactics and battle_map.is_ally_adjacent_to_target(attacker, target):
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_affecting_combatant(attacker, RecklessAttack):
+        if battle_map.effect_tracker.is_affecting_combatant(attacker, EffectType.RECKLESS_ATTACK):
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_affecting_combatant(target, RecklessAttack):
+        if battle_map.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
         if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) == 1:
             return RollType.ADVANTAGE
-        if self.effect_tracker.is_affecting_combatant(target, FaerieFire):
+        if self.effect_tracker.is_affecting_combatant(target, EffectType.FAERIE_FIRE):
             return RollType.ADVANTAGE
         if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
             return RollType.ADVANTAGE
         if attacker.is_affected_by(Conditions.INVISIBLE):
             return RollType.ADVANTAGE
         if target.wears_metal and (attack.factory.action_type is Action.SHOCKING_GRASP or attack.factory.action_type is BonusAction.QUICKENED_SHOCKING_GRASP or attack.factory.action_type is Action.TWINNED_SHOCKING_GRASP):
+            return RollType.ADVANTAGE
+        if battle_map.effect_tracker.is_combatant_hidden_from(attacker, target):
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
@@ -304,7 +309,10 @@ class ActionResolver:
         # TODO Conditions
         target = attack.target
         assert target
-        types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
+        if FactoryFlags.IS_MELEE in attack.factory.flags:
+            types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
+        else:
+            types = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
 
         final_modifier = reconcile_roll_types(types)
         if final_modifier is RollType.STRAIGHT:
@@ -340,13 +348,14 @@ class ActionResolver:
             logger.info(
                 f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {base_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)} damage", extra={"team": self.teams.get_team(attacker)})
             total_compound_dmg = [(base_dmg, attack.get_dmg_type())] + extra_dmg
+            attack.roll_type = final_modifier
             if target and attack.factory.on_hit is not None:
                 on_hit_dmg = attack.factory.on_hit.hit(attacker, attack, target)
                 on_hit_dmg[0] *= multiplier
-            if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
-                total_compound_dmg.append(on_hit_dmg)
+                if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
+                    total_compound_dmg.append(on_hit_dmg)
             target.receive_compound_dmg(total_compound_dmg)
-            target = Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
+            Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
 
             return ActionResult.DMG
         else:
@@ -394,7 +403,7 @@ class ActionResolver:
                 # self.effect_tracker.add(actoid, combatant)
                 return False
             case Action.RECKLESS_ATTACK:
-                if not self.effect_tracker.is_affecting_combatant(combatant, RecklessAttack):
+                if not self.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK):
                     # don't need to add it again in case of a multi-attack
                     actoid.activate()
                     # self.effect_tracker.add(actoid, combatant)

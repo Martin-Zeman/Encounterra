@@ -69,11 +69,11 @@ class EffectTracker:
         """
         Determines whether a combatant is affected by an effect of a certain type
         :param combatant:
-        :param effect_type: class of the effect
+        :param effect_type: EffectType enum
         :return: True if the combatant is affected, False otherwise
         """
         for e in self.effects:
-            if type(e) is effect_type and e.is_affecting(combatant):
+            if e.get_effect_type() is effect_type and e.is_affecting(combatant):
                 return True
         return False
 
@@ -101,6 +101,18 @@ class EffectTracker:
             else:
                 effects.append(e)
         self.effects = effects
+
+    def is_combatant_hidden_from(self, combatant, target):
+        """
+
+        :param combatant: the hiding combatant
+        :param target: the one hiding from
+        :return: True if the combatant is hidden from target
+        """
+        for e in self.get_effects_by_initiator(combatant):
+            if e.get_effect_type() is EffectType.HIDE and e.target is target:
+                return True
+        return False
 
     def reset(self):
         for effect in self.effects:

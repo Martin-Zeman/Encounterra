@@ -4,6 +4,7 @@ from simulator.abilities.totem_rage import TotemRage
 from simulator.actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction
 from simulator.battle_map import Map
 from simulator.combatant_coords import Coords
+from simulator.effects.effect import EffectType
 from simulator.misc import Conditions, Size
 import logging
 import numpy as np
@@ -84,14 +85,14 @@ def check_feasibility(combatant, action):
                 return res
             case Action.MELEE_ATTACK | HasteAction.HASTE_MELEE_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.RANGED_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
@@ -115,7 +116,7 @@ def check_feasibility(combatant, action):
                 return res and combatant.curr_wildshape_uses > 0
             case Action.PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
@@ -123,7 +124,7 @@ def check_feasibility(combatant, action):
                 return res
             case Action.BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
@@ -139,7 +140,7 @@ def check_feasibility(combatant, action):
                 return res
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
@@ -148,7 +149,7 @@ def check_feasibility(combatant, action):
                 return res
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
@@ -198,9 +199,9 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case BonusAction.RAGE:
-                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, Rage)
+                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
             case BonusAction.TOTEM_RAGE:
-                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, TotemRage)
+                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
             case BonusAction.MISTY_STEP:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
@@ -388,7 +389,7 @@ def check_feasibility_light(combatant, action):
                 return res
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.RECKLESS_ATTACK:
@@ -405,12 +406,12 @@ def check_feasibility_light(combatant, action):
                 return res and combatant.curr_wildshape_uses > 0
             case Action.PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.swallowed_target
                 res &= combatant.constricted_target is not None and combatant.constricted_target.size.value <= Size.MEDIUM.value
@@ -422,14 +423,14 @@ def check_feasibility_light(combatant, action):
                 return res
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.swallowed_target
                 res &= combatant.constricted_target is not None and combatant.constricted_target.size.value <= Size.MEDIUM.value
                 return res
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, RecklessAttack)
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case _:
@@ -443,9 +444,9 @@ def check_feasibility_light(combatant, action):
             case BonusAction.PAM_BONUS_ATTACK:  # TODO Remove this
                 return res
             case BonusAction.RAGE:
-                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, Rage)
+                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
             case BonusAction.TOTEM_RAGE:
-                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, TotemRage)
+                return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
             case BonusAction.MISTY_STEP:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn

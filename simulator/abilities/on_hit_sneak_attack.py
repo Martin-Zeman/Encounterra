@@ -1,6 +1,9 @@
 from simulator.abilities.on_hit_effect import OnHit
+from simulator.battle_map import Map
 from simulator.misc import roll_saving_throw, reconcile_roll_types, Conditions, ConditionWithoutDC, parse_dmg_dice, roll_dice, avg_roll
 import logging
+
+from simulator.utils.roll_types import RollType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -38,11 +41,12 @@ class OnHitSneakAttack(OnHit):
         self.crit_range = crit_range
 
     def hit(self, attacker, attack, target):
-        if not getattr(attacker, "already_used_sneak_attack_this_turn", True):
+        battle_map = Map.get()
+        if not getattr(attacker, "already_used_sneak_attack_this_turn", True) and (attack.roll_type is RollType.ADVANTAGE or battle_map.is_ally_adjacent_to_target(attacker, target)):
             dice = parse_dmg_dice(self.dmg_dice)
             attacker.already_used_sneak_attack_this_turn = True
             return roll_dice(dice), self.dmg_type
 
-    def calculate_threat(self, attacker, target, *args, **kwargs):
+    def calculate_threat(self, attacker, target, **kwargs):
         avg_dmg_roll = avg_roll(self.dmg_dice)
         return avg_dmg_roll + 0.05 * self.crit_range * avg_dmg_roll

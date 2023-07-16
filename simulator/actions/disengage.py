@@ -1,7 +1,7 @@
 from functools import cache
 
 from simulator.actions.action_types import HasteAction, BonusAction
-from simulator.actions.actoid import Actoid, ActoidFlags
+from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
@@ -17,6 +17,7 @@ class DisengageFactory(ThreatModifierFactory):
         super().__init__()
         self.combatant = combatant
         self.action_type = action_type  # DISENGAGE, CUNNING_DISENGAGE
+        self.flags |= FactoryFlags.DEFAULT
 
     def __str__(self):
         """

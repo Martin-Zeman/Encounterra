@@ -16,5 +16,5 @@ class OnHitProne(OnHit):
             target.apply_condition(ConditionWithoutDC(Conditions.PRONE, attacker))
         return None
 
-    def calculate_threat(self, attacker, target, *args, **kwargs):
+    def calculate_threat(self, attacker, target, **kwargs):
         return 0  # TODO
