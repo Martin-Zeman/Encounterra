@@ -277,7 +277,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
-            case BonusAction.CUNNING_DISENGAGE:
+            case BonusAction.CUNNING_DISENGAGE | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
                 return res
             case BonusAction.MOON_WILDSHAPE:
                 return res and combatant.curr_wildshape_uses > 0
@@ -303,7 +303,7 @@ def check_feasibility(combatant, action):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         match action_type:
-            case Movement.STANDARD | Movement.DISENGAGE | Movement.CUNNING_DISENGAGE:
+            case Movement.STANDARD | Movement.DISENGAGE:
                 target_position = battle_map.get_combatant_position(combatant) + action.increment
                 movement_needed = 1 if not battle_map.is_difficult_terrain_at(target_position) else 2
                 res = combatant.movement >= movement_needed and battle_map.are_valid_coords(target_position.get()) and battle_map.are_empty_or_self(target_position, combatant)
@@ -487,7 +487,7 @@ def check_feasibility_light(combatant, action):
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
                 return res and combatant.curr_sorcery_points > 1
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
-            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM:
+            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
                 return res
             case BonusAction.MOON_WILDSHAPE:
                 return res and combatant.curr_wildshape_uses > 0

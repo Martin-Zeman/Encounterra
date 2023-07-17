@@ -351,8 +351,9 @@ class ActionResolver:
             attack.roll_type = final_modifier
             if target and attack.factory.on_hit is not None:
                 on_hit_dmg = attack.factory.on_hit.hit(attacker, attack, target)
-                on_hit_dmg[0] *= multiplier
                 if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
+                    on_hit_dmg[0] *= multiplier
+                    logger.info(f"With extra {on_hit_dmg[0]} damage from {attack.factory.on_hit.name()}", extra={"team": self.teams.get_team(attacker)})
                     total_compound_dmg.append(on_hit_dmg)
             target.receive_compound_dmg(total_compound_dmg)
             Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
@@ -424,7 +425,10 @@ class ActionResolver:
                  | Action.FLAMING_SPHERE | Action.HOLD_PERSON | BonusAction.QUICKENED_HOLD_PERSON | Action.SPIKE_GROWTH | BonusAction.QUICKENED_SPIKE_GROWTH:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
-                # self.effect_tracker.add(actoid, combatant)
+                return ActionResult.NOP
+            case BonusAction.CUNNING_HIDE | Action.HIDE:
+                logger.info(f"{actoid.factory.combatant} attempts to hide from {actoid.target}")
+                actoid.activate()
                 return ActionResult.NOP
             case Action.FIREBOLT | BonusAction.QUICKENED_FIREBOLT:
                 logger.info(f"{combatant} casts {actoid}")
@@ -471,7 +475,7 @@ class ActionResolver:
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
                 | Action.BITE_AND_SWALLOW:
                 return self.resolve_attack(actoid, combatant)
-            case Movement.STANDARD | Movement.DISENGAGE | Movement.CUNNING_DISENGAGE:
+            case Movement.STANDARD | Movement.DISENGAGE:
                 if not self.request_movement(combatant, actoid):
                     return False
             case Movement.DASH:
@@ -528,7 +532,7 @@ class ActionResolver:
             case Action.WEB:
                 # TODO
                 return False
-            case Action.PRE_SWALLOW_BITE:
+            case Action.PRE_SWALLOW_BITE | HasteAction.HASTE_PRE_SWALLOW_BITE:
                 result = self.resolve_attack(actoid, combatant)  # TODO
                 if result is ActionResult.DMG:
                     combatant.constricted_target = actoid.target if actoid.target.is_alive() else None

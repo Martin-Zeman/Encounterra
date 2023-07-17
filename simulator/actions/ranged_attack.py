@@ -20,11 +20,11 @@ class RangedAttackFactory(AttackFactory):
         self.flags |= FactoryFlags.IS_RANGED
 
     def create(self, target):
-        return RangeAttack(target, self)
+        return RangedAttack(target, self)
 
     def create_all(self):
         targets = self.get_eligible_targets()
-        return [RangeAttack(t, self) for t in targets]
+        return [RangedAttack(t, self) for t in targets]
 
     def calculate_threat_to_target(self, target, **kwargs):
         try:
@@ -49,7 +49,7 @@ class RangedAttackFactory(AttackFactory):
         return 0
 
 
-class RangeAttack(Attack):
+class RangedAttack(Attack):
 
     def calculate_threat(self, combatant_coords: Coords = None, *args, **kwargs):
         battle_map = Map.get()

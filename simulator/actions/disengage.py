@@ -82,9 +82,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
         return 0  # Threat that a Disengage would potentially mitigate is calculated in a different way
 
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        # return None  # We don't want to have any coords pre-pended in the DAG
-        return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+        return Map.get().get_all_accessible_coords(shortest_paths, self.factory.combatant)
 
     def is_current_coord_eligible(self):
         return True

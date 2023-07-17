@@ -5,9 +5,10 @@ import logging
 logger = logging.getLogger("EncounTroll")
 
 class OnHitAutoRestrained(OnHit):
-    def __init__(self, skill, dc):
+    def __init__(self, skill, dc, name="On Hit Restrained"):
         self.skill = skill
         self.dc = dc
+        self.name = name
 
     def hit(self, attacker, attack, target):
         logger.info(f"{target} is grappled and restrained")

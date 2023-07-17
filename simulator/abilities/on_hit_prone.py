@@ -5,9 +5,10 @@ import logging
 logger = logging.getLogger("EncounTroll")
 
 class OnHitProne(OnHit):
-    def __init__(self, st, dc):
+    def __init__(self, st, dc, name="On Hit Prone"):
         self.st = st
         self.dc = dc
+        self.name = name
 
     def hit(self, attacker, attack, target):
         saved = roll_saving_throw(target.saving_throws[self.st], self.dc, reconcile_roll_types(target.saving_throws_roll_type_mod[self.st]))

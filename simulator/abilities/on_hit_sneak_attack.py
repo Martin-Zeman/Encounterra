@@ -35,10 +35,11 @@ class OnHitSneakAttack(OnHit):
             case _:
                 logger.error("Incorrect caster level of Sneak Attack")
                 return "1d6"
-    def __init__(self, dmg_dize, dmg_type, crit_range):
+    def __init__(self, dmg_dize, dmg_type, crit_range, name="Sneak Attack"):
         self.dmg_dice = dmg_dize
         self.dmg_type = dmg_type
         self.crit_range = crit_range
+        self.name = name
 
     def hit(self, attacker, attack, target):
         battle_map = Map.get()
@@ -50,3 +51,5 @@ class OnHitSneakAttack(OnHit):
     def calculate_threat(self, attacker, target, **kwargs):
         avg_dmg_roll = avg_roll(self.dmg_dice)
         return avg_dmg_roll + 0.05 * self.crit_range * avg_dmg_roll
+
+

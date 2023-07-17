@@ -10,10 +10,11 @@ from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Terrain
 from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
+from simulator.effects.effect import EffectType
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.misc import DamageType, Conditions
 from simulator.teams import Teams
-from simulator.test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map
+from simulator.test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue, test_ogre, test_goblin
 from simulator.utils.utils import preallocate_wildshape_forms
 
 from simulator.test.test_singleton import SingletonClass
@@ -198,6 +199,9 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
 
         def is_affecting(self, combatant):
             return False
+
+        def get_effect_type(self):
+            return EffectType.FAERIE_FIRE
     dummy_effect = DummyEffect()
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
     battle_map.effect_tracker.add(dummy_effect)
@@ -405,6 +409,39 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
             if test_moon_druid.is_affected_by(Conditions.GRAPPLED):  # Still grappled
                 actoid3 = get_action(test_moon_druid)
                 assert str(actoid3) == "None"
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_cunning_hide(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
+    """
+    We assert that the druid doesn't plan a wildshape action when grappled and unable to move to a place where there's the space to do so.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    battle_map.place_circular_element(np.array([6, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([2, 11]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([11, 12]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([1, 5]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([12, 8]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([2, 1]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
+    battle_map.build_adjacency_matrix()
+
+    try:
+        actoid1 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid1, test_assassin_rogue)
+        actoid2 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid2, test_assassin_rogue)
+        actoid3 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid3, test_assassin_rogue)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

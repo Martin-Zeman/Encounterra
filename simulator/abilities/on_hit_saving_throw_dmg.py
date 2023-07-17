@@ -8,13 +8,13 @@ from simulator.threat_utils import mean_dmg_dc_attack
 logger = logging.getLogger("EncounTroll")
 
 class OnHitSavingThrowDmg(OnHit):
-    def __init__(self, name, st, dc, dmg_dice, dmg_type, half_on_success=True):
-        self.name = name
+    def __init__(self, st, dc, dmg_dice, dmg_type, half_on_success=True, name="On Hit Saving Throw Damage"):
         self.st = st
         self.dc = dc
         self.dmg_dice = dmg_dice
         self.dmg_type = dmg_type
         self.half_on_success = half_on_success
+        self.name = name
 
     def hit(self, attacker, attack, target):
         dice = parse_dmg_dice(self.dmg_dice)

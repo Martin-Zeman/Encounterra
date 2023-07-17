@@ -10,6 +10,7 @@ from simulator.abilities.reckless_attack import RecklessAttackFactory
 from simulator.abilities.totem_rage import TotemRageFactory
 from simulator.abilities.wildshape import WildshapeFactory
 from simulator.actions.action_types import Action, BonusAction, HasteAction, Reaction
+from simulator.actions.dash import DashFactory
 from simulator.actions.disengage import DisengageFactory
 from simulator.actions.dodge import DodgeFactory
 from simulator.actions.hide import HideFactory
@@ -47,7 +48,7 @@ TO_FACTORY = {
     Action.RANGED_ATTACK: RangedAttackFactory,
     Action.RECKLESS_ATTACK: RecklessAttackFactory,
     Action.DODGE: DodgeFactory,
-    Action.DASH: None,
+    Action.DASH: DashFactory,
     Action.DISENGAGE: DisengageFactory,
     Action.FIREBALL: FireballFactory,
     Action.FIREBOLT: FireboltFactory,
@@ -79,6 +80,7 @@ TO_FACTORY = {
     BonusAction.MISTY_STEP: MistyStepFactory,
     BonusAction.CUNNING_DISENGAGE: DisengageFactory,
     BonusAction.CUNNING_HIDE: HideFactory,
+    BonusAction.CUNNING_DASH: DashFactory,
     BonusAction.QUICKENED_FIREBALL: FireballFactory,
     BonusAction.QUICKENED_FIREBOLT: FireboltFactory,
     BonusAction.QUICKENED_CHAOSBOLT: ChaosboltFactory,

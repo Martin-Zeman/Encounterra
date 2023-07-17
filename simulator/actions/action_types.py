@@ -73,7 +73,6 @@ class Reaction(Enum):
 class Movement(Enum):
     STANDARD = auto()
     DISENGAGE = auto()
-    CUNNING_DISENGAGE = auto()  # TODO is this necessary?
     FORCED = auto()
     GET_UP_FROM_PRONE = auto()
     DASH = auto()

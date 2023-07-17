@@ -11,6 +11,9 @@ logger = logging.getLogger("EncounTroll")
 
 class OnHitSwallow(OnHit):
 
+    def __init__(self, name="Swallow"):
+        self.name = name
+
     def hit(self, attacker, attack, target):
         logger.info(f"{target} is swallowed")
         target.remove_all_conditions_of_type(Conditions.GRAPPLED)

@@ -86,7 +86,7 @@ def use_resources(combatant, action):
                 subject.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
                 subject.curr_sorcery_points -= 2
-            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM:
+            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
                 pass  # Sufficiently tracked by not having a bonus action anymore
             case BonusAction.MOON_WILDSHAPE:
                 subject.curr_wildshape_uses -= 1

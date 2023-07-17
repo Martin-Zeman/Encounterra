@@ -393,10 +393,10 @@ def longest_path(combatant, dag, sorted_states, transition_name_to_action, dista
                 movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
             else:
                 try:
-                    # Is it a transition which represents a (bonus) action?
                     pretend_coords = get_pretend_coords(current_coords, pattern, state, max_threat_backwards_transition)
                     pretend_coords = pretend_coords.get()[0] if pretend_coords is not None else None
 
+                    # Is it a transition which represents a (bonus) action?
                     action = transition_name_to_action[transition_name]
                     with battle_map.as_if_combatant_position(combatant, pretend_coords) as orig_coords, battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, orig_coords) as did_transform:
                         transition_threat = action.calculate_threat(consider_dist=(not did_transform)) + (threat[state][1] if threat[state][1] > -math.inf else 0)
