@@ -1352,8 +1352,7 @@ class Map:
 
     def cache_visibility_dict_for_all_coords(self, combatant, shortest_paths):
         current_position = self.get_combatant_position(combatant).get()[0]
-        for coord in shortest_paths.keys():
-            self.visibility_dict_for_all_coords = {coord: self.get_visibility_dict(combatant, np.array(coord))}
+        self.visibility_dict_for_all_coords = {coord: self.get_visibility_dict(combatant, np.array(coord)) for coord in shortest_paths.keys()}
         self.visibility_dict_for_all_coords[tuple(current_position)] = self.get_visibility_dict(combatant, current_position)
 
     def get_adjacent_enemies(self, combatant):

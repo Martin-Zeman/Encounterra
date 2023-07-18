@@ -1,3 +1,4 @@
+from simulator.actions.action_types import BonusAction, HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 import logging
 
@@ -30,6 +31,22 @@ class Dash(Actoid, ThreatModifier, AttackThreatModifier):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_DASH)
         self.name = "Dash"
         self.factory = factory
+
+    def __str__(self):
+        prefix = ""
+        if self.factory.action_type is BonusAction.CUNNING_DASH:
+            prefix = "Cunning "
+        elif self.factory.action_type is HasteAction.HASTE_DASH:
+            prefix = "Hasted "
+        return prefix + f"Dash of {self.factory.combatant}"
+
+    def shorthand_str(self):
+        prefix = ""
+        if self.factory.action_type is BonusAction.CUNNING_DASH:
+            prefix = "Cunning "
+        elif self.factory.action_type is HasteAction.HASTE_DASH:
+            prefix = "Hasted "
+        return prefix + f"Dash"
 
     def calculate_threat(self, **kwargs):
         return 0  # TODO calculate the danger zone delta here

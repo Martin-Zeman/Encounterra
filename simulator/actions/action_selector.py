@@ -370,7 +370,7 @@ def longest_path(combatant, dag, sorted_states, transition_name_to_action, dista
     sorted_states.pop()  # Get rid of the nop state
     threat['0'] = [0, 0]
     max_threat_backwards_transition = dict()
-    pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+    pattern = r'([msdcio]+)_\((\d+), (\d+)\)'
     transition_name_to_ms_path = dict()
     current_coords = battle_map.get_combatant_position(combatant)
 

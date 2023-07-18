@@ -37,7 +37,7 @@ logger = logging.getLogger("EncounTroll")
 PRIORITY_ACTIONS = {
     Action.DODGE: ("Dodge", "do_"),
     Action.DISENGAGE: ("Disengage", "di_"),
-    BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "di_"),
+    BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "cdi_"),
     BonusAction.TOTEM_RAGE: ("TotemRage", "m_"),
     BonusAction.RAGE: ("Rage", "m_"),
     HasteAction.HASTE_DISENGAGE: ("Disengage", "di_")
