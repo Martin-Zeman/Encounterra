@@ -21,8 +21,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
                                    post_misty_step_actions)
             if dag is None:
                 return None
-            sorted_states = toposort_flatten(dag.dependencies)
-            longest_pth, transition_name_to_ms_path = longest_path(combatant, dag, sorted_states, transition_name_to_action,
+            longest_pth, transition_name_to_ms_path = longest_path(combatant, dag, transition_name_to_action,
                                                                    distances, shortest_paths)
             if longest_pth is None:
                 return None
@@ -44,8 +43,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
                 movement = self.get_movement_for_next_turn(distances, shortest_paths)
             return movement
-        sorted_states = toposort_flatten(dag.dependencies)
-        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
+        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, dag, transition_name_to_action, distances, shortest_paths)
         if longest_pth is None:
             return None
         # logger.info(f"{self.combatant}'s plan {longest_pth}")# TODO FIXME
