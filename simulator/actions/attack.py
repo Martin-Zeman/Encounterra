@@ -1,7 +1,6 @@
 from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import reduce, cache
-
+from functools import cache
 from simulator.battle_map import Map
 from simulator.misc import avg_roll, Conditions
 from simulator.threat_utils import mean_dmg, calc_p_hit
@@ -9,7 +8,6 @@ from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
 import math
 import logging
-
 from simulator.utils.roll_types import RollType, ROLL_TYPE_CRIT, ROLL_TYPE, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -170,7 +168,7 @@ class Attack(Actoid, DirectThreat):
     def get_dmg_type(self):
         return self.factory.dmg_type
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target, **kwargs)
 

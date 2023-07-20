@@ -1,12 +1,10 @@
 from functools import cache
-
 from simulator.battle_map import Map
-from simulator.combatant_coords import Coords
 from simulator.spells.spell import SpellStats
 import logging
 from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat_interfaces import ThreatModifier, DirectThreatFactory, Factory
+from simulator.threat_interfaces import Factory, Threat
 
 logger = logging.getLogger("EncounTroll")
 
@@ -50,7 +48,7 @@ class MistyStepFactory(Factory):
 
 
 
-class MistyStep(Actoid, ThreatModifier):
+class MistyStep(Actoid, Threat):
 
     def __init__(self, coord, factory):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
@@ -63,7 +61,7 @@ class MistyStep(Actoid, ThreatModifier):
     def shorthand_str(self):
         return "Misty Step"
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         return 0  # Misty Step is handled differently
 

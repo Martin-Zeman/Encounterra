@@ -17,12 +17,10 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         with self.combatant.as_if_new_turn() as combatant:
             get_aoe_and_aoo_threat_for_increment.cache_clear()
             fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(combatant)
-            dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths,
-                                   post_misty_step_actions)
+            dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
             if dag is None:
                 return None
-            longest_pth, transition_name_to_ms_path = longest_path(combatant, dag, transition_name_to_action,
-                                                                   distances, shortest_paths)
+            longest_pth, transition_name_to_ms_path = longest_path(combatant, dag, transition_name_to_action, distances, shortest_paths)
             if longest_pth is None:
                 return None
         return extract_movement(self.combatant, distances, shortest_paths, longest_pth)

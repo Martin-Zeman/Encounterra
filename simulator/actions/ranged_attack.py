@@ -51,6 +51,7 @@ class RangedAttackFactory(AttackFactory):
 
 class RangedAttack(Attack):
 
+    @cache
     def calculate_threat(self, combatant_coords: Coords = None, *args, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE

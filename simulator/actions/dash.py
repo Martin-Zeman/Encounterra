@@ -1,9 +1,9 @@
+from functools import cache
 from simulator.actions.action_types import BonusAction, HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 import logging
-
 from simulator.battle_map import Map
-from simulator.threat_interfaces import Factory, ThreatModifier, AttackThreatModifier
+from simulator.threat_interfaces import Factory, AttackThreatModifier
 
 logger = logging.getLogger("EncounTroll")
 
@@ -26,7 +26,7 @@ class DashFactory(Factory):
         return Dash(self)
 
 
-class Dash(Actoid, ThreatModifier, AttackThreatModifier):
+class Dash(Actoid, AttackThreatModifier):
     def __init__(self, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_DASH)
         self.name = "Dash"
@@ -48,6 +48,7 @@ class Dash(Actoid, ThreatModifier, AttackThreatModifier):
             prefix = "Hasted "
         return prefix + f"Dash"
 
+    @cache
     def calculate_threat(self, **kwargs):
         return 0  # TODO calculate the danger zone delta here
 

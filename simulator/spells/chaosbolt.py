@@ -7,8 +7,7 @@ from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from simulator.misc import percent_of_curr_hp
-from functools import  cache
-
+from functools import cache
 from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -123,7 +122,7 @@ class Chaosbolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt"
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE

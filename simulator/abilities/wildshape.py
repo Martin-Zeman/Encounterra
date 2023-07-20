@@ -1,21 +1,17 @@
 import math
-import random
-
+from functools import cache
 import numpy as np
-
 from simulator.actions.action_types import Action, BonusAction
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.battle_map import Map
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.misc import SavingThrow, Size
-
 from simulator.threat_interfaces import TransformerFactory, DirectThreat
 import logging
 
 logger = logging.getLogger("EncounTroll")
-
 
 class WildshapeFactory(TransformerFactory):
 
@@ -69,6 +65,7 @@ class WildshapeFactory(TransformerFactory):
         # Doesn't make much sense here
         return Wildshape(self.combatant, form, self)
 
+    @cache
     def calculate_threat(self, **kwargs):
         """
         Direct threat changes such as changes in HP. Doesn't account for newly added/lost action factories.
@@ -197,6 +194,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         for haf in self.combatants[0].haste_action_factories:
             haf[1].combatant = self.combatants[0]
 
+    @cache
     def calculate_threat(self, **kwargs):
         return self.form.max_hp# * random.uniform(0.8, 1.20)  # We try to encourage trying out different wildshape forms
 

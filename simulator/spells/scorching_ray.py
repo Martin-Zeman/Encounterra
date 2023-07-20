@@ -1,17 +1,13 @@
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
-from simulator.combatant_coords import Coords
-from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, percent_of_curr_hp, avg_roll, Conditions
+from simulator.misc import DamageType, avg_roll, Conditions
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import reduce, cache
-
+from functools import cache
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
-
 from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -115,7 +111,7 @@ class ScorchingRay(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Scorching Ray"
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE

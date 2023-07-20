@@ -1,15 +1,15 @@
+from functools import cache
 from simulator.battle_map import Map
 from simulator.effects.effect import EffectType
 from simulator.misc import DamageType, get_attacks
-from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
+from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.action_types import BonusAction
 from simulator.misc import ROUND_HORIZON
 from simulator.abilities.rage import RageFactory
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory, AttackThreatModifier
+from simulator.threat_interfaces import ThreatModifierFactory, AttackThreatModifier
 import logging
-
 from simulator.utils.roll_types import ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -67,7 +67,7 @@ class TotemRageFactory(ThreatModifierFactory):
         return total_threat * ROUND_HORIZON
 
 
-class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, AttackThreatModifier):
+class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
 
     def __init__(self, combatant, factory):
         CombatantEffect.__init__(self, combatants=[combatant])
@@ -107,9 +107,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier, 
         self.combatants[0].resistances.remove(DamageType.Poison)
         self.combatants[0].resistances.remove(DamageType.Radiant)
 
-
-
-
+    @cache
     def calculate_threat(self, **kwargs):
         """
         Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to

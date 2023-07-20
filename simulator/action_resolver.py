@@ -475,7 +475,7 @@ class ActionResolver:
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
                 | Action.BITE_AND_SWALLOW:
                 return self.resolve_attack(actoid, combatant)
-            case Movement.STANDARD | Movement.DISENGAGE:
+            case Movement.STANDARD | Movement.DISENGAGED:
                 if not self.request_movement(combatant, actoid):
                     return False
             case Movement.DASH:

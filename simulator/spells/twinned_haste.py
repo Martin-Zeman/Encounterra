@@ -1,13 +1,12 @@
 import logging
 from itertools import combinations
-
 from simulator.battle_map import Map
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect, EffectType
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_utils import mean_dmg
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
-from functools import reduce
+from simulator.threat_interfaces import ThreatModifierFactory, Threat
+from functools import reduce, cache
 from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions
 from simulator.spells.haste import HasteFactory
 from simulator.utils.roll_types import ThreatModifierType
@@ -86,7 +85,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         return max_attack_dmg * ROUND_HORIZON
 
 
-class TwinnedHaste(Actoid, Effect, ThreatModifier):
+class TwinnedHaste(Actoid, Effect, Threat):
 
     def __init__(self, targets, factory):
         super().__init__(ActoidFlags.IS_SPELL)
@@ -122,7 +121,7 @@ class TwinnedHaste(Actoid, Effect, ThreatModifier):
     def is_affecting(self, combatant):
         return combatant in self.targets
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds

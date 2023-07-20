@@ -105,8 +105,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
             ws_fsm, ws_transition_name_to_action, ws_post_misty_step_actions = generate_wildshape_action_fsm(self.combatant)
             ws_dag = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths, ws_post_misty_step_actions)
             if ws_dag is not None:
-                ws_sorted_states = toposort_flatten(ws_dag.dependencies)
-                wildshape_path, ws_transition_name_to_ms_path = longest_path(self.combatant, ws_dag, ws_sorted_states, ws_transition_name_to_action, distances, shortest_paths)
+                wildshape_path, ws_transition_name_to_ms_path = longest_path(self.combatant, ws_dag, ws_transition_name_to_action, distances, shortest_paths)
                 self.best_wildshape_plan_data = wildshape_path, ws_transition_name_to_ms_path, ws_transition_name_to_action
 
         get_aoe_and_aoo_threat_for_increment.cache_clear()
@@ -114,8 +113,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
         if dag is None:
             return None
-        sorted_states = toposort_flatten(dag.dependencies)
-        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
+        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, dag, transition_name_to_action, distances, shortest_paths)
         if longest_pth is None:
             return None
         need_to_combine, non_wildshape_action = evaluate_combination_eligibility(longest_pth, transition_name_to_action)

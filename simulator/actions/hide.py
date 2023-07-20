@@ -1,13 +1,13 @@
+from functools import cache
 from simulator.abilities.on_hit_sneak_attack import OnHitSneakAttack
 from simulator.actions.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
-from simulator.effects.effect import EffectType, Effect
+from simulator.effects.effect import EffectType
 from simulator.misc import Visibility, roll_ability_check
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory, AttackThreatModifier
+from simulator.threat_interfaces import ThreatModifierFactory, AttackThreatModifier
 import logging
-
 from simulator.utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -84,6 +84,7 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
     def deactivate(self):
         logger.info(f"{self.factory.combatant} is no longer hidden {self.target}")
 
+    @cache
     def calculate_threat(self, **kwargs):
         return 0
 

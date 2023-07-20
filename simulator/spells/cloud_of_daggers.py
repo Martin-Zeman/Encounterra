@@ -1,5 +1,4 @@
 from functools import cache
-
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.combatant_coords import Coords
@@ -106,7 +105,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def deactivate(self):
         self.factory.combatant.break_concentration()
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.origin)

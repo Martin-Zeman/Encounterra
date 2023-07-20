@@ -1,6 +1,5 @@
 import logging
 from functools import cache
-
 from simulator.actions.action_types import BonusAction
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
 from simulator.battle_map import Map
@@ -10,9 +9,9 @@ from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, avg_roll, roll_spell_dmg, Size, ROUND_HORIZON, SavingThrow
+from simulator.misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
+from simulator.threat_interfaces import DirectThreatFactory, AoEThreat, Threat
 import numpy as np
 
 from simulator.threat_utils import mean_dmg_dc_attack
@@ -79,7 +78,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 
-class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquareEffect, AoEThreat):
+class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquareEffect, Threat, AoEThreat):
 
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
@@ -113,7 +112,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def disable(self):
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
         enemies = Map.get().get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)

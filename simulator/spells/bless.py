@@ -1,15 +1,12 @@
 from functools import cache
-
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
-from simulator.combatant_coords import Coords
 from simulator.misc import Conditions
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory, AttackThreatModifier
+from simulator.threat_interfaces import ThreatModifierFactory, AttackThreatModifier
 from itertools import combinations
-
 
 class BlessFactory(ThreatModifierFactory):
     level = 1
@@ -53,7 +50,7 @@ class BlessFactory(ThreatModifierFactory):
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 
-class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
+class Bless(Actoid, Effect, AttackThreatModifier):
     def __init__(self, targets, factory):
         super().__init__(ActoidFlags.IS_SPELL)
         self.targets = targets
@@ -81,7 +78,7 @@ class Bless(Actoid, Effect, ThreatModifier, AttackThreatModifier):
     def is_affecting(self, combatant):
         return combatant in self.targets
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         # TODO Multiply the threat increment by 3 for 3 rounds
         # TODO iterate over all abilities of the targets and try plugging the mods into their factories

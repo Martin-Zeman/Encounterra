@@ -1,12 +1,11 @@
 from simulator.battle_map import Map
-from simulator.combatant_coords import Coords
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_utils import mean_dmg, dmg_decrement_for_ac_flat
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
+from simulator.threat_utils import mean_dmg
+from simulator.threat_interfaces import ThreatModifierFactory, Threat
 from functools import reduce, cache
 from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions
 import logging
@@ -98,7 +97,7 @@ class HasteFactory(ThreatModifierFactory):
         targets = self.get_eligible_targets()
         return max([self.calculate_threat_to_target(t) for t in targets])
 
-class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
+class Haste(Actoid, LimitedDurationEffect, Threat):
 
     def __init__(self, target, factory):
         super().__init__(ActoidFlags.IS_SPELL)
@@ -133,7 +132,7 @@ class Haste(Actoid, LimitedDurationEffect, ThreatModifier):
     def is_affecting(self, combatant):
         return combatant is self.target
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         """
         It's the same as the single target version of the factory

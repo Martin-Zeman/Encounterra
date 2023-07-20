@@ -1,20 +1,17 @@
 import logging
 import math
-
 from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.misc import reconcile_roll_types, Conditions
-from functools import reduce
+from functools import reduce, cache
 from simulator.misc import avg_roll
 from simulator.threat_utils import mean_dmg, calculate_threat_in_delta
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
-
 from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
-
 
 logger = logging.getLogger("EncounTroll")
 
@@ -183,7 +180,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def get_dmg_type(self):
         return self.factory.dmg_type
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target, **kwargs)
 

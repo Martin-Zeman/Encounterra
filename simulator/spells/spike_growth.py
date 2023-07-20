@@ -1,6 +1,5 @@
 import logging
 from functools import cache
-
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.combatant_coords import Coords
@@ -113,6 +112,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def deactivate(self):
         self.factory.combatant.break_concentration()
 
+    @cache
     def calculate_threat(self, **kwargs):
         # TODO This needs more intelligence (also subtract dmg caused to allies)
         battle_map = Map.get()

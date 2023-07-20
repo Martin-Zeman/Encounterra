@@ -1,14 +1,11 @@
 from functools import cache
-
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import numpy as np
-
 from simulator.threat_utils import mean_dmg_dc_attack
-
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -81,7 +78,7 @@ class FlamingSphereRam(Actoid, DirectThreat):
     def shorthand_str(self):
         return f"Flaming Sphere Ram"
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target)
 

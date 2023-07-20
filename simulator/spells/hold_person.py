@@ -7,11 +7,9 @@ from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC, roll_saving_throw
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-
 from simulator.threat_utils import get_saving_throw_fail_prob, calculate_threat_in_delta
-from simulator.threat_interfaces import ThreatModifierFactory, ThreatModifier
+from simulator.threat_interfaces import ThreatModifierFactory, Threat
 import logging
-
 from simulator.utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -100,7 +98,7 @@ class HoldPersonFactory(ThreatModifierFactory):
         return ret
 
 
-class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier):
+class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, target, factory, **kwargs):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, turns=10)
@@ -135,9 +133,9 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
     def is_affecting(self, combatant):
         return combatant is self.target
 
+    @cache
     def calculate_threat(self, **kwargs):
         ret = self.factory.calculate_threat_to_target(self.target)
-        # logger.warning(f"MY DEBUG {self} calculate_threat = {ret}")
         return ret
 
 

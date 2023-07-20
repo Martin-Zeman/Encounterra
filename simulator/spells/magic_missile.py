@@ -1,15 +1,14 @@
+from functools import cache
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType,  avg_roll, Conditions
+from simulator.misc import DamageType, Conditions
 from simulator.actions.actoid import Actoid, ActoidFlags
-
-from simulator.threat_utils import mean_dmg, mean_dmg_auto_hit
+from simulator.threat_utils import mean_dmg_auto_hit
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
-
-from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
+from simulator.utils.roll_types import RollType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -100,7 +99,7 @@ class MagicMissile(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Magic Missile"
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         dmg_acc = mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
         dmg_acc += mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[1].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus

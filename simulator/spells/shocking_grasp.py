@@ -4,11 +4,9 @@ from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, RollType, avg_roll, Conditions
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import logging
-
 from simulator.utils.roll_types import ROLL_TYPE_CRIT, ROLL_TYPE, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -108,7 +106,7 @@ class ShockingGrasp(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SHOCKING_GRASP else "") + "Shocking Grasp"
 
-
+    @cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target)
 
