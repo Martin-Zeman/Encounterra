@@ -136,8 +136,8 @@ def translate_longest_pth_to_actions(combatant, distances, shortest_paths, trans
     :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
     :return: list of the following types: np.array, action, bonus action
     """
-    pattern = r'([msdcio]+)_\((\d+), (\d+)\)'
-    ms_pattern = r'[mscdio_]+\((\d+), (\d+)\)'
+    pattern = r'([msdchio]+)_\((\d+), (\d+)\)'
+    ms_pattern = r'[mschdio_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(combatant)
     actions = []
     battle_map = Map.get()
@@ -173,7 +173,7 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
     :param longest_pth: list of best actions as strings
     :return: list of movement increments or None
     """
-    pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+    pattern = r'([msdhio]+)_\((\d+), (\d+)\)'
     actions = []
     for action in longest_pth:
         if action == "dummy":
@@ -195,7 +195,7 @@ def get_dist_to_action_sequence_coord(longest_pth, distances):
     :param distances: potentially already pre-computed distances to all coords
     :return: list of movement increments or None
     """
-    pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+    pattern = r'([msdhio]+)_\((\d+), (\d+)\)'
     for action in longest_pth:
         if action == "dummy":
             continue

@@ -40,7 +40,7 @@ PRIORITY_ACTIONS = {
     BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "cdi_"),
     BonusAction.TOTEM_RAGE: ("TotemRage", "m_"),
     BonusAction.RAGE: ("Rage", "m_"),
-    HasteAction.HASTE_DISENGAGE: ("Disengage", "di_")
+    HasteAction.HASTE_DISENGAGE: ("Disengage", "hdi_")
 }
 
 TO_FACTORY = {
