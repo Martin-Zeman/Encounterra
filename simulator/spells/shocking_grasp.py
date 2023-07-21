@@ -106,7 +106,6 @@ class ShockingGrasp(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SHOCKING_GRASP else "") + "Shocking Grasp"
 
-    @cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target)
 

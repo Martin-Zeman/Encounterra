@@ -78,7 +78,6 @@ class FlamingSphereRam(Actoid, DirectThreat):
     def shorthand_str(self):
         return f"Flaming Sphere Ram"
 
-    @cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target)
 

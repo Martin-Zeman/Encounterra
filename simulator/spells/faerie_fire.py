@@ -109,7 +109,6 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
         self.factory.combatant.break_concentration()
         self.combatants.clear()
 
-    @cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)

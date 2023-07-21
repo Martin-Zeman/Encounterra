@@ -121,7 +121,6 @@ class TwinnedHaste(Actoid, Effect, Threat):
     def is_affecting(self, combatant):
         return combatant in self.targets
 
-    @cache
     def calculate_threat(self, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds

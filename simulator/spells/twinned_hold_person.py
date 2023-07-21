@@ -141,7 +141,6 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def is_affecting(self, combatant):
         return combatant in self.targets
 
-    @cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.targets[0]) + self.factory.calculate_threat_to_target(self.targets[1])
 

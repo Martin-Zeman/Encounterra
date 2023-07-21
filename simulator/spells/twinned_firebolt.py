@@ -99,7 +99,6 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return "Twinned Firebolt"
 
-    @cache
     def calculate_threat(self, **kwargs):
         roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]

@@ -99,7 +99,6 @@ class MagicMissile(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Magic Missile"
 
-    @cache
     def calculate_threat(self, **kwargs):
         dmg_acc = mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
         dmg_acc += mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[1].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus

@@ -112,7 +112,6 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def disable(self):
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
 
-    @cache
     def calculate_threat(self, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
         enemies = Map.get().get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)

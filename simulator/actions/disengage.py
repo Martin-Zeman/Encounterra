@@ -71,7 +71,6 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         logger.info(f"{self.combatants[0]}'s disengage fades")
         self.factory.combatant.has_disengaged = False
 
-    @cache
     def calculate_threat(self, **kwargs):
         """
         Calculate how much dmg would the Disengage potentially mitigate. This will be the same as the one for the factory.

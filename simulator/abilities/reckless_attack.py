@@ -180,7 +180,6 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def get_dmg_type(self):
         return self.factory.dmg_type
 
-    @cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target, **kwargs)
 

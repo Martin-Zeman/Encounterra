@@ -20,7 +20,8 @@ class Threat(ABC):
         return 0
 
     def clear_cache(self):
-        self.calculate_threat.cache_clear()
+        pass
+        # self.calculate_threat.cache_clear()
 
 class DirectThreat(Threat):
     """

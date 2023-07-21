@@ -65,7 +65,6 @@ class WildshapeFactory(TransformerFactory):
         # Doesn't make much sense here
         return Wildshape(self.combatant, form, self)
 
-    @cache
     def calculate_threat(self, **kwargs):
         """
         Direct threat changes such as changes in HP. Doesn't account for newly added/lost action factories.
@@ -194,7 +193,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         for haf in self.combatants[0].haste_action_factories:
             haf[1].combatant = self.combatants[0]
 
-    @cache
     def calculate_threat(self, **kwargs):
         return self.form.max_hp# * random.uniform(0.8, 1.20)  # We try to encourage trying out different wildshape forms
 

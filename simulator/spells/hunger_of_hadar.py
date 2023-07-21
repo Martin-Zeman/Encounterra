@@ -119,7 +119,6 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         # TODO remove difficult terrain
         self.factory.combatant.break_concentration()
 
-    @cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.origin)

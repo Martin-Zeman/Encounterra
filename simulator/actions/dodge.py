@@ -69,7 +69,6 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         except KeyError:
             pass  # may not be present if called by reset
 
-    @cache
     def calculate_threat(self, **kwargs):
         """
         Calculate how much dmg would the dodge potentially mitigate. This will be the same as the one for the factory.

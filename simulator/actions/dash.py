@@ -48,7 +48,6 @@ class Dash(Actoid, AttackThreatModifier):
             prefix = "Hasted "
         return prefix + f"Dash"
 
-    @cache
     def calculate_threat(self, **kwargs):
         return 0  # TODO calculate the danger zone delta here
 

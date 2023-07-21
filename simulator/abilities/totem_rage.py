@@ -107,7 +107,6 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModi
         self.combatants[0].resistances.remove(DamageType.Poison)
         self.combatants[0].resistances.remove(DamageType.Radiant)
 
-    @cache
     def calculate_threat(self, **kwargs):
         """
         Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to

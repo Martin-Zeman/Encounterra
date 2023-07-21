@@ -132,7 +132,6 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
     def is_affecting(self, combatant):
         return combatant is self.target
 
-    @cache
     def calculate_threat(self, **kwargs):
         """
         It's the same as the single target version of the factory

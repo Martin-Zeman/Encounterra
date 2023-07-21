@@ -117,7 +117,6 @@ class Firebolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + "Firebolt"
 
-    @cache
     def calculate_threat(self, **kwargs):
         roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]

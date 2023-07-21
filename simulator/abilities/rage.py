@@ -131,7 +131,6 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier)
         self.combatants[0].resistances.remove(DamageType.Bludgeoning)
         self.combatants[0].resistances.remove(DamageType.Piercing)
 
-    @cache
     def calculate_threat(self, **kwargs):
         """
         Finds the combatant's attack that benefits the most from the dmg increment. Then adds the estimated damage prevention equal to

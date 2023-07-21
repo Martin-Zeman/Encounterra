@@ -61,7 +61,6 @@ class MistyStep(Actoid, Threat):
     def shorthand_str(self):
         return "Misty Step"
 
-    @cache
     def calculate_threat(self, **kwargs):
         return 0  # Misty Step is handled differently
 

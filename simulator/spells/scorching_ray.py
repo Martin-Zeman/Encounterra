@@ -111,7 +111,6 @@ class ScorchingRay(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Scorching Ray"
 
-    @cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
