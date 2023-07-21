@@ -7,6 +7,7 @@ from simulator.abilities.wildshape import WildshapeFactory
 from simulator.action_resolver import ActionResolver, ActionResult
 from simulator.actions.action_selector import get_action
 from simulator.actions.action_types import BonusAction
+from simulator.actions.hide import HideFactory
 from simulator.battle_map import Terrain
 from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
@@ -419,8 +420,37 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+def test_cunning_hide_geometry(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
+    """
+    Based on a scenario encountered during testing. The bounding box overlap test was incorrect.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    battle_map.place_circular_element(np.array([6, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([2, 11]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([11, 12]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([1, 5]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([12, 8]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([2, 1]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
+    battle_map.build_adjacency_matrix()
+    _, shortest_paths = battle_map.calc_dijkstra(test_assassin_rogue)
+    battle_map.cache_visibility_dict_for_all_coords(test_assassin_rogue, shortest_paths)
 
-def test_cunning_hide(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
+    hf = HideFactory(BonusAction.CUNNING_HIDE, test_assassin_rogue)
+    hide = hf.create(test_goblin)
+    eligible_coords = hide.get_eligible_coords(None, None)
+    assert (5, 10) not in eligible_coords
+    assert (6, 10) not in eligible_coords
+
+
+
+def test_cunning_hide_used(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
     """
     We assert that the druid doesn't plan a wildshape action when grappled and unable to move to a place where there's the space to do so.
     """
@@ -459,11 +489,15 @@ def test_cunning_hide(battle_map, teams, effect_tracker, test_assassin_rogue, te
         assert str(actoid7).startswith("Cunning Hide")
         action_resolver.resolve_action(actoid7, test_assassin_rogue)
         actoid8 = get_action(test_assassin_rogue)
+        assert str(actoid8) == "Shortbow on Ogre"
         action_resolver.resolve_action(actoid8, test_assassin_rogue)
+        test_assassin_rogue.new_turn()
         actoid9 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
         actoid10 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
+        actoid11 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid11, test_assassin_rogue)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

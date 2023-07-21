@@ -1292,10 +1292,11 @@ class Map:
         bottom_left, top_right = get_bounding_box(observer, target)
         objects = []
         for obstacle in self.obstacles:
-            obstacle_tr = obstacle.coord + obstacle.radius + (1, 1)
+            obstacle_tr = obstacle.coord + obstacle.radius
             obstacle_bl = obstacle.coord - obstacle.radius
-            if obstacle_tr[0] >= bottom_left[0] and obstacle_bl[0] <= top_right[0] and obstacle_bl[1] <= top_right[1] and obstacle_tr[1] >= bottom_left[0]:
-                objects.append(obstacle)
+            if obstacle_tr[0] < bottom_left[0] or obstacle_bl[0] > top_right[0] or obstacle_bl[1] > top_right[1] or obstacle_tr[1] < bottom_left[1]:
+                continue
+            objects.append(obstacle)
         objects.append(target)
 
         vec_to_object = [(vec, o) for o in objects for vec in find_fov_vectors(observer, o)]
