@@ -449,6 +449,21 @@ def test_cunning_hide(battle_map, teams, effect_tracker, test_assassin_rogue, te
         action_resolver.resolve_action(actoid2, test_assassin_rogue)
         actoid3 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid3, test_assassin_rogue)
+        actoid4 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid4, test_assassin_rogue)
+        actoid5 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid5, test_assassin_rogue)
+        actoid6 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid6, test_assassin_rogue)
+        actoid7 = get_action(test_assassin_rogue)
+        assert str(actoid7).startswith("Cunning Hide")
+        action_resolver.resolve_action(actoid7, test_assassin_rogue)
+        actoid8 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid8, test_assassin_rogue)
+        actoid9 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid9, test_assassin_rogue)
+        actoid10 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid10, test_assassin_rogue)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

@@ -478,7 +478,7 @@ class ActionResolver:
             case Movement.STANDARD | Movement.DISENGAGED:
                 if not self.request_movement(combatant, actoid):
                     return False
-            case Movement.DASH:
+            case Action.DASH | BonusAction.CUNNING_DASH:
                 combatant.movement += combatant.speed
                 return False
             case Movement.GET_UP_FROM_PRONE:

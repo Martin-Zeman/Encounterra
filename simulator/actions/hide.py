@@ -110,4 +110,4 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
         if self.factory.combatant.get_swallower():
             return False
         battle_map = Map.get()
-        return battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant))][self.target] is Visibility.NONE
+        return battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])][self.target] is Visibility.NONE
