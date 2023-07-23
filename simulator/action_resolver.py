@@ -353,7 +353,7 @@ class ActionResolver:
                 on_hit_dmg = attack.factory.on_hit.hit(attacker, attack, target)
                 if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
                     on_hit_dmg[0] *= multiplier
-                    logger.info(f"With extra {on_hit_dmg[0]} damage from {attack.factory.on_hit.name()}", extra={"team": self.teams.get_team(attacker)})
+                    logger.info(f"With extra {on_hit_dmg[0]} damage from {attack.factory.on_hit.name}", extra={"team": self.teams.get_team(attacker)})
                     total_compound_dmg.append(on_hit_dmg)
             target.receive_compound_dmg(total_compound_dmg)
             Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form

@@ -117,6 +117,9 @@ class Combatant(ABC, ProtoCombatant):
     def on_die(self):
         pass
 
+    def on_end_of_turn(self):
+        pass
+
     def roll_initiative(self):
         self.curr_init = random.randint(1, 20) + self.init_bonus
 

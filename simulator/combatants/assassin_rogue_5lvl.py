@@ -39,6 +39,12 @@ class AssassinRogue5Lvl(Combatant):
         self.attack_fsm.add_transition(str(self.rapier[1]), '0', 'nop')
         self.attack_fsm.add_transition(str(self.shortbow[1]), '0', 'nop')
 
+    def new_turn(self):
+        super().new_turn()
+        self.already_used_sneak_attack_this_turn = False
+
+    def on_end_of_turn(self):
+        self.already_used_sneak_attack_this_turn = False
 
     def prompt_aoo(self, moving_combatant):
         return None  # Saving reaction for Shield
@@ -50,7 +56,8 @@ class AssassinRogue5Lvl(Combatant):
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
-            'attack_state_machine': self.attack_fsm.state
+            'attack_state_machine': self.attack_fsm.state,
+            'ammo': copy.deepcopy(self.ammo)
         }
 
     def load_resources(self, resources):
@@ -60,6 +67,7 @@ class AssassinRogue5Lvl(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
+        self.ammo = resources['ammo']
 
 
     def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):

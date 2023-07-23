@@ -63,9 +63,15 @@ class RangedAttack(Attack):
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
         else:
             # We only consider the coords where Visibility.NONE transitions into any other kind
-            return {coord for coord in free_coords_in_range if
-                    battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE
-                    and shortest_paths.get(coord, Visibility.NONE) is Visibility.NONE}
+            ret = set()
+            for coord in free_coords_in_range:
+                if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE:
+                    try:
+                        if battle_map.visibility_dict_for_all_coords[tuple(shortest_paths[coord])][self.target] is Visibility.NONE:
+                            ret.add(coord)
+                    except KeyError:
+                        ret.add(coord)
+            return ret
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower() is self.target:

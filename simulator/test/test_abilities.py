@@ -488,7 +488,7 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         actoid6 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid6, test_assassin_rogue)
         actoid7 = get_action(test_assassin_rogue)
-        assert str(actoid7).startswith("Cunning Hide")
+        assert str(actoid7).startswith("Cunning Hide of AssassinRogue from Goblin")  # Wants to hide from Ogre but can't make it all the way
         action_resolver.resolve_action(actoid7, test_assassin_rogue)
         actoid8 = get_action(test_assassin_rogue)
         assert str(actoid8) == "Shortbow on Ogre"
@@ -497,9 +497,128 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         actoid9 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
         actoid10 = get_action(test_assassin_rogue)
+        assert str(actoid10).startswith("Cunning Hide of AssassinRogue from Ogre")
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
         actoid11 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid11, test_assassin_rogue)
+        assert str(actoid11).startswith("[") and str(actoid11) is not "[0 1]"
+        action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
+        actoid12 = get_action(test_assassin_rogue)
+        assert str(actoid12) == "Shortbow on Ogre"
+        action_resolver.resolve_action(actoid12, test_assassin_rogue)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
+    """
+    Test scenario where the Rogue has two enemies and one ally adjacent to one of the enemies. The Rogue doesn't need to hide to trigger
+    Sneak Attack but hiding still gives advantage so the rogue goes for it.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    battle_map.place_circular_element(np.array([6, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([2, 11]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([11, 12]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([1, 5]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 2]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([2, 1]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
+    battle_map.build_adjacency_matrix()
+    test_assassin_rogue.stealth = 20  # Making sure the hide always works
+
+    try:
+        actoid1 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid1, test_assassin_rogue)
+        actoid2 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid2, test_assassin_rogue)
+        actoid3 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid3, test_assassin_rogue)
+        actoid4 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid4, test_assassin_rogue)
+        actoid5 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid5, test_assassin_rogue)
+        actoid6 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid6, test_assassin_rogue)
+        actoid7 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid7, test_assassin_rogue)
+        actoid8 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid8, test_assassin_rogue)
+        test_assassin_rogue.new_turn()
+        actoid9 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid9, test_assassin_rogue)
+        actoid10 = get_action(test_assassin_rogue)
+        assert str(actoid10).startswith("Cunning Hide of AssassinRogue from Ogre")
+        action_resolver.resolve_action(actoid10, test_assassin_rogue)
+        actoid11 = get_action(test_assassin_rogue)
+        assert str(actoid11).startswith("[") and str(actoid11) is not "[0 1]"
+        action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
+        actoid12 = get_action(test_assassin_rogue)
+        assert str(actoid12) == "Shortbow on Ogre"
+        action_resolver.resolve_action(actoid12, test_assassin_rogue)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
+    """
+    Test scenario where the Rogue has two enemies and one ally adjacent to one of the enemies. The Rogue doesn't need to hide to trigger
+    Sneak Attack but hiding still gives advantage so the rogue goes for it. Ihis time the hiding spot can be reached in the first turn.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    battle_map.place_circular_element(np.array([6, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([2, 9]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([11, 12]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([1, 5]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 2]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([2, 1]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
+    battle_map.build_adjacency_matrix()
+    test_assassin_rogue.stealth = 20  # Making sure the hide always works
+
+    try:
+        actoid1 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid1, test_assassin_rogue)
+        actoid2 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid2, test_assassin_rogue)
+        actoid3 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid3, test_assassin_rogue)
+        actoid4 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid4, test_assassin_rogue)
+        actoid5 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid5, test_assassin_rogue)
+        actoid6 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid6, test_assassin_rogue)
+        actoid7 = get_action(test_assassin_rogue)
+        assert str(actoid7).startswith("Cunning Hide of AssassinRogue from Ogre")
+        action_resolver.resolve_action(actoid7, test_assassin_rogue)
+        actoid8 = get_action(test_assassin_rogue)
+        assert str(actoid8) == "Shortbow on Ogre"
+        action_resolver.resolve_action(actoid8, test_assassin_rogue)
+        test_assassin_rogue.new_turn()
+        actoid9 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid9, test_assassin_rogue)
+        actoid10 = get_action(test_assassin_rogue)
+        assert str(actoid10).startswith("Cunning Hide of AssassinRogue from Ogre")
+        action_resolver.resolve_action(actoid10, test_assassin_rogue)
+        actoid11 = get_action(test_assassin_rogue)
+        assert str(actoid11).startswith("[") and str(actoid11) is not "[0 1]"
+        action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
+        actoid12 = get_action(test_assassin_rogue)
+        assert str(actoid12) == "Shortbow on Ogre"
+        action_resolver.resolve_action(actoid12, test_assassin_rogue)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

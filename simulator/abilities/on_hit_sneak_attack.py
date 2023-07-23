@@ -48,7 +48,7 @@ class OnHitSneakAttack(OnHit):
             logger.info("Activating Sneak Attack")
             dice = parse_dmg_dice(self.dmg_dice)
             attacker.already_used_sneak_attack_this_turn = True
-            return roll_dice(dice), self.dmg_type
+            return [roll_dice(dice), self.dmg_type]
 
     def calculate_threat(self, attacker, target, **kwargs):
         battle_map = Map.get()
