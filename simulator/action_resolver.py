@@ -353,7 +353,7 @@ class ActionResolver:
                 on_hit_dmg = attack.factory.on_hit.hit(attacker, attack, target)
                 if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
                     on_hit_dmg[0] *= multiplier
-                    logger.info(f"With extra {on_hit_dmg[0]} damage from {attack.factory.on_hit.name()}", extra={"team": self.teams.get_team(attacker)})
+                    logger.info(f"With extra {on_hit_dmg[0]} damage from {attack.factory.on_hit.name}", extra={"team": self.teams.get_team(attacker)})
                     total_compound_dmg.append(on_hit_dmg)
             target.receive_compound_dmg(total_compound_dmg)
             Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
@@ -401,17 +401,14 @@ class ActionResolver:
         match actoid.factory.action_type:
             case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | HasteAction.HASTE_DISENGAGE:
                 actoid.activate()
-                # self.effect_tracker.add(actoid, combatant)
                 return False
             case Action.RECKLESS_ATTACK:
                 if not self.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK):
                     # don't need to add it again in case of a multi-attack
                     actoid.activate()
-                    # self.effect_tracker.add(actoid, combatant)
                     return self.resolve_attack(actoid, combatant)
             case Action.WILDSHAPE | BonusAction.MOON_WILDSHAPE:
                 actoid.activate()
-                # self.effect_tracker.add(actoid, combatant)
                 return False
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 logger.info(f"{combatant} casts {actoid}")
@@ -446,8 +443,7 @@ class ActionResolver:
                 return result
             case Action.TWINNED_SHOCKING_GRASP:
                 logger.info(f"{combatant} casts {actoid}")
-                result = (self.resolve_attack(actoid, combatant),
-                       self.resolve_attack(actoid, combatant))
+                result = (self.resolve_attack(actoid, combatant), self.resolve_attack(actoid, combatant))
                 if result[0] is ActionResult.DMG:
                     actoid.targets[0].has_reaction = False
                 if result[1] is ActionResult.DMG:
@@ -474,11 +470,12 @@ class ActionResolver:
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
                 | Action.BITE_AND_SWALLOW:
+                battle_map.effect_tracker.remove_effect_by_type(combatant, EffectType.HIDE)
                 return self.resolve_attack(actoid, combatant)
-            case Movement.STANDARD | Movement.DISENGAGE:
+            case Movement.STANDARD | Movement.DISENGAGED:
                 if not self.request_movement(combatant, actoid):
                     return False
-            case Movement.DASH:
+            case Action.DASH | BonusAction.CUNNING_DASH:
                 combatant.movement += combatant.speed
                 return False
             case Movement.GET_UP_FROM_PRONE:

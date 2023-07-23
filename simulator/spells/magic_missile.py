@@ -1,15 +1,14 @@
+from functools import cache
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType,  avg_roll, Conditions
+from simulator.misc import DamageType, Conditions, Visibility
 from simulator.actions.actoid import Actoid, ActoidFlags
-
-from simulator.threat_utils import mean_dmg, mean_dmg_auto_hit
+from simulator.threat_utils import mean_dmg_auto_hit
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
-
-from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
+from simulator.utils.roll_types import RollType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -91,7 +90,7 @@ class MagicMissile(Actoid, DirectThreat):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
         self.targets = targets
         self.factory = factory
-        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.empowered = kwargs.get("empowered", False)
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
@@ -99,7 +98,6 @@ class MagicMissile(Actoid, DirectThreat):
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Magic Missile"
-
 
     def calculate_threat(self, **kwargs):
         dmg_acc = mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
@@ -128,7 +126,12 @@ class MagicMissile(Actoid, DirectThreat):
                                                                           inflate_to_size=self.factory.combatant.size,
                                                                           rng=MagicMissileFactory.range,
                                                                           combatant=self.factory.combatant)
-        return coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
+        free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
+
+        return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+                and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
+                and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE}
+
 
     def is_current_coord_eligible(self):
         if all([t is self.factory.combatant.get_swallower() for t in self.targets]):

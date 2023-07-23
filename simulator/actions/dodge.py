@@ -1,16 +1,14 @@
 from functools import cache
-
 from simulator.actions.action_types import Action
-from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
+from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.threat_utils import calculate_threat_in_delta
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
+from simulator.threat_interfaces import ThreatModifierFactory, Threat
 from simulator.misc import SavingThrow
 import logging
-
 from simulator.utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -43,7 +41,7 @@ class DodgeFactory(ThreatModifierFactory):
         return -1 * calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES)[0] / 2
 
 
-class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
+class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
 
     def __init__(self, combatant, factory):
         CombatantEffect.__init__(self, combatants=[combatant])
@@ -70,7 +68,6 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
             self.combatants[0].saving_throws_roll_type_mod[SavingThrow.DEX].remove(RollType.ADVANTAGE)
         except KeyError:
             pass  # may not be present if called by reset
-
 
     def calculate_threat(self, **kwargs):
         """

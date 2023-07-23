@@ -103,7 +103,7 @@ def use_resources(combatant, action):
                 logger.error("Unknown reaction type")
     elif isinstance(action_type, Movement):
         match action_type:
-            case Movement.STANDARD | Movement.DISENGAGE:
+            case Movement.STANDARD | Movement.DISENGAGED:
                 battle_map = Map.get()
                 target_position = battle_map.get_combatant_position(subject) + action.increment  # Position is tracked at the original
                 decrement = 1

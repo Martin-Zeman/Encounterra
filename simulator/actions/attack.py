@@ -1,7 +1,6 @@
 from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import reduce, cache
-
+from functools import cache
 from simulator.battle_map import Map
 from simulator.misc import avg_roll, Conditions
 from simulator.threat_utils import mean_dmg, calc_p_hit
@@ -9,8 +8,7 @@ from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
 import math
 import logging
-
-from simulator.utils.roll_types import RollType, ROLL_TYPE_CRIT, ROLL_TYPE, ThreatModifierType
+from simulator.utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -72,9 +70,9 @@ class AttackFactory(DirectThreatFactory):
     #         return 0
     #     def mean_dmg_mod(acc, pt):
     #         to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
-    #         to_hit_total += ROLL_TYPE[roll_type][max(0, min(pt.ac - to_hit_total, 20))]
+    #         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(pt.ac - to_hit_total, 20))]
     #         total_crit = self.crit_range + self.mod_crit_range
-    #         total_crit *= ROLL_TYPE_CRIT[roll_type]
+    #         total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
     #         acc += mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
     #                               self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_resistant_to(self.dmg_type))
     #         for extra in self.extra_dmg:
@@ -87,17 +85,11 @@ class AttackFactory(DirectThreatFactory):
 
 
     def calculate_threat_to_target(self, target, **kwargs):
-        try:
-            consider_dist = kwargs["consider_dist"]
-        except KeyError:
-            consider_dist = False
-        try:
-            roll_type = kwargs['roll_type']
-        except KeyError:
-            roll_type = RollType.STRAIGHT
+        consider_dist = kwargs.get("consider_dist", False)
+        roll_type = kwargs.get("roll_type", RollType.STRAIGHT)
 
         to_hit_total = self.to_hit
-        to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
+        to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         if not consider_dist or Map.get().get_hop_distance(self.combatant, target) <= self.range:
@@ -130,11 +122,11 @@ class AttackFactory(DirectThreatFactory):
         total_target_ac = target.ac + target_ac
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
         try:
-            to_hit_total += ROLL_TYPE[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
+            to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         except KeyError:  # Can happen for extreme differences between the AC and the to_hit
             pass  # The effect is negligible in that case
         total_crit = self.crit_range + mod_crit_range
-        total_crit *= ROLL_TYPE_CRIT[roll_type]
+        total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
         total_crit = 20 if auto_crit else total_crit
         try:
             modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
@@ -169,7 +161,6 @@ class Attack(Actoid, DirectThreat):
 
     def get_dmg_type(self):
         return self.factory.dmg_type
-
 
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target, **kwargs)

@@ -348,9 +348,6 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
     :param disengaged: If True then don't include the AoOs
     :return: accumulated threat (negative)
     """
-    # TODO Make it prefer
-    # class Dummy(object):
-    #     pass
     threat_acc = 0
     max_threat_path = None
 
@@ -389,14 +386,20 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
         ms_dag.dependencies = dict()
         for t in transitions:
             ms_dag.add_transition(t[0], t[1], t[2])
-        # dummy = Dummy()
-        # graph_ms_dag = GraphMachine(dummy, states=ms_dag.states, transitions=transitions, initial=initial_state_name)
+            try:
+                ms_dag.dependencies[t[2]].append(t[1])
+            except KeyError:
+                ms_dag.dependencies[t[2]] = [t[1]]
         for i in range(0, len(coords) - 1):
             for j in range(i + 1, len(coords)):
                 if np.linalg.norm(coords[i] - coords[j]) <= MistyStepFactory.range:
                     dest_name = "ms_" + str(tuple(coords[j]))
-                    ms_dag.add_transition('ms_to_' + dest_name, str(tuple(coords[i])), dest_name)
-                    # graph_ms_dag.add_transition('ms_to_' + dest_name, str(tuple(coords[i])), dest_name)
+                    origin = str(tuple(coords[i]))
+                    ms_dag.add_transition('ms_to_' + dest_name, origin, dest_name)
+                    try:
+                        ms_dag.dependencies[dest_name].append(origin)
+                    except KeyError:
+                        ms_dag.dependencies[dest_name] = [origin]
 
         # Then sort the states topologically and find the longest path
         sorted_states = toposort_flatten(ms_dag.dependencies)
@@ -417,7 +420,6 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
 
         max_threat_path = reconstruct_path_through_dag(sorted_states[-1], sorted_states[0], max_threat_backwards_transition)
         threat_acc += threat[states[-1]]  # the last ms state was added last which represents the longest (best) path
-        # graph_ms_dag.get_graph().draw('misty_step_dag.png', prog='dot')
     # account for the final destination
     threat_acc -= get_threat_for_staying_at_coord(curr_coords_data if path else curr_coords.get(), combatant)
     return threat_acc, max_threat_path

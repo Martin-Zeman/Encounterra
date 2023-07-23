@@ -1,18 +1,16 @@
+from functools import cache
 from itertools import combinations
-
 from simulator.battle_map import Map
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.hold_person import HoldPersonFactory
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw
+from simulator.misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-
 from simulator.threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
-from simulator.threat_interfaces import ThreatModifierFactory, ThreatModifier
+from simulator.threat_interfaces import ThreatModifierFactory, Threat
 import logging
-
 from simulator.utils.roll_types import ThreatModifierType, RollType
 
 logger = logging.getLogger("EncounTroll")
@@ -99,7 +97,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         return (threats[0] if threats else 0) + (threats[1] if len(threats) > 1 else 0)
 
 
-class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier):
+class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, targets, factory, **kwargs):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, turns=10)
@@ -143,7 +141,6 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
     def is_affecting(self, combatant):
         return combatant in self.targets
 
-
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.targets[0]) + self.factory.calculate_threat_to_target(self.targets[1])
 
@@ -159,7 +156,11 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatMo
                                                               distances,
                                                               inflate_to_size=self.factory.combatant.size,
                                                               rng=TwinnedHoldPersonFactory.range)
-        return coords_for_first.intersection(coords_for_second)
+        free_coords_in_range = coords_for_first.intersection(coords_for_second)
+
+        return {coord for coord in free_coords_in_range if
+                battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+                and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():

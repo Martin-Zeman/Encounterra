@@ -4,14 +4,12 @@ from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC, roll_saving_throw
+from simulator.misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC, roll_saving_throw, Visibility
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-
 from simulator.threat_utils import get_saving_throw_fail_prob, calculate_threat_in_delta
-from simulator.threat_interfaces import ThreatModifierFactory, ThreatModifier
+from simulator.threat_interfaces import ThreatModifierFactory, Threat
 import logging
-
 from simulator.utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
@@ -100,7 +98,7 @@ class HoldPersonFactory(ThreatModifierFactory):
         return ret
 
 
-class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier):
+class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, target, factory, **kwargs):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, turns=10)
@@ -137,16 +135,16 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, ThreatModifier)
 
     def calculate_threat(self, **kwargs):
         ret = self.factory.calculate_threat_to_target(self.target)
-        # logger.warning(f"MY DEBUG {self} calculate_threat = {ret}")
         return ret
 
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+        free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=HoldPersonFactory.range, combatant=self.factory.combatant)
+        return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():

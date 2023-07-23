@@ -1,10 +1,7 @@
 import logging
-
-from toposort import toposort_flatten
-
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.action_plan_strategy import ActionPlanStrategy
-from simulator.actions.action_selector import longest_path, build_action_dag, translate_longest_pth_to_actions, extract_movement
+from simulator.actions.action_selector import calc_best_sequence, build_action_dag, translate_sequence_to_actions, extract_movement
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 
 logger = logging.getLogger("EncounTroll")
@@ -17,16 +14,13 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         with self.combatant.as_if_new_turn() as combatant:
             get_aoe_and_aoo_threat_for_increment.cache_clear()
             fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(combatant)
-            dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths,
-                                   post_misty_step_actions)
+            dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
             if dag is None:
                 return None
-            sorted_states = toposort_flatten(dag.dependencies)
-            longest_pth, transition_name_to_ms_path = longest_path(combatant, dag, sorted_states, transition_name_to_action,
-                                                                   distances, shortest_paths)
-            if longest_pth is None:
+            best_sequence, transition_name_to_ms_path = calc_best_sequence(combatant, dag, transition_name_to_action, distances, shortest_paths)
+            if best_sequence is None:
                 return None
-        return extract_movement(self.combatant, distances, shortest_paths, longest_pth)
+        return extract_movement(self.combatant, distances, shortest_paths, best_sequence)
 
     def calculate_action_plan(self, distances, shortest_paths):
         """
@@ -44,10 +38,9 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
                 movement = self.get_movement_for_next_turn(distances, shortest_paths)
             return movement
-        sorted_states = toposort_flatten(dag.dependencies)
-        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, dag, sorted_states, transition_name_to_action, distances, shortest_paths)
-        if longest_pth is None:
+        best_sequence, transition_name_to_ms_path = calc_best_sequence(self.combatant, dag, transition_name_to_action, distances, shortest_paths)
+        if best_sequence is None:
             return None
         # logger.info(f"{self.combatant}'s plan {longest_pth}")# TODO FIXME
         # print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
-        return translate_longest_pth_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)
+        return translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, best_sequence, transition_name_to_ms_path)

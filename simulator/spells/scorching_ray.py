@@ -1,18 +1,14 @@
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
-from simulator.combatant_coords import Coords
-from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, percent_of_curr_hp, avg_roll, Conditions
+from simulator.misc import DamageType, avg_roll, Conditions, Visibility
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import reduce, cache
-
+from functools import cache
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
-
-from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
+from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -61,8 +57,8 @@ class ScorchingRayFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= ScorchingRayFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
-            to_hit_total = self.to_hit + ROLL_TYPE[roll_type][max(0, min(target.ac - self.to_hit, 20))]
-            return 3 * mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT[roll_type], target.is_resistant_to(ScorchingRayFactory.dmg_type))
+            to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
+            return 3 * mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT_DELTA[roll_type], target.is_resistant_to(ScorchingRayFactory.dmg_type))
         else:
             return 0
 
@@ -75,8 +71,8 @@ class ScorchingRayFactory(DirectThreatFactory):
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-        to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
-        total_crit = ROLL_TYPE_CRIT[roll_type]
+        to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
+        total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
         # We assume the maximum threat in case where all three rays are aimed at the target
         return 3*(mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(ScorchingRayFactory.dmg_type)) - \
@@ -106,7 +102,7 @@ class ScorchingRay(Actoid, DirectThreat):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.targets = targets
         self.factory = factory
-        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.empowered = kwargs.get("empowered", False)
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
@@ -115,16 +111,15 @@ class ScorchingRay(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Scorching Ray"
 
-
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        crit_multiplier = ROLL_TYPE_CRIT[roll_type]
-        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
+        crit_multiplier = ROLL_TYPE_CRIT_DELTA[roll_type]
+        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
         dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, crit_multiplier, self.targets[0].is_resistant_to(ScorchingRayFactory.dmg_type))
-        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
+        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
         dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, crit_multiplier, self.targets[1].is_resistant_to(ScorchingRayFactory.dmg_type))
-        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.targets[2].ac - self.factory.to_hit, 20))]
+        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[2].ac - self.factory.to_hit, 20))]
         dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, crit_multiplier, self.targets[2].is_resistant_to(ScorchingRayFactory.dmg_type))
         return dmg_acc
 
@@ -151,7 +146,12 @@ class ScorchingRay(Actoid, DirectThreat):
                                                                           inflate_to_size=self.factory.combatant.size,
                                                                           rng=ScorchingRayFactory.range,
                                                                           combatant=self.factory.combatant)
-        return coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
+        free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
+
+        return {coord for coord in free_coords_in_range if
+                battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+                and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
+                and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE}
 
     def is_current_coord_eligible(self):
         if all([t is self.factory.combatant.get_swallower() for t in self.targets]):

@@ -1,21 +1,17 @@
 import math
-import random
-
+from functools import cache
 import numpy as np
-
 from simulator.actions.action_types import Action, BonusAction
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.battle_map import Map
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.misc import SavingThrow, Size
-
 from simulator.threat_interfaces import TransformerFactory, DirectThreat
 import logging
 
 logger = logging.getLogger("EncounTroll")
-
 
 class WildshapeFactory(TransformerFactory):
 

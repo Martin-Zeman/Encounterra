@@ -5,11 +5,11 @@ from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
 from simulator.battle_map import Map
 from simulator.combatant_coords import Coords
-from simulator.misc import percent_of_curr_hp
-from simulator.threat_utils import mean_dmg
+from simulator.misc import percent_of_curr_hp, Visibility
+from simulator.threat_utils import mean_dmg, calc_p_hit
 import logging
 
-from simulator.utils.roll_types import RollType, ROLL_TYPE
+from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA
 
 logger = logging.getLogger("EncounTroll")
 
@@ -27,17 +27,11 @@ class RangedAttackFactory(AttackFactory):
         return [RangedAttack(t, self) for t in targets]
 
     def calculate_threat_to_target(self, target, **kwargs):
-        try:
-            consider_dist = kwargs["consider_dist"]
-        except KeyError:
-            consider_dist = False
-        try:
-            roll_type = kwargs['roll_type']
-        except KeyError:
-            roll_type = RollType.STRAIGHT
+        consider_dist = kwargs.get("consider_dist", False)
+        roll_type = kwargs.get("roll_type", RollType.STRAIGHT)
 
         to_hit_total = self.to_hit
-        to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
+        to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         battle_map = Map.get()
@@ -45,6 +39,8 @@ class RangedAttackFactory(AttackFactory):
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
                 acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
+            if self.on_hit:
+                acc += calc_p_hit(to_hit_total, target.ac) * self.on_hit.calculate_threat(self.combatant, target)
             return acc
         return 0
 
@@ -59,10 +55,23 @@ class RangedAttack(Attack):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                             distances,
-                                                             inflate_to_size=self.factory.combatant.size,
-                                                             rng=self.factory.range, combatant=self.factory.combatant)
+        free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+                                                                             distances,
+                                                                             inflate_to_size=self.factory.combatant.size,
+                                                                             rng=self.factory.range, combatant=self.factory.combatant)
+        if not battle_map.effect_tracker.is_combatant_hidden_from(self.factory.combatant, self.target):
+            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+        else:
+            # We only consider the coords where Visibility.NONE transitions into any other kind
+            ret = set()
+            for coord in free_coords_in_range:
+                if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE:
+                    try:
+                        if battle_map.visibility_dict_for_all_coords[tuple(shortest_paths[coord])][self.target] is Visibility.NONE:
+                            ret.add(coord)
+                    except KeyError:
+                        ret.add(coord)
+            return ret
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower() is self.target:

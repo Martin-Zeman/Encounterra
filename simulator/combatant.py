@@ -117,6 +117,9 @@ class Combatant(ABC, ProtoCombatant):
     def on_die(self):
         pass
 
+    def on_end_of_turn(self):
+        pass
+
     def roll_initiative(self):
         self.curr_init = random.randint(1, 20) + self.init_bonus
 
@@ -545,12 +548,12 @@ class Combatant(ABC, ProtoCombatant):
 
     @contextmanager
     def as_if_new_turn(self):
-        exported_resources = self.export_resources()
+        has_action = self.has_action
         try:
-            self.new_turn()
+            self.has_action = True
         finally:
             yield self
-        self.load_resources(exported_resources)
+        self.has_action = has_action
 
     def add_team(self, team_color):
         self.team_color = team_color

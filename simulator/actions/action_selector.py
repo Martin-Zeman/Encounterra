@@ -2,40 +2,23 @@ import copy
 import logging
 import re
 import math
+import sys
+import time
 
 import numpy as np
-from toposort import toposort_flatten
 
 from simulator.actions.action_constants import PRIORITY_ACTIONS
 from simulator.actions.action_types import Movement
 from simulator.actions.break_grapple import BreakGrappleFactory
 from simulator.actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from simulator.battle_map import convert_path_to_increments, Map
-from simulator.combatant_coords import Coords
-from simulator.misc import reconstruct_path_through_dag, Conditions
+from simulator.misc import Conditions
 from simulator.spells.misty_step import MistyStepFactory
+from simulator.threat_interfaces import AttackThreatModifier
 from simulator.threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
 
 logger = logging.getLogger("EncounTroll")
 
-def find_ranges_of_consecutive(coords_w_threats):
-    """
-    A helper function which returns the index ranges consecutive threat.
-    :param coords_w_threats: list of tuples in the [((x1, y1), threat1), ((x2, y2), threat2)...] format
-    :return: dict which maps threat -> (start_index, end_index)
-    """
-    res = dict()
-    idx = 0
-    while idx < len(coords_w_threats):
-        start_pos = idx
-        val = coords_w_threats[idx][1]
-
-        while (idx < len(coords_w_threats) and coords_w_threats[idx][1] == val):
-            idx += 1
-        end_pos = idx - 1
-
-        res[val] = start_pos, end_pos
-    return res
 
 def get_post_transitions_of_priority_transitions(dag, transition_name_to_action):
     """
@@ -104,27 +87,6 @@ def build_priority_transitions(post_priority_transitions, action_to_eligible_coo
         if newly_added_state not in dag.forward_transitions.keys():
             dag.add_transition("dummy", newly_added_state, "nop")
 
-def prune_dead_dependencies(dag):
-    """
-    A small helper function which cuts off the dependencies any states that are unreachable from '0'. This is necessary since
-    the dead branch may be arbitrarily long (for long multiattacks)
-    :param dag: the DAG to be pruned
-    :return: None but the dag is modified
-    """
-    removed = True
-    while removed:
-        removed = False
-        for state in dag.states:
-            try:
-                if not dag.dependencies[state]:
-                    logger.info(f"Pruning state {state}")  # TODO Remove me, FIXME
-                    for successor_state in dag.forward_transitions[state]:
-                        dag.dependencies[successor_state[1]] = [e for e in dag.dependencies[successor_state[1]] if e != state]
-                    removed = True
-            except KeyError:
-                pass  # Will happen for state 0
-        dag.dependencies = {k:v for k, v in dag.dependencies.items() if v}
-
 
 def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pattern, ms_factory):
     """
@@ -164,7 +126,7 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pat
         after_path = convert_path_to_increments(after_path)
         actions.extend(list(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
 
-def translate_longest_pth_to_actions(combatant, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path):
+def translate_sequence_to_actions(combatant, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path):
     """
     Translates the string form of longest path back to action objects
     :param combatant: the combatant for whom the actions are translated
@@ -175,8 +137,8 @@ def translate_longest_pth_to_actions(combatant, distances, shortest_paths, trans
     :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
     :return: list of the following types: np.array, action, bonus action
     """
-    pattern = r'([msdio]+)_\((\d+), (\d+)\)'
-    ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
+    pattern = r'([msdchio]+)_\((\d+), (\d+)\)'
+    ms_pattern = r'[mschdio_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(combatant)
     actions = []
     battle_map = Map.get()
@@ -192,9 +154,9 @@ def translate_longest_pth_to_actions(combatant, distances, shortest_paths, trans
                     path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
                     movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
-                case "di":
+                case "di" | "cdi":
                     path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, False)
-                    movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGE).get_generator()
+                    movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGED).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
                 case "ms":
                     decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[action], actions, ms_pattern, ms_factory)
@@ -212,7 +174,7 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
     :param longest_pth: list of best actions as strings
     :return: list of movement increments or None
     """
-    pattern = r'([msdio]+)_\((\d+), (\d+)\)'
+    pattern = r'([msdhio]+)_\((\d+), (\d+)\)'
     actions = []
     for action in longest_pth:
         if action == "dummy":
@@ -226,58 +188,26 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
             break
     return actions if actions else None
 
-def get_pretend_coords(current_coords, search_pattern, state, max_threat_backwards_transition):
-    """
-    A helper function which determines if we use the coordinates of the previous transition of the current coordinates or None
-    :param current_coords: combatant's current coordinates
-    :param search_pattern: regex coordinate search pattern
-    :param state: state of the dag currently being examined
-    :param max_threat_backwards_transition: backwards transition dict which state -> predecessor state
-    :return: the coordinate to be considered as the combatant's position when calculating the next transition threat
-    """
-    curr_state = state
-    while True:
-        try:
-            previous_transition_name = max_threat_backwards_transition[curr_state][0]
-            _, x, y = re.search(search_pattern, previous_transition_name).groups()
-            curr_state = max_threat_backwards_transition[curr_state][1]
-            pretend_coords = Coords(np.array([int(x), int(y)]))
-            return pretend_coords
-        except KeyError:
-            break
-        except AttributeError:
-            curr_state = max_threat_backwards_transition[curr_state][1]
-        except Exception as e:
-            logger.error(f"Unexpected exception occurred in get_pretend_coords: {e}")
-            break
-    return current_coords
 
-def get_threat_delta_by_previous_action(combatant, state, action, max_threat_backwards_transition, transition_name_to_action):
+def get_dist_to_action_sequence_coord(longest_pth, distances):
     """
-    Goes back through the backwards transitions looking for an ability that would mofidy the threat of the current action
-    :param combatant:
-    :param state: current state
-    :param action: action to be modified
-    :param max_threat_backwards_transition: backwards transition to the preceeding best action
-    :param transition_name_to_action: dict mapping action names -> actions
-    :return: threat modification
+    Extracts the movement part of an action plan and returns the distance to its coordinate
+    :param longest_pth: list of best actions as strings
+    :param distances: potentially already pre-computed distances to all coords
+    :return: list of movement increments or None
     """
-    threat = 0
-    curr_state = state
-    while True:
-        try:
-            previous_transition_name = max_threat_backwards_transition[curr_state][0]
-            threat = transition_name_to_action[previous_transition_name].calculate_threat_for_attack(combatant, action)
-            break
-        except (KeyError, AttributeError):
-            try:
-                curr_state = max_threat_backwards_transition[curr_state][1]
-            except KeyError:
-                break
-        except Exception as e:
-            logger.error(f"Unexpected exception occurred in get_threat_delta_by_previous_action: {e}")
-            break
-    return threat
+    pattern = r'([msdhio]+)_\((\d+), (\d+)\)'
+    for action in longest_pth:
+        if action == "dummy":
+            continue
+        match = re.search(pattern, action)
+        if match:
+            _, x, y = match.groups()
+            map_size = Map.get().size
+            return distances[int(x) * map_size + int(y)]
+    return 0  # This should not happen
+
+
 
 def build_action_dag(combatant, action_fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions):
     """
@@ -296,7 +226,7 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     battle_map = Map.get()
-    battle_map.cache_visibility_dict_for_all_coords(combatant, shortest_paths)
+    battle_map.calc_visibility_dict_for_all_coords(combatant, shortest_paths)
     post_priority_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action)
     for priority_transition in post_priority_transitions.keys():  # TODO Do I need to have them removed for all states or just 0?
         for origin_state in action_fsm.states.keys():
@@ -347,91 +277,110 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
                     print("FIXME")
 
     build_priority_transitions(post_priority_transitions, action_to_eligible_coords, dag, added_states, transition_name_to_action)
-    prune_dead_dependencies(dag)
     return dag
 
 
-def longest_path(combatant, dag, sorted_states, transition_name_to_action, distances, shortest_paths):
+def DFS(dag, sequences, current_state, current_sequence):
+    if current_state == 'nop':
+        sequences.append(copy.deepcopy(current_sequence))
+        return
+
+    for transition, next_state in dag.forward_transitions[current_state]:
+        current_sequence.append(transition)
+        DFS(dag, sequences, next_state, current_sequence)
+        current_sequence.pop()
+
+
+def get_nearest_from_best_sequences(sequences, sorted_sequences, sequence_to_threat, distances):
     """
-    Finds the longest path in the DAG which represents the movement and actions with the highest calculated threat.
+    Takes all the sequences with the maximum threat (if there are multiple) and keeps the one with the nearest coordinate.
+    This is important for the get_movement_for_next_turn function. This will typically pick between equal sets of action just in a different
+    order.
+    :param sequences: all the action sequences in no particular order
+    :param sorted_sequences: indices of sequences sorted by threat in descending order
+    :param sequence_to_threat: dict mapping sequence index -> threat
+    :param distances: potentially already pre-computed distances to all coords
+    :return: maximum threat sequence with the more distant coordinate requirement
+    """
+    max_threat = sequence_to_threat[sorted_sequences[0]]
+    idx = 0
+    while idx < len(sorted_sequences) and sequence_to_threat[sorted_sequences[idx]] == max_threat:
+        idx += 1
+    sorted_sequences = sorted_sequences[:idx]
+    min_dist = sys.maxsize
+    min_dist_idx = sorted_sequences[0]
+    for idx in sorted_sequences:
+        dist = get_dist_to_action_sequence_coord(sequences[idx], distances)
+        if dist < min_dist:
+            min_dist = dist
+            min_dist_idx = idx
+    return sequences[min_dist_idx]
+
+
+def calc_best_sequence(combatant, dag, transition_name_to_action, distances, shortest_paths):
+    """
+    Finds the path through the DAG which represents the movement and actions with the highest calculated threat.
     :param combatant: the combatant for whom the DAG is modeled
     :param dag: finite state machine representing all possible actions for combatant
-    :param sorted_states: topologically sorted states of the DAG
     :param transition_name_to_action: dict mapping action names -> actions
     :param distances: potentially already pre-computed distances to all coords
     :param shortest_paths: potentially already pre-computed shortest paths to all coords
     :return: the longest path in the DAG as per the threat along its edges and nodes and a mapping of transitions names
     to special Misty Step paths
     """
-    # combatant = combatant.get_current_form()  # Takes care of possible wildshape
     battle_map = Map.get()
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
-    threat = {key: [-math.inf, -math.inf] for key in sorted_states}
-    sorted_states.pop()  # Get rid of the nop state
-    threat['0'] = [0, 0]
-    max_threat_backwards_transition = dict()
-    pattern = r'([msdcio]+)_\((\d+), (\d+)\)'
+    sequences = []
     transition_name_to_ms_path = dict()
+    sequence_to_threat = dict()
     current_coords = battle_map.get_combatant_position(combatant)
+    DFS(dag, sequences, '0', [])
 
     # Optimization: calculate_threat is cached, so we need to clear the cache before the computation
-    # for action in transition_name_to_action.values():
-    #     action.clear_cache()
+    for action in transition_name_to_action.values():
+        action.clear_cache()
 
-    for state in sorted_states:
-        try:
-            if state != '0':
-                foo = dag.dependencies[state]
-        except KeyError:
-            print("FIXME" + foo)
-        if state != '0' and not dag.dependencies[state]:
-            continue  # This essentially prunes unreachable states
-
-        for transition_name, target_state in dag.forward_transitions[state]:
-            if transition_name == "dummy":
-                transition_threat = threat[state][1] if threat[state][1] > -math.inf else 0
-                movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
-            else:
-                try:
-                    pretend_coords = get_pretend_coords(current_coords, pattern, state, max_threat_backwards_transition)
-                    pretend_coords = pretend_coords.get()[0] if pretend_coords is not None else None
-
-                    # Is it a transition which represents a (bonus) action?
-                    action = transition_name_to_action[transition_name]
-                    with battle_map.as_if_combatant_position(combatant, pretend_coords) as orig_coords, battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, orig_coords) as did_transform:
-                        transition_threat = action.calculate_threat(consider_dist=(not did_transform)) + (threat[state][1] if threat[state][1] > -math.inf else 0)
-                        transition_threat += get_threat_delta_by_previous_action(combatant, state, action, max_threat_backwards_transition, transition_name_to_action)
-                    movement_threat = threat[state][0] if threat[state][0] > -math.inf else 0
-                except KeyError:  # either not in the dict or regex search came up empty
-                    # or different kind which represents some type of movement
-                    movement_type, x, y = re.search(pattern, transition_name).groups()
-                    destination = np.array([int(x), int(y)])
-                    path = battle_map.get_path_to_coord(combatant, destination, distances, shortest_paths, True)
-                    if path is None:  # Note that an empty path is still a valid one
-                        continue
-                    match movement_type:
-                        case "m":
-                            movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
-                        case "di":
-                            movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=True)
-                        case "do":
-                            movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
-                        case "ms":
-                            movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)
-                            transition_name_to_ms_path[transition_name] = misty_step_path
-                        case _:
-                            logger.error(f"Unknown movement type {movement_type}")
-                            movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
-                    transition_threat = threat[state][1] if threat[state][1] > -math.inf else 0
-                    movement_threat += 0.01 if np.array_equal(destination, current_coords.get()[0]) else 0  # Small bias towards current position
-            if (movement_threat + transition_threat > sum(threat[target_state])) or (threat[target_state][1] <= 0 and transition_threat > 0):
-                threat[target_state] = [movement_threat, transition_threat]
-                max_threat_backwards_transition[target_state] = (transition_name, state)
-    if not max_threat_backwards_transition:
-            return None, None
-    # Let's go backwards to reconstruct the longest path
-    return reconstruct_path_through_dag('nop', '0', max_threat_backwards_transition), transition_name_to_ms_path
-
+    for idx, sequence in enumerate(sequences):
+        threat_acc = [0, 0]  # movement threat, transition threat
+        pretend_coords = None
+        delta_action = None
+        for transition in sequence:
+            if transition == "dummy":
+                break
+            try:  # Is it a transition which represents a (bonus) action?
+                action = transition_name_to_action[transition]
+                with battle_map.as_if_combatant_position(combatant, pretend_coords) as orig_coords, battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, orig_coords) as did_transform:
+                    threat_acc[1] += action.calculate_threat(consider_dist=(not did_transform))
+                    if delta_action:
+                        threat_acc[1] += delta_action.calculate_threat_for_attack(combatant, action)
+                    if isinstance(action, AttackThreatModifier):
+                        delta_action = action
+            except KeyError:  # or different kind which represents some type of movement
+                movement_type, x, y = re.search(r'([msdcio]+)_\((\d+), (\d+)\)', transition).groups()
+                destination = np.array([int(x), int(y)])
+                pretend_coords = destination
+                path = battle_map.get_path_to_coord(combatant, destination, distances, shortest_paths, True)
+                if path is None:  # Note that an empty path is still a valid one
+                    continue
+                match movement_type:
+                    case "m":
+                        movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
+                    case "di" | "cdi":
+                        movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=True)
+                    case "do":
+                        movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
+                    case "ms":
+                        movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)
+                        transition_name_to_ms_path[transition] = misty_step_path
+                    case _:
+                        logger.error(f"Unknown movement type {movement_type}")
+                        movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
+                movement_threat += 0.01 if np.array_equal(destination, current_coords.get()[0]) else 0  # Small bias towards current position
+                threat_acc[0] += movement_threat
+        sequence_to_threat[idx] = copy.copy(threat_acc)
+    # We only consider sequences that contain a greater-than-zero transition action
+    sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
+    return get_nearest_from_best_sequences(sequences, sorted_sequences, sequence_to_threat, distances), transition_name_to_ms_path
 
 
 def get_action(combatant):
@@ -441,6 +390,7 @@ def get_action(combatant):
     the best action is recalculated every time to react to any possible changes on the battle_map.
     :return: the next best actoid
     """
+    start_time = time.time()
     combatant = combatant.get_current_form()  # Takes care of possible wildshape
     grapple_cond = combatant.needs_to_break_out_of_grapple()
     if grapple_cond and combatant.has_action:
@@ -455,4 +405,5 @@ def get_action(combatant):
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)
     if not combatant.action_plan:
         return None  # Either no action possible or all actions already used
+    print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
     return combatant.action_plan.pop(0)

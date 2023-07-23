@@ -1,5 +1,4 @@
 import numpy as np
-
 from simulator.battle_map import Map
 from simulator.combatant_coords import Coords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
@@ -9,11 +8,10 @@ from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
 from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
+from simulator.threat_interfaces import ThreatModifierFactory, Threat
 from functools import cache
 from simulator.misc import roll_saving_throw, reconcile_roll_types, SavingThrow, Conditions
 import logging
-
 from simulator.threat_utils import calculate_threat_in_delta
 from simulator.utils.roll_types import ThreatModifierType, RollType
 
@@ -72,7 +70,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         # logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
         return ret
 
-class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect, CombatantEffect):
+class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, CombatantEffect):
 
     def __init__(self, coord, factory,  **kwargs):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
@@ -110,7 +108,6 @@ class FaerieFire(Actoid, LimitedDurationEffect, ThreatModifier, AoeSquareEffect,
     def deactivate(self):
         self.factory.combatant.break_concentration()
         self.combatants.clear()
-
 
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()

@@ -394,7 +394,7 @@ def test_calc_threat_for_path_with_misty_step_scenario_1(battle_map, teams, test
     assert threat == 0
 
     actions = []
-    ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
+    ms_pattern = r'[msdiho_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl)
     decode_ms_path_to_actions(test_draconic_sorcerer_5lvl, battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get()[0], max_threat_path, actions, ms_pattern, ms_factory)
     assert isinstance(actions[0], MovementIncrement)
@@ -422,7 +422,7 @@ def test_calc_threat_for_path_with_misty_step_scenario_2(battle_map, teams, test
     assert threat == pytest.approx(-5.399 * DZ_CONSTANT, 0.001)  # Just for the danger zone
 
     actions = []
-    ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
+    ms_pattern = r'[msdiho_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl)
     decode_ms_path_to_actions(test_draconic_sorcerer_5lvl, battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get()[0], max_threat_path, actions, ms_pattern, ms_factory)
     assert len(actions) == 1
@@ -447,7 +447,7 @@ def test_calc_threat_for_path_with_misty_step_scenario_3(battle_map, teams, test
     assert threat == 0  # Out of the danger zone
 
     actions = []
-    ms_pattern = r'[msdio_]+\((\d+), (\d+)\)'
+    ms_pattern = r'[msdiho_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl)
     decode_ms_path_to_actions(test_draconic_sorcerer_5lvl, battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get()[0], max_threat_path, actions, ms_pattern, ms_factory)
     # Many different combinations are valid we just assert that Misty Step is used exactly once and the length of the path checks out
@@ -470,6 +470,7 @@ def test_ranged_spell_with_enemy_adjacent(battle_map, teams, effect_tracker, tes
     firebolt = ff.create(test_bugbear)
     threat_enemy_adjacent = firebolt.calculate_threat()
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([2, 14]))
+    firebolt.clear_cache()
     threat_no_enemy_adjacent = firebolt.calculate_threat()
     assert threat_no_enemy_adjacent > threat_enemy_adjacent
 

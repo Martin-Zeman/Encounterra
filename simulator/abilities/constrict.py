@@ -1,10 +1,10 @@
+from functools import cache
 from simulator.actions.action_types import Action
 from simulator.actions.actoid import FactoryFlags, Actoid, ActoidFlags
 from simulator.battle_map import Map
 from simulator.misc import Conditions
 from simulator.threat_interfaces import DirectThreatFactory, DirectThreat
 import logging
-
 
 logger = logging.getLogger("EncounTroll")
 

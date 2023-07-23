@@ -1,5 +1,4 @@
 from functools import cache
-
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.combatant_coords import Coords
@@ -86,7 +85,6 @@ class Fireball(Actoid, DirectThreat):
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + "Fireball"
-
 
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()

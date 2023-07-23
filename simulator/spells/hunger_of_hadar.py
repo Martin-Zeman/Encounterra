@@ -1,5 +1,4 @@
 from functools import cache
-
 from simulator.action_resolver import resolve_dmg_saving_throw
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
@@ -119,7 +118,6 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     def deactivate(self):
         # TODO remove difficult terrain
         self.factory.combatant.break_concentration()
-
 
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()

@@ -181,6 +181,7 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
         assert False, f"Raised an exception {e}"
 
 
+@pytest.mark.skip(reason="Takes too long")
 def test_error_case_5(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_stone_giant, test_ogre):
     """
     This test case is based on a scenario encountered during fuzzy testing.

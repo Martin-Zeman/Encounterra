@@ -1,15 +1,14 @@
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, Conditions
+from simulator.misc import DamageType, Conditions, Visibility
 import logging
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from simulator.misc import percent_of_curr_hp
-from functools import  cache
-
-from simulator.utils.roll_types import RollType, ROLL_TYPE, ROLL_TYPE_CRIT, ThreatModifierType
+from functools import cache
+from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -74,7 +73,7 @@ class ChaosboltFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
-            to_hit_total = self.to_hit + ROLL_TYPE[roll_type][max(0, min(target.ac - self.to_hit, 20))]
+            to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             other_potential_targets = battle_map.get_enemies_within_radius(self.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
             other_potential_targets.remove(self.target)
             P_SAME = 4 / 43  # 8/86 = 4 / 43
@@ -82,7 +81,7 @@ class ChaosboltFactory(DirectThreatFactory):
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
             acc = mean_dmg(to_hit_total, dmg_dice, 0, target.ac)
             for pt in other_potential_targets:
-                acc += mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, ROLL_TYPE_CRIT[roll_type]) * p_acc
+                acc += mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
                 p_acc *= P_SAME
         return acc
 
@@ -95,8 +94,8 @@ class ChaosboltFactory(DirectThreatFactory):
 
         if Map.get().get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
             to_hit_total = self.to_hit + to_hit_bonus
-            to_hit_total += ROLL_TYPE[roll_type][max(0, min(target.ac - to_hit_total, 20))]
-            total_crit = ROLL_TYPE_CRIT[roll_type]
+            to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
+            total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
             return mean_dmg(to_hit_total, dmg_dice, 0, target.ac, total_crit) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
@@ -114,7 +113,7 @@ class Chaosbolt(Actoid, DirectThreat):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.target = target
         self.factory = factory
-        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.empowered = kwargs.get("empowered", False)
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
@@ -123,11 +122,10 @@ class Chaosbolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt"
 
-
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
+        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
         potential_targets = battle_map.get_enemies_within_radius(self.factory.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
         potential_targets.remove(self.target)
         P_SAME = 4 / 43  # 8/86 = 4 / 43
@@ -135,8 +133,8 @@ class Chaosbolt(Actoid, DirectThreat):
         dmg_dice = "+".join([self.factory.dmg_dice, self.factory.additional_dmg_dice])
         acc = mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac)
         for pt in potential_targets:
-            to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(pt.ac - self.factory.to_hit, 20))]
-            acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, ROLL_TYPE_CRIT[roll_type]) * p_acc
+            to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(pt.ac - self.factory.to_hit, 20))]
+            acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
             p_acc *= P_SAME
         return acc
 
@@ -148,11 +146,13 @@ class Chaosbolt(Actoid, DirectThreat):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+        free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=ChaosboltFactory.range,
                                                              combatant=self.factory.combatant)
+        return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower() is self.target:

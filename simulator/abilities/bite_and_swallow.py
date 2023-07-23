@@ -1,10 +1,10 @@
 import math
+from functools import cache
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
 from simulator.battle_map import Map
 from simulator.misc import Size
 import logging
-
 
 logger = logging.getLogger("EncounTroll")
 

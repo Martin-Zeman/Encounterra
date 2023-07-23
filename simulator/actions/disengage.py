@@ -1,12 +1,11 @@
 from functools import cache
-
 from simulator.actions.action_types import HasteAction, BonusAction
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.threat_interfaces import ThreatModifier, ThreatModifierFactory
+from simulator.threat_interfaces import ThreatModifierFactory, Threat
 import logging
 
 logger = logging.getLogger("EncounTroll")
@@ -38,7 +37,7 @@ class DisengageFactory(ThreatModifierFactory):
         return target.aoo_factory[1].calculate_threat_to_target(self.combatant)
 
 
-class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
+class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
 
     def __init__(self, combatant, factory):
         CombatantEffect.__init__(self, combatants=[combatant])
@@ -71,7 +70,6 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, ThreatModifier):
     def deactivate(self):
         logger.info(f"{self.combatants[0]}'s disengage fades")
         self.factory.combatant.has_disengaged = False
-
 
     def calculate_threat(self, **kwargs):
         """

@@ -1240,35 +1240,6 @@ class Map:
         distances.sort()
         return enemies, distances
 
-    def calc_bresenham(self, coord1: np.array, coord2: np.array):
-        """
-        An implementation of Bresenham's line algorithm.
-        :param coord1:
-        :param coord2:
-        :return: list of coordinates of all impassable squares that lie on the rasterized line between coord1 and coord2
-        """
-        x1, y1 = coord1
-        x2, y2 = coord2
-        dx = abs(x2 - x1)
-        dy = abs(y2 - y1)
-        sx = 1 if x1 < x2 else -1
-        sy = 1 if y1 < y2 else -1
-        err = dx - dy
-
-        obstacles = []
-        while x1 != x2 or y1 != y2:
-            if self.grid[x1][y1].is_impassable():
-                obstacles.append(np.array([x1, y1]))
-
-            e2 = 2 * err
-            if e2 > -dy:
-                err -= dy
-                x1 += sx
-            if e2 < dx:
-                err += dx
-                y1 += sy
-        return obstacles
-
     def get_visibility(self, observer: Coords, target: Coords):
         """
         The visibility is calculated terms of how much of the field of view of the target is blocked by obstacles. I find the leftmost and
@@ -1292,10 +1263,11 @@ class Map:
         bottom_left, top_right = get_bounding_box(observer, target)
         objects = []
         for obstacle in self.obstacles:
-            obstacle_tr = obstacle.coord + obstacle.radius + (1, 1)
+            obstacle_tr = obstacle.coord + obstacle.radius
             obstacle_bl = obstacle.coord - obstacle.radius
-            if obstacle_tr[0] >= bottom_left[0] and obstacle_bl[0] <= top_right[0] and obstacle_bl[1] <= top_right[1] and obstacle_tr[1] >= bottom_left[0]:
-                objects.append(obstacle)
+            if obstacle_tr[0] < bottom_left[0] or obstacle_bl[0] > top_right[0] or obstacle_bl[1] > top_right[1] or obstacle_tr[1] < bottom_left[1]:
+                continue
+            objects.append(obstacle)
         objects.append(target)
 
         vec_to_object = [(vec, o) for o in objects for vec in find_fov_vectors(observer, o)]
@@ -1348,9 +1320,17 @@ class Map:
         :return: dict mapping enemy -> Visibility
         """
         combatant_coords = Coords(coords, combatant.size)
-        return {e: self.get_visibility(combatant_coords, self.get_combatant_position(e)) for e in self.get_enemies(combatant)}
+        ret = {e: self.get_visibility(combatant_coords, self.get_combatant_position(e)) for e in self.get_combatants(combatant)}
+        ret[combatant] = Visibility.FULL
+        return ret
 
-    def cache_visibility_dict_for_all_coords(self, combatant, shortest_paths):
+    def calc_visibility_dict_for_all_coords(self, combatant, shortest_paths):
+        """
+        Calculates and caches the visibility dict for all coords accessible to a combatant.
+        :param combatant:
+        :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
+        :return: None
+        """
         current_position = self.get_combatant_position(combatant).get()[0]
         self.visibility_dict_for_all_coords = {coord: self.get_visibility_dict(combatant, np.array(coord)) for coord in shortest_paths.keys()}
         self.visibility_dict_for_all_coords[tuple(current_position)] = self.get_visibility_dict(combatant, current_position)
@@ -1366,6 +1346,9 @@ class Map:
 
     def get_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive()]
+
+    def get_combatants(self, combatant):
+        return [c for c in self.combatant_coordinate_cache.keys() if c.is_alive() and c is not combatant]
 
     def get_allies(self, combatant):
         return [a for a in self.teams.get_allies(combatant) if a.is_alive()]

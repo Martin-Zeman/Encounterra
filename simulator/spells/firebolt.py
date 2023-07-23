@@ -1,15 +1,13 @@
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, RollType, avg_roll, Conditions
+from simulator.misc import DamageType, RollType, avg_roll, Conditions, Visibility
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import logging
-
-from simulator.utils.roll_types import ROLL_TYPE_CRIT, ROLL_TYPE, ThreatModifierType
+from simulator.utils.roll_types import ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -77,8 +75,8 @@ class FireboltFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= FireboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
-            to_hit_total = self.to_hit + ROLL_TYPE[roll_type][max(0, min(target.ac - self.to_hit, 20))]
-            return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT[roll_type], target.is_resistant_to(FireboltFactory.dmg_type))
+            to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
+            return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT_DELTA[roll_type], target.is_resistant_to(FireboltFactory.dmg_type))
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -94,8 +92,8 @@ class FireboltFactory(DirectThreatFactory):
 
         total_target_ac = target_ac + target.ac
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-        to_hit_total += ROLL_TYPE[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
-        total_crit = ROLL_TYPE_CRIT[roll_type]
+        to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
+        total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
         return mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(FireboltFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     FireboltFactory.dmg_type))
@@ -110,7 +108,7 @@ class Firebolt(Actoid, DirectThreat):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.target = target
         self.factory = factory
-        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.empowered = kwargs.get("empowered", False)
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
@@ -119,21 +117,22 @@ class Firebolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + "Firebolt"
 
-
     def calculate_threat(self, **kwargs):
         roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        to_hit_total = self.factory.to_hit + ROLL_TYPE[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
-        return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, ROLL_TYPE_CRIT[roll_type], self.target.is_resistant_to(FireboltFactory.dmg_type))
+        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
+        return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, ROLL_TYPE_CRIT_DELTA[roll_type], self.target.is_resistant_to(FireboltFactory.dmg_type))
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+        free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                              distances,
                                                              inflate_to_size=self.factory.combatant.size,
                                                              rng=FireboltFactory.range, combatant=self.factory.combatant)
+        return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower() is self.target:
