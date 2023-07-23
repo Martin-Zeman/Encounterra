@@ -1320,7 +1320,9 @@ class Map:
         :return: dict mapping enemy -> Visibility
         """
         combatant_coords = Coords(coords, combatant.size)
-        return {e: self.get_visibility(combatant_coords, self.get_combatant_position(e)) for e in self.get_enemies(combatant)}
+        ret = {e: self.get_visibility(combatant_coords, self.get_combatant_position(e)) for e in self.get_combatants(combatant)}
+        ret[combatant] = Visibility.FULL
+        return ret
 
     def calc_visibility_dict_for_all_coords(self, combatant, shortest_paths):
         """
@@ -1344,6 +1346,9 @@ class Map:
 
     def get_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive()]
+
+    def get_combatants(self, combatant):
+        return [c for c in self.combatant_coordinate_cache.keys() if c.is_alive() and c is not combatant]
 
     def get_allies(self, combatant):
         return [a for a in self.teams.get_allies(combatant) if a.is_alive()]

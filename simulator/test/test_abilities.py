@@ -201,7 +201,12 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    class DummyFactory:
+        def __init__(self):
+            self.combatant = None
     class DummyEffect:
+        def __init__(self):
+            self.factory = DummyFactory()
         def deactivate(self):
             test_moon_druid.break_concentration()
 

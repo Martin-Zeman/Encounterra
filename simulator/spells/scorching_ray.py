@@ -57,7 +57,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance(self.combatant, target) <= ScorchingRayFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
-            to_hit_total = self.to_hit + ROLL_TYPE[roll_type][max(0, min(target.ac - self.to_hit, 20))]
+            to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             return 3 * mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT_DELTA[roll_type], target.is_resistant_to(ScorchingRayFactory.dmg_type))
         else:
             return 0
