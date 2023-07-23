@@ -6,7 +6,7 @@ from toposort import toposort_flatten
 
 from simulator.actions.action_fsms import generate_action_fsm, generate_wildshape_action_fsm
 from simulator.actions.action_plan_strategy import ActionPlanStrategy
-from simulator.actions.action_selector import longest_path, build_action_dag, translate_longest_pth_to_actions
+from simulator.actions.action_selector import calc_best_sequence, build_action_dag, translate_sequence_to_actions
 from simulator.actions.action_types import Action, BonusAction
 from simulator.battle_map import Map
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
@@ -105,22 +105,22 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
             ws_fsm, ws_transition_name_to_action, ws_post_misty_step_actions = generate_wildshape_action_fsm(self.combatant)
             ws_dag = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths, ws_post_misty_step_actions)
             if ws_dag is not None:
-                wildshape_path, ws_transition_name_to_ms_path = longest_path(self.combatant, ws_dag, ws_transition_name_to_action, distances, shortest_paths)
-                self.best_wildshape_plan_data = wildshape_path, ws_transition_name_to_ms_path, ws_transition_name_to_action
+                ws_best_sequence, ws_transition_name_to_ms_path = calc_best_sequence(self.combatant, ws_dag, ws_transition_name_to_action, distances, shortest_paths)
+                self.best_wildshape_plan_data = ws_best_sequence, ws_transition_name_to_ms_path, ws_transition_name_to_action
 
         get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(self.combatant)
         dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
         if dag is None:
             return None
-        longest_pth, transition_name_to_ms_path = longest_path(self.combatant, dag, transition_name_to_action, distances, shortest_paths)
-        if longest_pth is None:
+        best_sequence, transition_name_to_ms_path = calc_best_sequence(self.combatant, dag, transition_name_to_action, distances, shortest_paths)
+        if best_sequence is None:
             return None
-        need_to_combine, non_wildshape_action = evaluate_combination_eligibility(longest_pth, transition_name_to_action)
-        regular_plan = translate_longest_pth_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path)
+        need_to_combine, non_wildshape_action = evaluate_combination_eligibility(best_sequence, transition_name_to_action)
+        regular_plan = translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, best_sequence, transition_name_to_ms_path)
         if need_to_combine:
             if self.best_wildshape_plan_data is not None:
-                wildshape_plan = translate_longest_pth_to_actions(self.combatant, distances, shortest_paths, self.best_wildshape_plan_data[2], self.best_wildshape_plan_data[0], self.best_wildshape_plan_data[1])
+                wildshape_plan = translate_sequence_to_actions(self.combatant, distances, shortest_paths, self.best_wildshape_plan_data[2], self.best_wildshape_plan_data[0], self.best_wildshape_plan_data[1])
                 if non_wildshape_action is None:
                     return wildshape_plan  # The case where there's only the wildshape left in the plan
                 regular_plan = self.combine_action_plans(regular_plan, wildshape_plan, transition_name_to_action[non_wildshape_action], distances, shortest_paths)

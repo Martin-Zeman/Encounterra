@@ -7,7 +7,7 @@ from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import ThreatModifierFactory, Threat
 from functools import reduce, cache
-from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions
+from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions, Visibility
 from simulator.spells.haste import HasteFactory
 from simulator.utils.roll_types import ThreatModifierType
 
@@ -150,7 +150,11 @@ class TwinnedHaste(Actoid, Effect, Threat):
                                                                               distances,
                                                                               inflate_to_size=self.factory.combatant.size,
                                                                               rng=TwinnedHasteFactory.range)
-        return coords_for_first.intersection(coords_for_second)
+        free_coords_in_range = coords_for_first.intersection(coords_for_second)
+
+        return {coord for coord in free_coords_in_range if
+                battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+                and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():

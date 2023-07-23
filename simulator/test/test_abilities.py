@@ -440,7 +440,7 @@ def test_cunning_hide_geometry(battle_map, teams, effect_tracker, test_assassin_
     battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
     battle_map.build_adjacency_matrix()
     _, shortest_paths = battle_map.calc_dijkstra(test_assassin_rogue)
-    battle_map.cache_visibility_dict_for_all_coords(test_assassin_rogue, shortest_paths)
+    battle_map.calc_visibility_dict_for_all_coords(test_assassin_rogue, shortest_paths)
 
     hf = HideFactory(BonusAction.CUNNING_HIDE, test_assassin_rogue)
     hide = hf.create(test_goblin)
@@ -450,9 +450,10 @@ def test_cunning_hide_geometry(battle_map, teams, effect_tracker, test_assassin_
 
 
 
-def test_cunning_hide_used(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
+def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
     """
-    We assert that the druid doesn't plan a wildshape action when grappled and unable to move to a place where there's the space to do so.
+    Test scenario where the Rogue has three enemies and no allies (no Sneak Attack via adjacent allies). The Rogue has to find
+    a hiding spot, hide, step out of the hiding spot and then attack with Sneak Attack
     """
     CustomLogger(LogLevel.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
@@ -471,6 +472,7 @@ def test_cunning_hide_used(battle_map, teams, effect_tracker, test_assassin_rogu
     battle_map.set_combatant_coordinates(test_ogre, np.array([2, 1]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
     battle_map.build_adjacency_matrix()
+    test_assassin_rogue.stealth = 20  # Making sure the hide always works
 
     try:
         actoid1 = get_action(test_assassin_rogue)

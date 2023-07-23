@@ -7,7 +7,7 @@ from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import ThreatModifierFactory, Threat
 from functools import reduce, cache
-from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions
+from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions, Visibility
 import logging
 
 from simulator.utils.roll_types import ThreatModifierType
@@ -143,10 +143,11 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
         if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         else:
-            return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HasteFactory.range)
+            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():

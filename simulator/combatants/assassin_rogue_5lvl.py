@@ -31,6 +31,7 @@ class AssassinRogue5Lvl(Combatant):
         self.saving_throws[SavingThrow.CHA] = 1
         self.athletics = -1
         self.acrobatics = 7
+        self.stealth = 10
         self.passive_perception = 11
 
     def build_attack_fms(self):

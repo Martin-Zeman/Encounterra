@@ -6,7 +6,7 @@ from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.hold_person import HoldPersonFactory
 from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw
+from simulator.misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from simulator.threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
 from simulator.threat_interfaces import ThreatModifierFactory, Threat
@@ -156,7 +156,11 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
                                                               distances,
                                                               inflate_to_size=self.factory.combatant.size,
                                                               rng=TwinnedHoldPersonFactory.range)
-        return coords_for_first.intersection(coords_for_second)
+        free_coords_in_range = coords_for_first.intersection(coords_for_second)
+
+        return {coord for coord in free_coords_in_range if
+                battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+                and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
 
     def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():

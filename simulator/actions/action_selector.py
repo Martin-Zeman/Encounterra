@@ -2,6 +2,7 @@ import copy
 import logging
 import re
 import math
+import sys
 import time
 
 import numpy as np
@@ -125,7 +126,7 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pat
         after_path = convert_path_to_increments(after_path)
         actions.extend(list(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
 
-def translate_longest_pth_to_actions(combatant, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path):
+def translate_sequence_to_actions(combatant, distances, shortest_paths, transition_name_to_action, longest_pth, transition_name_to_ms_path):
     """
     Translates the string form of longest path back to action objects
     :param combatant: the combatant for whom the actions are translated
@@ -225,7 +226,7 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     :return: dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
     """
     battle_map = Map.get()
-    battle_map.cache_visibility_dict_for_all_coords(combatant, shortest_paths)
+    battle_map.calc_visibility_dict_for_all_coords(combatant, shortest_paths)
     post_priority_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action)
     for priority_transition in post_priority_transitions.keys():  # TODO Do I need to have them removed for all states or just 0?
         for origin_state in action_fsm.states.keys():
@@ -290,36 +291,33 @@ def DFS(dag, sequences, current_state, current_sequence):
         current_sequence.pop()
 
 
-# def post_process_longest_path(sequences, sorted_sequences, sequence_to_threat, distances):
-#     """
-#     Takes all the sequences with the maximum threat (if there are multiple) and keeps the one with the more distant coordinate.
-#     This is important for the get_movement_for_next_turn function. This will typically pick between equal sets of action just in a different
-#     order.
-#     :param sequences: all the action sequences in no particular order
-#     :param sorted_sequences: indices of sequences sorted by threat in descending order
-#     :param sequence_to_threat: dict mapping sequence index -> threat
-#     :param distances: potentially already pre-computed distances to all coords
-#     :return: maximum threat sequence with the more distant coordinate requirement
-#     """
-#     max_threat = sequence_to_threat[sorted_sequences[0]]
-#     idx = 0
-#     while idx < len(sorted_sequences) and sequence_to_threat[sorted_sequences[idx]] == max_threat:
-#         idx += 1
-#     sorted_sequences = sorted_sequences[:idx]
-#     max_dist = 0
-#     try:
-#         max_dist_idx = sorted_sequences[0]
-#     except IndexError:
-#         print("FIXME")
-#     for idx in sorted_sequences:
-#         dist = get_dist_to_action_sequence_coord(sequences[idx], distances)
-#         if dist > max_dist:
-#             max_dist = dist
-#             max_dist_idx = idx
-#     return sequences[max_dist_idx]
+def get_nearest_from_best_sequences(sequences, sorted_sequences, sequence_to_threat, distances):
+    """
+    Takes all the sequences with the maximum threat (if there are multiple) and keeps the one with the nearest coordinate.
+    This is important for the get_movement_for_next_turn function. This will typically pick between equal sets of action just in a different
+    order.
+    :param sequences: all the action sequences in no particular order
+    :param sorted_sequences: indices of sequences sorted by threat in descending order
+    :param sequence_to_threat: dict mapping sequence index -> threat
+    :param distances: potentially already pre-computed distances to all coords
+    :return: maximum threat sequence with the more distant coordinate requirement
+    """
+    max_threat = sequence_to_threat[sorted_sequences[0]]
+    idx = 0
+    while idx < len(sorted_sequences) and sequence_to_threat[sorted_sequences[idx]] == max_threat:
+        idx += 1
+    sorted_sequences = sorted_sequences[:idx]
+    min_dist = sys.maxsize
+    min_dist_idx = sorted_sequences[0]
+    for idx in sorted_sequences:
+        dist = get_dist_to_action_sequence_coord(sequences[idx], distances)
+        if dist < min_dist:
+            min_dist = dist
+            min_dist_idx = idx
+    return sequences[min_dist_idx]
 
 
-def longest_path(combatant, dag, transition_name_to_action, distances, shortest_paths):
+def calc_best_sequence(combatant, dag, transition_name_to_action, distances, shortest_paths):
     """
     Finds the path through the DAG which represents the movement and actions with the highest calculated threat.
     :param combatant: the combatant for whom the DAG is modeled
@@ -382,8 +380,7 @@ def longest_path(combatant, dag, transition_name_to_action, distances, shortest_
         sequence_to_threat[idx] = copy.copy(threat_acc)
     # We only consider sequences that contain a greater-than-zero transition action
     sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
-    # return post_process_longest_path(sequences, sorted_sequences, sequence_to_threat, distances), transition_name_to_ms_path
-    return sequences[sorted_sequences[0]], transition_name_to_ms_path
+    return get_nearest_from_best_sequences(sequences, sorted_sequences, sequence_to_threat, distances), transition_name_to_ms_path
 
 
 def get_action(combatant):

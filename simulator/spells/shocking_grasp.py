@@ -7,7 +7,7 @@ from functools import cache
 from simulator.threat_utils import mean_dmg
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 import logging
-from simulator.utils.roll_types import ROLL_TYPE_CRIT, ROLL_TYPE, ThreatModifierType
+from simulator.utils.roll_types import ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
 
 logger = logging.getLogger("EncounTroll")
 
@@ -77,8 +77,8 @@ class ShockingGraspFactory(DirectThreatFactory):
 
         total_target_ac = target_ac + target.ac
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
-        to_hit_total += ROLL_TYPE[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
-        total_crit = ROLL_TYPE_CRIT[roll_type]
+        to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
+        total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
         ret = mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(ShockingGraspFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     ShockingGraspFactory.dmg_type))
@@ -97,7 +97,7 @@ class ShockingGrasp(Actoid, DirectThreat):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
         self.target = target
         self.factory = factory
-        self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
+        self.empowered = kwargs.get("empowered", False)
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):

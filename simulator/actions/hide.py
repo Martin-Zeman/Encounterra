@@ -8,7 +8,9 @@ from simulator.effects.effect import EffectType
 from simulator.misc import Visibility, roll_ability_check
 from simulator.threat_interfaces import ThreatModifierFactory, AttackThreatModifier
 import logging
-from simulator.utils.roll_types import RollType, ThreatModifierType
+
+from simulator.threat_utils import calc_p_hit
+from simulator.utils.roll_types import RollType, ThreatModifierType, ROLL_TYPE_DELTA
 
 logger = logging.getLogger("EncounTroll")
 
@@ -72,14 +74,11 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
         return prefix + f"Hide"
 
     def activate(self):
-        battle_map = Map.get()
-        curr_visibility = battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        for enemy in curr_visibility.keys():
-            if roll_ability_check(self.factory.combatant.stealth, enemy.passive_perception + 1, RollType.STRAIGHT):
-                logger.info(f"{self.factory.combatant} is hidden from {self.target}")
-                Map.get().effect_tracker.add(self)
-            else:
-                logger.info(f"{self.factory.combatant} fails to hide from {self.target}")
+        if roll_ability_check(self.factory.combatant.stealth, self.target.passive_perception + 1, RollType.STRAIGHT):
+            logger.info(f"{self.factory.combatant} is hidden from {self.target}")
+            Map.get().effect_tracker.add(self)
+        else:
+            logger.info(f"{self.factory.combatant} fails to hide from {self.target}")
 
     def deactivate(self):
         logger.info(f"{self.factory.combatant} is no longer hidden {self.target}")
@@ -100,7 +99,8 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
             if battle_map.is_ally_adjacent_to_target(combatant, attack.target):
                 return threat_acc  # Sneak Attack condition already met, no extra benefit
             if isinstance(attack.factory.on_hit, OnHitSneakAttack):
-                threat_acc += attack.factory.on_hit.calculate_threat(combatant, attack.target)
+                to_hit_total = ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(attack.target.ac - attack.factory.to_hit, 20))]
+                threat_acc += calc_p_hit(to_hit_total, attack.target.ac) * attack.factory.on_hit.calculate_threat(combatant, attack.target)
             return threat_acc
         else:
             return 0
