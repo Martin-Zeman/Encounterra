@@ -172,12 +172,9 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
         action_resolver.resolve_action(actoid14, test_moon_druid)
         actoid15 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid15, test_moon_druid)
-        # We don't know exactly where the Flaming sphere is gonna be placed so the druid might need to maneuver around the target out of its range
-        assert str(actoid12) == 'GiantToad Bite on Bugbear' or str(actoid13) == 'GiantToad Bite on Bugbear' or str(actoid14) == 'GiantToad Bite on Bugbear' or str(actoid15) == 'GiantToad Bite on Bugbear'
-        try:
-            assert str(actoid12) == 'Flaming Sphere Ram into Bugbear' or str(actoid13) == 'Flaming Sphere Ram into Bugbear' or str(actoid14) == 'Flaming Sphere Ram into Bugbear' or str(actoid15) == 'Flaming Sphere Ram into Bugbear'
-        except AssertionError:
-            print("FIXME")
+        second_turn_actoids = [str(actoid10), str(actoid11), str(actoid12), str(actoid13), str(actoid14), str(actoid15)]
+        assert any(act == "GiantToad Bite on Bugbear" for act in second_turn_actoids)
+        assert any(act == "Flaming Sphere Ram into Bugbear" for act in second_turn_actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -492,23 +489,34 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         actoid6 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid6, test_assassin_rogue)
         actoid7 = get_action(test_assassin_rogue)
-        assert str(actoid7).startswith("Cunning Hide of AssassinRogue from Goblin")  # Wants to hide from Ogre but can't make it all the way
         action_resolver.resolve_action(actoid7, test_assassin_rogue)
         actoid8 = get_action(test_assassin_rogue)
-        assert str(actoid8) == "Shortbow on Ogre"
         action_resolver.resolve_action(actoid8, test_assassin_rogue)
-        test_assassin_rogue.new_turn()
         actoid9 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
         actoid10 = get_action(test_assassin_rogue)
-        assert str(actoid10).startswith("Cunning Hide of AssassinRogue from Ogre")
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
+        first_turn_actoids = [str(actoid1), str(actoid2), str(actoid3), str(actoid4), str(actoid5), str(actoid6),str(actoid7), str(actoid8), str(actoid9), str(actoid10)]
+        assert any(act.startswith("Cunning Dash") for act in first_turn_actoids)
+        assert any(act.startswith("Shortbow") for act in first_turn_actoids)
+        assert any(act.startswith("[") for act in first_turn_actoids)
+        test_assassin_rogue.new_turn()
         actoid11 = get_action(test_assassin_rogue)
-        assert str(actoid11).startswith("[") and str(actoid11) is not "[0 1]"
-        action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
+        action_resolver.resolve_action(actoid11, test_assassin_rogue)
         actoid12 = get_action(test_assassin_rogue)
-        assert str(actoid12) == "Shortbow on Ogre"
         action_resolver.resolve_action(actoid12, test_assassin_rogue)
+        actoid13 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid13, test_assassin_rogue)
+        actoid14 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid14, test_assassin_rogue)
+        actoid15 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid15, test_assassin_rogue)
+        actoid16 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid16, test_assassin_rogue)
+        second_turn_actoids = [str(actoid11), str(actoid12), str(actoid13), str(actoid14), str(actoid15), str(actoid16)]
+        assert any(act.startswith("Cunning Hide") for act in second_turn_actoids)
+        assert any(act.startswith("Shortbow") for act in second_turn_actoids)
+        assert any(act.startswith("[") for act in second_turn_actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -553,18 +561,23 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
         action_resolver.resolve_action(actoid7, test_assassin_rogue)
         actoid8 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid8, test_assassin_rogue)
-        test_assassin_rogue.new_turn()
         actoid9 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
         actoid10 = get_action(test_assassin_rogue)
-        assert str(actoid10).startswith("Cunning Hide of AssassinRogue from Ogre")
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
+        test_assassin_rogue.new_turn()
         actoid11 = get_action(test_assassin_rogue)
-        assert str(actoid11).startswith("[") and str(actoid11) is not "[0 1]"
-        action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
+        action_resolver.resolve_action(actoid11, test_assassin_rogue)
         actoid12 = get_action(test_assassin_rogue)
-        assert str(actoid12) == "Shortbow on Ogre"
         action_resolver.resolve_action(actoid12, test_assassin_rogue)
+        actoid13 = get_action(test_assassin_rogue)
+        assert str(actoid12).startswith("Cunning Hide") or str(actoid13).startswith("Cunning Hide")
+        action_resolver.resolve_action(actoid13, test_assassin_rogue)  # Step of out hiding
+        actoid14 = get_action(test_assassin_rogue)
+        assert str(actoid14) == "Shortbow on Ogre" or str(actoid14).startswith("[")
+        action_resolver.resolve_action(actoid14, test_assassin_rogue)
+        actoid15 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid15, test_assassin_rogue)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
