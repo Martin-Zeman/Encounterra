@@ -116,7 +116,7 @@ def test_as_if_dist_delta_from_combatant(teams, battle_map, test_draconic_sorcer
         assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 4 # 1 is min
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
-    
+
 
 def test_hop_distance_diagonal(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     # Two large combatants

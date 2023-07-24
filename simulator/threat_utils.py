@@ -234,19 +234,20 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=Fal
     final_avg_dmg = fail_dmg + avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else fail_dmg
     return final_avg_dmg if not is_resistant else final_avg_dmg / 2
 
-def get_danger_zone_threat(coords, combatant):
+def get_danger_zone_threat(coords, combatant, delta=0):
     """
     Adds potential threat projected by the virtue of being near an enemy. It adds up all the projected threat for all
     enemies within their projection range.
     move.
     :param coords: as np.array of size nx2 where n is the number of coords the combatant takes up
     :param combatant:
+    :param delta: to be added to the distance to enemies, used for dash threat calculation
     :return: danger zone threat (positive)
     """
     battle_map = Map.get()
     enemies = [e for e in battle_map.get_enemies(combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
     acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
-        battle_map.get_hop_distance(e, coords) <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
+        battle_map.get_hop_distance(e, coords) + delta <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
 
 def get_threat_for_staying_at_coord(coords, combatant):

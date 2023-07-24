@@ -4,6 +4,7 @@ from simulator.actions.actoid import Actoid, ActoidFlags
 import logging
 from simulator.battle_map import Map
 from simulator.threat_interfaces import Factory, AttackThreatModifier
+from simulator.threat_utils import get_danger_zone_threat
 
 logger = logging.getLogger("EncounTroll")
 
@@ -49,7 +50,10 @@ class Dash(Actoid, AttackThreatModifier):
         return prefix + f"Dash"
 
     def calculate_threat(self, **kwargs):
-        return 0  # TODO calculate the danger zone delta here
+        battle_map = Map.get()
+        baseline = get_danger_zone_threat(battle_map.get_combatant_position(self.factory.combatant).get(), self.factory.combatant)
+        modified = get_danger_zone_threat(battle_map.get_combatant_position(self.factory.combatant).get(), self.factory.combatant,  self.factory.combatant.speed)
+        return baseline - modified
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         return 0  # TODO do the distance mod here

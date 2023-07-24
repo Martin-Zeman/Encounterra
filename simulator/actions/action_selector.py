@@ -247,8 +247,11 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
         action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
-        if transition_name not in action_to_eligible_coords.keys():
-            dag.remove_transition(transition_name, '0')
+        try:
+            if not action_to_eligible_coords[transition_name]:
+                dag.remove_transition(transition_name, '0')
+        except KeyError:
+            dag.remove_transition(transition_name, '0')  # Happens where the combatant's out of movement
 
     added_states = set()  # tracks which states have already been added
     for action_name, coords in action_to_eligible_coords.items():

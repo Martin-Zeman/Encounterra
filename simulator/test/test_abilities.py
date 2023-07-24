@@ -9,7 +9,6 @@ from simulator.actions.action_selector import get_action
 from simulator.actions.action_types import BonusAction
 from simulator.actions.hide import HideFactory
 from simulator.battle_map import Terrain
-from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
 from simulator.effects.effect import EffectType
 from simulator.logging.custom_logger import CustomLogger, LogLevel
@@ -624,6 +623,119 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
         actoid12 = get_action(test_assassin_rogue)
         assert str(actoid12) == "Shortbow on Ogre"
         action_resolver.resolve_action(actoid12, test_assassin_rogue)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
+    """
+    Test scenario where the Rogue is surrounded by three enemies. Even though there is a place to hide nearby, the rogue opts to use
+    Cunning Disengage instead. In the second turn the rogue tries to get farther away while hiding and firing as he goes.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    battle_map.place_circular_element(np.array([4, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([2, 3]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 2]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([2, 1]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([1, 3]))
+    battle_map.build_adjacency_matrix()
+    test_assassin_rogue.stealth = 20  # Making sure the hide always works
+
+    try:
+        actoid1 = get_action(test_assassin_rogue)
+        assert str(actoid1) == "Cunning Disengage of AssassinRogue"
+        action_resolver.resolve_action(actoid1, test_assassin_rogue)
+        actoid2 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid2, test_assassin_rogue)
+        actoid3 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid3, test_assassin_rogue)
+        actoid4 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid4, test_assassin_rogue)
+        actoid5 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid5, test_assassin_rogue)
+        actoid6 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid6, test_assassin_rogue)
+        actoid7 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid7, test_assassin_rogue)
+        actoid8 = get_action(test_assassin_rogue)
+        assert str(actoid8).startswith("Shortbow")
+        action_resolver.resolve_action(actoid8, test_assassin_rogue)
+        test_assassin_rogue.new_turn()
+        actoid11 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid11, test_assassin_rogue)
+        actoid12 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid12, test_assassin_rogue)
+        actoid13 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid13, test_assassin_rogue)
+        actoid14 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid14, test_assassin_rogue)
+        actoid15 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid15, test_assassin_rogue)
+        actoid16 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid16, test_assassin_rogue)
+        actoid17 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid17, test_assassin_rogue)
+        actoid18 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid18, test_assassin_rogue)
+        assert str(actoid12).startswith("Cunning Hide") or str(actoid13).startswith("Cunning Hide") or str(actoid14).startswith("Cunning Hide") or str(actoid15).startswith("Cunning Hide")
+        assert str(actoid16).startswith("Shortbow") or str(actoid17).startswith("Shortbow") or str(actoid18).startswith("Shortbow")
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
+    """
+    Test scenario where the Rogue has three enemies nearby and no cover. The best option would be to use cunning dash.
+    """
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([7, 3]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 1]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([7, 0]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([9, 1]))
+    battle_map.build_adjacency_matrix()
+    test_bugbear.speed += 3  # Making him faster to incentivize the rogue to dash
+
+    try:
+        actoid1 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid1, test_assassin_rogue)
+        actoid2 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid2, test_assassin_rogue)
+        actoid3 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid3, test_assassin_rogue)
+        actoid4 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid4, test_assassin_rogue)
+        actoid5 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid5, test_assassin_rogue)
+        actoid6 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid6, test_assassin_rogue)
+        actoid7 = get_action(test_assassin_rogue)
+        assert str(actoid6).startswith("Cunning Dash") or str(actoid7).startswith("Cunning Dash")
+        action_resolver.resolve_action(actoid7, test_assassin_rogue)
+        actoid8 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid8, test_assassin_rogue)
+        actoid9 = get_action(test_assassin_rogue)
+        assert str(actoid9) is not "None"
+        action_resolver.resolve_action(actoid9, test_assassin_rogue)
+        actoid10 = get_action(test_assassin_rogue)
+        assert str(actoid10) is not "None"
+        action_resolver.resolve_action(actoid10, test_assassin_rogue)
+        actoid11 = get_action(test_assassin_rogue)
+        assert str(actoid11) is not "None"
+        action_resolver.resolve_action(actoid11, test_assassin_rogue)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
