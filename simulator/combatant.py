@@ -547,7 +547,7 @@ class Combatant(ABC, ProtoCombatant):
         pass
 
     @contextmanager
-    def as_if_new_turn(self):
+    def as_if_has_action(self):
         has_action = self.has_action
         try:
             self.has_action = True

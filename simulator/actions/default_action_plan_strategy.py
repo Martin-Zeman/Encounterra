@@ -11,7 +11,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
 
     def get_movement_for_next_turn(self, distances, shortest_paths):
         # logger.info(f"{self.combatant} still has movement left")  # TODO FIXME
-        with self.combatant.as_if_new_turn() as combatant:
+        with self.combatant.as_if_has_action() as combatant:
             get_aoe_and_aoo_threat_for_increment.cache_clear()
             fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(combatant)
             dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)

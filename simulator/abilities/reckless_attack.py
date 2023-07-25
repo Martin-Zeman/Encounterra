@@ -134,6 +134,8 @@ class RecklessAttackFactory(DirectThreatFactory):
                 total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
                 total_crit = 20 if auto_crit else total_crit
                 modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, total_crit, target.is_resistant_to(self.dmg_type))
+            else:
+                modified = 0
 
         # logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta modified threat = {modified}")
 

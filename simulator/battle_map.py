@@ -1,6 +1,12 @@
 import copy
+from functools import cache
+
 import numpy as np
 import sys
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 import logging
 from simulator.actions.action_types import Passive
 from simulator.combatant_coords import Coords
@@ -118,6 +124,37 @@ class GridSquare:
     def is_difficult_terrain(self):
         return self.terrain is Terrain.DIFFICULT_TERRAIN
 
+# def toggled_cache(func):
+#     cached_func = cache(func)
+#     def call_func(*args, **kwargs):
+#         if args[0].cache_enabled:
+#             return cached_func(*args, **kwargs)
+#         else:
+#             return func(*args, **kwargs)
+#     return call_func
+
+def toggled_cache(key):
+    """
+    A custom cache decorator designed to be used on a method of an object instance that has the `cache_enabled` property.
+
+    When applied to a method, this decorator allows caching of the method's results based on the value of `cache_enabled`
+    for the object instance. If `cache_enabled` is True, the decorator caches the results of the method calls. If `cache_enabled`
+    is False, caching is bypassed, and the method is executed normally without caching.
+    """
+    parametrized_cache = cached(cache={}, key=key)
+    def _toggled_cache(func):
+        cached_func = parametrized_cache(func)
+        def call_func(*args, **kwargs):
+            if args[0].cache_enabled:
+                return cached_func(*args, **kwargs)
+            else:
+                return func(*args, **kwargs)
+
+        call_func.cache_clear = cached_func.cache_clear
+        return call_func
+
+    return _toggled_cache
+
 
 class Map:
     _instance = None
@@ -137,7 +174,7 @@ class Map:
             cls._instance.obstacles = []  # Same as impassable_set but using a different data type
             cls._instance.combatant_coordinate_cache = dict()  # Maps combatant -> coordinate
             cls._instance.effect_tracker = None
-            cls._instance.combatant_positioning_hash = None
+            cls._instance.cache_enabled = True
         return cls._instance
 
     @classmethod
@@ -179,33 +216,15 @@ class Map:
             original_logger_level = logger.level
             try:
                 logger.setLevel(logging.WARNING)
+                self.cache_enabled = False
                 self.move_combatant(combatant, coords)
                 yield original_coords.get()[0]
             finally:
                 self.move_combatant(combatant, original_coords.get()[0])
+                self.cache_enabled = True
                 logger.setLevel(original_logger_level)
         else:
             yield None
-
-    @contextmanager
-    def as_if_dist_from_combatant(self, combatant1, combatant2, dist, dist_type=DistanceMetric.HOP):
-        orig_dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
-        def monkeypatch_dist(subject1, subject2):
-            if subject1 is combatant1 and subject2 is combatant2:
-                return dist
-            else:
-                return orig_dist_func(subject1, subject2)
-        if dist_type is DistanceMetric.HOP:
-            self.get_hop_distance = monkeypatch_dist
-        else:
-            self.get_cartesian_distance = monkeypatch_dist
-        try:
-            yield self
-        finally:
-            if dist_type is DistanceMetric.HOP:
-                self.get_hop_distance = orig_dist_func
-            else:
-                self.get_cartesian_distance = orig_dist_func
 
     @contextmanager
     def as_if_dist_delta_from_combatant(self, combatant1, combatant2, dist):
@@ -230,10 +249,12 @@ class Map:
         self.get_hop_distance = monkeypatch_hop_dist
         self.get_cartesian_distance = monkeypatch_cartesian_dist
         try:
+            self.cache_enabled = False
             yield self
         finally:
             self.get_hop_distance = orig_dist_hop_func
             self.get_cartesian_distance = orig_dist_cartesian_func
+            self.cache_enabled = True
 
 
     @contextmanager
@@ -248,6 +269,7 @@ class Map:
         if combatant is not action.factory.combatant:
             before_wildshape_position = self.get_combatant_position(combatant)
             try:
+                self.cache_enabled = False
                 self.teams.replace_combatant(combatant, action.factory.combatant)
                 wildshape_position = self.find_wildshaped_coordinate(combatant, action.factory.combatant.size, orig_coords)
                 self.remove_combatant(combatant)
@@ -260,6 +282,7 @@ class Map:
                 self.teams.replace_combatant(action.factory.combatant, combatant)
                 self.remove_combatant(action.factory.combatant)
                 self.set_combatant_coordinates(combatant, before_wildshape_position.get()[0])
+                self.cache_enabled = True
         else:
             yield False
 
@@ -773,6 +796,7 @@ class Map:
                 print("FIXME")
         return inflated
 
+    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
     def get_free_coords_in_hop_range(self, coords: Coords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
@@ -803,7 +827,8 @@ class Map:
         return adjacent_coords
 
 
-    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
+    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
+    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
         by a combatant of 'inflate_to_size' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
@@ -826,7 +851,7 @@ class Map:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size or self.get_cartesian_distance(coords.get(), np.array([[x, y]])) > rng:
                     continue
                 square = self.grid[x, y]
-                consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances is not None else True
+                consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances else True
                 if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     coords_in_range.add((x, y))
@@ -964,83 +989,7 @@ class Map:
             logger.error(e)
             return None
 
-    def get_free_coords_at_distance_sorted_by_dist_to_enemies(self, moving_combatant, distance, dist_type=DistanceMetric.HOP):
-        """
-        Returns a list of coordinates that are at a certain distance from the moving combatant. Sorted by distance to the nearest enemy
-        :param moving_combatant: combatant who wants to get away
-        :param distance: how far the combatant can go
-        :return: sorted by the minimum distance to any enemy in ascending order
-        """
-        elligible_coords = []
-        root_coord = np.array([self.combatant_coordinate_cache[moving_combatant].get()[0, :]])
-        dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
-        # optimization - narrowing search down to a bounding box
-        for i in range(-distance, distance + 1):
-            for j in range(-distance, distance + 1):
-                curr_coord = root_coord + np.array([i, j])
-                if curr_coord[0][0] in range(0, self.size) and curr_coord[0][1] in range(0, self.size):
-                    square = self.grid[curr_coord[0][0], curr_coord[0][1]]
-                    if square.is_empty() and dist_func(curr_coord, root_coord) == distance:
-                        elligible_coords.append(curr_coord)
 
-        def by_distance_to_nearest_enemy(coord):
-            min_dist = sys.maxsize
-            for combatant, cmbt_coord in self.combatant_coordinate_cache.items():
-                if combatant.is_alive() and self.teams.are_enemies(moving_combatant, combatant):
-                    dist = self.get_hop_distance(coord, cmbt_coord.get())
-                    min_dist = min(dist, min_dist)
-            return min_dist
-
-        elligible_coords.sort(key=by_distance_to_nearest_enemy, reverse=True)
-        return elligible_coords
-
-    def get_free_coords_at_distance_from_target(self, target, combatant, min_dist, max_dist=sys.maxsize):
-        """
-        Returns a list of coordinates that are unoccupied and at a given distance range from a target, sorted by ascending proximity to self
-        :param target: target to which the distance is measured
-        :param combatant: sorted by ascending proximity to this combatant
-        :param min_dist: minimum desired distance
-        :param max_dist: maximum desired distance
-        :return: list of numpy.array coordinates
-        """
-        assert min_dist > 0
-        self_coord = self.get_combatant_position(combatant)
-        target_coord = self.get_combatant_position(target)
-        coords = []
-        for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
-            potential_self_coord = Coords(np.array([x, y]), combatant.size)
-            dist = self.get_hop_distance(target_coord.get(), potential_self_coord.get())
-            is_empty = self.grid[x, y].is_empty()
-            if is_empty and min_dist <= dist <= max_dist:
-                coords.append(potential_self_coord.get()[0])
-
-        coords.sort(key=lambda coord: self.get_hop_distance(self_coord.get(), np.array([coord])))
-        return coords
-
-    def get_free_coords_sorted_by_distance_from_enemies(self, combatant):
-        """
-        Returns all free coordinates in a np.array matrix sorted by distances to the nearest enemy
-        :param combatant: combatant for which the coordinates are to be found
-        :return: numpy.array of nx2 shape where n is the number of coordinates returned
-        """
-        coords = []
-        distances = []
-        for x, y in [(x, y) for x in range(0, self.size) for y in range(0, self.size)]:
-            potential_self_coord = Coords(np.array([x, y]), combatant.size)
-            is_empty = self.are_empty(potential_self_coord)
-            if not is_empty:
-                continue
-            min_dist = sys.maxsize
-            for potential_enemy, cmbt_coord in self.combatant_coordinate_cache.items():
-                if potential_enemy.is_alive() and self.teams.are_enemies(potential_enemy, combatant):
-                    dist = self.get_hop_distance(potential_enemy, potential_self_coord.get())
-                    min_dist = min(min_dist, dist)
-                else:
-                    continue
-            coords.append(potential_self_coord.get()[0])
-            distances.append(min_dist)
-        # Convert it into a concatenated nx2 np.array
-        return np.stack([c for _, c in sorted((zip(distances, coords)), key=lambda x: x[0], reverse=True)])
 
     def remove_combatant(self, combatant):
         """
@@ -1365,3 +1314,7 @@ class Map:
     def is_difficult_terrain_at(self, coords: Coords):
         vec_is_difficult_terrain = np.vectorize(GridSquare.is_difficult_terrain)
         return np.any(vec_is_difficult_terrain(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
+
+    def clear_caches(self):
+        self.get_free_coords_in_cartesian_range.cache_clear()
+        self.get_free_coords_in_hop_range.cache_clear()
