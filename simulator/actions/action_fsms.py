@@ -82,7 +82,7 @@ def generate_action_fsm(combatant):
     transition_name_to_action = dict()
     post_misty_step_actions = None
 
-    def dfs(subject, previous_state_name, af_to_a_mapping, action_taken=None):
+    def dfs(subject, previous_state_name, af_to_a_mapping, depth, action_taken=None):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
@@ -93,7 +93,7 @@ def generate_action_fsm(combatant):
             print("FIXME")
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
-        action_taken_name = str(action_taken)
+        action_taken_name = f"{action_taken}_{depth}"
         if action_taken:
             transition_name_to_action[action_taken_name] = action_taken
 
@@ -116,10 +116,10 @@ def generate_action_fsm(combatant):
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
                             fafs = get_all_feasible_action_factories(form)
                             af_to_a_used = {faf: faf[1].create_all() for faf in fafs}
-                            dfs(form, curr_state_name, af_to_a_used, fa)
+                            dfs(form, curr_state_name, af_to_a_used, depth + 1, fa)
                     else:
                         af_to_a_used = af_to_a_mapping
-                        dfs(subject, curr_state_name, af_to_a_used, fa)
+                        dfs(subject, curr_state_name, af_to_a_used, depth + 1, fa)
                 subject.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
@@ -129,7 +129,7 @@ def generate_action_fsm(combatant):
     fafs = get_all_feasible_action_factories(combatant)
     af_to_a = {faf: faf[1].create_all() for faf in fafs}
 
-    dfs(combatant, '0', af_to_a)
+    dfs(combatant, '0', af_to_a, 0)
 
     # If the combatant has Misty Step, deal with it separately
     for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant):
@@ -138,8 +138,9 @@ def generate_action_fsm(combatant):
             exported_resources = combatant.export_resources()
             use_resources(combatant, ms)
             fafs = get_all_feasible_action_factories(combatant)
-            post_misty_step_actions = {str(a) for faf in fafs for a in af_to_a[faf]}
+            post_misty_step_actions = {f"{a}_2" for faf in fafs for a in af_to_a[faf]}
             combatant.load_resources(exported_resources)
+            break
 
     return fsm, transition_name_to_action, post_misty_step_actions
 

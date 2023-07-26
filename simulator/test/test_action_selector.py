@@ -41,8 +41,8 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     # Tests the Misty Step movement + Firebolt
     assert dag.state == '0'
     transitions = dag.get_available_transitions()
-    assert "Dodge of DraconicSorcerer5lvl" in transitions
-    assert "Disengage of DraconicSorcerer5lvl" in transitions
+    assert "Dodge of DraconicSorcerer5lvl_1" in transitions
+    assert "Disengage of DraconicSorcerer5lvl_1" in transitions
     assert "ms_(7, 3)" in transitions
     assert "ms_(2, 3)" in transitions
     assert "m_(7, 3)" in transitions

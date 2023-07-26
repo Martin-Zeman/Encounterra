@@ -48,13 +48,12 @@ def get_post_transitions_of_priority_transitions(dag, transition_name_to_action)
     return post_priority_transitions
 
 
-def build_priority_transitions(post_priority_transitions, action_to_eligible_coords, dag, added_states, transition_name_to_action):
+def build_priority_transitions(post_priority_transitions, transition_to_eligible_coords, dag, transition_name_to_action):
     """
     A helper function which builds the priority part of the DAG such as Dodge or Disengage.
     :param post_priority_transitions: dict from transition -> list of eligible follow-up transitions if the form of (transition, dest_state)
-    :param action_to_eligible_coords: mapping from action names to their eligible coordinates
+    :param transition_to_eligible_coords: mapping from action names to their eligible coordinates
     :param dag: the DAG which we're building
-    :param added_states: set of already existing states to avoid adding them multiple times
     :param transition_name_to_action: dict mapping action names -> actions
     :return: None but the the dag is modified
     """
@@ -64,23 +63,16 @@ def build_priority_transitions(post_priority_transitions, action_to_eligible_coo
             dag.add_transition(transition, "0", "nop")
             continue
         action_type = transition.split()[0]
-        new_source_state = action_type + "d"  # e.g. Dodge of FooBar -> Dodged
+        new_prio_state = action_type + "d"  # e.g. Dodge of FooBar -> Dodged
         prefix = PRIORITY_ACTIONS[transition_name_to_action[transition].factory.action_type][1]
-        if new_source_state not in added_states:
-            added_states.add(new_source_state)
-            dag.add_state(new_source_state)
-            newly_added_states.append(new_source_state)
-        dag.add_transition(transition, "0", new_source_state)
+        dag.add_state(new_prio_state)
+        newly_added_states.append(new_prio_state)
+        dag.add_transition(transition, "0", new_prio_state)
         for post_transition in post_transitions:
             try:
-                for coord in action_to_eligible_coords[post_transition[0]]:
-                    coord = tuple(coord)
-                    coord_state_name = prefix + str(coord)  # Needs to be made unique from the other coord states
-                    if coord_state_name not in added_states:
-                        added_states.add(coord_state_name)
-                        dag.add_state(coord_state_name)
-                    move_transition_name = prefix + str(coord)
-                    dag.add_transition(move_transition_name, new_source_state, coord_state_name)  # Will be added multiple times, but it's ok
+                for coord in transition_to_eligible_coords[post_transition[0]]:
+                    coord_state_name = prefix + str(tuple(coord))  # Needs to be made unique from the other coord states
+                    dag.add_transition(coord_state_name, new_prio_state, coord_state_name)  # Will be added multiple times, but it's ok
                     dag.add_transition(post_transition[0], coord_state_name, post_transition[1])
             except KeyError:
                 pass  # Some may not be available for the secondary plan
@@ -206,6 +198,26 @@ def get_dist_to_action_sequence_coord(longest_pth, distances):
     return 0  # This should not happen
 
 
+def create_movement_states(dag, transition_to_eligible_coords):
+    """
+    Movement states that share eligible transitions can be merged. Create new states for them.
+    :param dag: the dag which the states are to be added
+    :param transition_to_eligible_coords:
+    :return: dict mapping eligible transitions -> newly created state, dict mapping coord -> eligible transitions
+    """
+    coord_to_eligible_transitions = dict()
+    for transition_name, coords in transition_to_eligible_coords.items():
+        for coord in coords:
+            try:
+                coord_to_eligible_transitions[coord].add(transition_name)
+            except KeyError:
+                coord_to_eligible_transitions[coord] = {transition_name}
+    coord_to_eligible_transitions = {c: frozenset(a) for c, a in coord_to_eligible_transitions.items()}
+    eligible_transitions_to_state = {a: dag.get_next_state_name() for a in coord_to_eligible_transitions.values()}
+    for state_name in eligible_transitions_to_state.values():
+        dag.add_state(state_name)
+    return eligible_transitions_to_state, coord_to_eligible_transitions
+
 
 def build_action_dag(combatant, action_fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions):
     """
@@ -215,7 +227,6 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     to all post-Misty-Step states. Dodge and Disengage always make sense to be taken before any movement, therefore
     in their case coords are also pre-pended to their follow-up actions.
     :param combatant: the combatant for whom the DAG is modeled
-    :param battle_map:
     :param action_fsm: finite state machine representing all possible actions for combatant
     :param transition_name_to_action: dict mapping action names -> actions
     :param distances: the distances to all squares (result of Dijkstra)
@@ -235,50 +246,41 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     transition_names = list(filter(lambda t: t != "dummy", transition_names))
     if not transition_names or transition_names[0] == 'None':
         return None
-    if not post_misty_step_actions:
-        post_misty_step_actions = []
+    post_misty_step_actions = () if not post_misty_step_actions else post_misty_step_actions
 
-    # TODO Also build a reverse dict coord -> set(eligible actions) which can be used to merge coord states using their footprint
     if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
-        action_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
+        transition_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
     else:
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
-        action_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
+        transition_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
         try:
-            if not action_to_eligible_coords[transition_name]:
+            if not transition_to_eligible_coords[transition_name]:
                 dag.remove_transition(transition_name, '0')
         except KeyError:
             dag.remove_transition(transition_name, '0')  # Happens where the combatant's out of movement
 
-    added_states = set()  # tracks which states have already been added
-    for action_name, coords in action_to_eligible_coords.items():
+    eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(dag, transition_to_eligible_coords)
+
+    for transition_name, coords in transition_to_eligible_coords.items():
+        transitions = [t[0] for t in action_fsm.events[transition_name].transitions.values() if t[0].source == "0"]  # Iterate over the original to avoid deleting from the one being iterated over
+        assert len(transitions) == 1
+        transition = transitions[0]
         for coord in coords:
-            transitions = [t[0] for t in action_fsm.events[action_name].transitions.values() if t[0].source == "0"]
-            assert len(transitions) == 1
-            for transition in transitions:  # Iterate over the original to avoid deleting from the one being iterated over
-                new_state_and_transition_name = "m_" + str(coord)
-                if new_state_and_transition_name not in added_states:
-                    added_states.add(new_state_and_transition_name)
-                    dag.add_state(new_state_and_transition_name)
-                    dag.add_transition(new_state_and_transition_name, transition.source, new_state_and_transition_name)  # Will be added multiple times, but it's ok
-                dag.add_transition(action_name, new_state_and_transition_name, transition.dest)
+            movement_state_name = eligible_transitions_to_state[coord_to_eligible_transitions[coord]]
+            dag.add_transition("m_" + str(coord), "0", movement_state_name)
+            dag.add_transition(transition_name, movement_state_name, transition.dest)
 
-                # Make a special graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement (not a direct jump to the coord)
-                if action_name in post_misty_step_actions:
-                    new_state_name = "ms_" + str(coord)
-                    if new_state_name not in added_states:
-                        added_states.add(new_state_name)
-                        dag.add_state(new_state_name)
-                    dag.add_transition(new_state_name, "0", new_state_name)  # transition name is the same as state name
-                    dag.add_transition(action_name, new_state_name, "nop")
-                try:
-                    dag.remove_transition(action_name, transition.source)  # Remove the original
-                except AttributeError as e:
-                    print("FIXME")
+            # Make a separate graph section to model misty step. The ms_ transition implies the possibility of Misty Step included in the movement (not a direct jump to the coord)
+            if transition_name in post_misty_step_actions:  # TODO I don't think this is correct, what if there's another bonus action following that post_misty_step_action -> should be now solved with the depth counter
+                dag.add_transition("ms_" + str(coord), "0", movement_state_name)  # transition name is the same as state name
+            try:
+                dag.remove_transition(transition_name, "0")  # Remove the original
+            except AttributeError as e:
+                print("FIXME")
 
-    build_priority_transitions(post_priority_transitions, action_to_eligible_coords, dag, added_states, transition_name_to_action)
+    build_priority_transitions(post_priority_transitions, transition_to_eligible_coords, dag, transition_name_to_action)
     return dag
 
 
