@@ -1,6 +1,6 @@
 from functools import cache
 from itertools import combinations
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -141,8 +141,12 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def is_affecting(self, combatant):
         return combatant in self.targets
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.targets[0]) + self.factory.calculate_threat_to_target(self.targets[1])
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
 
     def get_eligible_coords(self, distances, shortest_paths):

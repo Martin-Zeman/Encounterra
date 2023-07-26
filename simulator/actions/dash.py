@@ -2,7 +2,7 @@ from functools import cache
 from simulator.actions.action_types import BonusAction, HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 import logging
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.threat_interfaces import Factory, AttackThreatModifier
 from simulator.threat_utils import get_danger_zone_threat
 
@@ -49,11 +49,15 @@ class Dash(Actoid, AttackThreatModifier):
             prefix = "Hasted "
         return prefix + f"Dash"
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         baseline = get_danger_zone_threat(battle_map.get_combatant_position(self.factory.combatant).get(), self.factory.combatant)
         modified = get_danger_zone_threat(battle_map.get_combatant_position(self.factory.combatant).get(), self.factory.combatant,  self.factory.combatant.speed)
         return baseline - modified
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         return 0  # TODO do the distance mod here

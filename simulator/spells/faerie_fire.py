@@ -1,5 +1,5 @@
 import numpy as np
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.combatant_coords import Coords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.combatant_effect import CombatantEffect
@@ -109,6 +109,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
         self.factory.combatant.break_concentration()
         self.combatants.clear()
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
@@ -118,6 +119,9 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * threat_delta
         # logger.warning(f"MY DEBUG {self} calculate_threat = {acc}")
         return -acc
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
         return 0

@@ -1,5 +1,5 @@
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, Conditions, Visibility
 import logging
@@ -122,6 +122,7 @@ class Chaosbolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt"
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
@@ -137,6 +138,9 @@ class Chaosbolt(Actoid, DirectThreat):
             acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
             p_acc *= P_SAME
         return acc
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """

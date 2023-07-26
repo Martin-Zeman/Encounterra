@@ -1,5 +1,5 @@
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -133,9 +133,13 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def is_affecting(self, combatant):
         return combatant is self.target
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         ret = self.factory.calculate_threat_to_target(self.target)
         return ret
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
 
     def get_eligible_coords(self, distances, shortest_paths):

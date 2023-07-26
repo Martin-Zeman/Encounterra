@@ -463,24 +463,19 @@ def test_get_free_coords_in_cartesian_range_medium(battle_map, teams, test_draco
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=1)
     # only directly above, below and to the sides
     assert free_coords == {(4, 7), (6, 7), (5, 8), (5, 6)}
-    battle_map.clear_caches()
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=1, combatant=test_draconic_sorcerer_5lvl)
     # same but including the combatant's own coord
     assert free_coords == {(4, 7),(5, 7), (6, 7), (5, 8), (5, 6)}
 
-    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([8, 13]))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    battle_map.clear_caches()
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=2)
     assert free_coords == {(6, 13), (7, 13), (9, 13), (10, 13), (7, 14), (8, 14), (9, 14), (7, 12), (8, 12), (9, 12), (8, 11)}
-    battle_map.clear_caches()
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=2, combatant=test_draconic_sorcerer_5lvl)
     # same but including the combatant's own coord
     assert free_coords == {(6, 13), (7, 13), (8, 13), (9, 13), (10, 13), (7, 14), (8, 14), (9, 14), (7, 12), (8, 12), (9, 12), (8, 11)}
 
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([5, 5]))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    battle_map.clear_caches()
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=4)
     assert (1, 1) not in free_coords and (2, 1) not in free_coords and (3, 1) not in free_coords and (4, 1) not in free_coords and (6, 1) not in free_coords
     assert (7, 1) not in free_coords and (8, 1) not in free_coords
@@ -489,7 +484,6 @@ def test_get_free_coords_in_cartesian_range_medium(battle_map, teams, test_draco
     assert (2, 8) not in free_coords and (8, 8) not in free_coords and (9, 8) not in free_coords
     assert (9, 5) in free_coords and (1, 5) in free_coords and (5, 1) in free_coords and (5, 9) in free_coords
     # same but including the combatant's own coord
-    battle_map.clear_caches()
     free_coords = battle_map.get_free_coords_in_cartesian_range(coords, rng=4, combatant=test_draconic_sorcerer_5lvl)
     assert (5, 5) in free_coords
 

@@ -156,6 +156,46 @@ def toggled_cache(key):
     return _toggled_cache
 
 
+
+# def map_toggled_cache(func):
+#     """
+#     A custom cache decorator which is governed by the caching state of the Map.
+#
+#     When applied to a method, this decorator allows caching of the method's results based on the value of `cache_enabled`
+#     of the Map singleton. If `cache_enabled` is True, the decorator caches the results of the method calls. If `cache_enabled`
+#     is False, caching is bypassed, and the method is executed normally without caching.
+#     """
+#     cached_func = cache(func)
+#     def call_func(*args, **kwargs):
+#         if Map.get().cache_enabled:
+#             return cached_func(*args, **kwargs)
+#         else:
+#             return func(*args, **kwargs)
+#
+#     call_func.cache_clear = cached_func.cache_clear
+#     return call_func
+
+
+def map_position_toggled_cache(func):
+    """
+    A custom cache decorator designed to be used on a method of an object instance that has the `cache_enabled` property and uses the
+    current combatant position as a hashkey.
+
+    When applied to a method, this decorator allows caching of the method's results based on the value of `cache_enabled`
+    for the object instance. If `cache_enabled` is True, the decorator caches the results of the method calls. If `cache_enabled`
+    is False, caching is bypassed, and the method is executed normally without caching.
+    """
+    cached_func = cache(func)
+    def call_func(*args, **kwargs):
+        battle_map = Map.get()
+        if battle_map.cache_enabled:
+            return cached_func(*args, **kwargs, position_hash=tuple(battle_map.get_combatant_position(args[0].factory.combatant).get()[0]))
+        else:
+            return func(*args, **kwargs)
+
+    call_func.cache_clear = cached_func.cache_clear
+    return call_func
+
 class Map:
     _instance = None
 
@@ -216,12 +256,12 @@ class Map:
             original_logger_level = logger.level
             try:
                 logger.setLevel(logging.WARNING)
-                self.cache_enabled = False
+                # self.cache_enabled = False
                 self.move_combatant(combatant, coords)
                 yield original_coords.get()[0]
             finally:
                 self.move_combatant(combatant, original_coords.get()[0])
-                self.cache_enabled = True
+                # self.cache_enabled = True
                 logger.setLevel(original_logger_level)
         else:
             yield None
@@ -796,7 +836,7 @@ class Map:
                 print("FIXME")
         return inflated
 
-    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
+    # @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
     def get_free_coords_in_hop_range(self, coords: Coords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
@@ -827,7 +867,7 @@ class Map:
         return adjacent_coords
 
 
-    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
+    # @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
     def get_free_coords_in_cartesian_range(self, coords: Coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
@@ -1316,5 +1356,6 @@ class Map:
         return np.any(vec_is_difficult_terrain(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
 
     def clear_caches(self):
-        self.get_free_coords_in_cartesian_range.cache_clear()
-        self.get_free_coords_in_hop_range.cache_clear()
+        pass
+        # self.get_free_coords_in_cartesian_range.cache_clear()
+        # self.get_free_coords_in_hop_range.cache_clear()

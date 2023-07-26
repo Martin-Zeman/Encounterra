@@ -1,6 +1,6 @@
 import logging
 import math
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -177,8 +177,12 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def get_dmg_type(self):
         return self.factory.dmg_type
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target, **kwargs)
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """

@@ -2,7 +2,6 @@ from enum import Enum, Flag, auto
 import random
 import re
 from functools import reduce, cache
-
 from simulator.actions.actoid import FactoryFlags
 import logging
 from simulator.utils.roll_types import RollType
@@ -265,3 +264,4 @@ class Visibility(Enum):
 THREE_QUARTERS_COVER_ERROR_THRESHOLD = 0.25
 HALF_COVER_ERROR_THRESHOLD = 0.35
 FULL_VISIBILITY_ERROR_THRESHOLD = 0.45
+

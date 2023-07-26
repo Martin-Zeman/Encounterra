@@ -1,7 +1,7 @@
 from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.misc import avg_roll, Conditions
 from simulator.threat_utils import mean_dmg, calc_p_hit
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
@@ -162,8 +162,12 @@ class Attack(Actoid, DirectThreat):
     def get_dmg_type(self):
         return self.factory.dmg_type
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target, **kwargs)
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
