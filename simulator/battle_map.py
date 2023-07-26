@@ -889,7 +889,7 @@ class Map:
         return adjacent_coords
 
     # @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
-    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
+    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=(), inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
         by a combatant of 'inflate_to_size' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
