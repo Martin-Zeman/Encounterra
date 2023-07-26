@@ -1,4 +1,4 @@
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, avg_roll, Conditions, Visibility
@@ -99,6 +99,7 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def shorthand_str(self):
         return "Twinned Firebolt"
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
@@ -107,6 +108,9 @@ class TwinnedFirebolt(Actoid, DirectThreat):
             to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
             dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, ROLL_TYPE_CRIT_DELTA[roll_type], self.targets[1].is_resistant_to(TwinnedFireboltFactory.dmg_type))
         return dmg_acc
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         ret = self.factory.calculate_threat_to_target_delta(self.targets[0], modifiers)

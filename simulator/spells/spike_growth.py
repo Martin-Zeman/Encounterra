@@ -1,7 +1,7 @@
 import logging
 from functools import cache
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.combatant_coords import Coords
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.effect import EffectType
@@ -112,6 +112,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def deactivate(self):
         self.factory.combatant.break_concentration()
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         # TODO This needs more intelligence (also subtract dmg caused to allies)
         battle_map = Map.get()
@@ -121,6 +122,9 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)
         # logger.warning(f"MY DEBUG {self} calculate_threat = {acc}")
         return acc
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability

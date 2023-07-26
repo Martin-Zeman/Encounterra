@@ -20,6 +20,9 @@ class Threat(ABC):
         return 0
 
     def clear_cache(self):
+        """
+        As this is the most frequently called method, it makes sense to cache it.
+        """
         pass
         # self.calculate_threat.cache_clear()
 

@@ -2,7 +2,7 @@ import math
 from functools import cache
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.misc import Size
 import logging
 
@@ -47,9 +47,13 @@ class BiteAndSwallow(MeleeAttack):
         battle_map = Map.get()
         return battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range)
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
         return self.factory.calculate_threat_to_target(self.target, **kwargs)
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """

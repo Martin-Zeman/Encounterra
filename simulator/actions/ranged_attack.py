@@ -3,9 +3,8 @@ from functools import cache
 
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
-from simulator.battle_map import Map
-from simulator.combatant_coords import Coords
-from simulator.misc import percent_of_curr_hp, Visibility
+from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.misc import Visibility
 from simulator.threat_utils import mean_dmg, calc_p_hit
 import logging
 
@@ -47,11 +46,15 @@ class RangedAttackFactory(AttackFactory):
 
 class RangedAttack(Attack):
 
-    def calculate_threat(self, combatant_coords: Coords = None, *args, **kwargs):
+    @map_position_toggled_cache
+    def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         roll_type = RollType.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target) > self.factory.short_range else roll_type
         return self.factory.calculate_threat_to_target(self.target, roll_type=roll_type, **kwargs)
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()

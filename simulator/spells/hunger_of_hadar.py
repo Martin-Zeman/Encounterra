@@ -1,7 +1,7 @@
 from functools import cache
 from simulator.action_resolver import resolve_dmg_saving_throw
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.combatant_coords import Coords
 from simulator.effects.aoe_spheric_effect import AoeSphericEffect
 from simulator.effects.effect import EffectType
@@ -119,6 +119,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         # TODO remove difficult terrain
         self.factory.combatant.break_concentration()
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.origin)
@@ -129,6 +130,9 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
             acc += 0.5 * mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(DamageType.Acid))
             acc *= (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3)
         return acc
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability

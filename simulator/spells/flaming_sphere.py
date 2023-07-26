@@ -2,7 +2,7 @@ import logging
 from functools import cache
 from simulator.actions.action_types import BonusAction
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.combatant_coords import Coords
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.aoe_square_effect import AoeSquareEffect
@@ -112,6 +112,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     def disable(self):
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
         enemies = Map.get().get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)
@@ -121,6 +122,9 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         for enemy in enemies:
             acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant_to(self.factory.dmg_type))
         return acc / len(enemies) * ROUND_HORIZON
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def get_eligible_coords(self, distances, shortest_paths):
         return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords

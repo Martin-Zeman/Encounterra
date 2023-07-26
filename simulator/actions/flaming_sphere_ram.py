@@ -1,6 +1,6 @@
 from functools import cache
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.misc import DamageType, SavingThrow, Conditions
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
@@ -78,8 +78,12 @@ class FlamingSphereRam(Actoid, DirectThreat):
     def shorthand_str(self):
         return f"Flaming Sphere Ram"
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         return self.factory.calculate_threat_to_target(self.target)
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Doesn't apply here

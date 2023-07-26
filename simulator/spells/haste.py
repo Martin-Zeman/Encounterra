@@ -1,4 +1,4 @@
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
@@ -132,11 +132,15 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
     def is_affecting(self, combatant):
         return combatant is self.target
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         """
         It's the same as the single target version of the factory
         """
         return self.factory.calculate_threat_to_target(self.target)
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()

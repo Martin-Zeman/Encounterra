@@ -11,7 +11,7 @@ from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.misc import Conditions, DamageType
 from simulator.spells.flaming_sphere import FlamingSphereFactory
 from simulator.teams import Teams
-from simulator.test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, teams, effect_tracker, battle_map
+from simulator.test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
 from simulator.utils.utils import preallocate_wildshape_forms
 
 def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid, test_draconic_sorcerer_5lvl):
@@ -87,3 +87,23 @@ def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker,
 
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+
+def test_map_position_toggled_cache(battle_map, teams, effect_tracker, test_goblin, test_bugbear):
+    CustomLogger(LogLevel.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 13]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 8]))
+    battle_map.build_adjacency_matrix()
+
+    shortbow = test_goblin.shortbow_attack[1].create(test_bugbear)
+    threat_before = shortbow.calculate_threat()
+    battle_map.move_combatant(test_goblin, np.array([8, 9]))
+    threat_after = shortbow.calculate_threat()
+    assert threat_before != threat_after
+
+    battle_map.move_combatant(test_goblin, np.array([8, 13]))
+    threat_after = shortbow.calculate_threat()
+    assert threat_before == threat_after

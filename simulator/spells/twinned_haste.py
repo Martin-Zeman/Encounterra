@@ -1,6 +1,6 @@
 import logging
 from itertools import combinations
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.spells.spell import SpellStats
 from simulator.effects.effect import Effect, EffectType
 from simulator.actions.actoid import Actoid, ActoidFlags
@@ -121,6 +121,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
     def is_affecting(self, combatant):
         return combatant in self.targets
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         """
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
@@ -132,6 +133,9 @@ class TwinnedHaste(Actoid, Effect, Threat):
         ret = target1_threat + target2_threat
         # logger.warning(f"MY DEBUG {self} calculate_threat = {ret}")
         return ret
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
