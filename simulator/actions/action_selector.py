@@ -19,6 +19,9 @@ from simulator.threat_utils import accumulate_threat_along_path, calc_threat_for
 
 logger = logging.getLogger("EncounTroll")
 
+REGEX_MOVEMENT_PATTERN = re.compile(r'([msdchio]+)_\((\d+), (\d+)\)')
+REGEX_MS_MOVEMENT_PATTERN = re.compile(r'[mschdio_]+\((\d+), (\d+)\)')
+
 
 def get_post_transitions_of_priority_transitions(dag, transition_name_to_action):
     """
@@ -88,7 +91,7 @@ def build_priority_transitions(post_priority_transitions, action_to_eligible_coo
             dag.add_transition("dummy", newly_added_state, "nop")
 
 
-def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pattern, ms_factory):
+def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_factory):
     """
     A helper function which decodes an action which represents movement with the possibility of including Misty Step into a sequence of
     actions which look like: regular movement (optional), Misty Step, regular movement (optional)
@@ -96,7 +99,6 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pat
     :param initial_coord: the initial coordinate of the combatant
     :param ms_path: name of the current action to be decoded
     :param actions: the list of actions to which we add the resulting sequence
-    :param ms_pattern: Optimization to avoid reallocation: search regex to extract coordinates from action names
     :param ms_factory: Optimization to avoid reallocation: Misty Step factory instance
     :return: None but actions shall be modified
     """
@@ -112,16 +114,16 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_pat
     if before_ms_idx is not None:
         before_path = [initial_coord]
         for i in range(0, before_ms_idx + 1):
-            x, y = re.search(ms_pattern, ms_path[i]).groups()
+            x, y = REGEX_MS_MOVEMENT_PATTERN.search(ms_path[i]).groups()
             before_path.append(np.array([int(x), int(y)]))
         before_path = convert_path_to_increments(before_path)
         actions.extend(list(MovementGenerator(combatant, before_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
-    x, y = re.search(ms_pattern, ms_path[ms_idx]).groups()
+    x, y = REGEX_MS_MOVEMENT_PATTERN.search(ms_path[ms_idx]).groups()
     actions.append(ms_factory.create(np.array([int(x), int(y)])))
     if after_ms_idx is not None:
         after_path = [actions[-1].coord]  # use the Misty Step target coord as the initial one
         for i in range(ms_idx + 1, after_ms_idx + 1):
-            x, y = re.search(ms_pattern, ms_path[i]).groups()
+            x, y = REGEX_MS_MOVEMENT_PATTERN.search(ms_path[i]).groups()
             after_path.append(np.array([int(x), int(y)]))
         after_path = convert_path_to_increments(after_path)
         actions.extend(list(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
@@ -137,8 +139,6 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
     :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
     :return: list of the following types: np.array, action, bonus action
     """
-    pattern = r'([msdchio]+)_\((\d+), (\d+)\)'
-    ms_pattern = r'[mschdio_]+\((\d+), (\d+)\)'
     ms_factory = MistyStepFactory(combatant)
     actions = []
     battle_map = Map.get()
@@ -148,18 +148,18 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
         try:
             actions.append(transition_name_to_action[action])
         except KeyError:
-            movement_type, x, y = re.search(pattern, action).groups()
+            movement_type, x, y = REGEX_MOVEMENT_PATTERN.search(action).groups()
             match movement_type:
                 case "m" | "do":
                     path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
                     movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
-                case "di" | "cdi":
+                case "di" | "cdi" | "hdi":
                     path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, False)
                     movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGED).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
                 case "ms":
-                    decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[action], actions, ms_pattern, ms_factory)
+                    decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[action], actions, ms_factory)
                     # TODO also unpack actions
                 case _:
                     logger.error(f"Unknown movement type {movement_type}")
@@ -174,12 +174,11 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
     :param longest_pth: list of best actions as strings
     :return: list of movement increments or None
     """
-    pattern = r'([msdhio]+)_\((\d+), (\d+)\)'
     actions = []
     for action in longest_pth:
         if action == "dummy":
             continue
-        match = re.search(pattern, action)
+        match = REGEX_MOVEMENT_PATTERN.search(action)
         if match:
             _, x, y = match.groups()
             path = Map.get().get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
@@ -196,11 +195,10 @@ def get_dist_to_action_sequence_coord(longest_pth, distances):
     :param distances: potentially already pre-computed distances to all coords
     :return: list of movement increments or None
     """
-    pattern = r'([msdhio]+)_\((\d+), (\d+)\)'
     for action in longest_pth:
         if action == "dummy":
             continue
-        match = re.search(pattern, action)
+        match = REGEX_MOVEMENT_PATTERN.search(action)
         if match:
             _, x, y = match.groups()
             map_size = Map.get().size
@@ -360,7 +358,7 @@ def calc_best_sequence(combatant, dag, transition_name_to_action, distances, sho
                     if isinstance(action, AttackThreatModifier):
                         delta_action = action
             except KeyError:  # or different kind which represents some type of movement
-                movement_type, x, y = re.search(r'([msdcio]+)_\((\d+), (\d+)\)', transition).groups()
+                movement_type, x, y = REGEX_MOVEMENT_PATTERN.search(transition).groups()
                 destination = np.array([int(x), int(y)])
                 pretend_coords = destination
                 path = battle_map.get_path_to_coord(combatant, destination, distances, shortest_paths, True)
@@ -369,7 +367,7 @@ def calc_best_sequence(combatant, dag, transition_name_to_action, distances, sho
                 match movement_type:
                     case "m":
                         movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
-                    case "di" | "cdi":
+                    case "di" | "cdi" | "hdi":
                         movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=True)
                     case "do":
                         movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
