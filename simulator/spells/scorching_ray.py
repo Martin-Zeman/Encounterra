@@ -1,5 +1,7 @@
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_position_toggled_cache_with_key
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, avg_roll, Conditions, Visibility
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -126,7 +128,9 @@ class ScorchingRay(Actoid, DirectThreat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        self.calculate_threat_delta.cache_clear()
 
+    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items())))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         ret = self.factory.calculate_threat_to_target_delta_single_target(self.targets[0], modifiers)
         ret += self.factory.calculate_threat_to_target_delta_single_target(self.targets[1], modifiers)

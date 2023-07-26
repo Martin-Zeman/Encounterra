@@ -1,7 +1,9 @@
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import HasteAction
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_position_toggled_cache_with_key
 from simulator.misc import avg_roll, Conditions
 from simulator.threat_utils import mean_dmg, calc_p_hit
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
@@ -168,7 +170,9 @@ class Attack(Actoid, DirectThreat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        self.calculate_threat_delta.cache_clear()
 
+    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items())))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications

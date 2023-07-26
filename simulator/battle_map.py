@@ -133,29 +133,6 @@ class GridSquare:
 #             return func(*args, **kwargs)
 #     return call_func
 
-def toggled_cache(key):
-    """
-    A custom cache decorator designed to be used on a method of an object instance that has the `cache_enabled` property.
-
-    When applied to a method, this decorator allows caching of the method's results based on the value of `cache_enabled`
-    for the object instance. If `cache_enabled` is True, the decorator caches the results of the method calls. If `cache_enabled`
-    is False, caching is bypassed, and the method is executed normally without caching.
-    """
-    parametrized_cache = cached(cache={}, key=key)
-    def _toggled_cache(func):
-        cached_func = parametrized_cache(func)
-        def call_func(*args, **kwargs):
-            if args[0].cache_enabled:
-                return cached_func(*args, **kwargs)
-            else:
-                return func(*args, **kwargs)
-
-        call_func.cache_clear = cached_func.cache_clear
-        return call_func
-
-    return _toggled_cache
-
-
 
 # def map_toggled_cache(func):
 #     """
@@ -195,6 +172,51 @@ def map_position_toggled_cache(func):
 
     call_func.cache_clear = cached_func.cache_clear
     return call_func
+
+def map_position_toggled_cache_with_key(key):
+    """
+    A custom cache decorator designed to be used on a method of an object instance that has the `cache_enabled` property and uses the
+    current combatant position as a hashkey.
+
+    When applied to a method, this decorator allows caching of the method's results based on the value of `cache_enabled`
+    for the object instance. If `cache_enabled` is True, the decorator caches the results of the method calls. If `cache_enabled`
+    is False, caching is bypassed, and the method is executed normally without caching.
+    """
+    parametrized_cache = cached(cache={}, key=key)
+    def _map_position_toggled_cache_with_key(func):
+        cached_func = parametrized_cache(func)
+        def call_func(*args, **kwargs):
+            battle_map = Map.get()
+            if battle_map.cache_enabled:
+                return cached_func(*args, **kwargs, position_hash=tuple(battle_map.get_combatant_position(args[0].factory.combatant).get()[0]))
+            else:
+                return func(*args, **kwargs)
+
+        call_func.cache_clear = cached_func.cache_clear
+        return call_func
+    return _map_position_toggled_cache_with_key
+
+def toggled_cache(key):
+    """
+    A custom cache decorator designed to be used on a method of an object instance that has the `cache_enabled` property.
+
+    When applied to a method, this decorator allows caching of the method's results based on the value of `cache_enabled`
+    for the object instance. If `cache_enabled` is True, the decorator caches the results of the method calls. If `cache_enabled`
+    is False, caching is bypassed, and the method is executed normally without caching.
+    """
+    parametrized_cache = cached(cache={}, key=key)
+    def _toggled_cache(func):
+        cached_func = parametrized_cache(func)
+        def call_func(*args, **kwargs):
+            if args[0].cache_enabled:
+                return cached_func(*args, **kwargs)
+            else:
+                return func(*args, **kwargs)
+
+        call_func.cache_clear = cached_func.cache_clear
+        return call_func
+
+    return _toggled_cache
 
 class Map:
     _instance = None
@@ -865,7 +887,6 @@ class Map:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((x, y))
         return adjacent_coords
-
 
     # @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
     def get_free_coords_in_cartesian_range(self, coords: Coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None):

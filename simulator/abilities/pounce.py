@@ -1,7 +1,10 @@
 from functools import cache
+
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import Action
 from simulator.actions.actoid import FactoryFlags, Actoid, ActoidFlags
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_position_toggled_cache_with_key
 from simulator.misc import Conditions
 from simulator.threat_interfaces import DirectThreatFactory, DirectThreat
 from simulator.threat_utils import get_saving_throw_success_prob
@@ -95,7 +98,9 @@ class Pounce(Actoid, DirectThreat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        self.calculate_threat_delta.cache_clear()
 
+    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items())))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         The delta in threat when modifiers are applied on this ability.
