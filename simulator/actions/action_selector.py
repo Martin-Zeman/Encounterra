@@ -250,9 +250,11 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
 
     if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
         transition_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
+        transition_to_eligible_coords.update({tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_transitions.values() for tn in pre})
     else:
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
         transition_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
+        transition_to_eligible_coords.update({tn[0]: [current_position] for pre in post_priority_transitions.values() if transition_name_to_action[tn[0]].is_current_coord_eligible() for tn in pre})
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
         try:
