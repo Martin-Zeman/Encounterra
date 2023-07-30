@@ -88,7 +88,7 @@ def generate_action_fsm(combatant):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
-        fafs = get_all_feasible_action_factories(subject)
+        fafs = get_all_feasible_action_factories(subject, depth)
         try:
             fas = {a for faf in fafs for a in af_to_a[faf]}
         except Exception as e:
@@ -116,7 +116,7 @@ def generate_action_fsm(combatant):
                 with subject.as_if_used_action_enabler(fa) as did_transform:  # This covers Action Enablers in general
                     if did_transform:
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
-                            fafs = get_all_feasible_action_factories(form)
+                            fafs = get_all_feasible_action_factories(form, depth)
                             af_to_a_used = {faf: faf[1].create_all() for faf in fafs}
                             dfs(form, curr_state_name, af_to_a_used, depth + 1, fa)
                     else:
@@ -128,7 +128,7 @@ def generate_action_fsm(combatant):
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])
 
     # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
-    fafs = get_all_feasible_action_factories(combatant)
+    fafs = get_all_feasible_action_factories(combatant, 0)
     af_to_a = {faf: faf[1].create_all() for faf in fafs}
 
     dfs(combatant, '0', af_to_a, 0)
