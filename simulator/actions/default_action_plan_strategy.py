@@ -13,8 +13,8 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         # logger.info(f"{self.combatant} still has movement left")  # TODO FIXME
         with self.combatant.as_if_has_action() as combatant:
             get_aoe_and_aoo_threat_for_increment.cache_clear()
-            fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(combatant)
-            dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
+            fsm, transition_name_to_action = generate_action_fsm(combatant)
+            dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths)
             if dag is None:
                 return None
             best_sequence, transition_name_to_ms_path = calc_best_sequence(combatant, dag, transition_name_to_action, distances, shortest_paths)
@@ -31,8 +31,8 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         """
         # start_time = time.time()
         get_aoe_and_aoo_threat_for_increment.cache_clear()
-        fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(self.combatant)
-        dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
+        fsm, transition_name_to_action = generate_action_fsm(self.combatant)
+        dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             movement = None
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action

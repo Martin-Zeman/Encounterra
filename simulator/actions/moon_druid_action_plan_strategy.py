@@ -102,15 +102,15 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         :return: list of the following types: np.array, action, bonus action
         """
         if self.best_wildshape_plan_data is None:
-            ws_fsm, ws_transition_name_to_action, ws_post_misty_step_actions = generate_wildshape_action_fsm(self.combatant)
-            ws_dag = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths, ws_post_misty_step_actions)
+            ws_fsm, ws_transition_name_to_action = generate_wildshape_action_fsm(self.combatant)
+            ws_dag = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
             if ws_dag is not None:
                 ws_best_sequence, ws_transition_name_to_ms_path = calc_best_sequence(self.combatant, ws_dag, ws_transition_name_to_action, distances, shortest_paths)
                 self.best_wildshape_plan_data = ws_best_sequence, ws_transition_name_to_ms_path, ws_transition_name_to_action
 
         get_aoe_and_aoo_threat_for_increment.cache_clear()
-        fsm, transition_name_to_action, post_misty_step_actions = generate_action_fsm(self.combatant)
-        dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths, post_misty_step_actions)
+        fsm, transition_name_to_action = generate_action_fsm(self.combatant)
+        dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             return None
         best_sequence, transition_name_to_ms_path = calc_best_sequence(self.combatant, dag, transition_name_to_action, distances, shortest_paths)

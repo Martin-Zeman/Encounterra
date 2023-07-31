@@ -33,10 +33,10 @@ def get_post_transitions_of_priority_transitions(dag, transition_name_to_action)
     """
     post_priority_transitions = dict()
     for transition in dag.get_available_transitions():
-        if transition == 'None':
+        if transition == 'None_0':
             break
         if transition_name_to_action[transition].factory.action_type in PRIORITY_ACTIONS.keys():
-            post_transitions = None
+            post_transitions = []
             if dag.trigger(transition):
                 # We filter out priority transitions even from all the post transitions
                 try:
@@ -53,26 +53,30 @@ def get_post_misty_step_transitions(dag, transition_name_to_action):
     dag.reset()
     return ms_post_transitions
 
-def build_misty_step_transitions(dag, ms_post_transitions, transition_to_eligible_coords, eligible_transitions_to_state, coord_to_eligible_transitions):
+def build_misty_step_transitions(dag, ms_post_transitions, transition_to_eligible_coords):
+    eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(dag, transition_to_eligible_coords)
     for mspt in ms_post_transitions:
-        for coord in transition_to_eligible_coords[mspt[0]]:
-            try:
+        try:
+            for coord in transition_to_eligible_coords[mspt[0]]:
                 post_ms_state = eligible_transitions_to_state[coord_to_eligible_transitions[coord]]
-            except KeyError:
-                post_ms_state = dag.get_next_state_name()
-                dag.add_state(post_ms_state)
-            dag.add_transition("ms_" + str(coord), "0", post_ms_state)
+                dag.add_transition("ms_" + str(coord), "0", post_ms_state)
+                dag.add_transition(mspt[0], post_ms_state, mspt[1])
+        except KeyError:
+            pass  # Happens e.g. for melee weapons when out of range
+    dag.remove_transition("Misty Step to 0, 0_1", "0")
 
 
-def build_priority_transitions(post_priority_transitions, transition_to_eligible_coords, dag, transition_name_to_action):
+def build_priority_transitions(dag, post_priority_transitions, transition_to_eligible_coords, transition_name_to_action):
     """
     A helper function which builds the priority part of the DAG such as Dodge or Disengage.
+    :param dag: the DAG which we're building
     :param post_priority_transitions: dict from transition -> list of eligible follow-up transitions if the form of (transition, dest_state)
     :param transition_to_eligible_coords: mapping from action names to their eligible coordinates
-    :param dag: the DAG which we're building
     :param transition_name_to_action: dict mapping action names -> actions
     :return: None but the the dag is modified
     """
+    eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(dag, transition_to_eligible_coords)
+
     newly_added_states = []
     for transition, post_transitions in post_priority_transitions.items():
         if not post_transitions:  # If there are no follow-up actions possible, connect directly to nop and return
@@ -87,14 +91,14 @@ def build_priority_transitions(post_priority_transitions, transition_to_eligible
         for post_transition in post_transitions:
             try:
                 for coord in transition_to_eligible_coords[post_transition[0]]:
-                    coord_state_name = prefix + str(tuple(coord))  # Needs to be made unique from the other coord states
-                    dag.add_transition(coord_state_name, new_prio_state, coord_state_name)  # Will be added multiple times, but it's ok
-                    dag.add_transition(post_transition[0], coord_state_name, post_transition[1])
+                    post_pt_state = eligible_transitions_to_state[coord_to_eligible_transitions[coord]]
+                    dag.add_transition(prefix + str(coord), new_prio_state, post_pt_state)  # Will be added multiple times, but it's ok
+                    dag.add_transition(post_transition[0], post_pt_state, post_transition[1])
             except KeyError:
                 pass  # Some may not be available for the secondary plan
 
     # Some states may have been left unconnected due to their follow-up actions not having eligible coords -> connect them to nop
-    for newly_added_state in newly_added_states:
+    for newly_added_state in newly_added_states:  # TODO is this still needed?
         if newly_added_state not in dag.forward_transitions.keys():
             dag.add_transition("dummy", newly_added_state, "nop")
 
@@ -219,6 +223,7 @@ def create_movement_states(dag, transition_to_eligible_coords):
     Movement states that share eligible transitions can be merged. Create new states for them.
     :param dag: the dag which the states are to be added
     :param transition_to_eligible_coords:
+    :param transition_name_to_action: used to filter out priority actions
     :return: dict mapping eligible transitions -> newly created state, dict mapping coord -> eligible transitions
     """
     coord_to_eligible_transitions = dict()
@@ -258,24 +263,28 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
 
     dag = copy.deepcopy(action_fsm)
     transition_names = action_fsm.get_available_transitions()
+    has_misty_step = False
+    ms_transition_to_eligible_coords = None
+    post_misty_step_transitions = None
     if 'Misty Step to 0, 0_1' in transition_names:
         has_misty_step = True
         post_misty_step_transitions = get_post_misty_step_transitions(dag, transition_name_to_action)
     transition_names = list(filter(lambda t: t != "dummy", transition_names))
-    if not transition_names or transition_names[0] == 'None':
+    if not transition_names or transition_names[0] == 'None_0':
         return None
 
     if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
         transition_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
-        transition_to_eligible_coords.update({tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_transitions.values() for tn in pre})
-        if has_misty_step:  # TODO
-            transition_to_eligible_coords.update({tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for tn in post_misty_step_transitions})
+        pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_transitions.values() for tn in pre}
+        if has_misty_step:
+            ms_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for tn in post_misty_step_transitions}
     else:
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
         transition_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
-        transition_to_eligible_coords.update({tn[0]: [current_position] for pre in post_priority_transitions.values() if transition_name_to_action[tn[0]].is_current_coord_eligible() for tn in pre})
-        if has_misty_step:  # TODO
-            transition_to_eligible_coords.update({tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for tn in post_misty_step_transitions})
+        # pt_transition_to_eligible_coords = {tn[0]: [current_position] for pre in post_priority_transitions.values() if pre and transition_name_to_action[tn[0]].is_current_coord_eligible() for tn in pre}
+        pt_transition_to_eligible_coords = {tn[0]: [current_position] for pre in post_priority_transitions.values() if pre for tn in pre if transition_name_to_action[tn[0]].is_current_coord_eligible()}
+        if has_misty_step:
+            ms_transition_to_eligible_coords = {tn[0]: [current_position] for tn in post_misty_step_transitions if transition_name_to_action[tn[0]].is_current_coord_eligible()}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
         try:
@@ -286,7 +295,6 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
 
     eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(dag, transition_to_eligible_coords)
 
-    has_misty_step = False
     for transition_name, coords in transition_to_eligible_coords.items():
         if transition_name.startswith("Misty Step"):
             continue
@@ -301,9 +309,9 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
         dag.remove_transition(transition_name, "0")  # Remove the original
 
     if has_misty_step:
-        build_misty_step_transitions(dag, transition_name_to_action, transition_to_eligible_coords, eligible_transitions_to_state, coord_to_eligible_transitions)
+        build_misty_step_transitions(dag, post_misty_step_transitions, ms_transition_to_eligible_coords)
 
-    build_priority_transitions(post_priority_transitions, transition_to_eligible_coords, dag, transition_name_to_action)
+    build_priority_transitions(dag, post_priority_transitions, pt_transition_to_eligible_coords, transition_name_to_action)
     return dag
 
 
