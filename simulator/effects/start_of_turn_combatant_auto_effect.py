@@ -1,7 +1,7 @@
 from simulator.effects.effect import Effect
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class StartOfTurnAutoEffect(Effect):
     def __init__(self, target):

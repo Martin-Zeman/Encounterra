@@ -4,7 +4,7 @@ from simulator.effects.effect import EffectType
 from simulator.effects.start_of_turn_combatant_auto_effect import StartOfTurnAutoEffect
 from simulator.misc import parse_dmg_dice, roll_dice, DamageType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class Digestion(StartOfTurnAutoEffect):
 

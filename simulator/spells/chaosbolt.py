@@ -12,7 +12,7 @@ from simulator.misc import percent_of_curr_hp
 from functools import cache
 from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class ChaosboltFactory(DirectThreatFactory):
     DMG_TYPE = (

@@ -53,7 +53,7 @@ class CustomLogger:
 
     def __init__(self, level):
         # addLoggingLevel('VERBOSE', self.VERBOSE_VALUE)
-        logger = logging.getLogger("EncounTroll")
+        logger = logging.getLogger("Encounterra")
         logger.setLevel(self.LEVEL_MAPPING[level])
         stdout_handler = logging.StreamHandler(stream=sys.stdout)
         stdout_handler.setFormatter(LogFormatter())

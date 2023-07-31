@@ -6,7 +6,7 @@ from simulator.misc import DamageType
 from simulator.misc import Side
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class Cyanwrath(Combatant):

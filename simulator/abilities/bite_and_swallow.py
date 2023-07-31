@@ -9,7 +9,7 @@ from simulator.battle_map import Map, map_position_toggled_cache, map_position_t
 from simulator.misc import Size
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class BiteAndSwallowFactory(MeleeAttackFactory):
 

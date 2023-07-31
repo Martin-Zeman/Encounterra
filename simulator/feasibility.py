@@ -9,7 +9,7 @@ from simulator.misc import Conditions, Size
 import logging
 import numpy as np
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 def check_feasibility(combatant, action):

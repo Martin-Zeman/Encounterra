@@ -6,7 +6,7 @@ from simulator.actions.action_types import BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.threat_interfaces import Factory, Threat
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class MistyStepFactory(Factory):
     level = 2

@@ -17,7 +17,7 @@ from simulator.spells.misty_step import MistyStepFactory
 from simulator.threat_interfaces import AttackThreatModifier
 from simulator.threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 REGEX_MOVEMENT_PATTERN = re.compile(r'([msdchio]+)_\((\d+), (\d+)\)')
 REGEX_MS_MOVEMENT_PATTERN = re.compile(r'[mschdio_]+\((\d+), (\d+)\)')

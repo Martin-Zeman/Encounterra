@@ -12,7 +12,7 @@ from simulator.combatant import Combatant
 from simulator.misc import DamageType, SavingThrow, Size, parse_dmg_dice, roll_dice, Conditions, SkillCheck
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class GiantToad(Combatant):

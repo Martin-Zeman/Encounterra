@@ -5,7 +5,7 @@ import logging
 
 from simulator.threat_utils import mean_dmg_dc_attack
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class OnHitSavingThrowDmg(OnHit):
     def __init__(self, st, dc, dmg_dice, dmg_type, half_on_success=True, name="On Hit Saving Throw Damage"):

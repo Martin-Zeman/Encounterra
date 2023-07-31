@@ -13,7 +13,7 @@ from simulator.misc import Size, Conditions
 from simulator.resources import use_resources
 from simulator.utils.state_machine_template import StateMachineTemplate
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 

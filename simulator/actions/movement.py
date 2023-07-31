@@ -3,7 +3,7 @@ import numpy as np
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.actions.action_types import Movement
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class MovementIncrement(Actoid):

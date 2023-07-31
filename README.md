@@ -1,4 +1,4 @@
-# EncounTroll
+# Encounterra
 Combat encounter simulator for D&D 5e
 
 The architecture was designed with the following goals in mind:

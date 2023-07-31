@@ -10,7 +10,7 @@ import logging
 
 from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class RangedAttackFactory(AttackFactory):
 

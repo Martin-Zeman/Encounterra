@@ -9,7 +9,7 @@ from simulator.misc import Conditions
 from simulator.threat_interfaces import DirectThreatFactory, DirectThreat
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class ConstrictFactory(DirectThreatFactory):
     """

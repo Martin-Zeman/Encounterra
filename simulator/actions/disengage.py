@@ -8,7 +8,7 @@ from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.threat_interfaces import ThreatModifierFactory, Threat
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class DisengageFactory(ThreatModifierFactory):
 

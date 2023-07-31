@@ -3,7 +3,7 @@ import logging
 
 from simulator.misc import roll_saving_throw, reconcile_roll_types
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class StartOfTurnEffect(Effect):
     def __init__(self, combatant, st, dc):

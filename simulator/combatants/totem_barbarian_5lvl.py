@@ -4,7 +4,7 @@ from simulator.combatant import Combatant
 from simulator.misc import DamageType, SavingThrow
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 

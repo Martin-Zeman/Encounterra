@@ -6,7 +6,7 @@ import logging
 
 from simulator.threat_utils import mean_dmg_auto_hit
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class OnHitSwallow(OnHit):

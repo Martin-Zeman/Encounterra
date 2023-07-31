@@ -2,7 +2,7 @@ import numpy as np
 import logging
 from simulator.misc import Size
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class Coords:
     """

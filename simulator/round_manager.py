@@ -7,7 +7,7 @@ import copy
 
 from simulator.utils.utils import preallocate_wildshape_forms
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class RoundManager:

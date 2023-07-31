@@ -24,7 +24,7 @@ import multiprocessing as mp
 
 from simulator.utils.utils import get_combatant_classes
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class Session:

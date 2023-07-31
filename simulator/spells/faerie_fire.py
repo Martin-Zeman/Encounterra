@@ -15,7 +15,7 @@ import logging
 from simulator.threat_utils import calculate_threat_in_delta
 from simulator.utils.roll_types import ThreatModifierType, RollType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class FaerieFireFactory(ThreatModifierFactory):
     level = 1

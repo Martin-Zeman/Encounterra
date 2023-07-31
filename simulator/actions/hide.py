@@ -12,7 +12,7 @@ import logging
 from simulator.threat_utils import calc_p_hit
 from simulator.utils.roll_types import RollType, ThreatModifierType, ROLL_TYPE_DELTA
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class HideFactory(ThreatModifierFactory):
 

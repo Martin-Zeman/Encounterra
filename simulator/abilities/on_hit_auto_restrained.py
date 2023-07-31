@@ -2,7 +2,7 @@ from simulator.abilities.on_hit_effect import OnHit
 from simulator.misc import Conditions, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class OnHitAutoRestrained(OnHit):
     def __init__(self, skill, dc, name="On Hit Restrained"):

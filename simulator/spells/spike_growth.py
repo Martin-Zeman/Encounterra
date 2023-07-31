@@ -12,7 +12,7 @@ from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
 import numpy as np
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class SpikeGrowthFactory(DirectThreatFactory):
     level = 2

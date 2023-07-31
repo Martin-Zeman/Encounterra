@@ -7,7 +7,7 @@ from simulator.spellslots import Spellslots, Class
 from simulator.misc import DamageType, get_factory_of_type, SavingThrow
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class DraconicSorcerer5Lvl(Combatant):

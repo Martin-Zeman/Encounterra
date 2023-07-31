@@ -24,7 +24,7 @@ import heapq
 from enum import Enum
 
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 SQRT_OF_TWO = 1.41421
 
@@ -1273,7 +1273,10 @@ class Map:
         bottom_left, top_right = get_bounding_box(observer, target)
         objects = []
         for obstacle in self.obstacles:
-            obstacle_tr = obstacle.coord + obstacle.radius
+            try:
+                obstacle_tr = obstacle.coord + obstacle.radius
+            except TypeError:
+                print("FIXME")
             obstacle_bl = obstacle.coord - obstacle.radius
             if obstacle_tr[0] < bottom_left[0] or obstacle_bl[0] > top_right[0] or obstacle_bl[1] > top_right[1] or obstacle_tr[1] < bottom_left[1]:
                 continue

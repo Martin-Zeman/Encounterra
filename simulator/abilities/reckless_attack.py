@@ -16,7 +16,7 @@ from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
 from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class RecklessAttackFactory(DirectThreatFactory):
 

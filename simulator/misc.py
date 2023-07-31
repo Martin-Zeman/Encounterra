@@ -6,7 +6,7 @@ from simulator.actions.actoid import FactoryFlags
 import logging
 from simulator.utils.roll_types import RollType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 ROUND_HORIZON = 3
 

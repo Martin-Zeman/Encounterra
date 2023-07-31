@@ -10,7 +10,7 @@ from simulator.threat_interfaces import DirectThreatFactory, DirectThreat, Recha
 from simulator.threat_utils import get_saving_throw_success_prob
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class WebFactory(DirectThreatFactory, RechargeFactory):
 

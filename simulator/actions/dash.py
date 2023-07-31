@@ -6,7 +6,7 @@ from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.threat_interfaces import Factory, AttackThreatModifier
 from simulator.threat_utils import get_danger_zone_threat
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class DashFactory(Factory):
     def __init__(self, action_type, combatant):

@@ -32,7 +32,7 @@ from simulator.spells.shield import ShieldFactory
 from simulator.spells.twinned_firebolt import TwinnedFireboltFactory
 from simulator.spells.twinned_haste import TwinnedHasteFactory
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 PRIORITY_ACTIONS = {
     Action.DODGE: ("Dodge", "do_"),

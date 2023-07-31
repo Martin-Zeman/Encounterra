@@ -22,7 +22,7 @@ from simulator.actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKEN
 from simulator.actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
 from simulator.proto_combatant import ProtoCombatant
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class Combatant(ABC, ProtoCombatant):

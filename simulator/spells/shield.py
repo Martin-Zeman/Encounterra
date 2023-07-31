@@ -4,7 +4,7 @@ import logging
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_interfaces import DirectThreatFactory
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class ShieldFactory(DirectThreatFactory):
     level = 1

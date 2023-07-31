@@ -13,7 +13,7 @@ from simulator.threat_interfaces import ThreatModifierFactory, Threat
 import logging
 from simulator.utils.roll_types import ThreatModifierType, RollType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class TwinnedHoldPersonFactory(ThreatModifierFactory):
     level = 2

@@ -3,7 +3,7 @@ from simulator.actions.action_types import Action, BonusAction, Reaction, Moveme
 from simulator.battle_map import Map
 from simulator.misc import Conditions
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 

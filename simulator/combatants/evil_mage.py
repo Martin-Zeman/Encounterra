@@ -7,7 +7,7 @@ from simulator.spellslots import Spellslots, Class
 from simulator.misc import DamageType,  SavingThrow
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class EvilMage(Combatant):

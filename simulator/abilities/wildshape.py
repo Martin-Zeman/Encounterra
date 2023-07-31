@@ -11,7 +11,7 @@ from simulator.misc import SavingThrow, Size
 from simulator.threat_interfaces import TransformerFactory, DirectThreat
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class WildshapeFactory(TransformerFactory):
 

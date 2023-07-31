@@ -8,7 +8,7 @@ from simulator.threat_utils import mean_dmg
 import logging
 
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class PreSwallowBiteFactory(MeleeAttackFactory):
 

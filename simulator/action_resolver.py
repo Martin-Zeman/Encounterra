@@ -16,7 +16,7 @@ from simulator.spells.chaosbolt import ChaosboltFactory
 from simulator.spells.faerie_fire import FaerieFire
 from simulator.spells.magic_missile import MagicMissileFactory
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class ActionResult(Enum):
     # TODO get rid of this

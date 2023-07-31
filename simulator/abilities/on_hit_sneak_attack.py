@@ -6,7 +6,7 @@ import logging
 
 from simulator.utils.roll_types import RollType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class OnHitSneakAttack(OnHit):
 

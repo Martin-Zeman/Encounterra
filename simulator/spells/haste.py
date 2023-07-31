@@ -12,7 +12,7 @@ import logging
 
 from simulator.utils.roll_types import ThreatModifierType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class HasteFactory(ThreatModifierFactory):
     level = 3

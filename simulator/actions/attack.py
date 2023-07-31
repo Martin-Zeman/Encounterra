@@ -12,7 +12,7 @@ import math
 import logging
 from simulator.utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class AttackFactory(DirectThreatFactory):
 

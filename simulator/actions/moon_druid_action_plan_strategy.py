@@ -11,7 +11,7 @@ from simulator.actions.action_types import Action, BonusAction
 from simulator.battle_map import Map
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 def evaluate_combination_eligibility(actions, transition_name_to_action):
     """

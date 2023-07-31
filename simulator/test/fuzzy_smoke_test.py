@@ -20,7 +20,7 @@ from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.teams import Teams
 import logging
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 @pytest.mark.slow
 def test_random_matchup():

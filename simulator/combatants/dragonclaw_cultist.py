@@ -5,7 +5,7 @@ import logging
 
 from simulator.utils.state_machine_template import StateMachineTemplate
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class DragonclawCultist(Combatant):

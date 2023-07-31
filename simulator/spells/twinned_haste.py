@@ -11,7 +11,7 @@ from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks
 from simulator.spells.haste import HasteFactory
 from simulator.utils.roll_types import ThreatModifierType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class TwinnedHasteFactory(ThreatModifierFactory):
     level = 3

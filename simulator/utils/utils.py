@@ -14,7 +14,7 @@ from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.quetzalcoatlus import Quetzalcoatlus
 from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 HALF_SQUARE_DIAGONAL = math.sqrt(2) / 2
 

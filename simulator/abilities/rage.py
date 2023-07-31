@@ -12,7 +12,7 @@ from simulator.threat_interfaces import ThreatModifierFactory, AttackThreatModif
 import logging
 from simulator.utils.roll_types import ThreatModifierType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class RageFactory(ThreatModifierFactory):
 

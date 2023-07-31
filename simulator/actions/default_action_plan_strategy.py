@@ -4,7 +4,7 @@ from simulator.actions.action_plan_strategy import ActionPlanStrategy
 from simulator.actions.action_selector import calc_best_sequence, build_action_dag, translate_sequence_to_actions, extract_movement
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 
 class DefaultActionPlanStrategy(ActionPlanStrategy):

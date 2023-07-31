@@ -11,7 +11,7 @@ from simulator.misc import SavingThrow
 import logging
 from simulator.utils.roll_types import RollType, ThreatModifierType
 
-logger = logging.getLogger("EncounTroll")
+logger = logging.getLogger("Encounterra")
 
 class DodgeFactory(ThreatModifierFactory):
 
