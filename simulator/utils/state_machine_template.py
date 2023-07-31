@@ -49,24 +49,21 @@ class StateMachineTemplate(Machine):
 
     def remove_transition(self, transition_name, origin):
         """
-        Overrides the remove_transition of the Machine to allow us to also remove from the forward and backward dictionaries on the side
+        Overrides the remove_transition of the Machine to allow us to also remove from the forward dictionary on the side
         :param transition_name: name of the transition
         :param origin: name of the origin state
         :param dest: name of the destination state
         :return:
         """
-        original_state = self.state
-        self.state = origin
-        self.trigger(transition_name)
-        self.state = original_state
-
         try:
+            transition_name = next(ft[0] for ft in self.forward_transitions[origin] if ft[0].split("_")[0] == transition_name.split("_")[0])
             self.forward_transitions[origin] = {ft for ft in self.forward_transitions[origin] if ft[0] != transition_name}
             if not self.forward_transitions[origin]:  # Created a dead end
                 self.add_transition("dummy", origin, 'nop')
             super().remove_transition(transition_name, origin)
-        except (ValueError, KeyError):
+        except (ValueError, KeyError, StopIteration):
             pass
+
 
     def reset(self):
         self.set_state('0')

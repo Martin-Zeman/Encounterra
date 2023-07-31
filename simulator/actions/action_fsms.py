@@ -49,16 +49,20 @@ def replace_combatant_if_action_is_wildshape(action, combatant):
         yield combatant
 
 
-def get_all_feasible_action_factories(combatant):
+def get_all_feasible_action_factories(combatant, depth):
     """
     A helper functions which collects all feasible (bonus/haste) action factories for a combatant. Note that it excludes Misty Step which
     is resolved separately.
     :param combatant: for whom the feasible factories are is to be constructed
     :param battle_map:
+    :param depth: depth in the FSM
     :return: all feasible (bonus/haste) action factories for a combatant
     """
     feasible_action_factories = get_feasible_factories(combatant.action_factories, combatant)
-    feasible_bonus_action_factories = [fbaf for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant) if fbaf[0] is not BonusAction.MISTY_STEP]
+    if depth > 1:
+        feasible_bonus_action_factories = [fbaf for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant) if fbaf[0] is not BonusAction.MISTY_STEP]
+    else:
+        feasible_bonus_action_factories = [fbaf for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant) if fbaf[0]]
     feasible_haste_action_factories = get_feasible_factories(combatant.haste_action_factories, combatant)
     all_action_factories = feasible_action_factories
     all_action_factories.extend(feasible_bonus_action_factories)
@@ -73,27 +77,25 @@ def generate_action_fsm(combatant):
     Misty Step gets a special treatment. We don't create states nor transitions for the Misty Step actions. We just note down which state
     the initial Misty Step would bring us into and pass it onto build_action_dag.
     :param combatant: for whom the FSM is to be constructed
-    :return: fsm, the mapping between FSM transition names to the actual action factory objects,
-    list of actions that can be taken after misty step
+    :return: fsm, the mapping between FSM transition names to the actual action factory objects
     """
     fsm = StateMachineTemplate()
     state_footprint_to_state_name = dict()
     visited = set()
     transition_name_to_action = dict()
-    post_misty_step_actions = None
 
-    def dfs(subject, previous_state_name, af_to_a_mapping, action_taken=None):
+    def dfs(subject, previous_state_name, af_to_a, depth, action_taken=None):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
-        fafs = get_all_feasible_action_factories(subject)
+        fafs = get_all_feasible_action_factories(subject, depth)
         try:
-            fas = {a for faf in fafs for a in af_to_a_mapping[faf]}
+            fas = {a for faf in fafs for a in af_to_a[faf]}
         except Exception as e:
             print("FIXME")
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
-        action_taken_name = str(action_taken)
+        action_taken_name = f"{action_taken}_{depth}"
         if action_taken:
             transition_name_to_action[action_taken_name] = action_taken
 
@@ -114,34 +116,24 @@ def generate_action_fsm(combatant):
                 with subject.as_if_used_action_enabler(fa) as did_transform:  # This covers Action Enablers in general
                     if did_transform:
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
-                            fafs = get_all_feasible_action_factories(form)
+                            fafs = get_all_feasible_action_factories(form, depth)
                             af_to_a_used = {faf: faf[1].create_all() for faf in fafs}
-                            dfs(form, curr_state_name, af_to_a_used, fa)
+                            dfs(form, curr_state_name, af_to_a_used, depth + 1, fa)
                     else:
-                        af_to_a_used = af_to_a_mapping
-                        dfs(subject, curr_state_name, af_to_a_used, fa)
+                        af_to_a_used = af_to_a
+                        dfs(subject, curr_state_name, af_to_a_used, depth + 1, fa)
                 subject.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])
 
     # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
-    fafs = get_all_feasible_action_factories(combatant)
+    fafs = get_all_feasible_action_factories(combatant, 0)
     af_to_a = {faf: faf[1].create_all() for faf in fafs}
 
-    dfs(combatant, '0', af_to_a)
+    dfs(combatant, '0', af_to_a, 0)
 
-    # If the combatant has Misty Step, deal with it separately
-    for fbaf in get_feasible_factories(combatant.bonus_action_factories, combatant):
-        if fbaf[0] is BonusAction.MISTY_STEP:
-            ms = fbaf[1].create(np.array([0, 0]))  # coords don't matter here
-            exported_resources = combatant.export_resources()
-            use_resources(combatant, ms)
-            fafs = get_all_feasible_action_factories(combatant)
-            post_misty_step_actions = {str(a) for faf in fafs for a in af_to_a[faf]}
-            combatant.load_resources(exported_resources)
-
-    return fsm, transition_name_to_action, post_misty_step_actions
+    return fsm, transition_name_to_action
 
 
 def generate_wildshape_action_fsm(combatant):
@@ -155,14 +147,13 @@ def generate_wildshape_action_fsm(combatant):
     state_footprint_to_state_name = dict()
     visited = set()
     transition_name_to_action = dict()
-    post_misty_step_actions = None
 
-    def dfs(subject, previous_state_name, af_to_a_mapping, action_taken=None):
+    def dfs(subject, previous_state_name, af_to_a, depth, action_taken=None):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
-        fafs = get_all_feasible_action_factories(subject)
-        fas = {a for faf in fafs for a in af_to_a_mapping[faf]}
+        fafs = get_all_feasible_action_factories(subject, depth,)
+        fas = {a for faf in fafs for a in af_to_a[faf]}
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
         action_taken_name = str(action_taken)
@@ -188,21 +179,21 @@ def generate_wildshape_action_fsm(combatant):
                 with subject.as_if_used_action_enabler(fa) as did_transform:  # This covers Action Enablers in general
                     if did_transform:
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
-                            fafs = get_all_feasible_action_factories(form)
+                            fafs = get_all_feasible_action_factories(form, depth)
                             af_to_a_used = {faf: faf[1].create_all() for faf in fafs}
-                            dfs(form, curr_state_name, af_to_a_used, fa)
+                            dfs(form, curr_state_name, af_to_a_used, depth, fa)
                     else:
-                        af_to_a_used = af_to_a_mapping
-                        dfs(subject, curr_state_name, af_to_a_used, fa)
+                        af_to_a_used = af_to_a
+                        dfs(subject, curr_state_name, af_to_a_used, depth, fa)
                 subject.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])
 
     # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
-    fafs = get_all_feasible_action_factories(combatant)
+    fafs = get_all_feasible_action_factories(combatant, 0)
     af_to_a = {faf: faf[1].create_all() for faf in fafs}
 
-    dfs(combatant, '0', af_to_a)
+    dfs(combatant, '0', af_to_a, 0)
 
-    return fsm, transition_name_to_action, post_misty_step_actions
+    return fsm, transition_name_to_action

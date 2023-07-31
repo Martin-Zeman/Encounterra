@@ -110,12 +110,12 @@ def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, combatant7]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl
-    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # Bugbear 1
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant
-    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre
-    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # Bugbear 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([14, 13]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 11]))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([3, 12]))
@@ -159,10 +159,10 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_draconic_sorcerer_5lvl_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl_2, Teams.Color.RED)  # DraconicSorcerer5Lvl 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl_2, Teams.Color.RED)
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([9, 13]))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 9]))
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([4, 8]))
@@ -194,18 +194,18 @@ def test_error_case_5(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_stone_giant, test_ogre, test_draconic_sorcerer_5lvl_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # Goblin
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)  # TotemBarbarian5Lvl
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant
-    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)  # Ogre
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl_2, Teams.Color.RED)  # DraconicSorcerer5Lvl 2
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([14, 14]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_goblin, np.array([9, 14]))  # Goblin
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 13]))  # TotemBarbarian5Lvl
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 8]))  # StoneGiant
-    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 10]))   # Ogre
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl_2, np.array([7, 8]))  # DraconicSorcerer5Lvl 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl_2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([14, 14]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([9, 14]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 13]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 8]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 10]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl_2, np.array([7, 8]))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -238,16 +238,16 @@ def test_error_case_6(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_bugbear, test_totem_barbarian, test_ogre, combatant7]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl
-    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # Bugbear
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)  # TotemBarbarian5Lvl 1
-    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre
-    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # TotemBarbarian5Lvl 2
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))  # Bugbear
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([14, 14]))  # Bugbear
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([9, 14]))  # TotemBarbarian5Lvl 1
-    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 13]))  # Ogre
-    battle_map.set_combatant_coordinates(combatant7, np.array([0, 8]))  # TotemBarbarian5Lvl 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([14, 14]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([9, 14]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 13]))
+    battle_map.set_combatant_coordinates(combatant7, np.array([0, 8]))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -288,9 +288,9 @@ def test_error_case_7(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_draconic_sorcerer_5lvl_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # Goblin
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([9, 13]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 9]))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 8]))
@@ -363,14 +363,14 @@ def test_error_case_8(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre, combatant7]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant
-    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)  # Ogre
-    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # DraconicSorcerer5Lvl 2
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([10, 10]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 12]))  # StoneGiant
-    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 13]))   # Ogre
-    battle_map.set_combatant_coordinates(combatant7, np.array([8, 13]))  # DraconicSorcerer5Lvl 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([10, 10]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 12]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 13]))
+    battle_map.set_combatant_coordinates(combatant7, np.array([8, 13]))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -406,16 +406,16 @@ def test_error_case_9(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre, combatant7, combatant8]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
-    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre 1
-    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # Stone Giant 2
-    teams.add_combatant_to_team(combatant8, Teams.Color.RED)  # Ogre 2
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 5]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([12, 10]))  # StoneGiant 1
-    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 10]))   # Ogre 1
-    battle_map.set_combatant_coordinates(combatant7, np.array([3, 8]))  # Stone Giant 2
-    battle_map.set_combatant_coordinates(combatant8, np.array([12, 8]))  # Ogre 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant8, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([12, 10]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 10]))
+    battle_map.set_combatant_coordinates(combatant7, np.array([3, 8]))
+    battle_map.set_combatant_coordinates(combatant8, np.array([12, 8]))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -447,10 +447,10 @@ def test_error_case_10(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant 1
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 3]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([3, 6]))   # Stone Giant 1
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 3]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([3, 6]))
     battle_map.build_adjacency_matrix()
     test_stone_giant.curr_hp = 52
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
@@ -494,18 +494,18 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_ogre, combatant7, combatant8]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
-    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre 1
-    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # DraconicSorcerer5Lvl 2
-    teams.add_combatant_to_team(combatant8, Teams.Color.RED)  # StoneGiant 2
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 8]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 12]))   # TotemBarbarian5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([9, 9]))   # StoneGiant 1
-    battle_map.set_combatant_coordinates(test_ogre, np.array([6, 10]))   # Ogre 1
-    battle_map.set_combatant_coordinates(combatant7, np.array([9, 12]))   # DraconicSorcerer5Lvl 2
-    battle_map.set_combatant_coordinates(combatant8, np.array([3, 10]))   # StoneGiant 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)
+    teams.add_combatant_to_team(combatant8, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 8]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 12]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([9, 9]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([6, 10]))
+    battle_map.set_combatant_coordinates(combatant7, np.array([9, 12]))
+    battle_map.set_combatant_coordinates(combatant8, np.array([3, 10]))
     battle_map.build_adjacency_matrix()
 
     test_totem_barbarian.curr_rage_uses -= 1
@@ -534,16 +534,16 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_ogre, combatant7]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)  # TotemBarbarian5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant 1
-    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre 1
-    teams.add_combatant_to_team(combatant7, Teams.Color.RED)  # TotemBarbarian5Lvl 2
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 13]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 11]))   # TotemBarbarian5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([7, 10]))   # StoneGiant 1
-    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 9]))   # Ogre 1
-    battle_map.set_combatant_coordinates(combatant7, np.array([6, 12]))   # TotemBarbarian5Lvl 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    teams.add_combatant_to_team(combatant7, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 13]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 11]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([7, 10]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 9]))
+    battle_map.set_combatant_coordinates(combatant7, np.array([6, 12]))
     battle_map.build_adjacency_matrix()
 
     test_totem_barbarian.curr_hp = 61
@@ -583,14 +583,14 @@ def test_error_case_13(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_stone_giant_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # TotemBarbarian5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
-    teams.add_combatant_to_team(test_stone_giant_2, Teams.Color.RED)  # StoneGiant 2
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 6]))   # TotemBarbarian5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([1, 10]))   # StoneGiant 1
-    battle_map.set_combatant_coordinates(test_stone_giant_2, np.array([8, 8]))   # TotemBarbarian5Lvl 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant_2, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 6]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([1, 10]))
+    battle_map.set_combatant_coordinates(test_stone_giant_2, np.array([8, 8]))
     battle_map.build_adjacency_matrix()
 
     test_draconic_sorcerer_5lvl.curr_hp = 43
@@ -630,12 +630,12 @@ def test_error_case_14(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
-    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)  # Ogre 1
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 14]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 10]))   # StoneGiant 1
-    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 13]))   # TotemBarbarian5Lvl 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 14]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 10]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 13]))
     battle_map.build_adjacency_matrix()
 
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
@@ -666,16 +666,16 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_stone_giant, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # Goblin 1
-    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)  # TotemBarbarian5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)  # StoneGiant 1
-    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)  # Ogre 1
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 8]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 9]))  # Goblin 1
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([8, 7]))  # TotemBarbarian5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([8, 12]))   # StoneGiant 1
-    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 8]))   # Ogre 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 8]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 9]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([8, 7]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([8, 12]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 8]))
     battle_map.build_adjacency_matrix()
 
     test_stone_giant.add_hasted_factories()
@@ -716,12 +716,12 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)  # DraconicSorcerer5Lvl 1
-    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)  # StoneGiant 1
-    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)  # Ogre 1
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 2]))  # DraconicSorcerer5Lvl 1
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([11, 8]))   # StoneGiant 1
-    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 10]))   # Ogre 2
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 2]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([11, 8]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 10]))
     battle_map.build_adjacency_matrix()
 
     test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
