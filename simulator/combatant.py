@@ -98,6 +98,7 @@ class Combatant(ABC, ProtoCombatant):
         self.constricted_target = None
         self.swallowed_target = None
         self.is_swallowed = [False, None]
+        self.uncanny_dodge_active = False
 
     def __str__(self):
         return self.name
@@ -278,7 +279,7 @@ class Combatant(ABC, ProtoCombatant):
                     self.danger_zone_attack = self.reaction_factories[-1]  # By default this is set to the reaction attack
                     self.melee_reaction_range = self.aoo_factory[1].range
                     return None
-                case Reaction.SHIELD:
+                case Reaction.SHIELD | Reaction.UNCANNY_DODGE:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](self)))
                     return self.reaction_factories[-1]
                 case _:
@@ -367,10 +368,13 @@ class Combatant(ABC, ProtoCombatant):
             return 0
         elif dmg_type in self.resistances:
             dmg = math.floor(dmg / 2)
-            logger.info(f"{self.name} is resistant to {dmg_type} and reduced the damage to {dmg}")
+            logger.info(f"{self.name} is resistant to {dmg_type} and reduces the damage to {dmg}")
         elif dmg_type in self.vulnerabities:
             dmg *= 2
             logger.info(f"{self.name} is vulnerable to {dmg_type} which doubles the damage to {dmg}")
+        if self.uncanny_dodge_active:
+            dmg = math.floor(dmg / 2)
+            logger.info(f"{self.name} uses Uncanny Dodge which reduces the damage to {dmg}")
         self.curr_hp -= dmg
         return dmg
 
@@ -403,6 +407,7 @@ class Combatant(ABC, ProtoCombatant):
             Map.get().effect_tracker.remove_effect_by_type(self.get_original_form(), EffectType.WILDSHAPE)
         if total_dmg:
             check_concentration(self, total_dmg)
+        self.uncanny_dodge_active = False
 
     def is_resistant_to(self, dmg_type):
         return dmg_type in self.resistances
@@ -571,7 +576,7 @@ class Combatant(ABC, ProtoCombatant):
     def prompt_dmg_reaction(self, attacking_combatant, dmg, dmg_type):
         return None
 
-    def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
+    def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
         return None
 
 

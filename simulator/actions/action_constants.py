@@ -8,6 +8,7 @@ from simulator.abilities.pounce import PounceFactory
 from simulator.abilities.rage import RageFactory
 from simulator.abilities.reckless_attack import RecklessAttackFactory
 from simulator.abilities.totem_rage import TotemRageFactory
+from simulator.abilities.uncanny_dodge import UncannyDodgeFactory
 from simulator.abilities.wildshape import WildshapeFactory
 from simulator.actions.action_types import Action, BonusAction, HasteAction, Reaction
 from simulator.actions.dash import DashFactory
@@ -95,6 +96,7 @@ TO_FACTORY = {
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
     Reaction.PRE_SWALLOW_BITE_REACTION: PreSwallowBiteFactory,
+    Reaction.UNCANNY_DODGE: UncannyDodgeFactory,
 
     HasteAction.HASTE_MELEE_ATTACK: MeleeAttackFactory,
     HasteAction.HASTE_PRE_SWALLOW_BITE: PreSwallowBiteFactory,

@@ -72,7 +72,7 @@ class DraconicSorcerer5Lvl(Combatant):
         self.attack_fsm.set_state(resources['attack_state_machine'])
 
 
-    def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
+    def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
         if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll < self.dc + 5:
             shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
             # logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})

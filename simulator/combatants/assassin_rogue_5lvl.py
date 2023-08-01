@@ -19,6 +19,7 @@ class AssassinRogue5Lvl(Combatant):
         self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=7, dmg_dice="1d6", dmg_bonus=4,
                                          dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=20)
         self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1)
+        self.add_ability(Reaction.UNCANNY_DODGE)
         self.add_ability(Passive.CUNNING_ACTION)
         self.add_ability(Passive.SNEAK_ATTACK)
         self.danger_zone_attack = self.shortbow
@@ -70,6 +71,6 @@ class AssassinRogue5Lvl(Combatant):
         self.ammo = resources['ammo']
 
 
-    def prompt_after_hit_reaction(self, attacking_combatant, attack_roll):
+    def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
         # TODO Uncanny Dodge
         return None

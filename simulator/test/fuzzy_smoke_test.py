@@ -8,6 +8,7 @@ from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.evil_mage import EvilMage
 from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.ogre import Ogre
+from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.session import Session
@@ -28,7 +29,7 @@ def test_random_matchup():
     for _ in range(100):
         Map.reset_singleton()
         combatant_pool = [DraconicSorcerer5Lvl, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl, GiantToad, DireWolf, BrownBear,
-                          EvilMage]
+                          EvilMage, AssassinRogue5Lvl]
         session = Session()
 
         num_blue_combatants = random.randint(1, 4)

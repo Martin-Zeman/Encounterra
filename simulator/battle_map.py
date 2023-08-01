@@ -320,7 +320,7 @@ class Map:
 
 
     @contextmanager
-    def replace_combatant_if_action_by_wildshaped(self, action, combatant, orig_coords):
+    def replace_combatant_if_action_by_wildshaped(self, action, combatant, orig_coords: np.array):
         """
         Replaces the combatant's position with the position of a wilshaped form if the actor of the action is a wildshaped for
         :param action:
@@ -334,6 +334,7 @@ class Map:
                 self.cache_enabled = False
                 self.teams.replace_combatant(combatant, action.factory.combatant)
                 wildshape_position = self.find_wildshaped_coordinate(combatant, action.factory.combatant.size, orig_coords)
+                assert wildshape_position
                 self.remove_combatant(combatant)
                 try:
                     self.set_combatant_coordinates(action.factory.combatant, np.array(wildshape_position))
@@ -349,9 +350,9 @@ class Map:
             yield False
 
 
-    def find_wildshaped_coordinate(self, combatant, size: Size, orig_coords=None):
+    def find_wildshaped_coordinate(self, combatant, size: Size, orig_coords: np.array=None):  # TODO caching cancidate
         """
-        Since the druid may incrase in size when using wildshape we want to allow the druid to shift their position when doing so
+        Since the druid's size may increase when using wildshape we want to allow the druid to shift their position when doing so
         in order to fit. We have to contend that the battle_map vs matrix coords are swapped and y-axis is inverted w.r.t. rows.
         :param combatant: the combatant who wants to wildshpae
         :param size: size of the wildshaped form
@@ -365,7 +366,7 @@ class Map:
             map_accessibility_matrix[self.size - coord[1] - 1, coord[0]] = 1
         map_accessibility_matrix[before_wildshape_coordinate] = 1
         if orig_coords is not None:
-            map_accessibility_matrix[orig_coords] = 1
+            map_accessibility_matrix[self.size - orig_coords[1] - 1, orig_coords[0]] = 1
 
         start_row = before_wildshape_coordinate[0]
         end_row = min(before_wildshape_coordinate[0] + size.value, self.size - 1)
@@ -1273,11 +1274,8 @@ class Map:
         bottom_left, top_right = get_bounding_box(observer, target)
         objects = []
         for obstacle in self.obstacles:
-            try:
-                obstacle_tr = obstacle.coord + obstacle.radius
-            except TypeError:
-                print("FIXME")
-            obstacle_bl = obstacle.coord - obstacle.radius
+            obstacle_tr = (obstacle.coord[0] + obstacle.radius, obstacle.coord[1] + obstacle.radius)
+            obstacle_bl = (obstacle.coord[0] - obstacle.radius, obstacle.coord[1] - obstacle.radius)
             if obstacle_tr[0] < bottom_left[0] or obstacle_bl[0] > top_right[0] or obstacle_bl[1] > top_right[1] or obstacle_tr[1] < bottom_left[1]:
                 continue
             objects.append(obstacle)

@@ -332,8 +332,9 @@ class ActionResolver:
         elif rolled >= 21 - attack.factory.crit_range:
             multiplier = 2
         if rolled + attack.factory.to_hit >= target.ac:
-            reaction = target.prompt_after_hit_reaction(attacker, rolled + attack.factory.to_hit)
-            self.resolve_action(reaction, target)
+            if target.has_reaction:
+                reaction = target.prompt_after_hit_reaction(attacker, attack, rolled + attack.factory.to_hit)
+                self.resolve_action(reaction, target)
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
@@ -467,6 +468,8 @@ class ActionResolver:
                 combatant.shield_spell_active = True
                 combatant.ac += 5
                 return ActionResult.FEASIBLE
+            case Reaction.UNCANNY_DODGE:
+                combatant.uncanny_dodge_active = True
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
                 | Action.BITE_AND_SWALLOW:

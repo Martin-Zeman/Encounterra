@@ -16,8 +16,8 @@ class Obstacle:
 
 
     def get_corners(self):
-        return [self.coord - (self.radius, self.radius), self.coord + (self.radius + 1, - self.radius), self.coord +
-                (-self.radius, self.radius + 1), self.coord + (self.radius + 1, self.radius + 1)]
+        return [(self.coord[0] - self.radius, self.coord[1] - self.radius), (self.coord[0] + self.radius + 1, self.coord[1] - self.radius),
+                (self.coord[0] - self.radius, self.coord[1] + self.radius + 1), (self.coord[0] + self.radius + 1, self.coord[1] + self.radius + 1)]
 
     def get_center(self):
-        return self.coord + (0.5, 0.5)
+        return self.coord[0] + 0.5, self.coord[1] + 0.5

@@ -989,6 +989,25 @@ def test_find_wildshaped_coordinate_huge_nine_options(battle_map, teams, test_mo
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
     assert np.array_equal(coord, np.array([4, 12]))
 
+def test_find_wildshaped_coordinate_enemies_around(battle_map, teams, test_moon_druid, test_ogre, test_bugbear):
+    """
+    The druid wants to wildshape into a large creature. There's two enemies around so the best option is to side step and transform.
+    This scenario is based on an error encountered during testing.
+    """
+    battle_map.build_adjacency_matrix()
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([1, 9]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([2, 7]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 10]))
+
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+    test_moon_druid.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.LARGE, np.array([1, 9]))
+    assert np.array_equal(coord, np.array([0, 8])) or np.array_equal(coord, np.array([0, 9])) or np.array_equal(coord, np.array([0, 10]))
+
 @pytest.mark.parametrize("size", [Size.SMALL, Size.MEDIUM])
 def test_get_visibility_small_medium(battle_map, size):
     battle_map.place_circular_element(np.array([5, 5]), Terrain.IMPASSABLE_TERRAIN, radius=0)
