@@ -2,6 +2,7 @@ import inspect
 import pkgutil
 
 from simulator.combatant import Combatant
+from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.dire_wolf import DireWolf
@@ -58,8 +59,8 @@ class Session:
                 self.combatants.append(DraconicSorcerer5Lvl("DraconicSorcerer5Lvl " + str(curr_count)))
             case "TotemBarbarian5Lvl":
                 self.combatants.append(TotemBarbarian5Lvl("TotemBarbarian5Lvl" + str(curr_count)))
-            case "Cyanwrath":
-                self.combatants.append(Cyanwrath(self.effect_tracker))
+            # case "Cyanwrath":
+            #     self.combatants.append(Cyanwrath(self.effect_tracker))
             case "DragonclawCultist":
                 self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
             case "Goblin":
@@ -72,6 +73,8 @@ class Session:
                 self.combatants.append(StoneGiant("StoneGiant " + str(curr_count)))
             case "MoonDruid5Lvl":
                 self.combatants.append(MoonDruid5Lvl("MoonDruid5Lvl " + str(curr_count)))
+            case "AssassinRogue5Lvl":
+                self.combatants.append(AssassinRogue5Lvl("AssassinRogue5Lvl " + str(curr_count)))
             case "DragonclawCultist":
                 self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
             case "GiantToad":

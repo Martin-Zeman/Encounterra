@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 
-from simulator.actions.action_constants import PRIORITY_ACTIONS
+from simulator.actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
 from simulator.actions.action_types import Movement
 from simulator.actions.break_grapple import BreakGrappleFactory
 from simulator.actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
@@ -23,24 +23,24 @@ REGEX_MOVEMENT_PATTERN = re.compile(r'([msdchio]+)_\((\d+), (\d+)\)')
 REGEX_MS_MOVEMENT_PATTERN = re.compile(r'[mschdio_]+\((\d+), (\d+)\)')
 
 
-def get_post_transitions_of_priority_transitions(dag, transition_name_to_action):
+def get_post_transitions_of_priority_transitions(dag, transition_name_to_action, prio_action_dict):
     """
     A helper function which gets eligible follow-up actions to all priority actions present in the DAG
-    :param combatant: the combatant taking the actions
     :param dag: the DAG on which we operate
     :param transition_name_to_action: dict mapping action names -> actions
+    :param prio_action_dict: either PRIORITY_ACTIONS or PRIORITY_BONUS_ACTIONS
     :return: dict priority_transition_name -> list of eligible follow-up transitions
     """
     post_priority_transitions = dict()
     for transition in dag.get_available_transitions():
         if transition == 'None_0':
             break
-        if transition_name_to_action[transition].factory.action_type in PRIORITY_ACTIONS.keys():
+        if transition_name_to_action[transition].factory.action_type in prio_action_dict.keys():
             post_transitions = []
             if dag.trigger(transition):
                 # We filter out priority transitions even from all the post transitions
                 try:
-                    post_transitions = [ft for ft in dag.forward_transitions[dag.state] if transition_name_to_action[ft[0]].factory.action_type not in PRIORITY_ACTIONS.keys()]
+                    post_transitions = [ft for ft in dag.forward_transitions[dag.state] if transition_name_to_action[ft[0]].factory.action_type not in prio_action_dict.keys()]
                 except KeyError:
                     pass  # For the case when the target state is nop
                 dag.reset()
@@ -66,13 +66,14 @@ def build_misty_step_transitions(dag, ms_post_transitions, transition_to_eligibl
     dag.remove_transition("Misty Step to 0, 0_1", "0")
 
 
-def build_priority_transitions(dag, post_priority_transitions, transition_to_eligible_coords, transition_name_to_action):
+def build_priority_transitions(dag, post_priority_transitions, transition_to_eligible_coords, transition_name_to_action, prio_action_dict):
     """
     A helper function which builds the priority part of the DAG such as Dodge or Disengage.
     :param dag: the DAG which we're building
     :param post_priority_transitions: dict from transition -> list of eligible follow-up transitions if the form of (transition, dest_state)
     :param transition_to_eligible_coords: mapping from action names to their eligible coordinates
     :param transition_name_to_action: dict mapping action names -> actions
+    :param prio_action_dict: either PRIORITY_ACTIONS or PRIORITY_BONUS_ACTIONS
     :return: None but the the dag is modified
     """
     eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(dag, transition_to_eligible_coords)
@@ -84,7 +85,7 @@ def build_priority_transitions(dag, post_priority_transitions, transition_to_eli
             continue
         action_type = transition.split()[0]
         new_prio_state = action_type + "d"  # e.g. Dodge of FooBar -> Dodged
-        prefix = PRIORITY_ACTIONS[transition_name_to_action[transition].factory.action_type][1]
+        prefix = prio_action_dict[transition_name_to_action[transition].factory.action_type][1]
         dag.add_state(new_prio_state)
         newly_added_states.append(new_prio_state)
         dag.add_transition(transition, "0", new_prio_state)
@@ -256,8 +257,12 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     """
     battle_map = Map.get()
     battle_map.calc_visibility_dict_for_all_coords(combatant, shortest_paths)
-    post_priority_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action)
-    for priority_transition in post_priority_transitions.keys():  # TODO Do I need to have them removed for all states or just 0?
+    post_priority_action_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action, PRIORITY_ACTIONS)
+    post_priority_bonus_action_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
+    for priority_transition in post_priority_action_transitions.keys():
+        for origin_state in action_fsm.states.keys():
+            action_fsm.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+    for priority_transition in post_priority_bonus_action_transitions.keys():
         for origin_state in action_fsm.states.keys():
             action_fsm.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
 
@@ -275,14 +280,15 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
 
     if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
         transition_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
-        pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_transitions.values() for tn in pre}
+        a_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_action_transitions.values() for tn in pre}
+        ba_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_bonus_action_transitions.values() for tn in pre}
         if has_misty_step:
             ms_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for tn in post_misty_step_transitions}
     else:
         current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
         transition_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
-        # pt_transition_to_eligible_coords = {tn[0]: [current_position] for pre in post_priority_transitions.values() if pre and transition_name_to_action[tn[0]].is_current_coord_eligible() for tn in pre}
-        pt_transition_to_eligible_coords = {tn[0]: [current_position] for pre in post_priority_transitions.values() if pre for tn in pre if transition_name_to_action[tn[0]].is_current_coord_eligible()}
+        a_pt_transition_to_eligible_coords = {tn[0]: [current_position] for pre in post_priority_action_transitions.values() if pre for tn in pre if transition_name_to_action[tn[0]].is_current_coord_eligible()}
+        ba_pt_transition_to_eligible_coords = {tn[0]: [current_position] for pre in post_priority_bonus_action_transitions.values() if pre for tn in pre if transition_name_to_action[tn[0]].is_current_coord_eligible()}
         if has_misty_step:
             ms_transition_to_eligible_coords = {tn[0]: [current_position] for tn in post_misty_step_transitions if transition_name_to_action[tn[0]].is_current_coord_eligible()}
 
@@ -311,7 +317,8 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     if has_misty_step:
         build_misty_step_transitions(dag, post_misty_step_transitions, ms_transition_to_eligible_coords)
 
-    build_priority_transitions(dag, post_priority_transitions, pt_transition_to_eligible_coords, transition_name_to_action)
+    build_priority_transitions(dag, post_priority_action_transitions, a_pt_transition_to_eligible_coords, transition_name_to_action, PRIORITY_ACTIONS)
+    build_priority_transitions(dag, post_priority_bonus_action_transitions, ba_pt_transition_to_eligible_coords, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
     return dag
 
 
@@ -352,7 +359,7 @@ def get_nearest_from_best_sequences(sequences, sorted_sequences, sequence_to_thr
     return sequences[min_dist_idx]
 
 
-def calc_best_sequence(combatant, dag, transition_name_to_action, distances, shortest_paths):
+def find_best_sequence(combatant, dag, transition_name_to_action, distances, shortest_paths):
     """
     Finds the path through the DAG which represents the movement and actions with the highest calculated threat.
     :param combatant: the combatant for whom the DAG is modeled

@@ -1,7 +1,7 @@
 import logging
 from simulator.actions.action_fsms import generate_action_fsm
 from simulator.actions.action_plan_strategy import ActionPlanStrategy
-from simulator.actions.action_selector import calc_best_sequence, build_action_dag, translate_sequence_to_actions, extract_movement
+from simulator.actions.action_selector import find_best_sequence, build_action_dag, translate_sequence_to_actions, extract_movement
 from simulator.threat_utils import get_aoe_and_aoo_threat_for_increment
 
 logger = logging.getLogger("Encounterra")
@@ -17,7 +17,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
             dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths)
             if dag is None:
                 return None
-            best_sequence, transition_name_to_ms_path = calc_best_sequence(combatant, dag, transition_name_to_action, distances, shortest_paths)
+            best_sequence, transition_name_to_ms_path = find_best_sequence(combatant, dag, transition_name_to_action, distances, shortest_paths)
             if best_sequence is None:
                 return None
         return extract_movement(self.combatant, distances, shortest_paths, best_sequence)
@@ -38,7 +38,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
                 movement = self.get_movement_for_next_turn(distances, shortest_paths)
             return movement
-        best_sequence, transition_name_to_ms_path = calc_best_sequence(self.combatant, dag, transition_name_to_action, distances, shortest_paths)
+        best_sequence, transition_name_to_ms_path = find_best_sequence(self.combatant, dag, transition_name_to_action, distances, shortest_paths)
         if best_sequence is None:
             return None
         # logger.info(f"{self.combatant}'s plan {longest_pth}")# TODO FIXME

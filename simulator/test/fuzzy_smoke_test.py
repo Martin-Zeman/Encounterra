@@ -39,6 +39,7 @@ def test_random_matchup():
         blue_team = random.sample(combatant_pool, num_blue_combatants)
         # blue_team = [GiantToad]
         red_team = random.sample(combatant_pool, num_red_combatants)
+        # red_team.append(AssassinRogue5Lvl)
         # red_team = random.sample(combatant_pool, num_red_combatants)
         logger.info(f"Starting a fuzzy test with:")
         logger.info(f"Blue team: {[str(c) for c in blue_team]}")

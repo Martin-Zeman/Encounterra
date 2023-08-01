@@ -479,6 +479,7 @@ class ActionResolver:
                 if not self.request_movement(combatant, actoid):
                     return False
             case Action.DASH | BonusAction.CUNNING_DASH:
+                logger.info(f"{combatant} uses {actoid.shorthand_str()}")
                 combatant.movement += combatant.speed
                 return False
             case Movement.GET_UP_FROM_PRONE:
