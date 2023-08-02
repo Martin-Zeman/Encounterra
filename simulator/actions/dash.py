@@ -54,7 +54,7 @@ class Dash(Actoid, AttackThreatModifier):
         battle_map = Map.get()
         baseline = get_danger_zone_threat(battle_map.get_combatant_position(self.factory.combatant).get(), self.factory.combatant)
         modified = get_danger_zone_threat(battle_map.get_combatant_position(self.factory.combatant).get(), self.factory.combatant,  self.factory.combatant.speed)
-        # TODO Add AoO in a simplified manner such as the threat of all AoO attack for which the comabant is currently in range
+        # TODO Add AoO in a simplified manner such as the threat of all AoO attack for which the combatant is currently in range
         return baseline - modified
 
     def clear_cache(self):

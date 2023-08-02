@@ -574,10 +574,10 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
         assert str(actoid12).startswith("Cunning Hide") or str(actoid13).startswith("Cunning Hide")
         action_resolver.resolve_action(actoid13, test_assassin_rogue)  # Step of out hiding
         actoid14 = get_action(test_assassin_rogue)
-        assert str(actoid14) == "Shortbow on Ogre" or str(actoid14).startswith("[")
         action_resolver.resolve_action(actoid14, test_assassin_rogue)
         actoid15 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid15, test_assassin_rogue)
+        assert str(actoid14) == "Shortbow on Ogre" or str(actoid15) == "Shortbow on Ogre"
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
