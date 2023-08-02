@@ -14,7 +14,7 @@ class MovementIncrement(Actoid):
         self.factory = factory
 
     def __str__(self):
-        return np.array2string(self.increment)
+        return str(self.increment)
 
 
 

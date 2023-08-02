@@ -33,7 +33,7 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     # fsm.get_graph().draw('state_diagram_faurung_pre_coords.png', prog='dot')
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    get_aoe_and_aoo_threat_for_increment.cache_clear()
+    # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_action_fsm(test_draconic_sorcerer_5lvl)
     dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # dfs.get_graph().draw('state_diagram_faurung_with_coords',format='svg', prog='dot')
@@ -70,7 +70,7 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
 
         # Pre-calculate Dijkstra for the combatant
         distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-        get_aoe_and_aoo_threat_for_increment.cache_clear()
+        # get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action = generate_action_fsm(test_draconic_sorcerer_5lvl)
         dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
         transitions = dag.get_available_transitions()
@@ -109,7 +109,7 @@ def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracke
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    get_aoe_and_aoo_threat_for_increment.cache_clear()
+    # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_action_fsm(test_draconic_sorcerer_5lvl)
     dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests regular movement + fireball
@@ -142,7 +142,7 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    get_aoe_and_aoo_threat_for_increment.cache_clear()
+    # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_action_fsm(test_draconic_sorcerer_5lvl)
     dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests regular movement + staff of defence attack
@@ -179,7 +179,7 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    get_aoe_and_aoo_threat_for_increment.cache_clear()
+    # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_action_fsm(test_draconic_sorcerer_5lvl)
     dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests Misty Step movement + staff of defence attack
@@ -204,7 +204,7 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    get_aoe_and_aoo_threat_for_increment.cache_clear()
+    # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_action_fsm(test_draconic_sorcerer_5lvl)
     dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests Dodge + movement + a quickened spell
@@ -234,7 +234,7 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
-    get_aoe_and_aoo_threat_for_increment.cache_clear()
+    # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_action_fsm(test_draconic_sorcerer_5lvl)
     dag = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests Disengage + movement + a quickened spell

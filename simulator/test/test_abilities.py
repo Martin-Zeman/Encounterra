@@ -135,19 +135,19 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
 
     try:
         actoid1 = get_action(test_moon_druid)
-        assert str(actoid1) =="[0 1]"
+        assert str(actoid1) =="(0, 1)"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "[0 1]"
+        assert str(actoid2) == "(0, 1)"
         action_resolver.resolve_action(actoid2, test_moon_druid)
         actoid3 = get_action(test_moon_druid)
-        assert str(actoid3) == "[1 1]"
+        assert str(actoid3) == "(1, 1)"
         action_resolver.resolve_action(actoid3, test_moon_druid)
         actoid4 = get_action(test_moon_druid)
-        assert str(actoid4) == "[1 0]"
+        assert str(actoid4) == "(1, 0)"
         action_resolver.resolve_action(actoid4, test_moon_druid)
         actoid5 = get_action(test_moon_druid)
-        assert str(actoid5) == "[1 1]" or str(actoid5) == "[1 0]" or str(actoid5) == '[ 1 -1]'
+        assert str(actoid5) == "(1, 1)" or str(actoid5) == "(1, 0)" or str(actoid5) == '(1, -1)'
         action_resolver.resolve_action(actoid5, test_moon_druid)
 
         actoid7 = get_action(test_moon_druid)
@@ -499,7 +499,7 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         first_turn_actoids = [str(actoid1), str(actoid2), str(actoid3), str(actoid4), str(actoid5), str(actoid6),str(actoid7), str(actoid8), str(actoid9), str(actoid10)]
         assert any(act.startswith("Cunning Dash") for act in first_turn_actoids)
         assert any(act.startswith("Shortbow") for act in first_turn_actoids)
-        assert any(act.startswith("[") for act in first_turn_actoids)
+        assert any(act.startswith("(") for act in first_turn_actoids)
         test_assassin_rogue.new_turn()
         actoid11 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid11, test_assassin_rogue)
@@ -516,7 +516,7 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         second_turn_actoids = [str(actoid11), str(actoid12), str(actoid13), str(actoid14), str(actoid15), str(actoid16)]
         assert any(act.startswith("Cunning Hide") for act in second_turn_actoids)
         assert any(act.startswith("Shortbow") for act in second_turn_actoids)
-        assert any(act.startswith("[") for act in second_turn_actoids)
+        assert any(act.startswith("(") for act in second_turn_actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -631,7 +631,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
         assert str(actoid10).startswith("Cunning Hide of AssassinRogue from Ogre")
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
         actoid11 = get_action(test_assassin_rogue)
-        assert str(actoid11).startswith("[") and str(actoid11) is not "[0 1]"
+        assert str(actoid11).startswith("(") and str(actoid11) is not "(0 1)"
         action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
         actoid12 = get_action(test_assassin_rogue)
         assert str(actoid12) == "Shortbow on Ogre"

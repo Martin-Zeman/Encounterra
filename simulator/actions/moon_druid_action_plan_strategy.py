@@ -108,7 +108,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
                 ws_best_sequence, ws_transition_name_to_ms_path = find_best_sequence(self.combatant, ws_dag, ws_transition_name_to_action, distances, shortest_paths)
                 self.best_wildshape_plan_data = ws_best_sequence, ws_transition_name_to_ms_path, ws_transition_name_to_action
 
-        get_aoe_and_aoo_threat_for_increment.cache_clear()
+        # get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action = generate_action_fsm(self.combatant)
         dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths)
         if dag is None:

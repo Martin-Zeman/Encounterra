@@ -9,7 +9,7 @@ from scipy.stats import randint
 from toposort import toposort_flatten
 
 from simulator.actions.actoid import FactoryFlags
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_position_toggled_cache_with_key
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag, Conditions
 from simulator.spells.misty_step import MistyStepFactory
@@ -275,7 +275,7 @@ def get_threat_for_staying_at_coord(coords, combatant):
     return threat_acc
 
 
-@cached(cache={}, key=lambda curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
+# @cached(cache={}, key=lambda curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
 def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     A helper caching function which accumulates threats from AoE and AoO along a path.
@@ -314,6 +314,7 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant,
     return threat_acc
 
 
+@cached(cache={}, key=lambda path, combatant, effect_to_coords, disengaged=False, dodged=False: hashkey(tuple(path), disengaged, dodged))
 def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn

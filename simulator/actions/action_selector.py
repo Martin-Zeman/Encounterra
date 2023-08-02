@@ -381,6 +381,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, distances, sho
     # Optimization: calculate_threat is cached, so we need to clear the cache before the computation
     for action in transition_name_to_action.values():
         action.clear_cache()
+    accumulate_threat_along_path.cache_clear()
 
     for idx, sequence in enumerate(sequences):
         threat_acc = [0, 0]  # movement threat, transition threat

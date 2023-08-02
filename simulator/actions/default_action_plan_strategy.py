@@ -12,7 +12,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
     def get_movement_for_next_turn(self, distances, shortest_paths):
         # logger.info(f"{self.combatant} still has movement left")  # TODO FIXME
         with self.combatant.as_if_has_action() as combatant:
-            get_aoe_and_aoo_threat_for_increment.cache_clear()
+            # get_aoe_and_aoo_threat_for_increment.cache_clear()
             fsm, transition_name_to_action = generate_action_fsm(combatant)
             dag = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths)
             if dag is None:
@@ -30,7 +30,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         :return: list of the following types: np.array, action, bonus action
         """
         # start_time = time.time()
-        get_aoe_and_aoo_threat_for_increment.cache_clear()
+        # get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action = generate_action_fsm(self.combatant)
         dag = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths)
         if dag is None:

@@ -67,7 +67,7 @@ def convert_path_to_increments(path):
     """
     increments = []
     for i in range(len(path) - 1):
-        increments.append(path[i + 1] - path[i])
+        increments.append(tuple(path[i + 1] - path[i]))
     logger.debug(increments)
     return increments
 
