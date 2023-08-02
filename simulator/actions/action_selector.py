@@ -25,7 +25,7 @@ REGEX_MS_MOVEMENT_PATTERN = re.compile(r'[mschdio_]+\((\d+), (\d+)\)')
 
 def get_post_transitions_of_priority_transitions(dag, transition_name_to_action, prio_action_dict):
     """
-    A helper function which gets eligible follow-up actions to all priority actions present in the DAG
+    A helper function which gets eligible follow-up actions to priority actions of the given dict present in the DAG
     :param dag: the DAG on which we operate
     :param transition_name_to_action: dict mapping action names -> actions
     :param prio_action_dict: either PRIORITY_ACTIONS or PRIORITY_BONUS_ACTIONS
@@ -47,11 +47,39 @@ def get_post_transitions_of_priority_transitions(dag, transition_name_to_action,
             post_priority_transitions[transition] = post_transitions
     return post_priority_transitions
 
+
+def get_all_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action):
+    """
+    Retrieves eligible follow-up actions for all priority actions present in the action finite state machine (FSM).
+
+    This helper function is used to gather eligible follow-up actions for priority actions and bonus actions separately.
+    It operates on the provided action finite state machine (action_fsm) and uses the mapping of action names to actions (transition_name_to_action).
+    The output of this function is utilized by the `build_priority_transitions` function.
+
+    :param action_fsm: The action finite state machine (FSM) on which the operation is performed.
+    :param transition_name_to_action: A dictionary mapping action names to their corresponding actions.
+
+    :return: A tuple of two dictionaries:
+        1. A dictionary containing priority action names as keys and lists of eligible follow-up transitions as values.
+        2. A dictionary containing priority bonus action names as keys and lists of eligible follow-up transitions as values.
+    """
+    post_priority_action_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action, PRIORITY_ACTIONS)
+    post_priority_bonus_action_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
+    for priority_transition in post_priority_action_transitions.keys():
+        for origin_state in action_fsm.states.keys():
+            action_fsm.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+    for priority_transition in post_priority_bonus_action_transitions.keys():
+        for origin_state in action_fsm.states.keys():
+            action_fsm.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+    return post_priority_action_transitions, post_priority_bonus_action_transitions
+
+
 def get_post_misty_step_transitions(dag, transition_name_to_action):
     dag.trigger("Misty Step to 0, 0_1")  # It's the only MS we created
     ms_post_transitions = [pt for pt in dag.forward_transitions[dag.state] if transition_name_to_action[pt[0]].factory.action_type not in PRIORITY_ACTIONS.keys()]
     dag.reset()
     return ms_post_transitions
+
 
 def build_misty_step_transitions(dag, ms_post_transitions, transition_to_eligible_coords):
     eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(dag, transition_to_eligible_coords)
@@ -257,14 +285,8 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     """
     battle_map = Map.get()
     battle_map.calc_visibility_dict_for_all_coords(combatant, shortest_paths)
-    post_priority_action_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action, PRIORITY_ACTIONS)
-    post_priority_bonus_action_transitions = get_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
-    for priority_transition in post_priority_action_transitions.keys():
-        for origin_state in action_fsm.states.keys():
-            action_fsm.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
-    for priority_transition in post_priority_bonus_action_transitions.keys():
-        for origin_state in action_fsm.states.keys():
-            action_fsm.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+
+    post_priority_action_transitions, post_priority_bonus_action_transitions = get_all_post_transitions_of_priority_transitions(action_fsm, transition_name_to_action)
 
     dag = copy.deepcopy(action_fsm)
     transition_names = action_fsm.get_available_transitions()
