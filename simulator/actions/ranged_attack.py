@@ -55,6 +55,7 @@ class RangedAttack(Attack):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        self.calculate_threat_delta.cache_clear()
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()

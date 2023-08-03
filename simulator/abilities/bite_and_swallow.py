@@ -59,7 +59,7 @@ class BiteAndSwallow(MeleeAttack):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
 
-    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items())))
+    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications

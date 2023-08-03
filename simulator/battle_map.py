@@ -188,13 +188,15 @@ def map_position_toggled_cache_with_key(key):
         def call_func(*args, **kwargs):
             battle_map = Map.get()
             if battle_map.cache_enabled:
-                return cached_func(*args, **kwargs, position_hash=tuple(battle_map.get_combatant_position(args[0].factory.combatant).get()[0]))
+                # return cached_func(*args, **kwargs, position_hash=tuple(battle_map.get_combatant_position(args[0].factory.combatant).get()[0]))
+                return cached_func(*args, **kwargs)
             else:
                 return func(*args, **kwargs)
 
         call_func.cache_clear = cached_func.cache_clear
         return call_func
     return _map_position_toggled_cache_with_key
+
 
 def toggled_cache(key):
     """

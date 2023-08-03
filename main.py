@@ -5,7 +5,6 @@ from simulator.combatants.stone_giant import StoneGiant
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
@@ -15,7 +14,6 @@ import time
 if __name__ == '__main__':
     CustomLogger(LogLevel.INFO)
     session = Session()
-    # session.add_combatant(Cyanwrath, Teams.Color.RED)
     session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
     session.add_combatant(MoonDruid5Lvl, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)

@@ -51,11 +51,10 @@ class Dash(Actoid, AttackThreatModifier):
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        battle_map = Map.get()
-        baseline = get_danger_zone_threat(battle_map.get_combatant_position(self.factory.combatant).get(), self.factory.combatant)
-        modified = get_danger_zone_threat(battle_map.get_combatant_position(self.factory.combatant).get(), self.factory.combatant,  self.factory.combatant.speed)
-        # TODO Add AoO in a simplified manner such as the threat of all AoO attack for which the combatant is currently in range
-        return baseline - modified
+        movement_threat = kwargs["movement_threat"]
+        baseline = -1 * movement_threat[min(self.factory.combatant.movement, len(movement_threat) - 1)]
+        modified = -1 * movement_threat[min(self.factory.combatant.movement + self.factory.combatant.movement, len(movement_threat) - 1)]
+        return max(0, baseline - modified)  # We're only interested in this if used defensively, we don't want it to play a role if used offensively
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()

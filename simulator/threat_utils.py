@@ -324,21 +324,19 @@ def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=F
     :param effect_to_coords: mapping of AoE effects to their coordinates
     :param disengaged: If True then don't include the AoOs
     :param dodged: If True then attacks at the moving combatant are calculated at a disadvantage
-    :return: accumulated threat (negative)
+    :return: tuple of cumulative threats along the path
     """
     threat_acc = 0
     curr_coords = Map.get().get_combatant_position(combatant)
+    threat_along_path = [-get_threat_for_staying_at_coord(curr_coords.get(), combatant)]
     curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
     for increment in path:
         t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged)
         assert t <= 0
         threat_acc += t
         curr_coords_data += increment
-    # account for the final destination
-    t = get_threat_for_staying_at_coord(curr_coords_data if path else curr_coords.get(), combatant)
-    assert t >= 0
-    threat_acc -= t
-    return threat_acc
+        threat_along_path.append(threat_acc - get_threat_for_staying_at_coord(curr_coords_data, combatant))
+    return tuple(threat_along_path)
 
 def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
     """
@@ -355,10 +353,10 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
 
     # First build the Misty Step DAG
     curr_coords = Map.get().get_combatant_position(combatant)
+    curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
     if path:
         # We build a DAG with two branches where one branch represents moving before using Misty Step and the other after
         # The only transitions between the branches represent Misty Step itself which can be taken at different points of the path
-        curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
         coords = [curr_coords.get()[0]]
         initial_state_name = str(tuple(curr_coords_data[0]))
         states = [initial_state_name]
@@ -424,5 +422,5 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
         threat_acc += threat[states[-1]]  # the last ms state was added last which represents the longest (best) path
     # account for the final destination
     threat_acc -= get_threat_for_staying_at_coord(curr_coords_data if path else curr_coords.get(), combatant)
-    return threat_acc, max_threat_path
+    return (threat_acc,), max_threat_path
 

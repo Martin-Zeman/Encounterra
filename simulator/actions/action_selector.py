@@ -429,6 +429,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, distances, sho
 
     for idx, sequence in enumerate(sequences):
         threat_acc = [0, 0]  # movement threat, transition threat
+        movement_threat = (0,)
         pretend_coords = None
         delta_action = None
         for transition in sequence:
@@ -437,7 +438,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, distances, sho
             try:  # Is it a transition which represents a (bonus) action?
                 action = transition_name_to_action[transition]
                 with battle_map.as_if_combatant_position(combatant, pretend_coords) as orig_coords, battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, orig_coords) as did_transform:
-                    threat_acc[1] += action.calculate_threat(consider_dist=(not did_transform))
+                    threat_acc[1] += action.calculate_threat(consider_dist=(not did_transform), movement_threat=movement_threat)
                     if delta_action:
                         threat_acc[1] += delta_action.calculate_threat_for_attack(combatant, action)
                     if isinstance(action, AttackThreatModifier):
@@ -457,13 +458,13 @@ def find_best_sequence(combatant, dag, transition_name_to_action, distances, sho
                     case "do":
                         movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
                     case "ms":
-                        movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)
+                        movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)  # TODO align this with accumulate_threat_along_path
                         transition_name_to_ms_path[transition] = misty_step_path
                     case _:
                         logger.error(f"Unknown movement type {movement_type}")
                         movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
-                movement_threat += 0.01 if np.array_equal(destination, current_coords.get()[0]) else 0  # Small bias towards current position
-                threat_acc[0] += movement_threat
+                threat_acc[0] += movement_threat[-1]
+                threat_acc[0] += 0.01 if np.array_equal(destination, current_coords.get()[0]) else 0  # Small bias towards current position
             try:
                 sequence_idx_to_transition_step_threat[idx].append(sum(threat_acc))
             except KeyError:

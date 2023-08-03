@@ -54,8 +54,8 @@ class Combatant(ABC, ProtoCombatant):
         self.has_reaction = True
         self.has_haste_action = False
         self.num_attacks = 1
-        self.speed = speed / 5
-        self.movement = speed / 5
+        self.speed = speed // 5
+        self.movement = speed // 5
         self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
         self.resistances = resistances
         self.immunities = immunities

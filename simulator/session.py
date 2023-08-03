@@ -15,7 +15,6 @@ from simulator.combatants.ogre import Ogre
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.battle_map import *
 from simulator.round_manager import *
 from simulator.teams import Teams
@@ -59,8 +58,6 @@ class Session:
                 self.combatants.append(DraconicSorcerer5Lvl("DraconicSorcerer5Lvl " + str(curr_count)))
             case "TotemBarbarian5Lvl":
                 self.combatants.append(TotemBarbarian5Lvl("TotemBarbarian5Lvl" + str(curr_count)))
-            # case "Cyanwrath":
-            #     self.combatants.append(Cyanwrath(self.effect_tracker))
             case "DragonclawCultist":
                 self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
             case "Goblin":

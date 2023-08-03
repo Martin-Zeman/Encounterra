@@ -13,7 +13,6 @@ from simulator.combatants.stone_giant import StoneGiant
 from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.combatants.cyanwrath import Cyanwrath
 from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
