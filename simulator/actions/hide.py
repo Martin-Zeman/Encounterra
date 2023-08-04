@@ -93,15 +93,16 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
         """
         if getattr(attack, "target", None) is self.target and (FactoryFlags.IS_ATTACK_LIKE in attack.factory.flags or
                                                              (FactoryFlags.IS_FINESSE in attack.factory.flags or
-                                                              FactoryFlags.IS_RANGED in attack.factory.flags)):
+                                                              FactoryFlags.IS_RANGED in attack.factory.flags))\
+                and self.factory.combatant.movement > 0:  # Have to be able to pop out of cover
             battle_map = Map.get()
             threat_acc = attack.calculate_threat_delta({ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE})
             assert threat_acc > 0
             if battle_map.is_ally_adjacent_to_target(combatant, attack.target):
                 return threat_acc  # Sneak Attack condition already met, no extra benefit
             if isinstance(attack.factory.on_hit, OnHitSneakAttack):
-                to_hit_total = ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(attack.target.ac - attack.factory.to_hit, 20))]
-                threat_acc += calc_p_hit(to_hit_total, attack.target.ac) * attack.factory.on_hit.calculate_threat(combatant, attack.target)
+                to_hit_total = attack.factory.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(attack.target.ac - attack.factory.to_hit, 20))]
+                threat_acc += calc_p_hit(to_hit_total, attack.target.ac) * attack.factory.on_hit.calculate_threat(combatant, attack.target, roll_type=RollType.ADVANTAGE)
             return threat_acc
         else:
             return 0

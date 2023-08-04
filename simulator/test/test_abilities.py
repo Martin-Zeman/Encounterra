@@ -500,9 +500,8 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         actoid10 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
         first_turn_actoids = [str(actoid1), str(actoid2), str(actoid3), str(actoid4), str(actoid5), str(actoid6),str(actoid7), str(actoid8), str(actoid9), str(actoid10)]
-        # assert any(act.startswith("Cunning Hide") for act in first_turn_actoids)
-        # assert any(act.startswith("Shortbow") for act in first_turn_actoids)
-        # assert any(act.startswith("(") for act in first_turn_actoids)
+        assert any(act.startswith("Shortbow") for act in first_turn_actoids)
+        assert any(act.startswith("(") for act in first_turn_actoids)
         test_assassin_rogue.new_turn()
         actoid11 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid11, test_assassin_rogue)
@@ -516,10 +515,13 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         action_resolver.resolve_action(actoid15, test_assassin_rogue)
         actoid16 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid16, test_assassin_rogue)
-        second_turn_actoids = [str(actoid11), str(actoid12), str(actoid13), str(actoid14), str(actoid15), str(actoid16)]
-        assert any(act.startswith("Cunning Hide") for act in second_turn_actoids)
-        assert any(act.startswith("Shortbow") for act in second_turn_actoids)
-        assert any(act.startswith("(") for act in second_turn_actoids)
+        actoid17 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid17, test_assassin_rogue)
+        second_turn_actoids = [actoid11, actoid12, actoid13, actoid14, actoid15, actoid16, actoid17]
+        assert any(str(act).startswith("Cunning Hide") for act in second_turn_actoids)
+        assert any(str(act).startswith("Shortbow") for act in second_turn_actoids)
+        assert any(str(act).startswith("(") for act in second_turn_actoids)
+        assert list(filter(lambda act: str(act).startswith("Cunning Hide"), second_turn_actoids))[0].target is list(filter(lambda act: str(act).startswith("Shortbow"), second_turn_actoids))[0].target
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

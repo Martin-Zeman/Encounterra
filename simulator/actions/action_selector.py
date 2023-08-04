@@ -435,6 +435,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, distances, sho
         for transition in sequence:
             if transition == "dummy":
                 break
+
             try:  # Is it a transition which represents a (bonus) action?
                 action = transition_name_to_action[transition]
                 with battle_map.as_if_combatant_position(combatant, pretend_coords) as orig_coords, battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, orig_coords) as did_transform:
@@ -443,6 +444,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, distances, sho
                         threat_acc[1] += delta_action.calculate_threat_for_attack(combatant, action)
                     if isinstance(action, AttackThreatModifier):
                         delta_action = action
+                    for existing_delta_effect in battle_map.effect_tracker.get_affecting_combatant(combatant):
+                        threat_acc[1] += existing_delta_effect.calculate_threat_for_attack(combatant, action)
             except KeyError:  # or different kind which represents some type of movement
                 movement_type, x, y = REGEX_MOVEMENT_PATTERN.search(transition).groups()
                 destination = np.array([int(x), int(y)])

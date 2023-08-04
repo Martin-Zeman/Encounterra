@@ -103,7 +103,7 @@ class RoundManager:
                 logger.info(Map.get())
                 self.effect_tracker.start_of_turn(combatant)
                 combatant.new_turn()
-                effects = self.effect_tracker.get_affecting_effects(combatant)  # TODO consider cleaning this up by merhing with start_of_turn
+                effects = self.effect_tracker.get_affecting_combatant(combatant)  # TODO consider cleaning this up by merhing with start_of_turn
                 self.action_resolver.resolve_effects(effects, combatant)
                 if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.PETRIFIED, Conditions.UNCONSCIOUS):
                     logger.info(f"{combatant} is affected by a condition which prevents any action. Skipping turn")
