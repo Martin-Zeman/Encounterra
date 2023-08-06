@@ -139,7 +139,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
 
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
-            return set()  # Better not waste a twinned version even though self could still be targeted
+            return None  # Better not waste a twinned version even though self could still be targeted
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
@@ -167,5 +167,5 @@ class TwinnedHaste(Actoid, Effect, Threat):
             battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range and \
             battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE and \
             battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
-            return set(curr_coord)
-        return set()
+            return set([curr_coord])
+        return None

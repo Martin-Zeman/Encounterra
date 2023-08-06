@@ -68,8 +68,8 @@ class MistyStep(Actoid, Threat):
 
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
-            return set()
+            return None
         battle_map = Map.get()
-        # if self.factory.combatant.movement > 0:
-        #     return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))  # Shouldn't make a difference for MS
+        if self.factory.combatant.movement > 0:
+            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])

@@ -90,8 +90,8 @@ class Constrict(Actoid, DirectThreat):
                                                            rng=1,
                                                            combatant=self.factory.combatant)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.attack.range):
-            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
-        return set()
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

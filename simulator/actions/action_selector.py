@@ -302,10 +302,14 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
 
     # if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
     transition_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
+    transition_to_eligible_coords = {tn: coords for tn, coords in transition_to_eligible_coords.items() if coords}
     a_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_action_transitions.values() for tn in pre}
+    a_pt_transition_to_eligible_coords = {tn: coords for tn, coords in a_pt_transition_to_eligible_coords.items() if coords}
     ba_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_bonus_action_transitions.values() for tn in pre}
+    ba_pt_transition_to_eligible_coords = {tn: coords for tn, coords in ba_pt_transition_to_eligible_coords.items() if coords}
     if has_misty_step:
         ms_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for tn in post_misty_step_transitions}
+        ms_transition_to_eligible_coords = {tn: coords for tn, coords in ms_transition_to_eligible_coords.items() if coords}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
         try:
@@ -440,10 +444,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, distances, sho
                     for existing_delta_effect in battle_map.effect_tracker.get_affecting_combatant(combatant):
                         threat_acc[1] += existing_delta_effect.calculate_threat_for_attack(combatant, action)
             except KeyError:  # or different kind which represents some type of movement
-                try:
-                    movement_type, x, y = REGEX_MOVEMENT_PATTERN.search(transition).groups()
-                except AttributeError:
-                    print("FIXME")
+                movement_type, x, y = REGEX_MOVEMENT_PATTERN.search(transition).groups()
                 destination = np.array([int(x), int(y)])
                 pretend_coords = destination
                 path = battle_map.get_path_to_coord(combatant, destination, distances, shortest_paths, True)

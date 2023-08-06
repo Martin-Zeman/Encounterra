@@ -131,5 +131,5 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModi
         battle_map = Map.get()
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
+        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
 

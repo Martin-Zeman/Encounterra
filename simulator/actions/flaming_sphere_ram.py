@@ -93,7 +93,7 @@ class FlamingSphereRam(Actoid, DirectThreat):
         battle_map = Map.get()
         if self.factory.combatant.movement > 0:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
+        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
 
     def move_effect(self, coord):
         self.factory.action_enabler_effect.origin = coord

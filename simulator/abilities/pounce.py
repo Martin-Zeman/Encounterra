@@ -86,8 +86,8 @@ class Pounce(Actoid, DirectThreat):
                                                            rng=battle_map.size,  # approximation, could theoretically be longer
                                                            combatant=self.factory.combatant)
         elif battle_map.get_hop_distance(self.factory.combatant, self.target) >= self.factory.distance:
-            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
-        return set()
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

@@ -82,5 +82,5 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         battle_map = Map.get()
         if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \
                 or self.factory.combatant.movement == 0:
-            return set()  # Disenaging makes no sense if you can't move
-        return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))  # It's a priority action, the coord is not relevant
+            return None  # Disenaging makes no sense if you can't move
+        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])  # It's a priority action, the coord is not relevant

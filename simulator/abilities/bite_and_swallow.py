@@ -47,8 +47,8 @@ class BiteAndSwallow(MeleeAttack):
             except AttributeError:
                 print("FIXME")
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
-        return set()
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None
 
 
 

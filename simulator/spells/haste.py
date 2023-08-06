@@ -149,7 +149,7 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
         if swallower:
             if self.target is self.factory.combatant:
                 set(curr_coord)
-            return set()  # Not possible while blinded
+            return None  # Not possible while blinded
         if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         elif self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
@@ -160,5 +160,5 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
         elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HasteFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return set(curr_coord)
-        return set()
+            return set([curr_coord])
+        return None

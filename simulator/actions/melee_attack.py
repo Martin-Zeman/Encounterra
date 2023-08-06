@@ -32,8 +32,8 @@ class MeleeAttack(Attack):
         swallower = self.factory.combatant.get_swallower()
         if swallower:
             if swallower is self.target:
-                return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
-            return set()
+                return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return None
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                            distances,
@@ -41,4 +41,4 @@ class MeleeAttack(Attack):
                                                            rng=self.factory.range,
                                                            combatant=self.factory.combatant)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])

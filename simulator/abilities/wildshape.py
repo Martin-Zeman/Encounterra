@@ -238,5 +238,5 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
                 idx += 1
             return final_coords
         elif Map.get().find_wildshaped_coordinate(self.factory.combatant, self.form.size):
-            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
-        return set()
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None

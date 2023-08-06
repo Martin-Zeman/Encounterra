@@ -138,8 +138,8 @@ class Firebolt(Actoid, DirectThreat):
         battle_map = Map.get()
         if swallower:
             if swallower is self.target:
-                return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
-            return set()
+                return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
@@ -149,6 +149,6 @@ class Firebolt(Actoid, DirectThreat):
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
         elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= FireboltFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return set(curr_coord)
-        return set()
+            return set([curr_coord])
+        return None
 

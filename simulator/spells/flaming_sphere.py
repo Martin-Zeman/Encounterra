@@ -128,7 +128,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
-            return set()  # Not possible while blinded
+            return None  # Not possible while blinded
         battle_map = Map.get()
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
@@ -137,8 +137,8 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
                                                                  rng=FlamingSphereFactory.range,
                                                                  combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FlamingSphereFactory.range:
-            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
-        return set()
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None
 
     def on_start_of_turn(self, combatant):
         pass
