@@ -5,6 +5,7 @@ from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
+from simulator.misc import Conditions
 from simulator.threat_interfaces import ThreatModifierFactory, Threat
 import logging
 
@@ -78,7 +79,8 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         return 0  # It's included in the accumulate_threat_along_path calculation
 
     def get_eligible_coords(self, distances, shortest_paths):
-        return Map.get().get_all_accessible_coords(shortest_paths, self.factory.combatant)
-
-    def is_current_coord_eligible(self):
-        return True
+        battle_map = Map.get()
+        if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \
+                or self.factory.combatant.movement == 0:
+            return set()  # Disenaging makes no sense if you can't move
+        return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))  # It's a priority action, the coord is not relevant

@@ -5,7 +5,7 @@ from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from simulator.battle_map import Map
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
-from simulator.misc import Visibility, roll_ability_check
+from simulator.misc import Visibility, roll_ability_check, Conditions
 from simulator.threat_interfaces import ThreatModifierFactory, AttackThreatModifier
 import logging
 
@@ -108,10 +108,11 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
             return 0
 
     def get_eligible_coords(self, distances, shortest_paths):
-        return [coord for coord, vis_dict in Map.get().visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE]
-
-    def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
-            return False
+            return set()
         battle_map = Map.get()
-        return battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])][self.target] is Visibility.NONE
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            return {coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE}
+        elif battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])][self.target] is Visibility.NONE:
+            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
+        return set()

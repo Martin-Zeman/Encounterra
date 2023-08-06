@@ -300,19 +300,12 @@ def build_action_dag(combatant, action_fsm, transition_name_to_action, distances
     if not transition_names or transition_names[0] == 'None_0':
         return None
 
-    if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
-        transition_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
-        a_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_action_transitions.values() for tn in pre}
-        ba_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_bonus_action_transitions.values() for tn in pre}
-        if has_misty_step:
-            ms_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for tn in post_misty_step_transitions}
-    else:
-        current_position = tuple(battle_map.get_combatant_position(combatant).get()[0])
-        transition_to_eligible_coords = {tn: [current_position] for tn in transition_names if transition_name_to_action[tn].is_current_coord_eligible()}
-        a_pt_transition_to_eligible_coords = {tn[0]: [current_position] for pre in post_priority_action_transitions.values() if pre for tn in pre if transition_name_to_action[tn[0]].is_current_coord_eligible()}
-        ba_pt_transition_to_eligible_coords = {tn[0]: [current_position] for pre in post_priority_bonus_action_transitions.values() if pre for tn in pre if transition_name_to_action[tn[0]].is_current_coord_eligible()}
-        if has_misty_step:
-            ms_transition_to_eligible_coords = {tn[0]: [current_position] for tn in post_misty_step_transitions if transition_name_to_action[tn[0]].is_current_coord_eligible()}
+    # if combatant.movement > 0 and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
+    transition_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
+    a_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_action_transitions.values() for tn in pre}
+    ba_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_bonus_action_transitions.values() for tn in pre}
+    if has_misty_step:
+        ms_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for tn in post_misty_step_transitions}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
         try:
@@ -447,7 +440,10 @@ def find_best_sequence(combatant, dag, transition_name_to_action, distances, sho
                     for existing_delta_effect in battle_map.effect_tracker.get_affecting_combatant(combatant):
                         threat_acc[1] += existing_delta_effect.calculate_threat_for_attack(combatant, action)
             except KeyError:  # or different kind which represents some type of movement
-                movement_type, x, y = REGEX_MOVEMENT_PATTERN.search(transition).groups()
+                try:
+                    movement_type, x, y = REGEX_MOVEMENT_PATTERN.search(transition).groups()
+                except AttributeError:
+                    print("FIXME")
                 destination = np.array([int(x), int(y)])
                 pretend_coords = destination
                 path = battle_map.get_path_to_coord(combatant, destination, distances, shortest_paths, True)

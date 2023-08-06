@@ -4,7 +4,7 @@ from functools import cache
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
 from simulator.battle_map import Map, map_position_toggled_cache
-from simulator.misc import Visibility
+from simulator.misc import Visibility, Conditions
 from simulator.threat_utils import mean_dmg, calc_p_hit
 import logging
 
@@ -59,26 +59,31 @@ class RangedAttack(Attack):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                                             distances,
-                                                                             inflate_to_size=self.factory.combatant.size,
-                                                                             rng=self.factory.range, combatant=self.factory.combatant)
-        if not battle_map.effect_tracker.is_combatant_hidden_from(self.factory.combatant, self.target):
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
-        else:
-            # We only consider the coords where Visibility.NONE transitions into any other kind
-            ret = set()
-            for coord in free_coords_in_range:
-                if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE:
-                    try:
-                        if battle_map.visibility_dict_for_all_coords[tuple(shortest_paths[coord])][self.target] is Visibility.NONE:
+        swallower = self.factory.combatant.get_swallower()
+        if swallower:
+            if swallower is self.target:
+                return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))  # Makes barely any sense but ok
+            return set()
+        curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+                                                                                 distances,
+                                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                                 rng=self.factory.range, combatant=self.factory.combatant)
+            if not battle_map.effect_tracker.is_combatant_hidden_from(self.factory.combatant, self.target):
+                return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+            else:
+                # We only consider the coords where Visibility.NONE transitions into any other kind
+                ret = set()
+                for coord in free_coords_in_range:
+                    if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE:
+                        try:
+                            if battle_map.visibility_dict_for_all_coords[tuple(shortest_paths[coord])][self.target] is Visibility.NONE:
+                                ret.add(coord)
+                        except KeyError:
                             ret.add(coord)
-                    except KeyError:
-                        ret.add(coord)
-            return ret
-
-    def is_current_coord_eligible(self):
-        if self.factory.combatant.get_swallower() is self.target:
-            return True
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= self.factory.range
+                return ret
+        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= self.factory.range and \
+                battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
+            return set(curr_coord)
+        return set()

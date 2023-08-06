@@ -3,6 +3,7 @@ from simulator.actions.action_types import BonusAction, HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 import logging
 from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.misc import Conditions
 from simulator.threat_interfaces import Factory, AttackThreatModifier
 from simulator.threat_utils import get_danger_zone_threat
 
@@ -63,7 +64,9 @@ class Dash(Actoid, AttackThreatModifier):
         return 0  # TODO do the distance mod here
 
     def get_eligible_coords(self, distances, shortest_paths):
-        return Map.get().get_all_accessible_coords(shortest_paths, self.factory.combatant)
-
-    def is_current_coord_eligible(self):
-        return True
+        battle_map = Map.get()
+        if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
+            return set()
+        if self.factory.combatant.movement > 0:
+            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+        return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))

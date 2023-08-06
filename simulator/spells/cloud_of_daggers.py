@@ -6,7 +6,7 @@ from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, avg_roll, roll_spell_dmg
+from simulator.misc import DamageType, avg_roll, roll_spell_dmg, Conditions
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
 import numpy as np
@@ -134,13 +134,14 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
-                                                             distances,
-                                                             inflate_to_size=self.factory.combatant.size,
-                                                             rng=CloudOfDaggersFactory.range, combatant=self.factory.combatant)
-
-    def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
-            return False
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= CloudOfDaggersFactory.range
+            return set()
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            return battle_map.get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
+                                                                 distances,
+                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                 rng=CloudOfDaggersFactory.range, combatant=self.factory.combatant)
+        elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= CloudOfDaggersFactory.range:
+            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
+        return set()
+

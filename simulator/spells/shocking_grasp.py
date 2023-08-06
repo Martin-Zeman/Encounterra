@@ -122,12 +122,16 @@ class ShockingGrasp(Actoid, DirectThreat):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                             distances,
-                                                             inflate_to_size=self.factory.combatant.size,
-                                                             rng=ShockingGraspFactory.range, combatant=self.factory.combatant)
-
-    def is_current_coord_eligible(self):
-        if self.factory.combatant.get_swallower() is self.target:
-            return True
-        return Map.get().get_cartesian_distance(self.factory.combatant, self.target) <= ShockingGraspFactory.range
+        swallower = self.factory.combatant.get_swallower()
+        if swallower:
+            if swallower is self.target:
+                return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
+            return set()
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+                                                                 distances,
+                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                 rng=ShockingGraspFactory.range, combatant=self.factory.combatant)
+        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= ShockingGraspFactory.range:
+            return set(tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0]))
+        return set()

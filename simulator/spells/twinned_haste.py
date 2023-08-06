@@ -138,31 +138,34 @@ class TwinnedHaste(Actoid, Effect, Threat):
         self.calculate_threat.cache_clear()
 
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        if self.targets[0] is self.factory.combatant:
-            coords_for_first = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        else:
-            coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
-                                                                             distances,
-                                                                             inflate_to_size=self.factory.combatant.size,
-                                                                             rng=TwinnedHasteFactory.range)
-
-        if self.targets[1] is self.factory.combatant:
-            coords_for_second = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        else:
-            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
-                                                                              distances,
-                                                                              inflate_to_size=self.factory.combatant.size,
-                                                                              rng=TwinnedHasteFactory.range)
-        free_coords_in_range = coords_for_first.intersection(coords_for_second)
-
-        return {coord for coord in free_coords_in_range if
-                battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
-                and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
-
-    def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
-            return False  # Technically possible but doesn't make sense to waste the sorcery points
+            return set()  # Better not waste a twinned version even though self could still be targeted
         battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= TwinnedHasteFactory.range and \
-            battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range
+        curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            if self.targets[0] is self.factory.combatant:
+                coords_for_first = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+            else:
+                coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
+                                                                                 distances,
+                                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                                 rng=TwinnedHasteFactory.range)
+
+            if self.targets[1] is self.factory.combatant:
+                coords_for_second = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+            else:
+                coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
+                                                                                  distances,
+                                                                                  inflate_to_size=self.factory.combatant.size,
+                                                                                  rng=TwinnedHasteFactory.range)
+            free_coords_in_range = coords_for_first.intersection(coords_for_second)
+
+            return {coord for coord in free_coords_in_range if
+                    battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
+        elif battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= TwinnedHasteFactory.range and \
+            battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range and \
+            battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE and \
+            battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
+            return set(curr_coord)
+        return set()

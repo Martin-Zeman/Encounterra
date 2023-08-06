@@ -38,9 +38,6 @@ class UncannyDodge(Actoid, DirectThreat):
     def get_eligible_coords(self, distances, shortest_paths):
         pass  # No need
 
-    def is_current_coord_eligible(self):
-        return True
-
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0
 
