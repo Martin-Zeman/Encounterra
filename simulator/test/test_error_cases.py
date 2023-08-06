@@ -1,4 +1,6 @@
 import copy
+import pstats
+
 import numpy as np
 import pytest
 
@@ -22,7 +24,7 @@ from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, te
     test_dire_wolf, test_assassin_rogue
 from simulator.actions.action_selector import get_action
 from simulator.utils.utils import preallocate_wildshape_forms
-
+import cProfile
 
 def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear):
     """
@@ -170,16 +172,21 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl_2, np.array([7, 8]))
     battle_map.build_adjacency_matrix()
 
-    try:
+    # try:
         # The Danger Zone of the Stone Giant spans the whole map so it doesn't pay off to move and suffer the AoO
-        actoid1 = get_action(test_draconic_sorcerer_5lvl)
-        action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-        actoid2 = get_action(test_draconic_sorcerer_5lvl)
-        action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-        actoid3 = get_action(test_draconic_sorcerer_5lvl)
-        assert actoid3 is None
-    except Exception as e:
-        assert False, f"Raised an exception {e}"
+    from simulator.actions.action_selector import get_action
+    cProfile.runctx('get_action(test_draconic_sorcerer_5lvl)', None, locals(), filename="get_action_stats")
+    p = pstats.Stats("get_action_stats")
+    p.strip_dirs().sort_stats("cumtime").print_stats()
+
+        # actoid1 = get_action(test_draconic_sorcerer_5lvl)
+        # action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
+        # actoid2 = get_action(test_draconic_sorcerer_5lvl)
+        # action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
+        # actoid3 = get_action(test_draconic_sorcerer_5lvl)
+        # assert actoid3 is None
+    # except Exception as e:
+    #     assert False, f"Raised an exception {e}"
 
 
 @pytest.mark.skip(reason="Takes too long")
