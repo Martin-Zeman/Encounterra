@@ -6,7 +6,7 @@ from cachetools.keys import hashkey
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
 from simulator.battle_map import Map, map_position_toggled_cache, map_position_toggled_cache_with_key
-from simulator.misc import Size
+from simulator.misc import Size, Conditions
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -36,19 +36,21 @@ class BiteAndSwallow(MeleeAttack):
         return "Bite"
 
     def get_eligible_coords(self, distances, shortest_paths):
-        try:
-            battle_map = Map.get()
-            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_size=self.factory.combatant.size,
-                                                           rng=self.factory.range,
-                                                           combatant=self.factory.combatant)
-        except AttributeError:
-            print("FIXME")
-
-    def is_current_coord_eligible(self):
         battle_map = Map.get()
-        return battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range)
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            try:
+                return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
+                                                               distances,
+                                                               inflate_to_size=self.factory.combatant.size,
+                                                               rng=self.factory.range,
+                                                               combatant=self.factory.combatant)
+            except AttributeError:
+                print("FIXME")
+        elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None
+
+
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

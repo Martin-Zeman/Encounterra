@@ -138,33 +138,37 @@ class ScorchingRay(Actoid, DirectThreat):
         return ret
 
     def get_eligible_coords(self, distances, shortest_paths):
+        if self.factory.combatant.get_swallower():
+            return None  # Doesn't state that vision is required but would make sense
         battle_map = Map.get()
-        coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
-                                                                        distances,
-                                                                        inflate_to_size=self.factory.combatant.size,
-                                                                        rng=ScorchingRayFactory.range,
-                                                                        combatant=self.factory.combatant)
-        coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
-                                                                          distances,
-                                                                          inflate_to_size=self.factory.combatant.size,
-                                                                          rng=ScorchingRayFactory.range,
-                                                                          combatant=self.factory.combatant)
-        coords_for_third = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[2]),
-                                                                          distances,
-                                                                          inflate_to_size=self.factory.combatant.size,
-                                                                          rng=ScorchingRayFactory.range,
-                                                                          combatant=self.factory.combatant)
-        free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
+        curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
+                                                                            distances,
+                                                                            inflate_to_size=self.factory.combatant.size,
+                                                                            rng=ScorchingRayFactory.range,
+                                                                            combatant=self.factory.combatant)
+            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
+                                                                              distances,
+                                                                              inflate_to_size=self.factory.combatant.size,
+                                                                              rng=ScorchingRayFactory.range,
+                                                                              combatant=self.factory.combatant)
+            coords_for_third = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[2]),
+                                                                              distances,
+                                                                              inflate_to_size=self.factory.combatant.size,
+                                                                              rng=ScorchingRayFactory.range,
+                                                                              combatant=self.factory.combatant)
+            free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
 
-        return {coord for coord in free_coords_in_range if
-                battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
-                and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
-                and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE}
-
-    def is_current_coord_eligible(self):
-        if all([t is self.factory.combatant.get_swallower() for t in self.targets]):
-            return True
-        battle_map = Map.get()
-        return battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= ScorchingRayFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= ScorchingRayFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[2]) <= ScorchingRayFactory.range
+            return {coord for coord in free_coords_in_range if
+                    battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE}
+        elif battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= ScorchingRayFactory.range \
+             and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= ScorchingRayFactory.range \
+             and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[2]) <= ScorchingRayFactory.range \
+             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
+             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE \
+             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[2]] is not Visibility.NONE:
+            return set([curr_coord])
+        return None

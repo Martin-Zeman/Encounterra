@@ -9,7 +9,7 @@ from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow
+from simulator.misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow, Conditions
 from simulator.actions.actoid import Actoid, ActoidFlags
 from simulator.threat_interfaces import DirectThreatFactory, AoEThreat, Threat
 import numpy as np
@@ -127,16 +127,18 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         self.calculate_threat.cache_clear()
 
     def get_eligible_coords(self, distances, shortest_paths):
-        return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
-                                                             distances,
-                                                             inflate_to_size=self.factory.combatant.size,
-                                                             rng=FlamingSphereFactory.range,
-                                                             combatant=self.factory.combatant)
-
-    def is_current_coord_eligible(self):
         if self.factory.combatant.get_swallower():
-            return False  # Not possible while blinded
-        return Map.get().get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FlamingSphereFactory.range
+            return None  # Not possible while blinded
+        battle_map = Map.get()
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
+                                                                 distances,
+                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                 rng=FlamingSphereFactory.range,
+                                                                 combatant=self.factory.combatant)
+        elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FlamingSphereFactory.range:
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None
 
     def on_start_of_turn(self, combatant):
         pass

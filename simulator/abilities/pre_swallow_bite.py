@@ -3,7 +3,7 @@ from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
 from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
 from simulator.battle_map import Map
-from simulator.misc import percent_of_curr_hp
+from simulator.misc import percent_of_curr_hp, Conditions
 from simulator.threat_utils import mean_dmg
 import logging
 
@@ -37,11 +37,12 @@ class PreSwallowBite(MeleeAttack):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                       distances,
-                                                       inflate_to_size=self.factory.combatant.size,
-                                                       rng=self.factory.range,
-                                                       combatant=self.factory.combatant)
-
-    def is_current_coord_eligible(self):
-        return Map.get().are_in_hop_range(self.factory.combatant, self.target, self.factory.range)
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
+                                                           distances,
+                                                           inflate_to_size=self.factory.combatant.size,
+                                                           rng=self.factory.range,
+                                                           combatant=self.factory.combatant)
+        elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None

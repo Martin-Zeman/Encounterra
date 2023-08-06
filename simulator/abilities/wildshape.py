@@ -7,7 +7,7 @@ from simulator.battle_map import Map
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
-from simulator.misc import SavingThrow, Size
+from simulator.misc import SavingThrow, Size, Conditions
 from simulator.threat_interfaces import TransformerFactory, DirectThreat
 import logging
 
@@ -208,34 +208,35 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         :return: eligible coordinates
         """
         battle_map = Map.get()
-        map_accessibility_matrix = np.zeros((battle_map.size, battle_map.size))
-        for coord in shortest_paths.keys():
-            map_accessibility_matrix[coord] = 1
-        original_coordinate = battle_map.get_combatant_position(self.factory.combatant).get()[0]
-        map_accessibility_matrix[original_coordinate[0], original_coordinate[1]] = 1
-        map_accessibility_matrix = np.transpose(map_accessibility_matrix)
-        wilshape_size_increment = self.form.size.value
-        result_matrix = np.zeros((battle_map.size, battle_map.size))
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            map_accessibility_matrix = np.zeros((battle_map.size, battle_map.size))
+            for coord in shortest_paths.keys():
+                map_accessibility_matrix[coord] = 1
+            original_coordinate = battle_map.get_combatant_position(self.factory.combatant).get()[0]
+            map_accessibility_matrix[original_coordinate[0], original_coordinate[1]] = 1
+            map_accessibility_matrix = np.transpose(map_accessibility_matrix)
+            wilshape_size_increment = self.form.size.value
+            result_matrix = np.zeros((battle_map.size, battle_map.size))
 
-        for col in range(battle_map.size - wilshape_size_increment):
-            for row in range(battle_map.size - wilshape_size_increment):
-                submatrix = map_accessibility_matrix[row:row + wilshape_size_increment + 1, col:col + wilshape_size_increment + 1]
-                if np.all(submatrix > 0):
-                    result_matrix[col, row] = 1  # Take care that axes are swapped here
-        # Here we're only interested in the coords with the lowest distance from the original coordinate
-        all_coords = np.argwhere(result_matrix == 1).tolist()
-        all_coords.sort(key=lambda coord: distances[coord[0] * battle_map.size + coord[1]])
-        final_coords = []
-        curr_coord = all_coords[0]
-        min_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
-        curr_distance = min_distance
-        idx = 1
-        while curr_distance == min_distance:
-            final_coords.append(tuple(curr_coord))
-            curr_coord = all_coords[idx]
-            curr_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
-            idx += 1
-        return final_coords
-
-    def is_current_coord_eligible(self):
-        return True if Map.get().find_wildshaped_coordinate(self.factory.combatant, self.form.size) else False
+            for col in range(battle_map.size - wilshape_size_increment):
+                for row in range(battle_map.size - wilshape_size_increment):
+                    submatrix = map_accessibility_matrix[row:row + wilshape_size_increment + 1, col:col + wilshape_size_increment + 1]
+                    if np.all(submatrix > 0):
+                        result_matrix[col, row] = 1  # Take care that axes are swapped here
+            # Here we're only interested in the coords with the lowest distance from the original coordinate
+            all_coords = np.argwhere(result_matrix == 1).tolist()
+            all_coords.sort(key=lambda coord: distances[coord[0] * battle_map.size + coord[1]])
+            final_coords = set()
+            curr_coord = all_coords[0]
+            min_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
+            curr_distance = min_distance
+            idx = 1
+            while curr_distance == min_distance:
+                final_coords.add(tuple(curr_coord))
+                curr_coord = all_coords[idx]
+                curr_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
+                idx += 1
+            return final_coords
+        elif Map.get().find_wildshaped_coordinate(self.factory.combatant, self.form.size):
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None

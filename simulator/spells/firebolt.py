@@ -134,15 +134,21 @@ class Firebolt(Actoid, DirectThreat):
         return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
     def get_eligible_coords(self, distances, shortest_paths):
+        swallower = self.factory.combatant.get_swallower()
         battle_map = Map.get()
-        free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                             distances,
-                                                             inflate_to_size=self.factory.combatant.size,
-                                                             rng=FireboltFactory.range, combatant=self.factory.combatant)
-        return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+        if swallower:
+            if swallower is self.target:
+                return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return None
+        curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+                                                                 distances,
+                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                 rng=FireboltFactory.range, combatant=self.factory.combatant)
+            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= FireboltFactory.range and \
+                battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
+            return set([curr_coord])
+        return None
 
-
-    def is_current_coord_eligible(self):
-        if self.factory.combatant.get_swallower() is self.target:
-            return True
-        return Map.get().get_cartesian_distance(self.factory.combatant, self.target) <= FireboltFactory.range

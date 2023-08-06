@@ -1,7 +1,7 @@
 from functools import cache
 from simulator.battle_map import Map
 from simulator.effects.effect import EffectType
-from simulator.misc import DamageType, get_attacks
+from simulator.misc import DamageType, get_attacks, Conditions
 from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -149,7 +149,6 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier)
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-
-    def is_current_coord_eligible(self):
-        return True
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])

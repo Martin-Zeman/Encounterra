@@ -8,6 +8,7 @@ from simulator.battle_map import Map, map_position_toggled_cache, map_position_t
 from simulator.misc import Conditions
 from simulator.threat_interfaces import DirectThreatFactory, DirectThreat, RechargeFactory
 from simulator.threat_utils import get_saving_throw_success_prob
+from simulator.misc import Visibility
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -74,15 +75,21 @@ class Web(Actoid, DirectThreat):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                       distances,
-                                                       inflate_to_size=self.factory.combatant.size + self.factory.distance,
-                                                       rng=battle_map.size,  # approximation, could theoretically be longer
-                                                       combatant=self.factory.combatant)
+        if self.factory.combatant.get_swallower():
+            return None  # Webbing someone from the inside doesn't make sense
+        curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            free_coords_in_range = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
+                                                           distances,
+                                                           inflate_to_size=self.factory.combatant.size + self.factory.distance,
+                                                           rng=battle_map.size,  # approximation, could theoretically be longer
+                                                           combatant=self.factory.combatant)
+            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+        elif battle_map.get_hop_distance(self.factory.combatant, self.target) >= self.factory.distance and \
+                battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
+            return set([curr_coord])
+        return None
 
-    def is_current_coord_eligible(self):
-        battle_map = Map.get()
-        return battle_map.get_hop_distance(self.factory.combatant, self.target) >= self.factory.distance
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

@@ -53,5 +53,3 @@ class Shield(Actoid):
     def get_eligible_coords(self, distances, shortest_paths):
         pass  # No need
 
-    def is_current_coord_eligible(self):
-        return True

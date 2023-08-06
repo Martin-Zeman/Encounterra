@@ -79,15 +79,15 @@ class Pounce(Actoid, DirectThreat):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                       distances,
-                                                       inflate_to_size=self.factory.combatant.size + self.factory.distance,
-                                                       rng=battle_map.size,  # approximation, could theoretically be longer
-                                                       combatant=self.factory.combatant)
-
-    def is_current_coord_eligible(self):
-        battle_map = Map.get()
-        return battle_map.get_hop_distance(self.factory.combatant, self.target) >= self.factory.distance
+        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
+                                                           distances,
+                                                           inflate_to_size=self.factory.combatant.size + self.factory.distance,
+                                                           rng=battle_map.size,  # approximation, could theoretically be longer
+                                                           combatant=self.factory.combatant)
+        elif battle_map.get_hop_distance(self.factory.combatant, self.target) >= self.factory.distance:
+            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return None
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
