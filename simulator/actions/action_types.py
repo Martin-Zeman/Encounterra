@@ -77,6 +77,11 @@ class Movement(Enum):
     GET_UP_FROM_PRONE = auto()
     DASH = auto()
 
+class MovementThreatType(Enum):
+    STANDARD = auto()
+    DISENGAGED = auto()
+    DODGED = auto()
+    MISTY_STEPPED = auto()
 
 class HasteAction(Enum):
     HASTE_MELEE_ATTACK = auto()
