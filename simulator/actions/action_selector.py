@@ -457,6 +457,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
 
     # Movement transitions
     for coord_and_type, ids in coord_to_sequence_ids.items():
+        if coord_and_type is None:
+            continue
         coord, movement_type = coord_and_type
         path = battle_map.get_path_to_coord(combatant, coord, distances, shortest_paths, True)
         if path is None:  # Note that an empty path is still a valid one
@@ -479,8 +481,10 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
 
     # (Bonus) action transitions
     for coord_and_type, ids in coord_to_sequence_ids.items():
+        if coord_and_type is None:
+            continue
         coord, movement_type = coord_and_type
-        with battle_map.as_if_combatant_position(combatant, coord):
+        with battle_map.as_if_combatant_position(combatant, np.array(coord)):
             for idx in ids:
                 delta_action = None
                 threat_acc = 0
