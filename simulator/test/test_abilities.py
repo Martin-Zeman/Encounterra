@@ -15,7 +15,7 @@ from simulator.logging.custom_logger import CustomLogger, LogLevel
 from simulator.misc import DamageType, Conditions
 from simulator.teams import Teams
 from simulator.test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
-    test_ogre, test_goblin, test_brown_bear, test_dire_wolf
+    test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant
 from simulator.utils.utils import preallocate_wildshape_forms
 
 from simulator.test.test_singleton import SingletonClass
@@ -625,7 +625,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
         actoid6 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid6, test_assassin_rogue)
         actoid7 = get_action(test_assassin_rogue)
-        # assert str(actoid7).startswith("Cunning Hide of AssassinRogue from Ogre")
+        assert str(actoid7).startswith("Cunning Hide of AssassinRogue from Ogre")
         action_resolver.resolve_action(actoid7, test_assassin_rogue)
         actoid8 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid8, test_assassin_rogue)

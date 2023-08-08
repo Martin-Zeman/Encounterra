@@ -42,9 +42,9 @@ PRIORITY_ACTIONS = {
 }
 
 PRIORITY_BONUS_ACTIONS = {
-    BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "cdi_"),
-    BonusAction.TOTEM_RAGE: ("TotemRage", "m_"),
-    BonusAction.RAGE: ("Rage", "m_"),
+    BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "cdi_", MovementThreatType.DISENGAGED),
+    BonusAction.TOTEM_RAGE: ("TotemRage", "m_", None),
+    BonusAction.RAGE: ("Rage", "m_", None),
 }
 
 TO_FACTORY = {
