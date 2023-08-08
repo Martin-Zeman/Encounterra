@@ -10,7 +10,7 @@ from simulator.abilities.reckless_attack import RecklessAttackFactory
 from simulator.abilities.totem_rage import TotemRageFactory
 from simulator.abilities.uncanny_dodge import UncannyDodgeFactory
 from simulator.abilities.wildshape import WildshapeFactory
-from simulator.actions.action_types import Action, BonusAction, HasteAction, Reaction
+from simulator.actions.action_types import Action, BonusAction, HasteAction, Reaction, MovementThreatType
 from simulator.actions.dash import DashFactory
 from simulator.actions.disengage import DisengageFactory
 from simulator.actions.dodge import DodgeFactory
@@ -36,15 +36,15 @@ from simulator.spells.twinned_haste import TwinnedHasteFactory
 logger = logging.getLogger("Encounterra")
 
 PRIORITY_ACTIONS = {
-    Action.DODGE: ("Dodge", "do_"),
-    Action.DISENGAGE: ("Disengage", "di_"),
-    HasteAction.HASTE_DISENGAGE: ("Disengage", "hdi_")
+    Action.DODGE: ("Dodge", "do_", MovementThreatType.DODGED),
+    Action.DISENGAGE: ("Disengage", "di_", MovementThreatType.DISENGAGED),
+    HasteAction.HASTE_DISENGAGE: ("Disengage", "hdi_", MovementThreatType.DISENGAGED)
 }
 
 PRIORITY_BONUS_ACTIONS = {
-    BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "cdi_"),
-    BonusAction.TOTEM_RAGE: ("TotemRage", "m_"),
-    BonusAction.RAGE: ("Rage", "m_"),
+    BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "cdi_", MovementThreatType.DISENGAGED),
+    BonusAction.TOTEM_RAGE: ("TotemRage", "m_", None),
+    BonusAction.RAGE: ("Rage", "m_", None),
 }
 
 TO_FACTORY = {

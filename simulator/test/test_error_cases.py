@@ -1,4 +1,6 @@
 import copy
+import pstats
+
 import numpy as np
 import pytest
 
@@ -22,7 +24,7 @@ from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, te
     test_dire_wolf, test_assassin_rogue
 from simulator.actions.action_selector import get_action
 from simulator.utils.utils import preallocate_wildshape_forms
-
+import cProfile
 
 def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear):
     """
@@ -172,6 +174,11 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
 
     try:
         # The Danger Zone of the Stone Giant spans the whole map so it doesn't pay off to move and suffer the AoO
+    # from simulator.actions.action_selector import get_action
+    # cProfile.runctx('get_action(test_draconic_sorcerer_5lvl)', None, locals(), filename="get_action_stats")
+    # p = pstats.Stats("get_action_stats")
+    # p.strip_dirs().sort_stats("cumtime").print_stats()
+
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
         actoid2 = get_action(test_draconic_sorcerer_5lvl)
