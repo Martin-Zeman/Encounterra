@@ -124,7 +124,7 @@ def build_priority_transitions(dag, post_priority_transitions, transition_to_eli
             continue
         action_type = transition.split()[0]
         new_prio_state = action_type + "d"  # e.g. Dodge of FooBar -> Dodged
-        prefix = prio_action_dict[transition_name_to_action[transition].factory.action_type][1]
+        prefix = prio_action_dict[transition_name_to_action[transition].factory.action_type][0]
         dag.add_state(new_prio_state)
         newly_added_states.append(new_prio_state)
         dag.add_transition(transition, "0", new_prio_state)
@@ -133,7 +133,7 @@ def build_priority_transitions(dag, post_priority_transitions, transition_to_eli
                 for coord in transition_to_eligible_coords[post_transition[0]]:
                     post_pt_state = eligible_transitions_to_state[coord_to_eligible_transitions[coord]]
                     movement_transition_name = prefix + str(coord)
-                    movement_trans_to_coord_and_type[movement_transition_name] = (coord, prio_action_dict[transition_name_to_action[transition].factory.action_type][2])
+                    movement_trans_to_coord_and_type[movement_transition_name] = (coord, prio_action_dict[transition_name_to_action[transition].factory.action_type][1])
                     dag.add_transition(movement_transition_name, new_prio_state, post_pt_state)  # Will be added multiple times, but it's ok
                     dag.add_transition(post_transition[0], post_pt_state, post_transition[1])
             except KeyError:
@@ -182,13 +182,14 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_fac
         after_path = convert_path_to_increments(after_path)
         actions.extend(list(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
 
-def translate_sequence_to_actions(combatant, distances, shortest_paths, transition_name_to_action, sequence, transition_name_to_ms_path):
+def translate_sequence_to_actions(combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, sequence, transition_name_to_ms_path):
     """
-    Translates the string form of longest path back to action objects
+    Translates the string form of the longest path back to action objects
     :param combatant: the combatant for whom the actions are translated
     :param distances: potentially already pre-computed distances to all coords
     :param shortest_paths: potentially already pre-computed shortest paths to all coords
     :param transition_name_to_action: dictionary mapping of non-movement types to actions
+    :param movement_trans_to_coord_and_type: mapping from movement transition -> coord, MovementThreatType
     :param sequence: list of best actions as strings
     :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
     :return: list of the following types: np.array, action, bonus action
@@ -202,17 +203,20 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
         try:
             actions.append(transition_name_to_action[transition])
         except KeyError:
-            movement_type, x, y = REGEX_MOVEMENT_PATTERN.search(transition).groups()
+            try:
+                coord, movement_type = movement_trans_to_coord_and_type[transition]
+            except KeyError:
+                print("FIXME")
             match movement_type:
-                case "m" | "do":
-                    path = battle_map.get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
+                case MovementThreatType.STANDARD | MovementThreatType.DODGED:
+                    path = battle_map.get_path_to_coord(combatant,  np.array(coord), distances, shortest_paths, True)
                     movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
-                case "di" | "cdi" | "hdi":
-                    path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, False)
+                case MovementThreatType.DISENGAGED:
+                    path = battle_map.get_path_to_coord(combatant, np.array(coord), distances, shortest_paths, False)
                     movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGED).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
-                case "ms":
+                case MovementThreatType.MISTY_STEPPED:
                     decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
                     # TODO also unpack actions
                 case _:
@@ -220,17 +224,17 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
     return actions
 
 
-def get_dist_to_action_sequence_coord(longest_pth, distances):
+def get_dist_to_action_sequence_coord(sequence, distances):
     """
     Extracts the movement part of an action plan and returns the distance to its coordinate
-    :param longest_pth: list of best actions as strings
+    :param sequence: list of best actions as strings
     :param distances: already pre-computed distances to all coords
     :return: list of movement increments or None
     """
-    for action in longest_pth:
-        if action == "dummy":
+    for transition in sequence:
+        if transition == "dummy":
             continue
-        match = REGEX_MOVEMENT_PATTERN.search(action)
+        match = REGEX_MOVEMENT_PATTERN.search(transition)
         if match:
             _, x, y = match.groups()
             map_size = Map.get().size

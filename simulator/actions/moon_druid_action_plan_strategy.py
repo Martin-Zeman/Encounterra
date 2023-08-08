@@ -101,10 +101,10 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         """
         if self.best_wildshape_plan_data is None:
             ws_fsm, ws_transition_name_to_action = generate_wildshape_action_fsm(self.combatant)
-            ws_dag, movement_trans_to_coord_and_type = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
+            ws_dag, ws_movement_trans_to_coord_and_type = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
             if ws_dag is not None:
-                ws_best_sequence, ws_transition_name_to_ms_path = find_best_sequence(self.combatant, ws_dag, ws_transition_name_to_action, movement_trans_to_coord_and_type, distances, shortest_paths)
-                self.best_wildshape_plan_data = ws_best_sequence, ws_transition_name_to_ms_path, ws_transition_name_to_action
+                ws_best_sequence, ws_transition_name_to_ms_path = find_best_sequence(self.combatant, ws_dag, ws_transition_name_to_action, ws_movement_trans_to_coord_and_type, distances, shortest_paths)
+                self.best_wildshape_plan_data = ws_transition_name_to_action, ws_movement_trans_to_coord_and_type, ws_best_sequence, ws_transition_name_to_ms_path
 
         # get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action = generate_action_fsm(self.combatant)
@@ -115,10 +115,10 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         if best_sequence is None:
             return None
         need_to_combine, non_wildshape_action = evaluate_combination_eligibility(best_sequence, transition_name_to_action)
-        regular_plan = translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, best_sequence, transition_name_to_ms_path)
+        regular_plan = translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)
         if need_to_combine:
             if self.best_wildshape_plan_data is not None:
-                wildshape_plan = translate_sequence_to_actions(self.combatant, distances, shortest_paths, self.best_wildshape_plan_data[2], self.best_wildshape_plan_data[0], self.best_wildshape_plan_data[1])
+                wildshape_plan = translate_sequence_to_actions(self.combatant, distances, shortest_paths, *self.best_wildshape_plan_data)
                 if non_wildshape_action is None:
                     return wildshape_plan  # The case where there's only the wildshape left in the plan
                 regular_plan = self.combine_action_plans(regular_plan, wildshape_plan, transition_name_to_action[non_wildshape_action], distances, shortest_paths)

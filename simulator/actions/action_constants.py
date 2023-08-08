@@ -36,15 +36,15 @@ from simulator.spells.twinned_haste import TwinnedHasteFactory
 logger = logging.getLogger("Encounterra")
 
 PRIORITY_ACTIONS = {
-    Action.DODGE: ("Dodge", "do_", MovementThreatType.DODGED),
-    Action.DISENGAGE: ("Disengage", "di_", MovementThreatType.DISENGAGED),
-    HasteAction.HASTE_DISENGAGE: ("Disengage", "hdi_", MovementThreatType.DISENGAGED)
+    Action.DODGE: ("do_", MovementThreatType.DODGED),
+    Action.DISENGAGE: ("di_", MovementThreatType.DISENGAGED),
+    HasteAction.HASTE_DISENGAGE: ("hdi_", MovementThreatType.DISENGAGED)
 }
 
 PRIORITY_BONUS_ACTIONS = {
-    BonusAction.CUNNING_DISENGAGE: ("Cunning Disengage", "cdi_", MovementThreatType.DISENGAGED),
-    BonusAction.TOTEM_RAGE: ("TotemRage", "m_", None),
-    BonusAction.RAGE: ("Rage", "m_", None),
+    BonusAction.CUNNING_DISENGAGE: ("cdi_", MovementThreatType.DISENGAGED),
+    BonusAction.TOTEM_RAGE: ("m_", MovementThreatType.STANDARD),
+    BonusAction.RAGE: ("m_", MovementThreatType.STANDARD),
 }
 
 TO_FACTORY = {

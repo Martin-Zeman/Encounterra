@@ -70,4 +70,4 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
             return None
         # logger.info(f"{self.combatant}'s plan {longest_pth}")# TODO FIXME
         # print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
-        return translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, best_sequence, transition_name_to_ms_path)
+        return translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)
