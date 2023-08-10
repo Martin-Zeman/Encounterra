@@ -472,7 +472,7 @@ class ActionResolver:
                 combatant.uncanny_dodge_active = True
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
-                | Action.BITE_AND_SWALLOW:
+                | Action.BITE_AND_SWALLOW | HasteAction.HASTE_BITE_AND_SWALLOW:
                 battle_map.effect_tracker.remove_effect_by_type(combatant, EffectType.HIDE)
                 return self.resolve_attack(actoid, combatant)
             case Movement.STANDARD | Movement.DISENGAGED:
@@ -559,10 +559,9 @@ class ActionResolver:
     def resolve_action(self, action, combatant):
         """
         The core of action resolution
-        @param action_type: action type
-        @param args: packed arguments of the action, can take on different interpretations based on the action_type
+        @param action:
         @param combatant: initiator of the action
-        @return: only relevant return here is DMG/MISS used for sentinel
+        @return: only relevant return here is DMG/MISS, used for sentinel
         """
         combatant = combatant.get_current_form()  # Takes care of possible wildshape
         if action is None:
