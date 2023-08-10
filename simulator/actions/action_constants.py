@@ -45,6 +45,7 @@ PRIORITY_BONUS_ACTIONS = {
     BonusAction.CUNNING_DISENGAGE: ("cdi_", MovementThreatType.DISENGAGED),
     BonusAction.TOTEM_RAGE: ("m_", MovementThreatType.STANDARD),
     BonusAction.RAGE: ("m_", MovementThreatType.STANDARD),
+    BonusAction.MISTY_STEP: ("ms_", MovementThreatType.MISTY_STEPPED),  # It's only here for the ordering
 }
 
 TO_FACTORY = {

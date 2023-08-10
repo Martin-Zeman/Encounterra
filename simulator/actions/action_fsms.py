@@ -6,6 +6,7 @@ import numpy as np
 from statemachine import State, StateMachine
 
 from simulator.abilities.wildshape import Wildshape
+from simulator.actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.feasibility import get_feasible_factories
@@ -19,7 +20,7 @@ logger = logging.getLogger("Encounterra")
 
 
 def actions_to_set(actions):
-    return frozenset([str(f) for f in actions])
+    return frozenset(str(a) for a in actions)
 
 
 @contextmanager
@@ -68,6 +69,7 @@ def get_all_feasible_action_factories(combatant, depth):
     all_action_factories = feasible_action_factories
     all_action_factories.extend(feasible_bonus_action_factories)
     all_action_factories.extend(feasible_haste_action_factories)
+    all_action_factories.sort(key=lambda faf: 1 if faf[0] in PRIORITY_ACTIONS.keys() or PRIORITY_BONUS_ACTIONS.keys() else 0)
     return all_action_factories
 
 
@@ -91,7 +93,7 @@ def generate_action_fsm(combatant):
         """
         fafs = get_all_feasible_action_factories(subject, depth)
         try:
-            fas = {a for faf in fafs for a in af_to_a[faf]}
+            fas = tuple(a for faf in fafs for a in af_to_a[faf])
         except Exception as e:
             print("FIXME")
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
@@ -138,10 +140,10 @@ def generate_action_fsm(combatant):
     pruned_fsm.last_added_state = fsm.last_added_state
     discovered_sequences = set()
     pruned_fsm_added_states = {"0"}
-    def DFS_pruning(current_state, current_sequence, delta_threat_transition=False):
+    def DFS_pruning(current_state, current_sequence, keep=False):
         if current_state == "nop":
             transition_sequence = frozenset(seq[1][0].split("_")[0] for seq in current_sequence)
-            if transition_sequence not in discovered_sequences or delta_threat_transition:
+            if transition_sequence not in discovered_sequences or keep:
                 discovered_sequences.add(transition_sequence)
                 for state, transition in current_sequence:
                     if state not in pruned_fsm_added_states:
@@ -152,11 +154,11 @@ def generate_action_fsm(combatant):
         for transition in fsm.forward_transitions[current_state]:
             try:
                 if isinstance(transition_name_to_action[transition[0]], AttackThreatModifier) and transition[1] != "nop":
-                    delta_threat_transition = True
+                    keep = True
             except KeyError:
                 pass  # None_0
             current_sequence.append((current_state, transition))
-            DFS_pruning(transition[1], current_sequence, delta_threat_transition)
+            DFS_pruning(transition[1], current_sequence, keep)
             current_sequence.pop()
 
     DFS_pruning("0", [])
@@ -226,10 +228,10 @@ def generate_wildshape_action_fsm(combatant):
     pruned_fsm.last_added_state = fsm.last_added_state
     discovered_sequences = set()
     pruned_fsm_added_states = {"0"}
-    def DFS_pruning(current_state, current_sequence, delta_threat_transition=False):
+    def DFS_pruning(current_state, current_sequence, keep=False):
         if current_state == "nop":
             transition_sequence = frozenset(seq[1][0].split("_")[0] for seq in current_sequence)
-            if transition_sequence not in discovered_sequences or delta_threat_transition:
+            if transition_sequence not in discovered_sequences or keep:
                 discovered_sequences.add(transition_sequence)
                 for state, transition in current_sequence:
                     if state not in pruned_fsm_added_states:
@@ -240,11 +242,11 @@ def generate_wildshape_action_fsm(combatant):
         for transition in fsm.forward_transitions[current_state]:
             try:
                 if isinstance(transition_name_to_action[transition[0]], AttackThreatModifier) and transition[1] != "nop":
-                    delta_threat_transition = True
+                    keep = True
             except KeyError:
                 pass  # None_0
             current_sequence.append((current_state, transition))
-            DFS_pruning(transition[1], current_sequence, delta_threat_transition)
+            DFS_pruning(transition[1], current_sequence, keep)
             current_sequence.pop()
 
     DFS_pruning("0", [])
