@@ -892,6 +892,9 @@ def test_error_case_20(battle_map, teams, effect_tracker, test_totem_barbarian, 
 
     try:
         action_resolver.resolve_action(haste, test_draconic_sorcerer_5lvl)
+        test_draconic_sorcerer_5lvl.new_turn()
+        effects = effect_tracker.get_affecting_combatant(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_effects(effects, test_draconic_sorcerer_5lvl)
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
         action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
         actoid2 = get_action(test_draconic_sorcerer_5lvl)

@@ -11,6 +11,7 @@ from simulator.battle_map import Map
 from simulator.feasibility import get_feasible_factories
 from simulator.misc import Size, Conditions
 from simulator.resources import use_resources
+from simulator.threat_interfaces import AttackThreatModifier
 from simulator.utils.state_machine_template import StateMachineTemplate
 
 logger = logging.getLogger("Encounterra")
@@ -84,7 +85,7 @@ def generate_action_fsm(combatant):
     visited = set()
     transition_name_to_action = dict()
 
-    def dfs(subject, previous_state_name, af_to_a, depth, action_taken=None):
+    def DFS_buildup(subject, previous_state_name, af_to_a, depth, action_taken=None):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
@@ -118,10 +119,10 @@ def generate_action_fsm(combatant):
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
                             fafs = get_all_feasible_action_factories(form, depth)
                             af_to_a_used = {faf: faf[1].create_all() for faf in fafs}
-                            dfs(form, curr_state_name, af_to_a_used, depth + 1, fa)
+                            DFS_buildup(form, curr_state_name, af_to_a_used, depth + 1, fa)
                     else:
                         af_to_a_used = af_to_a
-                        dfs(subject, curr_state_name, af_to_a_used, depth + 1, fa)
+                        DFS_buildup(subject, curr_state_name, af_to_a_used, depth + 1, fa)
                 subject.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
@@ -131,10 +132,35 @@ def generate_action_fsm(combatant):
     fafs = get_all_feasible_action_factories(combatant, 0)
     af_to_a = {faf: faf[1].create_all() for faf in fafs}
 
-    dfs(combatant, '0', af_to_a, 0)
+    DFS_buildup(combatant, "0", af_to_a, 0)
 
-    return fsm, transition_name_to_action
+    pruned_fsm = StateMachineTemplate()
+    pruned_fsm.last_added_state = fsm.last_added_state
+    discovered_sequences = set()
+    pruned_fsm_added_states = {"0"}
+    def DFS_pruning(current_state, current_sequence, delta_threat_transition=False):
+        if current_state == "nop":
+            transition_sequence = frozenset(seq[1][0].split("_")[0] for seq in current_sequence)
+            if transition_sequence not in discovered_sequences or delta_threat_transition:
+                discovered_sequences.add(transition_sequence)
+                for state, transition in current_sequence:
+                    if state not in pruned_fsm_added_states:
+                        pruned_fsm_added_states.add(state)
+                        pruned_fsm.add_new_state(state)
+                    pruned_fsm.add_transition(transition[0], state, transition[1])
+            return
+        for transition in fsm.forward_transitions[current_state]:
+            try:
+                if isinstance(transition_name_to_action[transition[0]], AttackThreatModifier) and transition[1] != "nop":
+                    delta_threat_transition = True
+            except KeyError:
+                pass  # None_0
+            current_sequence.append((current_state, transition))
+            DFS_pruning(transition[1], current_sequence, delta_threat_transition)
+            current_sequence.pop()
 
+    DFS_pruning("0", [])
+    return pruned_fsm, transition_name_to_action
 
 def generate_wildshape_action_fsm(combatant):
     """
@@ -148,7 +174,7 @@ def generate_wildshape_action_fsm(combatant):
     visited = set()
     transition_name_to_action = dict()
 
-    def dfs(subject, previous_state_name, af_to_a, depth, action_taken=None):
+    def DFS_buildup(subject, previous_state_name, af_to_a, depth, action_taken=None):
         """
         Internal function which recursively builds the action FSM in a DFS manner
         """
@@ -162,7 +188,7 @@ def generate_wildshape_action_fsm(combatant):
 
         if not state_footprint:
             # No more actions -> connect to the nop state
-            fsm.add_transition(action_taken_name, previous_state_name, 'nop')
+            fsm.add_transition(action_taken_name, previous_state_name, "nop")
         elif state_footprint not in visited:
             # State not yet discovered, create a new state, remember the footprint and add transitions
             visited.add(state_footprint)
@@ -181,10 +207,10 @@ def generate_wildshape_action_fsm(combatant):
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
                             fafs = get_all_feasible_action_factories(form, depth)
                             af_to_a_used = {faf: faf[1].create_all() for faf in fafs}
-                            dfs(form, curr_state_name, af_to_a_used, depth, fa)
+                            DFS_buildup(form, curr_state_name, af_to_a_used, depth, fa)
                     else:
                         af_to_a_used = af_to_a
-                        dfs(subject, curr_state_name, af_to_a_used, depth, fa)
+                        DFS_buildup(subject, curr_state_name, af_to_a_used, depth, fa)
                 subject.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
@@ -194,6 +220,32 @@ def generate_wildshape_action_fsm(combatant):
     fafs = get_all_feasible_action_factories(combatant, 0)
     af_to_a = {faf: faf[1].create_all() for faf in fafs}
 
-    dfs(combatant, '0', af_to_a, 0)
+    DFS_buildup(combatant, "0", af_to_a, 0)
 
-    return fsm, transition_name_to_action
+    pruned_fsm = StateMachineTemplate()
+    pruned_fsm.last_added_state = fsm.last_added_state
+    discovered_sequences = set()
+    pruned_fsm_added_states = {"0"}
+    def DFS_pruning(current_state, current_sequence, delta_threat_transition=False):
+        if current_state == "nop":
+            transition_sequence = frozenset(seq[1][0].split("_")[0] for seq in current_sequence)
+            if transition_sequence not in discovered_sequences or delta_threat_transition:
+                discovered_sequences.add(transition_sequence)
+                for state, transition in current_sequence:
+                    if state not in pruned_fsm_added_states:
+                        pruned_fsm_added_states.add(state)
+                        pruned_fsm.add_new_state(state)
+                    pruned_fsm.add_transition(transition[0], state, transition[1])
+            return
+        for transition in fsm.forward_transitions[current_state]:
+            try:
+                if isinstance(transition_name_to_action[transition[0]], AttackThreatModifier) and transition[1] != "nop":
+                    delta_threat_transition = True
+            except KeyError:
+                pass  # None_0
+            current_sequence.append((current_state, transition))
+            DFS_pruning(transition[1], current_sequence, delta_threat_transition)
+            current_sequence.pop()
+
+    DFS_pruning("0", [])
+    return pruned_fsm, transition_name_to_action
