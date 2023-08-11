@@ -75,7 +75,7 @@ class FireboltFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= FireboltFactory.range:
+        if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= FireboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT_DELTA[roll_type], target.is_resistant_to(FireboltFactory.dmg_type))
@@ -147,7 +147,7 @@ class Firebolt(Actoid, DirectThreat):
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=FireboltFactory.range, combatant=self.factory.combatant)
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= FireboltFactory.range and \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= FireboltFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
             return set([curr_coord])
         return None

@@ -158,7 +158,7 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HasteFactory.range)
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HasteFactory.range and \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HasteFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
             return set([curr_coord])
         return None

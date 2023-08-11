@@ -94,7 +94,7 @@ class AttackFactory(DirectThreatFactory):
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
 
         # TODO: Should I include roll types here? There may be a use-case in the future
-        if not consider_dist or Map.get().get_hop_distance(self.combatant, target) <= self.range:
+        if not consider_dist or Map.get().get_hop_distance_combatants(self.combatant, target) <= self.range:
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
                 acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))

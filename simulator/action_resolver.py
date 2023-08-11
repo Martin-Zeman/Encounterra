@@ -147,7 +147,7 @@ class ActionResolver:
         if battle_map.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) == 1:
+        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) == 1:
             return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, EffectType.FAERIE_FIRE):
             return RollType.ADVANTAGE
@@ -171,7 +171,7 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if battle_map.is_enemy_adjacent(attacker):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) > 1:
+        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
             return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
@@ -187,11 +187,11 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if target.is_dodging:
             return RollType.DISADVANTAGE
-        if battle_map.get_cartesian_distance(attacker, target) > attack.factory.short_range:
+        if battle_map.get_cartesian_distance_combatants(attacker, target) > attack.factory.short_range:
             return RollType.DISADVANTAGE
         if battle_map.is_enemy_adjacent(attacker):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance(attacker, target) > 1:
+        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
             return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
@@ -208,7 +208,8 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and Map.get().get_hop_distance(attacker, target) > 1:
+        battle_map = Map.get()
+        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
             return RollType.DISADVANTAGE
         if target.is_affected_by(Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
@@ -254,7 +255,7 @@ class ActionResolver:
                     for i, potential_target in enumerate(potential_targets):
                         if not potential_target.is_alive():
                             continue
-                        dist = battle_map.get_cartesian_distance(curr_target, potential_target)
+                        dist = battle_map.get_cartesian_distance_combatants(curr_target, potential_target)
                         if dist and dist <= 6:
                             curr_target = potential_target
                             logger.info(f"Chaos bolt jumping to {potential_target}!", extra={"team": self.teams.get_team(caster)})
@@ -472,7 +473,7 @@ class ActionResolver:
                 combatant.uncanny_dodge_active = True
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
-                | Action.BITE_AND_SWALLOW:
+                | Action.BITE_AND_SWALLOW | HasteAction.HASTE_BITE_AND_SWALLOW:
                 battle_map.effect_tracker.remove_effect_by_type(combatant, EffectType.HIDE)
                 return self.resolve_attack(actoid, combatant)
             case Movement.STANDARD | Movement.DISENGAGED:
@@ -559,10 +560,9 @@ class ActionResolver:
     def resolve_action(self, action, combatant):
         """
         The core of action resolution
-        @param action_type: action type
-        @param args: packed arguments of the action, can take on different interpretations based on the action_type
+        @param action:
         @param combatant: initiator of the action
-        @return: only relevant return here is DMG/MISS used for sentinel
+        @return: only relevant return here is DMG/MISS, used for sentinel
         """
         combatant = combatant.get_current_form()  # Takes care of possible wildshape
         if action is None:

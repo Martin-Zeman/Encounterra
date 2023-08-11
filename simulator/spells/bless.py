@@ -108,8 +108,8 @@ class Bless(Actoid, Effect, AttackThreatModifier):
                                                                               rng=BlessFactory.range,
                                                                               combatant=self.factory.combatant)
             return coords_for_third.intersection(coords_for_first.intersection(coords_for_second))  # Strangely no visibility required
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= BlessFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= BlessFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[2]) <= BlessFactory.range:
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= BlessFactory.range \
+            and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= BlessFactory.range \
+            and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[2]) <= BlessFactory.range:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None

@@ -107,7 +107,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     def is_affecting(self, combatant):
         battle_map = Map.get()
         coords = self.get_affected_coords()
-        return battle_map.get_hop_distance(combatant, coords) == 0
+        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
 
     def activate(self):
@@ -159,6 +159,6 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HungerOfHadarFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= HungerOfHadarFactory.range:
+        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= HungerOfHadarFactory.range:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None

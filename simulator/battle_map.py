@@ -296,10 +296,10 @@ class Map:
         Context manager which pretends that the distance betweent two comabatans is modified by dist. Dist > 0 means farther away. Dist < 0
         means closer.
         """
-        orig_dist_hop_func = self.get_hop_distance
-        orig_dist_cartesian_func = self.get_cartesian_distance
+        orig_dist_hop_func = self.get_hop_distance_combatants
+        orig_dist_cartesian_func = self.get_cartesian_distance_combatants
 
-        def monkeypatch_hop_dist(subject1, subject2):
+        def monkeypatch_hop_dist_combatants(subject1, subject2):
             if subject1 is combatant1 and subject2 is combatant2:
                 return max(1, orig_dist_hop_func(subject1, subject2) + dist)
             else:
@@ -310,14 +310,14 @@ class Map:
             else:
                 return orig_dist_cartesian_func(subject1, subject2)
 
-        self.get_hop_distance = monkeypatch_hop_dist
-        self.get_cartesian_distance = monkeypatch_cartesian_dist
+        self.get_hop_distance_combatants = monkeypatch_hop_dist_combatants
+        self.get_cartesian_distance_combatants = monkeypatch_cartesian_dist
         try:
             self.cache_enabled = False
             yield self
         finally:
-            self.get_hop_distance = orig_dist_hop_func
-            self.get_cartesian_distance = orig_dist_cartesian_func
+            self.get_hop_distance_combatants = orig_dist_hop_func
+            self.get_cartesian_distance_combatants = orig_dist_cartesian_func
             self.cache_enabled = True
 
 
@@ -663,8 +663,8 @@ class Map:
                 if curr_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
                     continue
                 try:
-                    pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
-                    post_increment_dist = self.get_hop_distance(combatant_coords.get() + increment, coords.get())
+                    pre_increment_dist = self.get_hop_distance_combatants(combatant, curr_combatant)
+                    post_increment_dist = self.get_hop_distance_coords(combatant_coords.get() + increment, coords.get())
                 except KeyError:
                     continue
                 if curr_combatant.has_passive(
@@ -678,8 +678,8 @@ class Map:
             if curr_combatant is not combatant and curr_combatant.is_alive() and self.teams.are_enemies(curr_combatant, combatant):
                 if curr_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
                     continue
-                pre_increment_dist = self.get_hop_distance(combatant, curr_combatant)
-                post_increment_dist = self.get_hop_distance(self.combatant_coordinate_cache[combatant].get() + increment, pos.get())
+                pre_increment_dist = self.get_hop_distance_combatants(combatant, curr_combatant)
+                post_increment_dist = self.get_hop_distance_coords(self.combatant_coordinate_cache[combatant].get() + increment, pos.get())
                 if pre_increment_dist == curr_combatant.melee_reaction_range and post_increment_dist > curr_combatant.melee_reaction_range and curr_combatant.has_reaction:
                     eligible_combatants.append(curr_combatant)
         return eligible_combatants
@@ -761,7 +761,7 @@ class Map:
         :return: the nearest enemy/ally and distance to them in hops or cartesian
         """
         team_func = self.teams.are_enemies if side is Side.ENEMY else self.teams.are_allies
-        dist_func = self.get_hop_distance if dist_type is DistanceMetric.HOP else self.get_cartesian_distance
+        dist_func = self.get_hop_distance_coords if dist_type is DistanceMetric.HOP else self.get_cartesian_distance_coords
         min_dist = sys.float_info.max
         nearest = None
         target_coord = None
@@ -798,44 +798,72 @@ class Map:
         return False
 
     def are_in_hop_range(self, combatant1, combatant2, distance):
-        return self.get_hop_distance(combatant1, combatant2) <= distance
+        return self.get_hop_distance_combatants(combatant1, combatant2) <= distance
 
-    def get_hop_distance(self, subject1, subject2):
+    @cached(cache={}, key=lambda self, coords1, coords2: hashkey(tuple(map(tuple, coords1)), tuple(map(tuple, coords2))))
+    def get_hop_distance_coords(self, coords1: np.array, coords2: np.array):
         """
         Universal hop distance function. Accepts both characters or coordinates
-        :param subject1: either a numpy.array or a Combatant type
-        :param subject2: either a numpy.array or a Combatant type
-        :return: distance between subjects in number of hops, None if one of the subjects is dead
+        :param coords1:
+        :param coords2:
+        :return: distance between two sets of coords in number of hops, None if one of the subjects is dead
         """
         try:
-            subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), ProtoCombatant) else subject1
-            subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), ProtoCombatant) else subject2
-        except KeyError:
-            print("FIXME")
-        try:
-            dist_mat = distance_matrix(subject1, subject2)
+            dist_mat = distance_matrix(coords1, coords2)
             min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
-            sub1_closest_coord = subject1[min_dist_index // dist_mat.shape[1], :]
-            sub2_closest_coord = subject2[min_dist_index % dist_mat.shape[1], :]
+            sub1_closest_coord = coords1[min_dist_index // dist_mat.shape[1], :]
+            sub2_closest_coord = coords2[min_dist_index % dist_mat.shape[1], :]
             res = np.max(np.abs(sub1_closest_coord - sub2_closest_coord))
         except TypeError as e:
             res = None
         return res
 
-    def get_cartesian_distance(self, subject1, subject2):
+    @cached(cache={}, key=lambda self, combatant1, combatant2: hashkey(combatant1.name, combatant2.name))
+    def get_hop_distance_combatants(self, combatant1: ProtoCombatant, combatant2: ProtoCombatant):
+        """
+        Universal hop distance function. Accepts both characters or coordinates
+        :param combatant1:
+        :param combatant2:
+        :return: distance between two combatants in number of hops, None if one of the combatants is dead
+        """
+        coords1 = self.combatant_coordinate_cache[combatant1].get()
+        coords2 = self.combatant_coordinate_cache[combatant2].get()
+        try:
+            dist_mat = distance_matrix(coords1, coords2)
+            min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points
+            sub1_closest_coord = coords1[min_dist_index // dist_mat.shape[1], :]
+            sub2_closest_coord = coords2[min_dist_index % dist_mat.shape[1], :]
+            res = np.max(np.abs(sub1_closest_coord - sub2_closest_coord))
+        except TypeError as e:
+            res = None
+        return res
+
+    @cached(cache={}, key=lambda self, combatant1, combatant2: hashkey(combatant1.name, combatant2.name))
+    def get_cartesian_distance_combatants(self, combatant1: ProtoCombatant, combatant2: ProtoCombatant):
         """
         Universal cartesian distance function. Accepts both characters or coordinates
-        :param subject1: either a Combatant type or a numpy array
-        :param subject2: either a Combatant type or a numpy array
-        :return: cartesian distance between subjects, None if one of the subjects is dead
+        :param combatant1:
+        :param comabtant2:
+        :return: cartesian distance between two combatants, None if one of the combatants is dead
+        """
+        coords1 = self.combatant_coordinate_cache[combatant1].get()
+        coords2 = self.combatant_coordinate_cache[combatant2].get()
+        try:
+            res = np.amin(distance_matrix(coords1, coords2))
+        except TypeError:
+            res = None
+        return res
+
+    @cached(cache={}, key=lambda self, coords1, coords2: hashkey(tuple(map(tuple, coords1)), tuple(map(tuple, coords2))))
+    def get_cartesian_distance_coords(self, coords1: np.array, coords2: np.array):
+        """
+        Universal cartesian distance function. Accepts both characters or coordinates
+        :param coords1:
+        :param coords2:
+        :return: cartesian distance between two sets of coords, None if one of the subjects is dead
         """
         try:
-            subject1 = self.combatant_coordinate_cache[subject1].get() if issubclass(type(subject1), ProtoCombatant) else subject1
-            subject2 = self.combatant_coordinate_cache[subject2].get() if issubclass(type(subject2), ProtoCombatant) else subject2
-        except KeyError:
-            return None
-        try:
-            res = np.amin(distance_matrix(subject1, subject2))
+            res = np.amin(distance_matrix(coords1, coords2))
         except TypeError:
             res = None
         return res
@@ -912,7 +940,7 @@ class Map:
         for coord in inflated:
             # the rng can be used as a bounding box for the search
             for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
-                if x < 0 or x >= self.size or y < 0 or y >= self.size or self.get_cartesian_distance(coords.get(), np.array([[x, y]])) > rng:
+                if x < 0 or x >= self.size or y < 0 or y >= self.size or self.get_cartesian_distance_coords(coords.get(), np.array([[x, y]])) > rng:
                     continue
                 square = self.grid[x, y]
                 consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances else True
@@ -966,7 +994,7 @@ class Map:
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]
-        adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance(coord, my_location.get()))
+        adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance_coords(coord, my_location.get()))
         return adjacent_coords[0][0]
 
 
@@ -1147,7 +1175,7 @@ class Map:
         caster_coords = self.combatant_coordinate_cache[caster].get()
         for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
             curr_coord = np.array([[x, y]])
-            if self.get_cartesian_distance(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
+            if self.get_cartesian_distance_coords(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
                 continue  # Skip those outside of spell range and those taken up by the caster
             threat_score = factory.create(curr_coord[0]).calculate_threat()
             if threat_score > max_score:
@@ -1173,7 +1201,7 @@ class Map:
         for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
             curr_coord = np.array([[x, y]])
             affected = []
-            if self.get_cartesian_distance(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
+            if self.get_cartesian_distance_coords(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
                 continue  # Skip those outside of spell range and those taken up by the caster
             score = 0
             for combatant, coords in self.combatant_coordinate_cache.items():
@@ -1219,12 +1247,12 @@ class Map:
             case SpellStats.Target.RADIUS_10 | SpellStats.Target.RADIUS_20 | SpellStats.Target.RADIUS_30:
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
                     if ability_type is SpellStats.Type.HARMFUL:
-                        if self.get_cartesian_distance(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
+                        if self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template]:
                             affected_combatants.append(potential_target)
                     elif ability_type is SpellStats.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if self.get_cartesian_distance(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
+                        if self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
             case SpellStats.Target.CONE_15 | SpellStats.Target.CONE_30 | SpellStats.Target.CONE_60 | SpellStats.Target.CONE_90:
@@ -1239,7 +1267,7 @@ class Map:
             case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_20:
                 affected_coords = self.get_coords_affected_by_square_aoe(origin, SpellStats.TRANSLATE_BOX[target_template])
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
-                    if self.get_cartesian_distance(potential_target, affected_coords) == 0:
+                    if self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:
                         affected_combatants.append(potential_target)
             case _:
                 logger.error("Unrecognized ability target type")
@@ -1247,9 +1275,9 @@ class Map:
 
 
     def get_enemies_within_radius_sorted_by_distance(self, combatant, radius):
-        enemies = [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
-        distances = [self.get_cartesian_distance(e, combatant) for e in enemies]
-        enemies.sort(key=lambda e: self.get_cartesian_distance(e, combatant))
+        enemies = [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance_combatants(e, combatant) <= radius]
+        distances = [self.get_cartesian_distance_combatants(e, combatant) for e in enemies]
+        enemies.sort(key=lambda e: self.get_cartesian_distance_combatants(e, combatant))
         distances.sort()
         return enemies, distances
 
@@ -1349,13 +1377,13 @@ class Map:
         self.visibility_dict_for_all_coords[tuple(current_position)] = self.get_visibility_dict(combatant, current_position)
 
     def get_adjacent_enemies(self, combatant):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) == 1]
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) == 1]
 
     def get_enemies_within_radius(self, combatant, radius):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance(e, combatant) <= radius]
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) <= radius]
 
     def get_allies_within_radius(self, combatant, radius):
-        return [a for a in self.teams.get_allies(combatant) if a.is_alive() and self.get_cartesian_distance(a, combatant) <= radius]
+        return [a for a in self.teams.get_allies(combatant) if a.is_alive() and self.get_hop_distance_combatants(a, combatant) <= radius]
 
     def get_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive()]
@@ -1367,19 +1395,23 @@ class Map:
         return [a for a in self.teams.get_allies(combatant) if a.is_alive()]
 
     def get_enemies_within_hop_distance(self, combatant, distance):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= distance]
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) <= distance]
 
     def get_enemies_without_hop_distance(self, combatant, distance):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) > distance]
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) > distance]
 
     def get_enemies_within_their_movement_range(self, combatant):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance(e, combatant) <= e.movement + 1]
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) <= e.movement + 1]
 
     def is_difficult_terrain_at(self, coords: Coords):
         vec_is_difficult_terrain = np.vectorize(GridSquare.is_difficult_terrain)
         return np.any(vec_is_difficult_terrain(self.grid[coords.get()[:, 0], coords.get()[:, 1]]))
 
     def clear_caches(self):
-        pass
+        self.get_hop_distance_coords.cache_clear()
+        self.get_hop_distance_combatants.cache_clear()
+        self.get_cartesian_distance_combatants.cache_clear()
+        self.get_cartesian_distance_coords.cache_clear()
+
         # self.get_free_coords_in_cartesian_range.cache_clear()
         # self.get_free_coords_in_hop_range.cache_clear()

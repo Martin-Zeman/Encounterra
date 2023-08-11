@@ -163,8 +163,8 @@ class TwinnedHaste(Actoid, Effect, Threat):
             return {coord for coord in free_coords_in_range if
                     battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= TwinnedHasteFactory.range and \
-            battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range and \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= TwinnedHasteFactory.range and \
+            battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range and \
             battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE and \
             battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
             return set([curr_coord])

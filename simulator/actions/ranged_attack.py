@@ -34,7 +34,7 @@ class RangedAttackFactory(AttackFactory):
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         battle_map = Map.get()
-        if not consider_dist or battle_map.get_cartesian_distance(self.combatant, target) <= self.range:
+        if not consider_dist or battle_map.get_cartesian_distance_combatants(self.combatant, target) <= self.range:
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
                 acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
@@ -50,7 +50,7 @@ class RangedAttack(Attack):
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        roll_type = RollType.DISADVANTAGE if battle_map.get_cartesian_distance(self.factory.combatant, self.target) > self.factory.short_range else roll_type
+        roll_type = RollType.DISADVANTAGE if battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) > self.factory.short_range else roll_type
         return self.factory.calculate_threat_to_target(self.target, roll_type=roll_type, **kwargs)
 
     def clear_cache(self):
@@ -83,7 +83,7 @@ class RangedAttack(Attack):
                         except KeyError:
                             ret.add(coord)
                 return ret
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= self.factory.range and \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= self.factory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
             return set([curr_coord])
         return None

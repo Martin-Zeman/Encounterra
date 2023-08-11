@@ -144,7 +144,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=FaerieFireFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FaerieFireFactory.range:
+        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FaerieFireFactory.range:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None
 

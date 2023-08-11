@@ -56,7 +56,7 @@ class HoldPersonFactory(ThreatModifierFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
-        if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
+        if Map.get().get_cartesian_distance_combatants(self.combatant, target) > HoldPersonFactory.range:
             return 0
 
         prevented_threat_out_acc = 0
@@ -153,7 +153,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HoldPersonFactory.range, combatant=self.factory.combatant)
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= HoldPersonFactory.range and \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HoldPersonFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
             return set([curr_coord])
         return None

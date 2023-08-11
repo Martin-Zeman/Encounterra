@@ -62,7 +62,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
             return 0
-        if Map.get().get_cartesian_distance(self.combatant, target) > HoldPersonFactory.range:
+        if Map.get().get_cartesian_distance_combatants(self.combatant, target) > HoldPersonFactory.range:
             return 0
 
         threat_acc = 0
@@ -169,8 +169,8 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
             return {coord for coord in free_coords_in_range if
                     battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= HoldPersonFactory.range and \
-            battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= HoldPersonFactory.range and \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= HoldPersonFactory.range and \
+            battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= HoldPersonFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
             return set([curr_coord])

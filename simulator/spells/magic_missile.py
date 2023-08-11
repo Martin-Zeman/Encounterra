@@ -54,7 +54,7 @@ class MagicMissileFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= MagicMissileFactory.range:
+        if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= MagicMissileFactory.range:
             ret = 3 * (mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)
             # logger.warning(f"MY DEBUG {self} calculate_threat_to_target = {ret}")
             return ret
@@ -139,9 +139,9 @@ class MagicMissile(Actoid, DirectThreat):
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= MagicMissileFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= MagicMissileFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[2]) <= MagicMissileFactory.range \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= MagicMissileFactory.range \
+            and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= MagicMissileFactory.range \
+            and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[2]) <= MagicMissileFactory.range \
             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[2]] is not Visibility.NONE:
