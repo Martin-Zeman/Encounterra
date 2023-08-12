@@ -889,7 +889,7 @@ class Map:
                 print("FIXME")
         return inflated
 
-    # @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
+    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
     def get_free_coords_in_hop_range(self, coords: Coords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
@@ -919,7 +919,7 @@ class Map:
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
-    # @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
+    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
     def get_free_coords_in_cartesian_range(self, coords: Coords, distances=(), inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
@@ -1159,6 +1159,7 @@ class Map:
         bb[1] = np.minimum(bb[1] + inflation, np.array([self.size - 1, self.size - 1]))
         return bb
 
+    @cached(cache={}, key=lambda self, caster, spell_range, radius, factory: hashkey(caster.name, spell_range, radius, str(factory)))
     def find_best_placement_harmful_circular(self, caster, spell_range, radius, factory):
         """
         Finds the best placement of a spherical harmful AoE effect
@@ -1413,5 +1414,7 @@ class Map:
         self.get_cartesian_distance_combatants.cache_clear()
         self.get_cartesian_distance_coords.cache_clear()
 
-        # self.get_free_coords_in_cartesian_range.cache_clear()
-        # self.get_free_coords_in_hop_range.cache_clear()
+        self.get_free_coords_in_cartesian_range.cache_clear()
+        self.get_free_coords_in_hop_range.cache_clear()
+        self.find_best_placement_harmful_circular.cache_clear()
+
