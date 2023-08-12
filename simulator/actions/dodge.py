@@ -77,5 +77,6 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         return 0  # Threat that a Dodge would potentially mitigate is calculated using accumulate_threat_along_path
 
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])  # It's a priority action so the coord is not relevant
+        return set()
+        # battle_map = Map.get()
+        # return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])  # It's a priority action so the coord is not relevant
