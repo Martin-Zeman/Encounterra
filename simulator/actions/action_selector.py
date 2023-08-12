@@ -76,7 +76,10 @@ def get_post_transitions_of_all_priority_transitions(action_fsm, transition_name
 
 def get_post_misty_step_transitions(dag, transition_name_to_action):
     dag.trigger("Misty Step to 0, 0_1")  # It's the only MS we created
-    ms_post_transitions = [pt for pt in dag.forward_transitions[dag.state] if transition_name_to_action[pt[0]].factory.action_type not in PRIORITY_ACTIONS.keys()]
+    try:
+        ms_post_transitions = [pt for pt in dag.forward_transitions[dag.state] if transition_name_to_action[pt[0]].factory.action_type not in PRIORITY_ACTIONS.keys()]
+    except KeyError:
+        ms_post_transitions = []
     dag.reset()
     return ms_post_transitions
 

@@ -1,6 +1,5 @@
 import math
 
-from simulator.abilities.reckless_attack import RecklessAttack
 from simulator.actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
 from simulator.actions.dodge import DodgeFactory
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
@@ -13,7 +12,6 @@ from simulator.resources import use_resources
 from enum import Enum, auto
 
 from simulator.spells.chaosbolt import ChaosboltFactory
-from simulator.spells.faerie_fire import FaerieFire
 from simulator.spells.magic_missile import MagicMissileFactory
 
 logger = logging.getLogger("Encounterra")
@@ -408,7 +406,7 @@ class ActionResolver:
                 if not self.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK):
                     # don't need to add it again in case of a multi-attack
                     actoid.activate()
-                    return self.resolve_attack(actoid, combatant)
+                return self.resolve_attack(actoid, combatant)
             case Action.WILDSHAPE | BonusAction.MOON_WILDSHAPE:
                 actoid.activate()
                 return False
