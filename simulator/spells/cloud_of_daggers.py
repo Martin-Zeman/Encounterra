@@ -96,7 +96,8 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
 
     def is_affecting(self, combatant):
         coords = self.get_affected_coords()
-        return Map.get().get_hop_distance(combatant, coords) == 0
+        battle_map = Map.get()
+        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
     def activate(self):
         Map.get().effect_tracker.add(self)
@@ -141,7 +142,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=CloudOfDaggersFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= CloudOfDaggersFactory.range:
+        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= CloudOfDaggersFactory.range:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None
 

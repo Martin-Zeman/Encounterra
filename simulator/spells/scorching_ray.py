@@ -57,7 +57,7 @@ class ScorchingRayFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= ScorchingRayFactory.range:
+        if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ScorchingRayFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             return 3 * mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT_DELTA[roll_type], target.is_resistant_to(ScorchingRayFactory.dmg_type))
@@ -164,9 +164,9 @@ class ScorchingRay(Actoid, DirectThreat):
                     battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= ScorchingRayFactory.range \
-             and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= ScorchingRayFactory.range \
-             and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[2]) <= ScorchingRayFactory.range \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= ScorchingRayFactory.range \
+             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= ScorchingRayFactory.range \
+             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[2]) <= ScorchingRayFactory.range \
              and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
              and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE \
              and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[2]] is not Visibility.NONE:

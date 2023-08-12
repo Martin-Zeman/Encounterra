@@ -18,7 +18,7 @@ logger = logging.getLogger("Encounterra")
 
 
 def actions_to_set(actions):
-    return frozenset([str(f) for f in actions])
+    return frozenset(str(f) for f in actions)
 
 
 @contextmanager
@@ -90,7 +90,7 @@ def generate_action_fsm(combatant):
         """
         fafs = get_all_feasible_action_factories(subject, depth)
         try:
-            fas = {a for faf in fafs for a in af_to_a[faf]}
+            fas = tuple(a for faf in fafs for a in af_to_a[faf])
         except Exception as e:
             print("FIXME")
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
@@ -153,7 +153,7 @@ def generate_wildshape_action_fsm(combatant):
         Internal function which recursively builds the action FSM in a DFS manner
         """
         fafs = get_all_feasible_action_factories(subject, depth,)
-        fas = {a for faf in fafs for a in af_to_a[faf]}
+        fas = tuple(a for faf in fafs for a in af_to_a[faf])
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
         action_taken_name = str(action_taken)

@@ -96,7 +96,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 
         dmg = 0
         battle_map = Map.get()
-        if battle_map.get_hop_distance(self.combatant, target) <= self.range or not consider_dist:
+        if battle_map.get_hop_distance_combatants(self.combatant, target) <= self.range or not consider_dist:
             dmg = mean_dmg(self.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_TYPE_CRIT_DELTA[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
         # logger.warning(f"MY DEBUG {self} calculate_threat_to_target dmg = {dmg}")
         # even the single target calculation the combatant is still more vulnerable to all potential attackers

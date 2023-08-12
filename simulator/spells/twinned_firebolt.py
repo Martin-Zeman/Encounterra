@@ -53,7 +53,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= TwinnedFireboltFactory.range:
+        if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= TwinnedFireboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             # Cannot target the same combatant twice
@@ -141,8 +141,8 @@ class TwinnedFirebolt(Actoid, DirectThreat):
 
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.targets[0]) <= TwinnedFireboltFactory.range \
-            and battle_map.get_cartesian_distance(self.factory.combatant, self.targets[1]) <= TwinnedFireboltFactory.range \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= TwinnedFireboltFactory.range \
+            and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= TwinnedFireboltFactory.range \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
             return set([curr_coord])

@@ -468,6 +468,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
         if coord_and_movement_type is None:
             continue
         coord, _ = coord_and_movement_type
+        battle_map.clear_caches()
         with battle_map.as_if_combatant_position(combatant, np.array(coord)):
             for idx in ids:
                 delta_action = None
@@ -502,13 +503,15 @@ def get_action(combatant):
     :return: the next best actoid
     """
     start_time = time.time()
+    battle_map = Map.get()
+    battle_map.clear_caches()
     combatant = combatant.get_current_form()  # Takes care of possible wildshape
     grapple_cond = combatant.needs_to_break_out_of_grapple()
     if grapple_cond and combatant.has_action:
         return BreakGrappleFactory(grapple_cond).create()
     if combatant.is_affected_by(Conditions.PRONE) and combatant.movement >= combatant.speed / 2:
         return GetUpFactory().create()
-    distances, shortest_paths = Map.get().calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
+    distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
     combatant.shortest_paths_cache = shortest_paths
     if combatant.action_plan:
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:

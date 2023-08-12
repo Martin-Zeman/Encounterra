@@ -57,7 +57,7 @@ class FireballFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        if Map.get().get_cartesian_distance(self.combatant, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
+        if Map.get().get_cartesian_distance_combatants(self.combatant, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
             return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
         return 0
 
@@ -112,6 +112,6 @@ class Fireball(Actoid, DirectThreat):
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=FireballFactory.range,
                                                                  combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.coord])) <= FireballFactory.range:
+        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= FireballFactory.range:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None

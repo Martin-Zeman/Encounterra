@@ -62,7 +62,7 @@ class ShockingGraspFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= ShockingGraspFactory.range:
+        if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ShockingGraspFactory.range:
             return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ShockingGraspFactory.dmg_type))
         return 0
 
@@ -132,6 +132,6 @@ class ShockingGrasp(Actoid, DirectThreat):
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=ShockingGraspFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= ShockingGraspFactory.range:
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= ShockingGraspFactory.range:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None

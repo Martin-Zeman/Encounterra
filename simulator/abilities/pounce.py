@@ -85,7 +85,7 @@ class Pounce(Actoid, DirectThreat):
                                                            inflate_to_size=self.factory.combatant.size + self.factory.distance,
                                                            rng=battle_map.size,  # approximation, could theoretically be longer
                                                            combatant=self.factory.combatant)
-        elif battle_map.get_hop_distance(self.factory.combatant, self.target) >= self.factory.distance:
+        elif battle_map.get_hop_distance_combatants(self.factory.combatant, self.target) >= self.factory.distance:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None
 

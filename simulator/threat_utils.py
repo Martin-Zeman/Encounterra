@@ -247,7 +247,7 @@ def get_danger_zone_threat(coords, combatant, delta=0):
     battle_map = Map.get()
     enemies = [e for e in battle_map.get_enemies(combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
     acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
-        battle_map.get_hop_distance(e, coords) + delta <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
+        battle_map.get_hop_distance_coords(battle_map.get_combatant_position(e).get(), coords) + delta <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
 
 def get_threat_for_staying_at_coord(coords, combatant):
@@ -262,7 +262,7 @@ def get_threat_for_staying_at_coord(coords, combatant):
     battle_map = Map.get()
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     for effect, affected_coords in effect_to_coords.items():
-        if battle_map.get_hop_distance(affected_coords, coords) == 0:
+        if battle_map.get_hop_distance_coords(affected_coords, coords) == 0:
             t = effect.threat_on_start_of_turn(combatant)
             assert t >= 0
             threat_acc += t
@@ -301,8 +301,8 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant,
 
         # account for AoE
         for effect, affected_coords in effect_to_coords.items():
-            pre_increment_dist = battle_map.get_hop_distance(curr_coords_data, affected_coords)
-            post_increment_dist = battle_map.get_hop_distance(curr_coords_data + increment, affected_coords)
+            pre_increment_dist = battle_map.get_hop_distance_coords(curr_coords_data, affected_coords)
+            post_increment_dist = battle_map.get_hop_distance_coords(curr_coords_data + increment, affected_coords)
             if pre_increment_dist == 1 and post_increment_dist == 0:
                 t = effect.threat_on_enter(combatant)
                 assert t >= 0

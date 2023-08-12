@@ -44,11 +44,12 @@ class ChaosboltFactory(DirectThreatFactory):
 
     @staticmethod
     def get_sorted_chain(potential_targets, threat_calc_func):
+        battle_map = Map.get()
         hp_percentages = [percent_of_curr_hp(pt, threat_calc_func(pt.ac)) for pt in potential_targets]
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         for i in range(1, len(potential_targets)):
-            if Map.get().get_cartesian_distance(potential_targets[i - 1][0], potential_targets[i][0]) > SpellStats.Range.FEET_30:
+            if battle_map.get_cartesian_distance_combatants(potential_targets[i - 1][0], potential_targets[i][0]) > SpellStats.Range.FEET_30:
                 break
         return list(zip(*potential_targets[:i]))[0]
 
@@ -73,7 +74,7 @@ class ChaosboltFactory(DirectThreatFactory):
         # TODO Consider including the potential of hitting others
         acc = 0
         battle_map = Map.get()
-        if battle_map.get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
+        if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ChaosboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             other_potential_targets = battle_map.get_enemies_within_radius(self.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
@@ -94,7 +95,7 @@ class ChaosboltFactory(DirectThreatFactory):
         to_hit_bonus = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
-        if Map.get().get_cartesian_distance(self.combatant, target) <= ChaosboltFactory.range:
+        if Map.get().get_cartesian_distance_combatants(self.combatant, target) <= ChaosboltFactory.range:
             to_hit_total = self.to_hit + to_hit_bonus
             to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
             total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
@@ -167,7 +168,7 @@ class Chaosbolt(Actoid, DirectThreat):
                                                                  rng=ChaosboltFactory.range,
                                                                  combatant=self.factory.combatant)
             return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
-        elif battle_map.get_cartesian_distance(self.factory.combatant, self.target) <= ChaosboltFactory.range and \
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= ChaosboltFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
             return set([curr_coord])
         return None

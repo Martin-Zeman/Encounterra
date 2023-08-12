@@ -102,7 +102,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def is_affecting(self, combatant):
         battle_map = Map.get()
         coords = self.get_affected_coords()
-        return battle_map.get_hop_distance(combatant, coords) == 0
+        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
 
     def activate(self):
@@ -150,6 +150,6 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=SpikeGrowthFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= SpikeGrowthFactory.range:
+        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= SpikeGrowthFactory.range:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None

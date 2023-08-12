@@ -180,6 +180,7 @@ def test_get_path_to_combatant_medium_to_medium_pass_by_one_aoo(battle_map, team
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
+    battle_map.clear_caches()
     assert threat[-1] == pytest.approx(-5.399 - 5.399 * DZ_CONSTANT - 2.649 * DZ_CONSTANT, 0.01)  # includes danger zone
     accumulate_threat_along_path.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)

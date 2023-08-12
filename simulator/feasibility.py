@@ -14,6 +14,7 @@ logger = logging.getLogger("Encounterra")
 
 def check_feasibility(combatant, action):
     battle_map = Map.get()
+    battle_map.clear_caches()
     action_type = action.factory.action_type
     if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
@@ -29,19 +30,19 @@ def check_feasibility(combatant, action):
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.are_valid_coords(action.coord)
-                res &= battle_map.get_cartesian_distance(combatant, np.array([action.coord])) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 return res
             case Action.HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
             case Action.CHAOSBOLT:
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
                 return res
             case Action.SCORCHING_RAY:
                 res &= combatant.spellslots.get_spellslots(2) > 0
@@ -49,9 +50,9 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[2])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
-                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[2]) <= action.factory.range
                 return res
             case Action.MAGIC_MISSILE:
                 res &= combatant.spellslots.get_spellslots(1) > 0
@@ -59,26 +60,26 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[2])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
-                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[2]) <= action.factory.range
                 return res
             case Action.FIREBOLT | Action.SHOCKING_GRASP:
                 res &= battle_map.teams.are_enemies(combatant, action.target)
-                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 return res
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 0
                 return res
             case Action.TWINNED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 res &= combatant.curr_sorcery_points > 2
@@ -87,20 +88,20 @@ def check_feasibility(combatant, action):
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.RANGED_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.RECKLESS_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.DASH | HasteAction.HASTE_DASH:
@@ -120,7 +121,7 @@ def check_feasibility(combatant, action):
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= (action.target is combatant.constricted_target) if combatant.constricted_target else True
                 return res
@@ -128,7 +129,7 @@ def check_feasibility(combatant, action):
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
                 res &= action.target is combatant.constricted_target
@@ -138,13 +139,13 @@ def check_feasibility(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
                 res &= action.target is combatant.constricted_target
@@ -153,7 +154,7 @@ def check_feasibility(combatant, action):
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
-                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= (action.target is combatant.constricted_target) if combatant.constricted_target else True
                 return res
@@ -161,7 +162,7 @@ def check_feasibility(combatant, action):
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
-                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.TWINNED_HOLD_PERSON:
@@ -169,8 +170,8 @@ def check_feasibility(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 res &= not combatant.concentration_effect
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
@@ -179,14 +180,14 @@ def check_feasibility(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case Action.FAERIE_FIRE:
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case _:
                 logger.error("check_feasibility: Unknown action type")
@@ -197,7 +198,7 @@ def check_feasibility(combatant, action):
         res = combatant.has_bonus_action
         match action_type:
             case BonusAction.PAM_BONUS_ATTACK:
-                res &= action.target.is_alive() and battle_map.get_hop_distance(combatant, action.target) <= action.range
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case BonusAction.RAGE:
@@ -207,13 +208,13 @@ def check_feasibility(combatant, action):
             case BonusAction.MISTY_STEP:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, np.array([action.coord])) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 res &= battle_map.are_valid_coords(action.coord) and battle_map.are_empty_or_self(Coords(action.coord, combatant.size), combatant)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
@@ -223,16 +224,16 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[2])
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
-                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[2]) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_SCORCHING_RAY:
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[0]) <= action.factory.range
-                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[1]) <= action.factory.range
-                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance(combatant, action.targets[2]) <= action.factory.range
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
+                res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[2]) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
@@ -241,7 +242,7 @@ def check_feasibility(combatant, action):
             case BonusAction.QUICKENED_HASTE:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
@@ -249,7 +250,7 @@ def check_feasibility(combatant, action):
                 res &= combatant.spellslots.get_spellslots(2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
-                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case BonusAction.QUICKENED_SPIKE_GROWTH:
@@ -257,24 +258,24 @@ def check_feasibility(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FAERIE_FIRE:
                 res &= combatant.spellslots.get_spellslots(1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= battle_map.get_cartesian_distance(combatant, np.array([action.origin])) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FIREBALL:
                 res &= combatant.spellslots.get_spellslots(3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.get_cartesian_distance(combatant, np.array([action.coord])) <= action.factory.range
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.are_valid_coords(action.coord)
                 return res
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
-                res &= action.target.is_alive() and battle_map.get_cartesian_distance(combatant, action.target) <= action.factory.range
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res

@@ -52,7 +52,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV
             coords_around_enemy = list(battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1))
-            coords_around_enemy.sort(key=lambda coord: battle_map.get_cartesian_distance(np.array([coord]), self.combatant), reverse=True)
+            coords_around_enemy.sort(key=lambda coord: battle_map.get_cartesian_distance_coords(np.array([coord]), battle_map.get_combatant_position(self.combatant).get()), reverse=True)
             coords.add(coords_around_enemy[0])
 
         # Here there really is no need to iterate over all coords. Just find the best score
@@ -136,7 +136,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=FlamingSphereFactory.range,
                                                                  combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance(self.factory.combatant, np.array([self.origin])) <= FlamingSphereFactory.range:
+        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FlamingSphereFactory.range:
             return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
         return None
 
