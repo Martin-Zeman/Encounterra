@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from simulator.actions.action_fsms import generate_action_fsm
+from simulator.actions.action_dag import generate_proto_dag
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant_coords import Coords
 from simulator.teams import Teams
@@ -51,7 +51,7 @@ def test_remove_state():
     # Have to inspect the log output manually
 
 
-def test_generate_action_fsm(test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, battle_map, effect_tracker, teams):
+def test_generate_proto_dag(test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, battle_map, effect_tracker, teams):
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
@@ -65,27 +65,27 @@ def test_generate_action_fsm(test_draconic_sorcerer_5lvl, test_goblin, test_bugb
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 6]))
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 0]))
     battle_map.set_combatant_coordinates(test_ogre, np.array([13, 6]))
-    fsm, transition_mapping = generate_action_fsm(test_draconic_sorcerer_5lvl)
+    fsm, transition_mapping = generate_proto_dag(test_draconic_sorcerer_5lvl)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_faurung.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(test_goblin)
+    fsm, transition_mapping = generate_proto_dag(test_goblin)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_goblin.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(test_bugbear)
+    fsm, transition_mapping = generate_proto_dag(test_bugbear)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_bugbear.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(test_totem_barbarian)
+    fsm, transition_mapping = generate_proto_dag(test_totem_barbarian)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_totem_barbarian5lvl.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(test_stone_giant)
+    fsm, transition_mapping = generate_proto_dag(test_stone_giant)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_stone_giant.png', prog='dot')
 
-    fsm, transition_mapping = generate_action_fsm(test_ogre)
+    fsm, transition_mapping = generate_proto_dag(test_ogre)
     assert fsm.state == '0'
     # fsm.get_graph().draw('state_diagram_ogre.png', prog='dot')
 

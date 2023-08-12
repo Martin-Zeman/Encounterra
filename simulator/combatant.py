@@ -61,7 +61,7 @@ class Combatant(ABC, ProtoCombatant):
         self.immunities = immunities
         self.vulnerabities = vulnerabities
         self.attack_fsm = None
-        self.action_fsm = None
+        self.proto_dag = None
         self.action_plan = None
         self.team_color = ""
         self.melee_reaction_range = 1

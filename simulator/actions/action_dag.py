@@ -70,7 +70,7 @@ def get_all_feasible_action_factories(combatant, depth):
     return all_action_factories
 
 
-def generate_action_fsm(combatant):
+def generate_proto_dag(combatant):
     """
     Builds a combatant-specific FSM which expresses all possible (bonus) action combinations the may take on their turn.
     It assumes the combatant's attack FSM is manually constructed already and is used as an input for the overall FSM.
@@ -136,9 +136,9 @@ def generate_action_fsm(combatant):
     return fsm, transition_name_to_action
 
 
-def generate_wildshape_action_fsm(combatant):
+def generate_wildshape_proto_dag(combatant):
     """
-    A special variation of generate_action_fsm which generated an action FSM where the only allowed first action is a wildshape
+    A special variation of generate_proto_dag which generated an action FSM where the only allowed first action is a wildshape
     :param combatant: for whom the FSM is to be constructed
     :return: fsm, the mapping between FSM transition names to the actual action factory objects,
     list of actions that can be taken after misty step

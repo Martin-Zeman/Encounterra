@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from simulator.actions.action_fsms import generate_action_fsm
+from simulator.actions.action_dag import generate_proto_dag
 from simulator.actions.action_plan_strategy import ActionPlanStrategy
 from simulator.actions.action_selector import find_best_sequence, build_action_dag, translate_sequence_to_actions, REGEX_MOVEMENT_PATTERN
 from simulator.actions.action_types import Movement
@@ -40,7 +40,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         # logger.info(f"{self.combatant} still has movement left")  # TODO FIXME
         with self.combatant.as_if_has_action() as combatant:
             # get_aoe_and_aoo_threat_for_increment.cache_clear()
-            fsm, transition_name_to_action = generate_action_fsm(combatant)
+            fsm, transition_name_to_action = generate_proto_dag(combatant)
             dag, movement_trans_to_coord_and_type = build_action_dag(combatant, fsm, transition_name_to_action, distances, shortest_paths)
             if dag is None:
                 return None
@@ -58,7 +58,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         """
         # start_time = time.time()
         # get_aoe_and_aoo_threat_for_increment.cache_clear()
-        fsm, transition_name_to_action = generate_action_fsm(self.combatant)
+        fsm, transition_name_to_action = generate_proto_dag(self.combatant)
         dag, movement_trans_to_coord_and_type = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             movement = None
