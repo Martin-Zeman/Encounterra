@@ -27,7 +27,9 @@ def effect_tracker():
 @pytest.fixture()
 def battle_map(teams):
     Map.reset_singleton()
-    return Map(15, teams)
+    ret = Map(15, teams)
+    ret.clear_caches()
+    return ret
 
 @pytest.fixture()
 def test_draconic_sorcerer_5lvl():

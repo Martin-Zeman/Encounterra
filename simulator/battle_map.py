@@ -678,7 +678,7 @@ class Map:
             if curr_combatant is not combatant and curr_combatant.is_alive() and self.teams.are_enemies(curr_combatant, combatant):
                 if curr_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
                     continue
-                pre_increment_dist = self.get_hop_distance_combatants(combatant, curr_combatant)
+                pre_increment_dist = self.get_hop_distance_coords(self.combatant_coordinate_cache[combatant].get(), self.combatant_coordinate_cache[curr_combatant].get())
                 post_increment_dist = self.get_hop_distance_coords(self.combatant_coordinate_cache[combatant].get() + increment, pos.get())
                 if pre_increment_dist == curr_combatant.melee_reaction_range and post_increment_dist > curr_combatant.melee_reaction_range and curr_combatant.has_reaction:
                     eligible_combatants.append(curr_combatant)
@@ -834,7 +834,7 @@ class Map:
             sub1_closest_coord = coords1[min_dist_index // dist_mat.shape[1], :]
             sub2_closest_coord = coords2[min_dist_index % dist_mat.shape[1], :]
             res = np.max(np.abs(sub1_closest_coord - sub2_closest_coord))
-        except TypeError as e:
+        except TypeError:
             res = None
         return res
 

@@ -23,11 +23,15 @@ def test_as_if_combatant_position(teams, battle_map, test_draconic_sorcerer_5lvl
     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7]))
 
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5
+    battle_map.clear_caches()
     with battle_map.as_if_combatant_position(test_draconic_sorcerer_5lvl, np.array([9, 7])):
         assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 1
+    battle_map.clear_caches()
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5
+    battle_map.clear_caches()
     with battle_map.as_if_combatant_position(test_draconic_sorcerer_5lvl, np.array([0, 7])):
         assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 10
+    battle_map.clear_caches()
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5
 
 def test_get_hop_distance_overlapping_medium_large(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
@@ -129,6 +133,7 @@ def test_hop_distance_diagonal(battle_map, test_draconic_sorcerer_5lvl, test_gob
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_hop_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 3, "Incorrect distance between two large combatants"
+    battle_map.clear_caches()
     assert battle_map.get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 3, "Incorrect distance between two large combatants"
 
 

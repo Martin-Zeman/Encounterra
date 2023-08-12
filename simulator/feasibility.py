@@ -14,6 +14,7 @@ logger = logging.getLogger("Encounterra")
 
 def check_feasibility(combatant, action):
     battle_map = Map.get()
+    battle_map.clear_caches()
     action_type = action.factory.action_type
     if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
         if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):

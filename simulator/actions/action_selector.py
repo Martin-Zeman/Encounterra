@@ -468,6 +468,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
         if coord_and_movement_type is None:
             continue
         coord, _ = coord_and_movement_type
+        battle_map.clear_caches()
         with battle_map.as_if_combatant_position(combatant, np.array(coord)):
             for idx in ids:
                 delta_action = None
