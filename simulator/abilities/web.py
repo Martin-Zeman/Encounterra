@@ -1,5 +1,6 @@
 from functools import cache
 
+from cachetools import cached
 from cachetools.keys import hashkey
 
 from simulator.actions.action_types import Action
@@ -73,6 +74,7 @@ class Web(Actoid, DirectThreat):
     def shorthand_str(self):
         return "Web"
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.get_swallower():
@@ -84,10 +86,10 @@ class Web(Actoid, DirectThreat):
                                                            inflate_to_size=self.factory.combatant.size + self.factory.distance,
                                                            rng=battle_map.size,  # approximation, could theoretically be longer
                                                            combatant=self.factory.combatant)
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_hop_distance_combatants(self.factory.combatant, self.target) >= self.factory.distance and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None
 
 

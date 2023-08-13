@@ -1,3 +1,4 @@
+from cachetools import cached
 from cachetools.keys import hashkey
 
 from simulator.actions.action_types import BonusAction
@@ -120,12 +121,13 @@ class ShockingGrasp(Actoid, DirectThreat):
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         swallower = self.factory.combatant.get_swallower()
         if swallower:
             if swallower is self.target:
-                return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+                return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
@@ -133,5 +135,5 @@ class ShockingGrasp(Actoid, DirectThreat):
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=ShockingGraspFactory.range, combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= ShockingGraspFactory.range:
-            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

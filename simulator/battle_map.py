@@ -907,7 +907,7 @@ class Map:
         except AttributeError:
             print("FIXME")
 
-        adjacent_coords = set()
+        adjacent_coords = list()
         for coord in inflated:
             for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size:
@@ -916,7 +916,7 @@ class Map:
                 consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances is not None else True
                 if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
-                    adjacent_coords.add((x, y))
+                    adjacent_coords.append((x, y))
         return adjacent_coords
 
     @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
@@ -936,7 +936,7 @@ class Map:
         # First inflate it by the size of the combatant looking for the path
         inflated = self.inflate_coords(coords, inflate_to_size)
 
-        coords_in_range = set()
+        coords_in_range = list()
         for coord in inflated:
             # the rng can be used as a bounding box for the search
             for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
@@ -946,7 +946,7 @@ class Map:
                 consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances else True
                 if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
-                    coords_in_range.add((x, y))
+                    coords_in_range.append((x, y))
         return coords_in_range
 
     def get_all_accessible_coords(self, shortest_paths, combatant):
@@ -956,8 +956,8 @@ class Map:
         :param combatant: the subject combatant
         :return: free and accessible coordinates as a set of tuples (x, y)
         """
-        ret = set(shortest_paths.keys())
-        ret.add(tuple(self.get_combatant_position(combatant).get()[0]))
+        ret = list(shortest_paths.keys())
+        ret.append(tuple(self.get_combatant_position(combatant).get()[0]))
         return ret
 
 
@@ -1116,16 +1116,6 @@ class Map:
                 return None
             else:
                 return combatant.get_original_form()
-    # def clear(self):
-    #     for row in self.grid:
-    #         for square in row:
-    #             square.remove_combatant()
-    #             square.reset_terrain()
-    #     for coords in self.combatant_coordinate_cache.values():
-    #         coords.get().fill(0)
-    #     self.impassable_set.clear()
-    #     self.difficult_set.clear()
-    #     self.terrain_encoding.fill(Terrain.NORMAL_TERRAIN.value)
 
 
     def reset(self, combatant_initial_positions):

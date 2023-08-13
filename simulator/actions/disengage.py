@@ -1,4 +1,8 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.battle_map import Map
@@ -78,9 +82,10 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         """
         return 0  # It's included in the accumulate_threat_along_path calculation
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \
                 or self.factory.combatant.movement == 0:
             return None  # Disenaging makes no sense if you can't move
-        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])  # It's a priority action, the coord is not relevant
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # It's a priority action, the coord is not relevant

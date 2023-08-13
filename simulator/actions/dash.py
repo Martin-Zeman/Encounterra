@@ -1,4 +1,8 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction, HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 import logging
@@ -63,10 +67,11 @@ class Dash(Actoid, AttackThreatModifier):
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         return 0  # TODO do the distance mod here
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
             return None
         if self.factory.combatant.movement > 0:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

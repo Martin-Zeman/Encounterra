@@ -1,5 +1,9 @@
 import logging
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.combatant_coords import Coords
@@ -141,6 +145,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def threat_on_move_within(self, target, *args, **kwargs):
         return avg_roll(self.factory.dmg_dice)
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None
@@ -151,5 +156,5 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=SpikeGrowthFactory.range, combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= SpikeGrowthFactory.range:
-            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

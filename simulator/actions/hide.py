@@ -1,4 +1,8 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.abilities.on_hit_sneak_attack import OnHitSneakAttack
 from simulator.actions.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -107,12 +111,13 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
         else:
             return 0
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None
         battle_map = Map.get()
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return {coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE}
+            return [coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE]
         elif battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])][self.target] is Visibility.NONE:
-            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

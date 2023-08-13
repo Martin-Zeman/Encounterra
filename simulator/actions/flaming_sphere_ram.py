@@ -1,4 +1,8 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.misc import DamageType, SavingThrow, Conditions
@@ -88,12 +92,12 @@ class FlamingSphereRam(Actoid, DirectThreat):
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Doesn't apply here
 
-
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.movement > 0:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
 
     def move_effect(self, coord):
         self.factory.action_enabler_effect.origin = coord

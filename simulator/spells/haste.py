@@ -1,3 +1,6 @@
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -142,13 +145,14 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         swallower = self.factory.combatant.get_swallower()
         if swallower:
             if self.target is self.factory.combatant:
-                set(curr_coord)
+                return [curr_coord]
             return None  # Not possible while blinded
         if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
@@ -157,8 +161,8 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HasteFactory.range)
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HasteFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None

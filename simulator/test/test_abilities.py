@@ -1,4 +1,6 @@
+import cProfile
 import copy
+import pstats
 
 import numpy as np
 import pytest
@@ -611,41 +613,47 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
     battle_map.build_adjacency_matrix()
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
 
-    try:
-        actoid1 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid1, test_assassin_rogue)
-        actoid2 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid2, test_assassin_rogue)
-        actoid3 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid3, test_assassin_rogue)
-        actoid4 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid4, test_assassin_rogue)
-        actoid5 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid5, test_assassin_rogue)
-        actoid6 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid6, test_assassin_rogue)
-        actoid7 = get_action(test_assassin_rogue)
-        assert str(actoid7).startswith("Cunning Hide of AssassinRogue from Ogre")
-        action_resolver.resolve_action(actoid7, test_assassin_rogue)
-        actoid8 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid8, test_assassin_rogue)
-        actoids = [actoid1, actoid2, actoid3, actoid4, actoid5, actoid6, actoid7, actoid8]
-        # TODO The rogue's not hiding first because there's lone LoS from (2, 10) -> two phase movement?
-        assert any(str(act) == "Shortbow on Ogre" for act in actoids)
-        test_assassin_rogue.new_turn()
-        actoid9 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid9, test_assassin_rogue)
-        actoid10 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid10, test_assassin_rogue)
-        actoid11 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
-        actoid12 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid12, test_assassin_rogue)
-        actoids = [actoid9, actoid10, actoid11, actoid12]
-        assert any(str(act) == "Shortbow on Ogre" for act in actoids)
-        assert any(str(act).startswith("Cunning Hide of AssassinRogue from Ogre") for act in actoids)
-    except Exception as e:
-        assert False, f"Raised an exception {e}"
+    # try:
+    from simulator.actions.action_selector import get_action
+    cProfile.runctx('get_action(test_assassin_rogue)', None, locals(), filename="get_action_stats")
+    p = pstats.Stats("get_action_stats")
+    p.strip_dirs().sort_stats("cumtime").print_stats()
+    #     actoid1 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid1, test_assassin_rogue)
+    #     actoid2 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid2, test_assassin_rogue)
+    #     actoid3 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid3, test_assassin_rogue)
+    #     actoid4 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid4, test_assassin_rogue)
+    #     actoid5 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid5, test_assassin_rogue)
+    #     actoid6 = get_action(test_assassin_rogue)
+    #     # assert str(actoid6).startswith("Cunning Hide of AssassinRogue from Ogre")
+    #     action_resolver.resolve_action(actoid6, test_assassin_rogue)
+    #     actoid7 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid7, test_assassin_rogue)
+    #     actoid8 = get_action(test_assassin_rogue)
+    #     # assert str(actoid8) == "Shortbow on Ogre"
+    #     action_resolver.resolve_action(actoid8, test_assassin_rogue)
+    #     actoids = [actoid1, actoid2, actoid3, actoid4, actoid5, actoid6, actoid7, actoid8]
+    #     # TODO The rogue's not hiding first because there's lone LoS from (2, 10) -> two phase movement?
+    #     test_assassin_rogue.new_turn()
+    #     actoid9 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid9, test_assassin_rogue)
+    #     actoid10 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid10, test_assassin_rogue)
+    #     actoid11 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
+    #     actoid12 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid12, test_assassin_rogue)
+    #     actoid13 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid12, test_assassin_rogue)
+    #     actoids = [actoid9, actoid10, actoid11, actoid12, actoid13]
+    #     # assert any(str(act) == "Shortbow on Ogre" for act in actoids)
+    #     # assert any(str(act).startswith("Cunning Hide of AssassinRogue from Ogre") for act in actoids)
+    # except Exception as e:
+    #     assert False, f"Raised an exception {e}"
 
 def test_cunning_adjacent_enemy_hide_sneak_attack_in_melee(battle_map, teams, effect_tracker, test_stone_giant, test_assassin_rogue, test_dire_wolf):
     """

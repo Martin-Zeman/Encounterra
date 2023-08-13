@@ -1,4 +1,8 @@
 import math
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
 from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
@@ -35,6 +39,7 @@ class PreSwallowBite(MeleeAttack):
     def shorthand_str(self):
         return "Bite"
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
@@ -44,5 +49,5 @@ class PreSwallowBite(MeleeAttack):
                                                            rng=self.factory.range,
                                                            combatant=self.factory.combatant)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

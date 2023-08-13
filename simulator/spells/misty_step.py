@@ -1,4 +1,8 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.battle_map import Map
 from simulator.spells.spell import SpellStats
 import logging
@@ -66,10 +70,11 @@ class MistyStep(Actoid, Threat):
     def calculate_threat(self, **kwargs):
         return 0  # Misty Step is handled differently
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None
         battle_map = Map.get()
         if self.factory.combatant.movement > 0:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

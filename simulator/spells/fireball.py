@@ -1,4 +1,8 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.combatant_coords import Coords
@@ -102,6 +106,7 @@ class Fireball(Actoid, DirectThreat):
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None
@@ -113,5 +118,5 @@ class Fireball(Actoid, DirectThreat):
                                                                  rng=FireballFactory.range,
                                                                  combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= FireballFactory.range:
-            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

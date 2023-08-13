@@ -1,4 +1,8 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.spells.spell import SpellStats
@@ -113,37 +117,38 @@ class MagicMissile(Actoid, DirectThreat):
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.get_swallower():
             return None  # Must be able to see
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
+            coords_for_first = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                             distances,
                                                                             inflate_to_size=self.factory.combatant.size,
                                                                             rng=MagicMissileFactory.range,
-                                                                            combatant=self.factory.combatant)
-            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
+                                                                            combatant=self.factory.combatant))
+            coords_for_second = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                               distances,
                                                                               inflate_to_size=self.factory.combatant.size,
                                                                               rng=MagicMissileFactory.range,
-                                                                              combatant=self.factory.combatant)
-            coords_for_third = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[2]),
+                                                                              combatant=self.factory.combatant))
+            coords_for_third = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[2]),
                                                                               distances,
                                                                               inflate_to_size=self.factory.combatant.size,
                                                                               rng=MagicMissileFactory.range,
-                                                                              combatant=self.factory.combatant)
+                                                                              combatant=self.factory.combatant))
             free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
 
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE}
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= MagicMissileFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= MagicMissileFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[2]) <= MagicMissileFactory.range \
             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[2]] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None

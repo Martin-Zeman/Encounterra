@@ -1,5 +1,9 @@
 from functools import cache
 from itertools import combinations
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.battle_map import Map, map_position_toggled_cache
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
@@ -148,7 +152,7 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
 
-
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None  # Not possible while blinded
@@ -164,14 +168,14 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
                                                                   distances,
                                                                   inflate_to_size=self.factory.combatant.size,
                                                                   rng=TwinnedHoldPersonFactory.range)
-            free_coords_in_range = coords_for_first.intersection(coords_for_second)
+            free_coords_in_range = set(coords_for_first).intersection(set(coords_for_second))
 
-            return {coord for coord in free_coords_in_range if
+            return [coord for coord in free_coords_in_range if
                     battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= HoldPersonFactory.range and \
             battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= HoldPersonFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None

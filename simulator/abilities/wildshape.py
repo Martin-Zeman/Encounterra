@@ -1,6 +1,9 @@
 import math
 from functools import cache
 import numpy as np
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import Action, BonusAction
 from simulator.actions.actoid import Actoid, FactoryFlags
 from simulator.battle_map import Map
@@ -199,6 +202,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0
 
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
     def get_eligible_coords(self, distances, shortest_paths):
         """
         Computes a list of coordinates that are eligible for wildshape but then reduces it down to those with a distance to the combatant
@@ -226,17 +230,17 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
             # Here we're only interested in the coords with the lowest distance from the original coordinate
             all_coords = np.argwhere(result_matrix == 1).tolist()
             all_coords.sort(key=lambda coord: distances[coord[0] * battle_map.size + coord[1]])
-            final_coords = set()
+            final_coords = list()
             curr_coord = all_coords[0]
             min_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
             curr_distance = min_distance
             idx = 1
             while curr_distance == min_distance:
-                final_coords.add(tuple(curr_coord))
+                final_coords.append(tuple(curr_coord))
                 curr_coord = all_coords[idx]
                 curr_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
                 idx += 1
             return final_coords
         elif Map.get().find_wildshaped_coordinate(self.factory.combatant, self.form.size):
-            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
