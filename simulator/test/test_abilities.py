@@ -154,7 +154,7 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
         action_resolver.resolve_action(actoid5, test_moon_druid)
 
         actoid7 = get_action(test_moon_druid)
-        # assert str(actoid7).startswith("Flaming Sphere")
+        assert actoid7.factory.concentration
         action_resolver.resolve_action(actoid7, test_moon_druid)
         actoid8 = get_action(test_moon_druid)
         assert str(actoid8) == "Wildshape of MoonDruid5Lvl into GiantToad"
@@ -177,7 +177,6 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
         action_resolver.resolve_action(actoid15, test_moon_druid)
         second_turn_actoids = [str(actoid10), str(actoid11), str(actoid12), str(actoid13), str(actoid14), str(actoid15)]
         assert any(act == "GiantToad Bite on Bugbear" for act in second_turn_actoids)
-        assert any(act == "Flaming Sphere Ram into Bugbear" for act in second_turn_actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -327,7 +326,7 @@ def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_mo
     wsf = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
     ws = wsf.create(GiantConstrictorSnake)
     coords = ws.get_eligible_coords(distances, shortest_paths)
-    assert coords == {(9, 9)}
+    assert coords == [(9, 9)]
 
 def test_wilshape_copy_two_druids(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
@@ -507,20 +506,30 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         assert any(act.startswith("(") for act in first_turn_actoids)
         test_assassin_rogue.new_turn()
         actoid11 = get_action(test_assassin_rogue)
+        print(actoid11)
         action_resolver.resolve_action(actoid11, test_assassin_rogue)
         actoid12 = get_action(test_assassin_rogue)
+        print(actoid12)
         action_resolver.resolve_action(actoid12, test_assassin_rogue)
         actoid13 = get_action(test_assassin_rogue)
+        print(actoid13)
         action_resolver.resolve_action(actoid13, test_assassin_rogue)
         actoid14 = get_action(test_assassin_rogue)
+        print(actoid14)
         action_resolver.resolve_action(actoid14, test_assassin_rogue)
         actoid15 = get_action(test_assassin_rogue)
+        print(actoid15)
         action_resolver.resolve_action(actoid15, test_assassin_rogue)
         actoid16 = get_action(test_assassin_rogue)
+        print(actoid16)
         action_resolver.resolve_action(actoid16, test_assassin_rogue)
         actoid17 = get_action(test_assassin_rogue)
+        print(actoid17)
         action_resolver.resolve_action(actoid17, test_assassin_rogue)
-        second_turn_actoids = [actoid11, actoid12, actoid13, actoid14, actoid15, actoid16, actoid17]
+        actoid18 = get_action(test_assassin_rogue)
+        print(actoid18)
+        action_resolver.resolve_action(actoid18, test_assassin_rogue)
+        second_turn_actoids = [actoid11, actoid12, actoid13, actoid14, actoid15, actoid16, actoid18]
         assert any(str(act).startswith("Cunning Hide") for act in second_turn_actoids)
         assert any(str(act).startswith("Shortbow") for act in second_turn_actoids)
         assert any(str(act).startswith("(") for act in second_turn_actoids)

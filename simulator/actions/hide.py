@@ -6,7 +6,7 @@ from cachetools.keys import hashkey
 from simulator.abilities.on_hit_sneak_attack import OnHitSneakAttack
 from simulator.actions.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_toggled_cache_with_key
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.misc import Visibility, roll_ability_check, Conditions
@@ -111,7 +111,7 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
         else:
             return 0
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None

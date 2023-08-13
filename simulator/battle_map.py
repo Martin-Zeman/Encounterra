@@ -173,7 +173,7 @@ def map_position_toggled_cache(func):
     call_func.cache_clear = cached_func.cache_clear
     return call_func
 
-def map_position_toggled_cache_with_key(key):
+def map_toggled_cache_with_key(key):
     """
     A custom cache decorator designed to be used on a method of an object instance that has the `cache_enabled` property and uses the
     current combatant position as a hashkey.
@@ -183,19 +183,18 @@ def map_position_toggled_cache_with_key(key):
     is False, caching is bypassed, and the method is executed normally without caching.
     """
     parametrized_cache = cached(cache={}, key=key)
-    def _map_position_toggled_cache_with_key(func):
+    def _map_toggled_cache_with_key(func):
         cached_func = parametrized_cache(func)
         def call_func(*args, **kwargs):
             battle_map = Map.get()
             if battle_map.cache_enabled:
-                # return cached_func(*args, **kwargs, position_hash=tuple(battle_map.get_combatant_position(args[0].factory.combatant).get()[0]))
                 return cached_func(*args, **kwargs)
             else:
                 return func(*args, **kwargs)
 
         call_func.cache_clear = cached_func.cache_clear
         return call_func
-    return _map_position_toggled_cache_with_key
+    return _map_toggled_cache_with_key
 
 
 def toggled_cache(key):

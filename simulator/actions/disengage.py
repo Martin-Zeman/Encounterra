@@ -5,7 +5,7 @@ from cachetools.keys import hashkey
 
 from simulator.actions.action_types import HasteAction, BonusAction
 from simulator.actions.actoid import Actoid, FactoryFlags
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_toggled_cache_with_key
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -82,7 +82,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         """
         return 0  # It's included in the accumulate_threat_along_path calculation
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \

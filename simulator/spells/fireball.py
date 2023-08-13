@@ -4,7 +4,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.combatant_coords import Coords
 from simulator.spells.spell import SpellStats
 from simulator.misc import SavingThrow, DamageType, Conditions
@@ -102,12 +102,12 @@ class Fireball(Actoid, DirectThreat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        self.get_eligible_coords.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None

@@ -6,7 +6,7 @@ from cachetools.keys import hashkey
 
 from simulator.actions.action_types import Action, BonusAction
 from simulator.actions.actoid import Actoid, FactoryFlags
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_toggled_cache_with_key
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.combatant_effect import CombatantEffect
 from simulator.effects.effect import EffectType
@@ -202,7 +202,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         """
         Computes a list of coordinates that are eligible for wildshape but then reduces it down to those with a distance to the combatant
@@ -241,6 +241,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
                 curr_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
                 idx += 1
             return final_coords
-        elif Map.get().find_wildshaped_coordinate(self.factory.combatant, self.form.size):
+        elif battle_map.find_wildshaped_coordinate(self.factory.combatant, self.form.size):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

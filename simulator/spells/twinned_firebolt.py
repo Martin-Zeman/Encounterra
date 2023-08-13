@@ -1,7 +1,7 @@
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.battle_map import Map, map_position_toggled_cache, map_position_toggled_cache_with_key
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, avg_roll, Conditions, Visibility
@@ -115,15 +115,15 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        self.get_eligible_coords.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
-    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         ret = self.factory.calculate_threat_to_target_delta(self.targets[0], modifiers)
         ret += self.factory.calculate_threat_to_target_delta(self.targets[1], modifiers)
         return ret
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None

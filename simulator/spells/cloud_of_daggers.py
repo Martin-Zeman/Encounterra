@@ -4,7 +4,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.combatant_coords import Coords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.effect import EffectType
@@ -121,7 +121,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        self.get_eligible_coords.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
@@ -138,7 +138,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def threat_on_move_within(self, target, *args, **kwargs):
         return 0
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.get_swallower():

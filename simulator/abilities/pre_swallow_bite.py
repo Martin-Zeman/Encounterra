@@ -6,7 +6,7 @@ from cachetools.keys import hashkey
 from simulator.actions.actoid import FactoryFlags
 from simulator.actions.attack import AttackFactory, Attack
 from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
-from simulator.battle_map import Map
+from simulator.battle_map import Map, map_toggled_cache_with_key
 from simulator.misc import percent_of_curr_hp, Conditions
 from simulator.threat_utils import mean_dmg
 import logging
@@ -39,7 +39,8 @@ class PreSwallowBite(MeleeAttack):
     def shorthand_str(self):
         return "Bite"
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):

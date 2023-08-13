@@ -2,7 +2,7 @@ import numpy as np
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.combatant_coords import Coords
 from simulator.effects.aoe_square_effect import AoeSquareEffect
 from simulator.effects.combatant_effect import CombatantEffect
@@ -125,7 +125,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        self.get_eligible_coords.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
         return 0
@@ -139,7 +139,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
     def threat_on_move_within(self, target, *args, **kwargs):
         return 0
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None

@@ -1,7 +1,7 @@
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
@@ -144,9 +144,9 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        self.get_eligible_coords.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])

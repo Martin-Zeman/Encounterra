@@ -6,7 +6,7 @@ from cachetools.keys import hashkey
 
 from simulator.actions.action_types import BonusAction
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.combatant_coords import Coords
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.aoe_square_effect import AoeSquareEffect
@@ -129,9 +129,9 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        self.get_eligible_coords.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None  # Not possible while blinded

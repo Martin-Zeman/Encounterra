@@ -293,7 +293,7 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
 
     ms_transition_to_eligible_coords = None
     post_misty_step_transitions = None
-    transition_names = proto_dag.get_available_transitions()
+    transition_names = proto_dag.get_all_transitions()
     if 'Misty Step to 0, 0_1' in transition_names:
         post_misty_step_transitions = get_post_misty_step_transitions(proto_dag, transition_name_to_action)
 
@@ -310,9 +310,14 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
 
     transition_names = list(filter(lambda t: t != "dummy", transition_names))
     if not transition_names or transition_names[0] == 'None_0':
-        return None, None
+        return None, None, None
 
-    transition_to_eligible_coords = {tn: transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths) for tn in transition_names}
+    transition_to_eligible_coords = dict()
+    for tn in transition_names:
+        try:
+            transition_to_eligible_coords[tn] = transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths)
+        except AttributeError:
+            continue  # Happens for wildshaped actions, will be dealth with separately since this is a chicken an egg problem. We need to be put to the wildshape's eligible coord first.
     transition_to_eligible_coords = {tn: coords for tn, coords in transition_to_eligible_coords.items() if coords}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
@@ -344,7 +349,7 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
         build_misty_step_transitions(dag, post_misty_step_transitions, ms_transition_to_eligible_coords, movement_transition_to_coord_and_type)
     build_priority_transitions(dag, post_priority_action_transitions, a_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_ACTIONS)
     build_priority_transitions(dag, post_priority_bonus_action_transitions, ba_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
-    return dag, movement_transition_to_coord_and_type
+    return dag, movement_transition_to_coord_and_type, transition_to_eligible_coords
 
 
 
@@ -397,7 +402,7 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, se
     return sequences[sorted_sequences[0]]
 
 
-def find_best_sequence(combatant, dag, transition_name_to_action, movement_transition_to_coord_and_type, distances, shortest_paths):
+def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_transition_to_coord_and_type, distances, shortest_paths):
     """
     Finds the path through the DAG which represents the movement and actions with the highest calculated threat.
     We're taking advantage of the fact that as a result of the DFS traversal the coordinates in generated sequences are block-wise.
@@ -407,6 +412,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
     :param combatant: the combatant for whom the DAG is modeled
     :param dag: finite state machine representing all possible actions for combatant
     :param transition_name_to_action: dict mapping non-movement transition names -> action objects
+    :param transition_to_eligible_coords: dict mapping non-movement transition names -> their eligible coordinates
     :param movement_transition_to_coord_and_type: dict mapping movement transition names -> target coord, MovementThreatType
     :param distances: potentially already pre-computed distances to all coords
     :param shortest_paths: potentially already pre-computed shortest paths to all coords
@@ -472,8 +478,6 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
             continue
         coord, _ = coord_and_movement_type
         battle_map.clear_caches()
-        if coord[0] == 4 and coord[1] == 3:
-            print("FIXME")
         with battle_map.as_if_combatant_position(combatant, np.array(coord)):
             for idx in ids:
                 delta_action = None
@@ -483,9 +487,13 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
                         break
                     try:  # Is it a transition which represents a (bonus) action?
                         action = transition_name_to_action[transition]
+                        # feasibility_multiplier = 1
                         with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, coord) as did_transform:
                             if t_idx > 1:
-                                eligible_coords = transition_name_to_action[transition].get_eligible_coords(distances, shortest_paths)
+                                try:
+                                    eligible_coords = transition_to_eligible_coords[transition]
+                                except KeyError:
+                                    eligible_coords = action.get_eligible_coords(distances, shortest_paths)  # Happens for wildshaped actions
                                 remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
                                 feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else 0.5
                             feasibility_multiplier = 1 if distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else 0.5
@@ -502,6 +510,11 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
                 sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords.get()[0]) else 0  # Small bias towards current position
 
     sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
+    try:
+        print(f"MY DEBUG {[sequences[sorted_sequences[i]] for i in range(10)]}")
+        print(f"MY DEBUG {[sequence_to_threat[sorted_sequences[i]] for i in range(10)]}")
+    except IndexError:
+        pass
     return get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, sequence_idx_to_transition_step_threat, distances), transition_name_to_ms_path
 
 

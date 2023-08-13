@@ -6,7 +6,7 @@ from cachetools.keys import hashkey
 from simulator.actions.action_types import BonusAction, HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 import logging
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.misc import Conditions
 from simulator.threat_interfaces import Factory, AttackThreatModifier
 from simulator.threat_utils import get_danger_zone_threat
@@ -63,12 +63,12 @@ class Dash(Actoid, AttackThreatModifier):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        self.get_eligible_coords.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         return 0  # TODO do the distance mod here
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
