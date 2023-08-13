@@ -322,7 +322,7 @@ class Map:
 
 
     @contextmanager
-    def replace_combatant_if_action_by_wildshaped(self, action, combatant, orig_coords: np.array):
+    def replace_combatant_if_action_by_wildshaped(self, action, combatant, orig_coords: tuple):
         """
         Replaces the combatant's position with the position of a wilshaped form if the actor of the action is a wildshaped for
         :param action:
@@ -352,7 +352,7 @@ class Map:
             yield False
 
 
-    def find_wildshaped_coordinate(self, combatant, size: Size, orig_coords: np.array=None):  # TODO caching cancidate
+    def find_wildshaped_coordinate(self, combatant, size: Size, orig_coords: tuple=None):  # TODO caching cancidate
         """
         Since the druid's size may increase when using wildshape we want to allow the druid to shift their position when doing so
         in order to fit. We have to contend that the battle_map vs matrix coords are swapped and y-axis is inverted w.r.t. rows.
