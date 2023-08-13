@@ -93,7 +93,7 @@ class Bless(Actoid, Effect, AttackThreatModifier):
         """
         return attack.calculate_threat_delta({"to_hit_die": '1d4'})
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):

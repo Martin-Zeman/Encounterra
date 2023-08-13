@@ -63,11 +63,12 @@ class Dash(Actoid, AttackThreatModifier):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        self.get_eligible_coords.cache_clear()
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         return 0  # TODO do the distance mod here
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):

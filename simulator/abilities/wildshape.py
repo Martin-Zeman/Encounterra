@@ -202,7 +202,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
     def get_eligible_coords(self, distances, shortest_paths):
         """
         Computes a list of coordinates that are eligible for wildshape but then reduces it down to those with a distance to the combatant

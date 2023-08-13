@@ -74,7 +74,7 @@ class Web(Actoid, DirectThreat):
     def shorthand_str(self):
         return "Web"
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.get_swallower():
@@ -103,6 +103,7 @@ class Web(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
+        self.get_eligible_coords.cache_clear()
 
     @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

@@ -129,6 +129,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        self.get_eligible_coords.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability
@@ -145,7 +146,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def threat_on_move_within(self, target, *args, **kwargs):
         return avg_roll(self.factory.dmg_dice)
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None

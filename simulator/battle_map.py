@@ -902,12 +902,9 @@ class Map:
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         assert rng > 0
-        try:
-            inflated = self.inflate_coords(coords, inflate_to_size)
-        except AttributeError:
-            print("FIXME")
+        inflated = self.inflate_coords(coords, inflate_to_size)
 
-        adjacent_coords = list()
+        adjacent_coords = set()
         for coord in inflated:
             for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size:
@@ -916,8 +913,8 @@ class Map:
                 consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances is not None else True
                 if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
-                    adjacent_coords.append((x, y))
-        return adjacent_coords
+                    adjacent_coords.add((x, y))
+        return list(adjacent_coords)
 
     @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
     def get_free_coords_in_cartesian_range(self, coords: Coords, distances=(), inflate_to_size=Size.MEDIUM, rng=1, combatant=None):

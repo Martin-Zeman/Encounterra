@@ -80,7 +80,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         # return -1 * calculate_threat_in_delta(combatant, 6, battle_map, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE | FactoryFlags.DEX_SAVE_APPLIES) / 2
         return 0  # Threat that a Dodge would potentially mitigate is calculated using accumulate_threat_along_path
 
-    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey())
+    @cached(cache={}, key=lambda self, distances, shortest_paths: hashkey(self.factory.combatant.name))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # It's a priority action so the coord is not relevant

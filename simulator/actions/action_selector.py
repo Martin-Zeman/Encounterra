@@ -285,6 +285,9 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
     """
     battle_map = Map.get()
     battle_map.calc_visibility_dict_for_all_coords(combatant, shortest_paths)
+    # Optimization: calculate_threat is cached, so we need to clear the cache before the computation
+    for action in transition_name_to_action.values():
+        action.clear_cache()
 
     post_priority_action_transitions, post_priority_bonus_action_transitions = get_post_transitions_of_all_priority_transitions(proto_dag, transition_name_to_action)
 
@@ -438,11 +441,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
 
     DFS(dag, '0', [], None)
 
-    # Optimization: calculate_threat is cached, so we need to clear the cache before the computation
-    for action in transition_name_to_action.values():
-        action.clear_cache()
     accumulate_threat_along_path.cache_clear()
-
     # Movement transitions
     for coord_and_movement_type, ids in coord_to_sequence_ids.items():
         if coord_and_movement_type is None:
@@ -473,6 +472,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, movement_trans
             continue
         coord, _ = coord_and_movement_type
         battle_map.clear_caches()
+        if coord[0] == 4 and coord[1] == 3:
+            print("FIXME")
         with battle_map.as_if_combatant_position(combatant, np.array(coord)):
             for idx in ids:
                 delta_action = None
