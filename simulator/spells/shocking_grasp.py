@@ -85,13 +85,11 @@ class ShockingGraspFactory(DirectThreatFactory):
 
         ret = mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(ShockingGraspFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     ShockingGraspFactory.dmg_type))
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta = {ret}")
         return ret
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
         ret = max([self.calculate_threat_to_target(t) for t in targets])
-        # logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
         return ret
 
 
@@ -118,7 +116,7 @@ class ShockingGrasp(Actoid, DirectThreat):
         self.calculate_threat_delta.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 

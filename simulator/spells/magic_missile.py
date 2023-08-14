@@ -60,10 +60,8 @@ class MagicMissileFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= MagicMissileFactory.range:
             ret = 3 * (mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)
-            # logger.warning(f"MY DEBUG {self} calculate_threat_to_target = {ret}")
             return ret
         else:
-            # logger.warning(f"MY DEBUG {self} calculate_threat_to_target = 0")
             return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -82,9 +80,7 @@ class MagicMissileFactory(DirectThreatFactory):
             threat = self.calculate_threat_to_target(t)
             # We just need one enemy within range which assures we can deal the damage (which is target-agnostic)
             if threat:
-                # logger.warning(f"MY DEBUG {self} calculate_max_threat = {threat}")
                 return threat
-        # logger.warning(f"MY DEBUG {self} calculate_max_threat = 0")
         return 0
 
 
@@ -118,7 +114,7 @@ class MagicMissile(Actoid, DirectThreat):
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0
 
-    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.get_swallower():

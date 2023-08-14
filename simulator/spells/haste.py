@@ -80,20 +80,16 @@ class HasteFactory(ThreatModifierFactory):
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_attack_dmg = max(dmg_acc, max_attack_dmg)
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target max_attack_dmg = {max_attack_dmg}")
         attack_dmg_decrement_acc = 0
         assert len(enemies) > 0
         for enemy in enemies:
             enemy_attacks = get_attacks(enemy)
             if not enemy_attacks:
                 continue
-            # attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
             attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(target, {ThreatModifierType.TARGET_AC: 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target attack_dmg_decrement_acc = {attack_dmg_decrement_acc}")
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target total = {max_attack_dmg * ROUND_HORIZON}")
         return max_attack_dmg * ROUND_HORIZON
 
     def calculate_max_threat(self):
@@ -146,7 +142,7 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
         self.calculate_threat.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])

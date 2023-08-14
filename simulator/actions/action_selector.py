@@ -510,11 +510,6 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                 sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords.get()[0]) else 0  # Small bias towards current position
 
     sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
-    try:
-        print(f"MY DEBUG {[sequences[sorted_sequences[i]] for i in range(10)]}")
-        print(f"MY DEBUG {[sequence_to_threat[sorted_sequences[i]] for i in range(10)]}")
-    except IndexError:
-        pass
     return get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, sequence_idx_to_transition_step_threat, distances), transition_name_to_ms_path
 
 

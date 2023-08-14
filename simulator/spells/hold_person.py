@@ -85,7 +85,6 @@ class HoldPersonFactory(ThreatModifierFactory):
         for _ in range(ROUND_HORIZON):
             total_threat += threat_round_total * p_fail_acc
             p_fail_acc *= p_fail
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target ={total_threat}")
         return total_threat
 
     def get_eligible_targets(self):
@@ -145,7 +144,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         self.calculate_threat.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.get_swallower():

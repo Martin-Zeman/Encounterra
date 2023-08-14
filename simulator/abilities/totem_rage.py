@@ -125,12 +125,10 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModi
         rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         if FactoryFlags.IS_MELEE in attack.factory.flags:
             ret = attack.calculate_threat_delta({ThreatModifierType.DMG_BONUS_FLAT: rage_bonus})
-            # logger.warning(f"MY DEBUG {self} calculate_threat_for_attack = {ret}")
             return ret
-        # logger.warning(f"MY DEBUG {self} calculate_threat_for_attack = 0")
         return 0
 
-    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):

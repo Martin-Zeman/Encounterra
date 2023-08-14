@@ -135,14 +135,13 @@ class TwinnedHaste(Actoid, Effect, Threat):
         target1_threat = self.factory.calculate_threat_to_target(self.targets[0]) if self.targets[0] is not None else 0
         target2_threat = self.factory.calculate_threat_to_target(self.targets[1]) if self.targets[1] is not None else 0
         ret = target1_threat + target2_threat
-        # logger.warning(f"MY DEBUG {self} calculate_threat = {ret}")
         return ret
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None  # Better not waste a twinned version even though self could still be targeted

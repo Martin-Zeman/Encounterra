@@ -99,11 +99,8 @@ class RecklessAttackFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_hop_distance_combatants(self.combatant, target) <= self.range or not consider_dist:
             dmg = mean_dmg(self.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range * ROLL_TYPE_CRIT_DELTA[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target dmg = {dmg}")
         # even the single target calculation the combatant is still more vulnerable to all potential attackers
         incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1] / 2  # Heuristic
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target incoming_threat_delta_acc = {incoming_threat_delta_acc}")
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target total = {dmg - incoming_threat_delta_acc}")
         return dmg - incoming_threat_delta_acc
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -141,11 +138,8 @@ class RecklessAttackFactory(DirectThreatFactory):
             else:
                 modified = 0
 
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta modified threat = {modified}")
 
         incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1] / 2  # Heuristic
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta incoming_threat_delta_acc = {incoming_threat_delta_acc}")
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta total = {modified - baseline - incoming_threat_delta_acc}")
         return modified - baseline - incoming_threat_delta_acc
 
     def calculate_max_threat(self):
@@ -190,7 +184,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         self.calculate_threat_delta.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         The delta in threat when modifiers are applied on this ability.
@@ -199,7 +193,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         # logger.warning(f"MY DEBUG {self} calculate_threat_delta = {ret}")
         return ret
 
-    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         swallower = self.factory.combatant.get_swallower()
