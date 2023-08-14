@@ -116,7 +116,7 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
         if self.factory.combatant.get_swallower():
             return None
         battle_map = Map.get()
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return [coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE]
         elif battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])][self.target] is Visibility.NONE:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

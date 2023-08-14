@@ -147,7 +147,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
             return None  # Better not waste a twinned version even though self could still be targeted
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             if self.targets[0] is self.factory.combatant:
                 coords_for_first = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
             else:

@@ -75,6 +75,6 @@ class MistyStep(Actoid, Threat):
         if self.factory.combatant.get_swallower():
             return None
         battle_map = Map.get()
-        if self.factory.combatant.movement > 0:
-            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+        # if self.factory.combatant.movement > 0:
+        #     return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

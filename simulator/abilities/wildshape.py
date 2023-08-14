@@ -212,7 +212,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         :return: eligible coordinates
         """
         battle_map = Map.get()
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             map_accessibility_matrix = np.zeros((battle_map.size, battle_map.size))
             for coord in shortest_paths.keys():
                 map_accessibility_matrix[coord] = 1

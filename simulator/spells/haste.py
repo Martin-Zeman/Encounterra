@@ -153,7 +153,7 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
             return None  # Not possible while blinded
         if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        elif self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        elif not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
