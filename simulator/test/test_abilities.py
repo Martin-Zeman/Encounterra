@@ -722,7 +722,7 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([2, 3]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 2]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([2, 1]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 1]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([1, 3]))
     battle_map.build_adjacency_matrix()
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
@@ -806,18 +806,16 @@ def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rog
         actoid8 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid8, test_assassin_rogue)
         actoid9 = get_action(test_assassin_rogue)
-        # assert str(actoid9) is not "None"
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
         actoid10 = get_action(test_assassin_rogue)
-        # assert str(actoid10) is not "None"
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
         actoid11 = get_action(test_assassin_rogue)
-        # assert str(actoid11) is not "None"
         action_resolver.resolve_action(actoid11, test_assassin_rogue)
-        actoids = [str(actoid6), str(actoid7), str(actoid8), str(actoid9), str(actoid10), str(actoid11)]
-        # assert any(act.startswith("Cunning Dash") for act in actoids)
-        # assert any(act.startswith("Shortbow") for act in actoids)
-        # assert not any(act.startswith("Disengage") for act in actoids) # TODO This will fail, fix ti
+        actoids = [str(actoid1), str(actoid2), str(actoid3), str(actoid4), str(actoid5), str(actoid6), str(actoid7), str(actoid8), str(actoid9), str(actoid10), str(actoid11)]
+        assert any(act.startswith("Cunning Dash") for act in actoids)
+        assert any(act.startswith("Shortbow") for act in actoids)
+        assert not any(act.startswith("Disengage") for act in actoids)
+        assert sum(1 for actoid in actoids if actoid.startswith("(")) > 6
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

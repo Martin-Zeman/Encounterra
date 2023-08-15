@@ -54,11 +54,11 @@ class Dash(Actoid, AttackThreatModifier):
             prefix = "Hasted "
         return prefix + f"Dash"
 
-    @map_position_toggled_cache
+    @map_toggled_cache_with_key(key=lambda self, **kwargs: hashkey(kwargs["movement_threat"], self.factory.combatant.movement, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat(self, **kwargs):
         movement_threat = kwargs["movement_threat"]
         baseline = -1 * movement_threat[min(self.factory.combatant.movement, len(movement_threat) - 1)]
-        modified = -1 * movement_threat[min(self.factory.combatant.movement + self.factory.combatant.movement, len(movement_threat) - 1)]
+        modified = -1 * movement_threat[min(self.factory.combatant.movement + self.factory.combatant.speed, len(movement_threat) - 1)]
         return max(0, baseline - modified)  # We're only interested in this if used defensively, we don't want it to play a role if used offensively
 
     def clear_cache(self):
@@ -74,5 +74,5 @@ class Dash(Actoid, AttackThreatModifier):
         if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
             return None
         # if self.factory.combatant.movement > 0:
-        #     return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+        return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+        # return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

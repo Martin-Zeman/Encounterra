@@ -493,6 +493,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                                     eligible_coords = transition_to_eligible_coords[transition]
                                 except KeyError:
                                     eligible_coords = action.get_eligible_coords(distances, shortest_paths)  # Happens for wildshaped actions
+                                if not eligible_coords:
+                                    continue  # e.g. when there's no place to hide
                                 remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
                                 feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else 0.5
                             else:
