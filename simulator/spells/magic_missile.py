@@ -94,10 +94,10 @@ class MagicMissile(Actoid, DirectThreat):
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Magic Missile on {self.targets[0]}, {self.targets[1]} and {self.targets[2]}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_MAGIC_MISSILE else "") + f"Magic Missile on {self.targets[0]}, {self.targets[1]} and {self.targets[2]}"
 
     def shorthand_str(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Magic Missile"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_MAGIC_MISSILE else "") + "Magic Missile"
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

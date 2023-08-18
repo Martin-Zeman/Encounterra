@@ -1117,4 +1117,3 @@ def test_error_case_25(battle_map, teams, effect_tracker, test_dire_wolf, test_g
         action_resolver.resolve_action(actoid1, test_dire_wolf)
     except Exception as e:
         assert False, f"Raised an exception {e}"
-

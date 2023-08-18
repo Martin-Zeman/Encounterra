@@ -1,8 +1,5 @@
 import math
-from functools import cache
 import numpy as np
-from cachetools import cached
-from cachetools.keys import hashkey
 
 from simulator.actions.action_types import Action, BonusAction
 from simulator.actions.actoid import Actoid, FactoryFlags
