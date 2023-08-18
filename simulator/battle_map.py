@@ -173,7 +173,7 @@ def map_position_toggled_cache(func):
     call_func.cache_clear = cached_func.cache_clear
     return call_func
 
-def map_position_toggled_cache_with_key(key):
+def map_toggled_cache_with_key(key):
     """
     A custom cache decorator designed to be used on a method of an object instance that has the `cache_enabled` property and uses the
     current combatant position as a hashkey.
@@ -183,19 +183,18 @@ def map_position_toggled_cache_with_key(key):
     is False, caching is bypassed, and the method is executed normally without caching.
     """
     parametrized_cache = cached(cache={}, key=key)
-    def _map_position_toggled_cache_with_key(func):
+    def _map_toggled_cache_with_key(func):
         cached_func = parametrized_cache(func)
         def call_func(*args, **kwargs):
             battle_map = Map.get()
             if battle_map.cache_enabled:
-                # return cached_func(*args, **kwargs, position_hash=tuple(battle_map.get_combatant_position(args[0].factory.combatant).get()[0]))
                 return cached_func(*args, **kwargs)
             else:
                 return func(*args, **kwargs)
 
         call_func.cache_clear = cached_func.cache_clear
         return call_func
-    return _map_position_toggled_cache_with_key
+    return _map_toggled_cache_with_key
 
 
 def toggled_cache(key):
@@ -902,10 +901,7 @@ class Map:
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         assert rng > 0
-        try:
-            inflated = self.inflate_coords(coords, inflate_to_size)
-        except AttributeError:
-            print("FIXME")
+        inflated = self.inflate_coords(coords, inflate_to_size)
 
         adjacent_coords = set()
         for coord in inflated:
@@ -917,7 +913,7 @@ class Map:
                 if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     adjacent_coords.add((x, y))
-        return adjacent_coords
+        return list(adjacent_coords)
 
     @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
     def get_free_coords_in_cartesian_range(self, coords: Coords, distances=(), inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
@@ -936,7 +932,7 @@ class Map:
         # First inflate it by the size of the combatant looking for the path
         inflated = self.inflate_coords(coords, inflate_to_size)
 
-        coords_in_range = set()
+        coords_in_range = list()
         for coord in inflated:
             # the rng can be used as a bounding box for the search
             for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
@@ -946,7 +942,7 @@ class Map:
                 consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances else True
                 if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
-                    coords_in_range.add((x, y))
+                    coords_in_range.append((x, y))
         return coords_in_range
 
     def get_all_accessible_coords(self, shortest_paths, combatant):
@@ -956,8 +952,8 @@ class Map:
         :param combatant: the subject combatant
         :return: free and accessible coordinates as a set of tuples (x, y)
         """
-        ret = set(shortest_paths.keys())
-        ret.add(tuple(self.get_combatant_position(combatant).get()[0]))
+        ret = list(shortest_paths.keys())
+        ret.append(tuple(self.get_combatant_position(combatant).get()[0]))
         return ret
 
 
@@ -1116,16 +1112,6 @@ class Map:
                 return None
             else:
                 return combatant.get_original_form()
-    # def clear(self):
-    #     for row in self.grid:
-    #         for square in row:
-    #             square.remove_combatant()
-    #             square.reset_terrain()
-    #     for coords in self.combatant_coordinate_cache.values():
-    #         coords.get().fill(0)
-    #     self.impassable_set.clear()
-    #     self.difficult_set.clear()
-    #     self.terrain_encoding.fill(Terrain.NORMAL_TERRAIN.value)
 
 
     def reset(self, combatant_initial_positions):

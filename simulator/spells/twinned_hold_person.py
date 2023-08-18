@@ -1,6 +1,10 @@
 from functools import cache
 from itertools import combinations
-from simulator.battle_map import Map, map_position_toggled_cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -147,14 +151,15 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
-
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None  # Not possible while blinded
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
@@ -164,14 +169,14 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
                                                                   distances,
                                                                   inflate_to_size=self.factory.combatant.size,
                                                                   rng=TwinnedHoldPersonFactory.range)
-            free_coords_in_range = coords_for_first.intersection(coords_for_second)
+            free_coords_in_range = set(coords_for_first).intersection(set(coords_for_second))
 
-            return {coord for coord in free_coords_in_range if
+            return [coord for coord in free_coords_in_range if
                     battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= HoldPersonFactory.range and \
             battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= HoldPersonFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None

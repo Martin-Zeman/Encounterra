@@ -1,8 +1,12 @@
 import logging
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction
 from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.combatant_coords import Coords
 from simulator.effects.action_enabler_effect import ActionEnablerEffect
 from simulator.effects.aoe_square_effect import AoeSquareEffect
@@ -125,19 +129,21 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None  # Not possible while blinded
         battle_map = Map.get()
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=FlamingSphereFactory.range,
                                                                  combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FlamingSphereFactory.range:
-            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
 
     def on_start_of_turn(self, combatant):

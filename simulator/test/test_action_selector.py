@@ -35,7 +35,7 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_proto_dag(test_draconic_sorcerer_5lvl)
-    dag, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
+    dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # dfs.get_graph().draw('state_diagram_faurung_with_coords',format='svg', prog='dot')
 
     # Tests the Misty Step movement + Firebolt
@@ -72,7 +72,7 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
         # get_aoe_and_aoo_threat_for_increment.cache_clear()
         fsm, transition_name_to_action = generate_proto_dag(test_draconic_sorcerer_5lvl)
-        dag, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
+        dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
         transitions = dag.get_available_transitions()
         # Tests regular movement + quickened fireball
         assert dag.state == '0'
@@ -111,7 +111,7 @@ def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracke
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_proto_dag(test_draconic_sorcerer_5lvl)
-    dag, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
+    dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests regular movement + fireball
     assert dag.state == '0'
     dag.trigger("m_(2, 3)")
@@ -144,7 +144,7 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_proto_dag(test_draconic_sorcerer_5lvl)
-    dag, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
+    dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests regular movement + staff of defence attack
     assert dag.state == '0'
     dag.trigger("m_(9, 10)")
@@ -181,7 +181,7 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_proto_dag(test_draconic_sorcerer_5lvl)
-    dag, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
+    dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests Misty Step movement + staff of defence attack
     assert dag.state == '0'
     dag.trigger("ms_(9, 10)")
@@ -206,7 +206,7 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_proto_dag(test_draconic_sorcerer_5lvl)
-    dag, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
+    dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests Dodge + movement + a quickened spell
     assert dag.state == '0'
     dag.trigger("Dodge of DraconicSorcerer5lvl_1")
@@ -236,7 +236,7 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_proto_dag(test_draconic_sorcerer_5lvl)
-    dag, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
+    dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests Disengage + movement + a quickened spell
     assert dag.state == '0'
     dag.trigger("Disengage of DraconicSorcerer5lvl_1")

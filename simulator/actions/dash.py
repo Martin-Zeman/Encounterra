@@ -1,8 +1,12 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction, HasteAction
 from simulator.actions.actoid import Actoid, ActoidFlags
 import logging
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.misc import Conditions
 from simulator.threat_interfaces import Factory, AttackThreatModifier
 from simulator.threat_utils import get_danger_zone_threat
@@ -50,23 +54,25 @@ class Dash(Actoid, AttackThreatModifier):
             prefix = "Hasted "
         return prefix + f"Dash"
 
-    @map_position_toggled_cache
+    @map_toggled_cache_with_key(key=lambda self, **kwargs: hashkey(kwargs["movement_threat"], self.factory.combatant.movement, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat(self, **kwargs):
         movement_threat = kwargs["movement_threat"]
         baseline = -1 * movement_threat[min(self.factory.combatant.movement, len(movement_threat) - 1)]
-        modified = -1 * movement_threat[min(self.factory.combatant.movement + self.factory.combatant.movement, len(movement_threat) - 1)]
+        modified = -1 * movement_threat[min(self.factory.combatant.movement + self.factory.combatant.speed, len(movement_threat) - 1)]
         return max(0, baseline - modified)  # We're only interested in this if used defensively, we don't want it to play a role if used offensively
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         return 0  # TODO do the distance mod here
 
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
             return None
-        if self.factory.combatant.movement > 0:
-            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+        # if self.factory.combatant.movement > 0:
+        return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+        # return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

@@ -472,8 +472,9 @@ class ActionResolver:
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
                 | Action.BITE_AND_SWALLOW | HasteAction.HASTE_BITE_AND_SWALLOW:
+                ret = self.resolve_attack(actoid, combatant)
                 battle_map.effect_tracker.remove_effect_by_type(combatant, EffectType.HIDE)
-                return self.resolve_attack(actoid, combatant)
+                return ret
             case Movement.STANDARD | Movement.DISENGAGED:
                 if not self.request_movement(combatant, actoid):
                     return False
@@ -514,6 +515,7 @@ class ActionResolver:
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
                 return ActionResult.DMG
             case Action.MAGIC_MISSILE | BonusAction.QUICKENED_MAGIC_MISSILE:
+                logger.info(f"{combatant} casts {actoid}")
                 dice = parse_dmg_dice(actoid.factory.dmg_dice)
                 dmg_dice_sum = roll_dice(dice) + actoid.factory.dmg_bonus
                 hits_received = dict()
@@ -525,6 +527,8 @@ class ActionResolver:
                 # They have to hit at the same time in order to incur only one concentration check
                 for target, hits in hits_received.items():
                     target.receive_compound_dmg([(dmg_dice_sum, MagicMissileFactory.dmg_type)] * hits)
+                    logger.info(f"{target} is hit for {dmg_dice_sum * hits} damage")
+                    battle_map.remove_combatant_if_dead(target)
                 return ActionResult.DMG
             case Action.POUNCE:
                 # TODO

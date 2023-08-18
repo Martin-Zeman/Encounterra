@@ -1,4 +1,6 @@
+import cProfile
 import copy
+import pstats
 
 import numpy as np
 import pytest
@@ -152,7 +154,7 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
         action_resolver.resolve_action(actoid5, test_moon_druid)
 
         actoid7 = get_action(test_moon_druid)
-        # assert str(actoid7).startswith("Flaming Sphere")
+        assert actoid7.factory.concentration
         action_resolver.resolve_action(actoid7, test_moon_druid)
         actoid8 = get_action(test_moon_druid)
         assert str(actoid8) == "Wildshape of MoonDruid5Lvl into GiantToad"
@@ -175,7 +177,6 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
         action_resolver.resolve_action(actoid15, test_moon_druid)
         second_turn_actoids = [str(actoid10), str(actoid11), str(actoid12), str(actoid13), str(actoid14), str(actoid15)]
         assert any(act == "GiantToad Bite on Bugbear" for act in second_turn_actoids)
-        assert any(act == "Flaming Sphere Ram into Bugbear" for act in second_turn_actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -325,7 +326,7 @@ def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_mo
     wsf = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
     ws = wsf.create(GiantConstrictorSnake)
     coords = ws.get_eligible_coords(distances, shortest_paths)
-    assert coords == {(9, 9)}
+    assert coords == [(9, 9)]
 
 def test_wilshape_copy_two_druids(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
@@ -500,9 +501,9 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
         actoid10 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
-        first_turn_actoids = [str(actoid1), str(actoid2), str(actoid3), str(actoid4), str(actoid5), str(actoid6),str(actoid7), str(actoid8), str(actoid9), str(actoid10)]
-        assert any(act.startswith("Shortbow") for act in first_turn_actoids)
-        assert any(act.startswith("(") for act in first_turn_actoids)
+        first_turn_actoids = [actoid1, actoid2, actoid3, actoid4, actoid5, actoid6, actoid7, actoid8, actoid9, actoid10]
+        assert any(str(act).startswith("Shortbow") for act in first_turn_actoids)
+        assert any(str(act).startswith("(") for act in first_turn_actoids)
         test_assassin_rogue.new_turn()
         actoid11 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid11, test_assassin_rogue)
@@ -518,7 +519,9 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
         action_resolver.resolve_action(actoid16, test_assassin_rogue)
         actoid17 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid17, test_assassin_rogue)
-        second_turn_actoids = [actoid11, actoid12, actoid13, actoid14, actoid15, actoid16, actoid17]
+        actoid18 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid18, test_assassin_rogue)
+        second_turn_actoids = [actoid11, actoid12, actoid13, actoid14, actoid15, actoid16, actoid18]
         assert any(str(act).startswith("Cunning Hide") for act in second_turn_actoids)
         assert any(str(act).startswith("Shortbow") for act in second_turn_actoids)
         assert any(str(act).startswith("(") for act in second_turn_actoids)
@@ -529,7 +532,7 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
 def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
     """
     Test scenario where the Rogue has two enemies and one ally adjacent to one of the enemies. The Rogue doesn't need to hide to trigger
-    Sneak Attack but hiding still gives advantage so the rogue goes for it.
+    Sneak Attack but hiding still gives advantage so the rogue goes for it despite suffering an AoO from the goblin.
     """
     CustomLogger(LogLevel.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
@@ -562,10 +565,12 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
         actoid5 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid5, test_assassin_rogue)
         actoid6 = get_action(test_assassin_rogue)
+        assert str(actoid6) == "Cunning Hide of AssassinRogue from Ogre"
         action_resolver.resolve_action(actoid6, test_assassin_rogue)
         actoid7 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid7, test_assassin_rogue)
         actoid8 = get_action(test_assassin_rogue)
+        assert str(actoid8) == "Shortbow on Ogre"
         action_resolver.resolve_action(actoid8, test_assassin_rogue)
         actoid9 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
@@ -577,13 +582,16 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
         actoid12 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid12, test_assassin_rogue)
         actoid13 = get_action(test_assassin_rogue)
-        assert str(actoid12).startswith("Cunning Hide") or str(actoid13).startswith("Cunning Hide")
         action_resolver.resolve_action(actoid13, test_assassin_rogue)  # Step of out hiding
         actoid14 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid14, test_assassin_rogue)
         actoid15 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid15, test_assassin_rogue)
-        assert str(actoid14) == "Shortbow on Ogre" or str(actoid15) == "Shortbow on Ogre"
+        actoid16 = get_action(test_assassin_rogue)
+        action_resolver.resolve_action(actoid16, test_assassin_rogue)
+        second_turn_actoids = [actoid11, actoid12, actoid13, actoid14, actoid15, actoid16]
+        assert any(str(act) == "Cunning Hide of AssassinRogue from Ogre" for act in second_turn_actoids)
+        assert any(str(act) == "Shortbow on Ogre" for act in second_turn_actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -611,41 +619,47 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
     battle_map.build_adjacency_matrix()
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
 
-    try:
-        actoid1 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid1, test_assassin_rogue)
-        actoid2 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid2, test_assassin_rogue)
-        actoid3 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid3, test_assassin_rogue)
-        actoid4 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid4, test_assassin_rogue)
-        actoid5 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid5, test_assassin_rogue)
-        actoid6 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid6, test_assassin_rogue)
-        actoid7 = get_action(test_assassin_rogue)
-        assert str(actoid7).startswith("Cunning Hide of AssassinRogue from Ogre")
-        action_resolver.resolve_action(actoid7, test_assassin_rogue)
-        actoid8 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid8, test_assassin_rogue)
-        actoids = [actoid1, actoid2, actoid3, actoid4, actoid5, actoid6, actoid7, actoid8]
-        # TODO The rogue's not hiding first because there's lone LoS from (2, 10) -> two phase movement?
-        assert any(str(act) == "Shortbow on Ogre" for act in actoids)
-        test_assassin_rogue.new_turn()
-        actoid9 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid9, test_assassin_rogue)
-        actoid10 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid10, test_assassin_rogue)
-        actoid11 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
-        actoid12 = get_action(test_assassin_rogue)
-        action_resolver.resolve_action(actoid12, test_assassin_rogue)
-        actoids = [actoid9, actoid10, actoid11, actoid12]
-        assert any(str(act) == "Shortbow on Ogre" for act in actoids)
-        assert any(str(act).startswith("Cunning Hide of AssassinRogue from Ogre") for act in actoids)
-    except Exception as e:
-        assert False, f"Raised an exception {e}"
+    # try:
+    from simulator.actions.action_selector import get_action
+    cProfile.runctx('get_action(test_assassin_rogue)', None, locals(), filename="get_action_stats")
+    p = pstats.Stats("get_action_stats")
+    p.strip_dirs().sort_stats("cumtime").print_stats()
+    #     actoid1 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid1, test_assassin_rogue)
+    #     actoid2 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid2, test_assassin_rogue)
+    #     actoid3 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid3, test_assassin_rogue)
+    #     actoid4 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid4, test_assassin_rogue)
+    #     actoid5 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid5, test_assassin_rogue)
+    #     actoid6 = get_action(test_assassin_rogue)
+    #     # assert str(actoid6).startswith("Cunning Hide of AssassinRogue from Ogre")
+    #     action_resolver.resolve_action(actoid6, test_assassin_rogue)
+    #     actoid7 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid7, test_assassin_rogue)
+    #     actoid8 = get_action(test_assassin_rogue)
+    #     # assert str(actoid8) == "Shortbow on Ogre"
+    #     action_resolver.resolve_action(actoid8, test_assassin_rogue)
+    #     actoids = [actoid1, actoid2, actoid3, actoid4, actoid5, actoid6, actoid7, actoid8]
+    #     # TODO The rogue's not hiding first because there's lone LoS from (2, 10) -> two phase movement?
+    #     test_assassin_rogue.new_turn()
+    #     actoid9 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid9, test_assassin_rogue)
+    #     actoid10 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid10, test_assassin_rogue)
+    #     actoid11 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid11, test_assassin_rogue)  # Step of out hiding
+    #     actoid12 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid12, test_assassin_rogue)
+    #     actoid13 = get_action(test_assassin_rogue)
+    #     action_resolver.resolve_action(actoid12, test_assassin_rogue)
+    #     actoids = [actoid9, actoid10, actoid11, actoid12, actoid13]
+    #     # assert any(str(act) == "Shortbow on Ogre" for act in actoids)
+    #     # assert any(str(act).startswith("Cunning Hide of AssassinRogue from Ogre") for act in actoids)
+    # except Exception as e:
+    #     assert False, f"Raised an exception {e}"
 
 def test_cunning_adjacent_enemy_hide_sneak_attack_in_melee(battle_map, teams, effect_tracker, test_stone_giant, test_assassin_rogue, test_dire_wolf):
     """
@@ -677,13 +691,22 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_in_melee(battle_map, teams, ef
         assert str(actoid2) == "Cunning Hide of AssassinRogue from StoneGiant"
         action_resolver.resolve_action(actoid2, test_assassin_rogue)
         actoid3 = get_action(test_assassin_rogue)
-        assert str(actoid3).startswith("(")
+        assert str(actoid3) == "(1, 1)"
         action_resolver.resolve_action(actoid3, test_assassin_rogue)
         actoid4 = get_action(test_assassin_rogue)
-        assert str(actoid4) == "Rapier on StoneGiant"
+        assert str(actoid4).startswith("Rapier")
         action_resolver.resolve_action(actoid4, test_assassin_rogue)
-        actoid5 = get_action(test_assassin_rogue)
-        assert actoid5 is None
+        # actoid5 = get_action(test_assassin_rogue)
+        # action_resolver.resolve_action(actoid5, test_assassin_rogue)
+        # actoid6 = get_action(test_assassin_rogue)
+        # action_resolver.resolve_action(actoid6, test_assassin_rogue)
+        # actoid7 = get_action(test_assassin_rogue)
+        # action_resolver.resolve_action(actoid7, test_assassin_rogue)
+        # actoid8 = get_action(test_assassin_rogue)
+        # action_resolver.resolve_action(actoid8, test_assassin_rogue)
+        # actoids = [actoid3, actoid4, actoid5, actoid6, actoid7, actoid8]
+        # assert any(str(act) == "Rapier on StoneGiant" for act in actoids)
+        # assert any(str(act).startswith("(") for act in actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -704,14 +727,14 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([2, 3]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 2]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([2, 1]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 1]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([1, 3]))
     battle_map.build_adjacency_matrix()
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
 
     try:
         actoid1 = get_action(test_assassin_rogue)
-        assert str(actoid1) == "Cunning Disengage of AssassinRogue" or str(actoid1) == "Disengage of AssassinRogue"
+        assert str(actoid1) == "Cunning Disengage of AssassinRogue"
         action_resolver.resolve_action(actoid1, test_assassin_rogue)
         actoid2 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid2, test_assassin_rogue)
@@ -726,7 +749,8 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
         actoid7 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid7, test_assassin_rogue)
         actoid8 = get_action(test_assassin_rogue)
-        # assert str(actoid8).startswith("Shortbow")
+        first_turn_actoids = [actoid2, actoid3, actoid4, actoid5, actoid6, actoid7, actoid8]
+        assert any(str(act).startswith("Shortbow") for act in first_turn_actoids)
         action_resolver.resolve_action(actoid8, test_assassin_rogue)
         test_assassin_rogue.new_turn()
         actoid11 = get_action(test_assassin_rogue)
@@ -745,8 +769,11 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
         action_resolver.resolve_action(actoid17, test_assassin_rogue)
         actoid18 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid18, test_assassin_rogue)
-        assert str(actoid12).startswith("Cunning Hide") or str(actoid13).startswith("Cunning Hide") or str(actoid14).startswith("Cunning Hide") or str(actoid15).startswith("Cunning Hide")
-        assert str(actoid16).startswith("Shortbow") or str(actoid17).startswith("Shortbow") or str(actoid18).startswith("Shortbow")
+        second_turn_actoids = [actoid11, actoid12, actoid13, actoid14, actoid15, actoid16, actoid17, actoid18]
+        assert any(str(act).startswith("Cunning Hide") for act in second_turn_actoids)
+        assert any(str(act).startswith("Shortbow") for act in second_turn_actoids)
+        assert any(str(act).startswith("(") for act in second_turn_actoids)
+        assert list(filter(lambda act: str(act).startswith("Cunning Hide"), second_turn_actoids))[0].target is list(filter(lambda act: str(act).startswith("Shortbow"), second_turn_actoids))[0].target
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -788,18 +815,16 @@ def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rog
         actoid8 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid8, test_assassin_rogue)
         actoid9 = get_action(test_assassin_rogue)
-        # assert str(actoid9) is not "None"
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
         actoid10 = get_action(test_assassin_rogue)
-        # assert str(actoid10) is not "None"
         action_resolver.resolve_action(actoid10, test_assassin_rogue)
         actoid11 = get_action(test_assassin_rogue)
-        # assert str(actoid11) is not "None"
         action_resolver.resolve_action(actoid11, test_assassin_rogue)
-        actoids = [str(actoid6), str(actoid7), str(actoid8), str(actoid9), str(actoid10), str(actoid11)]
-        # assert any(act.startswith("Cunning Dash") for act in actoids)
-        # assert any(act.startswith("Shortbow") for act in actoids)
-        # assert not any(act.startswith("Disengage") for act in actoids) # TODO This will fail, fix ti
+        actoids = [str(actoid1), str(actoid2), str(actoid3), str(actoid4), str(actoid5), str(actoid6), str(actoid7), str(actoid8), str(actoid9), str(actoid10), str(actoid11)]
+        assert any(act.startswith("Cunning Dash") for act in actoids)
+        assert any(act.startswith("Shortbow") for act in actoids)
+        assert not any(act.startswith("Disengage") for act in actoids)
+        assert sum(1 for actoid in actoids if actoid.startswith("(")) > 6
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

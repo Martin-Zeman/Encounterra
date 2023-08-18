@@ -1,7 +1,8 @@
+from cachetools import cached
 from cachetools.keys import hashkey
 
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache, map_position_toggled_cache_with_key
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, RollType, avg_roll, Conditions, Visibility
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -128,27 +129,29 @@ class Firebolt(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
-    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         swallower = self.factory.combatant.get_swallower()
         battle_map = Map.get()
         if swallower:
             if swallower is self.target:
-                return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+                return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=FireboltFactory.range, combatant=self.factory.combatant)
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= FireboltFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None
 

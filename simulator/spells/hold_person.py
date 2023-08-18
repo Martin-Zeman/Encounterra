@@ -1,5 +1,8 @@
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.effects.effect import EffectType
 from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
@@ -82,7 +85,6 @@ class HoldPersonFactory(ThreatModifierFactory):
         for _ in range(ROUND_HORIZON):
             total_threat += threat_round_total * p_fail_acc
             p_fail_acc *= p_fail
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target ={total_threat}")
         return total_threat
 
     def get_eligible_targets(self):
@@ -140,20 +142,21 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
-
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.get_swallower():
             return None  # Not possible while blinded
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HoldPersonFactory.range, combatant=self.factory.combatant)
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HoldPersonFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None

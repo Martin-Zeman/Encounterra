@@ -1,6 +1,7 @@
+from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.battle_map import Map, map_position_toggled_cache, map_position_toggled_cache_with_key
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.spells.firebolt import FireboltFactory
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, avg_roll, Conditions, Visibility
@@ -114,36 +115,38 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
-    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         ret = self.factory.calculate_threat_to_target_delta(self.targets[0], modifiers)
         ret += self.factory.calculate_threat_to_target_delta(self.targets[1], modifiers)
         return ret
 
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if self.factory.combatant.get_swallower():
             return None
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_fist = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            coords_for_fist = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                             distances,
                                                                             inflate_to_size=self.factory.combatant.size,
                                                                             rng=TwinnedFireboltFactory.range,
-                                                                            combatant=self.factory.combatant)
-            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
+                                                                            combatant=self.factory.combatant))
+            coords_for_second = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                               distances,
                                                                               inflate_to_size=self.factory.combatant.size,
                                                                               rng=TwinnedFireboltFactory.range,
-                                                                              combatant=self.factory.combatant)
+                                                                              combatant=self.factory.combatant))
             free_coords_in_range = coords_for_fist.intersection(coords_for_second)
 
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE}
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= TwinnedFireboltFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= TwinnedFireboltFactory.range \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None

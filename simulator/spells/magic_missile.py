@@ -1,6 +1,10 @@
 from functools import cache
+
+from cachetools import cached
+from cachetools.keys import hashkey
+
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, Conditions, Visibility
 from simulator.actions.actoid import Actoid, ActoidFlags
@@ -56,10 +60,8 @@ class MagicMissileFactory(DirectThreatFactory):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= MagicMissileFactory.range:
             ret = 3 * (mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)
-            # logger.warning(f"MY DEBUG {self} calculate_threat_to_target = {ret}")
             return ret
         else:
-            # logger.warning(f"MY DEBUG {self} calculate_threat_to_target = 0")
             return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -78,9 +80,7 @@ class MagicMissileFactory(DirectThreatFactory):
             threat = self.calculate_threat_to_target(t)
             # We just need one enemy within range which assures we can deal the damage (which is target-agnostic)
             if threat:
-                # logger.warning(f"MY DEBUG {self} calculate_max_threat = {threat}")
                 return threat
-        # logger.warning(f"MY DEBUG {self} calculate_max_threat = 0")
         return 0
 
 
@@ -94,10 +94,10 @@ class MagicMissile(Actoid, DirectThreat):
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Magic Missile on {self.targets[0]}, {self.targets[1]} and {self.targets[2]}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_MAGIC_MISSILE else "") + f"Magic Missile on {self.targets[0]}, {self.targets[1]} and {self.targets[2]}"
 
     def shorthand_str(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + "Magic Missile"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_MAGIC_MISSILE else "") + "Magic Missile"
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -109,41 +109,43 @@ class MagicMissile(Actoid, DirectThreat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0
 
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if self.factory.combatant.get_swallower():
             return None  # Must be able to see
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+            coords_for_first = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                             distances,
                                                                             inflate_to_size=self.factory.combatant.size,
                                                                             rng=MagicMissileFactory.range,
-                                                                            combatant=self.factory.combatant)
-            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
+                                                                            combatant=self.factory.combatant))
+            coords_for_second = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                               distances,
                                                                               inflate_to_size=self.factory.combatant.size,
                                                                               rng=MagicMissileFactory.range,
-                                                                              combatant=self.factory.combatant)
-            coords_for_third = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[2]),
+                                                                              combatant=self.factory.combatant))
+            coords_for_third = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[2]),
                                                                               distances,
                                                                               inflate_to_size=self.factory.combatant.size,
                                                                               rng=MagicMissileFactory.range,
-                                                                              combatant=self.factory.combatant)
+                                                                              combatant=self.factory.combatant))
             free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
 
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE}
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= MagicMissileFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= MagicMissileFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[2]) <= MagicMissileFactory.range \
             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
             and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[2]] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None

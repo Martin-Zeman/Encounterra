@@ -1,4 +1,7 @@
-from simulator.battle_map import Map, map_position_toggled_cache
+from cachetools import cached
+from cachetools.keys import hashkey
+
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.effects.effect import EffectType
 from simulator.effects.limited_duration_effect import LimitedDurationEffect
 from simulator.spells.spell import SpellStats
@@ -77,20 +80,16 @@ class HasteFactory(ThreatModifierFactory):
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_attack_dmg = max(dmg_acc, max_attack_dmg)
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target max_attack_dmg = {max_attack_dmg}")
         attack_dmg_decrement_acc = 0
         assert len(enemies) > 0
         for enemy in enemies:
             enemy_attacks = get_attacks(enemy)
             if not enemy_attacks:
                 continue
-            # attack_dmg_decrement_acc = reduce(lambda acc, at: acc + dmg_decrement_for_ac_flat(at.to_hit, at.dmg_dice, at.dmg_bonus, target.ac, 2, at.crit_range, target.is_resistant_to(at.dmg_type)), enemy_attacks, 0)
             attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(target, {ThreatModifierType.TARGET_AC: 2}), enemy_attacks, 0)
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target attack_dmg_decrement_acc = {attack_dmg_decrement_acc}")
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target total = {max_attack_dmg * ROUND_HORIZON}")
         return max_attack_dmg * ROUND_HORIZON
 
     def calculate_max_threat(self):
@@ -141,24 +140,26 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         swallower = self.factory.combatant.get_swallower()
         if swallower:
             if self.target is self.factory.combatant:
-                set(curr_coord)
+                return [curr_coord]
             return None  # Not possible while blinded
         if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        elif self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        elif not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HasteFactory.range)
-            return {coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE}
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HasteFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return set([curr_coord])
+            return [curr_coord]
         return None

@@ -25,6 +25,9 @@ class StateMachineTemplate(Machine):
     def get_available_transitions(self):
         return self.get_triggers(self.state)
 
+    def get_all_transitions(self):
+        return [trigger for s in self.states for trigger in self.get_triggers(s)]
+
     def get_available_transitions_in_state(self, state):
         return self.get_triggers(state)
 

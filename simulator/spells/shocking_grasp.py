@@ -1,7 +1,8 @@
+from cachetools import cached
 from cachetools.keys import hashkey
 
 from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache, map_position_toggled_cache_with_key
+from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from simulator.spells.spell import SpellStats
 from simulator.misc import DamageType, RollType, avg_roll, Conditions
 from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -84,13 +85,11 @@ class ShockingGraspFactory(DirectThreatFactory):
 
         ret = mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(ShockingGraspFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
                     ShockingGraspFactory.dmg_type))
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta = {ret}")
         return ret
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
         ret = max([self.calculate_threat_to_target(t) for t in targets])
-        # logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
         return ret
 
 
@@ -115,23 +114,25 @@ class ShockingGrasp(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
+        #self.get_eligible_coords.cache_clear()
 
-    @map_position_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
+    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         swallower = self.factory.combatant.get_swallower()
         if swallower:
             if swallower is self.target:
-                return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+                return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
-        if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=ShockingGraspFactory.range, combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= ShockingGraspFactory.range:
-            return set([tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])])
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
