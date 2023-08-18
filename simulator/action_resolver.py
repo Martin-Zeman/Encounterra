@@ -468,6 +468,7 @@ class ActionResolver:
                 combatant.ac += 5
                 return ActionResult.FEASIBLE
             case Reaction.UNCANNY_DODGE:
+                logger.info(f"{combatant} uses {actoid}")
                 combatant.uncanny_dodge_active = True
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
                  HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\

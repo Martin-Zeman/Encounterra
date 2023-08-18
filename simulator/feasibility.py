@@ -297,7 +297,7 @@ def check_feasibility(combatant, action):
         match action_type:
             case Reaction.SHIELD:
                 return combatant.has_reaction and combatant.spellslots.get_spellslots(1) > 0
-            case Reaction.REACTION_ATTACK:
+            case Reaction.REACTION_ATTACK | Reaction.UNCANNY_DODGE:
                 return combatant.has_reaction
             case Reaction.PRE_SWALLOW_BITE_REACTION:
                 return combatant.has_reaction and not combatant.constricted_target
@@ -509,6 +509,8 @@ def check_feasibility_light(combatant, action):
         match action_type:
             case Reaction.SHIELD:
                 return combatant.has_reaction and combatant.spellslots.get_spellslots(1) > 0
+            case Reaction.UNCANNY_DODGE:
+                return combatant.has_reaction
             case _:
                 logger.error("Unknown reaction")
         return combatant.has_reaction

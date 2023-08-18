@@ -72,8 +72,6 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         :return: combined action plan
         """
         current_position = tuple(Map.get().get_combatant_position(self.combatant).get()[0])
-        # regular_movement_increments = [e.increment for e in regular_action_plan if hasattr(e, "increment")]
-        # regular_destination = current_position + tuple(np.sum(regular_movement_increments, axis=0)) if regular_movement_increments else (0, 0)
         ws_movement_increments = [e.increment for e in ws_action_plan if hasattr(e, "increment")]
         sum_of_ws_increments = tuple(np.sum(ws_movement_increments, axis=0)) if ws_movement_increments else (0, 0)
         ws_destination = (current_position[0] + sum_of_ws_increments[0], current_position[1] + sum_of_ws_increments[1])

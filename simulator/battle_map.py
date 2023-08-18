@@ -1074,7 +1074,7 @@ class Map:
             else:
                 return self.combatant_coordinate_cache[combatant.is_swallowed[1]]
         except KeyError as e:
-            logger.error(e)
+            # logger.error(f"Combatant doesn't exist {e}")
             return None
 
 

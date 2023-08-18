@@ -47,9 +47,14 @@ class HoldPersonFactory(ThreatModifierFactory):
     def get_quickened_kwargs(self):
         return {'dc': self.dc, 'caster': self.combatant}
 
+    def get_eligible_targets(self):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return []  # Must be able to see
+        return [e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)]
 
     def create_all(self):
-        targets = Map.get().get_enemies(self.combatant)
+        targets = self.get_eligible_targets()
         return [HoldPerson(t, self) for t in targets]
 
     def create(self, target):
@@ -86,12 +91,6 @@ class HoldPersonFactory(ThreatModifierFactory):
             total_threat += threat_round_total * p_fail_acc
             p_fail_acc *= p_fail
         return total_threat
-
-    def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
-        if swallower:
-            return []  # Must be able to see
-        return [e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)]
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
