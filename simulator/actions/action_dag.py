@@ -1,15 +1,11 @@
 import logging
 from contextlib import contextmanager
 
-import numpy as np
-
-from statemachine import State, StateMachine
-
 from simulator.abilities.wildshape import Wildshape
 from simulator.actions.action_types import BonusAction
 from simulator.battle_map import Map
 from simulator.feasibility import get_feasible_factories
-from simulator.misc import Size, Conditions
+from simulator.misc import Size
 from simulator.resources import use_resources
 from simulator.utils.state_machine_template import StateMachineTemplate
 
