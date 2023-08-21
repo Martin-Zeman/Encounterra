@@ -18,55 +18,55 @@ DOCKER_SANDBOX_REMOTE = 728464280382.dkr.ecr.eu-west-1.amazonaws.com
 # docker push 728464280382.dkr.ecr.eu-west-1.amazonaws.com/encounterra_backend:latest
 
 docker.build:
-    @echo ""
-    @echo "Building container..."
-    docker build -t ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} --build-args APP_VERSION=&{GIT_COMMIT} --network host .
-    docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:latest
-    @if [ -z "${GIT_STATUS}" ]; then \
+	@echo ""
+	@echo "Building container..."
+	aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${DOCKER_SANDBOX_REMOTE}
+	docker build -t ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} --build-arg APP_VERSION=${GIT_COMMIT} --network host .
+	docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:latest
+	@if [ -z "${GIT_STATUS}" ]; then \
         docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:${GIT_COMMIT}; \
         docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}; \
     fi
-    @echo ""
-    @echo "*"
-    @echo "*"
-    @echo "* Docker container built"
-    @echo "*"
-    @echo "*  tagged: ${FONT_BOLD}${DOCKER_CONTAINER}:latest${FONT_NORMAL}"
-    @echo "*  tagged: ${FONT_BOLD}${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED}${FONT_NORMAL}"
-    @if [ -z "${GIT_STATUS}" ]; then \
-        docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:${GIT_COMMIT}; \
-        docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}; \
-    else \
-        @echo "Workspace is dirty!"; \
-    fi
-    @echo "*"
-    @echo "*"
-    @if [ -z "${GIT_STATUS}" ]; then \
-        @echo "* short commit nr: ${GIT_COMMIT}"; \
-    fi
+	@echo ""
+	@echo "*"
+	@echo "*"
+	@echo "* Docker container built"
+	@echo "*"
+	@echo "*  tagged: ${FONT_BOLD}${DOCKER_CONTAINER}:latest${FONT_NORMAL}"
+	@echo "*  tagged: ${FONT_BOLD}${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED}${FONT_NORMAL}"
+	@if [ -z "${GIT_STATUS}" ]; then \
+		docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:${GIT_COMMIT}; \
+		docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}; \
+	else \
+		@echo "Workspace is dirty!"; \
+	fi
+	@echo "*"
+	@echo "*"
+	@if [ -z "${GIT_STATUS}" ]; then \
+		@echo "* short commit nr: ${GIT_COMMIT}"; \
+	fi
 
 docker.push:
-    @echo ""
-    @echo "... pushing containers..."
-    docker build -t ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} --build-args APP_VERSION=&{GIT_COMMIT} --network host .
-    docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:latest
-    @if [ ! -z "${GIT_STATUS}" ]; then \
+	@echo ""
+	@echo "... pushing containers..."
+	@echo ""
+	@if [ ! -z "${GIT_STATUS}" ]; then \
         @echo "Workspace is dirty, cannot push!"; \
         echo ""; \
         exit 1; \
     fi
     # docker push 728464280382.dkr.ecr.eu-west-1.amazonaws.com/encounterra_backend:latest
-    docker push ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}
+	docker push ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}
 
-    @echo ""
-    @echo "*"
-    @echo "*"
-    @echo "* Container pushed"
-    @echo "*"
-    @echo "*  pushed: ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}"
-    @echo "* "
-    @if [ -z "${GIT_STATUS}" ]; then \
+	@echo ""
+	@echo "*"
+	@echo "*"
+	@echo "* Container pushed"
+	@echo "*"
+	@echo "*  pushed: ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}"
+	@echo "* "
+	@if [ -z "${GIT_STATUS}" ]; then \
         @echo "* short commit nr: ${GIT_COMMIT}"; \
     fi
-    @echo "*"
-    @echo ""
+	@echo "*"
+	@echo ""
