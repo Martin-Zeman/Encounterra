@@ -1,16 +1,24 @@
-GIT = git
 DOCKER = docker
-PYTHON = python
 
 API_VERSION := $(shell cat VERSION)
-
-GIT_STATUS := $(shell ${GIT} status --porcelain)
-GIT_BRANCH := $(shell ${GIT} rev-parse --abbrev-ref HEAD)
-GIT_COMMIT := $(shell ${GIT} rev-parse --short HEAD)
+GIT_STATUS := $(shell git status --porcelain)
+GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+GIT_COMMIT := $(shell git rev-parse --short HEAD)
 GIT_BRANCH_SANITIZED := $(subst /,-,${GIT_BRANCH})
 
 DOCKER_CONTAINER = encounterra_backend
 DOCKER_SANDBOX_REMOTE = 728464280382.dkr.ecr.eu-west-1.amazonaws.com
+
+#$ aws configure
+#AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
+#AWS Secret Access Key [None]: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+#Default region name [None]: us-west-2
+#Default output format [None]: json
+#$ aws configure set aws_session_token fcZib3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZ2luX2IQoJb3JpZVERYLONGSTRINGEXAMPLE
+
+# IQoJb3JpZ2luX2VjEDkaCWV1LXdlc3QtMSJIMEYCIQD2TRf4RWHlSWcocfk9BmgmM38UPvjCg6FwnwEvhDUMBQIhAImaEwq0XlLNxxORXxwPDZj7BIfkl2QIUDEYCXmxLviKKvoCCPL//////////wEQABoMMjk3OTQ1MzA3NTgwIgwlgetdcVeVyZf7G70qzgLU0uUkEh7G4rH9HnTKivwc8oGOeMqCT+v3vM3kiP3Bo0eMJMDZzfcik9nBEzxoY83T+n+QUaRFEdUzp/hb2JXeJt+gHYEyRVtCwA8Q5wi7gH001llY9uXxB6EO5Y5n75CqMBPe+llU/4ez3tt3G1ZIPJWXDIf9My3EwK7/OAFfIC5BEVTgoRuLvrN23n4pjCZS4N1hZbGsgjEe49/aAjgkgOXokDIyfWJ2Eo43Ds0mkxBB7WOjQzC3kKB/6eB6CI8N9Q+OyGSOYVaBatiZZgv7NZ3FDYe0jqz0R0ESPgWkvG22HmVnnm2egadAtTekAWtBw9gET3V6RI9MVdlZFbw4YcKQ7ZVaW/DDkRFMNKXSUBJTaTzs1JwrX+inAZ5hU+aAnnePsTLEhkef/Kj4FRsOseHPiKEBMOZlt0jmSvVP6EuwwlFJn3n8/VQmY0bUMO3Vk6cGOqYBmTO69H/ne5JcoOfcOA3/dyno1aU3T2fyg4m7hOiBKFFH8VzKmJDU+YSS4k76QN+eqh+1RvEmhocDeEAc5SAfQPeOREZAI8eACESruHtvhefENYGDrH4zcbp6g4gMAHZd4RtNr+ZisbqDRtQxPZEUcVqhfeGBAjBFXYrt2uIOIf6MzfdagKfpVi02CAKVAkxQpu+rPQZwcu9sK6obh4kh1e2Pgw8/Qg==
+# SSO Start URL https://d-93675b97f6.awsapps.com/start#
+# SSO Region eu-west-1
 
 # aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin 728464280382.dkr.ecr.eu-west-1.amazonaws.com
 # docker build -t encounterra_backend .
@@ -20,7 +28,7 @@ DOCKER_SANDBOX_REMOTE = 728464280382.dkr.ecr.eu-west-1.amazonaws.com
 docker.build:
 	@echo ""
 	@echo "Building container..."
-	aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${DOCKER_SANDBOX_REMOTE}
+	aws ecr get-login-password --region eu-west-1 | docker AWS --username admin --password-stdin ${DOCKER_SANDBOX_REMOTE}
 	docker build -t ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} --build-arg APP_VERSION=${GIT_COMMIT} --network host .
 	docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:latest
 	@if [ -z "${GIT_STATUS}" ]; then \
