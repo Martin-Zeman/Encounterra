@@ -14,24 +14,15 @@ WORKDIR /opt/backend
 ENV PYCURL_SSL_LIBRARY=openssl
 ARG POETRY_VERSION=1.5.1
 COPY poetry.lock pyproject.toml ./
-RUN apk update --no-cache
-RUN apk add --no-cache --virtual .build-deps build-base openssl openssl-dev
-RUN pip install --upgrade pip
-RUN pip install poetry==${POETRY_VERSION}
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-interaction --no-dev
-RUN mkdir -p ssl
-RUN openssl req -subj '/CN=localhost' -x509 -newkey rsa:4096 -nodes -keyout ssl/key.pem -out ssl/cert.pem -days 40000
-RUN apk del --no-cache .build-deps
-#RUN apk update --no-cache \
-# && apk add --no-cache --virtual .build-deps build-base openssl openssl-dev \
-# && pip install --upgrade pip \
-# && pip install poetry==${POETRY_VERSION} \
-# && poetry config virtualenvs.create false \
-# && poetry install --no-interaction --no-dev \
-# && mkdir -p ssl \
-# && openssl req -subj '/CN=localhost' -x509 -newkey rsa:4096 -nodes -keyout ssl/key.pem -out ssl/cert.pem -days 40000 \
-# && apk del --no-cache .build-deps
+RUN apk update --no-cache \
+ && apk add --no-cache --virtual .build-deps build-base openssl openssl-dev \
+ && pip install --upgrade pip \
+ && pip install poetry==${POETRY_VERSION} \
+ && poetry config virtualenvs.create false \
+ && poetry install --no-interaction --no-dev \
+ && mkdir -p ssl \
+ && openssl req -subj '/CN=localhost' -x509 -newkey rsa:4096 -nodes -keyout ssl/key.pem -out ssl/cert.pem -days 40000 \
+ && apk del --no-cache .build-deps
 
 COPY --chown=terra:terra --from=alpine_stage /opt/backend .
 

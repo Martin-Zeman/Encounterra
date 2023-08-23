@@ -47,12 +47,12 @@ docker.build:
 		docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:${GIT_COMMIT}; \
 		docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}; \
 	else \
-		@echo "Workspace is dirty!"; \
+		echo "Workspace is dirty!"; \
 	fi
 	@echo "*"
 	@echo "*"
 	@if [ -z "${GIT_STATUS}" ]; then \
-		@echo "* short commit nr: ${GIT_COMMIT}"; \
+		echo "* short commit nr: ${GIT_COMMIT}"; \
 	fi
 
 docker.push:
@@ -60,7 +60,7 @@ docker.push:
 	@echo "... pushing containers..."
 	@echo ""
 	@if [ ! -z "${GIT_STATUS}" ]; then \
-        @echo "Workspace is dirty, cannot push!"; \
+        echo "Workspace is dirty, cannot push!"; \
         echo ""; \
         exit 1; \
     fi
@@ -75,7 +75,7 @@ docker.push:
 	@echo "*  pushed: ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}"
 	@echo "* "
 	@if [ -z "${GIT_STATUS}" ]; then \
-        @echo "* short commit nr: ${GIT_COMMIT}"; \
+        echo "* short commit nr: ${GIT_COMMIT}"; \
     fi
 	@echo "*"
 	@echo ""
