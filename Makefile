@@ -1,4 +1,5 @@
 DOCKER = docker
+ACCOUNT_NR = ${AWS_ACCOUNT_NR}
 
 API_VERSION := $(shell cat VERSION)
 GIT_STATUS := $(shell git status --porcelain)
@@ -7,7 +8,7 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 GIT_BRANCH_SANITIZED := $(subst /,-,${GIT_BRANCH})
 
 DOCKER_CONTAINER = encounterra_backend
-DOCKER_SANDBOX_REMOTE = 728464280382.dkr.ecr.eu-west-1.amazonaws.com
+DOCKER_SANDBOX_REMOTE = ${ACCOUNT_NR}.dkr.ecr.eu-west-1.amazonaws.com
 
 #$ aws configure
 #AWS Access Key ID [None]: AKIAIOSFODNN7EXAMPLE
@@ -28,7 +29,7 @@ DOCKER_SANDBOX_REMOTE = 728464280382.dkr.ecr.eu-west-1.amazonaws.com
 docker.build:
 	@echo ""
 	@echo "Building container..."
-	aws ecr get-login-password --region eu-west-1 | docker AWS --username admin --password-stdin ${DOCKER_SANDBOX_REMOTE}
+	aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${DOCKER_SANDBOX_REMOTE}
 	docker build -t ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} --build-arg APP_VERSION=${GIT_COMMIT} --network host .
 	docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:latest
 	@if [ -z "${GIT_STATUS}" ]; then \
