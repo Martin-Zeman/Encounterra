@@ -1,10 +1,9 @@
 import copy
 
-from simulator.abilities.on_hit_sneak_attack import OnHitSneakAttack
-from simulator.actions.action_types import Action, BonusAction, Reaction, Passive
+from simulator.actions.action_types import Action, Reaction, Passive
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.misc import DamageType, SavingThrow, get_factory_of_type
+from simulator.misc import DamageType, SavingThrow
 import logging
 
 logger = logging.getLogger("Encounterra")
