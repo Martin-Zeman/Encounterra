@@ -3,7 +3,7 @@ import copy
 from ..actions.action_types import Action, BonusAction, Reaction
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
-from ..spellslots import Spellslots
+from ..spellslots import Spellslots, spellslot_factory
 from ..misc import DamageType, SavingThrow, Class
 import logging
 
@@ -24,7 +24,7 @@ class EvilMage(Combatant):
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
-        self.spellslots = Spellslots(Class.WIZARD, self.level)
+        self.spellslots = spellslot_factory(Class.WIZARD, self.level)
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 6

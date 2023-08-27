@@ -4,7 +4,6 @@ import logging
 import random
 import math
 from contextlib import contextmanager
-from abc import ABC, abstractmethod
 
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .action_resolver import check_concentration
@@ -25,7 +24,7 @@ from .spellslots import spellslot_factory
 logger = logging.getLogger("Encounterra")
 
 
-class Combatant(ABC, ProtoCombatant):
+class Combatant(ProtoCombatant):
 
     def __init__(self, name, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
         self.name = name
@@ -564,7 +563,6 @@ class Combatant(ABC, ProtoCombatant):
     def add_team(self, team_color):
         self.team_color = team_color
 
-    @abstractmethod
     def prompt_aoo(self, moving_combatant):
         return None
 

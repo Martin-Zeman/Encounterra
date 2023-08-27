@@ -25,7 +25,7 @@ def get_combatant_classes():
     # Recursively iterate over all submodules
     classes = []
     for _, module_name, is_pkg in pkgutil.walk_packages(module.__path__):
-        full_module_name = f'simulator.combatants.{module_name}'
+        full_module_name = f'Encounterra.simulator.combatants.{module_name}'
         sub_module = importlib.import_module(full_module_name)
 
         for name, obj in inspect.getmembers(sub_module):

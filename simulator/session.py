@@ -11,6 +11,7 @@ from .combatants.ogre import Ogre
 from .combatants.stone_giant import StoneGiant
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from .effects.effect_tracker import EffectTracker
 from .utils.utils import get_combatant_classes
 from .battle_map import *
 from .round_manager import *
