@@ -174,7 +174,7 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
 
     try:
         # The Danger Zone of the Stone Giant spans the whole map so it doesn't pay off to move and suffer the AoO
-    # from simulator.actions.action_selector import get_action
+    # from ..actions.action_selector import get_action
     # cProfile.runctx('get_action(test_draconic_sorcerer_5lvl)', None, locals(), filename="get_action_stats")
     # p = pstats.Stats("get_action_stats")
     # p.strip_dirs().sort_stats("cumtime").print_stats()

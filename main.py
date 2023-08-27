@@ -1,14 +1,14 @@
-from simulator.combatants.bugbear import Bugbear
-from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
-from simulator.combatants.ogre import Ogre
-from simulator.combatants.stone_giant import StoneGiant
-from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.session import Session
-from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from simulator.combatants.goblin import Goblin
-from simulator.combatants.dragonclaw_cultist import DragonclawCultist
-from simulator.teams import Teams
+from .simulator.combatants.bugbear import Bugbear
+from .simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
+from .simulator.combatants.ogre import Ogre
+from .simulator.combatants.stone_giant import StoneGiant
+from .simulator.logging.custom_logger import CustomLogger, LogLevel
+from .simulator.session import Session
+from .simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from .simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from .simulator.combatants.goblin import Goblin
+from .simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from .simulator.teams import Teams
 import time
 
 if __name__ == '__main__':

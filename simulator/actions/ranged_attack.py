@@ -9,9 +9,8 @@ from ..actions.attack import AttackFactory, Attack
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..misc import Visibility, Conditions
 from ..threat_utils import mean_dmg, calc_p_hit
+from ..utils.roll_types import RollType, ROLL_TYPE_DELTA
 import logging
-
-from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA
 
 logger = logging.getLogger("Encounterra")
 

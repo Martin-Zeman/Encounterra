@@ -1,4 +1,3 @@
-# from simulator.battle_map import *
 import math
 
 import numpy as np

@@ -1,7 +1,7 @@
 from ..effects.effect import Effect
 import logging
 
-from simulator.misc import roll_saving_throw, reconcile_roll_types
+from ..misc import roll_saving_throw, reconcile_roll_types
 
 logger = logging.getLogger("Encounterra")
 

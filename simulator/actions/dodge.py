@@ -13,7 +13,7 @@ from ..threat_utils import calculate_threat_in_delta
 from ..threat_interfaces import ThreatModifierFactory, Threat
 from ..misc import SavingThrow
 import logging
-from simulator.utils.roll_types import RollType, ThreatModifierType
+from ..utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 

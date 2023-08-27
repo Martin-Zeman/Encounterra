@@ -620,7 +620,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
 
     try:
-    # from simulator.actions.action_selector import get_action
+    # from ..actions.action_selector import get_action
     # cProfile.runctx('get_action(test_assassin_rogue)', None, locals(), filename="get_action_stats")
     # p = pstats.Stats("get_action_stats")
     # p.strip_dirs().sort_stats("cumtime").print_stats()
