@@ -21,14 +21,16 @@ from simulator.abilities.rage import RageFactory
 from simulator.actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKENED, TO_TWINNED
 from simulator.actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
 from simulator.proto_combatant import ProtoCombatant
+from simulator.spellslots import Spellslots, spellslot_factory
 
 logger = logging.getLogger("Encounterra")
 
 
 class Combatant(ABC, ProtoCombatant):
 
-    def __init__(self, name, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
+    def __init__(self, name, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
         self.name = name
+        self.cls = cls
         self.level = level
         self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self))]
         self.dodge_factory = self.action_factories[0]
@@ -81,7 +83,7 @@ class Combatant(ABC, ProtoCombatant):
         self.dc_conditions = []
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.has_disengaged = False  # TODO Get rid of this
-        self.spellslots = None
+        self.spellslots = spellslot_factory(self.cls, self.level)
         self.concentration_effect = None
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False

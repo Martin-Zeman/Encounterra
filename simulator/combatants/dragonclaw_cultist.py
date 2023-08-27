@@ -1,6 +1,6 @@
 from simulator.actions.action_types import Action, Reaction, Passive
 from simulator.combatant import Combatant
-from simulator.misc import DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow, Class
 import logging
 
 from simulator.utils.state_machine_template import StateMachineTemplate
@@ -11,7 +11,7 @@ logger = logging.getLogger("Encounterra")
 class DragonclawCultist(Combatant):
 
     def __init__(self, name="Dragonclaw"):
-        super().__init__(name, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+        super().__init__(name, Class.MONSTER.HUMANOID, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Passive.PACK_TACTICS)

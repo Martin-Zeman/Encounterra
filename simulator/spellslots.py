@@ -1,6 +1,7 @@
-from enum import Enum
 import logging
 import copy
+
+from simulator.misc import Class
 
 logger = logging.getLogger("Encounterra")
 
@@ -897,67 +898,37 @@ WARLOCK_TABLE = {
     }
 }
 
-
-class Class(Enum):
-    BARD = 1
-    CLERIC = 2
-    DRUID = 3
-    ELDRIDGE_KNIGHT = 4
-    PALADIN = 5
-    RANGER = 6
-    ARCANE_TRICKSTER = 7
-    SORCERER = 8
-    WARLOCK = 9
-    WIZARD = 10
-    ARTIFICER = 11
+def spellslot_factory(class_name, class_level):
+    match class_name:
+        case Class.BARD():
+            return Spellslots(FULL_CASTER_TABLE[class_level])
+        case Class.CLERIC():
+            return Spellslots(FULL_CASTER_TABLE[class_level])
+        case Class.DRUID():
+            return Spellslots(FULL_CASTER_TABLE[class_level])
+        case Class.FIGHTER():
+            return Spellslots(QUARTER_CASTER_TABLE[class_level]) if class_name is Class.FIGHTER.ELDRITCH_KNIGHT else None
+        case Class.PALADIN():
+            return Spellslots(HALF_CASTER_TABLE[class_level])
+        case Class.RANGER():
+            return Spellslots(HALF_CASTER_TABLE[class_level])
+        case Class.ROGUE():
+            return Spellslots(QUARTER_CASTER_TABLE[class_level]) if class_name is Class.ROGUE.ARCANE_TRICKSTER else None
+        case Class.SORCERER():
+            return Spellslots(FULL_CASTER_TABLE[class_level])
+        case Class.WARLOCK():
+            return Spellslots(WARLOCK_TABLE[class_level])
+        case Class.WIZARD():
+            return Spellslots(FULL_CASTER_TABLE[class_level])
+        case Class.ARTIFICER():
+            return Spellslots(HALF_CASTER_TABLE[class_level])
+        case _:
+            return None
 
 class Spellslots:
-    def __init__(self, class_name, class_level):
-        match class_name:
-            case Class.BARD:
-                self.max_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                return
-            case Class.CLERIC:
-                self.max_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                return
-            case Class.DRUID:
-                self.max_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                return
-            case Class.ELDRIDGE_KNIGHT:
-                self.max_spellslots = copy.deepcopy(QUARTER_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(QUARTER_CASTER_TABLE[class_level])
-                return
-            case Class.PALADIN:
-                self.max_spellslots = copy.deepcopy(HALF_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(HALF_CASTER_TABLE[class_level])
-                return
-            case Class.RANGER:
-                self.max_spellslots = copy.deepcopy(HALF_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(HALF_CASTER_TABLE[class_level])
-                return
-            case Class.ARCANE_TRICKSTER:
-                self.max_spellslots = copy.deepcopy(QUARTER_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(QUARTER_CASTER_TABLE[class_level])
-                return
-            case Class.SORCERER:
-                self.max_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                return
-            case Class.WARLOCK:
-                self.max_spellslots = copy.deepcopy(WARLOCK_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(WARLOCK_TABLE[class_level])
-                return
-            case Class.WIZARD:
-                self.max_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(FULL_CASTER_TABLE[class_level])
-                return
-            case Class.ARTIFICER:
-                self.max_spellslots = copy.deepcopy(HALF_CASTER_TABLE[class_level])
-                self.curr_spellslots = copy.deepcopy(HALF_CASTER_TABLE[class_level])
-                return
+    def __init__(self, spellslot_table):
+        self.max_spellslots = copy.deepcopy(spellslot_table)
+        self.curr_spellslots = copy.deepcopy(spellslot_table)
 
     def get_spellslots(self, level):
         return self.curr_spellslots[level]

@@ -3,8 +3,8 @@ import copy
 from simulator.actions.action_types import Action, BonusAction, Reaction, Passive, MetaAction
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.spellslots import Spellslots, Class
-from simulator.misc import DamageType, get_factory_of_type, SavingThrow
+from simulator.spellslots import Spellslots
+from simulator.misc import DamageType, get_factory_of_type, SavingThrow, Class
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -13,7 +13,7 @@ logger = logging.getLogger("Encounterra")
 class DraconicSorcerer5Lvl(Combatant):
 
     def __init__(self, name="DraconicSorcerer5Lvl"):
-        super().__init__(name, level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
+        super().__init__(name, Class.SORCERER.DRACONIC_BLOODLINE, level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.staff = self.add_ability(Action.MELEE_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
@@ -30,7 +30,7 @@ class DraconicSorcerer5Lvl(Combatant):
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
-        self.spellslots = Spellslots(Class.SORCERER, self.level)
+        # self.spellslots = Spellslots(Class.SORCERER, self.level)
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 6

@@ -6,8 +6,8 @@ from simulator.actions.action_types import Action, Reaction, BonusAction
 from simulator.actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
 from simulator.utils.state_machine_template import StateMachineTemplate
 from simulator.combatant import Combatant
-from simulator.spellslots import Spellslots, Class
-from simulator.misc import DamageType, SavingThrow
+from simulator.spellslots import Spellslots
+from simulator.misc import DamageType, SavingThrow, Class
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -16,7 +16,7 @@ logger = logging.getLogger("Encounterra")
 class MoonDruid5Lvl(Combatant):
 
     def __init__(self, name="MoonDruid5Lvl"):
-        super().__init__(name, level=5, hp=42, ac=15, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
+        super().__init__(name, Class.DRUID.CIRCLE_OF_MOON, level=5, hp=42, ac=15, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Action.FLAMING_SPHERE)
@@ -28,7 +28,7 @@ class MoonDruid5Lvl(Combatant):
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)
         self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
         self.build_attack_fms()
-        self.spellslots = Spellslots(Class.DRUID, self.level)
+        # self.spellslots = Spellslots(Class.DRUID, self.level)
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 3

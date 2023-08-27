@@ -10,6 +10,205 @@ logger = logging.getLogger("Encounterra")
 
 ROUND_HORIZON = 3
 
+class Artificer(Enum):
+    ALCHEMIST = auto()
+    ARMORER = auto()
+    ARTILLERIST = auto()
+    BATTLE_SMITH = auto()
+
+class Barbarian(Enum):
+    PATH_OF_THE_ANCESTRAL_GUARDIAN = auto()
+    PATH_OF_THE_BEAST = auto()
+    PATH_OF_THE_BERSERKER = auto()
+    PATH_OF_THE_STORM_HERALD = auto()
+    PATH_OF_THE_TOTEM_WARRIOR = auto()
+    PATH_OF_THE_ZEALOT = auto()
+    PATH_OF_WILD_MAGIC = auto()
+
+class Bard(Enum):
+    COLLEGE_OF_CREATION = auto()
+    COLLEGE_OF_ELOQUENCE = auto()
+    COLLEGE_OF_GLAMOUR = auto()
+    COLLEGE_OF_LORE = auto()
+    COLLEGE_OF_SPIRITS = auto()
+    COLLEGE_OF_SWORDS = auto()
+    COLLEGE_OF_VALOR = auto()
+    COLLEGE_OF_WHISPERS = auto()
+
+class Cleric(Enum):
+    ARCANA_DOMAIN = auto()
+    DEATH_DOMAIN = auto()
+    FORGE_DOMAIN = auto()
+    GRAVE_DOMAIN = auto()
+    KNOWLEDGE_DOMAIN = auto()
+    LIFE_DOMAIN = auto()
+    LIGHT_DOMAIN = auto()
+    NATURE_DOMAIN = auto()
+    ORDER_DOMAIN = auto()
+    PEACE_DOMAIN = auto()
+    TEMPEST_DOMAIN = auto()
+    TRICKERY_DOMAIN = auto()
+    TWILIGHT_DOMAIN = auto()
+    WAR_DOMAIN = auto()
+
+class Druid(Enum):
+    CIRCLE_OF_DREAMS = auto()
+    CIRCLE_OF_SPORES = auto()
+    CIRCLE_OF_STARS = auto()
+    CIRCLE_OF_WILDFIRE = auto()
+    CIRCLE_OF_LAND = auto()
+    CIRCLE_OF_MOON = auto()
+    CIRCLE_OF_SHEPHERD = auto()
+
+class Fighter(Enum):
+    ARCANE_ARCHER = auto()
+    BATTLE_MASTER = auto()
+    CAVALIER = auto()
+    ECHO_KNIGHT = auto()
+    ELDRITCH_KNIGHT = auto()
+    PSI_WARRIOR = auto()
+    RUNE_KNIGHT = auto()
+    SAMURAI = auto()
+    PURPLE_DRAGON_KNIGHT = auto()
+
+class Paladin(Enum):
+    OATH_OF_CONQUEST = auto()
+    OATH_OF_DEVOTION = auto()
+    OATH_OF_GLORY = auto()
+    OATH_OF_REDEMPTION = auto()
+    OATH_OF_ANCIENTS = auto()
+    OATH_OF_CROWN = auto()
+    OATH_OF_WATCHERS = auto()
+    OATH_OF_VENGEANCE = auto()
+    OATHBREAKER = auto()
+
+class Ranger(Enum):
+    BEAST_MASTER = auto()
+    DRAKEWARDEN = auto()
+    FEY_WANDERER = auto()
+    GLOOM_STALKER = auto()
+    HORIZON_WALKER = auto()
+    HUNTER = auto()
+    MONSTER_SLAYER = auto()
+    SWARMKEEPER = auto()
+
+class Rogue(Enum):
+    ARCANE_TRICKSTER = auto()
+    ASSASSIN = auto()
+    INQUISITIVE = auto()
+    PHANTOM = auto()
+    MASTERMIND = auto()
+    SCOUT = auto()
+    SOULKNIFE = auto()
+    SWASHBUCKLER = auto()
+    THIEF = auto()
+
+class Monk(Enum):
+    WAY_OF_MERCY = auto()
+    WAY_OF_SHADOW = auto()
+    WAY_OF_THE_ASCENDANT_DRAGON = auto()
+    WAY_OF_ASTRAL_SELF = auto()
+    WAY_OF_DRUNKEN_MASTER = auto()
+    WAY_OF_THE_FOUR_ELEMENTS = auto()
+    WAY_OF_KENSEI = auto()
+    WAY_OF_THE_LONG_DEATH = auto()
+    WAY_OF_THE_OPEN_HAND = auto()
+    WAY_OF_THE_SUN_SOUL = auto()
+
+class Sorcerer(Enum):
+    ABERRANT_MIND = auto()
+    CLOCKWORK_SOUL = auto()
+    DIVINE_SOUL = auto()
+    DRACONIC_BLOODLINE = auto()
+    SHADOW_MAGIC = auto()
+    STORM_SORCERY = auto()
+    WILD_MAGIC = auto()
+
+class Warlock(Enum):
+    THE_ARCHFEY = auto()
+    THE_CELESTIAL = auto()
+    THE_FATHOMLESS = auto()
+    THE_FIEND = auto()
+    THE_GENIE = auto()
+    THE_GREAT_OLD_ONE = auto()
+    THE_HEXBLADE = auto()
+    THE_UNDEAD = auto()
+    THE_UNDYING = auto()
+
+class Wizard(Enum):
+    BLADESINGER = auto()
+    CHRONURGY = auto()
+    GRAVITURGY = auto()
+    ORDER_OF_SCRIBES = auto()
+    ABJURATION = auto()
+    CONJURATION = auto()
+    DIVINATION = auto()
+    ENCHANTMENT = auto()
+    EVOCATION = auto()
+    ILLUSION = auto()
+    NECROMANCY = auto()
+    TRANSMUTATION = auto()
+    WAR_MAGIC = auto()
+
+class Monster(Flag):
+    HUMANOID = auto()
+    GIANT = auto()
+    MONSTROSITY = auto()
+    BEAST = auto()
+    UNDEAD = auto()
+    DRAGON = auto()
+    CONSTRUCT = auto()
+    ELEMENTAL = auto()
+    ABERRATION = auto()
+    FEY = auto()
+    OOZE = auto()
+
+class Class:
+    ARTIFICER = Artificer
+    BARBARIAN = Barbarian
+    BARD = Bard
+    CLERIC = Cleric
+    DRUID = Druid
+    FIGHTER = Fighter
+    PALADIN = Paladin
+    RANGER = Ranger
+    ROGUE = Rogue
+    MONK = Monk
+    SORCERER = Sorcerer
+    WARLOCK = Warlock
+    WIZARD = Wizard
+    MONSTER = Monster
+
+# class Class(Enum):
+#     ARTIFICER = Artificer()
+#     BARBARIAN = Barbarian()
+#     BARD = Bard()
+#     CLERIC = Cleric()
+#     DRUID = Druid()
+#     ELDRIDGE_KNIGHT = 4
+#     PALADIN = 5
+#     RANGER = 6
+#     ARCANE_TRICKSTER = 7
+#     SORCERER = 8
+#     WARLOCK = 9
+#     WIZARD = 10
+#
+#     MONSTER = 12
+
+# class Class(Enum):
+#     BARD = 1
+#     CLERIC = 2
+#     DRUID = 3
+#     ELDRIDGE_KNIGHT = 4
+#     PALADIN = 5
+#     RANGER = 6
+#     ARCANE_TRICKSTER = 7
+#     SORCERER = 8
+#     WARLOCK = 9
+#     WIZARD = 10
+#     ARTIFICER = 11
+#     MONSTER = 12
+
 class SavingThrow(Enum):
     STR = 1
     DEX = 2
