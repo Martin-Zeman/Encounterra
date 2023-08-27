@@ -1,5 +1,4 @@
 import logging
-from simulator.teams import Teams
 
 class LogFormatter(logging.Formatter):
     """Team-colored logging formatter"""

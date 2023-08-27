@@ -4,21 +4,21 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.action_types import BonusAction
-from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.combatant_coords import Coords
-from simulator.effects.action_enabler_effect import ActionEnablerEffect
-from simulator.effects.aoe_square_effect import AoeSquareEffect
-from simulator.effects.effect import EffectType
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow, Conditions
-from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import DirectThreatFactory, AoEThreat, Threat
+from ..actions.action_types import BonusAction
+from ..actions.flaming_sphere_ram import FlamingSphereRamFactory
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..combatant_coords import Coords
+from ..effects.action_enabler_effect import ActionEnablerEffect
+from ..effects.aoe_square_effect import AoeSquareEffect
+from ..effects.effect import EffectType
+from ..effects.limited_duration_effect import LimitedDurationEffect
+from ..spells.spell import SpellStats
+from ..misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow, Conditions
+from ..actions.actoid import Actoid, ActoidFlags
+from ..threat_interfaces import DirectThreatFactory, AoEThreat, Threat
 import numpy as np
 
-from simulator.threat_utils import mean_dmg_dc_attack
+from ..threat_utils import mean_dmg_dc_attack
 
 logger = logging.getLogger("Encounterra")
 

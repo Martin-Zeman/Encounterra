@@ -1,10 +1,9 @@
-from simulator.abilities.on_hit_effect import OnHit
-from simulator.battle_map import Map
-from simulator.effects.effect import EffectType
-from simulator.misc import roll_saving_throw, reconcile_roll_types, Conditions, ConditionWithoutDC, parse_dmg_dice, roll_dice, avg_roll
+from ..abilities.on_hit_effect import OnHit
+from ..battle_map import Map
+from ..misc import parse_dmg_dice, roll_dice, avg_roll
 import logging
 
-from simulator.utils.roll_types import RollType
+from ..utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
 

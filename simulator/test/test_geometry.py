@@ -1,10 +1,10 @@
 import pytest
 
-from simulator.geometry import *
-from simulator.misc import Size
-from simulator.spells.spell import *
+from ..geometry import *
+from ..misc import Size
+from ..spells.spell import *
 import numpy as np
-from simulator.test.fixtures import test_stone_giant, test_ogre, test_bugbear
+from ..test.fixtures import test_stone_giant, test_ogre, test_bugbear
 
 
 def test_cone_15_feet():

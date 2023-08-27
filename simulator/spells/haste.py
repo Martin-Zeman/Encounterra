@@ -1,19 +1,20 @@
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.effects.effect import EffectType
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.spells.spell import SpellStats
-from simulator.actions.action_types import BonusAction
-from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_utils import mean_dmg
-from simulator.threat_interfaces import ThreatModifierFactory, Threat
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..effects.effect import EffectType
+from ..effects.limited_duration_effect import LimitedDurationEffect
+from ..spells.spell import SpellStats
+from ..actions.action_types import BonusAction
+from ..actions.actoid import Actoid, ActoidFlags
+from ..threat_utils import mean_dmg
+from ..threat_interfaces import ThreatModifierFactory, Threat
 from functools import reduce, cache
-from simulator.misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions, Visibility
+from ..misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions, Visibility
+from ..utils.roll_types import ThreatModifierType
 import logging
 
-from simulator.utils.roll_types import ThreatModifierType
+
 
 logger = logging.getLogger("Encounterra")
 

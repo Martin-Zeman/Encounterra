@@ -1,18 +1,18 @@
 import copy
 
 import pytest
-from simulator.actions.action_types import Passive, Action
-from simulator.battle_map import Terrain, Coords, Map
-from simulator.combatants.goblin import Goblin
-from simulator.misc import DistanceMetric, Size, Side, Conditions, ConditionWithoutDC, Visibility
-from simulator.spells.fireball import FireballFactory
-from simulator.spells.spell import SpellStats
-from simulator.teams import Teams
-from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
+from ..actions.action_types import Passive, Action
+from ..battle_map import Terrain, Coords, Map
+from ..combatants.goblin import Goblin
+from ..misc import DistanceMetric, Size, Side, Conditions, ConditionWithoutDC, Visibility
+from ..spells.fireball import FireballFactory
+from ..spells.spell import SpellStats
+from ..teams import Teams
+from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
     teams, effect_tracker, battle_map
 import numpy as np
 
-from simulator.utils.roll_types import ThreatModifierType
+from ..utils.roll_types import ThreatModifierType
 
 
 def test_as_if_combatant_position(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):

@@ -1,8 +1,8 @@
 import logging
 
-from simulator.effects.effect import EffectType
-from simulator.effects.start_of_turn_combatant_auto_effect import StartOfTurnAutoEffect
-from simulator.misc import parse_dmg_dice, roll_dice, DamageType
+from ..effects.effect import EffectType
+from ..effects.start_of_turn_combatant_auto_effect import StartOfTurnAutoEffect
+from ..misc import parse_dmg_dice, roll_dice, DamageType
 
 logger = logging.getLogger("Encounterra")
 

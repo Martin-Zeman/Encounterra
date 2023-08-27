@@ -1,10 +1,10 @@
 import copy
 
-from simulator.actions.action_types import Action, BonusAction, Reaction
-from simulator.utils.state_machine_template import StateMachineTemplate
-from simulator.combatant import Combatant
-from simulator.spellslots import Spellslots
-from simulator.misc import DamageType, SavingThrow, Class
+from ..actions.action_types import Action, BonusAction, Reaction
+from ..utils.state_machine_template import StateMachineTemplate
+from ..combatant import Combatant
+from ..spellslots import Spellslots
+from ..misc import DamageType, SavingThrow, Class
 import logging
 
 logger = logging.getLogger("Encounterra")

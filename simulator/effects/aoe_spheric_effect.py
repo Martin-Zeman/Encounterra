@@ -1,8 +1,8 @@
 import numpy as np
 
-from simulator.battle_map import Map
-from simulator.effects.aoe_effect import AoeEffect
-from simulator.geometry import get_square_center
+from ..battle_map import Map
+from ..effects.aoe_effect import AoeEffect
+from ..geometry import get_square_center
 
 
 class AoeSphericEffect(AoeEffect):

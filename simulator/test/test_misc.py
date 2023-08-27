@@ -1,18 +1,17 @@
 import numpy as np
 import pytest
 
-from simulator.abilities.wildshape import WildshapeFactory
-from simulator.action_resolver import ActionResolver
-from simulator.actions.action_selector import get_action
-from simulator.actions.action_types import BonusAction, Action
-from simulator.battle_map import Map
-from simulator.combatants.giant_toad import GiantToad
-from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.misc import Conditions, DamageType
-from simulator.spells.flaming_sphere import FlamingSphereFactory
-from simulator.teams import Teams
-from simulator.test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
-from simulator.utils.utils import preallocate_wildshape_forms
+from ..abilities.wildshape import WildshapeFactory
+from ..action_resolver import ActionResolver
+from ..actions.action_types import BonusAction, Action
+from ..battle_map import Map
+from ..combatants.giant_toad import GiantToad
+from ..logging.custom_logger import CustomLogger, LogLevel
+from ..misc import DamageType
+from ..spells.flaming_sphere import FlamingSphereFactory
+from ..teams import Teams
+from ..test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
+from ..utils.utils import preallocate_wildshape_forms
 
 def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid, test_draconic_sorcerer_5lvl):
     """

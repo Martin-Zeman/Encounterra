@@ -2,7 +2,7 @@ import logging
 import sys
 from enum import Enum, auto
 
-from simulator.logging.log_formatter import LogFormatter
+from ..logging.log_formatter import LogFormatter
 
 
 def addLoggingLevel(levelName, levelNum, methodName=None):

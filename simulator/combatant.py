@@ -4,24 +4,23 @@ import logging
 import random
 import math
 from contextlib import contextmanager
-
-from simulator.abilities.on_hit_sneak_attack import OnHitSneakAttack
-from simulator.action_resolver import check_concentration
-from simulator.actions.actoid import FactoryFlags
-from simulator.actions.default_action_plan_strategy import DefaultActionPlanStrategy
-from simulator.battle_map import Map
-from simulator.effects.action_enabler_effect import ActionEnablerEffect
-from simulator.effects.effect import EffectType
-from simulator.misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
-from enum import Enum
 from abc import ABC, abstractmethod
-from simulator.actions.dodge import DodgeFactory
-from simulator.actions.disengage import DisengageFactory
-from simulator.abilities.rage import RageFactory
-from simulator.actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKENED, TO_TWINNED
-from simulator.actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
-from simulator.proto_combatant import ProtoCombatant
-from simulator.spellslots import Spellslots, spellslot_factory
+
+from .abilities.on_hit_sneak_attack import OnHitSneakAttack
+from .action_resolver import check_concentration
+from .actions.actoid import FactoryFlags
+from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from .battle_map import Map
+from .effects.action_enabler_effect import ActionEnablerEffect
+from .effects.effect import EffectType
+from .misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
+from .actions.dodge import DodgeFactory
+from .actions.disengage import DisengageFactory
+from .abilities.rage import RageFactory
+from .actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKENED, TO_TWINNED
+from .actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
+from .proto_combatant import ProtoCombatant
+from .spellslots import spellslot_factory
 
 logger = logging.getLogger("Encounterra")
 

@@ -3,16 +3,16 @@ import inspect
 import logging
 import math
 import pkgutil
-from simulator.abilities.wildshape import Wildshape
-from simulator.actions.action_types import Action, BonusAction
-from simulator.combatant import Combatant
-from simulator.combatants.brown_bear import BrownBear
-from simulator.combatants.dire_wolf import DireWolf
-from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
-from simulator.combatants.giant_spider import GiantSpider
-from simulator.combatants.giant_toad import GiantToad
-from simulator.combatants.quetzalcoatlus import Quetzalcoatlus
-from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
+from ..abilities.wildshape import Wildshape
+from ..actions.action_types import Action, BonusAction
+from ..combatant import Combatant
+from ..combatants.brown_bear import BrownBear
+from ..combatants.dire_wolf import DireWolf
+from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
+from ..combatants.giant_spider import GiantSpider
+from ..combatants.giant_toad import GiantToad
+from ..combatants.quetzalcoatlus import Quetzalcoatlus
+from ..combatants.saber_toothed_tiger import SaberToothedTiger
 
 logger = logging.getLogger("Encounterra")
 

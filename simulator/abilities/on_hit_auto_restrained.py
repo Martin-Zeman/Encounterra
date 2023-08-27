@@ -1,5 +1,5 @@
-from simulator.abilities.on_hit_effect import OnHit
-from simulator.misc import Conditions, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
+from ..abilities.on_hit_effect import OnHit
+from ..misc import Conditions, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
 import logging
 
 logger = logging.getLogger("Encounterra")

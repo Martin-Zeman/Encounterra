@@ -3,15 +3,15 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.action_types import Action
-from simulator.actions.actoid import Actoid, FactoryFlags
-from simulator.battle_map import Map, map_toggled_cache_with_key
-from simulator.effects.combatant_effect import CombatantEffect
-from simulator.effects.effect import EffectType
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.threat_utils import calculate_threat_in_delta
-from simulator.threat_interfaces import ThreatModifierFactory, Threat
-from simulator.misc import SavingThrow
+from ..actions.action_types import Action
+from ..actions.actoid import Actoid, FactoryFlags
+from ..battle_map import Map, map_toggled_cache_with_key
+from ..effects.combatant_effect import CombatantEffect
+from ..effects.effect import EffectType
+from ..effects.limited_duration_effect import LimitedDurationEffect
+from ..threat_utils import calculate_threat_in_delta
+from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..misc import SavingThrow
 import logging
 from simulator.utils.roll_types import RollType, ThreatModifierType
 

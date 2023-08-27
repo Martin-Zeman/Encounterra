@@ -3,11 +3,10 @@ import math
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.actoid import FactoryFlags
-from simulator.actions.attack import AttackFactory, Attack
-from simulator.battle_map import Map, map_toggled_cache_with_key
-from simulator.misc import percent_of_curr_hp, Conditions
-from simulator.threat_utils import mean_dmg
+from ..actions.actoid import FactoryFlags
+from ..actions.attack import AttackFactory, Attack
+from ..battle_map import Map
+from ..misc import Conditions
 import logging
 
 

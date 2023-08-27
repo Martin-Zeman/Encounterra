@@ -1,11 +1,8 @@
-from simulator.abilities.rage import Rage
-from simulator.abilities.reckless_attack import RecklessAttack
-from simulator.abilities.totem_rage import TotemRage
-from simulator.actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction
-from simulator.battle_map import Map
-from simulator.combatant_coords import Coords
-from simulator.effects.effect import EffectType
-from simulator.misc import Conditions, Size
+from .actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction
+from .battle_map import Map
+from .combatant_coords import Coords
+from .effects.effect import EffectType
+from .misc import Conditions, Size
 import logging
 import numpy as np
 

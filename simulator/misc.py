@@ -2,9 +2,9 @@ from enum import Enum, Flag, auto
 import random
 import re
 from functools import reduce, cache
-from simulator.actions.actoid import FactoryFlags
+from .actions.actoid import FactoryFlags
 import logging
-from simulator.utils.roll_types import RollType
+from .utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
 
@@ -178,36 +178,6 @@ class Class:
     WARLOCK = Warlock
     WIZARD = Wizard
     MONSTER = Monster
-
-# class Class(Enum):
-#     ARTIFICER = Artificer()
-#     BARBARIAN = Barbarian()
-#     BARD = Bard()
-#     CLERIC = Cleric()
-#     DRUID = Druid()
-#     ELDRIDGE_KNIGHT = 4
-#     PALADIN = 5
-#     RANGER = 6
-#     ARCANE_TRICKSTER = 7
-#     SORCERER = 8
-#     WARLOCK = 9
-#     WIZARD = 10
-#
-#     MONSTER = 12
-
-# class Class(Enum):
-#     BARD = 1
-#     CLERIC = 2
-#     DRUID = 3
-#     ELDRIDGE_KNIGHT = 4
-#     PALADIN = 5
-#     RANGER = 6
-#     ARCANE_TRICKSTER = 7
-#     SORCERER = 8
-#     WARLOCK = 9
-#     WIZARD = 10
-#     ARTIFICER = 11
-#     MONSTER = 12
 
 class SavingThrow(Enum):
     STR = 1

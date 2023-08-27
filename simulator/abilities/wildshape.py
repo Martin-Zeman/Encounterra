@@ -1,14 +1,14 @@
 import math
 import numpy as np
 
-from simulator.actions.action_types import Action, BonusAction
-from simulator.actions.actoid import Actoid, FactoryFlags
-from simulator.battle_map import Map, map_toggled_cache_with_key
-from simulator.effects.action_enabler_effect import ActionEnablerEffect
-from simulator.effects.combatant_effect import CombatantEffect
-from simulator.effects.effect import EffectType
-from simulator.misc import SavingThrow, Size, Conditions
-from simulator.threat_interfaces import TransformerFactory, DirectThreat
+from ..actions.action_types import Action, BonusAction
+from ..actions.actoid import Actoid, FactoryFlags
+from ..battle_map import Map, map_toggled_cache_with_key
+from ..effects.action_enabler_effect import ActionEnablerEffect
+from ..effects.combatant_effect import CombatantEffect
+from ..effects.effect import EffectType
+from ..misc import SavingThrow, Size, Conditions
+from ..threat_interfaces import TransformerFactory, DirectThreat
 import logging
 
 logger = logging.getLogger("Encounterra")

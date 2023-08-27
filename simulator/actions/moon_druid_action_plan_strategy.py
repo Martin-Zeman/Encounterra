@@ -3,11 +3,11 @@ import sys
 
 import numpy as np
 
-from simulator.actions.action_dag import generate_proto_dag, generate_wildshape_proto_dag
-from simulator.actions.action_plan_strategy import ActionPlanStrategy
-from simulator.actions.action_selector import find_best_sequence, build_action_dag, translate_sequence_to_actions
-from simulator.actions.action_types import Action, BonusAction
-from simulator.battle_map import Map
+from ..actions.action_dag import generate_proto_dag, generate_wildshape_proto_dag
+from ..actions.action_plan_strategy import ActionPlanStrategy
+from ..actions.action_selector import find_best_sequence, build_action_dag, translate_sequence_to_actions
+from ..actions.action_types import Action, BonusAction
+from ..battle_map import Map
 
 logger = logging.getLogger("Encounterra")
 

@@ -1,18 +1,22 @@
+import logging
 import math
-
-from simulator.actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
-from simulator.actions.dodge import DodgeFactory
-from simulator.actions.flaming_sphere_ram import FlamingSphereRamFactory
-from simulator.battle_map import Map
-from simulator.effects.effect import EffectType
-from simulator.misc import *
-from simulator.misc import SavingThrow
-from simulator.feasibility import check_feasibility
-from simulator.resources import use_resources
+import random
 from enum import Enum, auto
+from functools import reduce
 
-from simulator.spells.chaosbolt import ChaosboltFactory
-from simulator.spells.magic_missile import MagicMissileFactory
+from .actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
+from .actions.actoid import FactoryFlags
+from .actions.dodge import DodgeFactory
+from .actions.flaming_sphere_ram import FlamingSphereRamFactory
+from .battle_map import Map
+from .effects.effect import EffectType
+from .misc import SavingThrow, Conditions, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
+    roll_dice, roll_ability_check, roll_saving_throw
+from .feasibility import check_feasibility
+from .resources import use_resources
+from .spells.chaosbolt import ChaosboltFactory
+from .spells.magic_missile import MagicMissileFactory
+from .utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
 

@@ -1,21 +1,20 @@
 import logging
 import math
 
-from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.effects.combatant_effect import CombatantEffect
-from simulator.effects.effect import EffectType
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from simulator.misc import reconcile_roll_types, Conditions
-from functools import reduce, cache
-from simulator.misc import avg_roll
-from simulator.threat_utils import mean_dmg, calculate_threat_in_delta
-from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..effects.combatant_effect import CombatantEffect
+from ..effects.effect import EffectType
+from ..effects.limited_duration_effect import LimitedDurationEffect
+from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
+from ..misc import reconcile_roll_types, Conditions
+from functools import reduce
+from ..misc import avg_roll
+from ..threat_utils import mean_dmg, calculate_threat_in_delta
+from ..threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
-from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
+from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 

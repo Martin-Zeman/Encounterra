@@ -1,13 +1,12 @@
 import copy
 from functools import cache
 
-from simulator.abilities.wildshape import WildshapeFactory
-from simulator.actions.action_types import Action, Reaction, BonusAction
-from simulator.actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
-from simulator.utils.state_machine_template import StateMachineTemplate
-from simulator.combatant import Combatant
-from simulator.spellslots import Spellslots
-from simulator.misc import DamageType, SavingThrow, Class
+from ..abilities.wildshape import WildshapeFactory
+from ..actions.action_types import Action, Reaction, BonusAction
+from ..actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
+from ..utils.state_machine_template import StateMachineTemplate
+from ..combatant import Combatant
+from ..misc import DamageType, SavingThrow, Class
 import logging
 
 logger = logging.getLogger("Encounterra")

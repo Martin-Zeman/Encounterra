@@ -8,12 +8,12 @@ from cachetools.keys import hashkey
 from scipy.stats import randint
 from toposort import toposort_flatten
 
-from simulator.actions.actoid import FactoryFlags
-from simulator.battle_map import Map, map_toggled_cache_with_key
-from simulator.utils.state_machine_template import StateMachineTemplate
-from simulator.misc import parse_dmg_dice, reconstruct_path_through_dag, Conditions
-from simulator.spells.misty_step import MistyStepFactory
-from simulator.utils.roll_types import RollType
+from .actions.actoid import FactoryFlags
+from .battle_map import Map
+from .utils.state_machine_template import StateMachineTemplate
+from .misc import parse_dmg_dice, reconstruct_path_through_dag, Conditions
+from .spells.misty_step import MistyStepFactory
+from .utils.roll_types import RollType
 
 DZ_CONSTANT = 0.33
 

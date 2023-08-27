@@ -1,8 +1,7 @@
-from enum import Enum, auto
 from abc import ABC, abstractmethod
 
-from simulator.actions.actoid import FactoryFlags
-from simulator.misc import roll_dice
+from .actions.actoid import FactoryFlags
+from .misc import roll_dice
 
 
 class Factory:

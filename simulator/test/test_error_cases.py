@@ -4,26 +4,26 @@ import pstats
 import numpy as np
 import pytest
 
-from simulator.abilities.wildshape import WildshapeFactory
-from simulator.action_resolver import ActionResolver
-from simulator.actions.action_types import BonusAction, Action
-from simulator.actions.movement import MovementIncrement
-from simulator.battle_map import Terrain
-from simulator.combatants.giant_toad import GiantToad
-from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.misc import Conditions, ConditionWithoutDC, ConditionWithDC, PhaseOfTurn, SavingThrow, SkillCheck
-from simulator.spells.fireball import Fireball
-from simulator.spells.firebolt import Firebolt
-from simulator.spells.flaming_sphere import FlamingSphereFactory
-from simulator.spells.haste import HasteFactory
-from simulator.spells.spell import SpellStats
-from simulator.spells.twinned_firebolt import TwinnedFirebolt
-from simulator.teams import Teams
-from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
+from ..abilities.wildshape import WildshapeFactory
+from ..action_resolver import ActionResolver
+from ..actions.action_types import BonusAction, Action
+from ..actions.movement import MovementIncrement
+from ..battle_map import Terrain
+from ..combatants.giant_toad import GiantToad
+from ..logging.custom_logger import CustomLogger, LogLevel
+from ..misc import Conditions, ConditionWithoutDC, ConditionWithDC, PhaseOfTurn, SavingThrow, SkillCheck
+from ..spells.fireball import Fireball
+from ..spells.firebolt import Firebolt
+from ..spells.flaming_sphere import FlamingSphereFactory
+from ..spells.haste import HasteFactory
+from ..spells.spell import SpellStats
+from ..spells.twinned_firebolt import TwinnedFirebolt
+from ..teams import Teams
+from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue
-from simulator.actions.action_selector import get_action
-from simulator.utils.utils import preallocate_wildshape_forms
+from ..actions.action_selector import get_action
+from ..utils.utils import preallocate_wildshape_forms
 import cProfile
 
 def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear):
@@ -172,21 +172,21 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl_2, np.array([7, 8]))
     battle_map.build_adjacency_matrix()
 
-    # try:
+    try:
         # The Danger Zone of the Stone Giant spans the whole map so it doesn't pay off to move and suffer the AoO
-    from simulator.actions.action_selector import get_action
-    cProfile.runctx('get_action(test_draconic_sorcerer_5lvl)', None, locals(), filename="get_action_stats")
-    p = pstats.Stats("get_action_stats")
-    p.strip_dirs().sort_stats("cumtime").print_stats()
+    # from simulator.actions.action_selector import get_action
+    # cProfile.runctx('get_action(test_draconic_sorcerer_5lvl)', None, locals(), filename="get_action_stats")
+    # p = pstats.Stats("get_action_stats")
+    # p.strip_dirs().sort_stats("cumtime").print_stats()
 
-    #     actoid1 = get_action(test_draconic_sorcerer_5lvl)
-    #     action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
-    #     actoid2 = get_action(test_draconic_sorcerer_5lvl)
-    #     action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
-    #     actoid3 = get_action(test_draconic_sorcerer_5lvl)
-    #     assert actoid3 is None
-    # except Exception as e:
-    #     assert False, f"Raised an exception {e}"
+        actoid1 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid1, test_draconic_sorcerer_5lvl)
+        actoid2 = get_action(test_draconic_sorcerer_5lvl)
+        action_resolver.resolve_action(actoid2, test_draconic_sorcerer_5lvl)
+        actoid3 = get_action(test_draconic_sorcerer_5lvl)
+        assert actoid3 is None
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
 
 
 @pytest.mark.skip(reason="Takes too long")

@@ -3,13 +3,13 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_toggled_cache_with_key
-from simulator.misc import Conditions, Visibility
-from simulator.spells.spell import SpellStats
-from simulator.effects.effect import Effect
-from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..actions.action_types import BonusAction
+from ..battle_map import Map, map_toggled_cache_with_key
+from ..misc import Conditions
+from ..spells.spell import SpellStats
+from ..effects.effect import Effect
+from ..actions.actoid import Actoid, ActoidFlags
+from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
 from itertools import combinations
 
 class BlessFactory(ThreatModifierFactory):

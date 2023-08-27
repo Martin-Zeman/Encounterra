@@ -1,12 +1,12 @@
 import numpy as np
 
-from simulator.actions.action_types import Action
-from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.resources import use_resources
-from simulator.spells.fireball import FireballFactory
-from simulator.spells.firebolt import FireboltFactory
-from simulator.teams import Teams
-from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, teams, effect_tracker, battle_map
+from ..actions.action_types import Action
+from ..logging.custom_logger import CustomLogger, LogLevel
+from ..resources import use_resources
+from ..spells.fireball import FireballFactory
+from ..spells.firebolt import FireboltFactory
+from ..teams import Teams
+from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, teams, effect_tracker, battle_map
 
 def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
     CustomLogger(LogLevel.WARNING)

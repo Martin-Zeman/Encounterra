@@ -3,13 +3,12 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.action_types import BonusAction, HasteAction
-from simulator.actions.actoid import Actoid, ActoidFlags
+from ..actions.action_types import BonusAction, HasteAction
+from ..actions.actoid import Actoid, ActoidFlags
 import logging
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.misc import Conditions
-from simulator.threat_interfaces import Factory, AttackThreatModifier
-from simulator.threat_utils import get_danger_zone_threat
+from ..battle_map import Map, map_toggled_cache_with_key
+from ..misc import Conditions
+from ..threat_interfaces import Factory, AttackThreatModifier
 
 logger = logging.getLogger("Encounterra")
 

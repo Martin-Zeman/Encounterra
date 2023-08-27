@@ -1,4 +1,4 @@
-from simulator.effects.effect import Effect
+from ..effects.effect import Effect
 import logging
 
 logger = logging.getLogger("Encounterra")

@@ -1,10 +1,10 @@
 import copy
 
-from simulator.abilities.on_hit_prone import OnHitProne
-from simulator.actions.action_types import Action, Reaction
-from simulator.utils.state_machine_template import StateMachineTemplate
-from simulator.combatant import Combatant
-from simulator.misc import DamageType, SavingThrow, Size, Class
+from ..abilities.on_hit_prone import OnHitProne
+from ..actions.action_types import Action, Reaction
+from ..utils.state_machine_template import StateMachineTemplate
+from ..combatant import Combatant
+from ..misc import DamageType, SavingThrow, Size, Class
 import logging
 
 logger = logging.getLogger("Encounterra")

@@ -4,10 +4,10 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.actoid import FactoryFlags
-from simulator.actions.melee_attack import MeleeAttackFactory, MeleeAttack
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.misc import Size, Conditions
+from ..actions.actoid import FactoryFlags
+from ..actions.melee_attack import MeleeAttackFactory, MeleeAttack
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..misc import Size, Conditions
 import logging
 
 logger = logging.getLogger("Encounterra")

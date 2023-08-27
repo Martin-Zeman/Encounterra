@@ -2,21 +2,21 @@ import numpy as np
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.combatant_coords import Coords
-from simulator.effects.aoe_square_effect import AoeSquareEffect
-from simulator.effects.combatant_effect import CombatantEffect
-from simulator.effects.effect import EffectType
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.spells.spell import SpellStats
-from simulator.actions.action_types import BonusAction
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat_interfaces import ThreatModifierFactory, Threat
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..combatant_coords import Coords
+from ..effects.aoe_square_effect import AoeSquareEffect
+from ..effects.combatant_effect import CombatantEffect
+from ..effects.effect import EffectType
+from ..effects.limited_duration_effect import LimitedDurationEffect
+from ..spells.spell import SpellStats
+from ..actions.action_types import BonusAction
+from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from ..threat_interfaces import ThreatModifierFactory, Threat
 from functools import cache
-from simulator.misc import roll_saving_throw, reconcile_roll_types, SavingThrow, Conditions
+from ..misc import roll_saving_throw, reconcile_roll_types, SavingThrow, Conditions
 import logging
-from simulator.threat_utils import calculate_threat_in_delta
-from simulator.utils.roll_types import ThreatModifierType, RollType
+from ..threat_utils import calculate_threat_in_delta
+from ..utils.roll_types import ThreatModifierType, RollType
 
 logger = logging.getLogger("Encounterra")
 

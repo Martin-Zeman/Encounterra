@@ -3,14 +3,14 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.combatant_coords import Coords
-from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, DamageType, Conditions
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.threat_utils import mean_dmg_dc_attack
-from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
+from ..actions.action_types import BonusAction
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..combatant_coords import Coords
+from ..spells.spell import SpellStats
+from ..misc import SavingThrow, DamageType, Conditions
+from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from ..threat_utils import mean_dmg_dc_attack
+from ..threat_interfaces import DirectThreat, DirectThreatFactory
 import numpy as np
 
 class FireballFactory(DirectThreatFactory):

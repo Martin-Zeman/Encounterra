@@ -4,18 +4,18 @@ from itertools import combinations
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.effects.effect import EffectType
-from simulator.effects.end_of_turn_combatant_effect import EndOfTurnEffect
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.spells.hold_person import HoldPersonFactory
-from simulator.spells.spell import SpellStats
-from simulator.misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility
-from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from simulator.threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
-from simulator.threat_interfaces import ThreatModifierFactory, Threat
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..effects.effect import EffectType
+from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
+from ..effects.limited_duration_effect import LimitedDurationEffect
+from ..spells.hold_person import HoldPersonFactory
+from ..spells.spell import SpellStats
+from ..misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility
+from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
+from ..threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
+from ..threat_interfaces import ThreatModifierFactory, Threat
 import logging
-from simulator.utils.roll_types import ThreatModifierType, RollType
+from ..utils.roll_types import ThreatModifierType, RollType
 
 logger = logging.getLogger("Encounterra")
 

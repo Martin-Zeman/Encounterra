@@ -1,28 +1,24 @@
-import inspect
-import pkgutil
-
-from simulator.combatant import Combatant
-from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
-from simulator.combatants.brown_bear import BrownBear
-from simulator.combatants.bugbear import Bugbear
-from simulator.combatants.dire_wolf import DireWolf
-from simulator.combatants.dragonclaw_cultist import DragonclawCultist
-from simulator.combatants.evil_mage import EvilMage
-from simulator.combatants.giant_toad import GiantToad
-from simulator.combatants.goblin import Goblin
-from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
-from simulator.combatants.ogre import Ogre
-from simulator.combatants.stone_giant import StoneGiant
-from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from simulator.battle_map import *
-from simulator.round_manager import *
-from simulator.teams import Teams
+from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from .combatants.brown_bear import BrownBear
+from .combatants.bugbear import Bugbear
+from .combatants.dire_wolf import DireWolf
+from .combatants.dragonclaw_cultist import DragonclawCultist
+from .combatants.evil_mage import EvilMage
+from .combatants.giant_toad import GiantToad
+from .combatants.goblin import Goblin
+from .combatants.moon_druid_5lvl import MoonDruid5Lvl
+from .combatants.ogre import Ogre
+from .combatants.stone_giant import StoneGiant
+from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from .utils.utils import get_combatant_classes
+from .battle_map import *
+from .round_manager import *
+from .teams import Teams
 from enum import Enum
 import logging
 import multiprocessing as mp
 
-from simulator.utils.utils import get_combatant_classes
 
 logger = logging.getLogger("Encounterra")
 

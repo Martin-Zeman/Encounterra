@@ -1,6 +1,6 @@
-from simulator.effects.combatant_effect import CombatantEffect
-from simulator.effects.effect import EffectType
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
+from ..effects.combatant_effect import CombatantEffect
+from ..effects.effect import EffectType
+from ..effects.limited_duration_effect import LimitedDurationEffect
 
 class PostHasteLethargy(CombatantEffect, LimitedDurationEffect):
     def __init__(self, combatant):

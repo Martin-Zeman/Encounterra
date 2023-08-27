@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from simulator.effects.effect import Effect
+from ..effects.effect import Effect
 
 
 class ActionEnablerEffect(Effect):

@@ -1,10 +1,10 @@
-from simulator.abilities.on_hit_effect import OnHit
-from simulator.battle_map import Map
-from simulator.effects.digestion import Digestion
-from simulator.misc import Conditions, ConditionWithoutDC, DamageType, ROUND_HORIZON
+from ..abilities.on_hit_effect import OnHit
+from ..battle_map import Map
+from ..effects.digestion import Digestion
+from ..misc import Conditions, ConditionWithoutDC, DamageType, ROUND_HORIZON
 import logging
 
-from simulator.threat_utils import mean_dmg_auto_hit
+from ..threat_utils import mean_dmg_auto_hit
 
 logger = logging.getLogger("Encounterra")
 

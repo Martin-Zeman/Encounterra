@@ -7,15 +7,15 @@ import time
 
 import numpy as np
 
-from simulator.actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
-from simulator.actions.action_types import Movement, MovementThreatType
-from simulator.actions.break_grapple import BreakGrappleFactory
-from simulator.actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
-from simulator.battle_map import convert_path_to_increments, Map
-from simulator.misc import Conditions
-from simulator.spells.misty_step import MistyStepFactory
-from simulator.threat_interfaces import AttackThreatModifier
-from simulator.threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
+from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
+from ..actions.action_types import Movement, MovementThreatType
+from ..actions.break_grapple import BreakGrappleFactory
+from ..actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
+from ..battle_map import convert_path_to_increments, Map
+from ..misc import Conditions
+from ..spells.misty_step import MistyStepFactory
+from ..threat_interfaces import AttackThreatModifier
+from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
 
 logger = logging.getLogger("Encounterra")
 

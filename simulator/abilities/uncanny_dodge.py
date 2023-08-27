@@ -1,7 +1,7 @@
-from simulator.actions.action_types import Reaction
+from ..actions.action_types import Reaction
 import logging
-from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import Factory, DirectThreat
+from ..actions.actoid import Actoid, ActoidFlags
+from ..threat_interfaces import Factory, DirectThreat
 
 logger = logging.getLogger("Encounterra")
 

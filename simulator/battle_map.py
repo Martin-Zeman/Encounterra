@@ -8,15 +8,15 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 import logging
-from simulator.actions.action_types import Passive
-from simulator.combatant_coords import Coords
-from simulator.obstacle import Obstacle
-from simulator.proto_combatant import ProtoCombatant
-from simulator.spells.spell import SpellStats
-from simulator.misc import Conditions, Size, Visibility, THREE_QUARTERS_COVER_ERROR_THRESHOLD, HALF_COVER_ERROR_THRESHOLD, \
+from .actions.action_types import Passive
+from .combatant_coords import Coords
+from .obstacle import Obstacle
+from .proto_combatant import ProtoCombatant
+from .spells.spell import SpellStats
+from .misc import Conditions, Size, Visibility, THREE_QUARTERS_COVER_ERROR_THRESHOLD, HALF_COVER_ERROR_THRESHOLD, \
     FULL_VISIBILITY_ERROR_THRESHOLD
-from simulator.geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors
-from simulator.misc import Side, DistanceMetric
+from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors
+from .misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
 from scipy.spatial.distance import euclidean

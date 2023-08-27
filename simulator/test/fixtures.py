@@ -1,20 +1,20 @@
 import pytest
 
-from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
-from simulator.combatants.dire_wolf import DireWolf
-from simulator.combatants.dragonclaw_cultist import DragonclawCultist
-from simulator.combatants.giant_toad import GiantToad
-from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
-from simulator.combatants.ogre import Ogre
-from simulator.combatants.stone_giant import StoneGiant
-from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.effects.effect_tracker import EffectTracker
-from simulator.combatants.bugbear import Bugbear
-from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from simulator.combatants.goblin import Goblin
-from simulator.combatants.brown_bear import BrownBear
-from simulator.teams import Teams
-from simulator.battle_map import Map
+from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from ..combatants.dire_wolf import DireWolf
+from ..combatants.dragonclaw_cultist import DragonclawCultist
+from ..combatants.giant_toad import GiantToad
+from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
+from ..combatants.ogre import Ogre
+from ..combatants.stone_giant import StoneGiant
+from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from ..effects.effect_tracker import EffectTracker
+from ..combatants.bugbear import Bugbear
+from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from ..combatants.goblin import Goblin
+from ..combatants.brown_bear import BrownBear
+from ..teams import Teams
+from ..battle_map import Map
 
 @pytest.fixture()
 def teams():

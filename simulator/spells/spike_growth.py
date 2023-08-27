@@ -4,16 +4,16 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.action_types import BonusAction
-from simulator.battle_map import Map, map_position_toggled_cache
-from simulator.combatant_coords import Coords
-from simulator.effects.aoe_spheric_effect import AoeSphericEffect
-from simulator.effects.effect import EffectType
-from simulator.effects.limited_duration_effect import LimitedDurationEffect
-from simulator.spells.spell import SpellStats
-from simulator.misc import DamageType, avg_roll, roll_spell_dmg, Conditions
-from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
+from ..actions.action_types import BonusAction
+from ..battle_map import Map, map_position_toggled_cache
+from ..combatant_coords import Coords
+from ..effects.aoe_spheric_effect import AoeSphericEffect
+from ..effects.effect import EffectType
+from ..effects.limited_duration_effect import LimitedDurationEffect
+from ..spells.spell import SpellStats
+from ..misc import DamageType, avg_roll, roll_spell_dmg, Conditions
+from ..actions.actoid import Actoid, ActoidFlags
+from ..threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
 import numpy as np
 
 logger = logging.getLogger("Encounterra")

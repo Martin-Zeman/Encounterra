@@ -1,11 +1,9 @@
-from simulator.action_resolver import *
-from simulator.actions.action_selector import get_action
-from simulator.resources import reset_resources
-from simulator.effects.effect_tracker import EffectTracker
+from .action_resolver import *
+from .actions.action_selector import get_action
+from .resources import reset_resources
+from .utils.utils import preallocate_wildshape_forms
 import logging
 import copy
-
-from simulator.utils.utils import preallocate_wildshape_forms
 
 logger = logging.getLogger("Encounterra")
 

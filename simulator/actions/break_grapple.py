@@ -1,5 +1,5 @@
-from simulator.actions.action_types import Action
-from simulator.actions.actoid import Actoid, ActoidFlags
+from ..actions.action_types import Action
+from ..actions.actoid import Actoid, ActoidFlags
 
 
 class BreakGrappleFactory:

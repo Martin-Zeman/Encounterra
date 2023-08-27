@@ -1,8 +1,8 @@
-from simulator.spells.spell import SpellStats
-from simulator.actions.action_types import Reaction
+from ..spells.spell import SpellStats
+from ..actions.action_types import Reaction
 import logging
-from simulator.actions.actoid import Actoid, ActoidFlags
-from simulator.threat_interfaces import DirectThreatFactory
+from ..actions.actoid import Actoid, ActoidFlags
+from ..threat_interfaces import DirectThreatFactory
 
 logger = logging.getLogger("Encounterra")
 

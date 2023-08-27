@@ -3,8 +3,8 @@ import math
 
 import numpy as np
 
-from simulator.combatant_coords import Coords
-from simulator.obstacle import Obstacle
+from .combatant_coords import Coords
+from .obstacle import Obstacle
 
 
 def get_square_center(coord):

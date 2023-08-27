@@ -1,4 +1,4 @@
-from simulator.effects.effect import Effect
+from ..effects.effect import Effect
 import logging
 
 from simulator.misc import roll_saving_throw, reconcile_roll_types

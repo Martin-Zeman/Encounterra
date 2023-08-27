@@ -1,10 +1,10 @@
 import copy
 
-from simulator.abilities.on_hit_auto_restrained import OnHitAutoRestrained
-from simulator.actions.action_types import Action, Reaction
-from simulator.utils.state_machine_template import StateMachineTemplate
-from simulator.combatant import Combatant
-from simulator.misc import DamageType, SavingThrow, Size, SkillCheck, Class
+from ..abilities.on_hit_auto_restrained import OnHitAutoRestrained
+from ..actions.action_types import Action, Reaction
+from ..utils.state_machine_template import StateMachineTemplate
+from ..combatant import Combatant
+from ..misc import DamageType, SavingThrow, Size, SkillCheck, Class
 import logging
 
 logger = logging.getLogger("Encounterra")

@@ -1,16 +1,16 @@
 from cachetools.keys import hashkey
 
-from simulator.actions.action_types import HasteAction
-from simulator.actions.actoid import Actoid, FactoryFlags, ActoidFlags
+from ..actions.action_types import HasteAction
+from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.misc import avg_roll, Conditions
-from simulator.threat_utils import mean_dmg, calc_p_hit
-from simulator.threat_interfaces import DirectThreat, DirectThreatFactory
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..misc import avg_roll, Conditions
+from ..threat_utils import mean_dmg, calc_p_hit
+from ..threat_interfaces import DirectThreat, DirectThreatFactory
 from enum import Enum, auto
 import math
 import logging
-from simulator.utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
+from ..utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 

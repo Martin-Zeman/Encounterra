@@ -4,11 +4,11 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.actions.actoid import FactoryFlags
-from simulator.actions.attack import AttackFactory, Attack
-from simulator.battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from simulator.misc import Visibility, Conditions
-from simulator.threat_utils import mean_dmg, calc_p_hit
+from ..actions.actoid import FactoryFlags
+from ..actions.attack import AttackFactory, Attack
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..misc import Visibility, Conditions
+from ..threat_utils import mean_dmg, calc_p_hit
 import logging
 
 from simulator.utils.roll_types import RollType, ROLL_TYPE_DELTA

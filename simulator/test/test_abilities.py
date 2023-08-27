@@ -5,22 +5,22 @@ import pstats
 import numpy as np
 import pytest
 
-from simulator.abilities.wildshape import WildshapeFactory
-from simulator.action_resolver import ActionResolver, ActionResult
-from simulator.actions.action_selector import get_action
-from simulator.actions.action_types import BonusAction
-from simulator.actions.hide import HideFactory
-from simulator.battle_map import Terrain
-from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
-from simulator.effects.effect import EffectType
-from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.misc import DamageType, Conditions
-from simulator.teams import Teams
-from simulator.test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
+from ..abilities.wildshape import WildshapeFactory
+from ..action_resolver import ActionResolver, ActionResult
+from ..actions.action_selector import get_action
+from ..actions.action_types import BonusAction
+from ..actions.hide import HideFactory
+from ..battle_map import Terrain
+from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
+from ..effects.effect import EffectType
+from ..logging.custom_logger import CustomLogger, LogLevel
+from ..misc import DamageType, Conditions
+from ..teams import Teams
+from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant
-from simulator.utils.utils import preallocate_wildshape_forms
+from ..utils.utils import preallocate_wildshape_forms
 
-from simulator.test.test_singleton import SingletonClass
+from ..test.test_singleton import SingletonClass
 
 
 def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):

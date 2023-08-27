@@ -1,6 +1,6 @@
 import numpy as np
 import logging
-from simulator.misc import Size
+from .misc import Size
 
 logger = logging.getLogger("Encounterra")
 

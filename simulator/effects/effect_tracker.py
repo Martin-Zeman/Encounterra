@@ -1,10 +1,9 @@
 import logging
 
-from simulator.abilities.wildshape import Wildshape
-from simulator.effects.aoe_square_effect import AoeSquareEffect
-from simulator.effects.effect import EffectType
-from simulator.effects.post_haste_lethargy import PostHasteLethargy
-from simulator.effects.aoe_spheric_effect import AoeSphericEffect
+from ..effects.aoe_square_effect import AoeSquareEffect
+from ..effects.effect import EffectType
+from ..effects.post_haste_lethargy import PostHasteLethargy
+from ..effects.aoe_spheric_effect import AoeSphericEffect
 
 logger = logging.getLogger("Encounterra")
 

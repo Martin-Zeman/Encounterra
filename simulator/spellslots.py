@@ -1,7 +1,7 @@
 import logging
 import copy
 
-from simulator.misc import Class
+from .misc import Class
 
 logger = logging.getLogger("Encounterra")
 

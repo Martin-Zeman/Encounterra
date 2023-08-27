@@ -1,23 +1,23 @@
 import random
 import pytest
 
-from simulator.battle_map import Map
-from simulator.combatants.brown_bear import BrownBear
-from simulator.combatants.bugbear import Bugbear
-from simulator.combatants.dire_wolf import DireWolf
-from simulator.combatants.evil_mage import EvilMage
-from simulator.combatants.giant_toad import GiantToad
-from simulator.combatants.ogre import Ogre
-from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
-from simulator.combatants.stone_giant import StoneGiant
-from simulator.logging.custom_logger import CustomLogger, LogLevel
-from simulator.session import Session
-from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from simulator.combatants.goblin import Goblin
-from simulator.combatants.dragonclaw_cultist import DragonclawCultist
-from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
-from simulator.teams import Teams
+from ..battle_map import Map
+from ..combatants.brown_bear import BrownBear
+from ..combatants.bugbear import Bugbear
+from ..combatants.dire_wolf import DireWolf
+from ..combatants.evil_mage import EvilMage
+from ..combatants.giant_toad import GiantToad
+from ..combatants.ogre import Ogre
+from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from ..combatants.stone_giant import StoneGiant
+from ..logging.custom_logger import CustomLogger, LogLevel
+from ..session import Session
+from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from ..combatants.goblin import Goblin
+from ..combatants.dragonclaw_cultist import DragonclawCultist
+from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
+from ..teams import Teams
 import logging
 
 logger = logging.getLogger("Encounterra")

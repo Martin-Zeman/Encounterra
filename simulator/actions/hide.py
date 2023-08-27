@@ -3,18 +3,18 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from simulator.abilities.on_hit_sneak_attack import OnHitSneakAttack
-from simulator.actions.action_types import HasteAction, BonusAction
-from simulator.actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from simulator.battle_map import Map, map_toggled_cache_with_key
-from simulator.effects.combatant_effect import CombatantEffect
-from simulator.effects.effect import EffectType
-from simulator.misc import Visibility, roll_ability_check, Conditions
-from simulator.threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..abilities.on_hit_sneak_attack import OnHitSneakAttack
+from ..actions.action_types import HasteAction, BonusAction
+from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
+from ..battle_map import Map, map_toggled_cache_with_key
+from ..effects.combatant_effect import CombatantEffect
+from ..effects.effect import EffectType
+from ..misc import Visibility, roll_ability_check, Conditions
+from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
 import logging
 
-from simulator.threat_utils import calc_p_hit
-from simulator.utils.roll_types import RollType, ThreatModifierType, ROLL_TYPE_DELTA
+from ..threat_utils import calc_p_hit
+from ..utils.roll_types import RollType, ThreatModifierType, ROLL_TYPE_DELTA
 
 logger = logging.getLogger("Encounterra")
 

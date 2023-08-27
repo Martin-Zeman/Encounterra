@@ -1,5 +1,5 @@
-from simulator.abilities.on_hit_effect import OnHit
-from simulator.misc import roll_saving_throw, reconcile_roll_types, Conditions, ConditionWithoutDC
+from ..abilities.on_hit_effect import OnHit
+from ..misc import roll_saving_throw, reconcile_roll_types, Conditions, ConditionWithoutDC
 import logging
 
 logger = logging.getLogger("Encounterra")

@@ -1,9 +1,9 @@
-from simulator.abilities.on_hit_effect import OnHit
-from simulator.action_resolver import resolve_on_hit_dmg_saving_throw
-from simulator.misc import parse_dmg_dice, roll_dice
+from ..abilities.on_hit_effect import OnHit
+from ..action_resolver import resolve_on_hit_dmg_saving_throw
+from ..misc import parse_dmg_dice, roll_dice
 import logging
 
-from simulator.threat_utils import mean_dmg_dc_attack
+from ..threat_utils import mean_dmg_dc_attack
 
 logger = logging.getLogger("Encounterra")
 

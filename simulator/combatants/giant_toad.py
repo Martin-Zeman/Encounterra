@@ -2,14 +2,14 @@ import copy
 
 import numpy as np
 
-from simulator.abilities.on_hit_auto_restrained import OnHitAutoRestrained
-from simulator.abilities.on_hit_swallow import OnHitSwallow
-from simulator.actions.action_types import Action, Reaction
-from simulator.battle_map import Map
-from simulator.effects.effect import EffectType
-from simulator.utils.state_machine_template import StateMachineTemplate
-from simulator.combatant import Combatant
-from simulator.misc import DamageType, SavingThrow, Size, parse_dmg_dice, roll_dice, Conditions, SkillCheck, Class
+from ..abilities.on_hit_auto_restrained import OnHitAutoRestrained
+from ..abilities.on_hit_swallow import OnHitSwallow
+from ..actions.action_types import Action, Reaction
+from ..battle_map import Map
+from ..effects.effect import EffectType
+from ..utils.state_machine_template import StateMachineTemplate
+from ..combatant import Combatant
+from ..misc import DamageType, SavingThrow, Size, Conditions, SkillCheck, Class
 import logging
 
 logger = logging.getLogger("Encounterra")

@@ -1,7 +1,7 @@
 import logging
-from simulator.actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction
-from simulator.battle_map import Map
-from simulator.misc import Conditions
+from .actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction
+from .battle_map import Map
+from .misc import Conditions
 
 logger = logging.getLogger("Encounterra")
 
