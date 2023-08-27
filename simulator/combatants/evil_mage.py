@@ -24,7 +24,7 @@ class EvilMage(Combatant):
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
-        self.spellslots = spellslot_factory(Class.WIZARD, self.level)
+        self.spellslots = spellslot_factory(Class.WIZARD.ABJURATION, self.level)  # Subclass doesn't matter
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 6
