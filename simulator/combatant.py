@@ -201,13 +201,11 @@ class Combatant(ProtoCombatant):
                     self.get_current_form = wildshape_get.__get__(self, Combatant)
                     return self.bonus_action_factories[-1]
                 case Action.POUNCE:
-                    factory = TO_FACTORY[action_type]
-                    self.action_factories.append((action_type, factory(**kwargs)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
                     return self.action_factories[-1]
                 case Action.CONSTRICT:
-                    factory = TO_FACTORY[action_type]
                     self.constricted_target = None
-                    self.action_factories.append((action_type, factory(**kwargs)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
                     return self.action_factories[-1]
                 case _:
                     return None
