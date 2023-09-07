@@ -79,8 +79,10 @@ class RoundManager:
             logger.warning("--------------STATISTICS--------------")
             for name, victories in team_tally.items():
                 logger.warning(f"Team {name.name} won total of {victories} times", extra={"team": name})
+            return team_tally
         else:
             logger.error("Wrong input. n has to be 1 or higher!")
+        return None
 
     def simulate(self):
         self.roll_initiative()

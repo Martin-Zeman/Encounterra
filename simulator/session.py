@@ -170,5 +170,6 @@ class Session:
             logger.warning("--------------STATISTICS--------------")
             for name, victories in accumulated_tally.items():
                 logger.warning(f"Team {name.name} won total of {victories} times", extra={"team": name})
+            return accumulated_tally
         else:
-            self.round_manager.simulate_n(self.num_simulations)
+            return self.round_manager.simulate_n(self.num_simulations)
