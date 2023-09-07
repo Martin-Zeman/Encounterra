@@ -1,8 +1,8 @@
-from .simulator.combatants.bugbear import Bugbear
-from .simulator.logging.custom_logger import CustomLogger, LogLevel
-from .simulator.session import Session
-from .simulator.combatants.dragonclaw_cultist import DragonclawCultist
-from .simulator.teams import Teams
+from simulator.combatants.bugbear import Bugbear
+from simulator.logging.custom_logger import CustomLogger, LogLevel
+from simulator.session import Session
+from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.teams import Teams
 
 
 def handler(event, context):
