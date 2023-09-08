@@ -1,11 +1,12 @@
-FROM public.ecr.aws/lambda/python:3.10
+FROM python:3.10
+WORKDIR /app
+COPY . .
 
-COPY . ${LAMBDA_TASK_ROOT}
+# Upgraded from 1.5.1 due to https://github.com/python-poetry/poetry/issues/7611
+ARG POETRY_VERSION=1.6.1
+RUN pip install --upgrade pip \
+ && pip install poetry==${POETRY_VERSION} \
+ && poetry config virtualenvs.create false \
+ && poetry install --no-interaction --without dev
 
-#COPY requirements.txt ${LAMBDA_TASK_ROOT}
-#COPY simulator ${LAMBDA_TASK_ROOT}
-#COPY lambda_function.py ${LAMBDA_TASK_ROOT}
-
-RUN pip install -r requirements.txt
-
-CMD [ "lambda_function.handler" ]
+CMD ["python3", "./batch_entrypoint.py"]

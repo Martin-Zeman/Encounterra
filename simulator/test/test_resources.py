@@ -1,7 +1,9 @@
+import logging
+
 import numpy as np
 
 from ..actions.action_types import Action
-from ..logging.custom_logger import CustomLogger, LogLevel
+from ..logging.custom_logger import CustomLogger
 from ..resources import use_resources
 from ..spells.fireball import FireballFactory
 from ..spells.firebolt import FireboltFactory
@@ -9,7 +11,7 @@ from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, teams, effect_tracker, battle_map
 
 def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
     firebolt = firebolt_factory.create(test_goblin)
@@ -38,7 +40,7 @@ def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_dracon
 
 
 def test_use_resources_already_cast_leveled_spell_this_turn(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
     firebolt = firebolt_factory.create(test_goblin)

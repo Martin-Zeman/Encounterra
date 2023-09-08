@@ -1,5 +1,6 @@
 import cProfile
 import copy
+import logging
 import pstats
 
 import numpy as np
@@ -13,7 +14,7 @@ from ..actions.hide import HideFactory
 from ..battle_map import Terrain
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
 from ..effects.effect import EffectType
-from ..logging.custom_logger import CustomLogger, LogLevel
+from ..logging.custom_logger import CustomLogger
 from ..misc import DamageType, Conditions
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
@@ -27,7 +28,7 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
     """
     We assert the basic functionality of the wildshape ability. The Druid must be able to wildshape and attack.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
@@ -65,7 +66,7 @@ def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, t
     """
     We assert the basic functionality of the wildshape ability. The Druid must be able to wildshape and attack.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
@@ -110,7 +111,7 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
     We assert that action plan combination works with a concentration spell even when the druid first has to move in order to wildshape.
     There's a sort of a tunnel the druid first needs to get out of.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     battle_map.place_circular_element(np.array([0, 0]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -188,7 +189,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     We also assert that the druid wil attempt to wildshape again after being knocked out the first time. Also that the druid
     canot wildshape a third time.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
@@ -254,7 +255,7 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
     We assert that others can attack a wildshaped druid
     once.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
@@ -351,7 +352,7 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
     """
     We assert the basic functionality of the wildshape ability. The Druid must be able to wildshape and attack.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)  # For the log coloring...
@@ -392,7 +393,7 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
     """
     We assert that the druid doesn't plan a wildshape action when grappled and unable to move to a place where there's the space to do so.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_moon_druid, test_giant_toad]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
@@ -427,7 +428,7 @@ def test_cunning_hide_geometry(battle_map, teams, effect_tracker, test_assassin_
     """
     Based on a scenario encountered during testing. The bounding box overlap test was incorrect.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     battle_map.place_circular_element(np.array([6, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -459,7 +460,7 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
     a hiding spot, hide, step out of the hiding spot and then attack with Sneak Attack. I had to put the Brown Bear in the bottom right
     corner to prevent the Rogue from running there and make him hide and attack instead.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     battle_map.place_circular_element(np.array([6, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -534,7 +535,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
     Test scenario where the Rogue has two enemies and one ally adjacent to one of the enemies. The Rogue doesn't need to hide to trigger
     Sneak Attack but hiding still gives advantage so the rogue goes for it despite suffering an AoO from the goblin.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     battle_map.place_circular_element(np.array([6, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -600,7 +601,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
     Test scenario where the Rogue has two enemies and one ally adjacent to one of the enemies. The Rogue doesn't need to hide to trigger
     Sneak Attack but hiding still gives advantage so the rogue goes for it. Ihis time the hiding spot can be reached in the first turn.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     battle_map.place_circular_element(np.array([6, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -666,7 +667,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_in_melee(battle_map, teams, ef
     Investigation of Rogue's behavior when in the proximity of a Stone Giant. Based on an error case where the Rogue decided to disengage, run
     and dash back instead of hiding and attacking. It asserts that the Rogue does the right thing now.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_stone_giant, test_assassin_rogue, test_dire_wolf]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -716,7 +717,7 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
     Test scenario where the Rogue is surrounded by three enemies. Even though there is a place to hide nearby, the rogue opts to use
     Cunning Disengage instead. In the second turn the rogue tries to get farther away while hiding and firing as he goes.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     battle_map.place_circular_element(np.array([4, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin]
@@ -782,7 +783,7 @@ def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rog
     """
     Test scenario where the Rogue has three enemies nearby and no cover. The best option would be to use cunning dash.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)

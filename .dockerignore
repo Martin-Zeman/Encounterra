@@ -3,5 +3,6 @@
 !simulator/
 /simulator/**/__pycache__
 /simulator/test
-!lambda_function.py
-!requirements.txt
+!batch_entrypoint.py
+!pyproject.toml
+!poetry.lock

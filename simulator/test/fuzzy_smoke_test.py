@@ -10,7 +10,7 @@ from ..combatants.giant_toad import GiantToad
 from ..combatants.ogre import Ogre
 from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from ..combatants.stone_giant import StoneGiant
-from ..logging.custom_logger import CustomLogger, LogLevel
+from ..logging.custom_logger import CustomLogger
 from ..session import Session
 from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
@@ -24,7 +24,7 @@ logger = logging.getLogger("Encounterra")
 
 @pytest.mark.slow
 def test_random_matchup():
-    CustomLogger(LogLevel.INFO)
+    CustomLogger(logging.INFO)
     for _ in range(100):
         Map.reset_singleton()
         combatant_pool = [DraconicSorcerer5Lvl, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl, GiantToad, DireWolf, BrownBear,

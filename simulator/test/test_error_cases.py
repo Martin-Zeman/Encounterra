@@ -1,4 +1,5 @@
 import copy
+import logging
 import pstats
 
 import numpy as np
@@ -10,7 +11,7 @@ from ..actions.action_types import BonusAction, Action
 from ..actions.movement import MovementIncrement
 from ..battle_map import Terrain
 from ..combatants.giant_toad import GiantToad
-from ..logging.custom_logger import CustomLogger, LogLevel
+from ..logging.custom_logger import CustomLogger
 from ..misc import Conditions, ConditionWithoutDC, ConditionWithDC, PhaseOfTurn, SavingThrow, SkillCheck
 from ..spells.fireball import Fireball
 from ..spells.firebolt import Firebolt
@@ -31,7 +32,7 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     This test case is based on a scenario encountered during fuzzy testing. We make sure that test_draconic_sorcerer_5lvl doesn't hit
     itself with a fireball.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.place_circular_element(np.array([7, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([10, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([3, 2]), Terrain.DIFFICULT_TERRAIN, radius=0)
@@ -68,7 +69,7 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     test_bugbear_2 = copy.deepcopy(test_bugbear)
     battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([14, 0]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -104,7 +105,7 @@ def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_bugbear)
     battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([14, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -153,7 +154,7 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     test_draconic_sorcerer_5lvl_2 = copy.deepcopy(test_draconic_sorcerer_5lvl)
     battle_map.place_circular_element(np.array([2, 13]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([3, 7]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -194,7 +195,7 @@ def test_error_case_5(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     test_draconic_sorcerer_5lvl_2 = copy.deepcopy(test_draconic_sorcerer_5lvl)
     battle_map.place_circular_element(np.array([4, 13]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([8, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -241,7 +242,7 @@ def test_error_case_6(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     This test case is based on a scenario encountered during fuzzy testing. The purpose of this test is to make sure we don't enter
     into an endless recursion via the Barbarian's Reckless Attack.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_totem_barbarian)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_bugbear, test_totem_barbarian, test_ogre, combatant7]
@@ -287,7 +288,7 @@ def test_error_case_7(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     test_draconic_sorcerer_5lvl_2 = copy.deepcopy(test_draconic_sorcerer_5lvl)
     battle_map.place_circular_element(np.array([0, 6]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([11, 13]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -362,7 +363,7 @@ def test_error_case_8(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_draconic_sorcerer_5lvl)
     battle_map.place_circular_element(np.array([4, 12]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([0, 1]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -405,7 +406,7 @@ def test_error_case_9(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_stone_giant)
     combatant8 = copy.deepcopy(test_ogre)
     battle_map.place_circular_element(np.array([10, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -447,7 +448,7 @@ def test_error_case_10(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     This test case is based on a scenario encountered during fuzzy testing. Here the sorcerer is out of 3rd level spellslots.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.place_circular_element(np.array([3, 3]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([4, 13]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([5, 4]), Terrain.DIFFICULT_TERRAIN, radius=1)
@@ -492,7 +493,7 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_draconic_sorcerer_5lvl)
     combatant8 = copy.deepcopy(test_stone_giant)
     battle_map.place_circular_element(np.array([2, 4]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -533,7 +534,7 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_totem_barbarian)
     battle_map.place_circular_element(np.array([0, 7]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([7, 14]), Terrain.IMPASSABLE_TERRAIN, radius=0)
@@ -582,7 +583,7 @@ def test_error_case_13(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     test_stone_giant_2 = copy.deepcopy(test_stone_giant)
     battle_map.place_circular_element(np.array([1, 3]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([12, 14]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -630,7 +631,7 @@ def test_error_case_14(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.place_circular_element(np.array([4, 11]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([13, 10]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([10, 13]), Terrain.DIFFICULT_TERRAIN, radius=0)
@@ -666,7 +667,7 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
     This test case is based on a scenario encountered during fuzzy testing.
     """
     # TODO Why is this not failing?
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.place_circular_element(np.array([0, 12]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([7, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([10, 12]), Terrain.DIFFICULT_TERRAIN, radius=1)
@@ -716,7 +717,7 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     This test case is based on a scenario encountered during fuzzy testing.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.place_circular_element(np.array([7, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([6, 13]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([8, 8]), Terrain.DIFFICULT_TERRAIN, radius=1)
@@ -760,7 +761,7 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
     """
     This test case is based on a scenario encountered during fuzzy testing. It makes sure that find_wildshaped_coordinate does its job.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     test_totem_barbarian_2 = copy.deepcopy(test_totem_barbarian)
     battle_map.place_circular_element(np.array([6, 14]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     # battle_map.place_circular_element(np.array([0, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -806,7 +807,7 @@ def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_
     """
     This test case is based on a scenario encountered during fuzzy testing. It makes sure that find_wildshaped_coordinate does its job.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.place_circular_element(np.array([9, 8]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([13, 6]), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
@@ -847,7 +848,7 @@ def test_error_case_19(battle_map, teams, effect_tracker, test_giant_toad):
     """
     # TODO It's not reproducing the error
     test_giant_toad_2 = copy.deepcopy(test_giant_toad)
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_giant_toad, test_giant_toad_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -874,7 +875,7 @@ def test_error_case_20(battle_map, teams, effect_tracker, test_totem_barbarian, 
     """
     Aims to solve a bug where hasted actions are modeled incorrectly
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_totem_barbarian, test_draconic_sorcerer_5lvl, test_dragonclaw_cultist]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -916,7 +917,7 @@ def test_error_case_21(battle_map, teams, effect_tracker, test_totem_barbarian, 
     """
     Moon druid being prone, exhausting all their movement but still trying to move.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_totem_barbarian, test_moon_druid]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -955,7 +956,7 @@ def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, 
     """
     Hasted moon druid in a Giant Toad form swallows a barbarian
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_totem_barbarian, test_moon_druid, test_draconic_sorcerer_5lvl]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -1001,7 +1002,7 @@ def test_error_case_23(battle_map, teams, effect_tracker, test_ogre, test_stone_
     """
     Ogre tries to go into impassable terrain
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_ogre, test_stone_giant, test_brown_bear, test_bugbear]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -1042,7 +1043,7 @@ def test_error_case_24(battle_map, teams, effect_tracker, test_moon_druid, test_
     """
     Not enough space to wildshape. There was a bug in the plan combination when the druid has no eligible non-wildshape action.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_moon_druid, test_stone_giant, test_brown_bear, test_bugbear, test_giant_toad, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -1082,7 +1083,7 @@ def test_error_case_25(battle_map, teams, effect_tracker, test_dire_wolf, test_g
     """
     Immediate crash when Dire Wolf action planning
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     test_totem_barbarian_2 = copy.deepcopy(test_totem_barbarian)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_dire_wolf, test_giant_toad, test_bugbear, test_totem_barbarian, test_totem_barbarian_2, test_ogre, test_brown_bear]
