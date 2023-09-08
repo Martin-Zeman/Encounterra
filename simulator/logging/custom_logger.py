@@ -41,22 +41,25 @@ class LogLevel(Enum):
 
 class CustomLogger:
 
-    # VERBOSE_VALUE = logging.DEBUG - 5
-
     LEVEL_MAPPING = {
-        # LogLevel.VERBOSE: VERBOSE_VALUE,
         LogLevel.DEBUG: logging.DEBUG,
         LogLevel.INFO: logging.INFO,
         LogLevel.WARNING: logging.WARNING,
         LogLevel.ERROR: logging.ERROR,
     }
 
-    def __init__(self, level):
-        # addLoggingLevel('VERBOSE', self.VERBOSE_VALUE)
+    def __init__(self, level, stream=True, file_path=None):
         logger = logging.getLogger("Encounterra")
         logger.setLevel(self.LEVEL_MAPPING[level])
-        stdout_handler = logging.StreamHandler(stream=sys.stdout)
-        stdout_handler.setFormatter(LogFormatter())
-        stdout_handler.setLevel(self.LEVEL_MAPPING[level])
-        # stdout_handler.flush = sys.stdout.flush  # Add this line
-        logger.addHandler(stdout_handler)
+
+        if stream:
+            stdout_handler = logging.StreamHandler(stream=sys.stdout)
+            stdout_handler.setFormatter(LogFormatter())
+            stdout_handler.setLevel(self.LEVEL_MAPPING[level])
+            logger.addHandler(stdout_handler)
+
+        if file_path:
+            file_handler = logging.FileHandler(file_path)
+            file_handler.setFormatter(LogFormatter())
+            file_handler.setLevel(self.LEVEL_MAPPING[level])
+            logger.addHandler(file_handler)
