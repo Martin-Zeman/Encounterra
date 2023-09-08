@@ -52,6 +52,6 @@ try:
     s3.upload_file(local_log_file_path, bucket_name, s3_object_key)
     s3.upload_file(local_stats_file_path, bucket_name, f"{batch_job_id}/{batch_array_idx}/statistics.txt")
     logger.info(f"{batch_job_id}:{batch_array_idx} SUCCESS")
-except Exception:
-    logger.info(f"{batch_job_id}:{batch_array_idx} FAILURE")
+except Exception as e:
+    logger.error(f"{batch_job_id}:{batch_array_idx} FAILURE: {e}")
     exit(1)

@@ -7,8 +7,7 @@ GIT_BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 GIT_BRANCH_SANITIZED := $(subst /,-,${GIT_BRANCH})
 
-REPOSITORY = encounterra-backend
-DOCKER_CONTAINER = core
+DOCKER_CONTAINER = encounterra-core
 DOCKER_SANDBOX_REMOTE = ${ACCOUNT_NR}.dkr.ecr.eu-west-1.amazonaws.com
 
 docker.build:
@@ -19,7 +18,7 @@ docker.build:
 	docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:latest
 	@if [ -z "${GIT_STATUS}" ]; then \
         docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:${GIT_COMMIT}; \
-        docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_SANDBOX_REMOTE}/${REPOSITORY}/${DOCKER_CONTAINER}:${GIT_COMMIT}; \
+        docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}; \
     fi
 	@echo ""
 	@echo "*"
@@ -30,7 +29,7 @@ docker.build:
 	@echo "*  tagged: ${FONT_BOLD}${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED}${FONT_NORMAL}"
 	@if [ -z "${GIT_STATUS}" ]; then \
 		docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:${GIT_COMMIT}; \
-		docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_SANDBOX_REMOTE}/${REPOSITORY}/${DOCKER_CONTAINER}:${GIT_COMMIT}; \
+		docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}; \
 	else \
 		echo "Workspace is dirty!"; \
 	fi
@@ -49,14 +48,14 @@ docker.push:
         echo ""; \
         exit 1; \
     fi
-	docker push ${DOCKER_SANDBOX_REMOTE}/${REPOSITORY}/${DOCKER_CONTAINER}:${GIT_COMMIT}
+	docker push ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}
 
 	@echo ""
 	@echo "*"
 	@echo "*"
 	@echo "* Container pushed"
 	@echo "*"
-	@echo "*  pushed: ${DOCKER_SANDBOX_REMOTE}/${REPOSITORY}/${DOCKER_CONTAINER}:${GIT_COMMIT}"
+	@echo "*  pushed: ${DOCKER_SANDBOX_REMOTE}/${DOCKER_CONTAINER}:${GIT_COMMIT}"
 	@echo "* "
 	@if [ -z "${GIT_STATUS}" ]; then \
         echo "* short commit nr: ${GIT_COMMIT}"; \
