@@ -34,14 +34,11 @@ def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: boo
 
 parser = argparse.ArgumentParser()
 
-logger.warning("Starting aggregation")
 parser.add_argument('--batch-job-id', type=str)
 parser.add_argument('--iterations', type=str)
 args = parser.parse_args()
 batch_job_id = args.batch_job_id
 iterations = int(args.iterations)
-logger.warning(f"batch_job_id {batch_job_id}")
-logger.warning(f"iterations {iterations}")
 s3_url = f"https://encounterra-simulation-results.s3.eu-west-1.amazonaws.com/{batch_job_id}"
 
 blue_victories = 0
@@ -51,15 +48,9 @@ try:
         subdirectory = f"{batch_job_id}/{i}/"
         response = s3.get_object(Bucket=bucket_name, Key=subdirectory + 'statistics.txt')
         content = response['Body'].read().decode('utf-8')
-        logger.warning(f"content {content}")
         lines = content.split('\n')[:-1]   # Excludes the last empty line
-        logger.warning(f"len(lines) {lines}")
-        logger.warning(f"lines {lines}")
         for line in lines:
-            logger.warning(f"Line {line}")
             color, victories = line.strip().split()
-            logger.warning(f"color {color}")
-            logger.warning(f"victories {victories}")
             victories = int(victories)
             if color == 'BLUE':
                 blue_victories += victories
