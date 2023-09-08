@@ -8,14 +8,14 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 GIT_BRANCH_SANITIZED := $(subst /,-,${GIT_BRANCH})
 
 REPOSITORY = encounterra-backend
-DOCKER_CONTAINER = core
+DOCKER_CONTAINER = aggregation
 DOCKER_SANDBOX_REMOTE = ${ACCOUNT_NR}.dkr.ecr.eu-west-1.amazonaws.com
 
 docker.build:
 	@echo ""
 	@echo "Building container..."
 	aws ecr get-login-password --region eu-west-1 | docker login --username AWS --password-stdin ${DOCKER_SANDBOX_REMOTE}
-	docker build -t ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} --build-arg APP_VERSION=${GIT_COMMIT} --network host .
+	docker build -f Dockerfile -t ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} --build-arg APP_VERSION=${GIT_COMMIT} --network host .
 	docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:latest
 	@if [ -z "${GIT_STATUS}" ]; then \
         docker tag ${DOCKER_CONTAINER}:${GIT_BRANCH_SANITIZED} ${DOCKER_CONTAINER}:${GIT_COMMIT}; \
