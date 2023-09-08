@@ -9,4 +9,4 @@ RUN pip install --upgrade pip \
  && poetry config virtualenvs.create false \
  && poetry install --no-interaction --without dev
 
-ENTRYPOINT ["python", "batch_entrypoint.py"]
+CMD ["python3", "./batch_entrypoint.py"]
