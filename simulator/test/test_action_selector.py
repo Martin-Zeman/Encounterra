@@ -1,10 +1,11 @@
 import copy
+import logging
 import pstats
 import numpy as np
 
 from ..action_resolver import ActionResolver
 from ..actions.action_dag import generate_proto_dag
-from ..logging.custom_logger import CustomLogger, LogLevel
+from ..logging.custom_logger import CustomLogger
 from ..spells.fireball import Fireball
 from ..spells.twinned_firebolt import TwinnedFirebolt
 from ..teams import Teams
@@ -15,7 +16,7 @@ import cProfile
 
 
 def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
@@ -251,7 +252,7 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
 
 
 def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
@@ -279,7 +280,7 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, test_bugbear, tes
     """
     We assert that the barbarian rages before doing anything else.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # For the log coloring...
@@ -326,7 +327,7 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, test_bugbea
     It had occured during testing that the bugbear would opt for staying at range and throw javelins rather than go in melee range
     which is not desirable.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # For the log coloring...
@@ -360,7 +361,7 @@ def test_goblin_using_cunning_disengage(battle_map, teams, effect_tracker, test_
     """
     We assert that the goblin first uses his cunning disengage to first get away and then shoots his bow.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     test_bugbear_2 = copy.deepcopy(test_bugbear)
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)  # For the log coloring...

@@ -1,9 +1,11 @@
+import logging
+
 import numpy as np
 
 from ..action_resolver import ActionResolver
 from ..actions.action_selector import get_action
 from ..actions.action_types import Action
-from ..logging.custom_logger import CustomLogger, LogLevel
+from ..logging.custom_logger import CustomLogger
 from ..spells.haste import HasteFactory
 from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, teams, effect_tracker, battle_map
@@ -13,7 +15,7 @@ def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, t
     We assert that a hasted bugbear utilizes both its regular attack and hasted attack independently, although each attack must be used
     once.
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...

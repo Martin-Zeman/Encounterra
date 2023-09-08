@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pytest
 
@@ -6,7 +8,7 @@ from ..action_resolver import ActionResolver
 from ..actions.action_types import BonusAction, Action
 from ..battle_map import Map
 from ..combatants.giant_toad import GiantToad
-from ..logging.custom_logger import CustomLogger, LogLevel
+from ..logging.custom_logger import CustomLogger
 from ..misc import DamageType
 from ..spells.flaming_sphere import FlamingSphereFactory
 from ..teams import Teams
@@ -17,7 +19,7 @@ def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid,
     """
     Tests the basic concentration mechanic functionality
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_moon_druid, test_draconic_sorcerer_5lvl]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -50,7 +52,7 @@ def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker,
     """
     Tests the concentration mechanic functionality in combination with wildshape
     """
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_moon_druid, test_draconic_sorcerer_5lvl]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -89,7 +91,7 @@ def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker,
 
 
 def test_map_position_toggled_cache(battle_map, teams, effect_tracker, test_goblin, test_bugbear):
-    CustomLogger(LogLevel.WARNING)
+    CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)

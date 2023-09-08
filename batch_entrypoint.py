@@ -1,5 +1,5 @@
 from simulator.combatants.bugbear import Bugbear
-from simulator.logging.custom_logger import CustomLogger, LogLevel
+from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams
@@ -33,10 +33,10 @@ from botocore.exceptions import ClientError
 dynamodb = boto3.client('dynamodb')
 s3 = boto3.client('s3')
 # table_name = 'simulation_tracking'
-bucket_name = "simulation-results"
+bucket_name = "encounterra-simulation-results"
 # Define the local file you want to upload
 local_file_path = "/tmp/log.txt"
-CustomLogger(LogLevel.INFO, True, local_file_path)
+CustomLogger(logging.INFO, True, local_file_path)
 logger = logging.getLogger("Encounterra")
 logger.info("------CORE BATCH JOB STARTING------")
 
@@ -47,10 +47,11 @@ logger.info("------CORE BATCH JOB STARTING------")
 
 batch_job_id = value = os.environ.get("AWS_BATCH_JOB_ID", None)
 batch_array_idx = os.environ.get("AWS_BATCH_JOB_ARRAY_INDEX", None)
-subdirectory = f"{batch_job_id}/{batch_array_idx}/"
 if not (batch_job_id and batch_array_idx):
     logger.error(f"Failed to get either batch_job_id or batch_array_idx.")
     exit(1)
+batch_job_id = batch_job_id.split(":")[0]
+subdirectory = f"{batch_job_id}/{batch_array_idx}/"
 logger.info(f"batch_job_id: {batch_job_id}")
 logger.info(f"batch_array_idx: {batch_array_idx}")
 
