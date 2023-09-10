@@ -1,30 +1,29 @@
-from simulator.combatants.bugbear import Bugbear
 from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
-from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.teams import Teams
 
 import os
 import boto3
-# import argparse
+import argparse
 import logging
 
 
-dynamodb = boto3.client('dynamodb')
+dynamodb = boto3.client('dynamodb', region_name='eu-west-1')
 s3 = boto3.client('s3')
-# table_name = 'simulation_tracking'
 bucket_name = "encounterra-simulation-results"
-# Define the local file you want to upload
 local_log_file_path = "/tmp/log.txt"
 local_stats_file_path = "/tmp/statistics.txt"
 CustomLogger(logging.INFO, True, local_log_file_path)
 logger = logging.getLogger("Encounterra")
 logger.info("------CORE BATCH JOB STARTING------")
 
-# parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser()
 
-# parser.add_argument('--list-arg', nargs='+', type=str, help='A list of strings')
-# args = parser.parse_args()
+parser.add_argument('-b', '--blue', nargs='+', type=str, help='The blue team combatants')
+parser.add_argument('-r', '--red', nargs='+', type=str, help='the red team combatants')
+args = parser.parse_args()
+blue_team = args.blue
+red_team = args.red
 
 batch_job_id = value = os.environ.get("AWS_BATCH_JOB_ID", None)
 batch_array_idx = os.environ.get("AWS_BATCH_JOB_ARRAY_INDEX", None)
@@ -37,8 +36,10 @@ logger.info(f"batch_job_id: {batch_job_id}")
 logger.info(f"batch_array_idx: {batch_array_idx}")
 
 session = Session()
-session.add_combatant(Bugbear, Teams.Color.RED)
-session.add_combatant(DragonclawCultist, Teams.Color.BLUE)
+for blue_combatant in blue_team:
+    session.add_combatant(blue_combatant, Teams.Color.BLUE)
+for red_combatant in red_team:
+    session.add_combatant(red_combatant, Teams.Color.RED)
 session.set_num_simulations(1)
 try:
     result = session.simulate(parallel=False)

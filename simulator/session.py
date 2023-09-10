@@ -37,20 +37,22 @@ class Session:
         self.battle_map = None
         self.map_size = 15
         self.statistic_collector = None
-        self.character_type_counter = {cls: 1 for cls in get_combatant_classes()}
+        self.character_type_counter = {cls.__name__: 1 for cls in get_combatant_classes()}
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
         self.round_manager = None
         self.effect_tracker = EffectTracker()
 
     def add_combatant(self, combatant_type, team):
+        if type(combatant_type) is not str:
+            combatant_type = combatant_type.__name__  # we want to allow both kinds of calls
         try:
             curr_count = self.character_type_counter[combatant_type]
         except KeyError:
             logger.error("Unknown combatant type")
             return
 
-        match combatant_type.__name__:
+        match combatant_type:
             case "DraconicSorcerer5Lvl":
                 self.combatants.append(DraconicSorcerer5Lvl("DraconicSorcerer5Lvl " + str(curr_count)))
             case "TotemBarbarian5Lvl":
@@ -69,8 +71,6 @@ class Session:
                 self.combatants.append(MoonDruid5Lvl("MoonDruid5Lvl " + str(curr_count)))
             case "AssassinRogue5Lvl":
                 self.combatants.append(AssassinRogue5Lvl("AssassinRogue5Lvl " + str(curr_count)))
-            case "DragonclawCultist":
-                self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
             case "GiantToad":
                 self.combatants.append(GiantToad("GiantToad " + str(curr_count)))
             case "BrownBear":
