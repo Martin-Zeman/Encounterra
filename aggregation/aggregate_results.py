@@ -33,6 +33,8 @@ def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: boo
         raise
 
 def handler(event, context):
+    logger.info("------AGGREGATION LAMBDA STARTING------")
+    logger.info(f"event {event}")
     results_array = event.get("core_results", [])
     job_id = event.get("job_id")
 

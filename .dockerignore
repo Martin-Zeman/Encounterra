@@ -3,6 +3,6 @@
 !simulator/
 /simulator/**/__pycache__
 /simulator/test
-!batch_entrypoint.py
+!core_entrypoint.py
 !pyproject.toml
 !poetry.lock
