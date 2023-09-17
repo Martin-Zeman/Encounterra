@@ -1,5 +1,5 @@
-FROM python:3.10
-WORKDIR /app
+FROM public.ecr.aws/lambda/python:3.10
+WORKDIR ${LAMBDA_TASK_ROOT}
 COPY . .
 
 # Upgraded from 1.5.1 due to https://github.com/python-poetry/poetry/issues/7611
@@ -9,4 +9,4 @@ RUN pip install --upgrade pip \
  && poetry config virtualenvs.create false \
  && poetry install --no-interaction --without dev
 
-CMD ["python3", "./batch_entrypoint.py"]
+CMD ["core_entrypoint.handler"]

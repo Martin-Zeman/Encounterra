@@ -1,5 +1,5 @@
-FROM python:3.10
-WORKDIR /app
+FROM public.ecr.aws/lambda/python:3.10
+WORKDIR ${LAMBDA_TASK_ROOT}
 COPY aggregate_results.py .
 COPY pyproject.toml .
 COPY poetry.lock .
@@ -11,4 +11,4 @@ RUN pip install --upgrade pip \
  && poetry config virtualenvs.create false \
  && poetry install --no-interaction --without dev
 
-CMD ["python3", "./aggregate_results.py"]
+CMD ["aggregate_results.handler"]
