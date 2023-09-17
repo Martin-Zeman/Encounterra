@@ -25,7 +25,7 @@ def handler(event, context):
     blue_team = event['blue']
     red_team = event['red']
     job_id = event['job_id']
-    index = event.get('index')
+    # index = event.get('index')
 
     # parser = argparse.ArgumentParser()
     #
@@ -41,7 +41,7 @@ def handler(event, context):
     #     logger.error(f"Failed to get either batch_job_id or batch_array_idx.")
     #     exit(1)
     # batch_job_id = batch_job_id.split(":")[0]
-    subdirectory = f"{job_id}/{index}/"
+    # subdirectory = f"{job_id}/{index}/"
     # logger.info(f"batch_job_id: {batch_job_id}")
     # logger.info(f"batch_array_idx: {batch_array_idx}")
 
@@ -59,10 +59,11 @@ def handler(event, context):
         # with open(local_stats_file_path, 'w') as stats_file:
         #     stats_file.write(f"BLUE {blue_victory}\nRED {red_victory}\n")
         #
-        s3_object_key = subdirectory + f'{"blue" if result[Teams.Color.BLUE] else "red"}_victory_log.txt'
-        s3.upload_file(local_log_file_path, bucket_name, s3_object_key)
+        # s3_object_key = subdirectory + f'{"blue" if result[Teams.Color.BLUE] else "red"}_victory_log.txt'
+        # s3.upload_file(local_log_file_path, bucket_name, s3_object_key)
         # s3.upload_file(local_stats_file_path, bucket_name, f"{batch_job_id}/{batch_array_idx}/statistics.txt")
-        logger.info(f"{job_id}:{index} SUCCESS")
+        # logger.info(f"{job_id}:{index} SUCCESS")
+        logger.info(f"{job_id} SUCCESS")
         return {
             'statusCode': 200,
             'body': json.dumps({
