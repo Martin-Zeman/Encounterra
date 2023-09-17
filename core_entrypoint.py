@@ -48,13 +48,10 @@ def handler(event, context):
         # s3.upload_file(local_stats_file_path, bucket_name, f"{batch_job_id}/{batch_array_idx}/statistics.txt")
         logger.info(f"{job_id}:{index} SUCCESS")
         return {
-            'statusCode': 200,
-            'body': json.dumps({
-                'core_results': {
-                    'blue_victory': blue_victory,
-                    'red_victory': red_victory
-                }
-            })
+            'core_results': {
+                'blue_victory': blue_victory,
+                'red_victory': red_victory
+            }
         }
     except Exception as e:
         logger.error(f"{job_id}:{index} FAILURE: {e}")

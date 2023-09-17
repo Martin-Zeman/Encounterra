@@ -44,8 +44,21 @@ class CustomLogger:
             stdout_handler.setFormatter(LogFormatter())
             stdout_handler.setLevel(level)
             logger.addHandler(stdout_handler)
+        else:
+            self._remove_stdout_handlers()
 
         if file_path:
             file_handler = logging.FileHandler(file_path)
             file_handler.setLevel(level)
             logger.addHandler(file_handler)
+
+    def _remove_stdout_handlers(self):
+        """Remove all stdout handlers from the logger."""
+        logger = logging.getLogger("Encounterra")
+
+        handlers_to_remove = [handler for handler in logger.handlers
+                              if isinstance(handler, logging.StreamHandler)
+                              and handler.stream == sys.stdout]
+
+        for handler in handlers_to_remove:
+            logger.removeHandler(handler)
