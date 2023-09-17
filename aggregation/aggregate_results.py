@@ -33,10 +33,11 @@ def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: boo
         raise
 
 def handler(event, context):
+    logger.setLevel(logging.INFO)
     logger.info("------AGGREGATION LAMBDA STARTING------")
     logger.info(f"event {event}")
-    results_array = event.get("core_results", [])
-    job_id = event.get("job_id")
+    results_array = event["core_results"]
+    job_id = event["job_id"]
 
     total_blue_victories = 0
     total_red_victories = 0
@@ -46,32 +47,9 @@ def handler(event, context):
         total_blue_victories += result.get('blue_victory', 0)
         total_red_victories += result.get('red_victory', 0)
 
-    # Return the aggregated results
-    # parser = argparse.ArgumentParser()
-    #
-    # parser.add_argument('--batch-job-id', type=str)
-    # parser.add_argument('--iterations', type=str)
-    # args = parser.parse_args()
-    # batch_job_id = args.batch_job_id
-    # iterations = int(args.iterations)
     s3_url = f"https://encounterra-simulation-results.s3.eu-west-1.amazonaws.com/{job_id}"
 
-    # blue_victories = 0
-    # red_victories = 0
     try:
-    #     for i in range(iterations):
-    #         subdirectory = f"{batch_job_id}/{i}/"
-    #         response = s3.get_object(Bucket=bucket_name, Key=subdirectory + 'statistics.txt')
-    #         content = response['Body'].read().decode('utf-8')
-    #         lines = content.split('\n')[:-1]   # Excludes the last empty line
-    #         for line in lines:
-    #             color, victories = line.strip().split()
-    #             victories = int(victories)
-    #             if color == 'BLUE':
-    #                 blue_victories += victories
-    #             elif color == 'RED':
-    #                 red_victories += victories
-
         with open(local_file_path, 'w') as stats_file:
             stats_file.write(f"BLUE {total_blue_victories}\nRED {total_red_victories}\n")
         s3_object_key = f"{job_id}/aggregated_statistics.txt"
