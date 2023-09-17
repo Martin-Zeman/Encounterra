@@ -47,6 +47,5 @@ class CustomLogger:
 
         if file_path:
             file_handler = logging.FileHandler(file_path)
-            file_handler.setFormatter(LogFormatter())
             file_handler.setLevel(level)
             logger.addHandler(file_handler)
