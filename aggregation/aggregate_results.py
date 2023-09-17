@@ -56,8 +56,10 @@ def handler(event, context):
         s3.upload_file(local_file_path, bucket_name, s3_object_key)
         update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", True)
         return {
-            'total_blue_victories': total_blue_victories,
-            'total_red_victories': total_red_victories
+            "final_result": {
+                'total_blue_victories': total_blue_victories,
+                'total_red_victories': total_red_victories
+            }
         }
     except Exception as e:
         logger.error(f"Aggregation job for {job_id} failed: {e}")
