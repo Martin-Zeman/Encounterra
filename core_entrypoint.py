@@ -1,13 +1,9 @@
-import json
-
 from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
 from simulator.teams import Teams
 from simulator.battle_map import Map
 
-# import os
 import boto3
-# import argparse
 import logging
 
 
@@ -42,12 +38,8 @@ def handler(event, context):
 
         blue_victory = int(result[Teams.Color.BLUE])
         red_victory = int(not blue_victory)
-        # with open(local_stats_file_path, 'w') as stats_file:
-        #     stats_file.write(f"BLUE {blue_victory}\nRED {red_victory}\n")
-        #
         s3_object_key = subdirectory + f'{"blue" if result[Teams.Color.BLUE] else "red"}_victory_log.txt'
         s3.upload_file(local_log_file_path, bucket_name, s3_object_key)
-        # s3.upload_file(local_stats_file_path, bucket_name, f"{batch_job_id}/{batch_array_idx}/statistics.txt")
         logger.info(f"{job_id}:{index} SUCCESS")
         return {
             'blue_victory': blue_victory,
@@ -55,5 +47,4 @@ def handler(event, context):
         }
     except Exception as e:
         logger.error(f"{job_id}:{index} FAILURE: {e}")
-        # logger.error(f"{job_id} FAILURE: {e}")
         exit(1)
