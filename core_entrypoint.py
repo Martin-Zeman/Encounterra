@@ -3,6 +3,7 @@ import json
 from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
 from simulator.teams import Teams
+from simulator.battle_map import Map
 
 # import os
 import boto3
@@ -20,6 +21,7 @@ logger = logging.getLogger("Encounterra")
 
 def handler(event, context):
     logger.info("------CORE LAMBDA STARTING------")
+    Map.reset_singleton()
     logger.info(f"event {event}")
     input = event['core_input']
     blue_team = input['blue']
