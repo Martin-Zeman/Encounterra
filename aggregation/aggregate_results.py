@@ -1,5 +1,4 @@
 import boto3
-import argparse
 import logging
 from botocore.exceptions import ClientError
 
@@ -9,6 +8,7 @@ dynamodb_resource = boto3.resource("dynamodb")
 table = dynamodb_resource.Table("simulation_results")
 s3 = boto3.client('s3')
 bucket_name = "encounterra-simulation-results"
+local_file_path = "/tmp/aggregated_statistics.txt"
 
 def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: bool):
     try:
@@ -31,39 +31,34 @@ def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: boo
             err.response['Error']['Code'], err.response['Error']['Message'])
         raise
 
+def handler(event, context):
+    logger.setLevel(logging.INFO)
+    logger.info("------AGGREGATION LAMBDA STARTING------")
+    logger.info(f"event {event}")
+    results_array = event["core_results"]
+    job_id = event["job_id"]
 
-parser = argparse.ArgumentParser()
+    total_blue_victories = 0
+    total_red_victories = 0
 
-parser.add_argument('--batch-job-id', type=str)
-parser.add_argument('--iterations', type=str)
-args = parser.parse_args()
-batch_job_id = args.batch_job_id
-iterations = int(args.iterations)
-s3_url = f"https://encounterra-simulation-results.s3.eu-west-1.amazonaws.com/{batch_job_id}"
+    # Iterate over the results array and aggregate the victories
+    for result in results_array:
+        total_blue_victories += result['Payload'].get('blue_victory', 0)
+        total_red_victories += result['Payload'].get('red_victory', 0)
 
-blue_victories = 0
-red_victories = 0
-try:
-    for i in range(iterations):
-        subdirectory = f"{batch_job_id}/{i}/"
-        response = s3.get_object(Bucket=bucket_name, Key=subdirectory + 'statistics.txt')
-        content = response['Body'].read().decode('utf-8')
-        lines = content.split('\n')[:-1]   # Excludes the last empty line
-        for line in lines:
-            color, victories = line.strip().split()
-            victories = int(victories)
-            if color == 'BLUE':
-                blue_victories += victories
-            elif color == 'RED':
-                red_victories += victories
+    s3_url = f"https://encounterra-simulation-results.s3.eu-west-1.amazonaws.com/{job_id}"
 
-    local_file_path = "/tmp/aggregated_statistics.txt"
-    with open(local_file_path, 'w') as stats_file:
-        stats_file.write(f"BLUE {blue_victories}\nRED {red_victories}\n")
-    s3_object_key = f"{batch_job_id}/aggregated_statistics.txt"
-    s3.upload_file(local_file_path, bucket_name, s3_object_key)
-    update_simulation_result(batch_job_id, s3_url, f"BLUE: {blue_victories}, RED: {red_victories}", True)
-except Exception as e:
-    logger.error(f"Aggregation job for {batch_job_id} failed: {e}")
-    update_simulation_result(batch_job_id, s3_url, f"BLUE: {blue_victories}, RED: {red_victories}", False)
-    exit(1)
+    try:
+        with open(local_file_path, 'w') as stats_file:
+            stats_file.write(f"BLUE {total_blue_victories}\nRED {total_red_victories}\n")
+        s3_object_key = f"{job_id}/aggregated_statistics.txt"
+        s3.upload_file(local_file_path, bucket_name, s3_object_key)
+        update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", True)
+        return {
+            'total_blue_victories': total_blue_victories,
+            'total_red_victories': total_red_victories
+        }
+    except Exception as e:
+        logger.error(f"Aggregation job for {job_id} failed: {e}")
+        update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", False)
+        exit(1)
