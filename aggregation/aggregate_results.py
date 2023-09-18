@@ -44,8 +44,8 @@ def handler(event, context):
 
     # Iterate over the results array and aggregate the victories
     for result in results_array:
-        total_blue_victories += result.get('blue_victory', 0)
-        total_red_victories += result.get('red_victory', 0)
+        total_blue_victories += result['Payload'].get('blue_victory', 0)
+        total_red_victories += result['Payload'].get('red_victory', 0)
 
     s3_url = f"https://encounterra-simulation-results.s3.eu-west-1.amazonaws.com/{job_id}"
 
@@ -56,10 +56,8 @@ def handler(event, context):
         s3.upload_file(local_file_path, bucket_name, s3_object_key)
         update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", True)
         return {
-            "final_result": {
-                'total_blue_victories': total_blue_victories,
-                'total_red_victories': total_red_victories
-            }
+            'total_blue_victories': total_blue_victories,
+            'total_red_victories': total_red_victories
         }
     except Exception as e:
         logger.error(f"Aggregation job for {job_id} failed: {e}")
