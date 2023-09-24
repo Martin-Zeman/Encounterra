@@ -12,13 +12,13 @@ dynamodb = boto3.client('dynamodb', region_name='eu-west-1')  # TODO remove the 
 s3 = boto3.client('s3')
 bucket_name = "encounterra-simulation-results"
 local_log_file_path = "/tmp/log.txt"
-CustomLogger(logging.INFO, False, local_log_file_path)
 logger = logging.getLogger("Encounterra")
 
 def handler(event, context):
-    logger.info("------CORE LAMBDA STARTING------")
     if os.path.exists(local_log_file_path):
         os.remove(local_log_file_path)
+    CustomLogger(logging.INFO, False, local_log_file_path)
+    logger.info("------CORE LAMBDA STARTING------")
     Map.reset_singleton()
     logger.info(f"event {event}")
     input = event['core_input']
