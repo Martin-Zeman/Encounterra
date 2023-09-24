@@ -29,12 +29,13 @@ def get_combatant_classes():
         sub_module = importlib.import_module(full_module_name)
 
         for name, obj in inspect.getmembers(sub_module):
-            # Check if the attribute is a class and a subclass of Combatant
-            if inspect.isclass(obj) and issubclass(obj, Combatant) and obj != Combatant:
+            # Check if the attribute is a class and a subclass of Combatant. Has to be done this way do to id(Combatant) being different from the one imported this way
+            if inspect.isclass(obj) and "Combatant" in [base.__name__ for base in obj.__bases__] and obj.__name__ != "Combatant":
                 # Add the subclass to the list
                 classes.append(obj)
 
     return classes
+
 
 def get_available_wildshape_forms(level, action_type):
     if action_type is Action.WILDSHAPE:

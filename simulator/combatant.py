@@ -26,8 +26,8 @@ logger = logging.getLogger("Encounterra")
 
 class Combatant(ProtoCombatant):
 
-    def __init__(self, name, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
-        self.name = name
+    def __init__(self, num, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
+        self.name = type(self).type + " " + str(num)
         self.cls = cls
         self.level = level
         self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self))]

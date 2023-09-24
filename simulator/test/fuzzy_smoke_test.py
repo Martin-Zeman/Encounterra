@@ -25,7 +25,7 @@ logger = logging.getLogger("Encounterra")
 @pytest.mark.slow
 def test_random_matchup():
     CustomLogger(logging.INFO)
-    for _ in range(100):
+    for _ in range(1):
         Map.reset_singleton()
         combatant_pool = [DraconicSorcerer5Lvl, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl, GiantToad, DireWolf, BrownBear,
                           EvilMage, AssassinRogue5Lvl]

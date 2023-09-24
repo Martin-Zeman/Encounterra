@@ -11,8 +11,10 @@ logger = logging.getLogger("Encounterra")
 
 class TotemBarbarian5Lvl(Combatant):
 
-    def __init__(self, name="TotemBarbarian5Lvl"):
-        super().__init__(name, Class.BARBARIAN.PATH_OF_THE_TOTEM_WARRIOR, level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
+    type = "Totem Barbarian 5Lvl"
+
+    def __init__(self, num=1):
+        super().__init__(num, Class.BARBARIAN.PATH_OF_THE_TOTEM_WARRIOR, level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
         self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)

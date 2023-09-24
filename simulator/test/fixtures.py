@@ -33,31 +33,31 @@ def battle_map(teams):
 
 @pytest.fixture()
 def test_draconic_sorcerer_5lvl():
-    return DraconicSorcerer5Lvl("DraconicSorcerer5lvl")
+    return DraconicSorcerer5Lvl()
 
 @pytest.fixture()
 def test_goblin():
-    return Goblin("Goblin")
+    return Goblin()
 
 @pytest.fixture()
 def test_bugbear():
-    return Bugbear("Bugbear")
+    return Bugbear()
 
 @pytest.fixture()
 def test_totem_barbarian():
-    return TotemBarbarian5Lvl("TotemBarbarian5Lvl")
+    return TotemBarbarian5Lvl()
 
 @pytest.fixture()
 def test_stone_giant():
-    return StoneGiant("StoneGiant")
+    return StoneGiant()
 
 @pytest.fixture()
 def test_ogre():
-    return Ogre("Ogre")
+    return Ogre()
 
 @pytest.fixture()
 def test_moon_druid():
-    return MoonDruid5Lvl("MoonDruid5Lvl")
+    return MoonDruid5Lvl()
 
 @pytest.fixture()
 def test_giant_toad():
@@ -65,7 +65,7 @@ def test_giant_toad():
 
 @pytest.fixture()
 def test_dragonclaw_cultist():
-    return DragonclawCultist("DragonclawCultist")
+    return DragonclawCultist()
 
 @pytest.fixture()
 def test_brown_bear():
@@ -73,8 +73,8 @@ def test_brown_bear():
 
 @pytest.fixture()
 def test_dire_wolf():
-    return DireWolf("DireWolf")
+    return DireWolf()
 
 @pytest.fixture()
 def test_assassin_rogue():
-    return AssassinRogue5Lvl("AssassinRogue")
+    return AssassinRogue5Lvl()

@@ -17,8 +17,10 @@ logger = logging.getLogger("Encounterra")
 
 class GiantToad(Combatant):
 
-    def __init__(self, name="Giant Toad"):
-        super().__init__(name, Class.MONSTER.BEAST, level=1, hp=39, ac=11, init_bonus=1, spell_to_hit=0, speed=20, resistances=set(), dc=0)
+    type = "Giant Toad"
+
+    def __init__(self, num=1):
+        super().__init__(num, Class.MONSTER.BEAST, level=1, hp=39, ac=11, init_bonus=1, spell_to_hit=0, speed=20, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.PRE_SWALLOW_BITE,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,\
                                      on_hit=OnHitAutoRestrained(SkillCheck.ATHLETICS, 13), extra_dmg=[('1d10', DamageType.Poison)])

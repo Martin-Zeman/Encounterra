@@ -37,7 +37,7 @@ class Session:
         self.battle_map = None
         self.map_size = 15
         self.statistic_collector = None
-        self.character_type_counter = {cls.__name__: 1 for cls in get_combatant_classes()}
+        self.character_type_counter = {cls.type: 1 for cls in get_combatant_classes()}
         self.teams = Teams()
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
         self.round_manager = None
@@ -45,7 +45,7 @@ class Session:
 
     def add_combatant(self, combatant_type, team):
         if type(combatant_type) is not str:
-            combatant_type = combatant_type.__name__  # we want to allow both kinds of calls
+            combatant_type = combatant_type.type  # we want to allow both kinds of calls
         try:
             curr_count = self.character_type_counter[combatant_type]
         except KeyError:
@@ -53,32 +53,32 @@ class Session:
             return
 
         match combatant_type:
-            case "DraconicSorcerer5Lvl":
-                self.combatants.append(DraconicSorcerer5Lvl("DraconicSorcerer5Lvl " + str(curr_count)))
-            case "TotemBarbarian5Lvl":
-                self.combatants.append(TotemBarbarian5Lvl("TotemBarbarian5Lvl" + str(curr_count)))
-            case "DragonclawCultist":
-                self.combatants.append(DragonclawCultist("DragonclawCultist " + str(curr_count)))
-            case "Goblin":
-                self.combatants.append(Goblin("Goblin " + str(curr_count)))
-            case "Bugbear":
-                self.combatants.append(Bugbear("Bugbear " + str(curr_count)))
-            case "Ogre":
-                self.combatants.append(Ogre("Ogre " + str(curr_count)))
-            case "StoneGiant":
-                self.combatants.append(StoneGiant("StoneGiant " + str(curr_count)))
-            case "MoonDruid5Lvl":
-                self.combatants.append(MoonDruid5Lvl("MoonDruid5Lvl " + str(curr_count)))
-            case "AssassinRogue5Lvl":
-                self.combatants.append(AssassinRogue5Lvl("AssassinRogue5Lvl " + str(curr_count)))
-            case "GiantToad":
-                self.combatants.append(GiantToad("GiantToad " + str(curr_count)))
-            case "BrownBear":
-                self.combatants.append(BrownBear("BrownBear " + str(curr_count)))
-            case "DireWolf":
-                self.combatants.append(DireWolf("DireWolf " + str(curr_count)))
-            case "EvilMage":
-                self.combatants.append(EvilMage("EvilMage " + str(curr_count)))
+            case DraconicSorcerer5Lvl.type:
+                self.combatants.append(DraconicSorcerer5Lvl(curr_count))
+            case TotemBarbarian5Lvl.type:
+                self.combatants.append(TotemBarbarian5Lvl(curr_count))
+            case DragonclawCultist.type:
+                self.combatants.append(DragonclawCultist(curr_count))
+            case Goblin.type:
+                self.combatants.append(Goblin(curr_count))
+            case Bugbear.type:
+                self.combatants.append(Bugbear(curr_count))
+            case Ogre.type:
+                self.combatants.append(Ogre(curr_count))
+            case StoneGiant.type:
+                self.combatants.append(StoneGiant(curr_count))
+            case MoonDruid5Lvl.type:
+                self.combatants.append(MoonDruid5Lvl(curr_count))
+            case AssassinRogue5Lvl.type:
+                self.combatants.append(AssassinRogue5Lvl(curr_count))
+            case GiantToad.type:
+                self.combatants.append(GiantToad(curr_count))
+            case BrownBear.type:
+                self.combatants.append(BrownBear(curr_count))
+            case DireWolf.type:
+                self.combatants.append(DireWolf(curr_count))
+            case EvilMage.type:
+                self.combatants.append(EvilMage(curr_count))
             case _:
                 logger.error("Unknown combatant type")
                 return
