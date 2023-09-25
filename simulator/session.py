@@ -2,15 +2,19 @@ from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from .combatants.brown_bear import BrownBear
 from .combatants.bugbear import Bugbear
 from .combatants.dire_wolf import DireWolf
+from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from .combatants.dragonclaw_cultist import DragonclawCultist
 from .combatants.evil_mage import EvilMage
+from .combatants.giant_constrictor_snake import GiantConstrictorSnake
+from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
 from .combatants.moon_druid_5lvl import MoonDruid5Lvl
 from .combatants.ogre import Ogre
+from .combatants.quetzalcoatlus import Quetzalcoatlus
+from .combatants.saber_toothed_tiger import SaberToothedTiger
 from .combatants.stone_giant import StoneGiant
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from .effects.effect_tracker import EffectTracker
 from .utils.utils import get_combatant_classes
 from .battle_map import *
@@ -52,6 +56,7 @@ class Session:
             logger.error("Unknown combatant type")
             return
 
+        # TODO use character_type_counter instead
         match combatant_type:
             case DraconicSorcerer5Lvl.type:
                 self.combatants.append(DraconicSorcerer5Lvl(curr_count))
@@ -79,6 +84,14 @@ class Session:
                 self.combatants.append(DireWolf(curr_count))
             case EvilMage.type:
                 self.combatants.append(EvilMage(curr_count))
+            case GiantConstrictorSnake.type:
+                self.combatants.append(GiantConstrictorSnake(curr_count))
+            case GiantSpider.type:
+                self.combatants.append(GiantSpider(curr_count))
+            case Quetzalcoatlus.type:
+                self.combatants.append(Quetzalcoatlus(curr_count))
+            case SaberToothedTiger.type:
+                self.combatants.append(SaberToothedTiger(curr_count))
             case _:
                 logger.error("Unknown combatant type")
                 return
