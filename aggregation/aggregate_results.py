@@ -1,18 +1,21 @@
 import boto3
 import logging
 from botocore.exceptions import ClientError
+from boto3.dynamodb.conditions import Key
 
 logger = logging.getLogger("Encounterra")
 
 dynamodb_resource = boto3.resource("dynamodb")
-table = dynamodb_resource.Table("simulation_results")
+simulation_results_table = dynamodb_resource.Table("simulation_results")
+users_results_table = dynamodb_resource.Table("users")
 s3 = boto3.client('s3')
 bucket_name = "encounterra-simulation-results"
 local_file_path = "/tmp/aggregated_statistics.txt"
 
+
 def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: bool):
     try:
-        table.update_item(
+        simulation_results_table.update_item(
             Key={
                 'job_id': job_id
             },
@@ -31,12 +34,75 @@ def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: boo
             err.response['Error']['Code'], err.response['Error']['Message'])
         raise
 
+
+def get_iterations(job_id: str):
+    try:
+        response = simulation_results_table.get_item(
+            Key={
+                "job_id": job_id
+            }
+        )
+        # Return the Item if it exists, otherwise return None
+        return int(response['Item']['iterations'])
+    except ClientError as err:
+        logger.error(
+            "Couldn't retrieve result for %s from table simulation_results. Here's why: %s: %s",
+            job_id,
+            err.response['Error']['Code'], err.response['Error']['Message'])
+        raise
+
+
+def get_email_by_user_id(user_id: str) -> str:
+    """
+    Queries for user's email by user_id using the GSI.
+
+    :param user_id: The user_id to query.
+    :return: The email associated with the user_id.
+    """
+    table = users_results_table
+    response = table.query(
+        IndexName="UserIdIndex",
+        KeyConditionExpression=Key('user_id').eq(user_id)
+    )
+    items = response['Items']
+    if not items:
+        raise ValueError(f"No user found with user_id {user_id}")
+    return items[0]['email']
+
+
+def update_credits(user_id: str, credits_to_deduct: int):
+    email = get_email_by_user_id(user_id)
+
+    try:
+        users_results_table.update_item(
+            Key={
+                "email": email
+            },
+            UpdateExpression="ADD credits :neg_credits",
+            ExpressionAttributeValues={
+                ":neg_credits": -credits_to_deduct
+            },
+            ReturnValues="UPDATED_NEW")
+    except ClientError as err:
+        logger.error(
+            "Couldn't update the credits for user %s from table users. Here's why: %s: %s",
+            user_id,
+            err.response['Error']['Code'], err.response['Error']['Message'])
+        raise
+
+
 def handler(event, context):
     logger.setLevel(logging.INFO)
     logger.info("------AGGREGATION LAMBDA STARTING------")
     logger.info(f"event {event}")
     results_array = event["core_results"]
     job_id = event["job_id"]
+    user_id = event["user_id"]
+
+    iterations = get_iterations(job_id)
+    if iterations != len(results_array):
+        logger.error(f"Some iterations failed despite retries!")
+        exit(1)
 
     total_blue_victories = 0
     total_red_victories = 0
@@ -53,6 +119,9 @@ def handler(event, context):
             stats_file.write(f"BLUE {total_blue_victories}\nRED {total_red_victories}\n")
         s3_object_key = f"{job_id}/aggregated_statistics.txt"
         s3.upload_file(local_file_path, bucket_name, s3_object_key)
+
+        update_credits(user_id, iterations)
+
         update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", True)
         return {
             'total_blue_victories': total_blue_victories,
