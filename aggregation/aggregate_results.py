@@ -98,6 +98,7 @@ def handler(event, context):
     results_array = event["core_results"]
     job_id = event["job_id"]
     user_id = event["user_id"]
+    credit_cost = event["credits"]
 
     iterations = get_iterations(job_id)
     if iterations != len(results_array):
@@ -120,7 +121,8 @@ def handler(event, context):
         s3_object_key = f"{job_id}/aggregated_statistics.txt"
         s3.upload_file(local_file_path, bucket_name, s3_object_key)
 
-        update_credits(user_id, iterations)
+        if credit_cost > 0:
+            update_credits(user_id, credit_cost)
 
         update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", True)
         return {
