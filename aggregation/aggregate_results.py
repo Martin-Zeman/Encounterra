@@ -98,7 +98,7 @@ def handler(event, context):
     results_array = event["core_results"]
     job_id = event["job_id"]
     user_id = event["user_id"]
-    credit_cost = event["credits"]
+    credit_cost = event["credit_cost"]
 
     iterations = get_iterations(job_id)
     if iterations != len(results_array):
