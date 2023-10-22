@@ -24,7 +24,7 @@ def handler(event, context):
     input = event['core_input']
     blue_team = input['blue']
     red_team = input['red']
-    job_id = input['job_id']
+    job_id = event['job_id']
     index = event['index']
 
     subdirectory = f"{job_id}/{index}/"

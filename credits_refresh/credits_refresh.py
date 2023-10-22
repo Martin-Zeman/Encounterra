@@ -51,7 +51,6 @@ def refresh_credits(email: str, initial_credits: int):
 
 def handler(event, context):
     logger.setLevel(logging.INFO)
-    logger.info("------CREDIT REFRESH LAMBDA STARTING------")
     logger.info(f"event {event}")
     email = event["email"]
     initial_credits = event["initial_credits"]
