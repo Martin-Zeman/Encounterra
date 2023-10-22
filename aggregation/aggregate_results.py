@@ -110,8 +110,8 @@ def handler(event, context):
 
     # Iterate over the results array and aggregate the victories
     for result in results_array:
-        total_blue_victories += result['Payload'].get('blue_victory', 0)
-        total_red_victories += result['Payload'].get('red_victory', 0)
+        total_blue_victories += result.get('blue_victory', 0)
+        total_red_victories += result.get('red_victory', 0)
 
     s3_url = f"https://encounterra-simulation-results.s3.eu-west-1.amazonaws.com/{job_id}"
 
