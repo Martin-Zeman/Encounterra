@@ -140,6 +140,7 @@ def handler(event, context):
     results_array = event["core_results"]
     job_id = event["job_id"]
     user_id = event["user_id"]
+    credit_cost = event["credit_cost"]
 
     iterations = get_iterations(job_id)
     if iterations != len(results_array):
@@ -159,7 +160,8 @@ def handler(event, context):
             stats_file.write(f"BLUE {total_blue_victories}\nRED {total_red_victories}\n")
         s3_url = zip_s3_bucket_objects_and_get_presigned_url(bucket_name, job_id, aggregated_stats_path)
 
-        update_credits(user_id, iterations)
+        if credit_cost > 0:
+            update_credits(user_id, iterations)
 
         update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", True)
         return {
