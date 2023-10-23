@@ -93,7 +93,7 @@ def update_credits(user_id: str, credits_to_deduct: int):
         raise
 
 
-def zip_s3_bucket_objects_and_get_presigned_url(bucket_name, job_id):
+def zip_s3_bucket_objects_and_get_presigned_url(bucket_name, job_id, aggregated_stats_path):
     # Define the local zip path and the s3 zip object key
     local_zip_path = "/tmp/results.zip"
     s3_zip_object_key = f"{job_id}/results.zip"
@@ -103,6 +103,7 @@ def zip_s3_bucket_objects_and_get_presigned_url(bucket_name, job_id):
 
     # Create a zip file and add the S3 objects to it
     with zipfile.ZipFile(local_zip_path, 'w') as zf:
+        zf.write(aggregated_stats_path, os.path.basename(aggregated_stats_path))
         for obj in objects.get('Contents', []):
             object_key = obj['Key']
             local_file_path = f"/tmp/{os.path.basename(object_key)}"
@@ -156,7 +157,7 @@ def handler(event, context):
     try:
         with open(aggregated_stats_path, 'w') as stats_file:
             stats_file.write(f"BLUE {total_blue_victories}\nRED {total_red_victories}\n")
-        s3_url = zip_s3_bucket_objects_and_get_presigned_url(bucket_name, job_id)
+        s3_url = zip_s3_bucket_objects_and_get_presigned_url(bucket_name, job_id, aggregated_stats_path)
 
         update_credits(user_id, iterations)
 
