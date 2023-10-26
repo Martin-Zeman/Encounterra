@@ -522,7 +522,7 @@ def get_action(combatant):
     the best action is recalculated every time to react to any possible changes on the battle_map.
     :return: the next best actoid
     """
-    start_time = time.time()
+    # start_time = time.time()
     battle_map = Map.get()
     battle_map.clear_caches()
     combatant = combatant.get_current_form()  # Takes care of possible wildshape
@@ -539,5 +539,5 @@ def get_action(combatant):
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)
     if not combatant.action_plan:
         return None  # Either no action possible or all actions already used
-    print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
+    # print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
     return combatant.action_plan.pop(0)

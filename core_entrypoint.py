@@ -12,18 +12,17 @@ dynamodb = boto3.client('dynamodb', region_name='eu-west-1')  # TODO remove the 
 s3 = boto3.client('s3')
 bucket_name = "encounterra-simulation-results"
 local_log_file_path = "/tmp/log.txt"
-logger = logging.getLogger("Encounterra")
 
 def handler(event, context):
     if os.path.exists(local_log_file_path):
         os.remove(local_log_file_path)
     CustomLogger(logging.INFO, False, local_log_file_path)
-    logger.info("------CORE LAMBDA STARTING------")
+    logger = logging.getLogger("Encounterra")
+    # logger.info("------CORE LAMBDA STARTING------")
     Map.reset_singleton()
-    logger.info(f"event {event}")
-    input = event['core_input']
-    blue_team = input['blue']
-    red_team = input['red']
+    core_input = event['core_input']
+    blue_team = core_input['blue']
+    red_team = core_input['red']
     job_id = event['job_id']
     index = event['index']
 
@@ -42,7 +41,7 @@ def handler(event, context):
         red_victory = int(not blue_victory)
         s3_object_key = subdirectory + f'{"blue" if result[Teams.Color.BLUE] else "red"}_victory_log.txt'
         s3.upload_file(local_log_file_path, bucket_name, s3_object_key)
-        logger.info(f"{job_id}:{index} SUCCESS")
+        # logger.info(f"{job_id}:{index} SUCCESS")
         return {
             'blue_victory': blue_victory,
             'red_victory': red_victory
