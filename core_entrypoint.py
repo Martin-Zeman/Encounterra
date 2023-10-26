@@ -1,4 +1,5 @@
 from simulator.logging.custom_logger import CustomLogger
+from simulator.misc import Statistics
 from simulator.session import Session
 from simulator.teams import Teams
 from simulator.battle_map import Map
@@ -37,14 +38,20 @@ def handler(event, context):
     try:
         result = session.simulate(parallel=False)
 
-        blue_victory = int(result[Teams.Color.BLUE])
+        blue_victory = int(result[Teams.Color.BLUE][Statistics.VICTORIES])
         red_victory = int(not blue_victory)
         s3_object_key = subdirectory + f'{"blue" if result[Teams.Color.BLUE] else "red"}_victory_log.txt'
         s3.upload_file(local_log_file_path, bucket_name, s3_object_key)
         # logger.info(f"{job_id}:{index} SUCCESS")
         return {
-            'blue_victory': blue_victory,
-            'red_victory': red_victory
+            'blue_victory': result[Teams.Color.BLUE][Statistics.VICTORIES],
+            'red_victory': result[Teams.Color.RED][Statistics.VICTORIES],
+            'blue_at_least_one_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_ONE_DIED],
+            'red_at_least_one_died': result[Teams.Color.RED][Statistics.AT_LEAST_ONE_DIED],
+            'blue_at_least_two_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_TWO_DIED],
+            'red_at_least_two_died': result[Teams.Color.RED][Statistics.AT_LEAST_TWO_DIED],
+            'blue_at_least_three_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_THREE_DIED],
+            'red_at_least_three_died': result[Teams.Color.RED][Statistics.AT_LEAST_THREE_DIED],
         }
     except Exception as e:
         logger.error(f"{job_id}:{index} FAILURE: {e}")

@@ -49,11 +49,11 @@ class Teams:
 
 
     def get_surviving_teams(self):
-        surviving_teams = []
-        for name, combatants in self.team_book.items():
-            if any([ch.name for ch in combatants if ch.is_alive()]):
-                surviving_teams.append(name)
-        return surviving_teams
+        return [name for name, combatants in self.team_book.items() if any(ch.is_alive() for ch in combatants)]
+
+    def get_death_count(self):
+        return tuple(len(self.team_book[color]) - sum(ch.is_alive() for ch in self.team_book[color]) for color in
+                 [self.Color.BLUE, self.Color.RED])
 
     def get_team_colors(self):
         return self.team_book.keys()

@@ -237,6 +237,13 @@ class PhaseOfTurn(Enum):
     ACTION = auto()
 
 
+class Statistics(Enum):
+    VICTORIES = 1
+    AT_LEAST_ONE_DIED = 2
+    AT_LEAST_TWO_DIED = 3
+    AT_LEAST_THREE_DIED = 4
+
+
 class ConditionWithoutDC:
     def __init__(self, conditions, initiator):
         self.conditions = conditions  # Could multiples such as grapple + restrained go often together

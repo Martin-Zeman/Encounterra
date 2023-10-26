@@ -1,6 +1,8 @@
 from .action_resolver import *
 from .actions.action_selector import get_action
+from .misc import Statistics
 from .resources import reset_resources
+from .teams import Teams
 from .utils.utils import preallocate_wildshape_forms
 import logging
 import copy
@@ -59,7 +61,7 @@ class RoundManager:
 
     def simulate_n(self, n=1, result_queue=None):
         if n > 0:
-            team_tally = {color: 0 for color in self.teams.get_team_colors()}
+            team_tally = {color: {stat: 0 for stat in Statistics} for color in self.teams.get_team_colors()}
             combatant_initial_positions = {c: copy.deepcopy(Map.get().get_combatant_position(c).get()[0]) for c in self.combatants}
             self.prep_combatants()
             for i in range(n):
@@ -72,7 +74,21 @@ class RoundManager:
                     logger.warning("Everyone's dead. No winners!")
                 else:
                     logger.warning(f"Team {surviving_teams[0].name} wins")
-                    team_tally[surviving_teams[0]] += 1
+                    team_tally[surviving_teams[0]][Statistics.VICTORIES] += 1
+                    dead_blue, dead_red = self.teams.get_death_count()
+                    if dead_blue > 0:
+                        team_tally[Teams.Color.BLUE][Statistics.AT_LEAST_ONE_DIED] += 1
+                    if dead_red > 0:
+                        team_tally[Teams.Color.RED][Statistics.AT_LEAST_ONE_DIED] += 1
+                    if dead_blue > 1:
+                        team_tally[Teams.Color.BLUE][Statistics.AT_LEAST_TWO_DIED] += 1
+                    if dead_red > 1:
+                        team_tally[Teams.Color.RED][Statistics.AT_LEAST_TWO_DIED] += 1
+                    if dead_blue > 2:
+                        team_tally[Teams.Color.BLUE][Statistics.AT_LEAST_THREE_DIED] += 1
+                    if dead_red > 2:
+                        team_tally[Teams.Color.RED][Statistics.AT_LEAST_THREE_DIED] += 1
+
                 self.reset(combatant_initial_positions)
             if result_queue:
                 result_queue.put(team_tally)

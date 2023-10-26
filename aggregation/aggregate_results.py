@@ -2,6 +2,8 @@ import boto3
 import logging
 import os
 import zipfile
+import json
+from enum import Enum
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
@@ -13,6 +15,13 @@ users_results_table = dynamodb_resource.Table("users")
 s3 = boto3.client('s3')
 bucket_name = "encounterra-simulation-results"
 aggregated_stats_path = "/tmp/aggregated_statistics.txt"
+
+
+class Statistics(Enum):
+    VICTORIES = 1
+    AT_LEAST_ONE_DIED = 2
+    AT_LEAST_TWO_DIED = 3
+    AT_LEAST_THREE_DIED = 4
 
 
 def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: bool):
@@ -147,29 +156,31 @@ def handler(event, context):
         logger.error(f"Some iterations failed despite retries!")
         exit(1)
 
-    total_blue_victories = 0
-    total_red_victories = 0
+    statistics = {color: {stat.name: 0 for stat in Statistics} for color in ['BLUE', 'RED']}
 
     # Iterate over the results array and aggregate the victories
     for result in results_array:
-        total_blue_victories += result.get('blue_victory', 0)
-        total_red_victories += result.get('red_victory', 0)
+        statistics['BLUE'][Statistics.VICTORIES.name] += result.get('blue_victory', 0)
+        statistics['RED'][Statistics.VICTORIES.name] += result.get('red_victory', 0)
+        statistics['BLUE'][Statistics.AT_LEAST_ONE_DIED.name] += result.get('blue_at_least_one_died', 0)
+        statistics['RED'][Statistics.AT_LEAST_ONE_DIED.name] += result.get('red_at_least_one_died', 0)
+        statistics['BLUE'][Statistics.AT_LEAST_TWO_DIED.name] += result.get('blue_at_least_two_died', 0)
+        statistics['RED'][Statistics.AT_LEAST_TWO_DIED.name] += result.get('red_at_least_two_died', 0)
+        statistics['BLUE'][Statistics.AT_LEAST_THREE_DIED.name] += result.get('blue_at_least_three_died', 0)
+        statistics['RED'][Statistics.AT_LEAST_THREE_DIED.name] += result.get('red_at_least_three_died', 0)
+    statistics = json.dumps(statistics)
 
     try:
         with open(aggregated_stats_path, 'w') as stats_file:
-            stats_file.write(f"BLUE {total_blue_victories}\nRED {total_red_victories}\n")
+            stats_file.write(statistics)
         s3_url = zip_s3_bucket_objects_and_get_presigned_url(bucket_name, job_id, aggregated_stats_path)
 
         if credit_cost > 0:
             update_credits(user_id, iterations)
 
-        update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", True)
-        return {
-            'total_blue_victories': total_blue_victories,
-            'total_red_victories': total_red_victories
-        }
+        update_simulation_result(job_id, s3_url, statistics, True)
     except Exception as e:
         logger.error(f"Aggregation job for {job_id} failed: {e}")
         s3_url = f"https://encounterra-simulation-results.s3.eu-west-1.amazonaws.com/{job_id}"
-        update_simulation_result(job_id, s3_url, f"BLUE: {total_blue_victories}, RED: {total_red_victories}", False)
+        update_simulation_result(job_id, s3_url, statistics, False)
         exit(1)
