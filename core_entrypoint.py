@@ -38,9 +38,9 @@ def handler(event, context):
     try:
         result = session.simulate(parallel=False)
 
-        blue_victory = int(result[Teams.Color.BLUE][Statistics.VICTORIES])
-        red_victory = int(not blue_victory)
-        s3_object_key = subdirectory + f'{"blue" if result[Teams.Color.BLUE] else "red"}_victory_log.txt'
+        blue_victory = result[Teams.Color.BLUE][Statistics.VICTORIES]
+
+        s3_object_key = subdirectory + f'{"blue" if blue_victory == 1 else "red"}_victory_log.txt'
         s3.upload_file(local_log_file_path, bucket_name, s3_object_key)
         # logger.info(f"{job_id}:{index} SUCCESS")
         return {
