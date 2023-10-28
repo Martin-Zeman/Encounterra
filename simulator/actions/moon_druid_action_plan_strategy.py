@@ -99,14 +99,15 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         """
         if self.best_wildshape_plan_data is None:
             ws_fsm, ws_transition_name_to_action = generate_wildshape_proto_dag(self.combatant)
-            ws_dag, ws_movement_trans_to_coord_and_type, ws_transition_to_eligible_coords = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
-            if ws_dag is not None:
-                ws_best_sequence, ws_transition_name_to_ms_path = find_best_sequence(self.combatant, ws_dag, ws_transition_name_to_action, ws_transition_to_eligible_coords, ws_movement_trans_to_coord_and_type, distances, shortest_paths)
-                self.best_wildshape_plan_data = ws_transition_name_to_action, ws_movement_trans_to_coord_and_type, ws_best_sequence, ws_transition_name_to_ms_path
+            if ws_transition_name_to_action:  # Could be out of wildshape uses
+                ws_proto_dag, ws_movement_trans_to_coord_and_type, ws_transition_to_eligible_coords = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
+                if ws_proto_dag is not None:
+                    ws_best_sequence, ws_transition_name_to_ms_path = find_best_sequence(self.combatant, ws_proto_dag, ws_transition_name_to_action, ws_transition_to_eligible_coords, ws_movement_trans_to_coord_and_type, distances, shortest_paths)
+                    self.best_wildshape_plan_data = ws_transition_name_to_action, ws_movement_trans_to_coord_and_type, ws_best_sequence, ws_transition_name_to_ms_path
 
         # get_aoe_and_aoo_threat_for_increment.cache_clear()
-        fsm, transition_name_to_action = generate_proto_dag(self.combatant)
-        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, fsm, transition_name_to_action, distances, shortest_paths)
+        proto_dag, transition_name_to_action = generate_proto_dag(self.combatant)
+        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             return None
         best_sequence, transition_name_to_ms_path = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)

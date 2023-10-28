@@ -423,9 +423,9 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     sequences = []
     transition_name_to_ms_path = dict()
-    sequence_to_threat = dict()
+    sequence_to_threat = dict()  # Overall threat score of a sequence: sequence idx -> [movement threat, action threat]
     sequence_idx_to_transition_step_threat = dict()
-    coord_to_sequence_ids = dict()
+    coord_to_sequence_ids = dict()  # Maps coord (and movement typ) to all sequences which end in that coord
     current_coords = battle_map.get_combatant_position(combatant)
 
     def DFS(dag, current_state, current_sequence, coord):
@@ -441,7 +441,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
             try:
                 coord = movement_transition_to_coord_and_type[transition]
             except KeyError:
-                pass
+                pass  # Skipping transitions that aren't movement
             DFS(dag, next_state, current_sequence, coord)
             current_sequence.pop()
 
@@ -470,7 +470,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                 logger.error(f"Unknown movement type {movement_type}")
                 movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
         for idx in ids:
-            sequence_to_threat[idx] = movement_threat
+            sequence_to_threat[idx] = movement_threat  # We initialize it with the movement threat
 
     # (Bonus) action transitions
     for coord_and_movement_type, ids in coord_to_sequence_ids.items():

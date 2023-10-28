@@ -109,6 +109,14 @@ class ScorchingRay(Actoid, DirectThreat):
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
+        if self.targets[0] is self.targets[1] and self.targets[1] is self.targets[2]:
+            return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Scorching Ray on 3x{self.targets[0]}"
+        elif self.targets[0] is self.targets[1]:
+            return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Scorching Ray on 2x{self.targets[0]} and {self.targets[2]}"
+        elif self.targets[1] is self.targets[2]:
+            return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Scorching Ray on 2x{self.targets[1]} and {self.targets[0]}"
+        elif self.targets[0] is self.targets[2]:
+            return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Scorching Ray on 2x{self.targets[0]} and {self.targets[1]}"
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SCORCHING_RAY else "") + f"Scorching Ray on {self.targets[0]}, {self.targets[1]} and {self.targets[2]}"
 
     def shorthand_str(self):
