@@ -102,8 +102,8 @@ class HoldPersonFactory(ThreatModifierFactory):
 class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, target, factory, **kwargs):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
-        LimitedDurationEffect.__init__(self, turns=10)
-        EndOfTurnEffect.__init__(self, target, factory.saving_throw, factory.dc)
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
+        EndOfTurnEffect.__init__(self, factory.combatant, target, factory.saving_throw, factory.dc)
         self.target = target
         self.factory = factory
 

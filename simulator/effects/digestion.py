@@ -7,6 +7,7 @@ from ..battle_map import Map
 
 logger = logging.getLogger("Encounterra")
 
+
 class Digestion(StartOfTurnAutoEffect):
 
     def get_effect_type(self):

@@ -2,9 +2,12 @@ from ..effects.effect import Effect
 import logging
 
 logger = logging.getLogger("Encounterra")
+
+
 class LimitedDurationEffect(Effect):
-    def __init__(self, turns):
-       self.turns = turns
+    def __init__(self, initiator, turns):
+        Effect.__init__(self, initiator)
+        self.turns = turns
 
 
     def new_turn(self):

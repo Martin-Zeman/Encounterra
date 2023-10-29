@@ -22,7 +22,7 @@ class OnHitSwallow(OnHit):
         attacker.swallowed_target = target
         attacker.constricted_target = None
         battle_map = Map.get()
-        battle_map.effect_tracker.add(Digestion(target))
+        battle_map.effect_tracker.add(Digestion(attacker, target))
         battle_map.remove_combatant(target)
         return None
 

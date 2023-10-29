@@ -40,14 +40,11 @@ class BiteAndSwallow(MeleeAttack):
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            try:
-                return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                               distances,
-                                                               inflate_to_size=self.factory.combatant.size,
-                                                               rng=self.factory.range,
-                                                               combatant=self.factory.combatant)
-            except AttributeError:
-                print("FIXME")
+            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
+                                                           distances,
+                                                           inflate_to_size=self.factory.combatant.size,
+                                                           rng=self.factory.range,
+                                                           combatant=self.factory.combatant)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

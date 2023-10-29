@@ -45,8 +45,8 @@ class DisengageFactory(ThreatModifierFactory):
 class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
 
     def __init__(self, combatant, factory):
-        CombatantEffect.__init__(self, combatants=[combatant])
-        LimitedDurationEffect.__init__(self, turns=1)
+        CombatantEffect.__init__(self, combatant, combatants=[combatant])
+        LimitedDurationEffect.__init__(self, combatant, turns=1)
         self.factory = factory
 
     def get_effect_type(self):

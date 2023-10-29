@@ -24,6 +24,9 @@ class EffectType(Enum):
 
 class Effect(ABC):
 
+    def __init__(self, initiator):
+        self.initiator = initiator
+
     @abstractmethod
     def get_effect_type(self):
         pass

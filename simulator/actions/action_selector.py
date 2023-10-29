@@ -505,7 +505,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                             if isinstance(action, AttackThreatModifier):
                                 delta_action = action
                             for existing_delta_effect in battle_map.effect_tracker.get_affecting_combatant(combatant):
-                                threat_acc += existing_delta_effect.calculate_threat_for_attack(combatant, action)
+                                if isinstance(existing_delta_effect, AttackThreatModifier):
+                                    threat_acc += existing_delta_effect.calculate_threat_for_attack(combatant, action)
                     except KeyError:  # or different kind which represents some type of movement
                         pass  # Skipping
                 sequence_to_threat[idx] = [sequence_to_threat[idx][-1], threat_acc * feasibility_multiplier]  # Overwrite the movement threat tuple with the final movement and transition total

@@ -80,15 +80,15 @@ class EffectTracker:
         return [e for e in self.effects if isinstance(e, AoeSquareEffect) or isinstance(e, AoeSphericEffect)]
 
     def get_effects_by_initiator(self, initiator):
-        return [e for e in self.effects if e.factory.combatant is initiator]
+        return [e for e in self.effects if e.initiator is initiator]
 
     def combatant_died(self, combatant):
         for e in self.get_effects_by_initiator(combatant):
             e.deactivate()
-        self.effects = [e for e in self.effects if e.factory.combatant is not combatant]
+        self.effects = [e for e in self.effects if e.initiator is not combatant]
 
-    def create_post_haste_lethargy(self, combatant):
-        self.effects.append(PostHasteLethargy(combatant))
+    def create_post_haste_lethargy(self, initiator, combatant):
+        self.effects.append(PostHasteLethargy(initiator, combatant))
 
 # TODO add function for wildshape replacement
 

@@ -4,7 +4,8 @@ from ..effects.aoe_effect import AoeEffect
 
 class AoeSquareEffect(AoeEffect):
 
-    def __init__(self, origin, length):
+    def __init__(self, initiator, origin, length):
+        AoeEffect.__init__(self, initiator)
         self.origin = origin
         self.length = length
 

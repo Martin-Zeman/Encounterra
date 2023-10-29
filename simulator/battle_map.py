@@ -1160,7 +1160,11 @@ class Map:
         bb = self.get_harmful_bounding_box(caster, radius)
         max_score = -sys.maxsize - 1
         best_placement = None
-        caster_coords = self.combatant_coordinate_cache[caster].get()
+        swallower = caster.get_swallower()
+        if swallower:
+            caster_coords = self.combatant_coordinate_cache[swallower].get()
+        else:
+            caster_coords = self.combatant_coordinate_cache[caster].get()
         for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
             curr_coord = np.array([[x, y]])
             if self.get_cartesian_distance_coords(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):

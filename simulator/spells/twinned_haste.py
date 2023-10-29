@@ -122,7 +122,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
         for target in self.targets:
             target.ac -= 2
             target.haste_action_factories.clear()
-            effect_tracker.create_post_haste_lethargy(target)
+            effect_tracker.create_post_haste_lethargy(self.factory.combatant, target)
             target.has_haste_action = False  # TODO Remove this
 
     def is_affecting(self, combatant):

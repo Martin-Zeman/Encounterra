@@ -7,7 +7,8 @@ from ..geometry import get_square_center
 
 class AoeSphericEffect(AoeEffect):
 
-    def __init__(self, coord, radius):
+    def __init__(self, initiator, coord, radius):
+        AoeEffect.__init__(self, initiator)
         self.origin = coord
         self.radius = radius
 

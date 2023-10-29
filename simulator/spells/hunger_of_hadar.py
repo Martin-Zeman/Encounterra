@@ -73,8 +73,8 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
-        LimitedDurationEffect.__init__(self, turns=10)
-        AoeSphericEffect.__init__(self, coord, SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target])
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
+        AoeSphericEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target])
         self.factory = factory
 
     def __str__(self):

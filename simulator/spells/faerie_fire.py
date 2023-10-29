@@ -75,9 +75,9 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
 
     def __init__(self, coord, factory,  **kwargs):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
-        LimitedDurationEffect.__init__(self, turns=10)
-        AoeSquareEffect.__init__(self, coord, SpellStats.TRANSLATE_BOX[FaerieFireFactory.target])
-        CombatantEffect.__init__(self, [])
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
+        AoeSquareEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_BOX[FaerieFireFactory.target])
+        CombatantEffect.__init__(self, factory.combatant, [])
         self.factory = factory
 
     def __str__(self):

@@ -150,8 +150,8 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
 
     def __init__(self, target, factory):
         Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
-        CombatantEffect.__init__(self, combatants=[factory.combatant])
-        LimitedDurationEffect.__init__(self, turns=1)
+        CombatantEffect.__init__(self, factory.combatant, combatants=[factory.combatant])
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=1)
         self.target = target
         self.factory = factory
         self.roll_type = RollType.ADVANTAGE

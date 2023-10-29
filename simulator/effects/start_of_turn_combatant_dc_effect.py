@@ -6,10 +6,11 @@ from ..misc import roll_saving_throw, reconcile_roll_types
 logger = logging.getLogger("Encounterra")
 
 class StartOfTurnEffect(Effect):
-    def __init__(self, combatant, st, dc):
-       self.combatant = combatant
-       self.st = st
-       self.dc = dc
+    def __init__(self, initiator, combatant, st, dc):
+        Effect.__init__(self, initiator)
+        self.combatant = combatant
+        self.st = st
+        self.dc = dc
 
 
     def start_of_turn(self):

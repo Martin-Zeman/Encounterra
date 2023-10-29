@@ -101,7 +101,7 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
 
     def __init__(self, target, factory):
         super().__init__(ActoidFlags.IS_SPELL)
-        LimitedDurationEffect.__init__(self, turns=10)
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.target = target
         self.factory = factory
 
@@ -126,7 +126,7 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
         self.factory.combatant.break_concentration()
         self.target.ac -= 2
         self.target.haste_action_factories.clear()
-        effect_tracker.create_post_haste_lethargy(self.target)
+        effect_tracker.create_post_haste_lethargy(self.factory.combatant, self.target)
         self.target.has_haste_action = False  # TODO Remove this
 
     def is_affecting(self, combatant):

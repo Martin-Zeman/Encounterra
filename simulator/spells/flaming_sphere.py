@@ -86,8 +86,8 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def __init__(self, coord, factory,  **kwargs):
         super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
-        LimitedDurationEffect.__init__(self, turns=10)
-        AoeSquareEffect.__init__(self, coord, SpellStats.TRANSLATE_BOX[FlamingSphereFactory.target])
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
+        AoeSquareEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_BOX[FlamingSphereFactory.target])
         self.factory = factory
 
     def __str__(self):
