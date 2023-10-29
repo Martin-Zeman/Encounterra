@@ -53,7 +53,10 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return []  # Let's not waste a twinned version on this
-        return combinations([e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)], 2)
+        enemies = Map.get().get_enemies(self.combatant)
+        if len(enemies) < 2:
+            return []  # Let's not waste a twinned version on this
+        return combinations([e for e in enemies if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
     def create_all(self):
         targets = Map.get().get_enemies(self.combatant)
