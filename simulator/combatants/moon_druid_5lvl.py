@@ -53,6 +53,8 @@ class MoonDruid5Lvl(Combatant):
     def reset(self):
         super().reset()
         self.curr_wildshape_uses = self.max_wildshape_uses
+        for ws in self.available_wildshape_forms:
+            ws.form.reset()
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

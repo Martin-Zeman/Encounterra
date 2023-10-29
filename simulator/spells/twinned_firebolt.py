@@ -97,7 +97,10 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
-        return f"Twinned Firebolt on {self.targets[0]} and {self.targets[1]}"
+        try:
+            return f"Twinned Firebolt on {self.targets[0]} and {self.targets[1]}"
+        except TypeError:
+            print("FIXME")
 
     def shorthand_str(self):
         return "Twinned Firebolt"

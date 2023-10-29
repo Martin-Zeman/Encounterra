@@ -504,6 +504,7 @@ class ActionResolver:
                 if broken_out and getattr(grapple.initiator, "constricted_target", None):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
                     grapple.initiator.constricted_target = None
+                    grapple.initiator.remove_condition(Conditions.GRAPPLING)
                     combatant.break_out_of_grapple()
                 else:
                     logger.info(f"{combatant} remains grappled")

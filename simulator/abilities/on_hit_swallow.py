@@ -17,6 +17,7 @@ class OnHitSwallow(OnHit):
     def hit(self, attacker, attack, target):
         logger.info(f"{target} is swallowed")
         target.remove_all_conditions_of_type(Conditions.GRAPPLED)
+        attacker.remove_condition(Conditions.GRAPPLING)
         target.apply_condition(ConditionWithoutDC(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))
         attacker.swallowed_target = target
         attacker.constricted_target = None
