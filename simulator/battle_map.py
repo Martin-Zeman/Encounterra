@@ -826,11 +826,8 @@ class Map:
         :param combatant2:
         :return: distance between two combatants in number of hops, None if one of the combatants is dead
         """
-        try:
-            coords1 = self.combatant_coordinate_cache[combatant1].get()
-            coords2 = self.combatant_coordinate_cache[combatant2].get()
-        except KeyError:
-            print("FIXME")
+        coords1 = self.combatant_coordinate_cache[combatant1].get()
+        coords2 = self.combatant_coordinate_cache[combatant2].get()
         try:
             dist_mat = distance_matrix(coords1, coords2)
             min_dist_index = np.argmin(dist_mat)  # find the index closest distance between the two sets of points

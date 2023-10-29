@@ -61,10 +61,13 @@ class GiantToad(Combatant):
             if self.swallowed_target.is_alive():
                 battle_map = Map.get()
                 battle_map.effect_tracker.remove_effect_by_type(self.swallowed_target, EffectType.DIGESTION)
-                free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
-                                                              None,
-                                                              inflate_to_size=self.swallowed_target.size,
-                                                              rng=1, combatant=self.swallowed_target)
+                try:
+                    free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
+                                                                  None,
+                                                                  inflate_to_size=self.swallowed_target.size,
+                                                                  rng=1, combatant=self.swallowed_target)
+                except TypeError:
+                    print("FIXME")
                 self.swallowed_target = None
                 if not free_coords:
                     logger.error("No space around the dead Giant Toad to spit out the swallowed combatant")
