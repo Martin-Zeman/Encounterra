@@ -53,9 +53,9 @@ class RoundManager:
         return True if len(self.teams.get_surviving_teams()) == 1 else False
 
     def reset(self, combatant_initial_positions):
+        self.effect_tracker.reset()
         for combatant in self.combatants:
             reset_resources(combatant)
-        self.effect_tracker.reset()
         Map.get().reset(combatant_initial_positions)
 
 
