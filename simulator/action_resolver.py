@@ -275,13 +275,13 @@ class ActionResolver:
         final_modifier = reconcile_roll_types(types)
 
         if final_modifier is RollType.STRAIGHT:
-            logger.info(f"{caster} rolls for {spell}", extra={"team": self.teams.get_team(caster)})
+            logger.info(f"{caster} rolls for {spell.shorthand_str()}", extra={"team": self.teams.get_team(caster)})
             rolled = random.randint(1, 20)
         elif final_modifier is final_modifier.ADVANTAGE:
-            logger.info(f"{caster} rolls for {spell} at advantage", extra={"team": self.teams.get_team(caster)})
+            logger.info(f"{caster} rolls for {spell.shorthand_str()} at advantage", extra={"team": self.teams.get_team(caster)})
             rolled = max(random.randint(1, 20), random.randint(1, 20))
         else:
-            logger.info(f"{caster} rolls for {spell} at disadvantage", extra={"team": self.teams.get_team(caster)})
+            logger.info(f"{caster} rolls for {spell.shorthand_str()} at disadvantage", extra={"team": self.teams.get_team(caster)})
             rolled = min(random.randint(1, 20), random.randint(1, 20))
 
         multiplier = 1
@@ -293,13 +293,13 @@ class ActionResolver:
 
         if rolled + spell.factory.to_hit >= target.ac:
             dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
-            logger.info(f"{spell} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
+            logger.info(f"{spell.shorthand_str()} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
             target.receive_dmg(dmg, spell.factory.dmg_type)
             Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid
             return ActionResult.DMG
         else:
-            logger.info(f"{spell} misses {target}", extra={"team": self.teams.get_team(caster)})
+            logger.info(f"{spell.shorthand_str()} misses {target}", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
 
 
@@ -557,10 +557,10 @@ class ActionResolver:
             combatant.movement = 0  # This can be caused by difficult terrain which is ok, but we must avoid endless looping
             return None
         elif combatant.has_action:
-            logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
+            logger.error(f"Action {action} by {combatant} is not feasible. Taking the Dodge action!")
             df = DodgeFactory(combatant)
             return df.create()
-        logger.error(f"Action {action} by {combatant} is not feasible. This should not happen!")
+        logger.error(f"Action {action} by {combatant} is not feasible")
         return None
 
 

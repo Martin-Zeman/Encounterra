@@ -13,8 +13,8 @@ class Goblin(Combatant):
 
     type = "Goblin"
 
-    def __init__(self, num=1):
-        super().__init__(num, Class.MONSTER.HUMANOID, level=1, hp=7, ac=15, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+    def __init__(self, num_or_name=1):
+        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=1, hp=7, ac=15, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.scimitar_attack = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.shortbow_attack = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=64, crit_range=1)
         self.nimble_disengage = self.add_ability(BonusAction.CUNNING_DISENGAGE)

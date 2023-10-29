@@ -14,8 +14,8 @@ class SaberToothedTiger(Combatant):
 
     type = "Saber-Toothed Tiger"
 
-    def __init__(self, num=1):
-        super().__init__(num, Class.MONSTER.BEAST, level=1, hp=52, ac=12, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=0)
+    def __init__(self, num_or_name=1):
+        super().__init__(num_or_name, Class.MONSTER.BEAST, level=1, hp=52, ac=12, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="1d10", dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)

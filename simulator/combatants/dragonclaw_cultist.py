@@ -12,8 +12,8 @@ class DragonclawCultist(Combatant):
 
     type = "Dragonclaw"
 
-    def __init__(self, num=1):
-        super().__init__(num, Class.MONSTER.HUMANOID, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+    def __init__(self, num_or_name=1):
+        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=5, hp=16, ac=14, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Passive.PACK_TACTICS)
