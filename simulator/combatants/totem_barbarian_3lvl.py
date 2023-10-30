@@ -14,36 +14,30 @@ class TotemBarbarian5Lvl(Combatant):
     type = "Totem Barbarian 5Lvl"
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.BARBARIAN.PATH_OF_THE_TOTEM_WARRIOR, level=5, hp=61, ac=15, init_bonus=1, spell_to_hit=0, speed=40, resistances=set(), dc=15)
-        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
-        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
+        super().__init__(num_or_name, Class.BARBARIAN.PATH_OF_THE_TOTEM_WARRIOR, level=3, hp=35, ac=14, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=13)
+        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
+        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(BonusAction.TOTEM_RAGE)
         self.add_ability(Passive.DANGER_SENSE)
         self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.build_attack_fms()
-        self.saving_throws[SavingThrow.STR] = 7
+        self.saving_throws[SavingThrow.STR] = 5
         self.saving_throws[SavingThrow.DEX] = 1
-        self.saving_throws[SavingThrow.CON] = 7
-        self.saving_throws[SavingThrow.INT] = 0
+        self.saving_throws[SavingThrow.CON] = 5
+        self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 0
         self.saving_throws[SavingThrow.CHA] = 1
-        self.athletics = 6
+        self.athletics = 5
         self.acrobatics = 1
         self.passive_perception = 10
 
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_state('1')  # attacked with melee
-        self.attack_fsm.add_state('2')  # attacked with melee recklessly
-        self.attack_fsm.add_state('3')  # attacked with javelin
-        self.attack_fsm.add_transition(str(self.axe[1]), '0', '1')  # Melee
-        self.attack_fsm.add_transition(str(self.axe[1]), '1', 'nop')  # Melee
-        self.attack_fsm.add_transition(str(self.axe_recklessly[1]), '0', '2')
-        self.attack_fsm.add_transition(str(self.axe_recklessly[1]), '2', 'nop')
-        self.attack_fsm.add_transition(str(self.javelin_attack[1]), '0', '3')
-        self.attack_fsm.add_transition(str(self.javelin_attack[1]), '3', 'nop')
+        self.attack_fsm.add_transition(str(self.axe[1]), '0', 'nop')  # Melee
+        self.attack_fsm.add_transition(str(self.axe_recklessly[1]), '0', 'nop')
+        self.attack_fsm.add_transition(str(self.javelin_attack[1]), '0', 'nop')
 
     def export_resources(self):
         return {

@@ -206,6 +206,9 @@ class DamageType(Enum):
     Force = 10
     Psychic = 11
     Thunder = 12
+    BludgeoningMagical = 13
+    SlashingMagical = 14
+    PiercingMagical = 15
 
     def __str__(self):
         return self.name

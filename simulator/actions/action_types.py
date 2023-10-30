@@ -33,6 +33,8 @@ class Action(Enum):
     SHOCKING_GRASP = auto()
     TWINNED_SHOCKING_GRASP = auto()
     MAGIC_MISSILE = auto()
+    GRAPPLE_ATTACK = auto()
+    VAMPIRIC_BITE = auto()
 
 
 class BonusAction(Enum):
