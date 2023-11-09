@@ -25,6 +25,9 @@ class PounceFactory(DirectThreatFactory):
     def __str__(self):
         return "PounceFactory"
 
+    def get_ability_name(self):
+        return "Pounce"
+
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:

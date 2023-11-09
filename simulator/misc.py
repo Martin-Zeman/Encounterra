@@ -10,11 +10,13 @@ logger = logging.getLogger("Encounterra")
 
 ROUND_HORIZON = 3
 
+
 class Artificer(Enum):
     ALCHEMIST = auto()
     ARMORER = auto()
     ARTILLERIST = auto()
     BATTLE_SMITH = auto()
+
 
 class Barbarian(Enum):
     PATH_OF_THE_ANCESTRAL_GUARDIAN = auto()
@@ -25,6 +27,7 @@ class Barbarian(Enum):
     PATH_OF_THE_ZEALOT = auto()
     PATH_OF_WILD_MAGIC = auto()
 
+
 class Bard(Enum):
     COLLEGE_OF_CREATION = auto()
     COLLEGE_OF_ELOQUENCE = auto()
@@ -34,6 +37,7 @@ class Bard(Enum):
     COLLEGE_OF_SWORDS = auto()
     COLLEGE_OF_VALOR = auto()
     COLLEGE_OF_WHISPERS = auto()
+
 
 class Cleric(Enum):
     ARCANA_DOMAIN = auto()
@@ -51,6 +55,7 @@ class Cleric(Enum):
     TWILIGHT_DOMAIN = auto()
     WAR_DOMAIN = auto()
 
+
 class Druid(Enum):
     CIRCLE_OF_DREAMS = auto()
     CIRCLE_OF_SPORES = auto()
@@ -59,6 +64,7 @@ class Druid(Enum):
     CIRCLE_OF_LAND = auto()
     CIRCLE_OF_MOON = auto()
     CIRCLE_OF_SHEPHERD = auto()
+
 
 class Fighter(Enum):
     ARCANE_ARCHER = auto()
@@ -71,6 +77,7 @@ class Fighter(Enum):
     SAMURAI = auto()
     PURPLE_DRAGON_KNIGHT = auto()
 
+
 class Paladin(Enum):
     OATH_OF_CONQUEST = auto()
     OATH_OF_DEVOTION = auto()
@@ -82,6 +89,7 @@ class Paladin(Enum):
     OATH_OF_VENGEANCE = auto()
     OATHBREAKER = auto()
 
+
 class Ranger(Enum):
     BEAST_MASTER = auto()
     DRAKEWARDEN = auto()
@@ -91,6 +99,7 @@ class Ranger(Enum):
     HUNTER = auto()
     MONSTER_SLAYER = auto()
     SWARMKEEPER = auto()
+
 
 class Rogue(Enum):
     ARCANE_TRICKSTER = auto()
@@ -102,6 +111,7 @@ class Rogue(Enum):
     SOULKNIFE = auto()
     SWASHBUCKLER = auto()
     THIEF = auto()
+
 
 class Monk(Enum):
     WAY_OF_MERCY = auto()
@@ -115,6 +125,7 @@ class Monk(Enum):
     WAY_OF_THE_OPEN_HAND = auto()
     WAY_OF_THE_SUN_SOUL = auto()
 
+
 class Sorcerer(Enum):
     ABERRANT_MIND = auto()
     CLOCKWORK_SOUL = auto()
@@ -123,6 +134,7 @@ class Sorcerer(Enum):
     SHADOW_MAGIC = auto()
     STORM_SORCERY = auto()
     WILD_MAGIC = auto()
+
 
 class Warlock(Enum):
     THE_ARCHFEY = auto()
@@ -134,6 +146,7 @@ class Warlock(Enum):
     THE_HEXBLADE = auto()
     THE_UNDEAD = auto()
     THE_UNDYING = auto()
+
 
 class Wizard(Enum):
     BLADESINGER = auto()
@@ -150,6 +163,7 @@ class Wizard(Enum):
     TRANSMUTATION = auto()
     WAR_MAGIC = auto()
 
+
 class Monster(Flag):
     HUMANOID = auto()
     GIANT = auto()
@@ -162,6 +176,7 @@ class Monster(Flag):
     ABERRATION = auto()
     FEY = auto()
     OOZE = auto()
+
 
 class Class:
     ARTIFICER = Artificer
@@ -179,6 +194,7 @@ class Class:
     WIZARD = Wizard
     MONSTER = Monster
 
+
 class SavingThrow(Enum):
     STR = 1
     DEX = 2
@@ -186,6 +202,7 @@ class SavingThrow(Enum):
     INT = 4
     WIS = 5
     CHA = 6
+
 
 class SkillCheck(Enum):
     ATHLETICS = 1

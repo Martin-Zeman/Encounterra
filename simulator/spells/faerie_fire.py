@@ -44,6 +44,11 @@ class FaerieFireFactory(ThreatModifierFactory):
         """
         return "FaerieFireFactory"
 
+
+    def get_ability_name(self):
+        return "Faerie Fire"
+
+
     def get_quickened_kwargs(self):
         return {'combatant': self.combatant}
 

@@ -27,6 +27,11 @@ class RageFactory(ThreatModifierFactory):
         """
         return "RageFactory"
 
+
+    def get_ability_name(self):
+        return "Rage"
+
+
     @staticmethod
     def get_rage_bonus(level):
         match level:

@@ -41,6 +41,10 @@ class ShockingGraspFactory(DirectThreatFactory):
         return "FireboltFactory"
 
 
+    def get_ability_name(self):
+        return "Shocking Grasp"
+
+
     def get_twinned_kwargs(self):
         return {'to_hit': self.to_hit, 'caster': self.combatant}
 

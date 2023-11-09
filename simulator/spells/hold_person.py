@@ -41,6 +41,10 @@ class HoldPersonFactory(ThreatModifierFactory):
         return "HoldPersonFactory"
 
 
+    def get_ability_name(self):
+        return "Hold Person"
+
+
     def get_twinned_kwargs(self):
         return {'dc': self.dc, 'caster': self.combatant}
 

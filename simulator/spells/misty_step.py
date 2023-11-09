@@ -29,6 +29,10 @@ class MistyStepFactory(Factory):
         self.combatant = caster
 
 
+    def get_ability_name(self):
+        return "Misty Step"
+
+
     def __str__(self):
         """
         Important for FSM building

@@ -20,6 +20,9 @@ class RangedAttackFactory(AttackFactory):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg)
         self.flags |= FactoryFlags.IS_RANGED
 
+    def get_ability_name(self):
+        return "Ranged Attack"
+
     def create(self, target):
         return RangedAttack(target, self)
 

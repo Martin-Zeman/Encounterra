@@ -33,6 +33,11 @@ class TotemRageFactory(ThreatModifierFactory):
         """
         return "TotemRageFactory"
 
+
+    def get_ability_name(self):
+        return "Totem Rage"
+
+
     def create(self, target):
         # Doesn't make much sense here
         return TotemRage(target, self)

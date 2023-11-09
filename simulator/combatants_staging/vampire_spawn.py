@@ -1,9 +1,9 @@
-from ..actions.action_types import Action, Reaction, Passive
-from ..combatant import Combatant
-from ..misc import DamageType, SavingThrow, Class
+from simulator.actions.action_types import Action, Reaction, Passive
+from simulator.combatant import Combatant
+from simulator.misc import DamageType, SavingThrow, Class
 import logging
 
-from ..utils.state_machine_template import StateMachineTemplate
+from simulator.utils.state_machine_template import StateMachineTemplate
 
 logger = logging.getLogger("Encounterra")
 

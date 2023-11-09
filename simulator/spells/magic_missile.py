@@ -39,6 +39,11 @@ class MagicMissileFactory(DirectThreatFactory):
         """
         return "MagicMissileFactory"
 
+
+    def get_ability_name(self):
+        return "Magic Missile"
+
+
     def get_quickened_kwargs(self):
         return {'caster': self.combatant}
 

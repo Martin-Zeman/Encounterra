@@ -40,6 +40,11 @@ class SpikeGrowthFactory(DirectThreatFactory):
         """
         return "SpikeGrowthFactory"
 
+
+    def get_ability_name(self):
+        return "Spike Growth"
+
+
     def find_best_args(self, combatant):
         # TODO maybe find a smarter placement for this
         coord, _ = Map.get().find_best_placement_harmful_circular(combatant, SpikeGrowthFactory.range, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target], self)

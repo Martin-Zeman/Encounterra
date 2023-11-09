@@ -18,6 +18,10 @@ class UncannyDodgeFactory(Factory):
         """
         return "UncannyDodgeFactory"
 
+
+    def get_ability_name(self):
+        return "Uncanny Dodge"
+
     def create(self, attack):
         return UncannyDodge(self, attack)
 

@@ -27,6 +27,9 @@ class WebFactory(DirectThreatFactory, RechargeFactory):
     def __str__(self):
         return "WebFactory"
 
+    def get_ability_name(self):
+        return "Web"
+
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:

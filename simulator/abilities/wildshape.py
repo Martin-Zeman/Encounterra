@@ -27,6 +27,11 @@ class WildshapeFactory(TransformerFactory):
         """
         return "WildshapeFactory"
 
+
+    def get_ability_name(self):
+        return "Wildshape"
+
+
     @staticmethod
     def get_wildshape_uses(level):
         match level:

@@ -39,6 +39,11 @@ class ScorchingRayFactory(DirectThreatFactory):
         """
         return "ScorchingRayFactory"
 
+
+    def get_ability_name(self):
+        return "Scorching Ray"
+
+
     def get_quickened_kwargs(self):
         return {'to_hit': self.to_hit, 'caster': self.combatant}
 

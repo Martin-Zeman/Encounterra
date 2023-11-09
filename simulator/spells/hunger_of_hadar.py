@@ -42,6 +42,11 @@ class HungerOfHadarFactory(DirectThreatFactory):
         """
         return "HungerOfHadarFactory"
 
+
+    def get_ability_name(self):
+        return "Hunger of Hadar"
+
+
     def find_best_args(self, combatant):
         # TODO Deprecated
         battle_map = Map.get()

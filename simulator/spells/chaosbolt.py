@@ -43,6 +43,11 @@ class ChaosboltFactory(DirectThreatFactory):
         """
         return "ChaosboltFactory"
 
+
+    def get_ability_name(self):
+        return "Chaosbolt"
+
+
     @staticmethod
     def get_sorted_chain(potential_targets, threat_calc_func):
         battle_map = Map.get()

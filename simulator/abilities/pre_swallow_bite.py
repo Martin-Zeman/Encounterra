@@ -15,6 +15,10 @@ class PreSwallowBiteFactory(MeleeAttackFactory):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg)
         self.flags |= FactoryFlags.IS_MELEE
 
+
+    def get_ability_name(self):
+        return "Bite with grapple"
+
     def create(self, target):
         if self.combatant.constricted_target is None or (self.combatant.constricted_target is target and target.is_alive()):
             return PreSwallowBite(target, self)

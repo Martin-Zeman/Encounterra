@@ -20,6 +20,9 @@ class MeleeAttackFactory(AttackFactory):
         if finesse:
             self.flags |= FactoryFlags.IS_FINESSE
 
+    def get_ability_name(self):
+        return "Melee Attack"
+
     def create(self, target):
         return MeleeAttack(target, self)
 

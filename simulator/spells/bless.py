@@ -32,6 +32,11 @@ class BlessFactory(ThreatModifierFactory):
         """
         return "BlessFactory"
 
+
+    def get_ability_name(self):
+        return "Bless"
+
+
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
         if swallower:

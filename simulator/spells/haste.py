@@ -39,6 +39,11 @@ class HasteFactory(ThreatModifierFactory):
         """
         return "HasteFactory"
 
+
+    def get_ability_name(self):
+        return "Haste"
+
+
     def get_twinned_kwargs(self):
         return {'caster': self.combatant}
 

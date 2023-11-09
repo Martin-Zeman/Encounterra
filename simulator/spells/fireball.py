@@ -40,6 +40,11 @@ class FireballFactory(DirectThreatFactory):
         """
         return "FireballFactory"
 
+
+    def get_ability_name(self):
+        return "Fireball"
+
+
     def get_twinned_kwargs(self):
         return {'dc': self.dc, 'caster': self.combatant, 'has_spell_sculpting': self.has_spell_sculpting}
 

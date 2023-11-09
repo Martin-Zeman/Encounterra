@@ -37,6 +37,11 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         """
         return "CloudOfDaggersFactory"
 
+
+    def get_ability_name(self):
+        return "Cloud of Daggers"
+
+
     def find_best_args(self, combatant):
         # TODO maybe find a smarter placement for this
         coord, _, _ = Map.get().find_best_placement_harmful_square(self.combatant, CloudOfDaggersFactory.range, 1)
