@@ -12,170 +12,170 @@ ROUND_HORIZON = 3
 
 
 class Artificer(Enum):
-    ALCHEMIST = auto()
-    ARMORER = auto()
-    ARTILLERIST = auto()
-    BATTLE_SMITH = auto()
+    ALCHEMIST = "Alchemist"
+    ARMORER = "Armorer"
+    ARTILLERIST = "Artillerist"
+    BATTLE_SMITH = "Battlesmith"
 
 
 class Barbarian(Enum):
-    PATH_OF_THE_ANCESTRAL_GUARDIAN = auto()
-    PATH_OF_THE_BEAST = auto()
-    PATH_OF_THE_BERSERKER = auto()
-    PATH_OF_THE_STORM_HERALD = auto()
-    PATH_OF_THE_TOTEM_WARRIOR = auto()
-    PATH_OF_THE_ZEALOT = auto()
-    PATH_OF_WILD_MAGIC = auto()
+    PATH_OF_THE_ANCESTRAL_GUARDIAN = "Path of the Ancestral Guardian"
+    PATH_OF_THE_BEAST = "Path of the Beast"
+    PATH_OF_THE_BERSERKER = "Path of the Berserker"
+    PATH_OF_THE_STORM_HERALD = "Path of the Storm Herald"
+    PATH_OF_THE_TOTEM_WARRIOR = "Path of the Totem Warrior"
+    PATH_OF_THE_ZEALOT = "Path of the Zealot"
+    PATH_OF_WILD_MAGIC = "Path of the Wild Magic"
 
 
 class Bard(Enum):
-    COLLEGE_OF_CREATION = auto()
-    COLLEGE_OF_ELOQUENCE = auto()
-    COLLEGE_OF_GLAMOUR = auto()
-    COLLEGE_OF_LORE = auto()
-    COLLEGE_OF_SPIRITS = auto()
-    COLLEGE_OF_SWORDS = auto()
-    COLLEGE_OF_VALOR = auto()
-    COLLEGE_OF_WHISPERS = auto()
+    COLLEGE_OF_CREATION = "College of "
+    COLLEGE_OF_ELOQUENCE = "College of Eloquence"
+    COLLEGE_OF_GLAMOUR = "College of Glamour"
+    COLLEGE_OF_LORE = "College of Lore"
+    COLLEGE_OF_SPIRITS = "College of Spirits"
+    COLLEGE_OF_SWORDS = "College of Swords"
+    COLLEGE_OF_VALOR = "College of Valor"
+    COLLEGE_OF_WHISPERS = "College of Whispers"
 
 
 class Cleric(Enum):
-    ARCANA_DOMAIN = auto()
-    DEATH_DOMAIN = auto()
-    FORGE_DOMAIN = auto()
-    GRAVE_DOMAIN = auto()
-    KNOWLEDGE_DOMAIN = auto()
-    LIFE_DOMAIN = auto()
-    LIGHT_DOMAIN = auto()
-    NATURE_DOMAIN = auto()
-    ORDER_DOMAIN = auto()
-    PEACE_DOMAIN = auto()
-    TEMPEST_DOMAIN = auto()
-    TRICKERY_DOMAIN = auto()
-    TWILIGHT_DOMAIN = auto()
-    WAR_DOMAIN = auto()
+    ARCANA_DOMAIN = "Arcana Domain"
+    DEATH_DOMAIN = "Death Domain"
+    FORGE_DOMAIN = "Forge Domain"
+    GRAVE_DOMAIN = "Grave Domain"
+    KNOWLEDGE_DOMAIN = "Knowledge Domain"
+    LIFE_DOMAIN = "Life Domain"
+    LIGHT_DOMAIN = "Light Domain"
+    NATURE_DOMAIN = "Nature Domain"
+    ORDER_DOMAIN = "Order Domain"
+    PEACE_DOMAIN = "Peace Domain"
+    TEMPEST_DOMAIN = "Tempest Domain"
+    TRICKERY_DOMAIN = "Trickery Domain"
+    TWILIGHT_DOMAIN = "Twilight Domain"
+    WAR_DOMAIN = "War Domain"
 
 
 class Druid(Enum):
-    CIRCLE_OF_DREAMS = auto()
-    CIRCLE_OF_SPORES = auto()
-    CIRCLE_OF_STARS = auto()
-    CIRCLE_OF_WILDFIRE = auto()
-    CIRCLE_OF_LAND = auto()
-    CIRCLE_OF_MOON = auto()
-    CIRCLE_OF_SHEPHERD = auto()
+    CIRCLE_OF_DREAMS = "Circle of Dreams"
+    CIRCLE_OF_SPORES = "Circle of Spores"
+    CIRCLE_OF_STARS = "Circle of Stars"
+    CIRCLE_OF_WILDFIRE = "Circle of Wildfire"
+    CIRCLE_OF_LAND = "Circle of Land"
+    CIRCLE_OF_MOON = "Circle of Moon"
+    CIRCLE_OF_SHEPHERD = "Circle of Shepherd"
 
 
 class Fighter(Enum):
-    ARCANE_ARCHER = auto()
-    BATTLE_MASTER = auto()
-    CAVALIER = auto()
-    ECHO_KNIGHT = auto()
-    ELDRITCH_KNIGHT = auto()
-    PSI_WARRIOR = auto()
-    RUNE_KNIGHT = auto()
-    SAMURAI = auto()
-    PURPLE_DRAGON_KNIGHT = auto()
+    ARCANE_ARCHER = "Arcane Archer"
+    BATTLE_MASTER = "Battlemaster"
+    CAVALIER = "Cavalier"
+    ECHO_KNIGHT = "Echo Knight"
+    ELDRITCH_KNIGHT = "Eldritch Knight"
+    PSI_WARRIOR = "Psi Warrior"
+    RUNE_KNIGHT = "Rune Knight"
+    SAMURAI = "Samurai"
+    PURPLE_DRAGON_KNIGHT = "Purple Dragon Knight"
 
 
 class Paladin(Enum):
-    OATH_OF_CONQUEST = auto()
-    OATH_OF_DEVOTION = auto()
-    OATH_OF_GLORY = auto()
-    OATH_OF_REDEMPTION = auto()
-    OATH_OF_ANCIENTS = auto()
-    OATH_OF_CROWN = auto()
-    OATH_OF_WATCHERS = auto()
-    OATH_OF_VENGEANCE = auto()
-    OATHBREAKER = auto()
+    OATH_OF_CONQUEST = "Oath of Conquest"
+    OATH_OF_DEVOTION = "Oath of Devotion"
+    OATH_OF_GLORY = "Oath of Glory"
+    OATH_OF_REDEMPTION = "Oath of Redemption"
+    OATH_OF_ANCIENTS = "Oath of Ancients"
+    OATH_OF_CROWN = "Oath of Crown"
+    OATH_OF_WATCHERS = "Oath of Watchers"
+    OATH_OF_VENGEANCE = "Oath of Vengeance"
+    OATHBREAKER = "Oathbreaker"
 
 
 class Ranger(Enum):
-    BEAST_MASTER = auto()
-    DRAKEWARDEN = auto()
-    FEY_WANDERER = auto()
-    GLOOM_STALKER = auto()
-    HORIZON_WALKER = auto()
-    HUNTER = auto()
-    MONSTER_SLAYER = auto()
-    SWARMKEEPER = auto()
+    BEAST_MASTER = "Beastmaster"
+    DRAKEWARDEN = "Drakewarden"
+    FEY_WANDERER = "Fey Wanderer"
+    GLOOM_STALKER = "Gloomstalker"
+    HORIZON_WALKER = "Horizon Walker"
+    HUNTER = "Hunter"
+    MONSTER_SLAYER = "Monster Slayer"
+    SWARMKEEPER = "Swarmkeeper"
 
 
 class Rogue(Enum):
-    ARCANE_TRICKSTER = auto()
-    ASSASSIN = auto()
-    INQUISITIVE = auto()
-    PHANTOM = auto()
-    MASTERMIND = auto()
-    SCOUT = auto()
-    SOULKNIFE = auto()
-    SWASHBUCKLER = auto()
-    THIEF = auto()
+    ARCANE_TRICKSTER = "Arcane Trickster"
+    ASSASSIN = "Assassin"
+    INQUISITIVE = "Inquisitive"
+    PHANTOM = "Phantom"
+    MASTERMIND = "Mastermind"
+    SCOUT = "Scout"
+    SOULKNIFE = "Soulknife"
+    SWASHBUCKLER = "Swashbuckler"
+    THIEF = "Thief"
 
 
 class Monk(Enum):
-    WAY_OF_MERCY = auto()
-    WAY_OF_SHADOW = auto()
-    WAY_OF_THE_ASCENDANT_DRAGON = auto()
-    WAY_OF_ASTRAL_SELF = auto()
-    WAY_OF_DRUNKEN_MASTER = auto()
-    WAY_OF_THE_FOUR_ELEMENTS = auto()
-    WAY_OF_KENSEI = auto()
-    WAY_OF_THE_LONG_DEATH = auto()
-    WAY_OF_THE_OPEN_HAND = auto()
-    WAY_OF_THE_SUN_SOUL = auto()
+    WAY_OF_MERCY = "Way of Mercy"
+    WAY_OF_SHADOW = "Way of Shadow"
+    WAY_OF_THE_ASCENDANT_DRAGON = "Way of the Ascendant Dragon"
+    WAY_OF_ASTRAL_SELF = "Way of Astral Self"
+    WAY_OF_DRUNKEN_MASTER = "Way of the Drunken Master"
+    WAY_OF_THE_FOUR_ELEMENTS = "Way of the Four Elements"
+    WAY_OF_KENSEI = "Way of the Kensei"
+    WAY_OF_THE_LONG_DEATH = "Way of the Long Death"
+    WAY_OF_THE_OPEN_HAND = "Way of the Open Hand"
+    WAY_OF_THE_SUN_SOUL = "Way of the Sun Soul"
 
 
 class Sorcerer(Enum):
-    ABERRANT_MIND = auto()
-    CLOCKWORK_SOUL = auto()
-    DIVINE_SOUL = auto()
-    DRACONIC_BLOODLINE = auto()
-    SHADOW_MAGIC = auto()
-    STORM_SORCERY = auto()
-    WILD_MAGIC = auto()
+    ABERRANT_MIND = "Aberrant Mind"
+    CLOCKWORK_SOUL = "Clockwork Soul"
+    DIVINE_SOUL = "Divine Soul"
+    DRACONIC_BLOODLINE = "Draconic Bloodline"
+    SHADOW_MAGIC = "Shadow Magic"
+    STORM_SORCERY = "Storm Sorcery"
+    WILD_MAGIC = "Wild Magic"
 
 
 class Warlock(Enum):
-    THE_ARCHFEY = auto()
-    THE_CELESTIAL = auto()
-    THE_FATHOMLESS = auto()
-    THE_FIEND = auto()
-    THE_GENIE = auto()
-    THE_GREAT_OLD_ONE = auto()
-    THE_HEXBLADE = auto()
-    THE_UNDEAD = auto()
-    THE_UNDYING = auto()
+    THE_ARCHFEY = "The Archfey"
+    THE_CELESTIAL = "The Celestial"
+    THE_FATHOMLESS = "The Fathomless"
+    THE_FIEND = "The Fiend"
+    THE_GENIE = "The Genie"
+    THE_GREAT_OLD_ONE = "The Great Old one"
+    THE_HEXBLADE = "The Hexblade"
+    THE_UNDEAD = "The Undead"
+    THE_UNDYING = "The Undying"
 
 
 class Wizard(Enum):
-    BLADESINGER = auto()
-    CHRONURGY = auto()
-    GRAVITURGY = auto()
-    ORDER_OF_SCRIBES = auto()
-    ABJURATION = auto()
-    CONJURATION = auto()
-    DIVINATION = auto()
-    ENCHANTMENT = auto()
-    EVOCATION = auto()
-    ILLUSION = auto()
-    NECROMANCY = auto()
-    TRANSMUTATION = auto()
-    WAR_MAGIC = auto()
+    BLADESINGER = "Bladesinger"
+    CHRONURGY = "Chronurgy"
+    GRAVITURGY = "Graviturgy"
+    ORDER_OF_SCRIBES = "Order of Scribes"
+    ABJURATION = "Abjuration"
+    CONJURATION = "Conjuration"
+    DIVINATION = "Divination"
+    ENCHANTMENT = "Enchantment"
+    EVOCATION = "Evocation"
+    ILLUSION = "Illusion"
+    NECROMANCY = "Necromancy"
+    TRANSMUTATION = "Transmutation"
+    WAR_MAGIC = "War Magic"
 
 
 class Monster(Flag):
-    HUMANOID = auto()
-    GIANT = auto()
-    MONSTROSITY = auto()
-    BEAST = auto()
-    UNDEAD = auto()
-    DRAGON = auto()
-    CONSTRUCT = auto()
-    ELEMENTAL = auto()
-    ABERRATION = auto()
-    FEY = auto()
-    OOZE = auto()
+    HUMANOID = "Humanoid"
+    GIANT = "Giant"
+    MONSTROSITY = "Monstrosity"
+    BEAST = "Beast"
+    UNDEAD = "Undead"
+    DRAGON = "Dragon"
+    CONSTRUCT = "Construct"
+    ELEMENTAL = "Elemental"
+    ABERRATION = "Aberration"
+    FEY = "Fey"
+    OOZE = "Ooze"
 
 
 class Class:

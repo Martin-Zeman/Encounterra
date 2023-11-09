@@ -11,6 +11,7 @@ from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from simulator.teams import Teams
 import time
 
@@ -18,7 +19,7 @@ if __name__ == '__main__':
     CustomLogger(logging.INFO)
     session = Session()
     session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
-    session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.RED)
+    session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)

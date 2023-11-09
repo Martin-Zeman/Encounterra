@@ -94,7 +94,6 @@ class Combatant(ProtoCombatant):
         self.saving_throws_roll_type_mod = {SavingThrow.STR: set(), SavingThrow.DEX: set(), SavingThrow.CON: set(), SavingThrow.INT: set(), SavingThrow.WIS: set(), SavingThrow.CHA: set()}
         self.to_hit_flat_mod = [0]
         self.to_hit_dice_mod = []
-        self.action_types_added = []
         self.shortest_paths_cache = None
         self.wears_metal = False
         self.is_humanoid = True
@@ -138,7 +137,6 @@ class Combatant(ProtoCombatant):
         :return: The factory that has been added or None if case of passive actions factories, AoO or errors
         """
         # TODO Consider removing the kwargs and derive everything from the level
-        self.action_types_added.append(action_type)
         if isinstance(action_type, Passive):
             match action_type:
                 case Passive.METAMAGIC:
