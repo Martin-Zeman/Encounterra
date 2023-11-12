@@ -72,7 +72,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
 class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThreat, AoEThreat):
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
+        super().__init__(actoid_flags=ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         AoeSquareEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_BOX[CloudOfDaggersFactory.target])
         self.factory = factory

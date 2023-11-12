@@ -1,6 +1,7 @@
 from enum import Enum, auto
 from abc import ABC, abstractmethod
 
+
 # This class is an optimization which makes the matching of the type faster
 class EffectType(Enum):
     POST_HASTE_LETHARGY = auto()
@@ -20,6 +21,7 @@ class EffectType(Enum):
     HOLD_PERSON = auto()
     FAERIE_FIRE = auto()
     DIGESTION = auto()
+    REGENERATION = auto()
 
 
 class Effect(ABC):

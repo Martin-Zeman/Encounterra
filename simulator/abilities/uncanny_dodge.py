@@ -29,7 +29,7 @@ class UncannyDodgeFactory(Factory):
 class UncannyDodge(Actoid, DirectThreat):
 
     def __init__(self, factory, attack):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self)
         self.factory = factory
         self.attack = attack  # The attack to be mitigated
 

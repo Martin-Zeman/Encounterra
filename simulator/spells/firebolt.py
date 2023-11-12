@@ -112,7 +112,7 @@ class FireboltFactory(DirectThreatFactory):
 
 class Firebolt(Actoid, DirectThreat):
     def __init__(self, target, factory, **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
         self.empowered = kwargs.get("empowered", False)

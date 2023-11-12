@@ -92,7 +92,7 @@ class MagicMissileFactory(DirectThreatFactory):
 class MagicMissile(Actoid, DirectThreat):
 
     def __init__(self, targets, factory, **kwargs):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
         self.targets = targets
         self.factory = factory
         self.empowered = kwargs.get("empowered", False)

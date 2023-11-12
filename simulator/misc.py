@@ -231,6 +231,13 @@ class DamageType(Enum):
         return self.name
 
 
+TO_MAGICAL = {
+    DamageType.Bludgeoning: DamageType.BludgeoningMagical,
+    DamageType.Slashing: DamageType.SlashingMagical,
+    DamageType.Piercing: DamageType.PiercingMagical,
+}
+
+
 class Conditions(Flag):
     NONE = auto()
     BLINDED = auto()

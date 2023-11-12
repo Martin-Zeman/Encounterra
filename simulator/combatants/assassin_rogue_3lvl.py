@@ -45,6 +45,7 @@ class AssassinRogue5Lvl(Combatant):
         self.already_used_sneak_attack_this_turn = False
 
     def on_end_of_turn(self):
+        super().on_end_of_turn()
         self.already_used_sneak_attack_this_turn = False
 
     def prompt_aoo(self, moving_combatant):

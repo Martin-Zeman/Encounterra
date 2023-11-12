@@ -67,7 +67,7 @@ class WebFactory(DirectThreatFactory, RechargeFactory):
 class Web(Actoid, DirectThreat):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
 

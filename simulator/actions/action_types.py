@@ -33,6 +33,7 @@ class Action(Enum):
     SHOCKING_GRASP = auto()
     TWINNED_SHOCKING_GRASP = auto()
     MAGIC_MISSILE = auto()
+    GRAPPLE = auto()
     GRAPPLE_ATTACK = auto()
     VAMPIRIC_BITE = auto()
 
@@ -93,6 +94,8 @@ class HasteAction(Enum):
     HASTE_HIDE = auto()
     HASTE_PRE_SWALLOW_BITE = auto()
     HASTE_BITE_AND_SWALLOW = auto()
+    HASTE_GRAPPLE_ATTACK = auto()
+    HASTE_GRAPPLE = auto()
 
 
 class Passive(Enum):
@@ -107,6 +110,7 @@ class Passive(Enum):
     SNEAK_ATTACK = auto()
     CUNNING_ACTION = auto()
     ASSASSINATE = auto()
+    REGENERATION = auto()
 
 
 class MetaAction(Enum):

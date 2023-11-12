@@ -31,6 +31,7 @@ class Threat(ABC):
         pass
         # self.calculate_threat.cache_clear()
 
+
 class DirectThreat(Threat):
     """
     Direct dmg causing ability, directly healing ability or an ability that directly prevents dmg
@@ -43,8 +44,6 @@ class DirectThreat(Threat):
         The delta in threat when modifiers are applied on this ability.
         """
         return 0
-
-
 
 
 class AttackThreatModifier(Threat):
@@ -109,6 +108,7 @@ class ThreatModifierFactory(ABC, Factory):
         """
         return 0
 
+
 class DirectThreatFactory(ABC, Factory):
 
     def __init__(self):
@@ -136,6 +136,7 @@ class DirectThreatFactory(ABC, Factory):
         """
         return 0
 
+
 class RechargeFactory(ABC, Factory):
 
     def __init__(self, recharge_value):
@@ -147,6 +148,7 @@ class RechargeFactory(ABC, Factory):
         roll = roll_dice([1, 6])
         if roll >= self.recharge_value:
             self.combatant.ammo[self.name] = 1
+
 
 class TransformerFactory(Threat, Factory):
 

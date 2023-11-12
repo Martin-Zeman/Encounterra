@@ -11,7 +11,7 @@ from .actions.flaming_sphere_ram import FlamingSphereRamFactory
 from .battle_map import Map
 from .effects.effect import EffectType
 from .misc import SavingThrow, Conditions, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
-    roll_dice, roll_ability_check, roll_saving_throw
+    roll_dice, roll_ability_check, roll_saving_throw, ConditionWithDC, SkillCheck, PhaseOfTurn, ConditionWithoutDC
 from .feasibility import check_feasibility
 from .resources import use_resources
 from .spells.chaosbolt import ChaosboltFactory
@@ -302,12 +302,12 @@ class ActionResolver:
             logger.info(f"{spell.shorthand_str()} misses {target}", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
 
-
     def resolve_attack(self, attack, attacker):  # TODO remove combatant from attack and have it as a separate parameter
         """
 
         :param attack:
-        :return: True is hits, false if misses or is not attack
+        :param attacker:
+        :return: True if it hits, false if it misses or is not attack
         """
         # TODO Conditions
         target = attack.target
@@ -362,6 +362,48 @@ class ActionResolver:
             target.receive_compound_dmg(total_compound_dmg)
             Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
 
+            return ActionResult.DMG
+        else:
+            logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
+            return ActionResult.MISS
+
+    def resolve_grapple_attack(self, attack, attacker):
+        """
+        A special kind of attack where instead of dealing dmg, the target is auto-grappled on a hit
+        :param attack:
+        :param attacker:
+        :return: True if it hits, false if it misses
+        """
+        target = attack.target
+        assert target
+        if FactoryFlags.IS_MELEE in attack.factory.flags:
+            types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
+        else:
+            types = {self.has_advantage_ranged(attack, attacker, target), self.has_disadvantage_ranged(attack, attacker, target)}
+
+        final_modifier = reconcile_roll_types(types)
+        if final_modifier is RollType.STRAIGHT:
+            logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()}", extra={"team": self.teams.get_team(attacker)})
+            rolled = random.randint(1, 20)
+        elif final_modifier is RollType.ADVANTAGE:
+            logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()} at advantage", extra={"team": self.teams.get_team(attacker)})
+            rolled = max(random.randint(1, 20), random.randint(1, 20))
+        else:
+            logger.info(f"{attacker} attacks {target} with {attack.shorthand_str()} at disadvantage", extra={"team": self.teams.get_team(attacker)})
+            rolled = min(random.randint(1, 20), random.randint(1, 20))
+
+        if rolled == 1:
+            logger.info("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
+            return ActionResult.MISS
+        if rolled + attack.factory.to_hit >= target.ac:
+            if target.has_reaction:
+                reaction = target.prompt_after_hit_reaction(attacker, attack, rolled + attack.factory.to_hit)
+                self.resolve_action(reaction, target)
+        if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
+            logger.info(f"{target} is grappled and restrained")
+            cond = ConditionWithDC(Conditions.GRAPPLED, SkillCheck.ATHLETICS, attack.dc, attacker, PhaseOfTurn.ACTION)
+            target.apply_dc_condition(cond)
+            attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker))
             return ActionResult.DMG
         else:
             logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
@@ -508,6 +550,8 @@ class ActionResolver:
                     combatant.break_out_of_grapple()
                 else:
                     logger.info(f"{combatant} remains grappled")
+            case Action.GRAPPLE_ATTACK:
+                self.resolve_grapple_attack(actoid, combatant)
             case BonusAction.FLAMING_SPHERE_RAM:
                 adj = battle_map.build_flaming_sphere_adjacency_matrix()
                 _, shortest_paths = battle_map.dijkstra(actoid.factory.action_enabler_effect.origin, adj)
