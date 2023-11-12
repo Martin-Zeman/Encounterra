@@ -54,7 +54,7 @@ class MagicMissileFactory(DirectThreatFactory):
         # Range is so big that it doesn't matter
         return combinations_with_replacement([e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 3)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [MagicMissile(t, self) for t in targets]
 

@@ -1,6 +1,7 @@
 import logging
 
 from .grapple_attack import GrappleAttackFactory
+from .vampiric_bite import VampiricBiteFactory
 from ..abilities.bite_and_swallow import BiteAndSwallowFactory
 from ..abilities.pre_swallow_bite import PreSwallowBiteFactory
 from ..abilities.constrict import ConstrictFactory
@@ -75,6 +76,7 @@ TO_FACTORY = {
     Action.MAGIC_MISSILE: MagicMissileFactory,
     Action.FAERIE_FIRE: FaerieFireFactory,
     Action.GRAPPLE_ATTACK: GrappleAttackFactory,
+    Action.VAMPIRIC_BITE: VampiricBiteFactory,
 
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
@@ -138,6 +140,7 @@ TO_HASTED = {
     Action.BITE_AND_SWALLOW: HasteAction.HASTE_BITE_AND_SWALLOW,
     Action.PRE_SWALLOW_BITE: HasteAction.HASTE_PRE_SWALLOW_BITE,
     Action.GRAPPLE_ATTACK: HasteAction.HASTE_GRAPPLE_ATTACK,
-    Action.GRAPPLE: HasteAction.HASTE_GRAPPLE
+    Action.GRAPPLE: HasteAction.HASTE_GRAPPLE,
+    Action.VAMPIRIC_BITE: HasteAction.HASTE_VAMPIRIC_BITE
 }
 

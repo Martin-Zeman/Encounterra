@@ -57,7 +57,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         coord, _, _ = Map.get().find_best_placement_harmful_square(combatant, FaerieFireFactory.range, SpellStats.TRANSLATE_BOX[FaerieFireFactory.target])
         return coord[0]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Here there really is no need to iterate over all coords. Just find the best score
         return [FaerieFire(self.find_best_args(self.combatant), self)]
 

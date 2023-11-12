@@ -15,12 +15,18 @@ class VampiricBiteFactory(MeleeAttackFactory):
     def get_ability_name(self):
         return "Vampiric Bite"
 
+    def get_eligible_targets(self):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return [swallower]
+        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+
     def create(self, target):
         if self.combatant.constricted_target is target and target.is_alive() and target.size.value <= Size.MEDIUM.value:
             return VampiricBite(target, self)
         return None
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # if self.combatant.constricted_target is not None and self.combatant.constricted_target.size <= Size.MEDIUM:
         if self.combatant.constricted_target.is_alive():
             return [VampiricBite(self.combatant.constricted_target, self)]

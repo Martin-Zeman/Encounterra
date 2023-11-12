@@ -24,7 +24,7 @@ class DashFactory(Factory):
         """
         return "DashFactory"
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [Dash(self)]
 
     def create(self):

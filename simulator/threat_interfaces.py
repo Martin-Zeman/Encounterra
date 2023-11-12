@@ -18,6 +18,14 @@ class Threat(ABC):
         """
         return 0
 
+    @abstractmethod
+    def create_all(self, previous_action_in_dag=None):
+        return None
+
+    @abstractmethod
+    def create(self, target):
+        return None
+
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         """
         This is here so that we don't have to sort out AttackThreatModifier from other threats with if statements

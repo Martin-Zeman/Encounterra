@@ -53,7 +53,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         ret = combinations(ret, 2)
         return ret
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [TwinnedHaste(t, self) for t in targets]
 

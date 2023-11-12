@@ -44,7 +44,7 @@ class ConstrictFactory(DirectThreatFactory):
         return None
 
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         if self.combatant.constricted_target is not None:
             return [Constrict(self.combatant.constricted_target)]
         targets = self.get_eligible_targets()

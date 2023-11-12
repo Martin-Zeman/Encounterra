@@ -38,7 +38,7 @@ class PounceFactory(DirectThreatFactory):
     def create(self, target):
         return Pounce(target, self)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Pounce(t, self) for t in targets]
 

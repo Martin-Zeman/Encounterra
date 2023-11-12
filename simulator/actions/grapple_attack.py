@@ -37,7 +37,7 @@ class GrappleAttackFactory(Factory):
     def create(self, target):
         return GrappleAttack(target, self)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [GrappleAttack(t, self) for t in targets]
 

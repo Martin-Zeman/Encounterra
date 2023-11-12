@@ -48,7 +48,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
             return []  # Let's not waste a twinned version on this
         return combinations([e for e in enemies if not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [TwinnedFirebolt(t, self) for t in targets]
 

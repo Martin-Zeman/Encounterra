@@ -57,7 +57,7 @@ class HoldPersonFactory(ThreatModifierFactory):
             return []  # Must be able to see
         return [e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [HoldPerson(t, self) for t in targets]
 

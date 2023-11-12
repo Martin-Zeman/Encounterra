@@ -647,7 +647,8 @@ class ActionResolver:
                     combatant.has_reaction = False
                 case EffectType.RAGE | EffectType.TOTEM_RAGE | EffectType.WILDSHAPE | EffectType.DODGE | EffectType.DISENGAGE |\
                      EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
-                    EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | EffectType.DIGESTION:
+                    EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
+                     EffectType.DIGESTION | EffectType.REGENERATION:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error("Unknown effect")

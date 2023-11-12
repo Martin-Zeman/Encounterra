@@ -52,7 +52,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         return "Flaming Sphere"
 
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Getting coords around enemies
         battle_map = Map.get()
         enemies = battle_map.get_enemies(self.combatant)

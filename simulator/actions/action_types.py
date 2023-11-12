@@ -96,6 +96,7 @@ class HasteAction(Enum):
     HASTE_BITE_AND_SWALLOW = auto()
     HASTE_GRAPPLE_ATTACK = auto()
     HASTE_GRAPPLE = auto()
+    HASTE_VAMPIRIC_BITE = auto()
 
 
 class Passive(Enum):

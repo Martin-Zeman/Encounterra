@@ -27,7 +27,7 @@ logger = logging.getLogger("Encounterra")
 
 class Combatant(ProtoCombatant):
 
-    def __init__(self, num_or_name, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
+    def __init__(self, num_or_name, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=set(), immunities=[], vulnerabities=[]):
         if type(num_or_name) is int:
             self.name = type(self).type + " " + str(num_or_name)
         else:
@@ -105,7 +105,7 @@ class Combatant(ProtoCombatant):
         self.is_swallowed = [False, None]
         self.uncanny_dodge_active = False
         self.display_abilities = []
-        self.dmg_types_took_last_round = []
+        self.dmg_types_took_last_round = set()
 
     def __str__(self):
         return self.name
@@ -182,13 +182,17 @@ class Combatant(ProtoCombatant):
         elif isinstance(action_type, Action):
             match action_type:
                 case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE \
-                     | Action.BITE_AND_SWALLOW | Action.GRAPPLE_ATTACK:
+                     | Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
                     factory = TO_FACTORY[action_type]
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.action_factories[-1]
                     self.ammo[just_added[1].name] = just_added[1].ammo
                     self.display_abilities.append(just_added[1].name)
                     return just_added
+                case Action.GRAPPLE_ATTACK:
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    return self.action_factories[-1]
                 case Action.FIREBALL:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, has_spell_sculpting=False)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
@@ -404,6 +408,7 @@ class Combatant(ProtoCombatant):
         if self.temporary_hp < 0:
             self.curr_hp += self.temporary_hp
             self.temporary_hp = 0
+        self.dmg_types_took_last_round.add(dmg_type)
         return dmg
 
     def receive_dmg(self, dmg, dmg_type):

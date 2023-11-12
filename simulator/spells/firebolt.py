@@ -70,7 +70,7 @@ class FireboltFactory(DirectThreatFactory):
             return [swallower]
         return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Firebolt(t, self) for t in targets]
 

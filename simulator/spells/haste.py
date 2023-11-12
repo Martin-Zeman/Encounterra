@@ -60,7 +60,7 @@ class HasteFactory(ThreatModifierFactory):
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Haste(t, self) for t in targets]
 

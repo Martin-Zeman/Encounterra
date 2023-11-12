@@ -31,7 +31,7 @@ class DodgeFactory(ThreatModifierFactory):
         """
         return "DodgeFactory"
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [Dodge(self.combatant, self)]
 
     def create(self):

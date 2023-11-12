@@ -25,7 +25,7 @@ class PreSwallowBiteFactory(MeleeAttackFactory):
         return None
 
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         if self.combatant.constricted_target is not None and self.combatant.constricted_target.is_alive():
             return [PreSwallowBite(self.combatant.constricted_target, self)]
         targets = self.get_eligible_targets()

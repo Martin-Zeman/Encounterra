@@ -67,7 +67,7 @@ class RageFactory(ThreatModifierFactory):
     def get_eligible_targets(self):
         pass # No need due to the TARGETS_SELF flag
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [Rage(self.combatant, self)]
 
     def create(self, target):

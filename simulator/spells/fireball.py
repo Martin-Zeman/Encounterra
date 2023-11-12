@@ -55,7 +55,7 @@ class FireballFactory(DirectThreatFactory):
         coord, _ = Map.get().find_best_placement_harmful_circular(combatant, FireballFactory.range, SpellStats.TRANSLATE_RADIUS[FireballFactory.target], self)
         return coord[0]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Here there really is no need to iterate over all coords. Just find the best score
         return [Fireball(self.find_best_args(self.combatant), self)]
 

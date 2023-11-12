@@ -50,7 +50,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
         coord, _ = Map.get().find_best_placement_harmful_circular(combatant, SpikeGrowthFactory.range, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target], self)
         return coord
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Here there really is no need to iterate over all coords. Just find the best score
         return [SpikeGrowth(self.find_best_args(self.combatant), self)]
 

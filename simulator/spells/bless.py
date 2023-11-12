@@ -43,7 +43,7 @@ class BlessFactory(ThreatModifierFactory):
             return [self.combatant]
         return combinations([a for a in Map.get().get_allies_within_radius(self.combatant, BlessFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)], 3)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Bless(t, self) for t in targets]
 

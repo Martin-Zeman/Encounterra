@@ -49,7 +49,7 @@ class MistyStepFactory(Factory):
         # return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatant),
         #                                                      rng=MistyStepFactory.range)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [MistyStep(t, self) for t in targets]
 

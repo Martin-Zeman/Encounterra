@@ -62,7 +62,7 @@ class WildshapeFactory(TransformerFactory):
                     logger.error("Incorrect character level. No wildshape forms added!")
 
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # TODO Filter out those who cannot fit to the current position by size
         return self.combatant.available_wildshape_forms
 

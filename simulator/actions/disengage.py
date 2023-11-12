@@ -32,7 +32,7 @@ class DisengageFactory(ThreatModifierFactory):
     def get_kwargs(self):
         return {'combatant': self.combatant, 'action_type': self.action_type}
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [Disengage(self.combatant, self)]
 
     def calculate_threat_to_target(self, target, **kwargs):

@@ -36,7 +36,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         return "FlamingSphereRamFactory"
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         battle_map = Map.get()
         enemies = [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
         result = []

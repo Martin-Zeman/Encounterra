@@ -42,7 +42,7 @@ class TotemRageFactory(ThreatModifierFactory):
         # Doesn't make much sense here
         return TotemRage(target, self)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [TotemRage(self.combatant, self)]
 
     def calculate_threat_to_target(self, target, **kwargs):
