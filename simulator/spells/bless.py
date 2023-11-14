@@ -9,8 +9,10 @@ from ..misc import Conditions
 from ..spells.spell import SpellStats
 from ..effects.effect import Effect
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import ThreatModifierFactory
 from itertools import combinations
+
 
 class BlessFactory(ThreatModifierFactory):
     level = 1

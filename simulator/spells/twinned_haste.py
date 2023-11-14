@@ -9,7 +9,8 @@ from ..spells.spell import SpellStats
 from ..effects.effect import Effect, EffectType
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_utils import mean_dmg
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 from functools import reduce, cache
 from ..misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions, Visibility
 from ..spells.haste import HasteFactory

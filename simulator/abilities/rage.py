@@ -7,7 +7,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..actions.action_types import BonusAction
 from ..misc import ROUND_HORIZON
 import sys
-from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 from ..utils.roll_types import ThreatModifierType
 

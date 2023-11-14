@@ -12,7 +12,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import DamageType, avg_roll, roll_spell_dmg, Conditions
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
+from ..threat_interfaces import DirectThreat, AoEThreat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
 class CloudOfDaggersFactory(DirectThreatFactory):

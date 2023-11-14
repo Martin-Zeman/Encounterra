@@ -10,7 +10,8 @@ from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..misc import Visibility, roll_ability_check, Conditions
-from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 
 from ..threat_utils import calc_p_hit

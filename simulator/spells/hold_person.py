@@ -11,7 +11,8 @@ from ..misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC, r
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import get_saving_throw_fail_prob, calculate_threat_in_delta
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 from ..utils.roll_types import RollType, ThreatModifierType
 

@@ -13,7 +13,8 @@ from ..spells.spell import SpellStats
 from ..misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 from ..utils.roll_types import ThreatModifierType, RollType
 

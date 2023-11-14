@@ -15,7 +15,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow, Conditions
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import DirectThreatFactory, AoEThreat, Threat
+from ..threat_interfaces import AoEThreat, Threat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
 from ..threat_utils import mean_dmg_dc_attack

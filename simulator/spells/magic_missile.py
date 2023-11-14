@@ -9,7 +9,8 @@ from ..spells.spell import SpellStats
 from ..misc import DamageType, Conditions, Visibility
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_utils import mean_dmg_auto_hit
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
 from ..utils.roll_types import RollType

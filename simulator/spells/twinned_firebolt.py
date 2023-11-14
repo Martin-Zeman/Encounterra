@@ -8,7 +8,8 @@ from ..misc import DamageType, avg_roll, Conditions, Visibility
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import mean_dmg
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 from itertools import combinations
 import logging
 from ..utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType

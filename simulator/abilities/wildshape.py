@@ -8,7 +8,8 @@ from ..effects.action_enabler_effect import ActionEnablerEffect
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..misc import SavingThrow, Size, Conditions
-from ..threat_interfaces import TransformerFactory, DirectThreat
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import TransformerFactory
 import logging
 
 logger = logging.getLogger("Encounterra")

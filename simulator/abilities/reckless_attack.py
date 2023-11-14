@@ -12,7 +12,8 @@ from ..misc import reconcile_roll_types, Conditions
 from functools import reduce
 from ..misc import avg_roll
 from ..threat_utils import mean_dmg, calculate_threat_in_delta
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 from enum import Enum, auto
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 

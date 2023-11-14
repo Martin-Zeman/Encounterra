@@ -6,8 +6,9 @@ from cachetools.keys import hashkey
 from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..misc import DamageType, SavingThrow, Conditions
-from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..actions.actoid import Actoid, FactoryFlags
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 from ..threat_utils import mean_dmg_dc_attack
 import logging

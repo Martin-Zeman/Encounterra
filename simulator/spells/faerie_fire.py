@@ -11,7 +11,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..actions.action_types import BonusAction
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 from functools import cache
 from ..misc import roll_saving_throw, reconcile_roll_types, SavingThrow, Conditions
 import logging

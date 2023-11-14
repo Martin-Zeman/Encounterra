@@ -10,7 +10,8 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..threat_utils import calculate_threat_in_delta
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 from ..misc import SavingThrow
 import logging
 from ..utils.roll_types import RollType, ThreatModifierType

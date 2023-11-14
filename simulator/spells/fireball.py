@@ -10,7 +10,8 @@ from ..spells.spell import SpellStats
 from ..misc import SavingThrow, DamageType, Conditions
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_utils import mean_dmg_dc_attack
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
 class FireballFactory(DirectThreatFactory):

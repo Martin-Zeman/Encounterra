@@ -1,7 +1,8 @@
 from ..actions.action_types import Reaction
 import logging
-from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import Factory, DirectThreat
+from ..actions.actoid import Actoid
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import Factory
 
 logger = logging.getLogger("Encounterra")
 

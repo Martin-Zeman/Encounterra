@@ -8,7 +8,8 @@ from ..spells.spell import SpellStats
 import logging
 from ..actions.action_types import BonusAction
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_interfaces import Factory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import Factory
 
 logger = logging.getLogger("Encounterra")
 

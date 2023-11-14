@@ -8,7 +8,8 @@ from ..actions.actoid import Actoid, ActoidFlags
 import logging
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..misc import Conditions
-from ..threat_interfaces import Factory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import Factory
 
 logger = logging.getLogger("Encounterra")
 

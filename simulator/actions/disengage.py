@@ -10,7 +10,8 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import Conditions
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 
 logger = logging.getLogger("Encounterra")
