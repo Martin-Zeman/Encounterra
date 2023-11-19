@@ -22,8 +22,11 @@ def use_resources(combatant, action):
     if isinstance(action_type, Action):
         subject.has_action = False
         match action_type:
-            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | Action.BITE_AND_SWALLOW:
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | \
+                 Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
                 subject.ammo[action.factory.name] -= 1
+                subject.attack_fsm.trigger(str(action.factory))
+            case Action.GRAPPLE_ATTACK:
                 subject.attack_fsm.trigger(str(action.factory))
             case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP:
                 pass  # sufficiently tracked by not having an action anymore
