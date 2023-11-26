@@ -174,7 +174,11 @@ class Combatant(ProtoCombatant):
                             raf[1].on_hit = OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), raf[1].dmg_type, raf[1].crit_range)
                     self.display_abilities.append("Sneak Attack")
                 case Passive.REGENERATION:
-                    Map.get().effect_tracker.add(Regeneration(self, kwargs["hp"], kwargs["suppression_dmg_type"]))
+                    try:
+                        Map.get().effect_tracker.add(Regeneration(self, kwargs["hp"], kwargs["suppression_dmg_type"]))
+                    except AttributeError:
+                        pass  # This is ok for the sake of getting all the combatants by the backend
+                    self.display_abilities.append("Regeneration")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
