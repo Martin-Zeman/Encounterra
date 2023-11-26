@@ -23,14 +23,15 @@ class BiteAndSwallowFactory(MeleeAttackFactory):
         return "Bite and swallow"
 
     def create(self, target):
-        if self.combatant.constricted_target is target and target.is_alive() and target.size.value <= Size.MEDIUM.value:
+        grappled_target = self.combatant.get_grappled()
+        if grappled_target is target and target.is_alive() and target.size.value <= Size.MEDIUM.value:
             return BiteAndSwallow(target, self)
         return None
 
     def create_all(self, previous_action_in_dag=None):
-        # if self.combatant.constricted_target is not None and self.combatant.constricted_target.size <= Size.MEDIUM:
-        if self.combatant.constricted_target.is_alive():
-            return [BiteAndSwallow(self.combatant.constricted_target, self)]
+        grappled_target = self.combatant.get_grappled()
+        if grappled_target and grappled_target.is_alive():
+            return [BiteAndSwallow(grappled_target, self)]
         return None
 
 

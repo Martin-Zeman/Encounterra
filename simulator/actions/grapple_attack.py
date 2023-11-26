@@ -36,7 +36,7 @@ class GrappleAttackFactory(DirectThreatFactory):
         swallower = self.combatant.get_swallower()
         if swallower:
             return []
-        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED) and e.get_grappler() is not self.combatant]
 
     def create(self, target):
         return GrappleAttack(target, self)

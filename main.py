@@ -30,6 +30,7 @@ if __name__ == '__main__':
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
     session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
+    session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
     session.add_combatant(VampireSpawn, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.BLUE)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)

@@ -14,9 +14,10 @@ class OnHitHpMaxReduceAndHeal(OnHit):
         self.crit_range = crit_range
         self.name = name
 
-    def hit(self, attacker, attack, target):
+    def hit(self, attacker, attack, target, multiplier):
         dice = parse_dmg_dice(self.dmg_dice)
         dmg = roll_dice(dice)
+        dmg *= multiplier
         target.max_hp_modifier -= dmg
         attacker.heal(dmg)
         logger.info(f"{attacker} heals for {dmg} damage")

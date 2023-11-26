@@ -499,6 +499,15 @@ class Combatant(ProtoCombatant):
                 return cond.initiator
         return None
 
+    def get_grappled(self):
+        for dc_cond in self.dc_conditions:
+            if Conditions.GRAPPLING in dc_cond.conditions:
+                return dc_cond.target
+        for cond in self.conditions:
+            if Conditions.GRAPPLING in cond.conditions:
+                return cond.target
+        return None
+
     def needs_to_break_out_of_grapple(self):
         for dc_cond in self.dc_conditions:
             if Conditions.GRAPPLED in dc_cond.conditions and dc_cond.phase is PhaseOfTurn.ACTION:
@@ -526,10 +535,10 @@ class Combatant(ProtoCombatant):
         self.is_swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed  # This is an optimization to speed up conditions look-up since it's done frequently
         self.dc_conditions.append(condition)
 
-    def remove_dc_condition(self, condition: ConditionWithDC, initiator=None):
+    def remove_dc_condition(self, cond_to_remove: Conditions, initiator=None):
         for idx, cond in enumerate(self.dc_conditions):
-            if (not initiator or cond.initiator is initiator) and condition in cond.dc_conditions:
-                self.is_swallowed = [False, None] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed
+            if (not initiator or cond.initiator is initiator) and cond_to_remove in cond.conditions:
+                self.is_swallowed = [False, None] if cond_to_remove is Conditions.SWALLOWED else self.is_swallowed
                 del self.dc_conditions[idx]
                 return
 

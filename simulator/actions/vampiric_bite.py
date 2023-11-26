@@ -17,22 +17,24 @@ class VampiricBiteFactory(MeleeAttackFactory):
     def get_ability_name(self):
         return "Vampiric Bite"
 
-    # def get_eligible_targets(self, previous_action_in_dag):
-    #     swallower = self.combatant.get_swallower()
-    #     if swallower:
-    #         return []
-    #     return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED) and e.get_grappler() is self.combatant]
+    def get_eligible_targets(self):
+        swallower = self.combatant.get_swallower()
+        if swallower:
+            return []
+        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED) and
+                (e.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED)
+                 or e.get_grappler() is self.combatant)]
 
     def create(self, target):
-        if target.get_grappler() is self.combatant:
+        if target.get_grappler() is self.combatant or target.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED):
             return VampiricBite(target, self)
         return []
 
     def create_all(self, previous_action_in_dag=None):
-        # targets = self.get_eligible_targets(previous_action_in_dag)
         if previous_action_in_dag and isinstance(previous_action_in_dag, GrappleAttack):
             return [VampiricBite(previous_action_in_dag.target, self)]
-        return []
+        targets = self.get_eligible_targets()
+        return [VampiricBite(t, self) for t in targets]
 
 
 class VampiricBite(MeleeAttack):

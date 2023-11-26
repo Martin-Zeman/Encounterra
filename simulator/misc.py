@@ -272,18 +272,20 @@ class Statistics(Enum):
 
 
 class ConditionWithoutDC:
-    def __init__(self, conditions, initiator):
-        self.conditions = conditions  # Could multiples such as grapple + restrained go often together
+    def __init__(self, conditions, initiator, target=None):
+        self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
         self.initiator = initiator
+        self.target = target  # If there is a target, e.g. GRAPPLING has a target
 
 
 class ConditionWithDC:
-    def __init__(self, conditions, st, dc, initiator, phase):
-        self.conditions = conditions  # Could multiples such as grapple + restrained go often together
+    def __init__(self, conditions, st, dc, initiator, phase, target=None):
+        self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
         self.st = st
         self.dc = dc
         self.initiator = initiator
         self.phase = phase
+        self.target = target  # If there is a target, e.g. GRAPPLING has a target
 
 
 class Size(Enum):

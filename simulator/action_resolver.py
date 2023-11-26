@@ -354,9 +354,8 @@ class ActionResolver:
             total_compound_dmg = [(base_dmg, attack.get_dmg_type())] + extra_dmg
             attack.roll_type = final_modifier
             if target and attack.factory.on_hit is not None:
-                on_hit_dmg = attack.factory.on_hit.hit(attacker, attack, target)
+                on_hit_dmg = attack.factory.on_hit.hit(attacker, attack, target, multiplier)
                 if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
-                    on_hit_dmg[0] *= multiplier
                     logger.info(f"With extra {on_hit_dmg[0]} damage from {attack.factory.on_hit.name}", extra={"team": self.teams.get_team(attacker)})
                     total_compound_dmg.append(on_hit_dmg)
             target.receive_compound_dmg(total_compound_dmg)
@@ -400,10 +399,15 @@ class ActionResolver:
                 reaction = target.prompt_after_hit_reaction(attacker, attack, rolled + attack.factory.to_hit)
                 self.resolve_action(reaction, target)
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
-            logger.info(f"{target} is grappled and restrained")
+            already_grappled = attacker.get_grappled()
+            if already_grappled:
+                logger.info(f"{attacker} is letting go of {already_grappled} to grapple another target")
+                already_grappled.remove_dc_condition(Conditions.GRAPPLED, initiator=attacker)
+                attacker.remove_condition(Conditions.GRAPPLING)
+            logger.info(f"{target} is grappled")
             cond = ConditionWithDC(Conditions.GRAPPLED, SkillCheck.ATHLETICS, attack.factory.dc, attacker, PhaseOfTurn.ACTION)
             target.apply_dc_condition(cond)
-            attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker))
+            attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker, target))
             return ActionResult.DMG
         else:
             logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
@@ -516,9 +520,11 @@ class ActionResolver:
             case Reaction.UNCANNY_DODGE:
                 logger.info(f"{combatant} uses {actoid}")
                 combatant.uncanny_dodge_active = True
-            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.BONUS_MELEE_ATTACK |\
-                 HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK\
-                | Action.BITE_AND_SWALLOW | HasteAction.HASTE_BITE_AND_SWALLOW:
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | BonusAction.BONUS_RANGED_ATTACK | \
+                 BonusAction.BONUS_MELEE_ATTACK | HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | \
+                 BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK | Action.BITE_AND_SWALLOW | \
+                 HasteAction.HASTE_BITE_AND_SWALLOW | Action.VAMPIRIC_BITE | Action.PRE_SWALLOW_BITE | \
+                 HasteAction.HASTE_PRE_SWALLOW_BITE:
                 ret = self.resolve_attack(actoid, combatant)
                 battle_map.effect_tracker.remove_effect_by_type(combatant, EffectType.HIDE)
                 return ret
@@ -543,9 +549,9 @@ class ActionResolver:
                 logger.info(f"{combatant} is trying to break out of grapple")
                 grapple = actoid.factory.grapple_condition
                 broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollType.STRAIGHT)
-                if broken_out and getattr(grapple.initiator, "constricted_target", None):  # TODO this is a simplification
+                if broken_out:# and getattr(grapple.initiator, "constricted_target", None):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
-                    grapple.initiator.constricted_target = None
+                    # grapple.initiator.constricted_target = None
                     grapple.initiator.remove_condition(Conditions.GRAPPLING)
                     combatant.break_out_of_grapple()
                 else:
@@ -586,11 +592,11 @@ class ActionResolver:
             case Action.WEB:
                 # TODO
                 return False
-            case Action.PRE_SWALLOW_BITE | HasteAction.HASTE_PRE_SWALLOW_BITE:
-                result = self.resolve_attack(actoid, combatant)  # TODO
-                if result is ActionResult.DMG:
-                    combatant.constricted_target = actoid.target if actoid.target.is_alive() else None
-                return result
+            # case Action.PRE_SWALLOW_BITE | HasteAction.HASTE_PRE_SWALLOW_BITE:
+            #     result = self.resolve_attack(actoid, combatant)  # TODO
+            #     if result is ActionResult.DMG:
+            #         combatant.constricted_target = actoid.target if actoid.target.is_alive() else None
+            #     return result
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

@@ -81,7 +81,6 @@ class GiantToad(Combatant):
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state,
-            'constricted_target': self.constricted_target,
             'swallowed_target': self.swallowed_target,
             'ammo': copy.deepcopy(self.ammo)
         }
@@ -92,7 +91,6 @@ class GiantToad(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_fsm_state'])
-        self.constricted_target = resources['constricted_target']
         self.swallowed_target = resources['swallowed_target']
         self.ammo = resources['ammo']
 
