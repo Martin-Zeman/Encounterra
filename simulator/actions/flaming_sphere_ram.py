@@ -6,8 +6,9 @@ from cachetools.keys import hashkey
 from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..misc import DamageType, SavingThrow, Conditions
-from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..actions.actoid import Actoid, FactoryFlags
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 from ..threat_utils import mean_dmg_dc_attack
 import logging
@@ -36,7 +37,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         return "FlamingSphereRamFactory"
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         battle_map = Map.get()
         enemies = [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
         result = []
@@ -71,7 +72,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 class FlamingSphereRam(Actoid, DirectThreat):
 
     def __init__(self, target, coord, factory,  **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self)
         self.factory = factory
         self.target = target  # target of the ramming
         self.coord = coord  # but still has to end up at an adjacent unoccupied space

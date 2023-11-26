@@ -2,7 +2,7 @@ from ..spells.spell import SpellStats
 from ..actions.action_types import Reaction
 import logging
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import DirectThreatFactory
+from ..factory_interfaces import DirectThreatFactory
 
 logger = logging.getLogger("Encounterra")
 
@@ -45,7 +45,7 @@ class ShieldFactory(DirectThreatFactory):
 class Shield(Actoid):
 
     def __init__(self, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         self.action_type = Reaction.SHIELD
         self.factory = factory
 

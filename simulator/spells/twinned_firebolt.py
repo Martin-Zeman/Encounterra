@@ -8,7 +8,8 @@ from ..misc import DamageType, avg_roll, Conditions, Visibility
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import mean_dmg
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 from itertools import combinations
 import logging
 from ..utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
@@ -48,7 +49,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
             return []  # Let's not waste a twinned version on this
         return combinations([e for e in enemies if not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [TwinnedFirebolt(t, self) for t in targets]
 
@@ -93,7 +94,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
 class TwinnedFirebolt(Actoid, DirectThreat):
 
     def __init__(self, targets, factory, **kwargs):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE)
         self.targets = targets
         self.factory = factory
         self.empowered = kwargs.get("empowered", False)

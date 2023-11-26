@@ -13,7 +13,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import DamageType, avg_roll, roll_spell_dmg, Conditions
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
+from ..threat_interfaces import DirectThreat, AoEThreat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
 logger = logging.getLogger("Encounterra")
@@ -50,7 +51,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
         coord, _ = Map.get().find_best_placement_harmful_circular(combatant, SpikeGrowthFactory.range, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target], self)
         return coord
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Here there really is no need to iterate over all coords. Just find the best score
         return [SpikeGrowth(self.find_best_args(self.combatant), self)]
 
@@ -76,7 +77,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
 class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=100)
         AoeSphericEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target])
         self.factory = factory

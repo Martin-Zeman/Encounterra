@@ -6,7 +6,8 @@ from functools import cache
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..misc import avg_roll, Conditions
 from ..threat_utils import mean_dmg, calc_p_hit
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 from enum import Enum, auto
 import math
 import logging
@@ -126,7 +127,7 @@ class AttackFactory(DirectThreatFactory):
 class Attack(Actoid, DirectThreat):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
         self.roll_type = RollType.STRAIGHT

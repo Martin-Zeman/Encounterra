@@ -11,7 +11,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..actions.action_types import BonusAction
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 from functools import cache
 from ..misc import roll_saving_throw, reconcile_roll_types, SavingThrow, Conditions
 import logging
@@ -57,7 +58,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         coord, _, _ = Map.get().find_best_placement_harmful_square(combatant, FaerieFireFactory.range, SpellStats.TRANSLATE_BOX[FaerieFireFactory.target])
         return coord[0]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Here there really is no need to iterate over all coords. Just find the best score
         return [FaerieFire(self.find_best_args(self.combatant), self)]
 
@@ -79,7 +80,7 @@ class FaerieFireFactory(ThreatModifierFactory):
 class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, CombatantEffect):
 
     def __init__(self, coord, factory,  **kwargs):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         AoeSquareEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_BOX[FaerieFireFactory.target])
         CombatantEffect.__init__(self, factory.combatant, [])

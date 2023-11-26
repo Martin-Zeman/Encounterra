@@ -16,6 +16,7 @@ from .spells.misty_step import MistyStepFactory
 from .utils.roll_types import RollType
 
 DZ_CONSTANT = 0.33
+MAX_HP_MODIFIER_MULTIPLIER = 1.25
 
 @cache
 def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):

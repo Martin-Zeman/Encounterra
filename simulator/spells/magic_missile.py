@@ -9,7 +9,8 @@ from ..spells.spell import SpellStats
 from ..misc import DamageType, Conditions, Visibility
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_utils import mean_dmg_auto_hit
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
 from ..utils.roll_types import RollType
@@ -54,7 +55,7 @@ class MagicMissileFactory(DirectThreatFactory):
         # Range is so big that it doesn't matter
         return combinations_with_replacement([e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)], 3)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [MagicMissile(t, self) for t in targets]
 
@@ -92,7 +93,7 @@ class MagicMissileFactory(DirectThreatFactory):
 class MagicMissile(Actoid, DirectThreat):
 
     def __init__(self, targets, factory, **kwargs):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         self.targets = targets
         self.factory = factory
         self.empowered = kwargs.get("empowered", False)

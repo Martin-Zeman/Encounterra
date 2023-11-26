@@ -10,7 +10,7 @@ class OnHitProne(OnHit):
         self.dc = dc
         self.name = name
 
-    def hit(self, attacker, attack, target):
+    def hit(self, attacker, attack, target, multiplier):
         saved = roll_saving_throw(target.saving_throws[self.st], self.dc, reconcile_roll_types(target.saving_throws_roll_type_mod[self.st]))
         if not saved:
             logger.info(f"{target} is knocked prone")

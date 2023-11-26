@@ -13,7 +13,8 @@ from ..spells.spell import SpellStats
 from ..misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 from ..utils.roll_types import ThreatModifierType, RollType
 
@@ -58,7 +59,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
             return []  # Let's not waste a twinned version on this
         return combinations([e for e in enemies if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = Map.get().get_enemies(self.combatant)
         return [TwinnedHoldPerson(t, self) for t in targets]
 
@@ -106,7 +107,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
 
 class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, targets, factory, **kwargs):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         EndOfTurnEffect.__init__(self, factory.combatant, factory.saving_throw, factory.dc)
         self.targets = targets

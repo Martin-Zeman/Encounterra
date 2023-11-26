@@ -12,6 +12,7 @@ from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
+from .effects.regeneration import Regeneration
 from .misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
@@ -26,7 +27,7 @@ logger = logging.getLogger("Encounterra")
 
 class Combatant(ProtoCombatant):
 
-    def __init__(self, num_or_name, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=[], immunities=[], vulnerabities=[]):
+    def __init__(self, num_or_name, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=set(), immunities=[], vulnerabities=[]):
         if type(num_or_name) is int:
             self.name = type(self).type + " " + str(num_or_name)
         else:
@@ -44,6 +45,8 @@ class Combatant(ProtoCombatant):
         self.passive = []
         self.max_hp = hp
         self.curr_hp = hp
+        self.max_hp_modifier = 0
+        self.temporary_hp = 0
         self.ac = ac
         self.dc = dc
         self.init_bonus = init_bonus
@@ -102,6 +105,7 @@ class Combatant(ProtoCombatant):
         self.is_swallowed = [False, None]
         self.uncanny_dodge_active = False
         self.display_abilities = []
+        self.dmg_types_took_last_round = set()
 
     def __str__(self):
         return self.name
@@ -122,7 +126,7 @@ class Combatant(ProtoCombatant):
         pass
 
     def on_end_of_turn(self):
-        pass
+        self.dmg_types_took_last_round.clear()
 
     def roll_initiative(self):
         self.curr_init = random.randint(1, 20) + self.init_bonus
@@ -169,19 +173,26 @@ class Combatant(ProtoCombatant):
                         if FactoryFlags.IS_ATTACK_LIKE in raf[1].flags and (FactoryFlags.IS_FINESSE in raf[1].flags or FactoryFlags.IS_RANGED in raf[1].flags):
                             raf[1].on_hit = OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), raf[1].dmg_type, raf[1].crit_range)
                     self.display_abilities.append("Sneak Attack")
+                case Passive.REGENERATION:
+                    Map.get().effect_tracker.add(Regeneration(self, kwargs["hp"], kwargs["suppression_dmg_type"]))
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
             return None
         elif isinstance(action_type, Action):
             match action_type:
-                case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | Action.BITE_AND_SWALLOW:
+                case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE \
+                     | Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
                     factory = TO_FACTORY[action_type]
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.action_factories[-1]
                     self.ammo[just_added[1].name] = just_added[1].ammo
                     self.display_abilities.append(just_added[1].name)
                     return just_added
+                case Action.GRAPPLE_ATTACK:
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
+                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    return self.action_factories[-1]
                 case Action.FIREBALL:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, has_spell_sculpting=False)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
@@ -191,13 +202,11 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.CHAOSBOLT | Action.SCORCHING_RAY:
-                    self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case Action.MAGIC_MISSILE | Action.HASTE:
-                    self.action_factories.append(
-                        (action_type, TO_FACTORY[action_type](action_type, self)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case Action.DISENGAGE:
@@ -376,7 +385,6 @@ class Combatant(ProtoCombatant):
     def has_passive(self, ability):
         return ability in self.passive
 
-
     def _receive_dmg(self, dmg, dmg_type):
         """
         Private-like function which takes care of receiving dmg but does not incur a concentration check
@@ -395,7 +403,12 @@ class Combatant(ProtoCombatant):
         if self.uncanny_dodge_active:
             dmg = math.floor(dmg / 2)
             logger.info(f"{self.name} uses Uncanny Dodge which reduces the damage to {dmg}")
-        self.curr_hp -= dmg
+        assert self.temporary_hp >= 0  # TODO Remove this
+        self.temporary_hp -= dmg
+        if self.temporary_hp < 0:
+            self.curr_hp += self.temporary_hp
+            self.temporary_hp = 0
+        self.dmg_types_took_last_round.add(dmg_type)
         return dmg
 
     def receive_dmg(self, dmg, dmg_type):
@@ -428,6 +441,9 @@ class Combatant(ProtoCombatant):
         if total_dmg:
             check_concentration(self, total_dmg)
         self.uncanny_dodge_active = False
+
+    def heal(self, hp):
+        self.curr_hp = min(self.curr_hp + hp, self.max_hp + self.max_hp_modifier)
 
     def is_resistant_to(self, dmg_type):
         return dmg_type in self.resistances
@@ -474,6 +490,24 @@ class Combatant(ProtoCombatant):
         #         return cond.initiator
         # return None
 
+    def get_grappler(self):
+        for dc_cond in self.dc_conditions:
+            if Conditions.GRAPPLED in dc_cond.conditions:
+                return dc_cond.initiator
+        for cond in self.conditions:
+            if Conditions.GRAPPLED in cond.conditions:
+                return cond.initiator
+        return None
+
+    def get_grappled(self):
+        for dc_cond in self.dc_conditions:
+            if Conditions.GRAPPLING in dc_cond.conditions:
+                return dc_cond.target
+        for cond in self.conditions:
+            if Conditions.GRAPPLING in cond.conditions:
+                return cond.target
+        return None
+
     def needs_to_break_out_of_grapple(self):
         for dc_cond in self.dc_conditions:
             if Conditions.GRAPPLED in dc_cond.conditions and dc_cond.phase is PhaseOfTurn.ACTION:
@@ -501,10 +535,10 @@ class Combatant(ProtoCombatant):
         self.is_swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed  # This is an optimization to speed up conditions look-up since it's done frequently
         self.dc_conditions.append(condition)
 
-    def remove_dc_condition(self, condition: ConditionWithDC, initiator=None):
+    def remove_dc_condition(self, cond_to_remove: Conditions, initiator=None):
         for idx, cond in enumerate(self.dc_conditions):
-            if (not initiator or cond.initiator is initiator) and condition in cond.dc_conditions:
-                self.is_swallowed = [False, None] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed
+            if (not initiator or cond.initiator is initiator) and cond_to_remove in cond.conditions:
+                self.is_swallowed = [False, None] if cond_to_remove is Conditions.SWALLOWED else self.is_swallowed
                 del self.dc_conditions[idx]
                 return
 

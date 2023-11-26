@@ -12,6 +12,7 @@ import logging
 
 logger = logging.getLogger("Encounterra")
 
+
 class MeleeAttackFactory(AttackFactory):
 
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None, extra_dmg=[], finesse=False):
@@ -26,7 +27,7 @@ class MeleeAttackFactory(AttackFactory):
     def create(self, target):
         return MeleeAttack(target, self)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [MeleeAttack(t, self) for t in targets]
 

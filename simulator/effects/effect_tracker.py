@@ -7,6 +7,7 @@ from ..effects.aoe_spheric_effect import AoeSphericEffect
 
 logger = logging.getLogger("Encounterra")
 
+
 class EffectTracker:
     """
     Manages all lasting effects.

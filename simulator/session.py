@@ -15,6 +15,7 @@ from .combatants.quetzalcoatlus import Quetzalcoatlus
 from .combatants.saber_toothed_tiger import SaberToothedTiger
 from .combatants.stone_giant import StoneGiant
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from .combatants.vampire_spawn import VampireSpawn
 from .effects.effect_tracker import EffectTracker
 from .utils.utils import get_combatant_classes
 from .battle_map import *
@@ -38,14 +39,15 @@ class Session:
     def __init__(self):
         self.combatants = []
         self.num_simulations = 1
-        self.battle_map = None
         self.map_size = 15
         self.statistic_collector = None
         self.character_type_counter = {cls.type: 1 for cls in get_combatant_classes()}
         self.teams = Teams()
+        self.battle_map = Map(self.map_size, self.teams)
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
         self.round_manager = None
         self.effect_tracker = EffectTracker()
+        self.battle_map.set_effect_tracker(self.effect_tracker)
 
     def add_combatant(self, combatant_type, team):
         if type(combatant_type) is not str:
@@ -92,6 +94,8 @@ class Session:
                 self.combatants.append(Quetzalcoatlus(curr_count))
             case SaberToothedTiger.type:
                 self.combatants.append(SaberToothedTiger(curr_count))
+            case VampireSpawn.type:
+                self.combatants.append(VampireSpawn(curr_count))
             case _:
                 logger.error("Unknown combatant type")
                 return
@@ -124,8 +128,8 @@ class Session:
             # TODO place some kind of a timeout here
             random_coord = np.array([random.randint(*bounds1), random.randint(*bounds2)])
             random_coords = Coords(random_coord, combatant.size)
-            logger.warning(f"Setting initial position {random_coords.get()[0]} for {combatant}")
             if self.battle_map.are_empty(random_coords):
+                logger.warning(f"Setting initial position {random_coords.get()[0]} for {combatant}")
                 self.battle_map.set_combatant_coordinates(combatant, random_coord)
                 break
 
@@ -151,9 +155,7 @@ class Session:
         self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
 
     def simulate(self, parallel=False):
-        self.battle_map = Map(self.map_size, self.teams)
-        self.battle_map.set_effect_tracker(self.effect_tracker)
-        self.round_manager = RoundManager(self.combatants, self.teams, self.effect_tracker)
+        self.round_manager = RoundManager(self.combatants, self.teams, self.effect_tracker)  # TODO remove the effect_tracker
         self.place_random_elements_on_the_map()
         self.place_combatants_on_the_map()
         for combatant in self.combatants:

@@ -81,10 +81,17 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 res &= combatant.curr_sorcery_points > 2
                 return res
-            case Action.MELEE_ATTACK | HasteAction.HASTE_MELEE_ATTACK:
+            case Action.MELEE_ATTACK | HasteAction.HASTE_MELEE_ATTACK | Action.VAMPIRIC_BITE | \
+                 HasteAction.HASTE_VAMPIRIC_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action.factory.name] > 0
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
+                return res
+            case Action.GRAPPLE_ATTACK | HasteAction.HASTE_GRAPPLE_ATTACK:
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
@@ -389,10 +396,15 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.curr_sorcery_points > 2
                 res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
-            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
+            case Action.MELEE_ATTACK | Action.RANGED_ATTACK | HasteAction.HASTE_MELEE_ATTACK | \
+                 HasteAction.HASTE_RANGED_ATTACK | Action.VAMPIRIC_BITE | HasteAction.HASTE_VAMPIRIC_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
+                return res
+            case Action.GRAPPLE_ATTACK | HasteAction.HASTE_GRAPPLE_ATTACK:  # No ammo for this type
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 return res
             case Action.RECKLESS_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted

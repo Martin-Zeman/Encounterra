@@ -11,7 +11,8 @@ from ..misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC, r
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import get_saving_throw_fail_prob, calculate_threat_in_delta
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 from ..utils.roll_types import RollType, ThreatModifierType
 
@@ -57,7 +58,7 @@ class HoldPersonFactory(ThreatModifierFactory):
             return []  # Must be able to see
         return [e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [HoldPerson(t, self) for t in targets]
 
@@ -105,7 +106,7 @@ class HoldPersonFactory(ThreatModifierFactory):
 
 class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, target, factory, **kwargs):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         EndOfTurnEffect.__init__(self, factory.combatant, target, factory.saving_throw, factory.dc)
         self.target = target

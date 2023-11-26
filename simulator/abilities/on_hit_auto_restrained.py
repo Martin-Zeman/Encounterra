@@ -10,11 +10,11 @@ class OnHitAutoRestrained(OnHit):
         self.dc = dc
         self.name = name
 
-    def hit(self, attacker, attack, target):
+    def hit(self, attacker, attack, target, multiplier):
         logger.info(f"{target} is grappled and restrained")
         cond = ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, self.skill, self.dc, attacker, PhaseOfTurn.ACTION)
         target.apply_dc_condition(cond)
-        attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker))
+        attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker, target))
         return None
 
     def calculate_threat(self, attacker, target, **kwargs):

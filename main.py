@@ -12,14 +12,15 @@ from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from simulator.combatants.vampire_spawn import VampireSpawn
 from simulator.teams import Teams
 import time
 
 if __name__ == '__main__':
     CustomLogger(logging.INFO)
     session = Session()
-    session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
-    session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
+    # session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
+    # session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)
@@ -28,12 +29,14 @@ if __name__ == '__main__':
     # session.add_combatant(Bugbear, Teams.Color.BLUE)
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
-    # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
+    session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
+    session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
+    session.add_combatant(VampireSpawn, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.BLUE)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
-    session.set_num_simulations(10)
+    session.set_num_simulations(1)
     start_time = time.time()
     session.simulate(parallel=False)
     print("---Simulation took {:.1f} seconds ---".format((time.time() - start_time)))

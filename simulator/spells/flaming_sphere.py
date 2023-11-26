@@ -15,7 +15,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow, Conditions
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import DirectThreatFactory, AoEThreat, Threat
+from ..threat_interfaces import AoEThreat, Threat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
 from ..threat_utils import mean_dmg_dc_attack
@@ -52,7 +53,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         return "Flaming Sphere"
 
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Getting coords around enemies
         battle_map = Map.get()
         enemies = battle_map.get_enemies(self.combatant)
@@ -89,7 +90,7 @@ class FlamingSphereFactory(DirectThreatFactory):
 class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquareEffect, Threat, AoEThreat):
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         AoeSquareEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_BOX[FlamingSphereFactory.target])
         self.factory = factory

@@ -4,7 +4,8 @@ from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..misc import Conditions
-from ..threat_interfaces import DirectThreatFactory, DirectThreat
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 from ..threat_utils import get_saving_throw_success_prob
 import logging
 
@@ -38,7 +39,7 @@ class PounceFactory(DirectThreatFactory):
     def create(self, target):
         return Pounce(target, self)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Pounce(t, self) for t in targets]
 
@@ -68,7 +69,7 @@ class PounceFactory(DirectThreatFactory):
 class Pounce(Actoid, DirectThreat):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
 

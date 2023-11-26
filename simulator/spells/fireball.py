@@ -10,7 +10,8 @@ from ..spells.spell import SpellStats
 from ..misc import SavingThrow, DamageType, Conditions
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_utils import mean_dmg_dc_attack
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
 class FireballFactory(DirectThreatFactory):
@@ -55,7 +56,7 @@ class FireballFactory(DirectThreatFactory):
         coord, _ = Map.get().find_best_placement_harmful_circular(combatant, FireballFactory.range, SpellStats.TRANSLATE_RADIUS[FireballFactory.target], self)
         return coord[0]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Here there really is no need to iterate over all coords. Just find the best score
         return [Fireball(self.find_best_args(self.combatant), self)]
 
@@ -82,7 +83,7 @@ class FireballFactory(DirectThreatFactory):
 class Fireball(Actoid, DirectThreat):
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.coord = coord
         self.factory = factory

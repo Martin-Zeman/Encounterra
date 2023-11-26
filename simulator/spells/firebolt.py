@@ -8,7 +8,8 @@ from ..misc import DamageType, RollType, avg_roll, Conditions, Visibility
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import mean_dmg
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 import logging
 from ..utils.roll_types import ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
 
@@ -70,7 +71,7 @@ class FireboltFactory(DirectThreatFactory):
             return [swallower]
         return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Firebolt(t, self) for t in targets]
 
@@ -112,7 +113,7 @@ class FireboltFactory(DirectThreatFactory):
 
 class Firebolt(Actoid, DirectThreat):
     def __init__(self, target, factory, **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
         self.empowered = kwargs.get("empowered", False)

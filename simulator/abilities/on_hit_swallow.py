@@ -14,13 +14,14 @@ class OnHitSwallow(OnHit):
     def __init__(self, name="Swallow"):
         self.name = name
 
-    def hit(self, attacker, attack, target):
+    def hit(self, attacker, attack, target, multiplier):
         logger.info(f"{target} is swallowed")
         target.remove_all_conditions_of_type(Conditions.GRAPPLED)
         attacker.remove_condition(Conditions.GRAPPLING)
         target.apply_condition(ConditionWithoutDC(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))
         attacker.swallowed_target = target
-        attacker.constricted_target = None
+        attacker.remove_condition(Conditions.GRAPPLING)
+        # attacker.constricted_target = None
         battle_map = Map.get()
         battle_map.effect_tracker.add(Digestion(attacker, target))
         battle_map.remove_combatant(target)

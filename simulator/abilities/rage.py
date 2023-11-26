@@ -7,7 +7,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..actions.action_types import BonusAction
 from ..misc import ROUND_HORIZON
 import sys
-from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 from ..utils.roll_types import ThreatModifierType
 
@@ -67,7 +68,7 @@ class RageFactory(ThreatModifierFactory):
     def get_eligible_targets(self):
         pass # No need due to the TARGETS_SELF flag
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [Rage(self.combatant, self)]
 
     def create(self, target):
@@ -108,6 +109,7 @@ class RageFactory(ThreatModifierFactory):
 class Rage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
 
     def __init__(self, combatant, factory):
+        Actoid.__init__(self)
         CombatantEffect.__init__(self, factory.combatant, combatants=[combatant])
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)

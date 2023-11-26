@@ -11,7 +11,7 @@ logger = logging.getLogger("Encounterra")
 
 
 class RoundManager:
-    def __init__(self, combatants, teams, effect_tracker, num_rounds=30):
+    def __init__(self, combatants, teams, effect_tracker, num_rounds=50):
         self.combatants = combatants
         self.teams = teams
         self.num_rounds = num_rounds

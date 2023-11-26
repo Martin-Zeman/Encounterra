@@ -10,7 +10,8 @@ from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..misc import Visibility, roll_ability_check, Conditions
-from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 
 from ..threat_utils import calc_p_hit
@@ -34,12 +35,11 @@ class HideFactory(ThreatModifierFactory):
     def get_kwargs(self):
         return {'combatant': self.combatant, 'action_type': self.action_type}
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         if self.combatant.get_swallower():
             return None
         battle_map = Map.get()
         return [Hide(e, self) for e in Map.get().get_enemies(self.combatant) if not battle_map.effect_tracker.is_combatant_hidden_from(self.combatant, e)]
-
 
     def create(self, target):
         return Hide(target, self)
@@ -54,7 +54,7 @@ class HideFactory(ThreatModifierFactory):
 class Hide(Actoid, CombatantEffect, AttackThreatModifier):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_HIDE)
+        Actoid.__init__(self, ActoidFlags.IS_HIDE)
         CombatantEffect.__init__(self, factory.combatant, combatants=[factory.combatant])
         self.target = target
         self.factory = factory

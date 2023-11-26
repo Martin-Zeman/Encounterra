@@ -10,7 +10,8 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import Conditions
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -32,7 +33,7 @@ class DisengageFactory(ThreatModifierFactory):
     def get_kwargs(self):
         return {'combatant': self.combatant, 'action_type': self.action_type}
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [Disengage(self.combatant, self)]
 
     def calculate_threat_to_target(self, target, **kwargs):
@@ -45,6 +46,7 @@ class DisengageFactory(ThreatModifierFactory):
 class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
 
     def __init__(self, combatant, factory):
+        Actoid.__init__(self)
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         LimitedDurationEffect.__init__(self, combatant, turns=1)
         self.factory = factory

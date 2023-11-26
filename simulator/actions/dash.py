@@ -8,7 +8,8 @@ from ..actions.actoid import Actoid, ActoidFlags
 import logging
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..misc import Conditions
-from ..threat_interfaces import Factory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import Factory
 
 logger = logging.getLogger("Encounterra")
 
@@ -24,7 +25,7 @@ class DashFactory(Factory):
         """
         return "DashFactory"
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [Dash(self)]
 
     def create(self):
@@ -33,7 +34,7 @@ class DashFactory(Factory):
 
 class Dash(Actoid, AttackThreatModifier):
     def __init__(self, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_DASH)
+        Actoid.__init__(self, ActoidFlags.IS_DASH)
         self.name = "Dash"
         self.factory = factory
 

@@ -14,7 +14,8 @@ from ..spells.spell import SpellStats
 from ..misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions, ConditionWithoutDC
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_utils import mean_dmg_dc_attack
-from ..threat_interfaces import DirectThreat, DirectThreatFactory, AoEThreat
+from ..threat_interfaces import DirectThreat, AoEThreat
+from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
 class HungerOfHadarFactory(DirectThreatFactory):
@@ -53,7 +54,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         coord, _ = battle_map.find_best_placement_harmful_circular(combatant, HungerOfHadarFactory.range, SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target], self)
         return coord
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # Here there really is no need to iterate over all coords. Just find the best score
         return [HungerOfHadar(self.find_best_args(self.combatant), self)]
 
@@ -77,7 +78,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
 class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat, AoEThreat):
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         AoeSphericEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_RADIUS[HungerOfHadarFactory.target])
         self.factory = factory

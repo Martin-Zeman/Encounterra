@@ -9,7 +9,8 @@ from ..spells.spell import SpellStats
 from ..effects.effect import Effect, EffectType
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_utils import mean_dmg
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 from functools import reduce, cache
 from ..misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions, Visibility
 from ..spells.haste import HasteFactory
@@ -53,7 +54,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         ret = combinations(ret, 2)
         return ret
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [TwinnedHaste(t, self) for t in targets]
 
@@ -95,7 +96,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
 class TwinnedHaste(Actoid, Effect, Threat):
 
     def __init__(self, targets, factory):
-        super().__init__(ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         self.targets = targets
         self.factory = factory
 

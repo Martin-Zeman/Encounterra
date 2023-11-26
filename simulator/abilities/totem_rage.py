@@ -12,7 +12,8 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..actions.action_types import BonusAction
 from ..misc import ROUND_HORIZON
 from ..abilities.rage import RageFactory
-from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import ThreatModifierFactory
 import logging
 from ..utils.roll_types import ThreatModifierType
 
@@ -42,7 +43,7 @@ class TotemRageFactory(ThreatModifierFactory):
         # Doesn't make much sense here
         return TotemRage(target, self)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         return [TotemRage(self.combatant, self)]
 
     def calculate_threat_to_target(self, target, **kwargs):
@@ -79,6 +80,7 @@ class TotemRageFactory(ThreatModifierFactory):
 class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
 
     def __init__(self, combatant, factory):
+        Actoid.__init__(self)
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         LimitedDurationEffect.__init__(self, combatant, turns=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)

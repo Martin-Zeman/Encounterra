@@ -8,7 +8,8 @@ from ..effects.action_enabler_effect import ActionEnablerEffect
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..misc import SavingThrow, Size, Conditions
-from ..threat_interfaces import TransformerFactory, DirectThreat
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import TransformerFactory
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -62,7 +63,7 @@ class WildshapeFactory(TransformerFactory):
                     logger.error("Incorrect character level. No wildshape forms added!")
 
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         # TODO Filter out those who cannot fit to the current position by size
         return self.combatant.available_wildshape_forms
 
@@ -82,6 +83,7 @@ class WildshapeFactory(TransformerFactory):
 class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def __init__(self, combatant, form, factory):
+        Actoid.__init__(self)
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         self.form = form(f"{factory.combatant} wildshaped into {form.type}")
         def wildshape_get(self):

@@ -16,7 +16,7 @@ class OnHitSavingThrowDmg(OnHit):
         self.half_on_success = half_on_success
         self.name = name
 
-    def hit(self, attacker, attack, target):
+    def hit(self, attacker, attack, target, multiplier):
         dice = parse_dmg_dice(self.dmg_dice)
         dmg = roll_dice(dice)
         resolve_on_hit_dmg_saving_throw(self, dmg, target, self.half_on_success)

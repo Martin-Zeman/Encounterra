@@ -7,7 +7,8 @@ from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..misc import Conditions
-from ..threat_interfaces import DirectThreatFactory, DirectThreat
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -44,7 +45,7 @@ class ConstrictFactory(DirectThreatFactory):
         return None
 
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         if self.combatant.constricted_target is not None:
             return [Constrict(self.combatant.constricted_target)]
         targets = self.get_eligible_targets()
@@ -75,7 +76,7 @@ class ConstrictFactory(DirectThreatFactory):
 class Constrict(Actoid, DirectThreat):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
 

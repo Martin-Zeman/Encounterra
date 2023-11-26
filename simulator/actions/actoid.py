@@ -1,8 +1,9 @@
 from enum import auto, Flag, Enum
 
+
 class ActoidFlags(Flag):
+    DEFAULT = auto()
     IS_ATTACK_LIKE = auto()
-    IS_DIRECT_THREAT = auto()
     IS_ATTACK_MODIFIER = auto()
     IS_MOVEMENT = auto()
     IS_SPELL = auto()
@@ -10,13 +11,15 @@ class ActoidFlags(Flag):
     IS_HIDE = auto()
     IS_GET_UP_FROM_PRONE = auto()
     IS_BREAK_GRAPPLE = auto()
+    IS_ACTION_ENABLER = auto()
+
 
 class Actoid:
     """
     Proto-action base class. It doesn't map onto an 'action' directly as an Actoid can represent even a partial action such as one attack
     which is part of a multiattack or a movement increment.
     """
-    def __init__(self, actoid_flags):
+    def __init__(self, actoid_flags=ActoidFlags.DEFAULT):
         self.actoid_flags = actoid_flags
 
 

@@ -9,8 +9,10 @@ from ..misc import Conditions
 from ..spells.spell import SpellStats
 from ..effects.effect import Effect
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import ThreatModifierFactory, AttackThreatModifier
+from ..threat_interfaces import AttackThreatModifier
+from ..factory_interfaces import ThreatModifierFactory
 from itertools import combinations
+
 
 class BlessFactory(ThreatModifierFactory):
     level = 1
@@ -43,7 +45,7 @@ class BlessFactory(ThreatModifierFactory):
             return [self.combatant]
         return combinations([a for a in Map.get().get_allies_within_radius(self.combatant, BlessFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)], 3)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Bless(t, self) for t in targets]
 
@@ -61,7 +63,7 @@ class BlessFactory(ThreatModifierFactory):
 
 class Bless(Actoid, Effect, AttackThreatModifier):
     def __init__(self, targets, factory):
-        super().__init__(ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         self.targets = targets
         self.factory = factory
 

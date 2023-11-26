@@ -8,7 +8,8 @@ from ..spells.spell import SpellStats
 from ..actions.action_types import BonusAction
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_utils import mean_dmg
-from ..threat_interfaces import ThreatModifierFactory, Threat
+from ..threat_interfaces import Threat
+from ..factory_interfaces import ThreatModifierFactory
 from functools import reduce, cache
 from ..misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions, Visibility
 from ..utils.roll_types import ThreatModifierType
@@ -60,7 +61,7 @@ class HasteFactory(ThreatModifierFactory):
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Haste(t, self) for t in targets]
 
@@ -105,7 +106,7 @@ class HasteFactory(ThreatModifierFactory):
 class Haste(Actoid, LimitedDurationEffect, Threat):
 
     def __init__(self, target, factory):
-        super().__init__(ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.target = target
         self.factory = factory

@@ -7,7 +7,8 @@ from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..misc import Conditions
-from ..threat_interfaces import DirectThreatFactory, DirectThreat, RechargeFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory, RechargeFactory
 from ..threat_utils import get_saving_throw_success_prob
 from ..misc import Visibility
 import logging
@@ -40,7 +41,7 @@ class WebFactory(DirectThreatFactory, RechargeFactory):
     def create(self, target):
         return Web(target, self)
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [Web(t, self) for t in targets]
 
@@ -67,7 +68,7 @@ class WebFactory(DirectThreatFactory, RechargeFactory):
 class Web(Actoid, DirectThreat):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
 

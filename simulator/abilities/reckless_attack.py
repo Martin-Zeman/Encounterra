@@ -12,7 +12,8 @@ from ..misc import reconcile_roll_types, Conditions
 from functools import reduce
 from ..misc import avg_roll
 from ..threat_utils import mean_dmg, calculate_threat_in_delta
-from ..threat_interfaces import DirectThreat, DirectThreatFactory
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import DirectThreatFactory
 from enum import Enum, auto
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
@@ -71,7 +72,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         battle_map = Map.get()
         return [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
 
-    def create_all(self):
+    def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
         return [RecklessAttack(t, self) for t in targets]
 
@@ -153,7 +154,7 @@ class RecklessAttackFactory(DirectThreatFactory):
 class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE)
         CombatantEffect.__init__(self, factory.combatant, combatants=[factory.combatant])
         LimitedDurationEffect.__init__(self, factory.combatant, turns=1)
         self.target = target

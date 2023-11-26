@@ -1,7 +1,8 @@
 from ..actions.action_types import Reaction
 import logging
-from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_interfaces import Factory, DirectThreat
+from ..actions.actoid import Actoid
+from ..threat_interfaces import DirectThreat
+from ..factory_interfaces import Factory
 
 logger = logging.getLogger("Encounterra")
 
@@ -29,7 +30,7 @@ class UncannyDodgeFactory(Factory):
 class UncannyDodge(Actoid, DirectThreat):
 
     def __init__(self, factory, attack):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_DIRECT_THREAT)
+        Actoid.__init__(self)
         self.factory = factory
         self.attack = attack  # The attack to be mitigated
 
