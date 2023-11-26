@@ -45,7 +45,7 @@ class ShieldFactory(DirectThreatFactory):
 class Shield(Actoid):
 
     def __init__(self, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         self.action_type = Reaction.SHIELD
         self.factory = factory
 

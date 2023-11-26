@@ -12,6 +12,7 @@ import logging
 
 logger = logging.getLogger("Encounterra")
 
+
 class MeleeAttackFactory(AttackFactory):
 
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None, extra_dmg=[], finesse=False):

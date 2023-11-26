@@ -80,7 +80,7 @@ class FaerieFireFactory(ThreatModifierFactory):
 class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, CombatantEffect):
 
     def __init__(self, coord, factory,  **kwargs):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         AoeSquareEffect.__init__(self, factory.combatant, coord, SpellStats.TRANSLATE_BOX[FaerieFireFactory.target])
         CombatantEffect.__init__(self, factory.combatant, [])

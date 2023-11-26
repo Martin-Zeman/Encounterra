@@ -107,7 +107,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
 
 class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, targets, factory, **kwargs):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         EndOfTurnEffect.__init__(self, factory.combatant, factory.saving_throw, factory.dc)
         self.targets = targets

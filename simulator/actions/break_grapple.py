@@ -13,7 +13,7 @@ class BreakGrappleFactory:
 
 class BreakGrapple(Actoid):
     def __init__(self, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_BREAK_GRAPPLE)
+        Actoid.__init__(self, ActoidFlags.IS_BREAK_GRAPPLE)
         self.factory = factory
 
     def __str__(self):

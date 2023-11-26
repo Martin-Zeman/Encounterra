@@ -109,6 +109,7 @@ class RageFactory(ThreatModifierFactory):
 class Rage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
 
     def __init__(self, combatant, factory):
+        Actoid.__init__(self)
         CombatantEffect.__init__(self, factory.combatant, combatants=[combatant])
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)

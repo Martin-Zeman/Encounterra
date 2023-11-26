@@ -11,6 +11,7 @@ class ActoidFlags(Flag):
     IS_HIDE = auto()
     IS_GET_UP_FROM_PRONE = auto()
     IS_BREAK_GRAPPLE = auto()
+    IS_ACTION_ENABLER = auto()
 
 
 class Actoid:

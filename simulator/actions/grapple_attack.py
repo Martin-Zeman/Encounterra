@@ -1,3 +1,4 @@
+from .action_types import HasteAction
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
 from ..battle_map import Map
 from ..misc import Conditions
@@ -13,12 +14,14 @@ logger = logging.getLogger("Encounterra")
 
 class GrappleAttackFactory(DirectThreatFactory):
 
-    def __init__(self, action_type, name, combatant, to_hit, follow_up_attack):
+    def __init__(self, action_type, name, combatant, to_hit, attack_range, dc, follow_up_attack):
         super().__init__()
         self.action_type = action_type
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
+        self.range = attack_range
+        self.dc = dc
         self.follow_up_attack = follow_up_attack
         self.flags |= FactoryFlags.IS_MELEE
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
@@ -52,7 +55,7 @@ class GrappleAttackFactory(DirectThreatFactory):
                 return 0
 
             p_hit = calc_p_hit(attack.factory.to_hit, target.ac)
-            return p_hit * attack.factory.calculate_threat_to_target(target, kwargs)
+            return p_hit * attack.factory.calculate_threat_to_target(target, **kwargs)
         else:
             return 0
 
@@ -64,10 +67,22 @@ class GrappleAttackFactory(DirectThreatFactory):
 class GrappleAttack(Actoid, AttackThreatModifier):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE)
+        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_ACTION_ENABLER)
         self.target = target
         self.factory = factory
         self.roll_type = RollType.STRAIGHT
+
+    def __str__(self):
+        prefix = ""
+        if isinstance(self.factory.action_type, HasteAction):
+            prefix = "Hasted "
+        return prefix + f"Grapple Attack on {self.target}"
+
+    def shorthand_str(self):
+        prefix = ""
+        if isinstance(self.factory.action_type, HasteAction):
+            prefix = "Hasted "
+        return prefix + f"Grapple Attack"
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):

@@ -83,7 +83,7 @@ class FireballFactory(DirectThreatFactory):
 class Fireball(Actoid, DirectThreat):
 
     def __init__(self, coord, factory,  **kwargs):
-        super().__init__(actoid_flags=ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         # self.empowered = False if "empowered" not in kwargs or not kwargs["empowered"] else True
         self.coord = coord
         self.factory = factory

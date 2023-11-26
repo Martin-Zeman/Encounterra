@@ -54,7 +54,7 @@ class HideFactory(ThreatModifierFactory):
 class Hide(Actoid, CombatantEffect, AttackThreatModifier):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_HIDE)
+        Actoid.__init__(self, ActoidFlags.IS_HIDE)
         CombatantEffect.__init__(self, factory.combatant, combatants=[factory.combatant])
         self.target = target
         self.factory = factory

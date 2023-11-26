@@ -34,7 +34,7 @@ class DashFactory(Factory):
 
 class Dash(Actoid, AttackThreatModifier):
     def __init__(self, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_DASH)
+        Actoid.__init__(self, ActoidFlags.IS_DASH)
         self.name = "Dash"
         self.factory = factory
 

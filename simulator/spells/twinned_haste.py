@@ -96,7 +96,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
 class TwinnedHaste(Actoid, Effect, Threat):
 
     def __init__(self, targets, factory):
-        super().__init__(ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         self.targets = targets
         self.factory = factory
 

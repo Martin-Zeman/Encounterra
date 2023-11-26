@@ -106,7 +106,7 @@ class HasteFactory(ThreatModifierFactory):
 class Haste(Actoid, LimitedDurationEffect, Threat):
 
     def __init__(self, target, factory):
-        super().__init__(ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.target = target
         self.factory = factory

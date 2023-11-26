@@ -401,7 +401,7 @@ class ActionResolver:
                 self.resolve_action(reaction, target)
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
             logger.info(f"{target} is grappled and restrained")
-            cond = ConditionWithDC(Conditions.GRAPPLED, SkillCheck.ATHLETICS, attack.dc, attacker, PhaseOfTurn.ACTION)
+            cond = ConditionWithDC(Conditions.GRAPPLED, SkillCheck.ATHLETICS, attack.factory.dc, attacker, PhaseOfTurn.ACTION)
             target.apply_dc_condition(cond)
             attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker))
             return ActionResult.DMG

@@ -80,6 +80,7 @@ class TotemRageFactory(ThreatModifierFactory):
 class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
 
     def __init__(self, combatant, factory):
+        Actoid.__init__(self)
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         LimitedDurationEffect.__init__(self, combatant, turns=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)

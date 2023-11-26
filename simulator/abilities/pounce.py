@@ -69,7 +69,7 @@ class PounceFactory(DirectThreatFactory):
 class Pounce(Actoid, DirectThreat):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, actoid_flags=ActoidFlags.IS_ATTACK_LIKE)
+        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
 

@@ -72,7 +72,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 class FlamingSphereRam(Actoid, DirectThreat):
 
     def __init__(self, target, coord, factory,  **kwargs):
-        super().__init__()
+        Actoid.__init__(self)
         self.factory = factory
         self.target = target  # target of the ramming
         self.coord = coord  # but still has to end up at an adjacent unoccupied space

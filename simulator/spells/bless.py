@@ -63,7 +63,7 @@ class BlessFactory(ThreatModifierFactory):
 
 class Bless(Actoid, Effect, AttackThreatModifier):
     def __init__(self, targets, factory):
-        super().__init__(ActoidFlags.IS_SPELL)
+        Actoid.__init__(self, ActoidFlags.IS_SPELL)
         self.targets = targets
         self.factory = factory
 
