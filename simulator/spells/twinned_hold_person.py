@@ -109,13 +109,12 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, targets, factory, **kwargs):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
-        EndOfTurnEffect.__init__(self, factory.combatant, factory.saving_throw, factory.dc)
-        self.targets = targets
+        EndOfTurnEffect.__init__(self, factory.combatant, targets, factory.saving_throw, factory.dc)
         self.factory = factory
 
 
     def __str__(self):
-        return f"Twinned Hold Person on {self.targets[0]} and {self.targets[1]}"
+        return f"Twinned Hold Person on {self.combatants[0]} and {self.combatants[1]}"
 
     def shorthand_str(self):
         return "Twinned Hold Person"
@@ -124,18 +123,18 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         return EffectType.HOLD_PERSON
 
     def activate(self,):
-        saved1 = roll_saving_throw(self.targets[0].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
-        saved2 = roll_saving_throw(self.targets[1].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
+        saved1 = roll_saving_throw(self.combatants[0].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
+        saved2 = roll_saving_throw(self.combatants[1].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
         if not saved1:
-            self.targets[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
-            logger.info(f"{self.targets[0]} failed the save against Hold Person")
+            self.combatants[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+            logger.info(f"{self.combatants[0]} failed the save against Hold Person")
         else:
-            logger.info(f"{self.targets[0]} saved against Hold Person")
+            logger.info(f"{self.combatants[0]} saved against Hold Person")
         if not saved2:
-            self.targets[1].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
-            logger.info(f"{self.targets[1]} failed the save against Hold Person")
+            self.combatants[1].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+            logger.info(f"{self.combatants[1]} failed the save against Hold Person")
         else:
-            logger.info(f"{self.targets[1]} saved against Hold Person")
+            logger.info(f"{self.combatants[1]} saved against Hold Person")
         if not saved1 or not saved2:
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
@@ -143,15 +142,12 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def deactivate(self):
         if self.factory.combatant.concentration_effect is self:
             self.factory.combatant.break_concentration()
-        self.targets[0].remove_condition(Conditions.PARALYZED, self)
-        self.targets[1].remove_condition(Conditions.PARALYZED, self)
-
-    def is_affecting(self, combatant):
-        return combatant in self.targets
+        self.combatants[0].remove_condition(Conditions.PARALYZED, self)
+        self.combatants[1].remove_condition(Conditions.PARALYZED, self)
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        return self.factory.calculate_threat_to_target(self.targets[0]) + self.factory.calculate_threat_to_target(self.targets[1])
+        return self.factory.calculate_threat_to_target(self.combatants[0]) + self.factory.calculate_threat_to_target(self.combatants[1])
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
@@ -164,23 +160,23 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
+            coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=TwinnedHoldPersonFactory.range, combatant=self.factory.combatant)
 
-            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
+            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[1]),
                                                                   distances,
                                                                   inflate_to_size=self.factory.combatant.size,
                                                                   rng=TwinnedHoldPersonFactory.range)
             free_coords_in_range = set(coords_for_first).intersection(set(coords_for_second))
 
             return [coord for coord in free_coords_in_range if
-                    battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE]
-        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= HoldPersonFactory.range and \
-            battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= HoldPersonFactory.range and \
-                battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE and \
-                battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
+                    battle_map.visibility_dict_for_all_coords[coord][self.combatants[0]] is not Visibility.NONE
+                    and battle_map.visibility_dict_for_all_coords[coord][self.combatants[1]] is not Visibility.NONE]
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[0]) <= HoldPersonFactory.range and \
+            battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[1]) <= HoldPersonFactory.range and \
+                battle_map.visibility_dict_for_all_coords[curr_coord][self.combatants[0]] is not Visibility.NONE and \
+                battle_map.visibility_dict_for_all_coords[curr_coord][self.combatants[1]] is not Visibility.NONE:
             return [curr_coord]
         return None

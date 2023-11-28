@@ -1,4 +1,4 @@
-from ..effects.effect import Effect
+from .combatant_effect import CombatantEffect
 import logging
 
 from ..misc import roll_saving_throw, reconcile_roll_types
@@ -6,10 +6,9 @@ from ..misc import roll_saving_throw, reconcile_roll_types
 logger = logging.getLogger("Encounterra")
 
 
-class EndOfTurnEffect(Effect):
-    def __init__(self, initiator, combatant, st, dc):
-        Effect.__init__(self, initiator)
-        self.combatant = combatant
+class EndOfTurnEffect(CombatantEffect):
+    def __init__(self, initiator, targets, st, dc):
+        CombatantEffect.__init__(self, initiator, targets)
         self.st = st
         self.dc = dc
 
@@ -18,9 +17,9 @@ class EndOfTurnEffect(Effect):
 
         :return: False if the saved against the effect and can be removed, True otherwise
         """
-        saved = roll_saving_throw(self.combatant.saving_throws[self.st], self.dc, reconcile_roll_types(self.combatant.saving_throws_roll_type_mod[self.st]))
+        saved = roll_saving_throw(self.combatants[0].saving_throws[self.st], self.dc, reconcile_roll_types(self.combatants[0].saving_throws_roll_type_mod[self.st]))
         if saved:
-            logger.info(f"{self.combatant} saved against {self}")
+            logger.info(f"{self.combatants[0]} saved against {self}")
             return False
-        logger.info(f"{self.combatant} failed the save against {self}")
+        logger.info(f"{self.combatants[0]} failed the save against {self}")
         return True

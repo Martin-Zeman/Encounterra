@@ -72,6 +72,7 @@ class Bless(Actoid, Effect, AttackThreatModifier):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_BLESS else "") + f"Bless"
 
     def activate(self):
+        Map.get().effect_tracker.add(self)
         # todo should check if not already under the influence of another bless
         self.factory.combatant.concentration_effect = self
         for target in self.targets:

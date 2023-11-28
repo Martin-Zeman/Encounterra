@@ -164,7 +164,7 @@ class Wizard(Enum):
     WAR_MAGIC = "War Magic"
 
 
-class Monster(Flag):
+class Monster(Enum):
     HUMANOID = "Humanoid"
     GIANT = "Giant"
     MONSTROSITY = "Monstrosity"

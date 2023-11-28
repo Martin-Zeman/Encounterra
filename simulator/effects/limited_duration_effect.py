@@ -10,7 +10,7 @@ class LimitedDurationEffect(Effect):
         self.turns = turns
 
 
-    def new_turn(self):
+    def start_of_turn(self):
         """
 
         :return: False if the effect expired and can be removed, True otherwise

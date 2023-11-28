@@ -6,7 +6,7 @@ from ..effects.effect import EffectType
 logger = logging.getLogger("Encounterra")
 
 
-class Regeneration(CombatantEffect):
+class RegenerationEffect(CombatantEffect):
     def __init__(self, combatant, hp, suppression_dmg_type):
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         self.hp = hp

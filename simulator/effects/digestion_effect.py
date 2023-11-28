@@ -8,7 +8,7 @@ from ..battle_map import Map
 logger = logging.getLogger("Encounterra")
 
 
-class Digestion(StartOfTurnAutoEffect):
+class DigestionEffect(StartOfTurnAutoEffect):
 
     def get_effect_type(self):
         return EffectType.DIGESTION
@@ -16,7 +16,7 @@ class Digestion(StartOfTurnAutoEffect):
     def start_of_turn(self):
         dice = parse_dmg_dice('3d6')
         dmg_dice_sum = roll_dice(dice)
-        logger.info(f"{self.target} is being digested for {dmg_dice_sum} dmg")
-        self.target.receive_dmg(dmg_dice_sum, DamageType.Acid)
-        Map.get().remove_combatant_if_dead(self.target)
+        logger.info(f"{self.combatants[0]} is being digested for {dmg_dice_sum} dmg")
+        self.combatants[0].receive_dmg(dmg_dice_sum, DamageType.Acid)
+        Map.get().remove_combatant_if_dead(self.combatants[0])
         return True

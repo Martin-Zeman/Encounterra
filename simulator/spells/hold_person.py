@@ -108,8 +108,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, target, factory, **kwargs):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
-        EndOfTurnEffect.__init__(self, factory.combatant, target, factory.saving_throw, factory.dc)
-        self.target = target
+        EndOfTurnEffect.__init__(self, factory.combatant, [target], factory.saving_throw, factory.dc)
         self.factory = factory
 
 
@@ -124,24 +123,22 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         return EffectType.HOLD_PERSON
 
     def activate(self):
-        if not roll_saving_throw(self.target.saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT):
-            logger.info(f"{self.target} failed the save against Hold Person")
+        if not roll_saving_throw(self.combatants[0].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT):
+            logger.info(f"{self.combatants[0]} failed the save against Hold Person")
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
-            self.target.apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+            self.combatants[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
         else:
-            logger.info(f"{self.target} saved against Hold Person")
+            logger.info(f"{self.combatants[0]} saved against Hold Person")
 
     def deactivate(self):
         self.factory.combatant.break_concentration()
-        self.target.remove_condition(Conditions.PARALYZED, self)
+        self.combatants[0].remove_condition(Conditions.PARALYZED, self)
 
-    def is_affecting(self, combatant):
-        return combatant is self.target
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        ret = self.factory.calculate_threat_to_target(self.target)
+        ret = self.factory.calculate_threat_to_target(self.combatants[0])
         return ret
 
     def clear_cache(self):
@@ -155,12 +152,12 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
             return None  # Not possible while blinded
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
+            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
                                                                  distances,
                                                                  inflate_to_size=self.factory.combatant.size,
                                                                  rng=HoldPersonFactory.range, combatant=self.factory.combatant)
-            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
-        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HoldPersonFactory.range and \
-                battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.combatants[0]] is not Visibility.NONE]
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[0]) <= HoldPersonFactory.range and \
+                battle_map.visibility_dict_for_all_coords[curr_coord][self.combatants[0]] is not Visibility.NONE:
             return [curr_coord]
         return None

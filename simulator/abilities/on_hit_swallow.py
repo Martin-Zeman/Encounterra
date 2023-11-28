@@ -1,6 +1,6 @@
 from ..abilities.on_hit_effect import OnHit
 from ..battle_map import Map
-from ..effects.digestion import Digestion
+from ..effects.digestion_effect import DigestionEffect
 from ..misc import Conditions, ConditionWithoutDC, DamageType, ROUND_HORIZON
 import logging
 
@@ -23,7 +23,7 @@ class OnHitSwallow(OnHit):
         attacker.remove_condition(Conditions.GRAPPLING)
         # attacker.constricted_target = None
         battle_map = Map.get()
-        battle_map.effect_tracker.add(Digestion(attacker, target))
+        battle_map.effect_tracker.add(DigestionEffect(attacker, [target]))
         battle_map.remove_combatant(target)
         return None
 

@@ -2,7 +2,7 @@ import logging
 
 from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.effect import EffectType
-from ..effects.post_haste_lethargy import PostHasteLethargy
+from ..effects.post_haste_lethargy_effect import PostHasteLethargyEffect
 from ..effects.aoe_spheric_effect import AoeSphericEffect
 
 logger = logging.getLogger("Encounterra")
@@ -34,20 +34,19 @@ class EffectTracker:
         """
         effects = []
         for e in self.effects:
-            if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
-                if not e.new_turn():
-                    e.deactivate()
-                    continue  # Effect expired
+            # if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
+            if e.is_affecting(combatant):
                 if not e.start_of_turn():
                     e.deactivate()
-                    continue  # Effect's been saved against
+                    continue  # Effect's been saved against or expired
             effects.append(e)  # Effect persists
         self.effects = effects
 
     def end_of_turn(self, combatant):
         effects = []
         for e in self.effects:
-            if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
+            # if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
+            if e.is_affecting(combatant):
                 if not e.end_of_turn():
                     e.deactivate()
                     continue  # Effect's been saved against
@@ -89,7 +88,7 @@ class EffectTracker:
         self.effects = [e for e in self.effects if e.initiator is not combatant]
 
     def create_post_haste_lethargy(self, initiator, combatant):
-        self.effects.append(PostHasteLethargy(initiator, combatant))
+        self.effects.append(PostHasteLethargyEffect(initiator, combatant))
 
 # TODO add function for wildshape replacement
 

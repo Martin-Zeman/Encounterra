@@ -12,7 +12,7 @@ from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
-from .effects.regeneration import Regeneration
+from .effects.regeneration_effect import RegenerationEffect
 from .misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
@@ -175,7 +175,7 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Sneak Attack")
                 case Passive.REGENERATION:
                     try:
-                        Map.get().effect_tracker.add(Regeneration(self, kwargs["hp"], kwargs["suppression_dmg_type"]))
+                        Map.get().effect_tracker.add(RegenerationEffect(self, kwargs["hp"], kwargs["suppression_dmg_type"]))
                     except AttributeError:
                         pass  # This is ok for the sake of getting all the combatants by the backend
                     self.display_abilities.append("Regeneration")

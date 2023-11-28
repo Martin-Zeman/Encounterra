@@ -2,7 +2,7 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 
-class PostHasteLethargy(CombatantEffect, LimitedDurationEffect):
+class PostHasteLethargyEffect(CombatantEffect, LimitedDurationEffect):
     def __init__(self, initiator, combatant):
         CombatantEffect.__init__(self, initiator, combatants=[combatant])
         LimitedDurationEffect.__init__(self, initiator, turns=1)

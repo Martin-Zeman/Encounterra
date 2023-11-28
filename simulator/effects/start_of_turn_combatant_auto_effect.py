@@ -1,16 +1,12 @@
-from ..effects.effect import Effect
+from .combatant_effect import CombatantEffect
 import logging
 
 logger = logging.getLogger("Encounterra")
 
 
-class StartOfTurnAutoEffect(Effect):
-    def __init__(self, initiator, target):
-        Effect.__init__(self, initiator)
-        self.target = target
-
-    def is_affecting(self, combatant):
-        return combatant is self.target
+class StartOfTurnAutoEffect(CombatantEffect):
+    def __init__(self, initiator, targets):
+        CombatantEffect.__init__(self, initiator, targets)
 
     def activate(self):
         pass
