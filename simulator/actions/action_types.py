@@ -112,6 +112,7 @@ class Passive(Enum):
     CUNNING_ACTION = auto()
     ASSASSINATE = auto()
     REGENERATION = auto()
+    EVASION = auto()
 
 
 class MetaAction(Enum):

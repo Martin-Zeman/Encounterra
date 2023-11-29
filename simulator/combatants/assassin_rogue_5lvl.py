@@ -23,6 +23,7 @@ class AssassinRogue5Lvl(Combatant):
         self.uncanny_dodge = self.add_ability(Reaction.UNCANNY_DODGE)
         self.add_ability(Passive.CUNNING_ACTION)
         self.add_ability(Passive.SNEAK_ATTACK)
+        self.add_ability(Passive.ASSASSINATE)
         self.danger_zone_attack = self.shortbow
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = -1

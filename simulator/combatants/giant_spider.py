@@ -19,7 +19,7 @@ class GiantSpider(Combatant):
         self.size = Size.LARGE
         self.bite_attack = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3,
                                             dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,
-                                            on_hit=OnHitSavingThrowDmg(SavingThrow.CON, 11, "2d8", DamageType.Poison, "Bite Venom"))
+                                            on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 11, "2d8", DamageType.Poison, "Bite Venom")])
         self.add_ability(Reaction.REACTION_ATTACK,  name="Morningstar", combatant=self, to_hit=4, dmg_dice="2d8", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         # TODO Add Web attack
         self.build_attack_fms()

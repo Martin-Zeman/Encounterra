@@ -22,6 +22,7 @@ class AssassinRogue5Lvl(Combatant):
         self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1)
         self.add_ability(Passive.CUNNING_ACTION)
         self.add_ability(Passive.SNEAK_ATTACK)
+        self.add_ability(Passive.ASSASSINATE)
         self.danger_zone_attack = self.shortbow
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = -1

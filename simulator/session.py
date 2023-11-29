@@ -1,3 +1,4 @@
+from .combatants.assassin import Assassin
 from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from .combatants.brown_bear import BrownBear
 from .combatants.bugbear import Bugbear
@@ -96,6 +97,8 @@ class Session:
                 self.combatants.append(SaberToothedTiger(curr_count))
             case VampireSpawn.type:
                 self.combatants.append(VampireSpawn(curr_count))
+            case Assassin.type:
+                self.combatants.append(Assassin(curr_count))
             case _:
                 logger.error("Unknown combatant type")
                 return

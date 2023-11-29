@@ -101,11 +101,13 @@ class RoundManager:
         return None
 
     def simulate(self):
+        battle_map = Map.get()
         self.roll_initiative()
         self.order_by_initiative()
         done = False
         logger.info("--------------START--------------")
         for r in range(self.num_rounds):
+            battle_map.combat_round = r
             logger.info(f"Round {r + 1}:")
             if done:
                 logger.info("The fight is over")
@@ -116,7 +118,7 @@ class RoundManager:
                 if not combatant.is_alive():
                     continue
                 logger.info(f"It's {combatant}'s turn")
-                logger.info(Map.get())
+                logger.info(battle_map)
                 self.effect_tracker.start_of_turn(combatant)
                 if not combatant.is_alive():  # Start of turn effects can kill
                     continue

@@ -16,7 +16,7 @@ logger = logging.getLogger("Encounterra")
 
 class RangedAttackFactory(AttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None, extra_dmg=[]):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[]):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg)
         self.flags |= FactoryFlags.IS_RANGED
 
@@ -43,8 +43,8 @@ class RangedAttackFactory(AttackFactory):
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
                 acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
-            if self.on_hit:
-                acc += calc_p_hit(to_hit_total, target.ac) * self.on_hit.calculate_threat(self.combatant, target)
+            for oh in self.on_hit:
+                acc += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
             return acc
         return 0
 

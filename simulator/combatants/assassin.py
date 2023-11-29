@@ -1,0 +1,77 @@
+import copy
+
+from ..abilities.on_hit_saving_throw_dmg import OnHitSavingThrowDmg
+from ..actions.action_types import Action, Reaction, Passive
+from ..utils.state_machine_template import StateMachineTemplate
+from ..combatant import Combatant
+from ..misc import DamageType, SavingThrow, Class
+import logging
+
+logger = logging.getLogger("Encounterra")
+
+
+class Assassin(Combatant):
+
+    type = "Assassin"
+
+    def __init__(self, num_or_name=1):
+        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=8, hp=78, ac=15, init_bonus=3, speed=30, spell_to_hit=0, resistances={DamageType.Poison}, dc=15)
+        self.shortsword = self.add_ability(Action.MELEE_ATTACK, name="Shortsword", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=3,
+                                       dmg_type=DamageType.Piercing, attack_range=1, finesse=True, on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
+        self.light_crossbow = self.add_ability(Action.RANGED_ATTACK,  name="Light Crossbow", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=3,
+                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=20, on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
+        self.add_ability(Reaction.REACTION_ATTACK, name="Shortsword", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1,
+                         on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
+        self.add_ability(Passive.EVASION)
+        self.add_ability(Passive.SNEAK_ATTACK)
+        self.add_ability(Passive.ASSASSINATE)
+        self.danger_zone_attack = self.shortsword
+        self.build_attack_fms()
+        self.saving_throws[SavingThrow.STR] = 0
+        self.saving_throws[SavingThrow.DEX] = 6
+        self.saving_throws[SavingThrow.CON] = 2
+        self.saving_throws[SavingThrow.INT] = 4
+        self.saving_throws[SavingThrow.WIS] = 0
+        self.saving_throws[SavingThrow.CHA] = 0
+        self.athletics = 0
+        self.acrobatics = 6
+        self.stealth = 9
+        self.passive_perception = 10
+
+    def build_attack_fms(self):
+        self.attack_fsm = StateMachineTemplate()
+        self.attack_fsm.add_state('1')
+        self.attack_fsm.add_transition(str(self.shortsword[1]), '0', '1')
+        self.attack_fsm.add_transition(str(self.shortsword[1]), '1', 'nop')
+        self.attack_fsm.add_transition(str(self.light_crossbow[1]), '0', 'nop')
+
+    def new_turn(self):
+        super().new_turn()
+        self.already_used_sneak_attack_this_turn = False
+
+    def on_end_of_turn(self):
+        super().on_end_of_turn()
+        self.already_used_sneak_attack_this_turn = False
+
+    def prompt_aoo(self, moving_combatant):
+        return None  # Saving reaction for Shield
+
+    def export_resources(self):
+        return {
+            'movement': self.movement,
+            'already_used_sneak_attack_this_turn': self.already_used_sneak_attack_this_turn,
+            'has_action': self.has_action,
+            'has_bonus_action': self.has_bonus_action,
+            'has_haste_action': self.has_haste_action,
+            'attack_state_machine': self.attack_fsm.state,
+            'ammo': copy.deepcopy(self.ammo)
+        }
+
+    def load_resources(self, resources):
+        self.movement = resources['movement']
+        self.already_used_sneak_attack_this_turn = resources['already_used_sneak_attack_this_turn']
+        self.has_action = resources['has_action']
+        self.has_bonus_action = resources['has_bonus_action']
+        self.has_haste_action = resources['has_haste_action']
+        self.attack_fsm.set_state(resources['attack_state_machine'])
+        self.ammo = resources['ammo']

@@ -18,7 +18,7 @@ class GiantConstrictorSnake(Combatant):
         super().__init__(num_or_name, Class.MONSTER.BEAST, level=1, hp=60, ac=12, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.size = Size.HUGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
-        self.constrict_attack = self.add_ability(Action.MELEE_ATTACK,  name="ConstrictAttack", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, on_hit=OnHitAutoRestrained(SkillCheck.ATHLETICS, 16))
+        self.constrict_attack = self.add_ability(Action.MELEE_ATTACK,  name="ConstrictAttack", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, on_hit=[OnHitAutoRestrained(SkillCheck.ATHLETICS, 16)])
         self.constrict = self.add_ability(Action.CONSTRICT, combatant=self, attack=self.constrict_attack)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
         self.build_attack_fms()

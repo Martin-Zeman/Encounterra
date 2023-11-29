@@ -35,22 +35,22 @@ class ActionResult(Enum):
     STRONG_BUFF = auto()
     TRAINEE_DEAD = auto()
 
-def has_advantage_saving_throw(ability, target):
-    if RollType.ADVANTAGE in target.saving_throws_roll_type_mod[ability.factory.saving_throw]:
+def has_advantage_saving_throw(saving_throw, target):
+    if RollType.ADVANTAGE in target.saving_throws_roll_type_mod[saving_throw]:
         return True
-    if ability.factory.saving_throw is SavingThrow.DEX and target.has_passive(
+    if saving_throw is SavingThrow.DEX and target.has_passive(
             Passive.DANGER_SENSE) and not target.is_affected_by_any(Conditions.INCAPACITATED,
                                                                               Conditions.BLINDED,
                                                                               Conditions.DEAFENED):
         return RollType.ADVANTAGE
-    if ability.factory.saving_throw is SavingThrow.DEX and target.is_dodging:
+    if saving_throw is SavingThrow.DEX and target.is_dodging:
         return RollType.ADVANTAGE
     return RollType.STRAIGHT
 
-def has_disadvantage_saving_throw(ability, target):
-    if RollType.DISADVANTAGE in target.saving_throws_roll_type_mod[ability.factory.saving_throw]:
+def has_disadvantage_saving_throw(saving_throw, target):
+    if RollType.DISADVANTAGE in target.saving_throws_roll_type_mod[saving_throw]:
         return True
-    if ability.factory.saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
+    if saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
         return True
     return False
 
@@ -59,7 +59,7 @@ def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True):
     # TODO prompt reaction
     # TODO Conditions
     bonus = target.saving_throws[ability.factory.saving_throw]
-    types = {has_advantage_saving_throw(ability, target), has_disadvantage_saving_throw(ability, target)}
+    types = {has_advantage_saving_throw(ability.factory.saving_throw, target), has_disadvantage_saving_throw(ability.factory.saving_throw, target)}
     final_modifier = reconcile_roll_types(types)
 
     if final_modifier is RollType.STRAIGHT:
@@ -78,18 +78,26 @@ def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True):
     else:
         saved = False
     if not saved:
-        logger.info(f"{ability.shorthand_str()} deals {dmg} to {target}")
-        target.receive_dmg(dmg, ability.factory.dmg_type)
+        if ability.factory.saving_throw is SavingThrow.DEX and target.has_passive(Passive.EVASION):
+            dmg = dmg // 2
+            logger.info(f"{target} failed the save but only receives {dmg} damage thanks to Evasion")
+        else:
+            logger.info(f"{ability.shorthand_str()} deals {dmg} to {target}")
+            target.receive_dmg(dmg, ability.factory.dmg_type)
     elif half_on_success:
-        logger.info(f"{ability.shorthand_str()} deals {dmg // 2} to {target}")
-        target.receive_dmg(dmg // 2, ability.factory.dmg_type)
+        if ability.factory.saving_throw is SavingThrow.DEX and target.has_passive(Passive.EVASION):
+            logger.info(f"{target} made the save and receives no damage thanks to Evasion")
+        else:
+            dmg = dmg // 2
+            logger.info(f"{ability.shorthand_str()} deals {dmg} to {target}")
+            target.receive_dmg(dmg, ability.factory.dmg_type)
 
 
 def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
     # TODO prompt reaction
     # TODO Conditions
     bonus = target.saving_throws[ability.st]
-    types = {has_advantage_saving_throw(ability, target), has_disadvantage_saving_throw(ability, target)}
+    types = {has_advantage_saving_throw(ability.st, target), has_disadvantage_saving_throw(ability.st, target)}
     final_modifier = reconcile_roll_types(types)
 
     if final_modifier is RollType.STRAIGHT:
@@ -136,6 +144,9 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if battle_map.effect_tracker.is_combatant_hidden_from(attacker, target):
             return RollType.ADVANTAGE
+        if attacker.has_passive(Passive.ASSASSINATE) and battle_map.combat_round == 0 and attacker.curr_init > target.curr_init:
+            logger.info(f"{attacker} gains advantage thanks to Assassinate")
+            return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
     def has_advantage_melee(self, attack, attacker, target):
@@ -160,6 +171,9 @@ class ActionResolver:
         if target.wears_metal and (attack.factory.action_type is Action.SHOCKING_GRASP or attack.factory.action_type is BonusAction.QUICKENED_SHOCKING_GRASP or attack.factory.action_type is Action.TWINNED_SHOCKING_GRASP):
             return RollType.ADVANTAGE
         if battle_map.effect_tracker.is_combatant_hidden_from(attacker, target):
+            return RollType.ADVANTAGE
+        if attacker.has_passive(Passive.ASSASSINATE) and battle_map.combat_round == 0 and attacker.curr_init > target.curr_init:
+            logger.info(f"{attacker} gains advantage thanks to Assassinate")
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
@@ -353,11 +367,12 @@ class ActionResolver:
                 f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {base_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)} damage", extra={"team": self.teams.get_team(attacker)})
             total_compound_dmg = [(base_dmg, attack.get_dmg_type())] + extra_dmg
             attack.roll_type = final_modifier
-            if target and attack.factory.on_hit is not None:
-                on_hit_dmg = attack.factory.on_hit.hit(attacker, attack, target, multiplier)
-                if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
-                    logger.info(f"With extra {on_hit_dmg[0]} damage from {attack.factory.on_hit.name}", extra={"team": self.teams.get_team(attacker)})
-                    total_compound_dmg.append(on_hit_dmg)
+            if target:
+                for oh in attack.factory.on_hit:
+                    on_hit_dmg = oh.hit(attacker, attack, target, multiplier)
+                    if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
+                        logger.info(f"With extra {on_hit_dmg[0]} damage from {oh.name}", extra={"team": self.teams.get_team(attacker)})
+                        total_compound_dmg.append(on_hit_dmg)
             target.receive_compound_dmg(total_compound_dmg)
             Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
 

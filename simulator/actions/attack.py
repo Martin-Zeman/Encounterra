@@ -21,7 +21,7 @@ class AttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=None, extra_dmg=[]):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[]):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
@@ -76,8 +76,8 @@ class AttackFactory(DirectThreatFactory):
             acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
                 acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
-            if self.on_hit:
-                acc += calc_p_hit(to_hit_total, target.ac) * self.on_hit.calculate_threat(self.combatant, target)
+            for oh in self.on_hit:
+                acc += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
             return acc
         return 0
 
@@ -88,8 +88,8 @@ class AttackFactory(DirectThreatFactory):
         baseline = mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         for extra in self.extra_dmg:
             baseline += mean_dmg(self.to_hit, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
-        if self.on_hit:
-            baseline += calc_p_hit(self.to_hit, target.ac) * self.on_hit.calculate_threat(self.combatant, target)
+        for oh in self.on_hit:
+            baseline += calc_p_hit(self.to_hit, target.ac) * oh.calculate_threat(self.combatant, target)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
         mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
@@ -112,8 +112,8 @@ class AttackFactory(DirectThreatFactory):
             modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
             for extra in self.extra_dmg:
                 modified += mean_dmg(to_hit_total, extra[0], 0, total_target_ac, total_crit, target.is_resistant_to(extra[1]))
-            if self.on_hit:
-                modified += calc_p_hit(to_hit_total, target.ac) * self.on_hit.calculate_threat(self.combatant, target)
+            for oh in self.on_hit:
+                modified += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
         except:
             logger.error("Error in mean_dmg of calculate_threat_to_target_delta of AttackFactory")
             modified = baseline

@@ -23,11 +23,11 @@ class GiantToad(Combatant):
         super().__init__(num_or_name, Class.MONSTER.BEAST, level=1, hp=39, ac=11, init_bonus=1, spell_to_hit=0, speed=20, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.PRE_SWALLOW_BITE,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,
-                                     on_hit=OnHitAutoRestrained(SkillCheck.ATHLETICS, 13), extra_dmg=[('1d10', DamageType.Poison)])
+                                     on_hit=[OnHitAutoRestrained(SkillCheck.ATHLETICS, 13)], extra_dmg=[('1d10', DamageType.Poison)])
         self.bite_and_swallow = self.add_ability(Action.BITE_AND_SWALLOW, name="Bite and Swallow", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2,
-                                     dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, on_hit=OnHitSwallow(), extra_dmg=[('1d10', DamageType.Poison)])
+                                     dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, on_hit=[OnHitSwallow()], extra_dmg=[('1d10', DamageType.Poison)])
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,
-                         on_hit=OnHitAutoRestrained(SkillCheck.ATHLETICS, 13), extra_dmg=[('1d10', DamageType.Poison)])
+                         on_hit=[OnHitAutoRestrained(SkillCheck.ATHLETICS, 13)], extra_dmg=[('1d10', DamageType.Poison)])
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 2
         self.saving_throws[SavingThrow.DEX] = 2

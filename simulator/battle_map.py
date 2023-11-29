@@ -238,6 +238,7 @@ class Map:
             cls._instance.combatant_coordinate_cache = dict()  # Maps combatant -> coordinate
             cls._instance.effect_tracker = None
             cls._instance.cache_enabled = True
+            cls._instance.combat_round = 0
         return cls._instance
 
     @classmethod
