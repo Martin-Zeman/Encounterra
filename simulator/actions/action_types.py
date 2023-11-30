@@ -71,6 +71,7 @@ class Reaction(Enum):
     SHIELD = auto()
     PRE_SWALLOW_BITE_REACTION = auto()
     UNCANNY_DODGE = auto()
+    PARRY = auto()
 
 
 class Movement(Enum):
@@ -113,6 +114,8 @@ class Passive(Enum):
     ASSASSINATE = auto()
     REGENERATION = auto()
     EVASION = auto()
+    HEART_OF_HRUGGEK = auto()
+    BLINDSIGHT = auto()
 
 
 class MetaAction(Enum):

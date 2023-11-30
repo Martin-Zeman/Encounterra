@@ -1,7 +1,10 @@
 from .combatants.assassin import Assassin
 from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from .combatants.bandit import Bandit
+from .combatants.bandit_captain import BanditCaptain
 from .combatants.brown_bear import BrownBear
 from .combatants.bugbear import Bugbear
+from .combatants.bugbear_chief import BugbearChief
 from .combatants.dire_wolf import DireWolf
 from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from .combatants.dragonclaw_cultist import DragonclawCultist
@@ -11,11 +14,13 @@ from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
 from .combatants.moon_druid_5lvl import MoonDruid5Lvl
+from .combatants.needle_blight import NeedleBlight
 from .combatants.ogre import Ogre
 from .combatants.quetzalcoatlus import Quetzalcoatlus
 from .combatants.saber_toothed_tiger import SaberToothedTiger
 from .combatants.stone_giant import StoneGiant
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
 from .effects.effect_tracker import EffectTracker
 from .utils.utils import get_combatant_classes
@@ -71,6 +76,12 @@ class Session:
                 self.combatants.append(Goblin(curr_count))
             case Bugbear.type:
                 self.combatants.append(Bugbear(curr_count))
+            case BugbearChief.type:
+                self.combatants.append(BugbearChief(curr_count))
+            case Bandit.type:
+                self.combatants.append(Bandit(curr_count))
+            case BanditCaptain.type:
+                self.combatants.append(BanditCaptain(curr_count))
             case Ogre.type:
                 self.combatants.append(Ogre(curr_count))
             case StoneGiant.type:
@@ -99,6 +110,10 @@ class Session:
                 self.combatants.append(VampireSpawn(curr_count))
             case Assassin.type:
                 self.combatants.append(Assassin(curr_count))
+            case TwigBlight.type:
+                self.combatants.append(TwigBlight(curr_count))
+            case NeedleBlight.type:
+                self.combatants.append(NeedleBlight(curr_count))
             case _:
                 logger.error("Unknown combatant type")
                 return

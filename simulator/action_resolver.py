@@ -352,7 +352,8 @@ class ActionResolver:
             if target.has_reaction:
                 reaction = target.prompt_after_hit_reaction(attacker, attack, rolled + attack.factory.to_hit)
                 self.resolve_action(reaction, target)
-        if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
+        if rolled + attack.factory.to_hit >= (target.ac + target.one_time_ac_bonus):  # Potentially missing this time
+            target.one_time_ac_bonus = 0
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             dmg_dice_sum = roll_dice(dice)
             # logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
@@ -532,6 +533,9 @@ class ActionResolver:
                 combatant.shield_spell_active = True
                 combatant.ac += 5
                 return ActionResult.FEASIBLE
+            case Reaction.PARRY:
+                logger.info(f"{combatant} uses {actoid}")
+                combatant.one_time_ac_bonus = actoid.ac
             case Reaction.UNCANNY_DODGE:
                 logger.info(f"{combatant} uses {actoid}")
                 combatant.uncanny_dodge_active = True

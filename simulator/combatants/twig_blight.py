@@ -1,39 +1,39 @@
 import copy
 
-from ..actions.action_types import Action, Reaction
+from ..actions.action_types import Action, Reaction, Passive
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
-from ..misc import DamageType, SavingThrow, Class
+from ..misc import DamageType, SavingThrow, Class, Size
 import logging
 
 logger = logging.getLogger("Encounterra")
 
 
-class Bandit(Combatant):
+class TwigBlight(Combatant):
 
-    type = "Bandit"
+    type = "Twig Blight"
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=1, hp=11, ac=12, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.scimitar = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.light_crossbow = self.add_ability(Action.RANGED_ATTACK,  name="Light Crossbow", combatant=self, to_hit=4, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=1)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        super().__init__(num_or_name, Class.MONSTER.PLANT, level=1, hp=4, ac=13, init_bonus=1, spell_to_hit=0, speed=20, resistances=set(), dc=0)
+        self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=3, dmg_dice="1d4", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=3, dmg_dice="1d4", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.add_ability(Passive.BLINDSIGHT)
         self.build_attack_fms()
-        self.saving_throws[SavingThrow.STR] = 0
+        self.size = Size.SMALL
+        self.saving_throws[SavingThrow.STR] = -2
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 1
-        self.saving_throws[SavingThrow.INT] = 0
-        self.saving_throws[SavingThrow.WIS] = 0
-        self.saving_throws[SavingThrow.CHA] = 0
-        self.athletics = 0
+        self.saving_throws[SavingThrow.INT] = -3
+        self.saving_throws[SavingThrow.WIS] = -1
+        self.saving_throws[SavingThrow.CHA] = -4
+        self.athletics = -2
         self.acrobatics = 1
-        self.passive_perception = 10
+        self.passive_perception = 9
 
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_transition(str(self.scimitar[1]), '0', 'nop')  # Melee
-        self.attack_fsm.add_transition(str(self.light_crossbow[1]), '0', 'nop')  # Ranged
+        self.attack_fsm.add_transition(str(self.claws[1]), '0', 'nop')  # Melee
 
 
     def export_resources(self):

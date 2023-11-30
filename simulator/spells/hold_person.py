@@ -1,13 +1,15 @@
+import copy
+
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from ..actions.action_types import BonusAction
+from ..actions.action_types import BonusAction, Passive
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC, roll_saving_throw, Visibility
+from ..misc import SavingThrow, Conditions, ROUND_HORIZON, ConditionWithoutDC, roll_saving_throw, Visibility, reconcile_roll_types
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import get_saving_throw_fail_prob, calculate_threat_in_delta
@@ -123,13 +125,28 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         return EffectType.HOLD_PERSON
 
     def activate(self):
-        if not roll_saving_throw(self.combatants[0].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT):
+        roll_type_modifiers = copy.copy(self.combatants[0].saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
+        if self.combatants[0].has_passive(Passive.HEART_OF_HRUGGEK):
+            roll_type_modifiers.add(RollType.ADVANTAGE)
+        saved = roll_saving_throw(self.combatants[0].saving_throws[self.st], self.dc, reconcile_roll_types(roll_type_modifiers))
+        if not saved:
             logger.info(f"{self.combatants[0]} failed the save against Hold Person")
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
             self.combatants[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
+
+    def end_of_turn(self):
+        roll_type_modifiers = copy.copy(self.combatants[0].saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
+        if self.combatants[0].has_passive(Passive.HEART_OF_HRUGGEK):
+            roll_type_modifiers.add(RollType.ADVANTAGE)
+        saved = roll_saving_throw(self.combatants[0].saving_throws[self.st], self.dc, reconcile_roll_types(roll_type_modifiers))
+        if saved:
+            logger.info(f"{self.combatants[0]} saved against {self}")
+            return False
+        logger.info(f"{self.combatants[0]} failed the save against {self}")
+        return True
 
     def deactivate(self):
         self.factory.combatant.break_concentration()

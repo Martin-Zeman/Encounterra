@@ -106,6 +106,7 @@ class Combatant(ProtoCombatant):
         self.uncanny_dodge_active = False
         self.display_abilities = []
         self.dmg_types_took_last_round = set()
+        self.one_time_ac_bonus = 0
 
     def __str__(self):
         return self.name
@@ -179,6 +180,10 @@ class Combatant(ProtoCombatant):
                     except AttributeError:
                         pass  # This is ok for the sake of getting all the combatants by the backend
                     self.display_abilities.append("Regeneration")
+                case Passive.HEART_OF_HRUGGEK:
+                    self.display_abilities.append("Heart of Hruggek")
+                case Passive.BLINDSIGHT:
+                    self.display_abilities.append("Blindsight")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -314,6 +319,10 @@ class Combatant(ProtoCombatant):
                 case Reaction.SHIELD | Reaction.UNCANNY_DODGE:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    return self.reaction_factories[-1]
+                case Reaction.PARRY:
+                    self.reaction_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
+                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name() + f" : {kwargs['ac']}")
                     return self.reaction_factories[-1]
                 case _:
                     logger.error("Unknown reaction")
@@ -590,6 +599,7 @@ class Combatant(ProtoCombatant):
         for f in self.bonus_action_factories:
             if FactoryFlags.HAS_AMMO in f[1].flags:
                 self.ammo[f[1].name] = f[1].ammo
+        self.one_time_ac_bonus = 0  # Not really needed
 
 
     @contextmanager

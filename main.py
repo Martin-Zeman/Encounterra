@@ -1,10 +1,14 @@
 import logging
 
+from simulator.combatants.bandit_captain import BanditCaptain
 from simulator.combatants.bugbear import Bugbear
+from simulator.combatants.bugbear_chief import BugbearChief
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
+from simulator.combatants.needle_blight import NeedleBlight
 from simulator.combatants.ogre import Ogre
 from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.stone_giant import StoneGiant
+from simulator.combatants.twig_blight import TwigBlight
 from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
@@ -22,12 +26,18 @@ if __name__ == '__main__':
     CustomLogger(logging.INFO)
     session = Session()
     # session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
-    session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
+    # session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
     # session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
-    session.add_combatant(Assassin, Teams.Color.RED)
+    # session.add_combatant(Assassin, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
-    # session.add_combatant(Bugbear, Teams.Color.RED)
-    # session.add_combatant(Bugbear, Teams.Color.RED)
+    session.add_combatant(BanditCaptain, Teams.Color.BLUE)
+    session.add_combatant(Bugbear, Teams.Color.RED)
+    session.add_combatant(Bugbear, Teams.Color.RED)
+    # session.add_combatant(BugbearChief, Teams.Color.BLUE)
+    # session.add_combatant(TwigBlight, Teams.Color.RED)
+    # session.add_combatant(TwigBlight, Teams.Color.RED)
+    # session.add_combatant(TwigBlight, Teams.Color.RED)
+    # session.add_combatant(NeedleBlight, Teams.Color.RED)
     # session.add_combatant(Goblin, Teams.Color.BLUE)
     # session.add_combatant(BrownBear, Teams.Color.BLUE)
     # session.add_combatant(Bugbear, Teams.Color.BLUE)

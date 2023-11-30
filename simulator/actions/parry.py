@@ -1,4 +1,3 @@
-from ..spells.spell import SpellStats
 from ..actions.action_types import Reaction
 import logging
 from ..actions.actoid import Actoid, ActoidFlags
@@ -6,31 +5,22 @@ from ..factory_interfaces import DirectThreatFactory
 
 logger = logging.getLogger("Encounterra")
 
-class ShieldFactory(DirectThreatFactory):
-    level = 1
-    range = SpellStats.Range.SELF.value
-    target = SpellStats.Target.SELF
-    duration = SpellStats.Duration.INSTANTANEOUS
-    concentration = False
-    type = SpellStats.Type.BUFF
-    dc = None
-    dmg_type = None
+class ParryFactory(DirectThreatFactory):
 
-
-    def __init__(self, caster):
+    def __init__(self, ac):
         DirectThreatFactory.__init__(self)
-        self.action_type = Reaction.SHIELD
-        self.combatant = caster
+        self.action_type = Reaction.PARRY
+        self.ac = ac
 
     def __str__(self):
         """
         Important for FSM building
         """
-        return "ShieldFactory"
+        return "ParryFactory"
 
 
     def get_ability_name(self):
-        return "Shield"
+        return "Parry"
 
 
     def calculate_threat_to_target(self, target, **kwargs):
@@ -40,10 +30,10 @@ class ShieldFactory(DirectThreatFactory):
         return 0
 
     def create(self):
-        return Shield(self)
+        return Parry(self)
 
 
-class Shield(Actoid):
+class Parry(Actoid):
 
     def __init__(self, factory):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
@@ -51,10 +41,10 @@ class Shield(Actoid):
         self.factory = factory
 
     def __str__(self):
-        return "Shield"
+        return "Parry"
 
     def shorthand_str(self):
-        return "Shield"
+        return "Parry"
 
     def get_eligible_coords(self, distances, shortest_paths):
         pass  # No need

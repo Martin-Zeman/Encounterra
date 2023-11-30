@@ -1,6 +1,7 @@
 import logging
 
 from .grapple_attack import GrappleAttackFactory
+from .parry import ParryFactory
 from .vampiric_bite import VampiricBiteFactory
 from ..abilities.bite_and_swallow import BiteAndSwallowFactory
 from ..abilities.pre_swallow_bite import PreSwallowBiteFactory
@@ -103,6 +104,7 @@ TO_FACTORY = {
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
     Reaction.PRE_SWALLOW_BITE_REACTION: PreSwallowBiteFactory,
     Reaction.UNCANNY_DODGE: UncannyDodgeFactory,
+    Reaction.PARRY: ParryFactory,
 
     HasteAction.HASTE_MELEE_ATTACK: MeleeAttackFactory,
     HasteAction.HASTE_PRE_SWALLOW_BITE: PreSwallowBiteFactory,

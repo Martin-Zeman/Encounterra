@@ -176,6 +176,7 @@ class Monster(Enum):
     ABERRATION = "Aberration"
     FEY = "Fey"
     OOZE = "Ooze"
+    PLANT = "Plant"
 
 
 class Class:
