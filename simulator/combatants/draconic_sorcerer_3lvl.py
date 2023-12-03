@@ -72,11 +72,11 @@ class DraconicSorcerer3Lvl(Combatant):
 
 
     def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
-        if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll < self.dc + 5:
+        if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll < self.ac + 5:
             shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
             # logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})
             return shield_factory.create() if shield_factory else None
-        elif attack_roll >= self.dc + 5:
+        elif attack_roll >= self.ac + 5:
             logger.info("Shield would not suffice")
         elif self.has_reaction:
             logger.info(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})

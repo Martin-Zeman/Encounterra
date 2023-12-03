@@ -18,6 +18,7 @@ class BanditCaptain(Combatant):
         self.scimitar = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.dagger = self.add_ability(Action.MELEE_ATTACK,  name="Dagger", combatant=self, to_hit=5, dmg_dice="1d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.dagger_throw = self.add_ability(Action.RANGED_ATTACK, name="Thrown Dagger", combatant=self, to_hit=4, dmg_dice="1d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=12, crit_range=1, ammo=10)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Reaction.PARRY, ac=2)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4
@@ -71,9 +72,9 @@ class BanditCaptain(Combatant):
         return None
 
     def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
-        if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll < self.dc + 2:
+        if self.has_reaction and attack_roll < self.ac + 2:
             parry_factory = get_factory_of_type(self.reaction_factories, Reaction.PARRY)
             return parry_factory.create() if parry_factory else None
-        elif attack_roll >= self.dc + 2:
+        elif attack_roll >= self.ac + 2:
             logger.info("Parry would not suffice")
         return None

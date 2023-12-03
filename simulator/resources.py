@@ -25,7 +25,10 @@ def use_resources(combatant, action):
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | \
                  Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
                 subject.ammo[action.factory.name] -= 1
-                subject.attack_fsm.trigger(str(action.factory))
+                try:
+                    subject.attack_fsm.trigger(str(action.factory))
+                except AttributeError as e:
+                    print("FIXME")
             case Action.GRAPPLE_ATTACK:
                 subject.attack_fsm.trigger(str(action.factory))
             case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP:

@@ -102,8 +102,9 @@ def generate_proto_dag(combatant):
         fafs = get_all_feasible_action_factories(subject, depth)
         try:
             fas = tuple(a for faf in fafs for a in af_to_a[faf])
-        except Exception as e:
-            print("FIXME")
+        except KeyError:  # This can happen when the attack_fsm doesn't have all attacks types available from state 0
+            af_to_a = {faf: faf[1].create_all() for faf in fafs}
+            fas = tuple(a for faf in fafs for a in af_to_a[faf])
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
         state_footprint = actions_to_set(fas)
         action_taken_name = f"{action_taken}_{depth}"
