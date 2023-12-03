@@ -1,9 +1,15 @@
 import logging
 import copy
+from enum import Enum, auto
 
 from .misc import Class
 
 logger = logging.getLogger("Encounterra")
+
+class SpellcastingType(Enum):
+    FULL_CASTER = auto()
+    HALF_CASTER = auto()
+    QUARTER_CASTER = auto()
 
 
 FULL_CASTER_TABLE = {

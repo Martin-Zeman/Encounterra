@@ -2,9 +2,13 @@ from .combatants.assassin import Assassin
 from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from .combatants.bandit import Bandit
 from .combatants.bandit_captain import BanditCaptain
+from .combatants.berserker import Berserker
 from .combatants.brown_bear import BrownBear
 from .combatants.bugbear import Bugbear
 from .combatants.bugbear_chief import BugbearChief
+from .combatants.commoner import Commoner
+from .combatants.cultist import Cultist
+from .combatants.cultist_fanatic import CultistFanatic
 from .combatants.dire_wolf import DireWolf
 from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from .combatants.dragonclaw_cultist import DragonclawCultist
@@ -74,6 +78,8 @@ class Session:
                 self.combatants.append(DragonclawCultist(curr_count))
             case Goblin.type:
                 self.combatants.append(Goblin(curr_count))
+            case Berserker.type:
+                self.combatants.append(Berserker(curr_count))
             case Bugbear.type:
                 self.combatants.append(Bugbear(curr_count))
             case BugbearChief.type:
@@ -82,6 +88,12 @@ class Session:
                 self.combatants.append(Bandit(curr_count))
             case BanditCaptain.type:
                 self.combatants.append(BanditCaptain(curr_count))
+            case Cultist.type:
+                self.combatants.append(Cultist(curr_count))
+            case CultistFanatic.type:
+                self.combatants.append(CultistFanatic(curr_count))
+            case Commoner.type:
+                self.combatants.append(Commoner(curr_count))
             case Ogre.type:
                 self.combatants.append(Ogre(curr_count))
             case StoneGiant.type:

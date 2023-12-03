@@ -19,6 +19,7 @@ class DraconicSorcerer5Lvl(Combatant):
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.add_ability(Passive.SPELLCASTING, type=self.cls)
         self.add_ability(Action.FIREBALL)
         self.firebolt = self.add_ability(Action.FIREBOLT)
         self.danger_zone_attack = self.firebolt

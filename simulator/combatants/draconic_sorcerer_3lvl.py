@@ -21,6 +21,7 @@ class DraconicSorcerer3Lvl(Combatant):
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.firebolt = self.add_ability(Action.FIREBOLT)
         self.danger_zone_attack = self.firebolt
+        self.add_ability(Passive.SPELLCASTING, type=self.cls)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.SCORCHING_RAY)
         self.add_ability(Reaction.SHIELD)

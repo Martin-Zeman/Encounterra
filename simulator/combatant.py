@@ -87,7 +87,7 @@ class Combatant(ProtoCombatant):
         self.dc_conditions = []
         self.is_dodging = False  # TODO reconcile this somehow with disadvantage_on_incoming_attacks
         self.has_disengaged = False  # TODO Get rid of this
-        self.spellslots = spellslot_factory(self.cls, self.level)
+        self.spellslots = None
         self.concentration_effect = None
         self.already_cast_leveled_spell_this_turn = False
         self.shield_spell_active = False
@@ -144,6 +144,9 @@ class Combatant(ProtoCombatant):
         # TODO Consider removing the kwargs and derive everything from the level
         if isinstance(action_type, Passive):
             match action_type:
+                case Passive.SPELLCASTING:
+                    self.spellslots = spellslot_factory(kwargs["type"], self.level)
+                    self.display_abilities.append("Spellcasting")
                 case Passive.METAMAGIC:
                     self.curr_sorcery_points = kwargs["sorcery_points"]
                     self.max_sorcery_points = kwargs["sorcery_points"]
@@ -182,6 +185,8 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Regeneration")
                 case Passive.HEART_OF_HRUGGEK:
                     self.display_abilities.append("Heart of Hruggek")
+                case Passive.DARK_DEVOTION:
+                    self.display_abilities.append("Dark Devotion")
                 case Passive.BLINDSIGHT:
                     self.display_abilities.append("Blindsight")
                 case _:

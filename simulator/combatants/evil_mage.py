@@ -1,6 +1,6 @@
 import copy
 
-from ..actions.action_types import Action, BonusAction, Reaction
+from ..actions.action_types import Action, BonusAction, Reaction, Passive
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..spellslots import Spellslots, spellslot_factory
@@ -22,11 +22,11 @@ class EvilMage(Combatant):
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.shocking_grasp = self.add_ability(Action.SHOCKING_GRASP)
         self.danger_zone_attack = self.shocking_grasp
+        self.add_ability(Passive.SPELLCASTING, type=Class.WIZARD.ABJURATION)
         self.add_ability(Action.MAGIC_MISSILE)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
-        self.spellslots = spellslot_factory(Class.WIZARD.ABJURATION, self.level)  # Subclass doesn't matter
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 6

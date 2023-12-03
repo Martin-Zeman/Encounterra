@@ -25,6 +25,7 @@ class BlessFactory(ThreatModifierFactory):
     dmg_type = None
 
     def __init__(self, action_type, caster):
+        super().__init__()
         self.action_type = action_type  # QUICKENED_BLESS, BLESS
         self.combatant = caster
 

@@ -29,7 +29,7 @@ class Barbarian(Enum):
 
 
 class Bard(Enum):
-    COLLEGE_OF_CREATION = "College of "
+    COLLEGE_OF_CREATION = "College of Creation"
     COLLEGE_OF_ELOQUENCE = "College of Eloquence"
     COLLEGE_OF_GLAMOUR = "College of Glamour"
     COLLEGE_OF_LORE = "College of Lore"

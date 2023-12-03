@@ -36,6 +36,7 @@ class Action(Enum):
     GRAPPLE = auto()
     GRAPPLE_ATTACK = auto()
     VAMPIRIC_BITE = auto()
+    BLESS = auto()
 
 
 class BonusAction(Enum):
@@ -101,6 +102,7 @@ class HasteAction(Enum):
 
 
 class Passive(Enum):
+    SPELLCASTING = auto()
     SENTINEL = auto()
     POLEARM_MASTER = auto()
     DANGER_SENSE = auto()
@@ -115,6 +117,7 @@ class Passive(Enum):
     REGENERATION = auto()
     EVASION = auto()
     HEART_OF_HRUGGEK = auto()
+    DARK_DEVOTION = auto()
     BLINDSIGHT = auto()
 
 

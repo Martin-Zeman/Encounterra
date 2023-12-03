@@ -22,6 +22,7 @@ class EffectType(Enum):
     FAERIE_FIRE = auto()
     DIGESTION = auto()
     REGENERATION = auto()
+    BLESS = auto()
 
 
 class Effect(ABC):

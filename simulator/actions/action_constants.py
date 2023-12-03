@@ -19,6 +19,7 @@ from ..actions.dodge import DodgeFactory
 from ..actions.hide import HideFactory
 from ..actions.melee_attack import MeleeAttackFactory
 from ..actions.ranged_attack import RangedAttackFactory
+from ..spells.bless import BlessFactory
 from ..spells.chaosbolt import ChaosboltFactory
 from ..spells.faerie_fire import FaerieFireFactory
 from ..spells.fireball import FireballFactory
@@ -78,6 +79,7 @@ TO_FACTORY = {
     Action.FAERIE_FIRE: FaerieFireFactory,
     Action.GRAPPLE_ATTACK: GrappleAttackFactory,
     Action.VAMPIRIC_BITE: VampiricBiteFactory,
+    Action.BLESS: BlessFactory,
 
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
@@ -99,6 +101,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_SHOCKING_GRASP: ShockingGraspFactory,
     BonusAction.QUICKENED_MAGIC_MISSILE: MagicMissileFactory,
     BonusAction.QUICKENED_FAERIE_FIRE: FaerieFireFactory,
+    BonusAction.QUICKENED_BLESS: BlessFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
@@ -123,7 +126,8 @@ TO_QUICKENED = {
     Action.SCORCHING_RAY: BonusAction.QUICKENED_SCORCHING_RAY,
     Action.HOLD_PERSON: BonusAction.QUICKENED_HOLD_PERSON,
     Action.SHOCKING_GRASP: BonusAction.QUICKENED_SHOCKING_GRASP,
-    Action.MAGIC_MISSILE: BonusAction.QUICKENED_MAGIC_MISSILE
+    Action.MAGIC_MISSILE: BonusAction.QUICKENED_MAGIC_MISSILE,
+    Action.BLESS: BonusAction.QUICKENED_BLESS
 }
 
 TO_TWINNED = {

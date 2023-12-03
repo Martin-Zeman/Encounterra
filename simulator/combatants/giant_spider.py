@@ -59,7 +59,6 @@ class GiantSpider(Combatant):
         self.ammo = resources['ammo']
 
     def prompt_aoo(self, moving_combatant):
-        # only use it if I go before my selected target in initiative so that I can move away and use sentinel+pam
         if self.has_reaction:
             aoo = self.aoo_factory[1].create(moving_combatant)
             logger.info(f"{self.name} took an AoO {aoo} against {moving_combatant}",
