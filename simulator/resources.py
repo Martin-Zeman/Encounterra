@@ -101,7 +101,7 @@ def use_resources(combatant, action):
     elif isinstance(action_type, Reaction):
         subject.has_reaction = False
         match action_type:
-            case Reaction.REACTION_ATTACK | Reaction.PRE_SWALLOW_BITE_REACTION | Reaction.UNCANNY_DODGE:
+            case Reaction.REACTION_ATTACK | Reaction.PRE_SWALLOW_BITE_REACTION | Reaction.UNCANNY_DODGE | Reaction.PARRY:
                 pass  # Sufficiently tracked by not having a reaction anymore
             case Reaction.SHIELD:
                 subject.spellslots.use_spellslot(1)

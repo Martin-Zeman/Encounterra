@@ -535,7 +535,7 @@ class ActionResolver:
                 return ActionResult.FEASIBLE
             case Reaction.PARRY:
                 logger.info(f"{combatant} uses {actoid}")
-                combatant.one_time_ac_bonus = actoid.ac
+                combatant.one_time_ac_bonus = actoid.factory.ac
             case Reaction.UNCANNY_DODGE:
                 logger.info(f"{combatant} uses {actoid}")
                 combatant.uncanny_dodge_active = True

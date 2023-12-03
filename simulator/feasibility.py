@@ -301,7 +301,7 @@ def check_feasibility(combatant, action):
         match action_type:
             case Reaction.SHIELD:
                 return combatant.has_reaction and combatant.spellslots.get_spellslots(1) > 0
-            case Reaction.REACTION_ATTACK | Reaction.UNCANNY_DODGE:
+            case Reaction.REACTION_ATTACK | Reaction.UNCANNY_DODGE | Reaction.PARRY:
                 return combatant.has_reaction
             case Reaction.PRE_SWALLOW_BITE_REACTION:
                 return combatant.has_reaction and not combatant.constricted_target
