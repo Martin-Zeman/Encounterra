@@ -47,7 +47,7 @@ def use_resources(combatant, action):
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
-            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE:
+            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS:
                 subject.spellslots.use_spellslot(1)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH:
@@ -74,7 +74,7 @@ def use_resources(combatant, action):
             case BonusAction.MISTY_STEP:
                 subject.spellslots.use_spellslot(2)
                 subject.already_cast_leveled_spell_this_turn = True
-            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE:
+            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS:
                 subject.spellslots.use_spellslot(1)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2

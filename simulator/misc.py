@@ -431,7 +431,7 @@ def get_factory_of_type(factories, type):
     return None
 
 
-def get_attacks(combatant):
+def get_attack_factories(combatant):
     attacks = [af[1] for af in combatant.action_factories if FactoryFlags.IS_ATTACK_LIKE in af[1].flags]
     attacks.extend([baf[1] for baf in combatant.bonus_action_factories if FactoryFlags.IS_ATTACK_LIKE in baf[1].flags])
     return attacks

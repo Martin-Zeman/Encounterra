@@ -111,7 +111,6 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
             self.factory.combatant.concentration_effect = self
             Map.get().effect_tracker.add(self)
 
-
     def deactivate(self):
         self.factory.combatant.break_concentration()
         self.combatants.clear()
@@ -156,7 +155,6 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
         elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FaerieFireFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
-
 
     def on_enter(self, combatant):
         pass

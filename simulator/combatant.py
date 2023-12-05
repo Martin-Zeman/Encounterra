@@ -95,7 +95,7 @@ class Combatant(ProtoCombatant):
         self.saving_throws_flat_mod = {SavingThrow.STR: [0], SavingThrow.DEX: [0], SavingThrow.CON: [0], SavingThrow.INT: [0], SavingThrow.WIS: [0], SavingThrow.CHA: [0]}
         self.saving_throws_dice_mod = {SavingThrow.STR: [], SavingThrow.DEX: [], SavingThrow.CON: [], SavingThrow.INT: [], SavingThrow.WIS: [], SavingThrow.CHA: []}
         self.saving_throws_roll_type_mod = {SavingThrow.STR: set(), SavingThrow.DEX: set(), SavingThrow.CON: set(), SavingThrow.INT: set(), SavingThrow.WIS: set(), SavingThrow.CHA: set()}
-        self.to_hit_flat_mod = [0]
+        self.to_hit_flat_mod = 0
         self.to_hit_dice_mod = []
         self.shortest_paths_cache = None
         self.wears_metal = False
@@ -219,7 +219,7 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
-                case Action.MAGIC_MISSILE | Action.HASTE:
+                case Action.MAGIC_MISSILE | Action.HASTE | Action.BLESS:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]

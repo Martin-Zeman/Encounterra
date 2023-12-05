@@ -9,9 +9,9 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class AssassinRogue5Lvl(Combatant):
+class AssassinRogue3Lvl(Combatant):
 
-    type = "Assassin Rogue 5Lvl"
+    type = "Assassin Rogue 3Lvl"
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, Class.ROGUE.ASSASSIN, level=3, hp=21, ac=14, init_bonus=3, speed=30, spell_to_hit=0, resistances=set(), dc=13)

@@ -1,4 +1,5 @@
 from .combatants.assassin import Assassin
+from .combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
 from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from .combatants.bandit import Bandit
 from .combatants.bandit_captain import BanditCaptain
@@ -10,6 +11,7 @@ from .combatants.commoner import Commoner
 from .combatants.cultist import Cultist
 from .combatants.cultist_fanatic import CultistFanatic
 from .combatants.dire_wolf import DireWolf
+from .combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
 from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from .combatants.dragonclaw_cultist import DragonclawCultist
 from .combatants.evil_mage import EvilMage
@@ -17,6 +19,7 @@ from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
+from .combatants.moon_druid_3lvl import MoonDruid3Lvl
 from .combatants.moon_druid_5lvl import MoonDruid5Lvl
 from .combatants.needle_blight import NeedleBlight
 from .combatants.ogre import Ogre
@@ -72,6 +75,8 @@ class Session:
         match combatant_type:
             case DraconicSorcerer5Lvl.type:
                 self.combatants.append(DraconicSorcerer5Lvl(curr_count))
+            case DraconicSorcerer3Lvl.type:
+                self.combatants.append(DraconicSorcerer3Lvl(curr_count))
             case TotemBarbarian5Lvl.type:
                 self.combatants.append(TotemBarbarian5Lvl(curr_count))
             case DragonclawCultist.type:
@@ -100,8 +105,12 @@ class Session:
                 self.combatants.append(StoneGiant(curr_count))
             case MoonDruid5Lvl.type:
                 self.combatants.append(MoonDruid5Lvl(curr_count))
+            case MoonDruid3Lvl.type:
+                self.combatants.append(MoonDruid3Lvl(curr_count))
             case AssassinRogue5Lvl.type:
                 self.combatants.append(AssassinRogue5Lvl(curr_count))
+            case AssassinRogue3Lvl.type:
+                self.combatants.append(AssassinRogue3Lvl(curr_count))
             case GiantToad.type:
                 self.combatants.append(GiantToad(curr_count))
             case BrownBear.type:

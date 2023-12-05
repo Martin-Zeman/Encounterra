@@ -73,10 +73,15 @@ def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True):
         saved = False
     elif rolled == 20:
         saved = True
-    elif rolled + bonus >= ability.factory.dc:
-        saved = True
     else:
-        saved = False
+        for bonus_die in target.saving_throws_dice_mod[ability.factory.saving_throw]:
+            bonus_dice_roll = roll_dice(bonus_die)
+            logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll")
+            rolled += bonus_dice_roll
+        if rolled + bonus >= ability.factory.dc:
+            saved = True
+        else:
+            saved = False
     if not saved:
         if ability.factory.saving_throw is SavingThrow.DEX and target.has_passive(Passive.EVASION):
             dmg = dmg // 2
@@ -111,10 +116,15 @@ def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
         saved = False
     elif rolled == 20:
         saved = True
-    elif rolled + bonus >= ability.dc:
-        saved = True
     else:
-        saved = False
+        for bonus_die in target.saving_throws_dice_mod[ability.factory.saving_throw]:
+            bonus_dice_roll = roll_dice(bonus_die)
+            logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll")
+            rolled += bonus_dice_roll
+        if rolled + bonus >= ability.dc:
+            saved = True
+        else:
+            saved = False
     if not saved:
         target.receive_dmg(dmg, ability.dmg_type)
         logger.info(f"{ability.name} deals extra {dmg} to {target}")
@@ -304,7 +314,13 @@ class ActionResolver:
             return ActionResult.MISS
         elif rolled == 20:
             multiplier = 2
-
+        for bonus_die in caster.to_hit_dice_mod:
+            bonus_dice_roll = roll_dice(bonus_die)
+            logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(attacker)})
+            rolled += bonus_dice_roll
+        if caster.to_hit_flat_mod:
+            logger.info(f"Adding a flat {caster.to_hit_flat_mod} bonus to the roll", extra={"team": self.teams.get_team(attacker)})
+            rolled += caster.to_hit_flat_mod
         if rolled + spell.factory.to_hit >= target.ac:
             dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
             logger.info(f"{spell.shorthand_str()} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
@@ -348,6 +364,13 @@ class ActionResolver:
             return ActionResult.MISS
         elif rolled >= 21 - attack.factory.crit_range:
             multiplier = 2
+        for bonus_die in attacker.to_hit_dice_mod:
+            bonus_dice_roll = roll_dice(bonus_die)
+            logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(attacker)})
+            rolled += bonus_dice_roll
+        if attacker.to_hit_flat_mod:
+            logger.info(f"Adding a flat {attacker.to_hit_flat_mod} bonus to the roll", extra={"team": self.teams.get_team(attacker)})
+            rolled += attacker.to_hit_flat_mod
         if rolled + attack.factory.to_hit >= target.ac:
             if target.has_reaction:
                 reaction = target.prompt_after_hit_reaction(attacker, attack, rolled + attack.factory.to_hit)
@@ -410,6 +433,13 @@ class ActionResolver:
         if rolled == 1:
             logger.info("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
             return ActionResult.MISS
+        for bonus_die in attacker.to_hit_dice_mod:
+            bonus_dice_roll = roll_dice(bonus_die)
+            logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(attacker)})
+            rolled += bonus_dice_roll
+        if attacker.to_hit_flat_mod:
+            logger.info(f"Adding a flat {attacker.to_hit_flat_mod} bonus to the roll", extra={"team": self.teams.get_team(attacker)})
+            rolled += attacker.to_hit_flat_mod
         if rolled + attack.factory.to_hit >= target.ac:
             if target.has_reaction:
                 reaction = target.prompt_after_hit_reaction(attacker, attack, rolled + attack.factory.to_hit)
@@ -486,7 +516,7 @@ class ActionResolver:
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE | Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE\
                  | Action.FLAMING_SPHERE | Action.HOLD_PERSON | BonusAction.QUICKENED_HOLD_PERSON | Action.SPIKE_GROWTH | BonusAction.QUICKENED_SPIKE_GROWTH\
-                | Action.BLESS:
+                | Action.BLESS | BonusAction.QUICKENED_BLESS:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 return ActionResult.NOP
