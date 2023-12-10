@@ -9,6 +9,7 @@ from ..combatants.evil_mage import EvilMage
 from ..combatants.giant_toad import GiantToad
 from ..combatants.ogre import Ogre
 from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from ..combatants.quetzalcoatlus import Quetzalcoatlus
 from ..combatants.stone_giant import StoneGiant
 from ..logging.custom_logger import CustomLogger
 from ..session import Session
@@ -20,6 +21,8 @@ from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
 from ..teams import Teams
 import logging
 
+from ..utils.utils import get_combatant_classes
+
 logger = logging.getLogger("Encounterra")
 
 @pytest.mark.slow
@@ -27,19 +30,16 @@ def test_random_matchup():
     CustomLogger(logging.INFO)
     for _ in range(1):
         Map.reset_singleton()
-        combatant_pool = [DraconicSorcerer5Lvl, StoneGiant, Ogre, Bugbear, Goblin, TotemBarbarian5Lvl, DragonclawCultist, MoonDruid5Lvl, GiantToad, DireWolf, BrownBear,
-                          EvilMage, AssassinRogue5Lvl]
+        combatant_pool = get_combatant_classes()
+        combatant_black_list = [Quetzalcoatlus]
+        combatant_pool = [c for c in combatant_pool if c not in combatant_black_list]
         session = Session()
 
         num_blue_combatants = random.randint(1, 4)
         num_red_combatants = random.randint(1, 4)
-        # num_red_combatants = random.randint(1, 2)
 
         blue_team = random.sample(combatant_pool, num_blue_combatants)
-        # blue_team = [GiantToad]
         red_team = random.sample(combatant_pool, num_red_combatants)
-        # red_team.append(AssassinRogue5Lvl)
-        # red_team = random.sample(combatant_pool, num_red_combatants)
         logger.info(f"Starting a fuzzy test with:")
         logger.info(f"Blue team: {[str(c) for c in blue_team]}")
         logger.info(f"Red team: {[str(c) for c in red_team]}")

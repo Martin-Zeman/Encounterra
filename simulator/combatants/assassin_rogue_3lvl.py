@@ -50,7 +50,12 @@ class AssassinRogue3Lvl(Combatant):
         self.already_used_sneak_attack_this_turn = False
 
     def prompt_aoo(self, moving_combatant):
-        return None  # Saving reaction for Shield
+        if self.has_reaction:
+            aoo = self.aoo_factory[1].create(moving_combatant)
+            logger.info(f"{self.name} took an AoO {aoo} against {moving_combatant}",
+                         extra={"team": self.team_color})
+            return aoo
+        return None
 
     def export_resources(self):
         return {

@@ -11,6 +11,7 @@ from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from ..effects.effect_tracker import EffectTracker
 from ..combatants.bugbear import Bugbear
 from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from ..combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
 from ..combatants.goblin import Goblin
 from ..combatants.brown_bear import BrownBear
 from ..teams import Teams
@@ -34,6 +35,10 @@ def battle_map(teams):
 @pytest.fixture()
 def test_draconic_sorcerer_5lvl():
     return DraconicSorcerer5Lvl()
+
+@pytest.fixture()
+def test_draconic_sorcerer_3lvl():
+    return DraconicSorcerer3Lvl()
 
 @pytest.fixture()
 def test_goblin():
