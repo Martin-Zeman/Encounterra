@@ -1,6 +1,6 @@
 from ..battle_map import Map
 from ..effects.effect import EffectType
-from ..misc import DamageType, get_attacks, Conditions
+from ..misc import DamageType, get_attack_factories, Conditions
 from ..actions.actoid import Actoid, FactoryFlags
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
@@ -85,7 +85,7 @@ class RageFactory(ThreatModifierFactory):
         max_threat = 0
         # This doesn't take different attack ranges into account
         # TODO This could be moved to the mod threat calculation of the attack factory which should be called here for all the attacks
-        attacks = get_attacks(self.combatant)
+        attacks = get_attack_factories(self.combatant)
         for attack in attacks:
             dmg_inc = attack.calculate_threat_to_target_delta(self, {ThreatModifierType.DMG_BONUS_FLAT: rage_bonus})
             max_threat = max(dmg_inc, max_threat)

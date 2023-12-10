@@ -220,7 +220,11 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
                     movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGED).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
                 case MovementThreatType.MISTY_STEPPED:
-                    decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
+                    try:
+                        decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
+                    except KeyError:
+                        print("FIXME")
+                        decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
                     # TODO also unpack actions
                 case _:
                     logger.error(f"Unknown movement type {movement_type}")

@@ -11,7 +11,7 @@ from ..threat_utils import mean_dmg
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
 from functools import reduce, cache
-from ..misc import ROUND_HORIZON, get_attacks, get_haste_eligile_attacks, Conditions, Visibility
+from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligile_attacks, Conditions, Visibility
 from ..utils.roll_types import ThreatModifierType
 import logging
 
@@ -90,7 +90,7 @@ class HasteFactory(ThreatModifierFactory):
         attack_dmg_decrement_acc = 0
         assert len(enemies) > 0
         for enemy in enemies:
-            enemy_attacks = get_attacks(enemy)
+            enemy_attacks = get_attack_factories(enemy)
             if not enemy_attacks:
                 continue
             attack_dmg_decrement_acc = reduce(lambda acc, at: acc + at.calculate_threat_to_target_delta(target, {ThreatModifierType.TARGET_AC: 2}), enemy_attacks, 0)

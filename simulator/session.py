@@ -1,4 +1,6 @@
+from .combatants.acolyte import Acolyte
 from .combatants.assassin import Assassin
+from .combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
 from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from .combatants.bandit import Bandit
 from .combatants.bandit_captain import BanditCaptain
@@ -10,6 +12,7 @@ from .combatants.commoner import Commoner
 from .combatants.cultist import Cultist
 from .combatants.cultist_fanatic import CultistFanatic
 from .combatants.dire_wolf import DireWolf
+from .combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
 from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from .combatants.dragonclaw_cultist import DragonclawCultist
 from .combatants.evil_mage import EvilMage
@@ -17,6 +20,7 @@ from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
+from .combatants.moon_druid_3lvl import MoonDruid3Lvl
 from .combatants.moon_druid_5lvl import MoonDruid5Lvl
 from .combatants.needle_blight import NeedleBlight
 from .combatants.ogre import Ogre
@@ -70,68 +74,75 @@ class Session:
 
         # TODO use character_type_counter instead
         match combatant_type:
-            case DraconicSorcerer5Lvl.type:
-                self.combatants.append(DraconicSorcerer5Lvl(curr_count))
-            case TotemBarbarian5Lvl.type:
-                self.combatants.append(TotemBarbarian5Lvl(curr_count))
-            case DragonclawCultist.type:
-                self.combatants.append(DragonclawCultist(curr_count))
-            case Goblin.type:
-                self.combatants.append(Goblin(curr_count))
-            case Berserker.type:
-                self.combatants.append(Berserker(curr_count))
-            case Bugbear.type:
-                self.combatants.append(Bugbear(curr_count))
-            case BugbearChief.type:
-                self.combatants.append(BugbearChief(curr_count))
+            case Acolyte.type:
+                self.combatants.append(Acolyte(curr_count))
+            case Assassin.type:
+                self.combatants.append(Assassin(curr_count))
+            case AssassinRogue3Lvl.type:
+                self.combatants.append(AssassinRogue3Lvl(curr_count))
+            case AssassinRogue5Lvl.type:
+                self.combatants.append(AssassinRogue5Lvl(curr_count))
             case Bandit.type:
                 self.combatants.append(Bandit(curr_count))
             case BanditCaptain.type:
                 self.combatants.append(BanditCaptain(curr_count))
+            case Berserker.type:
+                self.combatants.append(Berserker(curr_count))
+            case BrownBear.type:
+                self.combatants.append(BrownBear(curr_count))
+            case Bugbear.type:
+                self.combatants.append(Bugbear(curr_count))
+            case BugbearChief.type:
+                self.combatants.append(BugbearChief(curr_count))
+            case Commoner.type:
+                self.combatants.append(Commoner(curr_count))
             case Cultist.type:
                 self.combatants.append(Cultist(curr_count))
             case CultistFanatic.type:
                 self.combatants.append(CultistFanatic(curr_count))
-            case Commoner.type:
-                self.combatants.append(Commoner(curr_count))
-            case Ogre.type:
-                self.combatants.append(Ogre(curr_count))
-            case StoneGiant.type:
-                self.combatants.append(StoneGiant(curr_count))
-            case MoonDruid5Lvl.type:
-                self.combatants.append(MoonDruid5Lvl(curr_count))
-            case AssassinRogue5Lvl.type:
-                self.combatants.append(AssassinRogue5Lvl(curr_count))
-            case GiantToad.type:
-                self.combatants.append(GiantToad(curr_count))
-            case BrownBear.type:
-                self.combatants.append(BrownBear(curr_count))
             case DireWolf.type:
                 self.combatants.append(DireWolf(curr_count))
+            case DraconicSorcerer3Lvl.type:
+                self.combatants.append(DraconicSorcerer3Lvl(curr_count))
+            case DraconicSorcerer5Lvl.type:
+                self.combatants.append(DraconicSorcerer5Lvl(curr_count))
+            case DragonclawCultist.type:
+                self.combatants.append(DragonclawCultist(curr_count))
             case EvilMage.type:
                 self.combatants.append(EvilMage(curr_count))
             case GiantConstrictorSnake.type:
                 self.combatants.append(GiantConstrictorSnake(curr_count))
             case GiantSpider.type:
                 self.combatants.append(GiantSpider(curr_count))
+            case GiantToad.type:
+                self.combatants.append(GiantToad(curr_count))
+            case Goblin.type:
+                self.combatants.append(Goblin(curr_count))
+            case MoonDruid3Lvl.type:
+                self.combatants.append(MoonDruid3Lvl(curr_count))
+            case MoonDruid5Lvl.type:
+                self.combatants.append(MoonDruid5Lvl(curr_count))
+            case NeedleBlight.type:
+                self.combatants.append(NeedleBlight(curr_count))
+            case Ogre.type:
+                self.combatants.append(Ogre(curr_count))
             case Quetzalcoatlus.type:
                 self.combatants.append(Quetzalcoatlus(curr_count))
             case SaberToothedTiger.type:
                 self.combatants.append(SaberToothedTiger(curr_count))
-            case VampireSpawn.type:
-                self.combatants.append(VampireSpawn(curr_count))
-            case Assassin.type:
-                self.combatants.append(Assassin(curr_count))
+            case StoneGiant.type:
+                self.combatants.append(StoneGiant(curr_count))
+            case TotemBarbarian5Lvl.type:
+                self.combatants.append(TotemBarbarian5Lvl(curr_count))
             case TwigBlight.type:
                 self.combatants.append(TwigBlight(curr_count))
-            case NeedleBlight.type:
-                self.combatants.append(NeedleBlight(curr_count))
+            case VampireSpawn.type:
+                self.combatants.append(VampireSpawn(curr_count))
             case _:
                 logger.error("Unknown combatant type")
                 return
         self.character_type_counter[combatant_type] += 1
         self.teams.add_combatant_to_team(self.combatants[-1], team)
-
 
     def set_map_type(self):
         pass

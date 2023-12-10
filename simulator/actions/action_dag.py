@@ -125,6 +125,9 @@ def generate_proto_dag(combatant):
             for fa in fas:
                 exported_resources = subject.export_resources()
                 use_resources(subject, fa)
+                if str(fa).startswith("Bless") and not subject.already_cast_leveled_spell_this_turn:
+                    print("FIXME")
+                    use_resources(subject, fa)
                 with subject.as_if_used_action_enabler(fa) as did_transform:  # This covers Action Enablers in general
                     if did_transform:
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action

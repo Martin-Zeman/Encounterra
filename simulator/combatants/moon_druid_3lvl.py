@@ -28,7 +28,6 @@ class MoonDruid3Lvl(Combatant):
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)
         self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
         self.build_attack_fms()
-        # self.spellslots = Spellslots(Class.DRUID, self.level)
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 2

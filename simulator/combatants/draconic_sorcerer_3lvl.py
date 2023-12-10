@@ -30,7 +30,6 @@ class DraconicSorcerer3Lvl(Combatant):
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
-        # self.spellslots = Spellslots(Class.SORCERER, self.level)
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 4
