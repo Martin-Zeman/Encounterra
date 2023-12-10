@@ -18,7 +18,6 @@ class BiteAndSwallowFactory(MeleeAttackFactory):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg)
         self.flags |= FactoryFlags.IS_MELEE
 
-
     def get_ability_name(self):
         return "Bite and swallow"
 
@@ -33,7 +32,6 @@ class BiteAndSwallowFactory(MeleeAttackFactory):
         if grappled_target and grappled_target.is_alive():
             return [BiteAndSwallow(grappled_target, self)]
         return None
-
 
 
 class BiteAndSwallow(MeleeAttack):
@@ -54,11 +52,9 @@ class BiteAndSwallow(MeleeAttack):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
 
-
-
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
+        # The swallow itself it hard to quantify, but we just need to make sure it wins out over the regular bite
         return self.factory.calculate_threat_to_target(self.target, **kwargs)
 
     def clear_cache(self):

@@ -19,7 +19,7 @@ class GiantConstrictorSnake(Combatant):
         self.size = Size.HUGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
         self.constrict_attack = self.add_ability(Action.MELEE_ATTACK,  name="ConstrictAttack", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1, on_hit=[OnHitAutoRestrained(SkillCheck.ATHLETICS, 16)])
-        self.constrict = self.add_ability(Action.CONSTRICT, combatant=self, attack=self.constrict_attack)
+        self.constrict = self.add_ability(Action.CONSTRICT, combatant=self, attack_factory=self.constrict_attack[1])
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 2

@@ -62,6 +62,7 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, test_moon_druid, test_goblin):
     """
     We assert the basic functionality of the wildshape ability. The Druid must be able to wildshape and attack.
@@ -182,7 +183,6 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
         assert False, f"Raised an exception {e}"
 
 
-
 def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
     We assert that damage can knock the druid out of the wildshape and that damage carries over to the original form.
@@ -298,7 +298,6 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
         assert False, f"Raised an exception {e}"
 
 
-
 def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
     We make sure there's a clearing in the terrain which the giant form fits into. It starts at root coordinate [9, 8].
@@ -328,6 +327,7 @@ def test_wilshape_get_eligible_coords(battle_map, teams, effect_tracker, test_mo
     ws = wsf.create(GiantConstrictorSnake)
     coords = ws.get_eligible_coords(distances, shortest_paths)
     assert coords == [(9, 9)]
+
 
 def test_wilshape_copy_two_druids(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
@@ -373,7 +373,6 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
         if result is ActionResult.DMG:
             assert test_bugbear.is_affected_by(Conditions.GRAPPLED)
             assert test_bugbear.is_affected_by(Conditions.RESTRAINED)
-            assert test_giant_toad.constricted_target is test_bugbear
             actoid2 = get_action(test_giant_toad)
             assert str(actoid2) == "None"
             test_giant_toad.new_turn()
@@ -381,7 +380,6 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
             assert str(actoid3) == "Bite and Swallow on Bugbear 1"
             swallowed = action_resolver.resolve_action(actoid3, test_giant_toad)
             if swallowed is ActionResult.DMG:
-                assert test_giant_toad.constricted_target is None
                 assert test_giant_toad.swallowed_target is test_bugbear
                 assert test_bugbear.is_affected_by(Conditions.RESTRAINED)
                 assert test_bugbear.is_affected_by(Conditions.BLINDED)
@@ -424,6 +422,7 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 def test_cunning_hide_geometry(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
     """
     Based on a scenario encountered during testing. The bounding box overlap test was incorrect.
@@ -453,7 +452,6 @@ def test_cunning_hide_geometry(battle_map, teams, effect_tracker, test_assassin_
     assert (6, 10) not in eligible_coords
 
 
-
 def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin, test_brown_bear):
     """
     Test scenario where the Rogue has three enemies and no allies (no Sneak Attack via adjacent allies). The Rogue has to find
@@ -466,7 +464,7 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
     battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([2, 11]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([11, 12]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin]
+    combatants = [test_assassin_rogue, test_bugbear, test_ogre, test_goblin, test_brown_bear]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
@@ -480,6 +478,8 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
     battle_map.set_combatant_coordinates(test_brown_bear, np.array([13, 0]))
     battle_map.build_adjacency_matrix()
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
+    for combatant in combatants:
+        combatant.curr_init = 0  # To prevent assassinate from crashing
 
     try:
         actoid1 = get_action(test_assassin_rogue)
@@ -530,6 +530,7 @@ def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_a
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
     """
     Test scenario where the Rogue has two enemies and one ally adjacent to one of the enemies. The Rogue doesn't need to hide to trigger
@@ -553,6 +554,8 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
     battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
     battle_map.build_adjacency_matrix()
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
+    for combatant in combatants:
+        combatant.curr_init = 0  # To prevent assassinate from crashing
 
     try:
         actoid1 = get_action(test_assassin_rogue)
@@ -596,6 +599,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
     """
     Test scenario where the Rogue has two enemies and one ally adjacent to one of the enemies. The Rogue doesn't need to hide to trigger
@@ -619,6 +623,8 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
     battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
     battle_map.build_adjacency_matrix()
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
+    for combatant in combatants:
+        combatant.curr_init = 0  # To prevent assassinate from crashing
 
     try:
     # from ..actions.action_selector import get_action
@@ -662,6 +668,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_2(battle_map, teams, effect_tr
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 def test_cunning_adjacent_enemy_hide_sneak_attack_in_melee(battle_map, teams, effect_tracker, test_stone_giant, test_assassin_rogue, test_dire_wolf):
     """
     Investigation of Rogue's behavior when in the proximity of a Stone Giant. Based on an error case where the Rogue decided to disengage, run
@@ -683,6 +690,8 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_in_melee(battle_map, teams, ef
     battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([12, 10]))
     battle_map.set_combatant_coordinates(test_dire_wolf, np.array([7, 10]))
     battle_map.build_adjacency_matrix()
+    for combatant in combatants:
+        combatant.curr_init = 0  # To prevent assassinate from crashing
 
     try:
         actoid1 = get_action(test_assassin_rogue)
@@ -732,6 +741,8 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
     battle_map.set_combatant_coordinates(test_goblin, np.array([1, 3]))
     battle_map.build_adjacency_matrix()
     test_assassin_rogue.stealth = 20  # Making sure the hide always works
+    for combatant in combatants:
+        combatant.curr_init = 0  # To prevent assassinate from crashing
 
     try:
         actoid1 = get_action(test_assassin_rogue)
@@ -797,6 +808,8 @@ def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rog
     battle_map.set_combatant_coordinates(test_goblin, np.array([9, 1]))
     battle_map.build_adjacency_matrix()
     test_bugbear.speed += 3  # Making him faster to incentivize the rogue to dash
+    for combatant in combatants:
+        combatant.curr_init = 0  # To prevent assassinate from crashing
 
     try:
         actoid1 = get_action(test_assassin_rogue)
@@ -829,13 +842,16 @@ def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rog
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 @pytest.fixture(autouse=True)
 def reset_singleton():
     SingletonClass._instance = None
 
+
 def test_singleton_1():
     obj1 = SingletonClass(10)
     assert obj1.number == 10
+
 
 def test_singleton_2():
     obj1 = SingletonClass(20)

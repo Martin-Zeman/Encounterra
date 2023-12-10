@@ -18,10 +18,10 @@ class ConstrictFactory(DirectThreatFactory):
     The constricted_target variable is the reason why this is modeled as a separate ability rather than an attack with an on_hit effect
     """
 
-    def __init__(self, combatant, attack):
+    def __init__(self, combatant, attack_factory):
         DirectThreatFactory.__init__(self)
         self.combatant = combatant
-        self.attack = attack
+        self.attack_factory = attack_factory
         self.action_type = Action.CONSTRICT
         self.flags |= FactoryFlags.IS_MELEE
 
@@ -44,10 +44,9 @@ class ConstrictFactory(DirectThreatFactory):
             return Constrict(target, self)
         return None
 
-
     def create_all(self, previous_action_in_dag=None):
         if self.combatant.constricted_target is not None:
-            return [Constrict(self.combatant.constricted_target)]
+            return [Constrict(self.combatant.constricted_target, self)]
         targets = self.get_eligible_targets()
         return [Constrict(t, self) for t in targets]
 
@@ -57,7 +56,7 @@ class ConstrictFactory(DirectThreatFactory):
         This is useful for calculating threat_in from the abilities of enemies
         """
         # TODO include the threat of the RESTRAINED and GRAPPLED in the calculation
-        return self.attack.calculate_threat_to_target(target)
+        return self.attack_factory.calculate_threat_to_target(target)
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -65,7 +64,7 @@ class ConstrictFactory(DirectThreatFactory):
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
-        return self.attack.calculate_threat_to_target_delta(target, modifiers)
+        return self.attack_factory.calculate_threat_to_target_delta(target, modifiers)
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
@@ -79,6 +78,7 @@ class Constrict(Actoid, DirectThreat):
         Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE)
         self.target = target
         self.factory = factory
+        self.attack = self.factory.attack_factory.create(target)
 
     def __str__(self):
         return f"Constrict on {self.target}"

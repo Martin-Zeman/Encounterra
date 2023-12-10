@@ -591,9 +591,9 @@ class ActionResolver:
                 return False
             case Action.CONSTRICT:
                 logger.info(f"{combatant} is trying to constrict {actoid.target}")
-                result = self.resolve_attack(actoid.factory.attack, combatant)
-                if result is ActionResult.DMG:
-                    combatant.constricted_target = True
+                result = self.resolve_attack(actoid.attack, combatant)
+                if result is ActionResult.DMG and actoid.target.is_alive():
+                    combatant.constricted_target = actoid.target
                     return True
             case Action.BREAK_GRAPPLE:
                 logger.info(f"{combatant} is trying to break out of grapple")

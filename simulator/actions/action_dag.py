@@ -215,9 +215,9 @@ def generate_wildshape_proto_dag(combatant):
                             dfs(form, curr_state_name, af_to_a_used, depth, fa)
                     elif ActoidFlags.IS_ACTION_ENABLER in fa.actoid_flags:  # This should be more lightweight than inheritance
                         af_to_a_used = {faf: faf[1].create_all(fa) for faf in fafs}
+                        dfs(subject, curr_state_name, af_to_a_used, depth, fa)
                     else:
-                        af_to_a_used = af_to_a
-                    dfs(subject, curr_state_name, af_to_a_used, depth, fa)
+                        dfs(subject, curr_state_name, af_to_a, depth, fa)
                 subject.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition

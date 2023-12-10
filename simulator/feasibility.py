@@ -149,7 +149,8 @@ def check_feasibility(combatant, action):
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
-                res &= action.target is combatant.constricted_target
+                grappled_target = combatant.get_grappled()
+                res &= grappled_target and grappled_target is action.target
                 return res
             case Action.FLAMING_SPHERE:
                 res &= combatant.spellslots.get_spellslots(2) > 0
@@ -165,7 +166,8 @@ def check_feasibility(combatant, action):
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
-                res &= action.target is combatant.constricted_target
+                grappled_target = combatant.get_grappled()
+                res &= grappled_target and grappled_target is action.target
                 return res
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
@@ -454,7 +456,8 @@ def check_feasibility_light(combatant, action):
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.swallowed_target
-                res &= combatant.constricted_target is not None and combatant.constricted_target.size.value <= Size.MEDIUM.value
+                grappled_target = combatant.get_grappled()
+                res &= grappled_target is not None and grappled_target.size.value <= Size.MEDIUM.value
                 return res
             case Action.FLAMING_SPHERE:
                 res &= combatant.spellslots.get_spellslots(2) > 0
@@ -466,7 +469,8 @@ def check_feasibility_light(combatant, action):
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.swallowed_target
-                res &= combatant.constricted_target is not None and combatant.constricted_target.size.value <= Size.MEDIUM.value
+                grappled_target = combatant.get_grappled()
+                res &= grappled_target is not None and grappled_target.size.value <= Size.MEDIUM.value
                 return res
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted

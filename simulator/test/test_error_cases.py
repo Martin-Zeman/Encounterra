@@ -22,7 +22,8 @@ from ..spells.twinned_firebolt import TwinnedFirebolt
 from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
-    test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl
+    test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
+    test_bandit_captain
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
@@ -1155,3 +1156,45 @@ def test_error_case_26(battle_map, teams, effect_tracker, test_ogre, test_dracon
     except Exception as e:
         assert False, f"Raised an exception {e}"
     assert len([1 for a in actoids if a is not None and a.factory.action_type in action_types]) == 1, "Cannot cast two leveled spells in a turn"
+
+
+def test_error_case_27(battle_map, teams, effect_tracker, test_twig_blight, test_giant_constrictor_snake, test_bandit_captain):
+    """
+    Error in constrict "AttributeError: 'tuple' object has no attribute 'calculate_threat_to_target'"
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_twig_blight, test_giant_constrictor_snake, test_bandit_captain]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    battle_map.place_circular_element(np.array([12, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([6, 4]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([7, 7]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([5, 3]), Terrain.DIFFICULT_TERRAIN, radius=0)
+
+    teams.add_combatant_to_team(test_twig_blight, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bandit_captain, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_giant_constrictor_snake, Teams.Color.RED)
+
+    battle_map.set_combatant_coordinates(test_twig_blight, np.array([5, 9]))
+    battle_map.set_combatant_coordinates(test_bandit_captain, np.array([9, 8]))
+    battle_map.set_combatant_coordinates(test_giant_constrictor_snake, np.array([10, 9]))
+
+    battle_map.build_adjacency_matrix()
+
+    actoids = []
+    try:
+        actoids.append(get_action(test_giant_constrictor_snake))
+        action_resolver.resolve_action(actoids[-1], test_giant_constrictor_snake)
+        actoids.append(get_action(test_giant_constrictor_snake))
+        action_resolver.resolve_action(actoids[-1], test_giant_constrictor_snake)
+        actoids.append(get_action(test_giant_constrictor_snake))
+        action_resolver.resolve_action(actoids[-1], test_giant_constrictor_snake)
+        actoids.append(get_action(test_giant_constrictor_snake))
+        action_resolver.resolve_action(actoids[-1], test_giant_constrictor_snake)
+        actoids.append(get_action(test_giant_constrictor_snake))
+        action_resolver.resolve_action(actoids[-1], test_giant_constrictor_snake)
+        actoids.append(get_action(test_giant_constrictor_snake))
+        action_resolver.resolve_action(actoids[-1], test_giant_constrictor_snake)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
