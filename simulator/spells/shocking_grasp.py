@@ -94,8 +94,9 @@ class ShockingGraspFactory(DirectThreatFactory):
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
-        ret = max([self.calculate_threat_to_target(t) for t in targets])
-        return ret
+        if not targets:
+            return 0
+        return max([self.calculate_threat_to_target(t) for t in targets])
 
 
 class ShockingGrasp(Actoid, DirectThreat):

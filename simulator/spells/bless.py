@@ -64,6 +64,8 @@ class BlessFactory(ThreatModifierFactory):
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
+        if not targets:
+            return 0
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 

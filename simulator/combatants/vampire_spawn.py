@@ -14,7 +14,7 @@ class VampireSpawn(Combatant):
     type = "Vampire Spawn"
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=5, hp=82, ac=15, init_bonus=3, spell_to_hit=0, speed=30, resistances={DamageType.Slashing, DamageType.Piercing, DamageType.Bludgeoning}, dc=0)
+        super().__init__(num_or_name, Class.MONSTER.UNDEAD, level=5, hp=82, ac=15, init_bonus=3, spell_to_hit=0, speed=30, resistances={DamageType.Slashing, DamageType.Piercing, DamageType.Bludgeoning}, dc=0)
         self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=6, dmg_dice="2d4", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.bite = self.add_ability(Action.VAMPIRIC_BITE,  name="Bite", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,
                                      on_hit=[OnHitHpMaxReduceAndHeal('2d6', DamageType.Necrotic, 1, "Blood Drain")])
@@ -32,6 +32,7 @@ class VampireSpawn(Combatant):
         self.acrobatics = 3
         self.stealth = 6
         self.passive_perception = 13
+        self.is_humanoid = False
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

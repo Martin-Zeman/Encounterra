@@ -32,6 +32,8 @@ class ShieldFactory(DirectThreatFactory):
     def get_ability_name(self):
         return "Shield"
 
+    def calculate_max_threat(self):
+        return 0
 
     def calculate_threat_to_target(self, target, **kwargs):
         return 0

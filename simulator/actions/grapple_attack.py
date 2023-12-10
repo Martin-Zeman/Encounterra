@@ -45,6 +45,9 @@ class GrappleAttackFactory(DirectThreatFactory):
         targets = self.get_eligible_targets()
         return [GrappleAttack(t, self) for t in targets]
 
+    def calculate_max_threat(self):
+        return 0  # TODO
+
     def calculate_threat_to_target(self, target, **kwargs):
         attack = kwargs["attack"]
         if attack.factory is self.follow_up_attack:

@@ -101,9 +101,9 @@ class HoldPersonFactory(ThreatModifierFactory):
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
-        ret = max([self.calculate_threat_to_target(t) for t in targets])
-        # logger.warning(f"MY DEBUG {self} calculate_max_threat = {ret}")
-        return ret
+        if not targets:
+            return 0
+        return max([self.calculate_threat_to_target(t) for t in targets])
 
 
 class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):

@@ -45,6 +45,13 @@ class DirectThreatFactory(ABC, Factory):
         """
         return 0
 
+    @abstractmethod
+    def calculate_max_threat(self):
+        """
+        The theoretical maximum threat the factory is able to generate.
+        """
+        return 0
+
 
 class RechargeFactory(ABC, Factory):
 

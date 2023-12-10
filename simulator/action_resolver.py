@@ -701,12 +701,10 @@ class ActionResolver:
                     combatant.has_action = False
                     combatant.has_bonus_action = False
                     combatant.has_reaction = False
-                case EffectType.REGENERATION:
-                    effect.start_of_turn()
                 case EffectType.RAGE | EffectType.TOTEM_RAGE | EffectType.WILDSHAPE | EffectType.DODGE | EffectType.DISENGAGE |\
                      EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
                     EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
-                     EffectType.DIGESTION | EffectType.BLESS:
+                     EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error("Unknown effect")

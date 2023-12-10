@@ -84,6 +84,8 @@ class FlamingSphereFactory(DirectThreatFactory):
 
     def calculate_max_threat(self):
         targets = Map.get().get_enemies(self.combatant)
+        if not targets:
+            return 0
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 

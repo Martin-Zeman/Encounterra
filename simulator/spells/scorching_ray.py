@@ -102,6 +102,8 @@ class ScorchingRayFactory(DirectThreatFactory):
             targets = [swallower]
         else:
             targets = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        if not targets:
+            return 0
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 
