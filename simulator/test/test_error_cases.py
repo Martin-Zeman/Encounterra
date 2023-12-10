@@ -1122,7 +1122,8 @@ def test_error_case_25(battle_map, teams, effect_tracker, test_dire_wolf, test_g
 
 def test_error_case_26(battle_map, teams, effect_tracker, test_ogre, test_draconic_sorcerer_3lvl):
     """
-    Draconic Sorcerer was casting a quickened scorching ray followed by a regular one which is not allowed
+    Draconic Sorcerer was casting a quickened scorching ray followed by a regular one which is not allowed. This turned
+    out to be specific to python version 3.10
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
@@ -1145,22 +1146,12 @@ def test_error_case_26(battle_map, teams, effect_tracker, test_ogre, test_dracon
     action_types = [Action.SCORCHING_RAY, BonusAction.QUICKENED_SCORCHING_RAY]
     actoids = []
     try:
-        print("MY DEBUG 1")
         actoids.append(get_action(test_draconic_sorcerer_3lvl))
-        print(f"MY DEBUG 2 {actoids[-1]}")
         action_resolver.resolve_action(actoids[-1], test_draconic_sorcerer_3lvl)
-        print("MY DEBUG 3")
         actoids.append(get_action(test_draconic_sorcerer_3lvl))
-        print(f"MY DEBUG 4 {actoids[-1]}")
         action_resolver.resolve_action(actoids[-1], test_draconic_sorcerer_3lvl)
-        print("MY DEBUG 5")
         actoids.append(get_action(test_draconic_sorcerer_3lvl))
-        print(f"MY DEBUG 6 {actoids[-1]}")
         action_resolver.resolve_action(actoids[-1], test_draconic_sorcerer_3lvl)
-        print("MY DEBUG 7")
     except Exception as e:
-        print("MY DEBUG 8")
         assert False, f"Raised an exception {e}"
-    print("MY DEBUG 9")
     assert len([1 for a in actoids if a is not None and a.factory.action_type in action_types]) == 1, "Cannot cast two leveled spells in a turn"
-    print(f"MY DEBUG 10 {[a.factory.action_type for a in actoids if a is not None]}")
