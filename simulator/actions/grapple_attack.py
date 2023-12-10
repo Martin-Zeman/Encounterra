@@ -46,7 +46,14 @@ class GrappleAttackFactory(DirectThreatFactory):
         return [GrappleAttack(t, self) for t in targets]
 
     def calculate_max_threat(self):
-        return 0  # TODO
+        targets = self.get_eligible_targets()
+        max_threat = 0
+        for target in targets:
+            if target.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED):
+                continue
+            p_hit = calc_p_hit(self.follow_up_attack.factory.to_hit, target.ac)
+            max_threat = max(max_threat, p_hit * self.follow_up_attack.factory.calculate_threat_to_target(target))
+        return max_threat
 
     def calculate_threat_to_target(self, target, **kwargs):
         attack = kwargs["attack"]
