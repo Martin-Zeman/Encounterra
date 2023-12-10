@@ -316,10 +316,10 @@ class ActionResolver:
             multiplier = 2
         for bonus_die in caster.to_hit_dice_mod:
             bonus_dice_roll = roll_dice(bonus_die)
-            logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(attacker)})
+            logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(caster)})
             rolled += bonus_dice_roll
         if caster.to_hit_flat_mod:
-            logger.info(f"Adding a flat {caster.to_hit_flat_mod} bonus to the roll", extra={"team": self.teams.get_team(attacker)})
+            logger.info(f"Adding a flat {caster.to_hit_flat_mod} bonus to the roll", extra={"team": self.teams.get_team(caster)})
             rolled += caster.to_hit_flat_mod
         if rolled + spell.factory.to_hit >= target.ac:
             dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
@@ -365,7 +365,7 @@ class ActionResolver:
         elif rolled >= 21 - attack.factory.crit_range:
             multiplier = 2
         for bonus_die in attacker.to_hit_dice_mod:
-            bonus_dice_roll = roll_dice(bonus_die)
+            bonus_dice_roll = roll_dice(parse_dmg_dice(bonus_die))
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(attacker)})
             rolled += bonus_dice_roll
         if attacker.to_hit_flat_mod:

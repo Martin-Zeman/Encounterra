@@ -120,8 +120,8 @@ class Bless(Actoid, CombatantEffect, AttackThreatModifier):
         try:
             return attack.calculate_threat_delta({ThreatModifierType.TO_HIT_DIE: '1d4'})
         except AttributeError:
-            attack.calculate_threat_delta({ThreatModifierType.TO_HIT_DIE: '1d4'})
-            print("FIXME")
+            return 0
+
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):

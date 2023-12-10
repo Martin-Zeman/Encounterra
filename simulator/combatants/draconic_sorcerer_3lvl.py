@@ -19,19 +19,17 @@ class DraconicSorcerer3Lvl(Combatant):
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
-        # self.firebolt = self.add_ability(Action.FIREBOLT)
-        # self.danger_zone_attack = self.firebolt
+        self.firebolt = self.add_ability(Action.FIREBOLT)
+        self.danger_zone_attack = self.firebolt
         self.add_ability(Passive.SPELLCASTING, type=self.cls)
-        # self.add_ability(BonusAction.MISTY_STEP)
-        self.add_ability(Action.BLESS)
-        # self.add_ability(Action.SCORCHING_RAY)
+        self.add_ability(BonusAction.MISTY_STEP)
+        self.add_ability(Action.SCORCHING_RAY)
         self.add_ability(Reaction.SHIELD)
         self.add_ability(Passive.METAMAGIC, sorcery_points=self.level)
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
-        # self.add_ability(Action.HOLD_PERSON)
+        self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
-        # self.spellslots = Spellslots(Class.SORCERER, self.level)
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
         self.saving_throws[SavingThrow.CON] = 4
