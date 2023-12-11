@@ -150,7 +150,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                                  distances,
-                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                 inflate_to_dist=self.factory.combatant.size.value,
                                                                  rng=FaerieFireFactory.range, combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FaerieFireFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

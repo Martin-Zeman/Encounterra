@@ -28,7 +28,7 @@ logger = logging.getLogger("Encounterra")
 @pytest.mark.slow
 def test_random_matchup():
     CustomLogger(logging.INFO)
-    for _ in range(1):
+    for _ in range(100):
         Map.reset_singleton()
         combatant_pool = get_combatant_classes()
         combatant_black_list = [Quetzalcoatlus]

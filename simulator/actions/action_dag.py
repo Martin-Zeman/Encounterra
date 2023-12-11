@@ -125,20 +125,17 @@ def generate_proto_dag(combatant):
             for fa in fas:
                 exported_resources = subject.export_resources()
                 use_resources(subject, fa)
-                if str(fa).startswith("Bless") and not subject.already_cast_leveled_spell_this_turn:
-                    print("FIXME")
-                    use_resources(subject, fa)
-                with subject.as_if_used_action_enabler(fa) as did_transform:  # This covers Action Enablers in general
-                    if did_transform:
+                with subject.as_if_used_action_enabler(fa) as action_enabler_used:  # This covers Action Enablers in general
+                    if action_enabler_used:
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
                             fafs = get_all_feasible_action_factories(form, depth)
                             af_to_a_used = {faf: faf[1].create_all(action_taken) for faf in fafs}
                             dfs(form, curr_state_name, af_to_a_used, depth + 1, fa)
                     elif ActoidFlags.IS_ACTION_ENABLER in fa.actoid_flags:  # This should be more lightweight than inheritance
                         af_to_a_used = {faf: faf[1].create_all(fa) for faf in fafs}
+                        dfs(subject, curr_state_name, af_to_a_used, depth + 1, fa)
                     else:
-                        af_to_a_used = af_to_a
-                    dfs(subject, curr_state_name, af_to_a_used, depth + 1, fa)
+                        dfs(subject, curr_state_name, af_to_a, depth + 1, fa)
                 subject.load_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
@@ -207,8 +204,8 @@ def generate_wildshape_proto_dag(combatant):
                     continue
                 exported_resources = subject.export_resources()
                 use_resources(subject, fa)
-                with subject.as_if_used_action_enabler(fa) as did_transform:  # This covers Action Enablers in general
-                    if did_transform:
+                with subject.as_if_used_action_enabler(fa) as action_enabler_used:  # This covers Action Enablers in general
+                    if action_enabler_used:
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
                             fafs = get_all_feasible_action_factories(form, depth)
                             af_to_a_used = {faf: faf[1].create_all(action_taken) for faf in fafs}

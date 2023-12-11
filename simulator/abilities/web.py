@@ -87,7 +87,7 @@ class Web(Actoid, DirectThreat):
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                            distances,
-                                                           inflate_to_size=self.factory.combatant.size + self.factory.distance,
+                                                           inflate_to_dist=self.factory.combatant.size.value + self.factory.distance,
                                                            rng=battle_map.size,  # approximation, could theoretically be longer
                                                            combatant=self.factory.combatant)
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]

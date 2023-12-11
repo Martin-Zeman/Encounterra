@@ -117,7 +117,7 @@ def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
     elif rolled == 20:
         saved = True
     else:
-        for bonus_die in target.saving_throws_dice_mod[ability.factory.saving_throw]:
+        for bonus_die in target.saving_throws_dice_mod[ability.st]:
             bonus_dice_roll = roll_dice(bonus_die)
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll")
             rolled += bonus_dice_roll

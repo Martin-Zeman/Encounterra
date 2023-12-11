@@ -61,6 +61,9 @@ class HungerOfHadarFactory(DirectThreatFactory):
     def create(self, coord):
         return HungerOfHadar(coord, self)
 
+    def calculate_max_threat(self):
+        return HungerOfHadar(self.find_best_args(self.combatant), self).calculate_threat()
+
     def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates threat to one specific target
@@ -169,7 +172,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                                  distances,
-                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                 inflate_to_dist=self.factory.combatant.size.value,
                                                                  rng=HungerOfHadarFactory.range, combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= HungerOfHadarFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

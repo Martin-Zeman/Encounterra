@@ -545,7 +545,7 @@ class Map:
                     continue
                 rng = e.melee_reaction_range
                 coords = self.get_combatant_position(e)
-                adj_coords = self.get_free_coords_in_hop_range(coords, inflate_to_size=combatant.size, rng=rng)
+                adj_coords = self.get_free_coords_in_hop_range(coords, inflate_to_dist=combatant.size.value, rng=rng)
                 for ac in adj_coords:
                     # it should be ok to apply this to coords that are part of the set or inaccessible
                     mv_reshaped[ac[0], ac[1], :, :] *= 2
@@ -869,17 +869,17 @@ class Map:
             res = None
         return res
 
-    def inflate_coords(self, coords: Coords, inflate_to_size):
+    def inflate_coords(self, coords: Coords, inflate_to_dist):
         """
         A helper function which inflates the given Coords to a given size (they may already by inflated but may need further inflation
         due to the size of the other combatant).
         :param coords: target combatant coordinates
-        :param inflate_to_size: size of the other combatant
+        :param inflate_to_dist: size of the other combatant
         :return: inflated set of coordinates (as x, y tuples)
         """
         offset = 0
-        if inflate_to_size.value > Size.MEDIUM.value:
-            offset = inflate_to_size.value
+        if inflate_to_dist > Size.MEDIUM.value:
+            offset = inflate_to_dist
 
         inflated = set()
         for coord in coords.get():
@@ -890,20 +890,20 @@ class Map:
                 print("FIXME")
         return inflated
 
-    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
-    def get_free_coords_in_hop_range(self, coords: Coords, distances=None, inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
+    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
+    def get_free_coords_in_hop_range(self, coords: Coords, distances=None, inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
         """
         Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
-        by a combatant of 'inflate_to_size' size.
+        by a combatant of 'inflate_to_dist' size.
         :param coords: target combatant coordinates
         :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
-        :param inflate_to_size: inflate for the sake of pathfinding BY larger combatants
+        :param inflate_to_dist: inflate for the sake of pathfinding BY larger combatants
         :param rng: maximum range of what is considered 'adjacent'
         :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         assert rng > 0
-        inflated = self.inflate_coords(coords, inflate_to_size)
+        inflated = self.inflate_coords(coords, inflate_to_dist)
 
         adjacent_coords = set()
         for coord in inflated:
@@ -917,22 +917,22 @@ class Map:
                     adjacent_coords.add((x, y))
         return list(adjacent_coords)
 
-    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_size=Size.MEDIUM, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_size, rng, combatant))
-    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=(), inflate_to_size=Size.MEDIUM, rng=1, combatant=None):
+    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
+    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=(), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
-        by a combatant of 'inflate_to_size' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
+        by a combatant of 'inflate_to_dist' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
         bounding box to narrow down the search.
         :param coords: target combatant or destination coordinates
         :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
-        :param inflate_to_size: inflate for the sake of pathfinding BY larger combatants (as opposed to TO larger combatants)
+        :param inflate_to_dist: inflate for the sake of pathfinding BY larger combatants (as opposed to TO larger combatants)
         :param rng: maximum range
         :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
         :return: free adjacent coordinates as a set of tuples (x, y)
         """
         assert rng > 0
         # First inflate it by the size of the combatant looking for the path
-        inflated = self.inflate_coords(coords, inflate_to_size)
+        inflated = self.inflate_coords(coords, inflate_to_dist)
 
         coords_in_range = list()
         for coord in inflated:
@@ -987,7 +987,7 @@ class Map:
         :param rng: the range of what is considered adjacent
         :return:
         """
-        adjacent_coords = self.get_free_coords_in_hop_range(target_location, distances, my_location.size, rng,
+        adjacent_coords = self.get_free_coords_in_hop_range(target_location, distances, my_location.size.value, rng,
                                                             combatant=combatant)
         if not adjacent_coords:
             return None

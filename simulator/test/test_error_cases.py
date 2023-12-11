@@ -23,7 +23,7 @@ from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
-    test_bandit_captain
+    test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
@@ -1198,3 +1198,94 @@ def test_error_case_27(battle_map, teams, effect_tracker, test_twig_blight, test
         action_resolver.resolve_action(actoids[-1], test_giant_constrictor_snake)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+
+def test_error_case_28(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_dire_wolf, test_berserker, test_twig_blight):
+    """
+    Error in for the Moon Druid "KeyError((<Action.DODGE: 6>, <Encounterra.simulator.actions.dodge.DodgeFactory object at 0x7f8bbb9a5110>))"
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_moon_druid, test_sabertoother_tiger, test_dire_wolf, test_berserker, test_twig_blight]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    battle_map.place_circular_element(np.array([7, 11]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([4, 11]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 4]), Terrain.DIFFICULT_TERRAIN, radius=0)
+
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_dire_wolf, Teams.Color.RED)
+    teams.add_combatant_to_team(test_berserker, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_twig_blight, Teams.Color.BLUE)
+
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([5, 14]))
+    battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([6, 8]))
+    battle_map.set_combatant_coordinates(test_dire_wolf, np.array([8, 8]))
+    battle_map.set_combatant_coordinates(test_berserker, np.array([2, 8]))
+    battle_map.set_combatant_coordinates(test_twig_blight, np.array([13, 10]))
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE,
+                                                                            test_moon_druid.wildshape_factory[1])
+
+    battle_map.build_adjacency_matrix()
+
+    actoids = []
+    try:
+        actoids.append(get_action(test_moon_druid))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid)
+        actoids.append(get_action(test_moon_druid))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid)
+        actoids.append(get_action(test_moon_druid))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid)
+        actoids.append(get_action(test_moon_druid))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid)
+        actoids.append(get_action(test_moon_druid))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid)
+        actoids.append(get_action(test_moon_druid))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_bugbear, test_evil_mage):
+    """
+    Error in for the Saber-Toother Tiger's "TypeError("unsupported operand type(s) for +: 'Size' and 'int'")"
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    test_sabertoother_tiger_2 = copy.deepcopy(test_sabertoother_tiger)
+    combatants = [test_moon_druid, test_sabertoother_tiger, test_sabertoother_tiger_2, test_bugbear, test_evil_mage]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    battle_map.place_circular_element(np.array([9, 12]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([9, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([8, 6]), Terrain.DIFFICULT_TERRAIN, radius=0)
+
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_sabertoother_tiger_2, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_evil_mage, Teams.Color.RED)
+
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 11]))
+    battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([5, 10]))
+    battle_map.set_combatant_coordinates(test_sabertoother_tiger_2, np.array([3, 12]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([0, 10]))
+    battle_map.set_combatant_coordinates(test_evil_mage, np.array([0, 12]))
+
+    battle_map.build_adjacency_matrix()
+
+    actoids = []
+    try:
+        actoids.append(get_action(test_sabertoother_tiger))
+        action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
+        actoids.append(get_action(test_sabertoother_tiger))
+        action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
+        actoids.append(get_action(test_sabertoother_tiger))
+        action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
+        actoids.append(get_action(test_sabertoother_tiger))
+        action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+    assert any([str(a).startswith("Pounce") for a in actoids])

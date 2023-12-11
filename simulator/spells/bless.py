@@ -131,17 +131,17 @@ class Bless(Actoid, CombatantEffect, AttackThreatModifier):
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             coords_for_first = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
                                                                             distances,
-                                                                            inflate_to_size=self.factory.combatant.size,
+                                                                            inflate_to_dist=self.factory.combatant.size.value,
                                                                             rng=BlessFactory.range,
                                                                             combatant=self.factory.combatant))
             coords_for_second = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[1]),
                                                                               distances,
-                                                                              inflate_to_size=self.factory.combatant.size,
+                                                                              inflate_to_dist=self.factory.combatant.size.value,
                                                                               rng=BlessFactory.range,
                                                                               combatant=self.factory.combatant))
             coords_for_third = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[2]),
                                                                               distances,
-                                                                              inflate_to_size=self.factory.combatant.size,
+                                                                              inflate_to_dist=self.factory.combatant.size.value,
                                                                               rng=BlessFactory.range,
                                                                               combatant=self.factory.combatant))
             return list(coords_for_third.intersection(coords_for_first.intersection(coords_for_second)))  # Strangely no visibility required

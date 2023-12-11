@@ -49,8 +49,8 @@ class PounceFactory(DirectThreatFactory):
         This is useful for calculating threat_in from the abilities of enemies
         """
         # TODO include the threat of the PRONE in the calculation
-        p_fail = 1 - get_saving_throw_success_prob(self.primary_attack.on_hit.dc, target.saving_throws[self.primary_attack.on_hit.st])
-        return self.primary_attack.calculate_threat_to_target(target) + p_fail * self.secondary_attack.calculate_threat_to_target(target)
+        p_fail = 1 - get_saving_throw_success_prob(self.primary_attack[1].on_hit[0].dc, target.saving_throws[self.primary_attack[1].on_hit[0].st])
+        return self.primary_attack[1].calculate_threat_to_target(target) + p_fail * self.secondary_attack[1].calculate_threat_to_target(target)
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -58,8 +58,8 @@ class PounceFactory(DirectThreatFactory):
         This is useful calculating the potential reduction of threat_in caused by abilities of enemies, e.g. advantage on saving throw
         against fireball or bane on attack rolls etc.
         """
-        p_fail = 1 - get_saving_throw_success_prob(self.primary_attack.on_hit.dc, target.saving_throws[self.primary_attack.on_hit.st])
-        return self.primary_attack.calculate_threat_to_target_delta(target, modifiers) + p_fail * self.secondary_attack.calculate_threat_to_target_delta(target, modifiers)
+        p_fail = 1 - get_saving_throw_success_prob(self.primary_attack[1].on_hit[0].dc, target.saving_throws[self.primary_attack[1].on_hit[0].st])
+        return self.primary_attack[1].calculate_threat_to_target_delta(target, modifiers) + p_fail * self.secondary_attack[1].calculate_threat_to_target_delta(target, modifiers)
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
@@ -87,7 +87,7 @@ class Pounce(Actoid, DirectThreat):
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                            distances,
-                                                           inflate_to_size=self.factory.combatant.size + self.factory.distance,
+                                                           inflate_to_dist=self.factory.combatant.size.value + self.factory.distance,
                                                            rng=battle_map.size,  # approximation, could theoretically be longer
                                                            combatant=self.factory.combatant)
         elif battle_map.get_hop_distance_combatants(self.factory.combatant, self.target) >= self.factory.distance:

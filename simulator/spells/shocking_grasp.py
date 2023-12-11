@@ -137,7 +137,7 @@ class ShockingGrasp(Actoid, DirectThreat):
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
-                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                 inflate_to_dist=self.factory.combatant.size.value,
                                                                  rng=ShockingGraspFactory.range, combatant=self.factory.combatant)
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= ShockingGraspFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

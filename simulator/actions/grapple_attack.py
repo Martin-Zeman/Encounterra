@@ -50,7 +50,7 @@ class GrappleAttackFactory(DirectThreatFactory):
         max_threat = 0
         for target in targets:
             if target.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED):
-                continue
+                continue  # TODO: This is specific to Vampire Spawn, consider removing it
             p_hit = calc_p_hit(self.follow_up_attack.factory.to_hit, target.ac)
             max_threat = max(max_threat, p_hit * self.follow_up_attack.factory.calculate_threat_to_target(target))
         return max_threat
@@ -103,7 +103,7 @@ class GrappleAttack(Actoid, AttackThreatModifier):
         if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                            distances,
-                                                           inflate_to_size=self.factory.combatant.size,
+                                                           inflate_to_dist=self.factory.combatant.size.value,
                                                            rng=self.factory.range,
                                                            combatant=self.factory.combatant)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):

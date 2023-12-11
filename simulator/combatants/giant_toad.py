@@ -63,7 +63,7 @@ class GiantToad(Combatant):
                 battle_map.effect_tracker.remove_effect_by_type(self.swallowed_target, EffectType.DIGESTION)
                 free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
                                                               None,
-                                                              inflate_to_size=self.swallowed_target.size,
+                                                              inflate_to_dist=self.swallowed_target.size.value,
                                                               rng=1, combatant=self.swallowed_target)
                 self.swallowed_target = None
                 if not free_coords:

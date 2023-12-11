@@ -157,7 +157,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
             else:
                 coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
                                                                                  distances,
-                                                                                 inflate_to_size=self.factory.combatant.size,
+                                                                                 inflate_to_dist=self.factory.combatant.size.value,
                                                                                  rng=TwinnedHasteFactory.range)
 
             if self.targets[1] is self.factory.combatant:
@@ -165,7 +165,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
             else:
                 coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
                                                                                   distances,
-                                                                                  inflate_to_size=self.factory.combatant.size,
+                                                                                  inflate_to_dist=self.factory.combatant.size.value,
                                                                                   rng=TwinnedHasteFactory.range)
             free_coords_in_range = set(coords_for_first).intersection(set(coords_for_second))
 

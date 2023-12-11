@@ -17,6 +17,9 @@ from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from ..combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
 from ..combatants.goblin import Goblin
 from ..combatants.brown_bear import BrownBear
+from ..combatants.saber_toothed_tiger import SaberToothedTiger
+from ..combatants.berserker import Berserker
+from ..combatants.evil_mage import EvilMage
 from ..teams import Teams
 from ..battle_map import Map
 
@@ -55,6 +58,9 @@ def test_goblin():
 def test_bugbear():
     return Bugbear()
 
+@pytest.fixture()
+def test_evil_mage():
+    return EvilMage()
 
 @pytest.fixture()
 def test_totem_barbarian():
@@ -95,6 +101,10 @@ def test_twig_blight():
 def test_bandit_captain():
     return BanditCaptain()
 
+@pytest.fixture()
+def test_sabertoother_tiger():
+    return SaberToothedTiger()
+
 
 @pytest.fixture()
 def test_dragonclaw_cultist():
@@ -110,6 +120,9 @@ def test_brown_bear():
 def test_dire_wolf():
     return DireWolf()
 
+@pytest.fixture()
+def test_berserker():
+    return Berserker()
 
 @pytest.fixture()
 def test_assassin_rogue():
