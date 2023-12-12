@@ -34,24 +34,24 @@ def use_resources(combatant, action):
             case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL:
-                subject.spellslots.use_spellslot(3)
+                action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.HASTE:
-                subject.spellslots.use_spellslot(3)
+                action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_HASTE:
-                subject.spellslots.use_spellslot(3)
+                action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 3
             case Action.TWINNED_HOLD_PERSON:
-                subject.spellslots.use_spellslot(2)
+                action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
             case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS:
-                subject.spellslots.use_spellslot(1)
+                action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH:
-                subject.spellslots.use_spellslot(2)
+                action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 subject.curr_sorcery_points -= 1
@@ -60,7 +60,7 @@ def use_resources(combatant, action):
             case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE:
                 pass  # Sufficiently tracked by not having an action anymore
             case Action.FLAMING_SPHERE:
-                subject.spellslots.use_spellslot(2)
+                action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
             case _:
                 logger.error("use_resources: Unknown action type")
@@ -72,22 +72,22 @@ def use_resources(combatant, action):
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 subject.curr_rage_uses -= 1
             case BonusAction.MISTY_STEP:
-                subject.spellslots.use_spellslot(2)
+                action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
             case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS:
-                subject.spellslots.use_spellslot(1)
+                action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_SCORCHING_RAY | BonusAction.QUICKENED_FLAMING_SPHERE | BonusAction.QUICKENED_HOLD_PERSON | BonusAction.QUICKENED_SPIKE_GROWTH:
-                subject.spellslots.use_spellslot(2)
+                action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_HASTE:
-                subject.spellslots.use_spellslot(3)
+                action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_FIREBALL:
-                subject.spellslots.use_spellslot(3)
+                action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
@@ -104,7 +104,7 @@ def use_resources(combatant, action):
             case Reaction.REACTION_ATTACK | Reaction.PRE_SWALLOW_BITE_REACTION | Reaction.UNCANNY_DODGE | Reaction.PARRY:
                 pass  # Sufficiently tracked by not having a reaction anymore
             case Reaction.SHIELD:
-                subject.spellslots.use_spellslot(1)
+                action.factory.resource.use_resource(level=1)
             case _:
                 logger.error("Unknown reaction type")
     elif isinstance(action_type, Movement):

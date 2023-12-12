@@ -26,13 +26,14 @@ class ScorchingRayFactory(DirectThreatFactory):
     dc = None
     dmg_type = DamageType.Fire
 
-    def __init__(self, to_hit, action_type, caster):
+    def __init__(self, to_hit, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # SCORCHING_RAY, QUICKENED_SCORCHING_RAY
         self.dmg_dice = '2d6'
         self.combatant = caster
+        self.resource = resource
 
     def __str__(self):
         """

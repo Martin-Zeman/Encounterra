@@ -6,6 +6,11 @@ from .misc import Conditions, Size
 import logging
 import numpy as np
 
+from .spells.fireball import FireballFactory
+from .spells.flaming_sphere import FlamingSphereFactory
+from .spells.haste import HasteFactory
+from .spells.shield import ShieldFactory
+
 logger = logging.getLogger("Encounterra")
 
 
@@ -24,26 +29,26 @@ def check_feasibility(combatant, action):
                 return False
         match action_type:
             case Action.FIREBALL:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action.factory.resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.are_valid_coords(action.coord)
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 return res
             case Action.HASTE:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action.factory.resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
             case Action.CHAOSBOLT:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
                 return res
             case Action.SCORCHING_RAY:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
@@ -53,7 +58,7 @@ def check_feasibility(combatant, action):
                 res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[2]) <= action.factory.range
                 return res
             case Action.MAGIC_MISSILE:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
@@ -63,7 +68,7 @@ def check_feasibility(combatant, action):
                 res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[2]) <= action.factory.range
                 return res
             case Action.BLESS:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.teams.are_allies(combatant, action.combatants[0])
@@ -85,7 +90,7 @@ def check_feasibility(combatant, action):
                 res &= combatant.curr_sorcery_points > 0
                 return res
             case Action.TWINNED_HASTE:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action.factory.resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
@@ -153,7 +158,7 @@ def check_feasibility(combatant, action):
                 res &= grappled_target and grappled_target is action.target
                 return res
             case Action.FLAMING_SPHERE:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
@@ -178,14 +183,14 @@ def check_feasibility(combatant, action):
                 res &= (action.target is combatant.constricted_target) if combatant.constricted_target else True
                 return res
             case Action.HOLD_PERSON:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= action.combatants[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.combatants[0]) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.combatants[0])
                 return res
             case Action.TWINNED_HOLD_PERSON:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 res &= not combatant.concentration_effect
@@ -195,14 +200,14 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.combatants[1])
                 return res
             case Action.SPIKE_GROWTH:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case Action.FAERIE_FIRE:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
@@ -225,20 +230,20 @@ def check_feasibility(combatant, action):
             case BonusAction.TOTEM_RAGE:
                 return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
             case BonusAction.MISTY_STEP:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 res &= battle_map.are_valid_coords(action.coord) and battle_map.are_empty_or_self(Coords(action.coord, combatant.size), combatant)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 return res
             case Action.MAGIC_MISSILE:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.teams.are_enemies(combatant, action.targets[0])
                 res &= battle_map.teams.are_enemies(combatant, action.targets[1])
@@ -248,7 +253,7 @@ def check_feasibility(combatant, action):
                 res &= action.targets[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[2]) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_SCORCHING_RAY:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
                 res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
@@ -259,7 +264,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.targets[2])
                 return res
             case BonusAction.QUICKENED_BLESS:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.teams.are_allies(combatant, action.combatants[0])
@@ -270,35 +275,35 @@ def check_feasibility(combatant, action):
                 res &= action.combatants[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.combatants[2]) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_HASTE:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action.factory.resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
             case BonusAction.QUICKENED_HOLD_PERSON:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= action.combatants[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.combatants[0]) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.combatants[0])
                 return res
             case BonusAction.QUICKENED_SPIKE_GROWTH:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FAERIE_FIRE:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FIREBALL:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action.factory.resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
@@ -326,7 +331,7 @@ def check_feasibility(combatant, action):
             return False
         match action_type:
             case Reaction.SHIELD:
-                return combatant.has_reaction and combatant.spellslots.get_spellslots(1) > 0
+                return combatant.has_reaction and action.factory.resource.has_resource(level=1) > 0
             case Reaction.REACTION_ATTACK | Reaction.UNCANNY_DODGE | Reaction.PARRY:
                 return combatant.has_reaction
             case Reaction.PRE_SWALLOW_BITE_REACTION:
@@ -378,35 +383,35 @@ def check_feasibility_light(combatant, action):
                 return False
         match action_type:
             case Action.FIREBALL:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
             case Action.HASTE:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 # res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.CHAOSBOLT | Action.MAGIC_MISSILE:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action[1].resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
             case Action.FAERIE_FIRE | Action.BLESS:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action[1].resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 return res
             case Action.SCORCHING_RAY:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
             case Action.HOLD_PERSON | Action.SPIKE_GROWTH:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 return res
             case Action.TWINNED_HOLD_PERSON:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 res &= not combatant.concentration_effect
@@ -416,7 +421,7 @@ def check_feasibility_light(combatant, action):
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 return res and combatant.curr_sorcery_points > 0
             case Action.TWINNED_HASTE:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= combatant.curr_sorcery_points > 2
@@ -460,7 +465,7 @@ def check_feasibility_light(combatant, action):
                 res &= grappled_target is not None and grappled_target.size.value <= Size.MEDIUM.value
                 return res
             case Action.FLAMING_SPHERE:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 return res
@@ -492,39 +497,39 @@ def check_feasibility_light(combatant, action):
             case BonusAction.TOTEM_RAGE:
                 return res and combatant.curr_rage_uses and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
             case BonusAction.MISTY_STEP:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action[1].resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 return res
             case BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS:
-                res &= combatant.spellslots.get_spellslots(1) > 0
+                res &= action[1].resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 res &= not combatant.concentration_effect
                 return res
             case BonusAction.QUICKENED_SCORCHING_RAY:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 return res
             case BonusAction.QUICKENED_HOLD_PERSON | BonusAction.QUICKENED_SPIKE_GROWTH:
-                res &= combatant.spellslots.get_spellslots(2) > 0
+                res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 res &= not combatant.concentration_effect
                 return res
             case BonusAction.QUICKENED_HASTE:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= combatant.curr_sorcery_points > 1
                 return res
             case BonusAction.QUICKENED_FIREBALL:
-                res &= combatant.spellslots.get_spellslots(3) > 0
+                res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 return res
@@ -545,7 +550,7 @@ def check_feasibility_light(combatant, action):
             return False
         match action_type:
             case Reaction.SHIELD:
-                return combatant.has_reaction and combatant.spellslots.get_spellslots(1) > 0
+                return combatant.has_reaction and action[1].resource.has_resource(level=1) > 0
             case Reaction.UNCANNY_DODGE:
                 return combatant.has_reaction
             case _:

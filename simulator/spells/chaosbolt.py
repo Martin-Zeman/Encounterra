@@ -29,7 +29,8 @@ class ChaosboltFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dc = None
     dmg_type = None
-    def __init__(self, to_hit, action_type, caster):
+
+    def __init__(self, to_hit, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
@@ -37,6 +38,7 @@ class ChaosboltFactory(DirectThreatFactory):
         self.dmg_dice = "2d8"
         self.additional_dmg_dice = "1d6"
         self.combatant = caster
+        self.resource = resource
 
     def __str__(self):
         """
@@ -44,10 +46,8 @@ class ChaosboltFactory(DirectThreatFactory):
         """
         return "ChaosboltFactory"
 
-
     def get_ability_name(self):
         return "Chaosbolt"
-
 
     @staticmethod
     def get_sorted_chain(potential_targets, threat_calc_func):

@@ -2,9 +2,10 @@ import logging
 import copy
 from enum import Enum, auto
 
-from .misc import Class
+from .misc import Class, Resource
 
 logger = logging.getLogger("Encounterra")
+
 
 class SpellcastingType(Enum):
     FULL_CASTER = auto()
@@ -22,7 +23,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     2: {
         1: 3,
@@ -33,7 +35,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     3: {
         1: 4,
@@ -44,7 +47,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     4: {
         1: 4,
@@ -55,7 +59,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     5: {
         1: 4,
@@ -66,7 +71,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     6: {
         1: 4,
@@ -77,7 +83,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     7: {
         1: 4,
@@ -88,7 +95,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     8: {
         1: 4,
@@ -99,7 +107,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     9: {
         1: 4,
@@ -110,7 +119,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     10: {
         1: 4,
@@ -121,7 +131,8 @@ FULL_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     11: {
         1: 4,
@@ -132,7 +143,8 @@ FULL_CASTER_TABLE = {
         6: 1,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     12: {
         1: 4,
@@ -143,7 +155,8 @@ FULL_CASTER_TABLE = {
         6: 1,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     13: {
         1: 4,
@@ -154,7 +167,8 @@ FULL_CASTER_TABLE = {
         6: 1,
         7: 1,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     14: {
         1: 4,
@@ -165,7 +179,8 @@ FULL_CASTER_TABLE = {
         6: 1,
         7: 1,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     15: {
         1: 4,
@@ -176,7 +191,8 @@ FULL_CASTER_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 0
+        9: 0,
+        None: 0
     },
     16: {
         1: 4,
@@ -187,7 +203,8 @@ FULL_CASTER_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 0
+        9: 0,
+        None: 0
     },
     17: {
         1: 4,
@@ -198,7 +215,8 @@ FULL_CASTER_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 1
+        9: 1,
+        None: 0
     },
     18: {
         1: 4,
@@ -209,7 +227,8 @@ FULL_CASTER_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 1
+        9: 1,
+        None: 0
     },
     19: {
         1: 4,
@@ -220,7 +239,8 @@ FULL_CASTER_TABLE = {
         6: 2,
         7: 1,
         8: 1,
-        9: 1
+        9: 1,
+        None: 0
     },
     20: {
         1: 4,
@@ -231,7 +251,8 @@ FULL_CASTER_TABLE = {
         6: 2,
         7: 2,
         8: 1,
-        9: 1
+        9: 1,
+        None: 0
     }
 }
 
@@ -245,7 +266,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     2: {
         1: 2,
@@ -256,7 +278,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     3: {
         1: 3,
@@ -267,7 +290,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     4: {
         1: 3,
@@ -278,7 +302,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     5: {
         1: 4,
@@ -289,7 +314,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     6: {
         1: 4,
@@ -300,7 +326,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     7: {
         1: 4,
@@ -311,7 +338,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     8: {
         1: 4,
@@ -322,7 +350,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     9: {
         1: 4,
@@ -333,7 +362,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     10: {
         1: 4,
@@ -344,7 +374,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     11: {
         1: 4,
@@ -355,7 +386,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     12: {
         1: 4,
@@ -366,7 +398,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     13: {
         1: 4,
@@ -377,7 +410,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     14: {
         1: 4,
@@ -388,7 +422,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     15: {
         1: 4,
@@ -399,7 +434,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     16: {
         1: 4,
@@ -410,7 +446,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     17: {
         1: 4,
@@ -421,7 +458,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     18: {
         1: 4,
@@ -432,7 +470,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     19: {
         1: 4,
@@ -443,7 +482,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     20: {
         1: 4,
@@ -454,7 +494,8 @@ HALF_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     }
 }
 
@@ -468,7 +509,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     2: {
         1: 0,
@@ -479,7 +521,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     3: {
         1: 2,
@@ -490,7 +533,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     4: {
         1: 3,
@@ -501,7 +545,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     5: {
         1: 3,
@@ -512,7 +557,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     6: {
         1: 3,
@@ -523,7 +569,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     7: {
         1: 4,
@@ -534,7 +581,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     8: {
         1: 4,
@@ -545,7 +593,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     9: {
         1: 4,
@@ -556,7 +605,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     10: {
         1: 4,
@@ -567,7 +617,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     11: {
         1: 4,
@@ -578,7 +629,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     12: {
         1: 4,
@@ -589,7 +641,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     13: {
         1: 4,
@@ -600,7 +653,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     14: {
         1: 4,
@@ -611,7 +665,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     15: {
         1: 4,
@@ -622,7 +677,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     16: {
         1: 4,
@@ -633,7 +689,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     17: {
         1: 4,
@@ -644,7 +701,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     18: {
         1: 4,
@@ -655,7 +713,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     19: {
         1: 4,
@@ -666,7 +725,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     20: {
         1: 4,
@@ -677,7 +737,8 @@ QUARTER_CASTER_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     }
 }
 
@@ -691,7 +752,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     2: {
         1: 2,
@@ -702,7 +764,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     3: {
         1: 0,
@@ -713,7 +776,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     4: {
         1: 0,
@@ -724,7 +788,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     5: {
         1: 0,
@@ -735,7 +800,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     6: {
         1: 0,
@@ -746,7 +812,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     7: {
         1: 0,
@@ -757,7 +824,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     8: {
         1: 0,
@@ -768,7 +836,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     9: {
         1: 0,
@@ -779,7 +848,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     10: {
         1: 0,
@@ -790,7 +860,8 @@ WARLOCK_TABLE = {
         6: 0,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     11: {
         1: 0,
@@ -801,7 +872,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     12: {
         1: 0,
@@ -812,7 +884,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 0,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     13: {
         1: 0,
@@ -823,7 +896,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 1,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     14: {
         1: 0,
@@ -834,7 +908,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 1,
         8: 0,
-        9: 0
+        9: 0,
+        None: 0
     },
     15: {
         1: 0,
@@ -845,7 +920,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 0
+        9: 0,
+        None: 0
     },
     16: {
         1: 0,
@@ -856,7 +932,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 0
+        9: 0,
+        None: 0
     },
     17: {
         1: 0,
@@ -867,7 +944,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 1
+        9: 1,
+        None: 0
     },
     18: {
         1: 0,
@@ -878,7 +956,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 1
+        9: 1,
+        None: 0
     },
     19: {
         1: 0,
@@ -889,7 +968,8 @@ WARLOCK_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 1
+        9: 1,
+        None: 0
     },
     20: {
         1: 0,
@@ -900,9 +980,11 @@ WARLOCK_TABLE = {
         6: 1,
         7: 1,
         8: 1,
-        9: 1
+        9: 1,
+        None: 0
     }
 }
+
 
 def spellslot_factory(class_name, class_level):
     match class_name:
@@ -931,19 +1013,39 @@ def spellslot_factory(class_name, class_level):
         case _:
             return None
 
-class Spellslots:
+
+class Spellslots(Resource):
     def __init__(self, spellslot_table):
+        Resource.__init__(self)
         self.max_spellslots = copy.deepcopy(spellslot_table)
         self.curr_spellslots = copy.deepcopy(spellslot_table)
 
-    def get_spellslots(self, level):
+    def has_resource(self, **kwargs):
+        level = kwargs.get("level", None)
         return self.curr_spellslots[level]
 
-    def use_spellslot(self, level):
+    def use_resource(self, **kwargs):
         try:
+            level = kwargs["level"]
             self.curr_spellslots[level] -= 1
         except:
             logger.error("Something gone wrong with spellslots!")
 
     def reset(self):
         self.curr_spellslots = copy.copy(self.max_spellslots)
+
+
+class DailyUses(Resource):
+    def __init__(self, uses):
+        Resource.__init__(self)
+        self.curr_uses = uses
+        self.max_uses = uses
+
+    def has_resource(self, **kwargs):
+        return self.curr_uses > 0
+
+    def use_resource(self, **kwargs):
+        self.curr_uses -= 1
+
+    def reset(self):
+        self.curr_uses = self.max_uses

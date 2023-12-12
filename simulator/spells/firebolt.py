@@ -25,13 +25,14 @@ class FireboltFactory(DirectThreatFactory):
     dc = None
     dmg_type = DamageType.Fire
 
-    def __init__(self, to_hit, action_type, caster):
+    def __init__(self, to_hit, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
         self.dmg_dice = self.get_dmg_dice(caster.level)
         self.combatant = caster
+        self.resource = resource
 
     def __str__(self):
         """
@@ -39,10 +40,8 @@ class FireboltFactory(DirectThreatFactory):
         """
         return "FireboltFactory"
 
-
     def get_ability_name(self):
         return "Firebolt"
-
 
     def get_twinned_kwargs(self):
         return {'to_hit': self.to_hit, 'caster': self.combatant}

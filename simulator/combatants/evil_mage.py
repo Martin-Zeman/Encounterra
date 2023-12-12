@@ -4,7 +4,7 @@ from ..actions.action_types import Action, BonusAction, Reaction, Passive
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..spellslots import Spellslots, spellslot_factory
-from ..misc import DamageType, SavingThrow, Class
+from ..misc import DamageType, SavingThrow, Class, SpellcastingResourceType
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -22,7 +22,8 @@ class EvilMage(Combatant):
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.shocking_grasp = self.add_ability(Action.SHOCKING_GRASP)
         self.danger_zone_attack = self.shocking_grasp
-        self.add_ability(Passive.SPELLCASTING, type=Class.WIZARD.ABJURATION)
+        self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS, cls=Class.WIZARD.ABJURATION)
+        self.add_ability(Action.MAGIC_MISSILE)
         self.add_ability(Action.MAGIC_MISSILE)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.HOLD_PERSON)

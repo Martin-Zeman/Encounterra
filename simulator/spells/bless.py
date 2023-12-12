@@ -28,10 +28,11 @@ class BlessFactory(ThreatModifierFactory):
     dc = None
     dmg_type = None
 
-    def __init__(self, action_type, caster):
+    def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # QUICKENED_BLESS, BLESS
         self.combatant = caster
+        self.resource = resource
 
     def __str__(self):
         """

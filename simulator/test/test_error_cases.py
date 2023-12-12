@@ -12,7 +12,7 @@ from ..actions.movement import MovementIncrement
 from ..battle_map import Terrain
 from ..combatants.giant_toad import GiantToad
 from ..logging.custom_logger import CustomLogger
-from ..misc import Conditions, ConditionWithoutDC, ConditionWithDC, PhaseOfTurn, SavingThrow, SkillCheck
+from ..misc import Conditions, ConditionWithoutDC, ConditionWithDC, PhaseOfTurn, SavingThrow, SkillCheck, DamageType
 from ..spells.fireball import Fireball
 from ..spells.firebolt import Firebolt
 from ..spells.flaming_sphere import FlamingSphereFactory
@@ -23,7 +23,7 @@ from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
-    test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage
+    test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
@@ -463,10 +463,10 @@ def test_error_case_10(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([3, 6]))
     battle_map.build_adjacency_matrix()
     test_stone_giant.curr_hp = 52
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.curr_sorcery_points -= 4
 
     try:
@@ -521,7 +521,7 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_totem_barbarian.curr_rage_uses -= 1
     test_ogre.curr_hp -= 32
     combatant7.curr_hp -= 4
-    combatant7.spellslots.use_spellslot(3)
+    combatant7.spellslots.use_resource(level=3)
     combatant7.curr_sorcery_points -= 5
 
     try:
@@ -559,10 +559,10 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_totem_barbarian.curr_hp = 61
 
     test_draconic_sorcerer_5lvl.curr_hp = 7
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.curr_sorcery_points -= 5
     test_draconic_sorcerer_5lvl.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
 
@@ -604,9 +604,9 @@ def test_error_case_13(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.build_adjacency_matrix()
 
     test_draconic_sorcerer_5lvl.curr_hp = 43
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
 
     try:
@@ -648,8 +648,8 @@ def test_error_case_14(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_combatant_coordinates(test_ogre, np.array([1, 13]))
     battle_map.build_adjacency_matrix()
 
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 2
 
     try:
@@ -690,9 +690,9 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
 
     test_stone_giant.add_hasted_factories()
     test_stone_giant.has_haste_action = True
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(1)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
 
     try:
@@ -734,8 +734,8 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_combatant_coordinates(test_ogre, np.array([9, 10]))
     battle_map.build_adjacency_matrix()
 
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
-    test_draconic_sorcerer_5lvl.spellslots.use_spellslot(3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+    test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
     test_draconic_sorcerer_5lvl.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
 
@@ -1289,3 +1289,63 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
     except Exception as e:
         assert False, f"Raised an exception {e}"
     assert any([str(a).startswith("Pounce") for a in actoids])
+
+# def test_error_case_30(battle_map, teams, effect_tracker, test_giant_toad, test_moon_druid, test_totem_barbarian, test_draconic_sorcerer_5lvl):
+#     """
+#     Error in for the Moon Druid's "KeyError(<Encounterra.simulator.combatants.giant_toad.GiantToad object at 0x7fc56b5f9810>)"
+#     """
+#     # TODO failed to reproduce
+#     CustomLogger(logging.WARNING)
+#     battle_map.set_effect_tracker(effect_tracker)
+#     combatants = [test_giant_toad, test_moon_druid, test_totem_barbarian, test_draconic_sorcerer_5lvl]
+#     action_resolver = ActionResolver(combatants, teams, effect_tracker)
+#
+#     battle_map.place_circular_element(np.array([4, 1]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+#     battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+#     battle_map.place_circular_element(np.array([10, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
+#     battle_map.place_circular_element(np.array([11, 5]), Terrain.DIFFICULT_TERRAIN, radius=0)
+#
+#     teams.add_combatant_to_team(test_giant_toad, Teams.Color.RED)
+#     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+#     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
+#     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+#
+#     battle_map.set_combatant_coordinates(test_giant_toad, np.array([4, 8]))
+#     battle_map.set_combatant_coordinates(test_moon_druid, np.array([4, 11]))
+#     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([7, 11]))
+#     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([6, 10]))
+#     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE,
+#                                                                             test_moon_druid.wildshape_factory[1])
+#
+#     battle_map.build_adjacency_matrix()
+#     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
+#     test_moon_druid.shortest_paths_cache = shortest_paths
+#     test_moon_druid.spellslots.use_resource(level=2)
+#
+#     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
+#     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
+#     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+#     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
+#     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
+#
+#     actoids = []
+#     try:
+#         ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
+#         ws = ws_factory.create(GiantToad)
+#         action_resolver.resolve_action(ws, test_moon_druid)
+#         assert test_moon_druid.get_current_form() is not test_moon_druid
+#         test_moon_druid.get_current_form().new_turn()
+#         test_moon_druid.get_current_form().receive_dmg(40, DamageType.Fire)
+#         assert test_moon_druid.get_current_form() is test_moon_druid
+#         test_giant_toad.receive_dmg(40, DamageType.Fire)
+#         battle_map.remove_combatant_if_dead(test_giant_toad)
+#         actoids.append(get_action(test_moon_druid))
+#         action_resolver.resolve_action(actoids[-1], test_moon_druid)
+#         actoids.append(get_action(test_moon_druid))
+#         action_resolver.resolve_action(actoids[-1], test_moon_druid)
+#         actoids.append(get_action(test_moon_druid))
+#         action_resolver.resolve_action(actoids[-1], test_moon_druid)
+#         actoids.append(get_action(test_moon_druid))
+#         action_resolver.resolve_action(actoids[-1], test_moon_druid)
+#     except Exception as e:
+#         assert False, f"Raised an exception {e}"

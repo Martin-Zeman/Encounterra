@@ -3,7 +3,7 @@ import copy
 from ..actions.action_types import Action, BonusAction, Reaction, Passive, MetaAction
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
-from ..misc import DamageType, get_factory_of_type, SavingThrow, Class
+from ..misc import DamageType, get_factory_of_type, SavingThrow, Class, SpellcastingResourceType
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -19,7 +19,7 @@ class DraconicSorcerer5Lvl(Combatant):
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Passive.SPELLCASTING, type=self.cls)
+        self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(Action.FIREBALL)
         self.firebolt = self.add_ability(Action.FIREBOLT)
         self.danger_zone_attack = self.firebolt
@@ -74,7 +74,7 @@ class DraconicSorcerer5Lvl(Combatant):
 
 
     def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
-        if self.spellslots.get_spellslots(1) and self.has_reaction and attack_roll < self.ac + 5:
+        if self.spellslots.has_resource(level=1) and self.has_reaction and attack_roll < self.ac + 5:
             shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
             # logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})
             return shield_factory.create() if shield_factory else None

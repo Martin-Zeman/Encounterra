@@ -23,16 +23,15 @@ class MistyStepFactory(Factory):
     dc = None
     dmg_type = None
 
-    def __init__(self, caster):
+    def __init__(self, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.TARGETS_COORDS
         self.action_type = BonusAction.MISTY_STEP
         self.combatant = caster
-
+        self.resource = resource
 
     def get_ability_name(self):
         return "Misty Step"
-
 
     def __str__(self):
         """

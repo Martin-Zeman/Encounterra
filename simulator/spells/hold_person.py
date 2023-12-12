@@ -28,21 +28,20 @@ class HoldPersonFactory(ThreatModifierFactory):
     concentration = True
     type = SpellStats.Type.HARMFUL
 
-    def __init__(self, dc, action_type, caster):
+    def __init__(self, dc, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
         self.dc = dc
         self.action_type = action_type  # HOLD_PERSON, QUICKENED_HOLD_PERSON
         self.combatant = caster
         self.saving_throw = SavingThrow.WIS
-
+        self.resource = resource
 
     def __str__(self):
         """
         Important for FSM building
         """
         return "HoldPersonFactory"
-
 
     def get_ability_name(self):
         return "Hold Person"

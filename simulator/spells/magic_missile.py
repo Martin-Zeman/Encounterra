@@ -27,19 +27,19 @@ class MagicMissileFactory(DirectThreatFactory):
     dc = None
     dmg_type = DamageType.Force
 
-    def __init__(self, action_type, caster):
+    def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # MAGIC_MISSILE, QUICKENED_MAGIC_MISSILE
         self.dmg_dice = '1d4'
         self.dmg_bonus = 1
         self.combatant = caster
+        self.resource = resource
 
     def __str__(self):
         """
         Important for FSM building
         """
         return "MagicMissileFactory"
-
 
     def get_ability_name(self):
         return "Magic Missile"

@@ -29,17 +29,17 @@ class HasteFactory(ThreatModifierFactory):
     dc = None
     dmg_type = None
 
-    def __init__(self, action_type, caster):
+    def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # TWINNED_HASTE, QUICKENED_HASTE, HASTE
         self.combatant = caster
+        self.resource = resource
 
     def __str__(self):
         """
         Important for FSM building
         """
         return "HasteFactory"
-
 
     def get_ability_name(self):
         return "Haste"

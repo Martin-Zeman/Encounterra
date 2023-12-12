@@ -13,7 +13,8 @@ from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
-from .misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
+from .misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC, \
+    SpellcastingResourceType
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
 from .abilities.rage import RageFactory
@@ -59,10 +60,10 @@ class Combatant(ProtoCombatant):
         self.has_bonus_action = True
         self.has_reaction = True
         self.has_haste_action = False
-        self.num_attacks = 1
+        self.resources = []
         self.speed = speed // 5
         self.movement = speed // 5
-        self.ammo = {}  # Dict of type Attack Factory Name -> current ammo
+        self.ammo = {}  # Dict of type Attack Factory Name -> current ammo, TODO: Unify with resources
         self.resistances = resistances
         self.immunities = immunities
         self.vulnerabities = vulnerabities
@@ -102,7 +103,7 @@ class Combatant(ProtoCombatant):
         self.is_humanoid = True
         self.constricted_target = None
         self.swallowed_target = None
-        self.is_swallowed = [False, None]
+        self.is_swallowed = [False, None]  # [if swallowed, by whom]
         self.uncanny_dodge_active = False
         self.display_abilities = []
         self.dmg_types_took_last_round = set()
@@ -145,7 +146,26 @@ class Combatant(ProtoCombatant):
         if isinstance(action_type, Passive):
             match action_type:
                 case Passive.SPELLCASTING:
-                    self.spellslots = spellslot_factory(kwargs["type"], self.level)
+                    spell_resource_type = kwargs.get('resource_type', None)
+                    if not spell_resource_type:
+                        logger.error("No spell resource type defined!")
+                        return None
+                    if spell_resource_type is SpellcastingResourceType.SPELLSLOTS:
+                        spellslot_cls = kwargs.get('cls', None)
+                        if spellslot_cls:
+                            self.spellslots = spellslot_factory(spellslot_cls, self.level)
+                        else:
+                            self.spellslots = spellslot_factory(self.cls, self.level)
+                    elif spell_resource_type is SpellcastingResourceType.SPECIAL:
+                        resource = kwargs.get('resource', None)
+                        if not resource:
+                            logger.error("No spellcasting resource defined!")
+                            return None
+                        self.resources.append(resource)
+                    else:
+                        logger.error("Unknown spellcasting resource type!")
+                        return None
+
                     self.display_abilities.append("Spellcasting")
                 case Passive.METAMAGIC:
                     self.curr_sorcery_points = kwargs["sorcery_points"]
@@ -208,19 +228,23 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case Action.FIREBALL:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, has_spell_sculpting=False)))
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, resource, has_spell_sculpting=False)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case Action.HOLD_PERSON | Action.FLAMING_SPHERE | Action.FAERIE_FIRE:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self)))
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.CHAOSBOLT | Action.SCORCHING_RAY:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case Action.MAGIC_MISSILE | Action.HASTE | Action.BLESS:
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case Action.DISENGAGE:
@@ -275,31 +299,27 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case BonusAction.MISTY_STEP:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_DISENGAGE | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))  # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBALL:
+                    resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.dc, action_type, self, has_spell_sculpting=False)))
+                        (action_type, TO_FACTORY[action_type](self.dc, action_type, self, resource, has_spell_sculpting=False)))
                     return self.bonus_action_factories[-1]
-                case BonusAction.QUICKENED_FIREBOLT:
+                case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP | BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_SCORCHING_RAY:
+                    resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, self.level, action_type, self)))
-                    return self.bonus_action_factories[-1]
-                case BonusAction.QUICKENED_SHOCKING_GRASP:
-                    self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
-                    return self.bonus_action_factories[-1]
-                case BonusAction.QUICKENED_CHAOSBOLT:
-                    self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self)))
+                        (action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self, resource)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_HASTE:
+                    resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append(
-                        (action_type, TO_FACTORY[action_type](action_type, self)))
+                        (action_type, TO_FACTORY[action_type](action_type, self, resource)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.MOON_WILDSHAPE:
                     self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
@@ -321,7 +341,12 @@ class Combatant(ProtoCombatant):
                     self.danger_zone_attack = self.reaction_factories[-1]  # By default this is set to the reaction attack
                     self.melee_reaction_range = self.aoo_factory[1].range
                     return None
-                case Reaction.SHIELD | Reaction.UNCANNY_DODGE:
+                case Reaction.SHIELD:
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.reaction_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
+                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    return self.reaction_factories[-1]
+                case Reaction.UNCANNY_DODGE:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.reaction_factories[-1]
@@ -587,6 +612,8 @@ class Combatant(ProtoCombatant):
         self.is_dodging = False
         if self.spellslots:
             self.spellslots.reset()
+        for r in self.resources:
+            r.reset()
         self.already_cast_leveled_spell_this_turn = False
         if self.shield_spell_active:
             self.ac -= 5
@@ -605,7 +632,6 @@ class Combatant(ProtoCombatant):
             if FactoryFlags.HAS_AMMO in f[1].flags:
                 self.ammo[f[1].name] = f[1].ammo
         self.one_time_ac_bonus = 0  # Not really needed
-
 
     @contextmanager
     def as_if_used_action_enabler(self, action):

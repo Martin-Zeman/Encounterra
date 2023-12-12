@@ -9,19 +9,21 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class DraconicSorcerer3Lvl(Combatant):
+class NightHag(Combatant):
 
-    type = "Draconic Sorcerer 3Lvl"
+    type = "Night Hag"
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.SORCERER.DRACONIC_BLOODLINE, level=3, hp=23, ac=15, init_bonus=2, speed=30, spell_to_hit=5, resistances=set(), dc=13)
-        self.staff = self.add_ability(Action.MELEE_ATTACK, name="Staff of Defence", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,
-                         dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,
-                         dmg_type=DamageType.Bludgeoning, attack_range=1)
+        super().__init__(num_or_name, Class.MONSTER.FIEND, level=5, hp=112, ac=17, init_bonus=2, speed=30, spell_to_hit=6, resistances={DamageType.Fire, DamageType.Cold, DamageType.Bludgeoning, DamageType.Slashing, DamageType.Piercing}, dc=14)
+        self.claws = self.add_ability(Action.MELEE_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice="2d8", dmg_bonus=4,
+                         dmg_type=DamageType.Slashing, attack_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice="2d8", dmg_bonus=4,
+                         dmg_type=DamageType.Slashing, attack_range=1)
+        self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPECIAL)
+        self.add_ability(Action.FIREBALL)
         self.firebolt = self.add_ability(Action.FIREBOLT)
         self.danger_zone_attack = self.firebolt
-        self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
+        self.add_ability(Action.HASTE)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.SCORCHING_RAY)
         self.add_ability(Reaction.SHIELD)
@@ -32,13 +34,13 @@ class DraconicSorcerer3Lvl(Combatant):
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
-        self.saving_throws[SavingThrow.CON] = 4
+        self.saving_throws[SavingThrow.CON] = 6
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 1
-        self.saving_throws[SavingThrow.CHA] = 5
-        self.athletics = 1
+        self.saving_throws[SavingThrow.CHA] = 7
+        self.athletics = 2
         self.acrobatics = 2
-        self.passive_perception = 11
+        self.passive_perception = 16
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

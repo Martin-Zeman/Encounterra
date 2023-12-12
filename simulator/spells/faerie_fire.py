@@ -30,14 +30,14 @@ class FaerieFireFactory(ThreatModifierFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = None
 
-
-    def __init__(self, dc, action_type, caster):
+    def __init__(self, dc, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
         self.dc = dc
         self.action_type = action_type  # QUICKENED_FAERIE_FIRE, FAERIE_FIRE
         self.combatant = caster
         self.saving_throw = SavingThrow.DEX
+        self.resource = resource
 
     def __str__(self):
         """
@@ -45,14 +45,11 @@ class FaerieFireFactory(ThreatModifierFactory):
         """
         return "FaerieFireFactory"
 
-
     def get_ability_name(self):
         return "Faerie Fire"
 
-
     def get_quickened_kwargs(self):
         return {'combatant': self.combatant}
-
 
     def find_best_args(self, combatant):
         coord, _, _ = Map.get().find_best_placement_harmful_square(combatant, FaerieFireFactory.range, SpellStats.TRANSLATE_BOX[FaerieFireFactory.target])

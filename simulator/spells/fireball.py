@@ -23,7 +23,7 @@ class FireballFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = DamageType.Fire
 
-    def __init__(self, dc, action_type, caster, has_spell_sculpting=False, **kwargs):
+    def __init__(self, dc, action_type, caster, resource, has_spell_sculpting=False):
         super().__init__()
         self.flags |= FactoryFlags.DEX_SAVE_APPLIES
         self.dc = dc
@@ -33,7 +33,7 @@ class FireballFactory(DirectThreatFactory):
         self.additional_upcast_dmg = "1d6"
         self.combatant = caster
         self.has_spell_sculpting = has_spell_sculpting
-
+        self.resource = resource
 
     def __str__(self):
         """
@@ -41,10 +41,8 @@ class FireballFactory(DirectThreatFactory):
         """
         return "FireballFactory"
 
-
     def get_ability_name(self):
         return "Fireball"
-
 
     def get_twinned_kwargs(self):
         return {'dc': self.dc, 'caster': self.combatant, 'has_spell_sculpting': self.has_spell_sculpting}

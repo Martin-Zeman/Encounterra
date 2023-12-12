@@ -16,18 +16,17 @@ class ShieldFactory(DirectThreatFactory):
     dc = None
     dmg_type = None
 
-
-    def __init__(self, caster):
+    def __init__(self, caster, resource):
         DirectThreatFactory.__init__(self)
         self.action_type = Reaction.SHIELD
         self.combatant = caster
+        self.resource = resource
 
     def __str__(self):
         """
         Important for FSM building
         """
         return "ShieldFactory"
-
 
     def get_ability_name(self):
         return "Shield"

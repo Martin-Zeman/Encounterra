@@ -25,7 +25,7 @@ class ShockingGraspFactory(DirectThreatFactory):
     dc = None
     dmg_type = DamageType.Lightning
 
-    def __init__(self, to_hit, action_type, caster, crit_range=1):
+    def __init__(self, to_hit, action_type, caster, resource, crit_range=1):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_MELEE
@@ -33,6 +33,7 @@ class ShockingGraspFactory(DirectThreatFactory):
         self.action_type = action_type  # SHOCKING_GRASP, QUICKENED_SHOCKING_GRASP
         self.dmg_dice = '1d8'
         self.combatant = caster
+        self.resource = resource
         self.crit_range = crit_range
 
     def __str__(self):

@@ -28,12 +28,12 @@ class SpikeGrowthFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = DamageType.Piercing
 
-    def __init__(self, action_type, caster, **kwargs):
+    def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
         self.dmg_dice = "2d4"
         self.combatant = caster
-
+        self.resource = resource
 
     def __str__(self):
         """

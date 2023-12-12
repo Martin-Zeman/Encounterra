@@ -33,21 +33,20 @@ class FlamingSphereFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = DamageType.Fire
 
-    def __init__(self, dc, action_type, caster, **kwargs):
+    def __init__(self, dc, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # FLAMING_SPHERE, QUICKENED_FLAMING_SPHERE
         self.dmg_dice = "2d6"
         self.dc = dc
         self.combatant = caster
         self.saving_throw = SavingThrow.DEX
-
+        self.resource = resource
 
     def __str__(self):
         """
         Important for FSM building
         """
         return "FlamingSphereFactory"
-
 
     def get_ability_name(self):
         return "Flaming Sphere"

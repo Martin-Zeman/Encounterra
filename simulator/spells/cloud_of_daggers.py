@@ -25,12 +25,12 @@ class CloudOfDaggersFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = DamageType.Slashing
 
-    def __init__(self, action_type, caster, **kwargs):
+    def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
         self.dmg_dice = "4d4"
         self.combatant = caster
-
+        self.resource = resource
 
     def __str__(self):
         """
@@ -38,10 +38,8 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         """
         return "CloudOfDaggersFactory"
 
-
     def get_ability_name(self):
         return "Cloud of Daggers"
-
 
     def find_best_args(self, combatant):
         # TODO maybe find a smarter placement for this

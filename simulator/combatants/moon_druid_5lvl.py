@@ -6,7 +6,7 @@ from ..actions.action_types import Action, Reaction, BonusAction, Passive
 from ..actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
-from ..misc import DamageType, SavingThrow, Class
+from ..misc import DamageType, SavingThrow, Class, SpellcastingResourceType
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -18,7 +18,7 @@ class MoonDruid5Lvl(Combatant):
         super().__init__(num_or_name, Class.DRUID.CIRCLE_OF_MOON, level=5, hp=42, ac=15, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
-        self.add_ability(Passive.SPELLCASTING, type=self.cls)
+        self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(Action.FLAMING_SPHERE)
         self.add_ability(Action.HOLD_PERSON)
         self.add_ability(Action.FAERIE_FIRE)

@@ -8,11 +8,11 @@ import time
 import numpy as np
 
 from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
-from ..actions.action_types import Movement, MovementThreatType
+from ..actions.action_types import Movement, MovementThreatType, BonusAction
 from ..actions.break_grapple import BreakGrappleFactory
 from ..actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from ..battle_map import convert_path_to_increments, Map
-from ..misc import Conditions
+from ..misc import Conditions, get_factory_of_type
 from ..spells.misty_step import MistyStepFactory
 from ..threat_interfaces import AttackThreatModifier
 from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
@@ -197,7 +197,6 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
     :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
     :return: list of the following types: np.array, action, bonus action
     """
-    ms_factory = MistyStepFactory(combatant)
     actions = []
     battle_map = Map.get()
     for transition in sequence:
@@ -220,6 +219,7 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
                     movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGED).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
                 case MovementThreatType.MISTY_STEPPED:
+                    ms_factory = get_factory_of_type(combatant.bonus_action_factories, BonusAction.MISTY_STEP)
                     try:
                         decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
                     except KeyError:

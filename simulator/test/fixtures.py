@@ -20,6 +20,7 @@ from ..combatants.brown_bear import BrownBear
 from ..combatants.saber_toothed_tiger import SaberToothedTiger
 from ..combatants.berserker import Berserker
 from ..combatants.evil_mage import EvilMage
+from ..combatants.commoner import Commoner
 from ..teams import Teams
 from ..battle_map import Map
 
@@ -66,6 +67,9 @@ def test_evil_mage():
 def test_totem_barbarian():
     return TotemBarbarian5Lvl()
 
+@pytest.fixture()
+def test_commoner():
+    return Commoner()
 
 @pytest.fixture()
 def test_stone_giant():

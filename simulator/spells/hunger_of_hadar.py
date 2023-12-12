@@ -27,7 +27,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = DamageType.Cold
 
-    def __init__(self, dc, action_type, caster, **kwargs):
+    def __init__(self, dc, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.DEX_SAVE_APPLIES
         self.dc = dc
@@ -35,14 +35,13 @@ class HungerOfHadarFactory(DirectThreatFactory):
         self.saving_throw = SavingThrow.DEX
         self.dmg_dice = "2d6"
         self.combatant = caster
-
+        self.resource = resource
 
     def __str__(self):
         """
         Important for FSM building
         """
         return "HungerOfHadarFactory"
-
 
     def get_ability_name(self):
         return "Hunger of Hadar"
