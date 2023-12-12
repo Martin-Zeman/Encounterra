@@ -49,7 +49,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         return "Faerie Fire"
 
     def get_quickened_kwargs(self):
-        return {'combatant': self.combatant}
+        return {'combatant': self.combatant, 'resource': self.resource}
 
     def find_best_args(self, combatant):
         coord, _, _ = Map.get().find_best_placement_harmful_square(combatant, FaerieFireFactory.range, SpellStats.TRANSLATE_BOX[FaerieFireFactory.target])

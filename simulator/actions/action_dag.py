@@ -136,7 +136,7 @@ def generate_proto_dag(combatant):
                         dfs(subject, curr_state_name, af_to_a_used, depth + 1, fa)
                     else:
                         dfs(subject, curr_state_name, af_to_a, depth + 1, fa)
-                subject.load_resources(exported_resources)
+                subject.import_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])
@@ -215,7 +215,7 @@ def generate_wildshape_proto_dag(combatant):
                         dfs(subject, curr_state_name, af_to_a_used, depth, fa)
                     else:
                         dfs(subject, curr_state_name, af_to_a, depth, fa)
-                subject.load_resources(exported_resources)
+                subject.import_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
             fsm.add_transition(action_taken_name, previous_state_name, state_footprint_to_state_name[state_footprint])

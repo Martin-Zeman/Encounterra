@@ -23,6 +23,7 @@ from .combatants.goblin import Goblin
 from .combatants.moon_druid_3lvl import MoonDruid3Lvl
 from .combatants.moon_druid_5lvl import MoonDruid5Lvl
 from .combatants.needle_blight import NeedleBlight
+from .combatants.night_hag import NightHag
 from .combatants.ogre import Ogre
 from .combatants.quetzalcoatlus import Quetzalcoatlus
 from .combatants.saber_toothed_tiger import SaberToothedTiger
@@ -124,6 +125,8 @@ class Session:
                 self.combatants.append(MoonDruid5Lvl(curr_count))
             case NeedleBlight.type:
                 self.combatants.append(NeedleBlight(curr_count))
+            case NightHag.type:
+                self.combatants.append(NightHag(curr_count))
             case Ogre.type:
                 self.combatants.append(Ogre(curr_count))
             case Quetzalcoatlus.type:

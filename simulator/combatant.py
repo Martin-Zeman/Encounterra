@@ -156,15 +156,15 @@ class Combatant(ProtoCombatant):
                             self.spellslots = spellslot_factory(spellslot_cls, self.level)
                         else:
                             self.spellslots = spellslot_factory(self.cls, self.level)
-                    elif spell_resource_type is SpellcastingResourceType.SPECIAL:
-                        resource = kwargs.get('resource', None)
-                        if not resource:
-                            logger.error("No spellcasting resource defined!")
-                            return None
-                        self.resources.append(resource)
-                    else:
-                        logger.error("Unknown spellcasting resource type!")
-                        return None
+                    # elif spell_resource_type is SpellcastingResourceType.SPECIAL:
+                    #     resource = kwargs.get('resource', None)
+                    #     if not resource:
+                    #         logger.error("No spellcasting resource defined!")
+                    #         return None
+                    #     self.resources.append(resource)
+                    # else:
+                    #     logger.error("Unknown spellcasting resource type!")
+                    #     return None
 
                     self.display_abilities.append("Spellcasting")
                 case Passive.METAMAGIC:
@@ -647,7 +647,7 @@ class Combatant(ProtoCombatant):
     def export_resources(self):
         return None
 
-    def load_resources(self, resources):
+    def import_resources(self, resources):
         pass
 
     @contextmanager

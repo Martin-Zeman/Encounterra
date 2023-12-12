@@ -13,9 +13,9 @@ from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, teams, eff
 def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
     CustomLogger(logging.WARNING)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
-    firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
+    firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     firebolt = firebolt_factory.create(test_goblin)
-    fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl)
+    fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     fireball = fireball_factory.create(np.array([0, 0]))
 
     assert test_draconic_sorcerer_5lvl.spellslots.has_resource(level=3) == 2
@@ -42,9 +42,9 @@ def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_dracon
 def test_use_resources_already_cast_leveled_spell_this_turn(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
     CustomLogger(logging.WARNING)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
-    firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
+    firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     firebolt = firebolt_factory.create(test_goblin)
-    fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl)
+    fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     fireball = fireball_factory.create(np.array([0, 0]))
 
     assert not test_draconic_sorcerer_5lvl.already_cast_leveled_spell_this_turn

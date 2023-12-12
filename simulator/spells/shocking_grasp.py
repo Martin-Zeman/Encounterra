@@ -48,10 +48,10 @@ class ShockingGraspFactory(DirectThreatFactory):
 
 
     def get_twinned_kwargs(self):
-        return {'to_hit': self.to_hit, 'caster': self.combatant}
+        return {'to_hit': self.to_hit, 'caster': self.combatant, 'resource': self.resource}
 
     def get_quickened_kwargs(self):
-        return {'to_hit': self.to_hit, 'caster': self.combatant}
+        return {'to_hit': self.to_hit, 'caster': self.combatant, 'resource': self.resource}
 
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()

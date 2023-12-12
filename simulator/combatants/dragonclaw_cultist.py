@@ -51,7 +51,7 @@ class DragonclawCultist(Combatant):
             'already_used_fanatic_advantage': self.already_used_fanatic_advantage
         }
 
-    def load_resources(self, resources):
+    def import_resources(self, resources):
         self.movement = resources['movement']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']

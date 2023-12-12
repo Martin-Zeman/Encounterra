@@ -32,7 +32,7 @@ def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid,
     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
     test_moon_druid.shortest_paths_cache = shortest_paths
 
-    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid)
+    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid, test_moon_druid.spellslots)
     fs = fs_factory.create(np.array((6, 13)))
 
     test_moon_druid.curr_hp = 200  # Make sure we can deal huge damage to it and have it survive
@@ -67,7 +67,7 @@ def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker,
 
     ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
     ws = ws_factory.create(GiantToad)
-    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid)
+    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid, test_moon_druid.spellslots)
     fs = fs_factory.create(np.array((6, 13)))
 
     test_moon_druid.curr_hp = 200  # Make sure we can deal huge damage to it and have it survive

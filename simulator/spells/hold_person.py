@@ -48,10 +48,10 @@ class HoldPersonFactory(ThreatModifierFactory):
 
 
     def get_twinned_kwargs(self):
-        return {'dc': self.dc, 'caster': self.combatant}
+        return {'dc': self.dc, 'caster': self.combatant, 'resource': self.resource}
 
     def get_quickened_kwargs(self):
-        return {'dc': self.dc, 'caster': self.combatant}
+        return {'dc': self.dc, 'caster': self.combatant, 'resource': self.resource}
 
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()

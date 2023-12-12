@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 from enum import Enum, Flag, auto
 import random
 import re
@@ -10,29 +9,6 @@ from .utils.roll_types import RollType
 logger = logging.getLogger("Encounterra")
 
 ROUND_HORIZON = 3
-
-
-class ResourceRefreshType(Enum):
-    LONG_REST = auto()
-    SHORT_REST = auto()
-    ROUND = auto()
-
-
-class Resource(ABC):
-
-    def __init__(self, refresh_type=ResourceRefreshType.LONG_REST):
-        self.refresh_type = refresh_type
-    @abstractmethod
-    def has_resource(self, **kwargs):
-        pass
-
-    @abstractmethod
-    def use_resource(self, **kwargs):
-        pass
-
-    @abstractmethod
-    def reset(self):
-        pass
 
 
 class Artificer(Enum):

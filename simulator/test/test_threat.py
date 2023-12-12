@@ -24,7 +24,7 @@ def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
-    sgf = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_goblin)
+    sgf = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_goblin, test_goblin.spellslots)
     sg = sgf.create(np.array([7, 3]))
     effect_tracker.add(sg)
     battle_map.build_adjacency_matrix()
@@ -44,7 +44,7 @@ def test_get_path_to_combatant_medium_to_medium_one_partial_spike_growth(battle_
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
-    sgf = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_goblin)
+    sgf = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_goblin, test_goblin.spellslots)
     sg = sgf.create(np.array([7, 6]))
     effect_tracker.add(sg)
     battle_map.build_adjacency_matrix()
@@ -65,7 +65,7 @@ def test_get_path_to_combatant_large_to_medium_one_aoe(battle_map, teams, test_d
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
-    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
+    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
     cod = codf.create(np.array([4, 2]))
     effect_tracker.add(cod)
     battle_map.build_adjacency_matrix()
@@ -85,7 +85,7 @@ def test_get_path_to_combatant_large_to_medium_avoided_aoe(battle_map, teams, te
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
-    hohf = HungerOfHadarFactory(15, Action.HUNGER_OF_HADAR, test_goblin)
+    hohf = HungerOfHadarFactory(15, Action.HUNGER_OF_HADAR, test_goblin, test_goblin.spellslots)
     hoh = hohf.create(np.array([4, 7]))
     effect_tracker.add(hoh)
     battle_map.build_adjacency_matrix()
@@ -105,7 +105,7 @@ def test_get_path_to_combatant_medium_to_medium_two_overlapping_aoe(battle_map, 
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
-    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
+    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
     cod = codf.create(np.array([7, 3]))
     effect_tracker.add(cod)
     cod2 = codf.create(np.array([7, 3]))
@@ -128,7 +128,7 @@ def test_get_path_to_combatant_large_to_medium_two_overlapping_aoe(battle_map, t
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
-    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
+    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
     cod = codf.create(np.array([7, 3]))
     effect_tracker.add(cod)
     hoh = codf.create(np.array([7, 4]))  # Should still be hit due to combatant's size
@@ -151,7 +151,7 @@ def test_get_path_to_combatant_large_to_medium_starting_inside_aoe(battle_map, t
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
-    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
+    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
     cod = codf.create(np.array([6, 3]))
     effect_tracker.add(cod)
     battle_map.build_adjacency_matrix()
@@ -349,7 +349,7 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_
     battle_map.set_combatant_coordinates(test_goblin, np.array([1, 4]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([2, 8]))
-    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin)
+    codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
     cod = codf.create(np.array([2, 7]))
     effect_tracker.add(cod)
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_totem_barbarian)
@@ -395,7 +395,7 @@ def test_calc_threat_for_path_with_misty_step_scenario_1(battle_map, teams, test
     assert threat[0] == 0
 
     actions = []
-    ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl)
+    ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     decode_ms_path_to_actions(test_draconic_sorcerer_5lvl, battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get()[0], max_threat_path, actions, ms_factory)
     assert isinstance(actions[0], MovementIncrement)
     assert isinstance(actions[1], MistyStep)
@@ -422,7 +422,7 @@ def test_calc_threat_for_path_with_misty_step_scenario_2(battle_map, teams, test
     assert threat[0] == pytest.approx(-5.399 * DZ_CONSTANT, 0.001)  # Just for the danger zone
 
     actions = []
-    ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl)
+    ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     decode_ms_path_to_actions(test_draconic_sorcerer_5lvl, battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get()[0], max_threat_path, actions, ms_factory)
     assert len(actions) == 1
     assert isinstance(actions[0], MistyStep)
@@ -446,7 +446,7 @@ def test_calc_threat_for_path_with_misty_step_scenario_3(battle_map, teams, test
     assert threat[0] == 0  # Out of the danger zone
 
     actions = []
-    ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl)
+    ms_factory = MistyStepFactory(test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     decode_ms_path_to_actions(test_draconic_sorcerer_5lvl, battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get()[0], max_threat_path, actions, ms_factory)
     # Many different combinations are valid we just assert that Misty Step is used exactly once and the length of the path checks out
     assert sum(1 for a in actions if isinstance(a, MistyStep)) == 1
@@ -464,7 +464,7 @@ def test_ranged_spell_with_enemy_adjacent(battle_map, teams, effect_tracker, tes
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 14]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13]))
 
-    ff = FireboltFactory(6, Action.FIREBOLT, test_draconic_sorcerer_5lvl)
+    ff = FireboltFactory(6, Action.FIREBOLT, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     firebolt = ff.create(test_bugbear)
     threat_enemy_adjacent = firebolt.calculate_threat()
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([2, 14]))

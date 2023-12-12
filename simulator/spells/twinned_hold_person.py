@@ -45,7 +45,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
 
 
     def get_twinned_kwargs(self):
-        return {'dc': self.dc, 'caster': self.combatant}
+        return {'dc': self.dc, 'caster': self.combatant, 'resource': self.resource}
 
     def get_quickened_kwargs(self):
         return {'dc': self.dc, 'caster': self.combatant}

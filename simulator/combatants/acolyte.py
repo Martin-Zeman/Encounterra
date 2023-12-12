@@ -39,7 +39,7 @@ class Acolyte(Combatant):
     def export_resources(self):
         return {
             'movement': self.movement,
-            'spellslots': copy.deepcopy(self.spellslots),
+            'spellslots': self.spellslots.export_resource(),
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
@@ -47,9 +47,9 @@ class Acolyte(Combatant):
             'attack_state_machine': self.attack_fsm.state
         }
 
-    def load_resources(self, resources):
+    def import_resources(self, resources):
         self.movement = resources['movement']
-        self.spellslots = resources['spellslots']
+        self.spellslots.import_resource(spellslots=resources['spellslots'])
         self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']

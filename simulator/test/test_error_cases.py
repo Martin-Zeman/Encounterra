@@ -889,7 +889,7 @@ def test_error_case_20(battle_map, teams, effect_tracker, test_totem_barbarian, 
 
     battle_map.build_adjacency_matrix()
 
-    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl)
+    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     haste = haste_factory.create(test_draconic_sorcerer_5lvl)
 
     try:
@@ -974,9 +974,9 @@ def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, 
 
     ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
     ws = ws_factory.create(GiantToad)
-    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid)
+    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid, test_moon_druid.spellslots)
     fs = fs_factory.create(np.array((6, 13)))
-    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl)
+    haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     test_totem_barbarian.ac = 0
 
     # TODO Failed to reproduce

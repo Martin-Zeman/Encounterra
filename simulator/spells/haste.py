@@ -46,10 +46,10 @@ class HasteFactory(ThreatModifierFactory):
 
 
     def get_twinned_kwargs(self):
-        return {'caster': self.combatant}
+        return {'caster': self.combatant, 'resource': self.resource}
 
     def get_quickened_kwargs(self):
-        return {'caster': self.combatant}
+        return {'caster': self.combatant, 'resource': self.resource}
 
 
     def get_eligible_targets(self):

@@ -46,7 +46,7 @@ class NeedleBlight(Combatant):
             'ammo': copy.deepcopy(self.ammo)
         }
 
-    def load_resources(self, resources):
+    def import_resources(self, resources):
         self.movement = resources['movement']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']

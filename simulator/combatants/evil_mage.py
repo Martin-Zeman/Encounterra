@@ -24,7 +24,6 @@ class EvilMage(Combatant):
         self.danger_zone_attack = self.shocking_grasp
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS, cls=Class.WIZARD.ABJURATION)
         self.add_ability(Action.MAGIC_MISSILE)
-        self.add_ability(Action.MAGIC_MISSILE)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
@@ -45,7 +44,7 @@ class EvilMage(Combatant):
     def export_resources(self):
         return {
             'movement': self.movement,
-            'spellslots': copy.deepcopy(self.spellslots),
+            'spellslots': self.spellslots.export_resource(),
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
@@ -53,9 +52,9 @@ class EvilMage(Combatant):
             'attack_state_machine': self.attack_fsm.state
         }
 
-    def load_resources(self, resources):
+    def import_resources(self, resources):
         self.movement = resources['movement']
-        self.spellslots = resources['spellslots']
+        self.spellslots.import_resource(spellslots=resources['spellslots'])
         self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']

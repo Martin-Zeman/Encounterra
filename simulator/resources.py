@@ -1,4 +1,7 @@
 import logging
+from abc import abstractmethod, ABC
+from enum import Enum, auto
+
 from .actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction
 from .battle_map import Map
 from .misc import Conditions
@@ -6,6 +9,61 @@ from .misc import Conditions
 logger = logging.getLogger("Encounterra")
 
 
+class ResourceRefreshType(Enum):
+    LONG_REST = auto()
+    SHORT_REST = auto()
+    ROUND = auto()
+
+
+class Resource(ABC):
+
+    def __init__(self, refresh_type):
+        self.refresh_type = refresh_type
+
+    @abstractmethod
+    def has_resource(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def use_resource(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def reset(self):
+        pass
+
+    @abstractmethod
+    def export_resource(self):
+        pass
+
+    @abstractmethod
+    def import_resource(self, **kwargs):
+        pass
+
+
+class Uses(Resource):
+    def __init__(self, uses, refresh_type=ResourceRefreshType.LONG_REST):
+        Resource.__init__(self, refresh_type)
+        self.curr_uses = uses
+        self.max_uses = uses
+
+    def has_resource(self, **kwargs):
+        return self.curr_uses > 0
+
+    def use_resource(self, **kwargs):
+        self.curr_uses -= 1
+
+    def reset(self):
+        self.curr_uses = self.max_uses
+
+    def export_resource(self):
+        return self.curr_uses
+
+    def import_resource(self, **kwargs):
+        try:
+            self.curr_uses = kwargs["uses"]
+        except KeyError:
+            logger.error("Invalid Uses import resource!")
 
 
 def use_resources(combatant, action):

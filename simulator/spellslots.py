@@ -2,7 +2,8 @@ import logging
 import copy
 from enum import Enum, auto
 
-from .misc import Class, Resource
+from .misc import Class
+from .resources import Resource, ResourceRefreshType
 
 logger = logging.getLogger("Encounterra")
 
@@ -1016,7 +1017,7 @@ def spellslot_factory(class_name, class_level):
 
 class Spellslots(Resource):
     def __init__(self, spellslot_table):
-        Resource.__init__(self)
+        Resource.__init__(self, ResourceRefreshType.LONG_REST)
         self.max_spellslots = copy.deepcopy(spellslot_table)
         self.curr_spellslots = copy.deepcopy(spellslot_table)
 
@@ -1028,24 +1029,18 @@ class Spellslots(Resource):
         try:
             level = kwargs["level"]
             self.curr_spellslots[level] -= 1
-        except:
-            logger.error("Something gone wrong with spellslots!")
+        except KeyError:
+            logger.error("Level of use_resource for Spellslots not specified!")
 
     def reset(self):
         self.curr_spellslots = copy.copy(self.max_spellslots)
 
+    def export_resource(self):
+        return copy.deepcopy(self.curr_spellslots)
 
-class DailyUses(Resource):
-    def __init__(self, uses):
-        Resource.__init__(self)
-        self.curr_uses = uses
-        self.max_uses = uses
-
-    def has_resource(self, **kwargs):
-        return self.curr_uses > 0
-
-    def use_resource(self, **kwargs):
-        self.curr_uses -= 1
-
-    def reset(self):
-        self.curr_uses = self.max_uses
+    def import_resource(self, **kwargs):
+        try:
+            spellslots = kwargs["spellslots"]
+            self.curr_spellslots = copy.deepcopy(spellslots)
+        except KeyError:
+            logger.error("Invalid Spellslots import resource!")

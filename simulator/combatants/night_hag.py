@@ -1,9 +1,10 @@
-import copy
+import math
 
-from ..actions.action_types import Action, BonusAction, Reaction, Passive, MetaAction
+from ..actions.action_types import Action, Reaction, Passive
+from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
-from ..misc import DamageType, get_factory_of_type, SavingThrow, Class, SpellcastingResourceType
+from ..misc import DamageType, SavingThrow, Class, SpellcastingResourceType
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -19,42 +20,39 @@ class NightHag(Combatant):
                          dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice="2d8", dmg_bonus=4,
                          dmg_type=DamageType.Slashing, attack_range=1)
+        two_uses = Uses(2, ResourceRefreshType.LONG_REST)
+        inf_uses = Uses(math.inf, ResourceRefreshType.LONG_REST)
+        self.resources.append(two_uses)
+        self.resources.append(inf_uses)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPECIAL)
-        self.add_ability(Action.FIREBALL)
-        self.firebolt = self.add_ability(Action.FIREBOLT)
-        self.danger_zone_attack = self.firebolt
-        self.add_ability(Action.HASTE)
-        self.add_ability(BonusAction.MISTY_STEP)
-        self.add_ability(Action.SCORCHING_RAY)
-        self.add_ability(Reaction.SHIELD)
-        self.add_ability(Passive.METAMAGIC, sorcery_points=self.level)
-        self.add_ability(MetaAction.QUICKENED_SPELL)
-        self.add_ability(MetaAction.TWINNED_SPELL)
-        self.add_ability(Action.HOLD_PERSON)
+        self.add_ability(Action.MAGIC_MISSILE, resource=inf_uses)
         self.build_attack_fms()
-        self.saving_throws[SavingThrow.STR] = -1
+        self.saving_throws[SavingThrow.STR] = 4
         self.saving_throws[SavingThrow.DEX] = 2
-        self.saving_throws[SavingThrow.CON] = 6
-        self.saving_throws[SavingThrow.INT] = 1
-        self.saving_throws[SavingThrow.WIS] = 1
-        self.saving_throws[SavingThrow.CHA] = 7
-        self.athletics = 2
+        self.saving_throws[SavingThrow.CON] = 3
+        self.saving_throws[SavingThrow.INT] = 3
+        self.saving_throws[SavingThrow.WIS] = 2
+        self.saving_throws[SavingThrow.CHA] = 3
+        self.athletics = 4
         self.acrobatics = 2
         self.passive_perception = 16
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
-
+        self.attack_fsm.add_transition(str(self.claws[1]), '0', 'nop')
 
     def prompt_aoo(self, moving_combatant):
-        return None  # Saving reaction for Shield
+        if self.has_reaction:
+            aoo = self.aoo_factory[1].create(moving_combatant)
+            logger.info(f"{self.name} took an AoO {aoo} against {moving_combatant}",
+                         extra={"team": self.team_color})
+            return aoo
+        return None
 
     def export_resources(self):
         return {
             'movement': self.movement,
-            'spellslots': copy.deepcopy(self.spellslots),
-            'sorcery_points': self.curr_sorcery_points,
+            'resources': [r.export_resource() for r in self.resources],
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
@@ -62,24 +60,12 @@ class NightHag(Combatant):
             'attack_state_machine': self.attack_fsm.state
         }
 
-    def load_resources(self, resources):
+    def import_resources(self, resources):
         self.movement = resources['movement']
-        self.spellslots = resources['spellslots']
-        self.curr_sorcery_points = resources['sorcery_points']
+        for idx, r in enumerate(resources['resources']):
+            self.resources[idx].import_resource(uses=r)
         self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
-
-
-    def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
-        if self.spellslots.has_resource(level=1) and self.has_reaction and attack_roll < self.ac + 5:
-            shield_factory = get_factory_of_type(self.reaction_factories, Reaction.SHIELD)
-            # logger.info(f"{self.name} casts Shield", extra={"team": self.team_color})
-            return shield_factory.create() if shield_factory else None
-        elif attack_roll >= self.ac + 5:
-            logger.info("Shield would not suffice")
-        elif self.has_reaction:
-            logger.info(f"{self.name} cannot cast Shield. Out of spellslots.", extra={"team": self.team_color})
-        return None

@@ -44,7 +44,7 @@ class BlessFactory(ThreatModifierFactory):
         return "Bless"
 
     def get_quickened_kwargs(self):
-        return {'caster': self.combatant}
+        return {'caster': self.combatant, 'resource': self.resource}
 
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
