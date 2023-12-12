@@ -632,8 +632,7 @@ class ActionResolver:
                         hits_received[t] = 1
                 # They have to hit at the same time in order to incur only one concentration check
                 for target, hits in hits_received.items():
-                    target.receive_compound_dmg([(dmg_dice_sum, MagicMissileFactory.dmg_type)] * hits)
-                    logger.info(f"{target} is hit for {dmg_dice_sum * hits} damage")
+                    target.receive_dmg(dmg_dice_sum * hits, MagicMissileFactory.dmg_type)
                     battle_map.remove_combatant_if_dead(target)
                 return ActionResult.DMG
             case Action.POUNCE:
