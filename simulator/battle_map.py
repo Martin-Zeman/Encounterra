@@ -1137,11 +1137,17 @@ class Map:
         """
         if combatant.get_original_form() is combatant and not combatant.is_alive():
             logger.info(f"{combatant} died")
+            grappler = combatant.get_grappler()
+            if grappler:
+                grappler.remove_condition(Conditions.GRAPPLING)
             combatant.on_die()
             self.remove_combatant(combatant)
             return None
         else:
             if not combatant.get_original_form().is_alive():
+                grappler = combatant.get_original_form().get_grappler()
+                if grappler:
+                    grappler.remove_condition(Conditions.GRAPPLING)
                 combatant.get_original_form().on_die()
                 logger.info(f"{combatant.get_original_form()} died")
                 self.remove_combatant(combatant.get_original_form())

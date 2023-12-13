@@ -11,7 +11,7 @@ class Factory:
 
     @abstractmethod
     def create_all(self, previous_action_in_dag=None):
-        return None
+        return []
 
     @abstractmethod
     def create(self, target):

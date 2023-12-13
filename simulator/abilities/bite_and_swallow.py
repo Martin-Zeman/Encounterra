@@ -31,7 +31,7 @@ class BiteAndSwallowFactory(MeleeAttackFactory):
         grappled_target = self.combatant.get_grappled()
         if grappled_target and grappled_target.is_alive():
             return [BiteAndSwallow(grappled_target, self)]
-        return None
+        return []
 
 
 class BiteAndSwallow(MeleeAttack):
