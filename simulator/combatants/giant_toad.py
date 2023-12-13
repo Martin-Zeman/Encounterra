@@ -37,9 +37,7 @@ class GiantToad(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
         self.athletics = 2
         self.acrobatics = 1
-        self.is_humanoid = False
         self.passive_perception = 10
-
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
@@ -72,7 +70,6 @@ class GiantToad(Combatant):
                 else:
                     battle_map.set_combatant_coordinates(self.swallowed_target, np.array(next(iter(free_coords))))
             self.swallowed_target = None
-
 
     def export_resources(self):
         return {

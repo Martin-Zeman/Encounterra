@@ -3,6 +3,8 @@ import math
 import random
 from enum import Enum, auto
 from functools import reduce
+from collections import Counter
+from typing import Dict
 
 from .actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
 from .actions.actoid import FactoryFlags
@@ -13,6 +15,7 @@ from .effects.effect import EffectType
 from .misc import SavingThrow, Conditions, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
     roll_dice, roll_ability_check, roll_saving_throw, ConditionWithDC, SkillCheck, PhaseOfTurn, ConditionWithoutDC
 from .feasibility import check_feasibility
+from .proto_combatant import ProtoCombatant
 from .resources import use_resources
 from .spells.chaosbolt import ChaosboltFactory
 from .spells.magic_missile import MagicMissileFactory
@@ -624,15 +627,12 @@ class ActionResolver:
                 logger.info(f"{combatant} casts {actoid}")
                 dice = parse_dmg_dice(actoid.factory.dmg_dice)
                 dmg_dice_sum = roll_dice(dice) + actoid.factory.dmg_bonus
-                hits_received = dict()
-                for t in actoid.targets:
-                    try:
-                        hits_received[t] += 1
-                    except KeyError:
-                        hits_received[t] = 1
+                hits_received: Dict[ProtoCombatant, int] = Counter(actoid.targets)
                 # They have to hit at the same time in order to incur only one concentration check
                 for target, hits in hits_received.items():
-                    target.receive_dmg(dmg_dice_sum * hits, MagicMissileFactory.dmg_type)
+                    total_damage = dmg_dice_sum * hits
+                    logger.info(f"{target} receives {total_damage} damage")
+                    target.receive_dmg(total_damage, MagicMissileFactory.dmg_type)
                     battle_map.remove_combatant_if_dead(target)
                 return ActionResult.DMG
             case Action.POUNCE:

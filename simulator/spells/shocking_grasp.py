@@ -35,6 +35,7 @@ class ShockingGraspFactory(DirectThreatFactory):
         self.combatant = caster
         self.resource = resource
         self.crit_range = crit_range
+        self.extra_dmg = []  # Just to comply with what an attack needs
 
     def __str__(self):
         """

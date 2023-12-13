@@ -1,5 +1,9 @@
 import random
+import time
+import os
+
 import pytest
+import pickle
 
 from ..battle_map import Map
 from ..combatants.brown_bear import BrownBear
@@ -25,6 +29,8 @@ from ..utils.utils import get_combatant_classes
 
 logger = logging.getLogger("Encounterra")
 
+SERIALIZE_DIR = 'serialized_objects'
+
 @pytest.mark.slow
 def test_random_matchup():
     CustomLogger(logging.INFO)
@@ -40,6 +46,7 @@ def test_random_matchup():
 
         blue_team = random.sample(combatant_pool, num_blue_combatants)
         red_team = random.sample(combatant_pool, num_red_combatants)
+        blue_team.append(EvilMage)
         logger.info(f"Starting a fuzzy test with:")
         logger.info(f"Blue team: {[str(c) for c in blue_team]}")
         logger.info(f"Red team: {[str(c) for c in red_team]}")
@@ -53,4 +60,12 @@ def test_random_matchup():
         try:
             session.simulate(parallel=False)
         except Exception as e:
+            timestamp = int(time.time())
+            with open(os.path.join(SERIALIZE_DIR, f'battle_map_data_{timestamp}.pkl'), 'wb') as f:
+                pickle.dump(Map.serialize_data(), f)
+            with open(os.path.join(SERIALIZE_DIR, f'session_{timestamp}.pkl'), 'wb') as f:
+                pickle.dump(session.serialize_data(), f)
+            with open(os.path.join(SERIALIZE_DIR, f'exception_{timestamp}.txt'), 'w') as f:
+                f.write(f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception:\n{e}")
+
             assert False, f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception {e}"

@@ -14,7 +14,7 @@ from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
 from .misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC, \
-    SpellcastingResourceType
+    SpellcastingResourceType, Class
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
 from .abilities.rage import RageFactory
@@ -100,7 +100,7 @@ class Combatant(ProtoCombatant):
         self.to_hit_dice_mod = []
         self.shortest_paths_cache = None
         self.wears_metal = False
-        self.is_humanoid = True
+        self.is_humanoid = type(cls) is not Class.MONSTER or cls is Class.MONSTER.HUMANOID
         self.constricted_target = None
         self.swallowed_target = None
         self.is_swallowed = [False, None]  # [if swallowed, by whom]
@@ -108,18 +108,11 @@ class Combatant(ProtoCombatant):
         self.display_abilities = []
         self.dmg_types_took_last_round = set()
         self.one_time_ac_bonus = 0
+        self.current_wildshape_form = None
+        self.original_form = self
 
     def __str__(self):
         return self.name
-
-    def get_current_form(self):
-        return self
-
-    def get_original_form(self):
-        return self
-
-    def set_round_manager(self, round_manager):
-        self.round_manager = round_manager
 
     def is_alive(self):
         return self.curr_hp > 0
@@ -133,6 +126,11 @@ class Combatant(ProtoCombatant):
     def roll_initiative(self):
         self.curr_init = random.randint(1, 20) + self.init_bonus
 
+    def get_current_form(self):
+        return self if self.current_wildshape_form is None else self.current_wildshape_form
+
+    def get_original_form(self):
+        return self.original_form
 
     def add_ability(self, action_type, **kwargs):
         """
@@ -253,12 +251,11 @@ class Combatant(ProtoCombatant):
                 case Action.WILDSHAPE:
                     self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
-                    self.current_wildshape_form = None
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append("Wildshape")
-                    def wildshape_get(self):
-                        return self if self.current_wildshape_form is None else self.current_wildshape_form
-                    self.get_current_form = wildshape_get.__get__(self, Combatant)
+                    # def wildshape_get(self):
+                    #     return self if self.current_wildshape_form is None else self.current_wildshape_form
+                    # self.get_current_form = wildshape_get.__get__(self, Combatant)
                     return self.bonus_action_factories[-1]
                 case Action.POUNCE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
@@ -324,11 +321,10 @@ class Combatant(ProtoCombatant):
                 case BonusAction.MOON_WILDSHAPE:
                     self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
-                    self.current_wildshape_form = None
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
-                    def wildshape_get(self):
-                        return self if self.current_wildshape_form is None else self.current_wildshape_form
-                    self.get_current_form = wildshape_get.__get__(self, Combatant)
+                    # def wildshape_get(self):
+                    #     return self if self.current_wildshape_form is None else self.current_wildshape_form
+                    # self.get_current_form = wildshape_get.__get__(self, Combatant)
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case _:

@@ -32,7 +32,6 @@ class StoneGiant(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
         self.athletics = 12
         self.acrobatics = 2
-        self.is_humanoid = False
         self.passive_perception = 14
 
 

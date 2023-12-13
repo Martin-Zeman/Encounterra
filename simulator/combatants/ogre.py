@@ -28,14 +28,12 @@ class Ogre(Combatant):
         self.saving_throws[SavingThrow.CHA] = -2
         self.athletics = 4
         self.acrobatics = -1
-        self.is_humanoid = False
         self.passive_perception = 8
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_transition(str(self.greatclub_attack[1]), '0', 'nop')
         self.attack_fsm.add_transition(str(self.javelin_attack[1]), '0', 'nop')
-
 
     def export_resources(self):
         return {

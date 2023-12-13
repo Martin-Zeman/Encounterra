@@ -30,14 +30,11 @@ class GiantConstrictorSnake(Combatant):
         self.saving_throws[SavingThrow.CHA] = -1
         self.athletics = 2
         self.acrobatics = 2
-        self.is_humanoid = False
         self.passive_perception = 12
-
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_transition(str(self.bite[1]), '0', 'nop')  # Melee
-
 
     def export_resources(self):
         return {

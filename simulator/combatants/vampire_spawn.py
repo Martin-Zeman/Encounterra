@@ -32,7 +32,6 @@ class VampireSpawn(Combatant):
         self.acrobatics = 3
         self.stealth = 6
         self.passive_perception = 13
-        self.is_humanoid = False
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

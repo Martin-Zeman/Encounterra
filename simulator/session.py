@@ -64,6 +64,22 @@ class Session:
         self.effect_tracker = EffectTracker()
         self.battle_map.set_effect_tracker(self.effect_tracker)
 
+    def serialize_data(self):
+        data = {
+            'combatants': self.combatants,
+            'teams': self.teams,
+            'effect_tracker': self.effect_tracker,
+            'round_manager': self.round_manager,
+            # Add other attributes as needed
+        }
+        return data
+
+    def deserialize_data(self, data):
+        self.combatants = data['combatants']
+        self.teams = data['teams']
+        self.effect_tracker = data['effect_tracker']
+        self.round_manager = data['round_manager']
+
     def add_combatant(self, combatant_type, team):
         if type(combatant_type) is not str:
             combatant_type = combatant_type.type  # we want to allow both kinds of calls
@@ -202,8 +218,6 @@ class Session:
         self.round_manager = RoundManager(self.combatants, self.teams, self.effect_tracker)  # TODO remove the effect_tracker
         self.place_random_elements_on_the_map()
         self.place_combatants_on_the_map()
-        for combatant in self.combatants:
-            combatant.set_round_manager(self.round_manager)
         self.battle_map.build_adjacency_matrix()
         if parallel and self.num_simulations >= mp.cpu_count():
             # mp.set_start_method('spawn')

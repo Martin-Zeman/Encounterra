@@ -17,6 +17,7 @@ class RoundManager:
         self.num_rounds = num_rounds
         self.effect_tracker = effect_tracker
         self.action_resolver = ActionResolver(combatants, teams, self.effect_tracker)
+        self.curr_combatant = None  # For the sake of de/serialization
 
     def roll_initiative(self):
         for combatant in self.combatants:
@@ -118,6 +119,7 @@ class RoundManager:
                 if not combatant.is_alive():
                     continue
                 logger.info(f"It's {combatant}'s turn")
+                self.curr_combatant = combatant
                 logger.info(battle_map)
                 self.effect_tracker.start_of_turn(combatant)
                 if not combatant.is_alive():  # Start of turn effects can kill

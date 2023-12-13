@@ -249,6 +249,40 @@ class Map:
     def get(cls):
         return cls._instance
 
+    @classmethod
+    def serialize_data(cls):
+        if cls._instance is None:
+            return None
+        data = {
+            'size': cls._instance.size,
+            'teams': cls._instance.teams,
+            'grid': cls._instance.grid,
+            'base_adjacency_matrix': cls._instance.base_adjacency_matrix,
+            'difficult_set': list(cls._instance.difficult_set),  # Sets need to be converted to lists
+            'impassable_set': list(cls._instance.impassable_set),
+            'obstacles': cls._instance.obstacles,
+            'combatant_coordinate_cache': cls._instance.combatant_coordinate_cache,
+            'effect_tracker': cls._instance.effect_tracker,
+            'cache_enabled': cls._instance.cache_enabled,
+            'combat_round': cls._instance.combat_round,
+        }
+        return data
+
+    @classmethod
+    def deserialize_data(cls, data):
+        if data is not None:
+            cls.__new__(cls, data['size'], data['teams'])
+            cls._instance.grid = data['grid']
+            cls._instance.base_adjacency_matrix = data['base_adjacency_matrix']
+            cls._instance.difficult_set = set(data['difficult_set'])
+            cls._instance.impassable_set = set(data['impassable_set'])
+            cls._instance.obstacles = data['obstacles']
+            cls._instance.combatant_coordinate_cache = data['combatant_coordinate_cache']
+            cls._instance.effect_tracker = data['effect_tracker']
+            cls._instance.cache_enabled = data['cache_enabled']
+            cls._instance.combat_round = data['combat_round']
+
+
     def __str__(self):
         string_repr = ""
         for y in range(self.size - 1, -1, -1):

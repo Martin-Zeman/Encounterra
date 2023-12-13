@@ -29,8 +29,6 @@ class BrownBear(Combatant):
         self.athletics = 4
         self.acrobatics = 0
         self.passive_perception = 13
-        self.is_humanoid = False
-
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

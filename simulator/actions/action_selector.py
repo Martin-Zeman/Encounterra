@@ -220,11 +220,7 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
                     actions.extend(list(movement_generator))  # Unpack the movement generator
                 case MovementThreatType.MISTY_STEPPED:
                     ms_factory = get_factory_of_type(combatant.bonus_action_factories, BonusAction.MISTY_STEP)
-                    try:
-                        decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
-                    except KeyError:
-                        print("FIXME")
-                        decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
+                    decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
                     # TODO also unpack actions
                 case _:
                     logger.error(f"Unknown movement type {movement_type}")
@@ -429,7 +425,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     transition_name_to_ms_path = dict()
     sequence_to_threat = dict()  # Overall threat score of a sequence: sequence idx -> [movement threat, action threat]
     sequence_idx_to_transition_step_threat = dict()
-    coord_to_sequence_ids = dict()  # Maps coord (and movement typ) to all sequences which end in that coord
+    coord_to_sequence_ids = dict()  # Maps coord (and movement type) to all sequences which end in that coord
     current_coords = battle_map.get_combatant_position(combatant)
 
     def DFS(dag, current_state, current_sequence, coord):
@@ -468,8 +464,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
             case MovementThreatType.DODGED:
                 movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
             case MovementThreatType.MISTY_STEPPED:
-                movement_threat, _ = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)  # TODO align this with accumulate_threat_along_path
-                # transition_name_to_ms_path[transition] = misty_step_path
+                movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)  # TODO align this with accumulate_threat_along_path
+                transition_name_to_ms_path["ms_" + str(coord)] = misty_step_path
             case _:
                 logger.error(f"Unknown movement type {movement_type}")
                 movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)

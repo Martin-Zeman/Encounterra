@@ -1,0 +1,2 @@
+Fuzzy test with Blue team [<class 'simulator.combatants.saber_toothed_tiger.SaberToothedTiger'>, <class 'simulator.combatants.giant_toad.GiantToad'>, <class 'simulator.combatants.cultist_fanatic.CultistFanatic'>, <class 'Encounterra.simulator.combatants.evil_mage.EvilMage'>] and Red team [<class 'simulator.combatants.berserker.Berserker'>, <class 'simulator.combatants.needle_blight.NeedleBlight'>, <class 'simulator.combatants.bandit.Bandit'>] raised an exception:
+'NoneType' object is not iterable

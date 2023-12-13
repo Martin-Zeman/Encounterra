@@ -4,15 +4,17 @@ import pstats
 
 import numpy as np
 import pytest
+import pickle
 
 from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver
 from ..actions.action_types import BonusAction, Action
 from ..actions.movement import MovementIncrement
-from ..battle_map import Terrain
+from ..battle_map import Terrain, Map
 from ..combatants.giant_toad import GiantToad
 from ..logging.custom_logger import CustomLogger
 from ..misc import Conditions, ConditionWithoutDC, ConditionWithDC, PhaseOfTurn, SavingThrow, SkillCheck, DamageType
+from ..session import Session
 from ..spells.fireball import Fireball
 from ..spells.firebolt import Firebolt
 from ..spells.flaming_sphere import FlamingSphereFactory
@@ -1349,3 +1351,42 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
 #         action_resolver.resolve_action(actoids[-1], test_moon_druid)
 #     except Exception as e:
 #         assert False, f"Raised an exception {e}"
+
+def unify_combatants(session, battle_map):
+    map_combatants_keys = list(battle_map.combatant_coordinate_cache.keys())
+
+    for combatant in session.combatants:
+        for map_combatant_key in map_combatants_keys:
+            if combatant.name == map_combatant_key.name:
+                battle_map.combatant_coordinate_cache[combatant] = battle_map.combatant_coordinate_cache.pop(map_combatant_key)
+                break
+    # Unify combatants in the grid
+    for row in battle_map.grid:
+        for grid_square in row:
+            if grid_square.combatant:
+                for combatant in session.combatants:
+                    if grid_square.combatant.name == combatant.name:
+                        grid_square.combatant = combatant
+                        break
+
+def test_error_case_30():
+    """
+    Deserializes error objects after:
+    'NoneType' object is not iterable
+    """
+    CustomLogger(logging.WARNING)
+    with open('simulator/test/serialized_objects/battle_map_data_1702472305.pkl', 'rb') as f:
+        map_data = pickle.load(f)
+        Map.deserialize_data(map_data)
+
+    # Load the session
+    with open('simulator/test/serialized_objects/session_1702472305.pkl', 'rb') as f:
+        session_data = pickle.load(f)
+        session = Session()
+        session.deserialize_data(session_data)
+    battle_map = Map.get()
+    battle_map.effect_tracker = session.effect_tracker
+    battle_map.teams = session.teams
+    unify_combatants(session, Map.get())
+    actoid = get_action(session.combatants[1])
+    session.round_manager.action_resolver.resolve_action(actoid, session.combatants[1])

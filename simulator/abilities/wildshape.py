@@ -86,10 +86,10 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         Actoid.__init__(self)
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         self.form = form(f"{factory.combatant} wildshaped into {form.type}")
-        def wildshape_get(self):
-            return combatant
+        # def wildshape_get(self):
+        #     return combatant
 
-        self.form.get_original_form = wildshape_get.__get__(self, type(self.form))
+        self.form.original_form = combatant
         self.factory = factory
 
     def __str__(self):
