@@ -46,7 +46,6 @@ def test_random_matchup():
 
         blue_team = random.sample(combatant_pool, num_blue_combatants)
         red_team = random.sample(combatant_pool, num_red_combatants)
-        blue_team.append(EvilMage)
         logger.info(f"Starting a fuzzy test with:")
         logger.info(f"Blue team: {[str(c) for c in blue_team]}")
         logger.info(f"Red team: {[str(c) for c in red_team]}")

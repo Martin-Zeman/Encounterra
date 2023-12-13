@@ -3,17 +3,16 @@ import logging
 import re
 import math
 import sys
-import time
 
 import numpy as np
 
+from .action_dag import replace_combatant_with_wildshape
 from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
 from ..actions.action_types import Movement, MovementThreatType, BonusAction
 from ..actions.break_grapple import BreakGrappleFactory
 from ..actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from ..battle_map import convert_path_to_increments, Map
 from ..misc import Conditions, get_factory_of_type
-from ..spells.misty_step import MistyStepFactory
 from ..threat_interfaces import AttackThreatModifier
 from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
 
@@ -185,6 +184,7 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_fac
         after_path = convert_path_to_increments(after_path)
         actions.extend(list(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
 
+
 def translate_sequence_to_actions(combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, sequence, transition_name_to_ms_path):
     """
     Translates the string form of the longest path back to action objects
@@ -314,10 +314,16 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
 
     transition_to_eligible_coords = dict()
     for tn in transition_names:
-        try:
+        # try:
+        action = transition_name_to_action[tn]
+        if action.factory.combatant.get_original_form().get_current_form() is not action.factory.combatant:
+            # The actions of wildshaped forms need to be on the map in order to determine feasible coordinates
+            with replace_combatant_with_wildshape(action.factory.combatant, action.factory.combatant.get_original_form()):
+                transition_to_eligible_coords[tn] = transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths)
+        else:
             transition_to_eligible_coords[tn] = transition_name_to_action[tn].get_eligible_coords(distances, shortest_paths)
-        except AttributeError:
-            continue  # Happens for wildshaped actions, will be dealth with separately since this is a chicken an egg problem. We need to be put to the wildshape's eligible coord first.
+        # except AttributeError:
+        #     continue  # Happens for wildshaped actions, will be dealt with separately since this is a chicken an egg problem. We need to be put to the wildshape's eligible coord first.
     transition_to_eligible_coords = {tn: coords for tn, coords in transition_to_eligible_coords.items() if coords}
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
@@ -350,7 +356,6 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
     build_priority_transitions(dag, post_priority_action_transitions, a_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_ACTIONS)
     build_priority_transitions(dag, post_priority_bonus_action_transitions, ba_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
     return dag, movement_transition_to_coord_and_type, transition_to_eligible_coords
-
 
 
 def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, sequence_idx_to_transition_step_threat, distances):
@@ -489,10 +494,10 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                         action = transition_name_to_action[transition]
                         with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, coord) as did_transform:
                             if t_idx > 1:
-                                try:
-                                    eligible_coords = transition_to_eligible_coords[transition]
-                                except KeyError:
-                                    eligible_coords = action.get_eligible_coords(distances, shortest_paths)  # Happens for wildshaped actions
+                                # try:
+                                eligible_coords = transition_to_eligible_coords[transition]
+                                # except KeyError: This should no longer be necessary
+                                #     eligible_coords = action.get_eligible_coords(distances, shortest_paths)  # Happens for wildshaped actions
                                 if not eligible_coords:
                                     continue  # e.g. when there's no place to hide
                                 remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough

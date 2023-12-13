@@ -46,6 +46,31 @@ def replace_combatant_if_action_is_wildshape(action, combatant):
         yield combatant
 
 
+@contextmanager
+def replace_combatant_with_wildshape(form, combatant):
+    """
+    Replaces the combatant with the wildshaped form given by the action
+    :param form:
+    :param combatant:
+    :return:
+    """
+    battle_map = Map.get()
+    original_size = form.size
+    try:
+        battle_map.teams.replace_combatant(combatant, form)
+        position = battle_map.get_combatant_position(combatant)
+        form.size = Size.MEDIUM  # TODO this is a hack, making the form medium to make sure it fits
+        battle_map.remove_combatant(combatant)
+        battle_map.set_combatant_coordinates(form, position.get()[0])  # TODO shouldn't this also use find_wildshaped_coordinate
+        yield form
+    finally:
+        form.size = original_size
+        battle_map.teams.replace_combatant(form, combatant)
+        position = battle_map.get_combatant_position(form)
+        battle_map.remove_combatant(form)
+        battle_map.set_combatant_coordinates(combatant, position.get()[0])
+
+
 def get_all_feasible_action_factories(combatant, depth):
     """
     A helper functions which collects all feasible (bonus/haste) action factories for a combatant. Note that it excludes Misty Step which

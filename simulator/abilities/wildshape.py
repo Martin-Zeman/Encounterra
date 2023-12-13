@@ -131,7 +131,6 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
             haf[1].combatant = self.form
         # TODO add function for wildshape replacement for effect tracker
 
-
     def deactivate(self):
         """
         Activation happens when the ability is either cancelled (loss of concentration) or expires
@@ -161,10 +160,10 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
             haf[1].combatant = self.combatants[0]
         # TODO add function for wildshape replacement for effect tracker
 
-
     def enable(self):
         """
         Enabling happens when the ability is being explored during action FSM creation as an action enabler.
+        It's a light-weight form of tha activate method since it doesn't replace the combatant on the map.
         """
         self.combatants[0].current_wildshape_form = self.form
         self.form.has_action = self.combatants[0].has_action
@@ -184,6 +183,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def disable(self):
         """
         Disabling happens when the ability is finished being explored during action FSM creation as an action enabler.
+        It's a light-weight form of tha deactivate method since it doesn't replace the combatant on the map.
         """
         self.combatants[0].current_wildshape_form = None
         self.combatants[0].has_action = self.form.has_action
