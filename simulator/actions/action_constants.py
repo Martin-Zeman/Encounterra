@@ -28,6 +28,7 @@ from ..spells.flaming_sphere import FlamingSphereFactory
 from ..spells.haste import HasteFactory
 from ..spells.hold_person import HoldPersonFactory
 from ..spells.magic_missile import MagicMissileFactory
+from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
 from ..spells.shocking_grasp import ShockingGraspFactory
 from ..spells.twinned_hold_person import TwinnedHoldPersonFactory
 from ..spells.misty_step import MistyStepFactory
@@ -80,7 +81,7 @@ TO_FACTORY = {
     Action.GRAPPLE_ATTACK: GrappleAttackFactory,
     Action.VAMPIRIC_BITE: VampiricBiteFactory,
     Action.BLESS: BlessFactory,
-
+    Action.RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -102,6 +103,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_MAGIC_MISSILE: MagicMissileFactory,
     BonusAction.QUICKENED_FAERIE_FIRE: FaerieFireFactory,
     BonusAction.QUICKENED_BLESS: BlessFactory,
+    BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,

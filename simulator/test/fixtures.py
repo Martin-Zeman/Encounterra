@@ -6,6 +6,7 @@ from ..combatants.dragonclaw_cultist import DragonclawCultist
 from ..combatants.giant_toad import GiantToad
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
 from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
+from ..combatants.night_hag import NightHag
 from ..combatants.ogre import Ogre
 from ..combatants.bandit_captain import BanditCaptain
 from ..combatants.twig_blight import TwigBlight
@@ -66,6 +67,10 @@ def test_evil_mage():
 @pytest.fixture()
 def test_totem_barbarian():
     return TotemBarbarian5Lvl()
+
+@pytest.fixture()
+def test_night_hag():
+    return NightHag()
 
 @pytest.fixture()
 def test_commoner():

@@ -101,14 +101,14 @@ def use_resources(combatant, action):
                 action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 3
-            case Action.TWINNED_HOLD_PERSON:
+            case Action.TWINNED_HOLD_PERSON | Action.TWINNED_RAY_OF_ENFEEBLEMENT:
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
             case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS:
                 action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
-            case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH:
+            case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH | Action.RAY_OF_ENFEEBLEMENT:
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
@@ -136,7 +136,7 @@ def use_resources(combatant, action):
                 action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
-            case BonusAction.QUICKENED_SCORCHING_RAY | BonusAction.QUICKENED_FLAMING_SPHERE | BonusAction.QUICKENED_HOLD_PERSON | BonusAction.QUICKENED_SPIKE_GROWTH:
+            case BonusAction.QUICKENED_SCORCHING_RAY | BonusAction.QUICKENED_FLAMING_SPHERE | BonusAction.QUICKENED_HOLD_PERSON | BonusAction.QUICKENED_SPIKE_GROWTH | BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT:
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2

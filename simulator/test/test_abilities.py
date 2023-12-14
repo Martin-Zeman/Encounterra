@@ -9,16 +9,17 @@ import pytest
 from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver, ActionResult
 from ..actions.action_selector import get_action
-from ..actions.action_types import BonusAction
+from ..actions.action_types import BonusAction, Action
 from ..actions.hide import HideFactory
 from ..battle_map import Terrain
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
 from ..effects.effect import EffectType
 from ..logging.custom_logger import CustomLogger
 from ..misc import DamageType, Conditions
+from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
-    test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant
+    test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag
 from ..utils.utils import preallocate_wildshape_forms
 
 from ..test.test_singleton import SingletonClass
@@ -840,6 +841,65 @@ def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rog
         assert any(act.startswith("Shortbow") for act in actoids)
         assert not any(act.startswith("Disengage") for act in actoids)
         assert sum(1 for actoid in actoids if actoid.startswith("(")) > 6
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_ray_of_enfeeblement(battle_map, teams, effect_tracker, test_totem_barbarian, test_night_hag):
+    """
+    Test that Ray of Enfeeblement really does lower strength-based damage.
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_totem_barbarian, test_night_hag]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_night_hag, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([7, 4]))
+    battle_map.set_combatant_coordinates(test_night_hag, np.array([7, 5]))
+    battle_map.build_adjacency_matrix()
+    FULL_HP = 1000
+    test_night_hag.curr_hp = FULL_HP  # Making sure she doesn't die
+    test_totem_barbarian.curr_rage_uses = 0
+
+    try:
+        pre_roe_actoids = []
+        for _ in range(50):
+            pre_roe_actoids.append(get_action(test_totem_barbarian))
+            action_resolver.resolve_action(pre_roe_actoids[-1], test_totem_barbarian)
+            pre_roe_actoids.append(get_action(test_totem_barbarian))
+            action_resolver.resolve_action(pre_roe_actoids[-1], test_totem_barbarian)
+            test_totem_barbarian.new_turn()
+        pre_roe_dmg_dealt = FULL_HP - test_night_hag.curr_hp
+        test_night_hag.curr_hp = FULL_HP
+
+        roe_factory = None
+        for af in test_night_hag.action_factories:
+            if af[0] is Action.RAY_OF_ENFEEBLEMENT:
+                roe_factory = af[1]
+                break
+        assert roe_factory, "No Ray of Enfeeblement factory found"
+        roe_factory.to_hit = 20  # Making it a sure hit except natural 1
+        roe = roe_factory.create(test_totem_barbarian)
+        roe.activate()
+        # res = action_resolver.resolve_action(roe, test_night_hag)
+        # assert res is ActionResult.DMG
+
+        post_roe_actoids = []
+        for _ in range(50):
+            post_roe_actoids.append(get_action(test_totem_barbarian))
+            action_resolver.resolve_action(post_roe_actoids[-1], test_totem_barbarian)
+            if not test_night_hag.concentration_effect:
+                roe.activate()
+            post_roe_actoids.append(get_action(test_totem_barbarian))
+            action_resolver.resolve_action(post_roe_actoids[-1], test_totem_barbarian)
+            if not test_night_hag.concentration_effect:
+                roe.activate()
+            test_totem_barbarian.new_turn()
+        post_roe_dmg_dealt = FULL_HP - test_night_hag.curr_hp
+
+        tolerance = 0.15 * pre_roe_dmg_dealt
+        assert abs(pre_roe_dmg_dealt - 2 * post_roe_dmg_dealt) <= tolerance
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

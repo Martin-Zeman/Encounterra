@@ -266,6 +266,11 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
+                case Action.RAY_OF_ENFEEBLEMENT:
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource)))
+                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    return self.action_factories[-1]
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):

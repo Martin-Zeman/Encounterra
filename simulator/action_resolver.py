@@ -347,11 +347,13 @@ class ActionResolver:
         """
 
         :param attack:
+        :param target:
         :param attacker:
         :return: True if it hits, false if it misses or is not attack
         """
         # TODO Conditions
         assert target
+        battle_map = Map.get()
         if FactoryFlags.IS_MELEE in attack.factory.flags:
             types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
         else:
@@ -397,6 +399,9 @@ class ActionResolver:
                 logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
                 attacker.already_used_fanatic_advantage = True
                 base_dmg += roll_dice([(2, 6)])
+            if battle_map.effect_tracker.is_affecting_combatant(attacker, EffectType.RAY_OF_ENFEEBLEMENT) and FactoryFlags.USES_DEX not in attack.factory.flags:
+                logger.info(f"Damage by {attacker} is halved by Ray of Enfeeblement", extra={"team": self.teams.get_team(attacker)})
+                base_dmg = base_dmg // 2
             logger.info(
                 f"The attack {'CRITS' if multiplier == 2 else 'hits'} {target} for {base_dmg + reduce(lambda acc, extra: acc + extra[0], extra_dmg, 0)} damage", extra={"team": self.teams.get_team(attacker)})
             total_compound_dmg = [(base_dmg, attack.get_dmg_type())] + extra_dmg
@@ -408,7 +413,7 @@ class ActionResolver:
                         logger.info(f"With extra {on_hit_dmg[0]} damage from {oh.name}", extra={"team": self.teams.get_team(attacker)})
                         total_compound_dmg.append(on_hit_dmg)
             target.receive_compound_dmg(total_compound_dmg)
-            Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
+            battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
 
             return ActionResult.DMG
         else:
@@ -685,7 +690,6 @@ class ActionResolver:
         logger.error(f"Action {action} by {combatant} is not feasible")
         return None
 
-
     def resolve_action(self, action, combatant):
         """
         The core of action resolution
@@ -702,7 +706,6 @@ class ActionResolver:
                 return None
         use_resources(combatant, action)
         return self.resolve_by_actoid_flags(action, combatant)
-
 
     def resolve_effects(self, effects, combatant):
         """

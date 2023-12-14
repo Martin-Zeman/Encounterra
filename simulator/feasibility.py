@@ -182,14 +182,14 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= (action.target is combatant.constricted_target) if combatant.constricted_target else True
                 return res
-            case Action.HOLD_PERSON:
+            case Action.HOLD_PERSON | Action.RAY_OF_ENFEEBLEMENT:
                 res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= action.combatants[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.combatants[0]) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.combatants[0])
                 return res
-            case Action.TWINNED_HOLD_PERSON:
+            case Action.TWINNED_HOLD_PERSON | Action.TWINNED_RAY_OF_ENFEEBLEMENT:
                 res &= action.factory.resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
@@ -405,12 +405,12 @@ def check_feasibility_light(combatant, action):
                 res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
-            case Action.HOLD_PERSON | Action.SPIKE_GROWTH:
+            case Action.HOLD_PERSON | Action.SPIKE_GROWTH | Action.RAY_OF_ENFEEBLEMENT:
                 res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 return res
-            case Action.TWINNED_HOLD_PERSON:
+            case Action.TWINNED_HOLD_PERSON | Action.TWINNED_RAY_OF_ENFEEBLEMENT:
                 res &= action[1].resource.has_resource(level=2) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1

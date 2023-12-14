@@ -31,11 +31,12 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = None
 
-    def __init__(self, to_hit, dc, action_type, caster, resource):
+    def __init__(self, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
-        self.to_hit = to_hit
-        self.dc = dc
+        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
+        self.to_hit = caster.spell_to_hit
+        self.dc = caster.dc
         self.action_type = action_type  # RAY_OF_ENFEEBLEMENT, TWINNED_RAY_OF_ENFEEBLEMENT, QUICKENED_RAY_OF_ENFEEBLEMENT
         self.dmg_dice = "0d0"
         self.combatant = caster
@@ -52,10 +53,10 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
         return "Ray of Enfeeblement"
 
     def get_twinned_kwargs(self):
-        return {'to_hit': self.to_hit, 'dc': self.dc, 'caster': self.combatant, 'resource': self.resource}
+        return {'caster': self.combatant, 'resource': self.resource}
 
     def get_quickened_kwargs(self):
-        return {'to_hit': self.to_hit, 'dc': self.dc,  'caster': self.combatant, 'resource': self.resource}
+        return {'caster': self.combatant, 'resource': self.resource}
 
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
