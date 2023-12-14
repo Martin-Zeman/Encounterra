@@ -122,7 +122,7 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
     def get_effect_type(self):
         return EffectType.HASTE
 
-    def activate(self):
+    def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
         self.target.ac += 2

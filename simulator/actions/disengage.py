@@ -70,7 +70,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
             prefix = "Cunning "
         return prefix + f"Disengage"
 
-    def activate(self):
+    def activate(self, **kwargs):
         logger.info(f"{self.combatants[0]} disengages")
         self.factory.combatant.has_disengaged = True
 

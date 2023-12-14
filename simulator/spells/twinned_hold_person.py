@@ -1,16 +1,19 @@
+import copy
 from functools import cache
 from itertools import combinations
 
 from cachetools import cached
 from cachetools.keys import hashkey
 
+from ..actions.action_types import Passive
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.hold_person import HoldPersonFactory
 from ..spells.spell import SpellStats
-from ..misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility
+from ..misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility, \
+    reconcile_roll_types
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
 from ..threat_interfaces import Threat
@@ -123,19 +126,36 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         return EffectType.HOLD_PERSON
 
     def activate(self,):
-        saved1 = roll_saving_throw(self.combatants[0].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
-        saved2 = roll_saving_throw(self.combatants[1].saving_throws[SavingThrow.WIS], self.factory.dc, RollType.STRAIGHT)
-        if not saved1:
+        st = self.factory.saving_throw
+        dc = self.factory.dc
+        roll_type_modifiers_1 = copy.copy(self.combatants[0].saving_throws_roll_type_mod[st])
+        if self.combatants[0].has_passive(Passive.MAGIC_RESISTANCE):
+            logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Magic Resistance")
+            roll_type_modifiers_1.add(RollType.ADVANTAGE)
+        elif self.combatants[0].has_passive(Passive.HEART_OF_HRUGGEK):
+            logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Heart of Hruggek")
+            roll_type_modifiers_1.add(RollType.ADVANTAGE)
+        saved_1 = roll_saving_throw(self.combatants[0].saving_throws[st], dc, reconcile_roll_types(roll_type_modifiers_1))
+        roll_type_modifiers_2 = copy.copy(self.combatants[1].saving_throws_roll_type_mod[st])
+        if self.combatants[1].has_passive(Passive.MAGIC_RESISTANCE):
+            logger.info(f"{self.combatants[1]} gains advantage against Hold Person through Magic Resistance")
+            roll_type_modifiers_2.add(RollType.ADVANTAGE)
+        elif self.combatants[1].has_passive(Passive.HEART_OF_HRUGGEK):
+            logger.info(f"{self.combatants[1]} gains advantage against Hold Person through Heart of Hruggek")
+            roll_type_modifiers_2.add(RollType.ADVANTAGE)
+        saved_2 = roll_saving_throw(self.combatants[1].saving_throws[st], dc, reconcile_roll_types(roll_type_modifiers_2))
+
+        if not saved_1:
             self.combatants[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
             logger.info(f"{self.combatants[0]} failed the save against Hold Person")
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
-        if not saved2:
+        if not saved_2:
             self.combatants[1].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
             logger.info(f"{self.combatants[1]} failed the save against Hold Person")
         else:
             logger.info(f"{self.combatants[1]} saved against Hold Person")
-        if not saved1 or not saved2:
+        if not saved_1 or not saved_2:
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
 

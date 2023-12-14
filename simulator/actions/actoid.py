@@ -24,12 +24,11 @@ class Actoid:
 
 
 class FactoryFlags(Flag):
-    # TODO Consider merging actoid flags and factory flags
     DEFAULT = auto()
     IS_ATTACK_LIKE = auto()
     IS_HASTE_ELIGIBLE_ATTACK = auto()
     IS_MELEE = auto()
-    IS_FINESSE = auto()
+    USES_DEX = auto()  # We're not calling it FINESSE because of Ray of Enfeeblement and the fact that ranged attacks can also use STR
     IS_RANGED = auto()
     IS_DIRECT_THREAT = auto()
     IS_ATTACK_MODIFIER = auto()

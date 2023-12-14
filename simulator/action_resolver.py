@@ -38,31 +38,39 @@ class ActionResult(Enum):
     STRONG_BUFF = auto()
     TRAINEE_DEAD = auto()
 
-def has_advantage_saving_throw(saving_throw, target):
+
+def has_advantage_saving_throw(saving_throw, target, is_spell_effect=False):
     if RollType.ADVANTAGE in target.saving_throws_roll_type_mod[saving_throw]:
         return True
     if saving_throw is SavingThrow.DEX and target.has_passive(
             Passive.DANGER_SENSE) and not target.is_affected_by_any(Conditions.INCAPACITATED,
                                                                               Conditions.BLINDED,
                                                                               Conditions.DEAFENED):
+        logger.info(f"{target} gains advantage through Danger Sense")
         return RollType.ADVANTAGE
     if saving_throw is SavingThrow.DEX and target.is_dodging:
+        logger.info(f"{target} gains advantage by dodging")
+        return RollType.ADVANTAGE
+    if is_spell_effect and target.has_passive(Passive.MAGIC_RESISTANCE):
+        logger.info(f"{target} gains advantage through Magic Resistance")
         return RollType.ADVANTAGE
     return RollType.STRAIGHT
+
 
 def has_disadvantage_saving_throw(saving_throw, target):
     if RollType.DISADVANTAGE in target.saving_throws_roll_type_mod[saving_throw]:
         return True
     if saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
+        logger.info(f"{target} is restrained")
         return True
     return False
 
 
-def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True):
+def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True, is_spell_effect=False):
     # TODO prompt reaction
     # TODO Conditions
     bonus = target.saving_throws[ability.factory.saving_throw]
-    types = {has_advantage_saving_throw(ability.factory.saving_throw, target), has_disadvantage_saving_throw(ability.factory.saving_throw, target)}
+    types = {has_advantage_saving_throw(ability.factory.saving_throw, target, is_spell_effect), has_disadvantage_saving_throw(ability.factory.saving_throw, target)}
     final_modifier = reconcile_roll_types(types)
 
     if final_modifier is RollType.STRAIGHT:
@@ -335,7 +343,7 @@ class ActionResolver:
             logger.info(f"{spell.shorthand_str()} misses {target}", extra={"team": self.teams.get_team(caster)})
             return ActionResult.MISS
 
-    def resolve_attack(self, attack, attacker):  # TODO remove combatant from attack and have it as a separate parameter
+    def resolve_attack(self, attack, target, attacker):  # TODO remove combatant from attack and have it as a separate parameter
         """
 
         :param attack:
@@ -343,7 +351,6 @@ class ActionResolver:
         :return: True if it hits, false if it misses or is not attack
         """
         # TODO Conditions
-        target = attack.target
         assert target
         if FactoryFlags.IS_MELEE in attack.factory.flags:
             types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}
@@ -505,7 +512,7 @@ class ActionResolver:
                 if not self.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK):
                     # don't need to add it again in case of a multi-attack
                     actoid.activate()
-                return self.resolve_attack(actoid, combatant)
+                return self.resolve_attack(actoid, actoid.target, combatant)
             case Action.WILDSHAPE | BonusAction.MOON_WILDSHAPE:
                 actoid.activate()
                 return False
@@ -514,7 +521,7 @@ class ActionResolver:
                 affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
                 dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                 for combatant in affected:
-                    resolve_dmg_saving_throw(actoid, dmg, combatant)
+                    resolve_dmg_saving_throw(actoid, dmg, combatant, True, True)
                     battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE | Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE\
@@ -537,18 +544,33 @@ class ActionResolver:
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case Action.SHOCKING_GRASP | BonusAction.QUICKENED_SHOCKING_GRASP:
                 logger.info(f"{combatant} casts {actoid}")
-                result = self.resolve_attack(actoid, combatant)
+                result = self.resolve_attack(actoid, actoid.target, combatant)
                 if result is ActionResult.DMG:
                     actoid.target.has_reaction = False
                 return result
             case Action.TWINNED_SHOCKING_GRASP:
                 logger.info(f"{combatant} casts {actoid}")
-                result = (self.resolve_attack(actoid, combatant), self.resolve_attack(actoid, combatant))
+                result = (self.resolve_attack(actoid, actoid.targets[0], combatant), self.resolve_attack(actoid, actoid.targets[1], combatant))
                 if result[0] is ActionResult.DMG:
                     actoid.targets[0].has_reaction = False
                 if result[1] is ActionResult.DMG:
                     actoid.targets[1].has_reaction = False
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in result]) else ActionResult.MISS
+            case Action.RAY_OF_ENFEEBLEMENT | BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT:
+                logger.info(f"{combatant} casts {actoid}")
+                result = self.resolve_ranged_spell_attack(combatant, actoid, actoid.target)
+                if result is ActionResult.DMG:
+                    actoid.activate()
+                return result
+            case Action.TWINNED_RAY_OF_ENFEEBLEMENT:
+                logger.info(f"{combatant} casts {actoid}")
+                ret = (self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[0]),
+                       self.resolve_ranged_spell_attack(combatant, actoid, actoid.targets[1]))
+                if ret[0] is ActionResult.DMG:
+                    actoid.activate(target=0)
+                if ret[1] is ActionResult.DMG:
+                    actoid.activate(target=1)
+                return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in ret]) else ActionResult.MISS
             case BonusAction.MISTY_STEP:
                 logger.info(f"{combatant} casts {actoid}")
                 battle_map.move_combatant(combatant, actoid.coord)
@@ -578,7 +600,7 @@ class ActionResolver:
                  BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK | Action.BITE_AND_SWALLOW | \
                  HasteAction.HASTE_BITE_AND_SWALLOW | Action.VAMPIRIC_BITE | Action.PRE_SWALLOW_BITE | \
                  HasteAction.HASTE_PRE_SWALLOW_BITE:
-                ret = self.resolve_attack(actoid, combatant)
+                ret = self.resolve_attack(actoid, actoid.target, combatant)
                 battle_map.effect_tracker.remove_effect_by_type(combatant, EffectType.HIDE)
                 return ret
             case Movement.STANDARD | Movement.DISENGAGED:
@@ -594,7 +616,7 @@ class ActionResolver:
                 return False
             case Action.CONSTRICT:
                 logger.info(f"{combatant} is trying to constrict {actoid.target}")
-                result = self.resolve_attack(actoid.attack, combatant)
+                result = self.resolve_attack(actoid.attack, actoid.target, combatant)
                 if result is ActionResult.DMG and actoid.target.is_alive():
                     combatant.constricted_target = actoid.target
                     return True
@@ -618,7 +640,7 @@ class ActionResolver:
                 if path and len(path) <= FlamingSphereRamFactory.RANGE + 1:
                     dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                     logger.info(f"{ actoid.target} is rammed by Flaming Sphere")
-                    resolve_dmg_saving_throw(actoid, dmg, actoid.target)
+                    resolve_dmg_saving_throw(actoid, dmg, actoid.target, True, True)
                     battle_map.remove_combatant_if_dead(actoid.target)   # TODO revisit if this is really needed
                 path = path['tuples'][:FlamingSphereRamFactory.RANGE + 1]
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker

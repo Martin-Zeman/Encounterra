@@ -17,7 +17,7 @@ class Ogre(Combatant):
         super().__init__(num_or_name, Class.MONSTER.GIANT, level=1, hp=59, ac=11, init_bonus=-1, spell_to_hit=0, speed=40, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.greatclub_attack = self.add_ability(Action.MELEE_ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
-        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK,  name="Javelin", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=1)
+        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK,  name="Javelin", combatant=self, to_hit=6, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=1, uses_dex=False)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=6, dmg_dice="2d8", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4

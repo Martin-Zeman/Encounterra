@@ -172,7 +172,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def shorthand_str(self):
         return "Reckless Attack"
 
-    def activate(self):
+    def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
 
     def deactivate(self):

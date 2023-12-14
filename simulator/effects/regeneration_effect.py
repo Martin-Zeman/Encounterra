@@ -15,7 +15,7 @@ class RegenerationEffect(CombatantEffect):
     def get_effect_type(self):
         return EffectType.REGENERATION
 
-    def activate(self):
+    def activate(self, **kwargs):
         pass
 
     def deactivate(self):

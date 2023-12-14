@@ -77,7 +77,6 @@ class FireboltFactory(DirectThreatFactory):
     def create(self, target):
         return Firebolt(target, self)
 
-
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= FireboltFactory.range:

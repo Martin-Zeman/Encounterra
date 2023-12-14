@@ -98,7 +98,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
     def get_effect_type(self):
         return EffectType.WILDSHAPE
 
-    def activate(self):
+    def activate(self, **kwargs):
         """
         Activation happens when the ability is selected and is being resolved.
         """

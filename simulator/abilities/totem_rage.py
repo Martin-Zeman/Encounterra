@@ -95,7 +95,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModi
     def get_effect_type(self):
         return EffectType.TOTEM_RAGE
 
-    def activate(self):
+    def activate(self, **kwargs):
         logger.info(f"{self.combatants[0]} enters into a totem rage")
         Map.get().effect_tracker.add(self)
         self.combatants[0].ability_dmg_bonus += self.rage_bonus

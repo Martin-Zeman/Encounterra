@@ -85,7 +85,7 @@ class Bless(Actoid, CombatantEffect, AttackThreatModifier):
     def get_effect_type(self):
         return EffectType.BLESS
 
-    def activate(self):
+    def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
         # todo should check if not already under the influence of another bless
         self.factory.combatant.concentration_effect = self

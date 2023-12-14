@@ -23,6 +23,7 @@ class EffectType(Enum):
     DIGESTION = auto()
     REGENERATION = auto()
     BLESS = auto()
+    RAY_OF_ENFEEBLEMENT = auto()
 
 
 class Effect(ABC):
@@ -35,7 +36,7 @@ class Effect(ABC):
         pass
 
     @abstractmethod
-    def activate(self):
+    def activate(self, **kwargs):
         pass
 
     @abstractmethod

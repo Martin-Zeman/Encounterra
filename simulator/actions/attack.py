@@ -21,7 +21,7 @@ class AttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[]):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
@@ -46,6 +46,8 @@ class AttackFactory(DirectThreatFactory):
         self.mod_dmg_flat = 0
         self.mod_dmg_die = '0d0'
         self.mod_crit_range = 0
+        if uses_dex:
+            self.flags |= FactoryFlags.USES_DEX
 
     def __str__(self):
         return self.name + " AttackFactory"
@@ -53,7 +55,8 @@ class AttackFactory(DirectThreatFactory):
     def get_kwargs(self):
         return {'name': self.name, 'combatant': self.combatant, 'to_hit': self.to_hit, 'dmg_dice': self.dmg_dice,
                 'dmg_bonus': self.dmg_bonus, 'dmg_type': self.dmg_type, 'attack_range': self.range, 'action_type': self.action_type,
-                'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit}
+                'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit, 'extra_dmg': self.extra_dmg,
+                'uses_dex': FactoryFlags.USES_DEX in self.flags}
 
     def get_eligible_targets(self):
         swallower = self.combatant.get_swallower()
@@ -113,7 +116,7 @@ class AttackFactory(DirectThreatFactory):
             for extra in self.extra_dmg:
                 modified += mean_dmg(to_hit_total, extra[0], 0, total_target_ac, total_crit, target.is_resistant_to(extra[1]))
             for oh in self.on_hit:
-                modified += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
+                modified += calc_p_hit(to_hit_total, total_target_ac) * oh.calculate_threat(self.combatant, target)
         except:
             logger.error("Error in mean_dmg of calculate_threat_to_target_delta of AttackFactory")
             modified = baseline

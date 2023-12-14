@@ -63,7 +63,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
     def shorthand_str(self):
         return f"Dodge"
 
-    def activate(self):
+    def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
         self.combatants[0].is_dodging = True
         self.combatants[0].saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.ADVANTAGE)

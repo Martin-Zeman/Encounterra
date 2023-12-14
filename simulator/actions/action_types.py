@@ -37,6 +37,8 @@ class Action(Enum):
     GRAPPLE_ATTACK = auto()
     VAMPIRIC_BITE = auto()
     BLESS = auto()
+    RAY_OF_ENFEEBLEMENT = auto()
+    TWINNED_RAY_OF_ENFEEBLEMENT = auto()
 
 
 class BonusAction(Enum):
@@ -65,6 +67,7 @@ class BonusAction(Enum):
     MOON_WILDSHAPE = auto()
     QUICKENED_SHOCKING_GRASP = auto()
     QUICKENED_MAGIC_MISSILE = auto()
+    QUICKENED_RAY_OF_ENFEEBLEMENT = auto()
 
 
 class Reaction(Enum):
@@ -119,6 +122,7 @@ class Passive(Enum):
     HEART_OF_HRUGGEK = auto()
     DARK_DEVOTION = auto()
     BLINDSIGHT = auto()
+    MAGIC_RESISTANCE = auto()
 
 
 class MetaAction(Enum):

@@ -20,12 +20,16 @@ class NightHag(Combatant):
                          dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice="2d8", dmg_bonus=4,
                          dmg_type=DamageType.Slashing, attack_range=1)
-        two_uses = Uses(2, ResourceRefreshType.LONG_REST)
+        ray_of_enfeeblement_two_uses = Uses(2, ResourceRefreshType.LONG_REST)
+        sleep_two_uses = Uses(2, ResourceRefreshType.LONG_REST)
         inf_uses = Uses(math.inf, ResourceRefreshType.LONG_REST)
-        self.resources.append(two_uses)
+        self.resources.append(ray_of_enfeeblement_two_uses)
+        self.resources.append(sleep_two_uses)
         self.resources.append(inf_uses)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPECIAL)
+        self.add_ability(Passive.MAGIC_RESISTANCE)
         self.add_ability(Action.MAGIC_MISSILE, resource=inf_uses)
+        self.add_ability(Action.RAY_OF_ENFEEBLEMENT, resource=ray_of_enfeeblement_two_uses)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4
         self.saving_throws[SavingThrow.DEX] = 2

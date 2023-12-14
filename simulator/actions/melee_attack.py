@@ -15,11 +15,9 @@ logger = logging.getLogger("Encounterra")
 
 class MeleeAttackFactory(AttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], finesse=False):
-        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg)
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False):
+        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg, uses_dex)
         self.flags |= FactoryFlags.IS_MELEE
-        if finesse:
-            self.flags |= FactoryFlags.IS_FINESSE
 
     def get_ability_name(self):
         return "Melee Attack"

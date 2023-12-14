@@ -110,7 +110,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
     def shorthand_str(self):
         return "Twinned Haste"
 
-    def activate(self):
+    def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
         for target in self.targets:

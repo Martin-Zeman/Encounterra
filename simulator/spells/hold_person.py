@@ -123,9 +123,13 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def get_effect_type(self):
         return EffectType.HOLD_PERSON
 
-    def activate(self):
+    def activate(self, **kwargs):
         roll_type_modifiers = copy.copy(self.combatants[0].saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
-        if self.combatants[0].has_passive(Passive.HEART_OF_HRUGGEK):
+        if self.combatants[0].has_passive(Passive.MAGIC_RESISTANCE):
+            logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Magic Resistance")
+            roll_type_modifiers.add(RollType.ADVANTAGE)
+        elif self.combatants[0].has_passive(Passive.HEART_OF_HRUGGEK):
+            logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Heart of Hruggek")
             roll_type_modifiers.add(RollType.ADVANTAGE)
         saved = roll_saving_throw(self.combatants[0].saving_throws[self.st], self.dc, reconcile_roll_types(roll_type_modifiers))
         if not saved:
@@ -138,7 +142,11 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
     def end_of_turn(self):
         roll_type_modifiers = copy.copy(self.combatants[0].saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
-        if self.combatants[0].has_passive(Passive.HEART_OF_HRUGGEK):
+        if self.combatants[0].has_passive(Passive.MAGIC_RESISTANCE):
+            logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Magic Resistance")
+            roll_type_modifiers.add(RollType.ADVANTAGE)
+        elif self.combatants[0].has_passive(Passive.HEART_OF_HRUGGEK):
+            logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Heart of Hruggek")
             roll_type_modifiers.add(RollType.ADVANTAGE)
         saved = roll_saving_throw(self.combatants[0].saving_throws[self.st], self.dc, reconcile_roll_types(roll_type_modifiers))
         if saved:

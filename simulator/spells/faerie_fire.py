@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 from cachetools import cached
 from cachetools.keys import hashkey
@@ -9,7 +11,7 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..actions.action_types import BonusAction
+from ..actions.action_types import BonusAction, Passive
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
@@ -92,12 +94,15 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
     def get_effect_type(self):
         return EffectType.FAERIE_FIRE
 
-    def activate(self):
+    def activate(self, **kwargs):
         potentially_affected_combatants = Map.get().get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
         failed_count = 0
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
-            if not roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_types(pac.saving_throws_roll_type_mod[st])):
+            roll_type_modifiers = copy.copy(pac.saving_throws_roll_type_mod[st])
+            if pac.has_passive(Passive.MAGIC_RESISTANCE):
+                roll_type_modifiers.add(RollType.ADVANTAGE)
+            if not roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_types(roll_type_modifiers)):
                 logger.info(f"{pac} failed the save against Faerie Fire")
                 failed_count += 1
                 pac.remove_condition(Conditions.INVISIBLE)

@@ -104,7 +104,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         combatant.apply_condition(ConditionWithoutDC(Conditions.BLINDED, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         self.dmg_type = DamageType.Acid
-        resolve_dmg_saving_throw(self, dmg, combatant)
+        resolve_dmg_saving_throw(self, dmg, combatant, False, True)
         self.dmg_type = DamageType.Cold
 
     def on_enter(self, combatant):
@@ -122,7 +122,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
 
-    def activate(self):
+    def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
         # TODO make the area difficult terrain

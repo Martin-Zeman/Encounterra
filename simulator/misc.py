@@ -441,6 +441,13 @@ def get_attack_factories(combatant):
     attacks.extend([baf[1] for baf in combatant.bonus_action_factories if FactoryFlags.IS_ATTACK_LIKE in baf[1].flags])
     return attacks
 
+
+def get_strength_based_attack_factories(combatant):
+    attacks = [af[1] for af in combatant.action_factories if (FactoryFlags.IS_ATTACK_LIKE in af[1].flags and FactoryFlags.USES_DEX not in af[1].flags)]
+    attacks.extend([baf[1] for baf in combatant.bonus_action_factories if FactoryFlags.IS_ATTACK_LIKE in baf[1].flags])
+    return attacks
+
+
 def get_haste_eligile_attacks(combatant):
     attacks = [af[1] for af in combatant.action_factories if FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK in af[1].flags]
     return attacks

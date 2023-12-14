@@ -16,7 +16,7 @@ class BugbearChief(Combatant):
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=4, hp=65, ac=17, init_bonus=2, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.morningstar_attack = self.add_ability(Action.MELEE_ATTACK,  name="Morningstar", combatant=self, to_hit=5, dmg_dice="2d8", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
-        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=1)
+        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK,  name="Javelin", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=1, uses_dex=False)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Morningstar", combatant=self, to_hit=5, dmg_dice="2d8", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.add_ability(Passive.HEART_OF_HRUGGEK)
         self.build_attack_fms()

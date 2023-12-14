@@ -8,7 +8,7 @@ class StartOfTurnAutoEffect(CombatantEffect):
     def __init__(self, initiator, targets):
         CombatantEffect.__init__(self, initiator, targets)
 
-    def activate(self):
+    def activate(self, **kwargs):
         pass
 
     def deactivate(self):
