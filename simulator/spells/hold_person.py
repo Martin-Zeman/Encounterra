@@ -20,6 +20,7 @@ from ..utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 
+
 class HoldPersonFactory(ThreatModifierFactory):
     level = 2
     range = SpellStats.Range.FEET_60.value
@@ -46,7 +47,6 @@ class HoldPersonFactory(ThreatModifierFactory):
     def get_ability_name(self):
         return "Hold Person"
 
-
     def get_twinned_kwargs(self):
         return {'dc': self.dc, 'caster': self.combatant, 'resource': self.resource}
 
@@ -65,7 +65,6 @@ class HoldPersonFactory(ThreatModifierFactory):
 
     def create(self, target):
         return HoldPerson(target, self)
-
 
     def calculate_threat_to_target(self, target, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
@@ -112,13 +111,11 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         EndOfTurnEffect.__init__(self, factory.combatant, [target], factory.saving_throw, factory.dc)
         self.factory = factory
 
-
     def __str__(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HOLD_PERSON else "") + f"Hold Person on {self.combatants[0]}"
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HOLD_PERSON else "") + "Hold Person"
-
 
     def get_effect_type(self):
         return EffectType.HOLD_PERSON
@@ -140,7 +137,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
 
-    def end_of_turn(self):
+    def end_of_turn(self, **kwargs):
         roll_type_modifiers = copy.copy(self.combatants[0].saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
         if self.combatants[0].has_passive(Passive.MAGIC_RESISTANCE):
             logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Magic Resistance")
@@ -155,10 +152,10 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         logger.info(f"{self.combatants[0]} failed the save against {self}")
         return True
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         self.factory.combatant.break_concentration()
         self.combatants[0].remove_condition(Conditions.PARALYZED, self)
-
+        return False  # There's only one target -> automatic removal
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

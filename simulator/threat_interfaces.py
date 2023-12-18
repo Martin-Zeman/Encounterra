@@ -10,7 +10,6 @@ class Threat(ABC):
         """
         return 0
 
-
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         """
         This is here so that we don't have to sort out AttackThreatModifier from other threats with if statements
@@ -29,7 +28,6 @@ class DirectThreat(Threat):
     """
     Direct dmg causing ability, directly healing ability or an ability that directly prevents dmg
     """
-
 
     @abstractmethod
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

@@ -9,15 +9,15 @@ from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, RollType, avg_roll, Conditions, Visibility, SavingThrow, reconcile_roll_types, \
-    roll_saving_throw, get_attack_factories, get_strength_based_attack_factories, ROUND_HORIZON
+from ..misc import RollType, avg_roll, Conditions, Visibility, SavingThrow, reconcile_roll_types, \
+    roll_saving_throw, get_strength_based_attack_factories, ROUND_HORIZON
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-from ..threat_utils import mean_dmg, calc_p_hit
-from ..threat_interfaces import DirectThreat
+from ..threat_utils import calc_p_hit
+from ..threat_interfaces import Threat
 from ..factory_interfaces import DirectThreatFactory
 import logging
-from ..utils.roll_types import ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
+from ..utils.roll_types import ROLL_TYPE_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 
@@ -114,7 +114,7 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 
-class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, DirectThreat):
+class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, target, factory, **kwargs):
         Actoid.__init__(self, ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
@@ -136,7 +136,7 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, DirectTh
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
 
-    def end_of_turn(self):
+    def end_of_turn(self, **kwargs):
         roll_type_modifiers = copy.copy(self.combatants[0].saving_throws_roll_type_mod[self.st])
         if self.combatants[0].has_passive(Passive.MAGIC_RESISTANCE):
             logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Magic Resistance")
@@ -148,8 +148,9 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, DirectTh
         logger.info(f"{self.combatants[0]} failed the save against {self}")
         return True
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         self.factory.combatant.break_concentration()
+        return False  # There's only one target -> automatic removal
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -168,11 +169,11 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, DirectTh
         self.calculate_threat_delta.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
-    def calculate_threat_delta(self, modifiers, *args, **kwargs):
-        roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        modifiers[ThreatModifierType.ROLL_TYPE] = reconcile_roll_types({modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT), roll_type})
-        return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
+    # @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    # def calculate_threat_delta(self, modifiers, *args, **kwargs):
+    #     roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
+    #     modifiers[ThreatModifierType.ROLL_TYPE] = reconcile_roll_types({modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT), roll_type})
+    #     return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):

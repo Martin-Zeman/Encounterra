@@ -20,11 +20,8 @@ class EffectTracker:
         self.effects.append(effect)
 
     def remove(self, effect):
-        try:
-            effect.deactivate()
-            self.effects.remove(effect)
-        except ValueError:
-            print("FIXME")
+        effect.deactivate()
+        self.effects.remove(effect)
 
     def start_of_turn(self, combatant):
         """
@@ -47,9 +44,9 @@ class EffectTracker:
         for e in self.effects:
             # if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
             if e.is_affecting(combatant):
-                if not e.end_of_turn():
-                    e.deactivate()
-                    continue  # Effect's been saved against
+                if not e.end_of_turn(combatant=combatant):
+                    if not e.deactivate(combatant=combatant):
+                        continue  # Effect's been saved against or somehow ceased on all combatants -> can be removed
             effects.append(e)
         self.effects = effects
 

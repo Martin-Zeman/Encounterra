@@ -12,7 +12,7 @@ class EndOfTurnEffect(CombatantEffect):
         self.st = st
         self.dc = dc
 
-    def end_of_turn(self):
+    def end_of_turn(self, **kwargs):
         """
 
         :return: False if the saved against the effect and can be removed, True otherwise

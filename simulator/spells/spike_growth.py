@@ -91,7 +91,6 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SPIKE_GROWTH else "") + "Spike Growth"
 
-
     def on_start_of_turn(self, combatant):
         pass
 
@@ -113,7 +112,6 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         battle_map = Map.get()
         coords = self.get_affected_coords()
         return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
-
 
     def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)

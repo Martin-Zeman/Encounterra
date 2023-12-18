@@ -63,12 +63,11 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         return combinations([e for e in enemies if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)], 2)
 
     def create_all(self, previous_action_in_dag=None):
-        targets = Map.get().get_enemies(self.combatant)
+        targets = self.get_eligible_targets()
         return [TwinnedHoldPerson(t, self) for t in targets]
 
-    def create(self, target):
-        return TwinnedHoldPerson(target, self)
-
+    def create(self, targets):
+        return TwinnedHoldPerson(targets, self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         if target.is_affected_by_any(Conditions.PARALYZED):
@@ -99,7 +98,6 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
             p_success *= p_success
         return total_threat
 
-
     def calculate_max_threat(self):
         if self.combatant.get_swallower():
             return 0
@@ -125,7 +123,7 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def get_effect_type(self):
         return EffectType.HOLD_PERSON
 
-    def activate(self,):
+    def activate(self, **kwargs):
         st = self.factory.saving_throw
         dc = self.factory.dc
         roll_type_modifiers_1 = copy.copy(self.combatants[0].saving_throws_roll_type_mod[st])
@@ -159,11 +157,28 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
 
-    def deactivate(self):
-        if self.factory.combatant.concentration_effect is self:
+    def end_of_turn(self, **kwargs):
+        combatant = kwargs["combatant"]
+        roll_type_modifiers = copy.copy(combatant.saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
+        if combatant.has_passive(Passive.MAGIC_RESISTANCE):
+            logger.info(f"{combatant} gains advantage against Hold Person through Magic Resistance")
+            roll_type_modifiers.add(RollType.ADVANTAGE)
+        elif combatant.has_passive(Passive.HEART_OF_HRUGGEK):
+            logger.info(f"{combatant} gains advantage against Hold Person through Heart of Hruggek")
+            roll_type_modifiers.add(RollType.ADVANTAGE)
+        saved = roll_saving_throw(combatant.saving_throws[self.st], self.dc, reconcile_roll_types(roll_type_modifiers))
+        if saved:
+            logger.info(f"{combatant} saved against {self}")
+            self.combatants = [c for c in self.combatants if c is not combatant]
+            return False
+        logger.info(f"{combatant} failed the save against {self}")
+        return True
+
+    def deactivate(self, **kwargs):
+        combatant = kwargs["combatant"]
+        if self.factory.combatant.concentration_effect is self and not self.combatants:
             self.factory.combatant.break_concentration()
-        self.combatants[0].remove_condition(Conditions.PARALYZED, self)
-        self.combatants[1].remove_condition(Conditions.PARALYZED, self)
+        combatant.remove_condition(Conditions.PARALYZED, self)
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

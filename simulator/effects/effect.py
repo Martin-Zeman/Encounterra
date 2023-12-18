@@ -47,7 +47,7 @@ class Effect(ABC):
     def is_affecting(self, combatant):
         return False
 
-    def end_of_turn(self):
+    def end_of_turn(self, **kwargs):
         return True
 
     def start_of_turn(self):
