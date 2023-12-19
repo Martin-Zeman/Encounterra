@@ -1,5 +1,6 @@
 from ..abilities.on_hit_effect import OnHit
-from ..misc import Conditions, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC
+from ..conditions import Conditions, ConditionWithDC, ConditionWithoutDC, apply_condition, apply_dc_condition
+from ..misc import PhaseOfTurn
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -13,8 +14,8 @@ class OnHitAutoRestrained(OnHit):
     def hit(self, attacker, attack, target, multiplier):
         logger.info(f"{target} is grappled and restrained")
         cond = ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, self.skill, self.dc, attacker, PhaseOfTurn.ACTION)
-        target.apply_dc_condition(cond)
-        attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker, target))
+        apply_dc_condition(target, cond)
+        apply_condition(attacker, ConditionWithoutDC(Conditions.GRAPPLING, attacker, target))
         return None
 
     def calculate_threat(self, attacker, target, **kwargs):

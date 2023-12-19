@@ -4,7 +4,8 @@ from ..actions.action_types import HasteAction
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from ..misc import avg_roll, Conditions
+from ..conditions import Conditions, get_swallower, is_affected_by
+from ..misc import avg_roll
 from ..threat_utils import mean_dmg, calc_p_hit
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
@@ -59,10 +60,10 @@ class AttackFactory(DirectThreatFactory):
                 'uses_dex': FactoryFlags.USES_DEX in self.flags}
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return [swallower]
-        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
 
     def create(self, target):
         return Attack(target, self)

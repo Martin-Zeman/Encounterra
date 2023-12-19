@@ -9,7 +9,8 @@ from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
-from ..misc import Visibility, roll_ability_check, Conditions
+from ..misc import Visibility, roll_ability_check
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import ThreatModifierFactory
 import logging
@@ -36,7 +37,7 @@ class HideFactory(ThreatModifierFactory):
         return {'combatant': self.combatant, 'action_type': self.action_type}
 
     def create_all(self, previous_action_in_dag=None):
-        if self.combatant.get_swallower():
+        if get_swallower(self.combatant):
             return None
         battle_map = Map.get()
         return [Hide(e, self) for e in Map.get().get_enemies(self.combatant) if not battle_map.effect_tracker.is_combatant_hidden_from(self.combatant, e)]
@@ -113,10 +114,10 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return [coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE]
         elif battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])][self.target] is Visibility.NONE:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

@@ -4,7 +4,8 @@ import pytest
 from ..actions.action_types import Passive, Action
 from ..battle_map import Terrain, Coords, Map
 from ..combatants.goblin import Goblin
-from ..misc import DistanceMetric, Size, Side, Conditions, ConditionWithoutDC, Visibility
+from ..misc import DistanceMetric, Size, Side, Visibility
+from ..conditions import Conditions, ConditionWithoutDC, apply_condition, remove_condition
 from ..spells.fireball import FireballFactory
 from ..spells.spell import SpellStats
 from ..teams import Teams
@@ -763,9 +764,9 @@ def test_is_ally_adjacent_to_target(battle_map, teams, test_draconic_sorcerer_5l
     battle_map.set_combatant_coordinates(test_goblin, np.array([1, 5]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([1, 4]))
     assert battle_map.is_ally_adjacent_to_target(test_draconic_sorcerer_5lvl, test_bugbear)
-    test_goblin.apply_condition(ConditionWithoutDC(Conditions.INCAPACITATED, None))
+    apply_condition(test_goblin, ConditionWithoutDC(Conditions.INCAPACITATED, None))
     assert not battle_map.is_ally_adjacent_to_target(test_draconic_sorcerer_5lvl, test_bugbear)
-    test_goblin.remove_condition(Conditions.INCAPACITATED)
+    remove_condition(test_goblin, Conditions.INCAPACITATED)
     battle_map.move_combatant(test_goblin, np.array([1, 6]))
     assert not battle_map.is_ally_adjacent_to_target(test_draconic_sorcerer_5lvl, test_bugbear)
 

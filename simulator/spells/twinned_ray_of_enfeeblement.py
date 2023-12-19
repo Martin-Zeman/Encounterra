@@ -10,8 +10,9 @@ from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import RollType, avg_roll, Conditions, Visibility, SavingThrow, reconcile_roll_types, \
+from ..misc import RollType, avg_roll, Visibility, SavingThrow, reconcile_roll_types, \
     roll_saving_throw, get_strength_based_attack_factories, ROUND_HORIZON
+from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import calc_p_hit
@@ -60,13 +61,13 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
         return {'caster': self.combatant, 'resource': self.resource}
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return []
         enemies = Map.get().get_enemies(self.combatant)
         if len(enemies) < 2:
             return []  # Let's not waste a twinned version on this
-        return combinations([e for e in enemies if not e.is_affected_by(Conditions.SWALLOWED)], 2)
+        return combinations([e for e in enemies if not is_affected_by(e, Conditions.SWALLOWED)], 2)
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -112,9 +113,9 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
         return (modified_p_hit - baseline_p_hit) * max_threat * ROUND_HORIZON
 
     def calculate_max_threat(self):
-        if self.combatant.get_swallower():
+        if get_swallower(self.combatant):
             return 0
-        targets = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        targets = [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
         threats = sorted([self.calculate_threat_to_target(t) for t in targets], reverse=True)
         return (threats[0] if threats else 0) + (threats[1] if len(threats) > 1 else 0)
 
@@ -193,11 +194,11 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None  # Not possible while blinded
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

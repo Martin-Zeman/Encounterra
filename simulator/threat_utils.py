@@ -11,7 +11,8 @@ from toposort import toposort_flatten
 from .actions.actoid import FactoryFlags
 from .battle_map import Map
 from .utils.state_machine_template import StateMachineTemplate
-from .misc import parse_dmg_dice, reconstruct_path_through_dag, Conditions
+from .misc import parse_dmg_dice, reconstruct_path_through_dag
+from .conditions import Conditions, is_affected_by
 from .spells.misty_step import MistyStepFactory
 from .utils.roll_types import RollType
 
@@ -246,7 +247,7 @@ def get_danger_zone_threat(coords, combatant, delta=0):
     :return: danger zone threat (positive)
     """
     battle_map = Map.get()
-    enemies = [e for e in battle_map.get_enemies(combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+    enemies = [e for e in battle_map.get_enemies(combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
     acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
         battle_map.get_hop_distance_coords(battle_map.get_combatant_position(e).get(), coords) + delta <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc

@@ -4,7 +4,7 @@ from enum import Enum, auto
 
 from .actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction
 from .battle_map import Map
-from .misc import Conditions
+from .conditions import Conditions, is_affected_by
 
 logger = logging.getLogger("Encounterra")
 
@@ -171,7 +171,7 @@ def use_resources(combatant, action):
                 battle_map = Map.get()
                 target_position = battle_map.get_combatant_position(subject) + action.increment  # Position is tracked at the original
                 decrement = 1
-                if subject.is_affected_by(Conditions.PRONE):
+                if is_affected_by(subject, Conditions.PRONE):
                     decrement += 1
                 if battle_map.is_difficult_terrain_at(target_position):
                     decrement += 1

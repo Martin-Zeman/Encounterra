@@ -3,7 +3,7 @@ import math
 from ..actions.actoid import FactoryFlags
 from ..actions.melee_attack import MeleeAttackFactory, MeleeAttack
 from ..battle_map import Map
-from ..misc import Conditions
+from ..conditions import Conditions, is_affected_by_any, get_grappled
 import logging
 
 
@@ -19,18 +19,17 @@ class PreSwallowBiteFactory(MeleeAttackFactory):
         return "Bite with grapple"
 
     def create(self, target):
-        grappled_target = self.combatant.get_grappled()
+        grappled_target = get_grappled(self.combatant)
         if grappled_target is None or (grappled_target is target and target.is_alive()):
             return PreSwallowBite(target, self)
         return None
 
     def create_all(self, previous_action_in_dag=None):
-        grappled_target = self.combatant.get_grappled()
+        grappled_target = get_grappled(self.combatant)
         if grappled_target is not None and grappled_target.is_alive():
             return [PreSwallowBite(grappled_target, self)]
         targets = self.get_eligible_targets()
         return [PreSwallowBite(t, self) for t in targets]
-
 
 
 class PreSwallowBite(MeleeAttack):
@@ -42,7 +41,7 @@ class PreSwallowBite(MeleeAttack):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                            distances,
                                                            inflate_to_dist=self.factory.combatant.size.value,

@@ -245,26 +245,6 @@ TO_MAGICAL = {
 }
 
 
-class Conditions(Flag):
-    NONE = auto()
-    BLINDED = auto()
-    CHARMED = auto()
-    DEAFENED = auto()
-    FRIGHTENED = auto()
-    GRAPPLED = auto()
-    INCAPACITATED = auto()
-    INVISIBLE = auto()
-    PARALYZED = auto()
-    PETRIFIED = auto()
-    POISONED = auto()
-    PRONE = auto()
-    RESTRAINED = auto()
-    STUNNED = auto()
-    UNCONSCIOUS = auto()
-    SWALLOWED = auto()  # Meta-Condition
-    GRAPPLING = auto()  # Meta-Condition
-
-
 class PhaseOfTurn(Enum):
     START_OF_TURN = auto()
     END_OF_TURN = auto()
@@ -276,23 +256,6 @@ class Statistics(Enum):
     AT_LEAST_ONE_DIED = 2
     AT_LEAST_TWO_DIED = 3
     AT_LEAST_THREE_DIED = 4
-
-
-class ConditionWithoutDC:
-    def __init__(self, conditions, initiator, target=None):
-        self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
-        self.initiator = initiator
-        self.target = target  # If there is a target, e.g. GRAPPLING has a target
-
-
-class ConditionWithDC:
-    def __init__(self, conditions, st, dc, initiator, phase, target=None):
-        self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
-        self.st = st
-        self.dc = dc
-        self.initiator = initiator
-        self.phase = phase
-        self.target = target  # If there is a target, e.g. GRAPPLING has a target
 
 
 class Size(Enum):

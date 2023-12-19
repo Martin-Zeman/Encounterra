@@ -15,7 +15,8 @@ from ..battle_map import Terrain
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
 from ..effects.effect import EffectType
 from ..logging.custom_logger import CustomLogger
-from ..misc import DamageType, Conditions
+from ..misc import DamageType
+from ..conditions import Conditions, is_affected_by
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
@@ -271,12 +272,19 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     test_bugbear.curr_hp = 100 # Making sure it survives the attacks
     class DummyEffect:
+        def __init__(self):
+            self.initiator = None
         def deactivate(self):
             test_moon_druid.break_concentration()
 
         def is_affecting(self, combatant):
             return False
+
+        def get_effect_type(self):
+            return None
+
     dummy_effect = DummyEffect()
+    effect_tracker.add(dummy_effect)
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
 
     try:
@@ -291,7 +299,7 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
         action_resolver.resolve_action(actoid4, test_moon_druid)
 
         actoid5 = get_action(test_bugbear)
-        if test_bugbear.is_affected_by(Conditions.GRAPPLED):
+        if is_affected_by(test_bugbear, Conditions.GRAPPLED):
             assert str(actoid5) == "Break Grapple"
         else:
             assert str(actoid5) == "Morningstar on Moon Druid 5Lvl 1 wildshaped into Giant Toad"
@@ -373,8 +381,8 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
         assert str(actoid1) == "Bite on Bugbear 1"
         result = action_resolver.resolve_action(actoid1, test_giant_toad)
         if result is ActionResult.DMG:
-            assert test_bugbear.is_affected_by(Conditions.GRAPPLED)
-            assert test_bugbear.is_affected_by(Conditions.RESTRAINED)
+            assert is_affected_by(test_bugbear, Conditions.GRAPPLED)
+            assert is_affected_by(test_bugbear, Conditions.RESTRAINED)
             actoid2 = get_action(test_giant_toad)
             assert str(actoid2) == "None"
             test_giant_toad.new_turn()
@@ -383,8 +391,8 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
             swallowed = action_resolver.resolve_action(actoid3, test_giant_toad)
             if swallowed is ActionResult.DMG:
                 assert test_giant_toad.swallowed_target is test_bugbear
-                assert test_bugbear.is_affected_by(Conditions.RESTRAINED)
-                assert test_bugbear.is_affected_by(Conditions.BLINDED)
+                assert is_affected_by(test_bugbear, Conditions.RESTRAINED)
+                assert is_affected_by(test_bugbear, Conditions.BLINDED)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -415,10 +423,10 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
     try:
         actoid1 = get_action(test_giant_toad)
         action_resolver.resolve_action(actoid1, test_giant_toad)
-        if test_moon_druid.is_affected_by(Conditions.GRAPPLED):
+        if is_affected_by(test_moon_druid, Conditions.GRAPPLED):
             actoid2 = get_action(test_moon_druid)
             action_resolver.resolve_action(actoid2, test_moon_druid)
-            if test_moon_druid.is_affected_by(Conditions.GRAPPLED):  # Still grappled
+            if is_affected_by(test_moon_druid, Conditions.GRAPPLED):  # Still grappled
                 actoid3 = get_action(test_moon_druid)
                 assert str(actoid3) == "None"
     except Exception as e:
@@ -882,8 +890,6 @@ def test_ray_of_enfeeblement(battle_map, teams, effect_tracker, test_totem_barba
         roe_factory.to_hit = 20  # Making it a sure hit except natural 1
         roe = roe_factory.create(test_totem_barbarian)
         roe.activate()
-        # res = action_resolver.resolve_action(roe, test_night_hag)
-        # assert res is ActionResult.DMG
 
         post_roe_actoids = []
         for _ in range(50):

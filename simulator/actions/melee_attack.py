@@ -6,7 +6,7 @@ from cachetools.keys import hashkey
 from ..actions.actoid import FactoryFlags
 from ..actions.attack import AttackFactory, Attack
 from ..battle_map import Map
-from ..misc import Conditions
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 import logging
 
 
@@ -35,12 +35,12 @@ class MeleeAttack(Attack):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        swallower = self.factory.combatant.get_swallower()
+        swallower = get_swallower(self.factory.combatant)
         if swallower:
             if swallower is self.target:
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                            distances,
                                                            inflate_to_dist=self.factory.combatant.size.value,

@@ -11,7 +11,9 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import Conditions, roll_dice, ConditionWithoutDC
+from ..misc import roll_dice
+from ..conditions import Conditions, ConditionWithoutDC, is_affected_by_any, get_swallower, apply_condition, \
+    remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_utils import mean_dmg_dc_attack
 from ..threat_interfaces import DirectThreat
@@ -117,7 +119,7 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
             self.factory.combatant.concentration_effect = self
             for combatant in self.combatants:
                 logger.info(f"{combatant} is put to sleep.")
-                combatant.apply_condition(ConditionWithoutDC(Conditions.UNCONSCIOUS, self))
+                apply_condition(combatant, ConditionWithoutDC(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self))
         else:
             logger.info(f"Sleep failed to affect anyone. The rolled HP wasn't high enough.")
 
@@ -125,9 +127,8 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
         # TODO Remove free action from all enemies
         self.factory.combatant.break_concentration()
         for combatant in self.combatants:
-            combatant.remove_condition(Conditions.UNCONSCIOUS, self)
+            remove_condition(combatant, Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self)
         return False  # There's only one target -> automatic removal
-
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -148,10 +149,10 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_cartesian_range(Coords(self.coord),  # not actually combatant coords
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

@@ -5,7 +5,8 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from ..misc import DamageType, SavingThrow, Conditions
+from ..misc import DamageType, SavingThrow
+from ..conditions import Conditions, is_affected_by
 from ..actions.actoid import Actoid, FactoryFlags
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
@@ -39,7 +40,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 
     def create_all(self, previous_action_in_dag=None):
         battle_map = Map.get()
-        enemies = [e for e in battle_map.get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        enemies = [e for e in battle_map.get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
         result = []
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV
@@ -65,7 +66,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 
 
     def calculate_max_threat(self):
-        enemies = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        enemies = [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
         return max([self.calculate_threat_to_target(e) for e in enemies])
 
 

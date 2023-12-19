@@ -7,7 +7,8 @@ from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.action_enabler_effect import ActionEnablerEffect
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
-from ..misc import SavingThrow, Size, Conditions
+from ..misc import SavingThrow, Size
+from ..conditions import Conditions, is_affected_by_any
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import TransformerFactory
 import logging
@@ -216,7 +217,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         :return: eligible coordinates
         """
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             map_accessibility_matrix = np.zeros((battle_map.size, battle_map.size))
             for coord in shortest_paths.keys():
                 map_accessibility_matrix[coord] = 1

@@ -13,7 +13,9 @@ from ..actions.movement import MovementIncrement
 from ..battle_map import Terrain, Map
 from ..combatants.giant_toad import GiantToad
 from ..logging.custom_logger import CustomLogger
-from ..misc import Conditions, ConditionWithoutDC, ConditionWithDC, PhaseOfTurn, SavingThrow, SkillCheck, DamageType
+from ..misc import  PhaseOfTurn, SkillCheck
+from ..conditions import Conditions, ConditionWithoutDC, ConditionWithDC, is_affected_by, apply_condition, \
+    apply_dc_condition
 from ..session import Session
 from ..spells.fireball import Fireball
 from ..spells.firebolt import Firebolt
@@ -566,7 +568,7 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.curr_sorcery_points -= 5
-    test_draconic_sorcerer_5lvl.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
+    apply_condition(test_draconic_sorcerer_5lvl, ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
 
     test_stone_giant.ammo[test_stone_giant.rock[1].name] = 0
     test_stone_giant.curr_hp = 46
@@ -739,7 +741,7 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
-    test_draconic_sorcerer_5lvl.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
+    apply_condition(test_draconic_sorcerer_5lvl, ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
 
     try:
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
@@ -932,7 +934,7 @@ def test_error_case_21(battle_map, teams, effect_tracker, test_totem_barbarian, 
 
     battle_map.build_adjacency_matrix()
 
-    test_moon_druid.apply_condition(ConditionWithoutDC(Conditions.PRONE, test_totem_barbarian))
+    apply_condition(test_moon_druid, ConditionWithoutDC(Conditions.PRONE, test_totem_barbarian))
 
     try:
         actoid1 = get_action(test_moon_druid)
@@ -988,7 +990,7 @@ def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, 
         test_moon_druid.new_turn()
         bite = test_moon_druid.get_current_form().bite[1].create(test_totem_barbarian)
         action_resolver.resolve_action(bite, test_moon_druid)
-        if test_totem_barbarian.is_affected_by(Conditions.GRAPPLED):
+        if is_affected_by(test_totem_barbarian, Conditions.GRAPPLED):
             test_moon_druid.new_turn()
             haste = haste_factory.create(test_moon_druid.get_current_form())
             action_resolver.resolve_action(haste, test_draconic_sorcerer_5lvl)
@@ -1066,7 +1068,7 @@ def test_error_case_24(battle_map, teams, effect_tracker, test_moon_druid, test_
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
 
     # Make the grapple easy to break out of
-    test_moon_druid.apply_dc_condition(ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, SkillCheck.ATHLETICS, 1, test_ogre, PhaseOfTurn.ACTION))
+    apply_dc_condition(test_moon_druid, ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, SkillCheck.ATHLETICS, 1, test_ogre, PhaseOfTurn.ACTION))
     test_ogre.constricted_target = test_moon_druid
 
     try:
