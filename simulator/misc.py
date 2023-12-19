@@ -201,6 +201,7 @@ class SpellcastingResourceType(Enum):
     SPELLSLOTS = auto()
     SPECIAL = auto()
 
+
 class SavingThrow(Enum):
     STR = 1
     DEX = 2
@@ -318,7 +319,9 @@ class PlacementScenario(Enum):
     TOTALLY_RANDOM = 2
     # SURROUNDED = 3
 
+
 SIGN = {"+": 1, "-": -1}
+
 
 def reconcile_roll_types(types):
     """
@@ -357,6 +360,7 @@ def parse_dmg_dice(dice_string):
             sign = SIGN[seg]
     return res
 
+
 def avg_roll(dice_string):
     dice = parse_dmg_dice(dice_string)
     return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
@@ -387,7 +391,6 @@ def roll_saving_throw(bonus, dc, roll_type):
     if roll == 20:
         return True
     return roll + bonus >= dc
-
 
 
 def roll_ability_check(bonus, dc, roll_type):
@@ -426,8 +429,10 @@ def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
 def percentage_hp_loss(start_of_turn_hp, combatant):
     return 100 * (start_of_turn_hp - max(0, combatant.curr_hp)) / combatant.max_hp
 
+
 def percent_of_curr_hp(combatant, dmg):
     return dmg / (combatant.curr_hp * 0.01)
+
 
 def get_factory_of_type(factories, type):
     for f in factories:

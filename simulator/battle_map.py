@@ -1280,12 +1280,12 @@ class Map:
             case SpellStats.Target.RADIUS_10 | SpellStats.Target.RADIUS_20 | SpellStats.Target.RADIUS_30:
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
                     if ability_type is SpellStats.Type.HARMFUL:
-                        if self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
+                        if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template]:
                             affected_combatants.append(potential_target)
                     elif ability_type is SpellStats.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
+                        if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
             case SpellStats.Target.CONE_15 | SpellStats.Target.CONE_30 | SpellStats.Target.CONE_60 | SpellStats.Target.CONE_90:
@@ -1295,12 +1295,12 @@ class Map:
                 radius = SpellStats.TRANSLATE_CONE[target_template]
                 origin = self.combatant_coordinate_cache[caster]
                 affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
-                affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords]
+                affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords and pt.is_alive()]
 
             case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_20:
                 affected_coords = self.get_coords_affected_by_square_aoe(origin, SpellStats.TRANSLATE_BOX[target_template])
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
-                    if self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:
+                    if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:
                         affected_combatants.append(potential_target)
             case _:
                 logger.error("Unrecognized ability target type")

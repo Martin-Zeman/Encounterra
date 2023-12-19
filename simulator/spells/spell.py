@@ -33,6 +33,7 @@ class SpellStats:
         FEET_10 = 2
         FEET_30 = 6
         FEET_60 = 12
+        FEET_90 = 18
         FEET_100 = 20
         FEET_120 = 24
         FEET_150 = 30
@@ -44,7 +45,6 @@ class SpellStats:
         ROUND_ONE = 1
         MINUTE = 10  # in rounds
         TEN_MINUTES = 100  # in rounds
-
 
     class Type(Enum):
         HARMFUL = 1

@@ -24,6 +24,7 @@ class EffectType(Enum):
     REGENERATION = auto()
     BLESS = auto()
     RAY_OF_ENFEEBLEMENT = auto()
+    SLEEP = auto()
 
 
 class Effect(ABC):

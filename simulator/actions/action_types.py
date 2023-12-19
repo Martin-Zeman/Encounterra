@@ -39,6 +39,7 @@ class Action(Enum):
     BLESS = auto()
     RAY_OF_ENFEEBLEMENT = auto()
     TWINNED_RAY_OF_ENFEEBLEMENT = auto()
+    SHAKE_ALLY_AWAKE = auto()
 
 
 class BonusAction(Enum):
@@ -85,11 +86,13 @@ class Movement(Enum):
     GET_UP_FROM_PRONE = auto()
     DASH = auto()
 
+
 class MovementThreatType(Enum):
     STANDARD = auto()
     DISENGAGED = auto()
     DODGED = auto()
     MISTY_STEPPED = auto()
+
 
 class HasteAction(Enum):
     HASTE_MELEE_ATTACK = auto()
