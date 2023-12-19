@@ -207,7 +207,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
-            case Action.FAERIE_FIRE:
+            case Action.FAERIE_FIRE | Action.SLEEP:
                 res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
@@ -296,7 +296,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
-            case BonusAction.QUICKENED_FAERIE_FIRE:
+            case BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_SLEEP:
                 res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect

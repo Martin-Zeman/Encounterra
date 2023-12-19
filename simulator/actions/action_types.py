@@ -39,6 +39,7 @@ class Action(Enum):
     BLESS = auto()
     RAY_OF_ENFEEBLEMENT = auto()
     TWINNED_RAY_OF_ENFEEBLEMENT = auto()
+    SLEEP = auto()
     SHAKE_ALLY_AWAKE = auto()
 
 
@@ -69,6 +70,7 @@ class BonusAction(Enum):
     QUICKENED_SHOCKING_GRASP = auto()
     QUICKENED_MAGIC_MISSILE = auto()
     QUICKENED_RAY_OF_ENFEEBLEMENT = auto()
+    QUICKENED_SLEEP = auto()
 
 
 class Reaction(Enum):

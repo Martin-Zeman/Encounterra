@@ -537,6 +537,11 @@ class ActionResolver:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 return ActionResult.NOP
+            case Action.SLEEP | BonusAction.QUICKENED_SLEEP:
+                # TODO See if it can be merged into the previous one
+                logger.info(f"{combatant} casts {actoid}")
+                actoid.activate()
+                return ActionResult.NOP
             case BonusAction.CUNNING_HIDE | Action.HIDE:
                 logger.info(f"{actoid.factory.combatant} attempts to hide from {actoid.target}")
                 actoid.activate()

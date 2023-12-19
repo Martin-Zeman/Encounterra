@@ -105,7 +105,7 @@ def use_resources(combatant, action):
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
-            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS:
+            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS | Action.SLEEP:
                 action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH | Action.RAY_OF_ENFEEBLEMENT:
@@ -132,7 +132,7 @@ def use_resources(combatant, action):
             case BonusAction.MISTY_STEP:
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
-            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS:
+            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS | BonusAction.QUICKENED_SLEEP:
                 action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2

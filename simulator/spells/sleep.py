@@ -11,15 +11,16 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import roll_dice
+from ..misc import roll_dice, ROUND_HORIZON, avg_roll
 from ..conditions import Conditions, ConditionWithoutDC, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_utils import mean_dmg_dc_attack
+from ..threat_utils import mean_dmg_dc_attack, calculate_threat_in_delta, get_saving_throw_fail_prob
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
+from ..utils.roll_types import ThreatModifierType, RollType
 
 logger = logging.getLogger("Encounterra")
 
@@ -33,9 +34,11 @@ class SleepFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = None
 
-    def __init__(self, dc, action_type, caster, resource):
+    mean_sleep_hp = avg_roll('5d8')
+    max_sleep_hp = 40
+
+    def __init__(self, action_type, caster, resource):
         super().__init__()
-        self.flags |= FactoryFlags.DEX_SAVE_APPLIES
         self.action_type = action_type  # SLEEP, QUICKENED_SLEEP
         self.combatant = caster
         self.resource = resource
@@ -70,9 +73,32 @@ class SleepFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        if Map.get().get_cartesian_distance_combatants(self.combatant, target) <= SleepFactory.range + SpellStats.TRANSLATE_RADIUS[SleepFactory.target]:
-            return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
-        return 0
+        if target.curr_hp > SleepFactory.max_sleep_hp:
+            return 0
+        if is_affected_by_any(target, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.STUNNED):
+            return 0
+        if Map.get().get_cartesian_distance_combatants(self.combatant, target) > SleepFactory.range:
+            return 0
+        multiplier = min(1, SleepFactory.mean_sleep_hp / target.curr_hp)
+
+        prevented_threat_out_acc = 0
+        # Haste factories wouldn't change the result here, so we're omitting them
+        # This is an approximation, we're only looking at the best action overall, not the action + bonus_action combo
+        max_action_threat = 0
+        for f in target.action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+                max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
+        for f in target.bonus_action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+                max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
+        prevented_threat_out_acc += max_action_threat
+
+        mods = {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE, ThreatModifierType.AUTO_CRIT: True}
+        # Neglecting the auto-crit in melee range only
+        threat_in_delta = min(target.curr_hp, calculate_threat_in_delta(target, 6, mods, FactoryFlags.IS_ATTACK_LIKE)[1])
+        threat_round_total = prevented_threat_out_acc + threat_in_delta
+
+        return threat_round_total * ROUND_HORIZON * multiplier
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -116,10 +142,11 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
     def activate(self, **kwargs):
         if self.combatants:
             # TODO Add free action to all enemies
+            Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
             for combatant in self.combatants:
                 logger.info(f"{combatant} is put to sleep.")
-                apply_condition(combatant, ConditionWithoutDC(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self))
+                apply_condition(combatant, ConditionWithoutDC(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self.factory.combatant))
         else:
             logger.info(f"Sleep failed to affect anyone. The rolled HP wasn't high enough.")
 
@@ -127,7 +154,7 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
         # TODO Remove free action from all enemies
         self.factory.combatant.break_concentration()
         for combatant in self.combatants:
-            remove_condition(combatant, Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self)
+            remove_condition(combatant, Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self.factory.combatant)
         return False  # There's only one target -> automatic removal
 
     @map_position_toggled_cache

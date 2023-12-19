@@ -135,7 +135,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
             logger.info(f"{self.combatants[0]} failed the save against Hold Person")
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
-            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self))
+            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant))
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
 
@@ -156,7 +156,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
     def deactivate(self, **kwargs):
         self.factory.combatant.break_concentration()
-        remove_condition(self.combatants[0], Conditions.PARALYZED, self)
+        remove_condition(self.combatants[0], Conditions.PARALYZED, self.factory.combatant)
         return False  # There's only one target -> automatic removal
 
     @map_position_toggled_cache

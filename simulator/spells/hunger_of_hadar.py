@@ -97,12 +97,12 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + "Hunger Of Hadar"
 
     def on_start_of_turn(self, combatant):
-        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self))
+        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.dmg_type)
 
     def on_end_of_turn(self, combatant):
-        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self))
+        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         self.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant, False, True)
@@ -115,7 +115,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         pass
 
     def on_exit(self, combatant):
-        remove_condition(combatant, Conditions.BLINDED, self)
+        remove_condition(combatant, Conditions.BLINDED, self.factory.combatant)
 
     def is_affecting(self, combatant):
         battle_map = Map.get()

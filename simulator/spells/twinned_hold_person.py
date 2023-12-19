@@ -180,7 +180,7 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         combatant = kwargs["combatant"]
         if self.factory.combatant.concentration_effect is self and not self.combatants:
             self.factory.combatant.break_concentration()
-        remove_condition(combatant, Conditions.PARALYZED, self)
+        remove_condition(combatant, Conditions.PARALYZED, self.factory.combatant)
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

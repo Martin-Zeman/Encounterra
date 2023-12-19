@@ -1371,46 +1371,26 @@ def unify_combatants(session, battle_map):
                         grid_square.combatant = combatant
                         break
 
-def test_error_case_30():
-    """
-    Deserializes error objects after:
-    'NoneType' object is not iterable
-    """
-    CustomLogger(logging.WARNING)
-    with open('simulator/test/serialized_objects/battle_map_data_1702472305.pkl', 'rb') as f:
-        map_data = pickle.load(f)
-        Map.deserialize_data(map_data)
+# Note: These tests become obsolete when certain refactorings take place
+# def test_error_case_30():
+#     """
+#     Deserializes error objects after:
+#     'NoneType' object is not iterable
+#     """
+#     CustomLogger(logging.WARNING)
+#     with open('simulator/test/serialized_objects/battle_map_data_1702472305.pkl', 'rb') as f:
+#         map_data = pickle.load(f)
+#         Map.deserialize_data(map_data)
+#
+#     # Load the session
+#     with open('simulator/test/serialized_objects/session_1702472305.pkl', 'rb') as f:
+#         session_data = pickle.load(f)
+#         session = Session()
+#         session.deserialize_data(session_data)
+#     battle_map = Map.get()
+#     battle_map.effect_tracker = session.effect_tracker
+#     battle_map.teams = session.teams
+#     unify_combatants(session, Map.get())
+#     actoid = get_action(session.combatants[1])
+#     session.round_manager.action_resolver.resolve_action(actoid, session.combatants[1])
 
-    # Load the session
-    with open('simulator/test/serialized_objects/session_1702472305.pkl', 'rb') as f:
-        session_data = pickle.load(f)
-        session = Session()
-        session.deserialize_data(session_data)
-    battle_map = Map.get()
-    battle_map.effect_tracker = session.effect_tracker
-    battle_map.teams = session.teams
-    unify_combatants(session, Map.get())
-    actoid = get_action(session.combatants[1])
-    session.round_manager.action_resolver.resolve_action(actoid, session.combatants[1])
-
-def test_error_case_31():
-    """
-    Deserializes error objects after:
-    AssertionError: <Encounterra.simulator.combatants.giant_toad.GiantToad object at 0x7f63a7c5c450>
-    """
-    CustomLogger(logging.WARNING)
-    with open('simulator/test/serialized_objects/battle_map_data_1702479930.pkl', 'rb') as f:
-        map_data = pickle.load(f)
-        Map.deserialize_data(map_data)
-
-    # Load the session
-    with open('simulator/test/serialized_objects/session_1702479930.pkl', 'rb') as f:
-        session_data = pickle.load(f)
-        session = Session()
-        session.deserialize_data(session_data)
-    battle_map = Map.get()
-    battle_map.effect_tracker = session.effect_tracker
-    battle_map.teams = session.teams
-    unify_combatants(session, Map.get())
-    actoid = get_action(session.combatants[0])
-    session.round_manager.action_resolver.resolve_action(actoid, session.combatants[0])

@@ -241,7 +241,7 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
-                case Action.MAGIC_MISSILE | Action.HASTE | Action.BLESS:
+                case Action.MAGIC_MISSILE | Action.HASTE | Action.BLESS | Action.RAY_OF_ENFEEBLEMENT | Action.SLEEP:
                     resource = kwargs.get("resource", self.spellslots)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
@@ -265,11 +265,6 @@ class Combatant(ProtoCombatant):
                 case Action.CONSTRICT:
                     self.constricted_target = None
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
-                    return self.action_factories[-1]
-                case Action.RAY_OF_ENFEEBLEMENT:
-                    resource = kwargs.get("resource", self.spellslots)
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case _:
@@ -470,7 +465,8 @@ class Combatant(ProtoCombatant):
         if dmg:
             check_concentration(self, dmg)
             if is_affected_by(self, Conditions.AWAKENED_BY_DMG):
-                remove_condition(self, Conditions.AWAKENED_BY_DMG)
+                initiator = remove_condition(self, Conditions.AWAKENED_BY_DMG)
+                if initiator:
         return dmg
 
     def receive_compound_dmg(self, dmg):
@@ -488,7 +484,7 @@ class Combatant(ProtoCombatant):
         if total_dmg:
             check_concentration(self, total_dmg)
             if is_affected_by(self, Conditions.AWAKENED_BY_DMG):
-                remove_condition(self, Conditions.AWAKENED_BY_DMG)
+                initiator = remove_condition(self, Conditions.AWAKENED_BY_DMG)
         self.uncanny_dodge_active = False
 
     def heal(self, hp):
