@@ -5,6 +5,7 @@ import logging
 
 logger = logging.getLogger("Encounterra")
 
+
 class OnHitProne(OnHit):
     def __init__(self, st, dc, name="On Hit Prone"):
         self.st = st

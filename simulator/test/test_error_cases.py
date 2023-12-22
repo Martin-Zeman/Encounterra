@@ -52,7 +52,7 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
 
     class DummyEffect:
-        def deactivate(self):
+        def deactivate(self, **kwargs):
             test_draconic_sorcerer_5lvl.break_concentration()
 
         def is_affecting(self, combatant):

@@ -465,8 +465,11 @@ class Combatant(ProtoCombatant):
         if dmg:
             check_concentration(self, dmg)
             if is_affected_by(self, Conditions.AWAKENED_BY_DMG):
-                initiator = remove_condition(self, Conditions.AWAKENED_BY_DMG)
-                if initiator:
+                cond = remove_condition(self, Conditions.AWAKENED_BY_DMG)
+                if cond.effect and not cond.effect.combatants and cond.effect.initiator.concentration_effect is cond.effect:
+                    cond.effect.initiator.break_concentration()
+                    logger.info(f"Concentration on {cond.effect} is broken as the effect fades from the last combatant")
+                    Map.get().effect_tracker.remove(cond.effect)
         return dmg
 
     def receive_compound_dmg(self, dmg):
@@ -484,7 +487,11 @@ class Combatant(ProtoCombatant):
         if total_dmg:
             check_concentration(self, total_dmg)
             if is_affected_by(self, Conditions.AWAKENED_BY_DMG):
-                initiator = remove_condition(self, Conditions.AWAKENED_BY_DMG)
+                cond = remove_condition(self, Conditions.AWAKENED_BY_DMG)
+                if cond.effect and not cond.effect.combatants and cond.effect.initiator.concentration_effect is cond.effect:
+                    cond.effect.initiator.break_concentration()
+                    logger.info(f"Concentration on {cond.effect} is broken as the effect fades from the last combatant")
+                    Map.get().effect_tracker.remove(cond.effect)
         self.uncanny_dodge_active = False
 
     def heal(self, hp):

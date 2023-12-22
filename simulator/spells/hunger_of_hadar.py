@@ -97,19 +97,19 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + "Hunger Of Hadar"
 
     def on_start_of_turn(self, combatant):
-        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant))
+        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.dmg_type)
 
     def on_end_of_turn(self, combatant):
-        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant))
+        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         self.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant, False, True)
         self.dmg_type = DamageType.Cold
 
     def on_enter(self, combatant):
-        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self))
+        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
 
     def on_move_within(self, combatant):
         pass
@@ -127,9 +127,10 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         self.factory.combatant.concentration_effect = self
         # TODO make the area difficult terrain
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         # TODO remove difficult terrain
         self.factory.combatant.break_concentration()
+        return False
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

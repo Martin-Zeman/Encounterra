@@ -41,7 +41,12 @@ class Effect(ABC):
         pass
 
     @abstractmethod
-    def deactivate(self):
+    def deactivate(self, **kwargs):
+        """
+        Deactivate either the entire effect or its instance for a given combatant
+        :param kwargs: combatant=... for combatant effects where combatants may save independently at different times
+        :return: True if the Effect is still up (e.g. at least for one combatant), False otherwise
+        """
         pass
 
     @abstractmethod

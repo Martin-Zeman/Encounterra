@@ -1,8 +1,8 @@
 from enum import Flag, auto
 from typing import Union
 
+from .effects.effect import Effect
 from .misc import PhaseOfTurn
-from .proto_combatant import ProtoCombatant
 
 
 class Conditions(Flag):
@@ -27,19 +27,21 @@ class Conditions(Flag):
 
 
 class ConditionWithoutDC:
-    def __init__(self, conditions, initiator, target=None):
+    def __init__(self, conditions, initiator, effect=None, target=None):
         self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
         self.initiator = initiator
+        self.effect = effect
         self.target = target  # If there is a target, e.g. GRAPPLING has a target
 
 
 class ConditionWithDC:
-    def __init__(self, conditions, st, dc, initiator, phase, target=None):
+    def __init__(self, conditions, st, dc, initiator, phase, effect=None, target=None):
         self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
         self.st = st
         self.dc = dc
         self.initiator = initiator
         self.phase = phase
+        self.effect = effect
         self.target = target  # If there is a target, e.g. GRAPPLING has a target
 
 
@@ -66,7 +68,7 @@ def find_condition_index(condition_list, condition: Conditions, initiator=None) 
     return None
 
 
-def remove_condition(combatant, condition: Conditions, initiator=None) -> Union[None, ProtoCombatant]:
+def remove_condition(combatant, condition: Conditions, initiator=None) -> Union[None, Effect]:
     """
     Remove a specific condition from the list.
 
@@ -76,13 +78,13 @@ def remove_condition(combatant, condition: Conditions, initiator=None) -> Union[
     - initiator: The initiator of the condition (optional).
 
     Returns:
-    - Any: The initiator of the removed condition if found, None otherwise.
+    - Any: The removed condition if found, None otherwise.
     """
     index = find_condition_index(combatant.conditions, condition, initiator)
     if index is not None:
         removed_condition = combatant.conditions.pop(index)
         combatant.is_swallowed = [False, None] if condition is Conditions.SWALLOWED else combatant.is_swallowed
-        return removed_condition.initiator
+        return removed_condition
     return None
 
 
@@ -178,7 +180,7 @@ def apply_dc_condition(combatant, condition: ConditionWithDC):
     combatant.dc_conditions.append(condition)
 
 
-def remove_dc_condition(combatant, condition: Conditions, initiator=None) -> Union[None, ProtoCombatant]:
+def remove_dc_condition(combatant, condition: Conditions, initiator=None) -> Union[None, Effect]:
     """
     Remove a specific dc condition from the combatant.
 
@@ -188,11 +190,11 @@ def remove_dc_condition(combatant, condition: Conditions, initiator=None) -> Uni
     - initiator: The initiator of the condition (optional).
 
     Returns:
-    - Any: The initiator of the removed condition if found, None otherwise.
+    - Any: The removed condition if found, None otherwise.
     """
     index = find_condition_index(combatant.dc_conditions, condition, initiator)
     if index is not None:
         removed_condition = combatant.dc_conditions.pop(index)
         combatant.is_swallowed = [False, None] if condition is Conditions.SWALLOWED else combatant.is_swallowed
-        return removed_condition.initiator
+        return removed_condition
     return None

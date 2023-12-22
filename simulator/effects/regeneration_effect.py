@@ -18,8 +18,8 @@ class RegenerationEffect(CombatantEffect):
     def activate(self, **kwargs):
         pass
 
-    def deactivate(self):
-        pass
+    def deactivate(self, **kwargs):
+        return False
 
     def start_of_turn(self):
         if self.initiator.is_alive():

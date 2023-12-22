@@ -130,13 +130,14 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
         self.target.add_hasted_factories()
         self.target.has_haste_action = True  # TODO Remove this
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         effect_tracker = Map.get().effect_tracker
         self.factory.combatant.break_concentration()
         self.target.ac -= 2
         self.target.haste_action_factories.clear()
         effect_tracker.create_post_haste_lethargy(self.factory.combatant, self.target)
         self.target.has_haste_action = False  # TODO Remove this
+        return False
 
     def is_affecting(self, combatant):
         return combatant is self.target

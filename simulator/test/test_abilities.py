@@ -209,8 +209,9 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         def __init__(self):
             self.factory = DummyFactory()
             self.initiator = test_moon_druid
-        def deactivate(self):
+        def deactivate(self, **kwargs):
             test_moon_druid.break_concentration()
+            return False
 
         def is_affecting(self, combatant):
             return False
@@ -274,8 +275,9 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
     class DummyEffect:
         def __init__(self):
             self.initiator = None
-        def deactivate(self):
+        def deactivate(self, **kwargs):
             test_moon_druid.break_concentration()
+            return False
 
         def is_affecting(self, combatant):
             return False

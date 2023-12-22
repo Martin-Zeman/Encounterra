@@ -9,7 +9,6 @@ class LimitedDurationEffect(Effect):
         Effect.__init__(self, initiator)
         self.turns = turns
 
-
     def start_of_turn(self):
         """
 

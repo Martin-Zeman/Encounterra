@@ -114,10 +114,11 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         EndOfTurnEffect.__init__(self, factory.combatant, targets, factory.saving_throw, factory.dc)
         self.factory = factory
-
+        self.combatant_0_name = str(self.combatants[0])  # Making a copy, because it can be deleted as combatant saves
+        self.combatant_1_name = str(self.combatants[1])  # Making a copy, because it can be deleted as combatant saves
 
     def __str__(self):
-        return f"Twinned Hold Person on {self.combatants[0]} and {self.combatants[1]}"
+        return f"Twinned Hold Person on {self.combatant_0_name} and {self.combatant_1_name}"
 
     def shorthand_str(self):
         return "Twinned Hold Person"
@@ -146,12 +147,12 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         saved_2 = roll_saving_throw(self.combatants[1].saving_throws[st], dc, reconcile_roll_types(roll_type_modifiers_2))
 
         if not saved_1:
-            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self))
+            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant, self))
             logger.info(f"{self.combatants[0]} failed the save against Hold Person")
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
         if not saved_2:
-            apply_condition(self.combatants[1], ConditionWithoutDC(Conditions.PARALYZED, self))
+            apply_condition(self.combatants[1], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant, self))
             logger.info(f"{self.combatants[1]} failed the save against Hold Person")
         else:
             logger.info(f"{self.combatants[1]} saved against Hold Person")
@@ -178,9 +179,12 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
     def deactivate(self, **kwargs):
         combatant = kwargs["combatant"]
-        if self.factory.combatant.concentration_effect is self and not self.combatants:
-            self.factory.combatant.break_concentration()
         remove_condition(combatant, Conditions.PARALYZED, self.factory.combatant)
+        if not self.combatants:
+            self.factory.combatant.break_concentration()
+            return False
+        return True
+
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

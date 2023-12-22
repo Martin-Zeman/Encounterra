@@ -112,8 +112,9 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         self.factory.combatant.break_concentration()
+        return False
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

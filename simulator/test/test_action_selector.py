@@ -263,8 +263,9 @@ def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, eff
     battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 4]))  # Have to set it for fireball placement
 
     class DummyEffect:
-        def deactivate(self):
+        def deactivate(self, **kwargs):
             test_draconic_sorcerer_5lvl.break_concentration()
+            return False
 
         def is_affecting(self, combatant):
             return False

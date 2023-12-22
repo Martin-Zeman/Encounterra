@@ -25,6 +25,7 @@ from .utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
 
+
 class ActionResult(Enum):
     # TODO get rid of this
     UNFEASIBLE = auto()
@@ -144,6 +145,7 @@ def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
     elif half_on_success:
         target.receive_dmg(dmg // 2, ability.dmg_type)
         logger.info(f"{ability.name} deals extra {dmg // 2} to {target}")
+
 
 class ActionResolver:
 
@@ -470,7 +472,7 @@ class ActionResolver:
             logger.info(f"{target} is grappled")
             cond = ConditionWithDC(Conditions.GRAPPLED, SkillCheck.ATHLETICS, attack.factory.dc, attacker, PhaseOfTurn.ACTION)
             apply_dc_condition(target, cond)
-            apply_condition(attacker, ConditionWithoutDC(Conditions.GRAPPLING, attacker, target))
+            apply_condition(attacker, ConditionWithoutDC(Conditions.GRAPPLING, attacker, None, target))
             return ActionResult.DMG
         else:
             logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
@@ -531,9 +533,10 @@ class ActionResolver:
                     resolve_dmg_saving_throw(actoid, dmg, combatant, True, True)
                     battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
-            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE | Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE\
-                 | Action.FLAMING_SPHERE | Action.HOLD_PERSON | BonusAction.QUICKENED_HOLD_PERSON | Action.SPIKE_GROWTH | BonusAction.QUICKENED_SPIKE_GROWTH\
-                | Action.BLESS | BonusAction.QUICKENED_BLESS:
+            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE | Action.FAERIE_FIRE | \
+                 BonusAction.QUICKENED_FAERIE_FIRE | Action.FLAMING_SPHERE | Action.HOLD_PERSON | \
+                 BonusAction.QUICKENED_HOLD_PERSON | Action.TWINNED_HOLD_PERSON | Action.SPIKE_GROWTH | \
+                 BonusAction.QUICKENED_SPIKE_GROWTH | Action.BLESS | BonusAction.QUICKENED_BLESS:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 return ActionResult.NOP
@@ -753,14 +756,14 @@ def check_concentration(combatant, dmg):
         return False
     if not combatant.is_alive():
         logger.info(f"Concentration on {combatant.concentration_effect} is broken as {combatant} is dead")
-        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which removes sets the concentration_effect to None
+        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which sets the concentration_effect to None
         return False
     dc = max(10, math.floor(dmg / 2))
     roll_type = RollType.STRAIGHT if not (combatant.has_passive(Passive.WAR_CASTER) or combatant.has_passive(Passive.ELDRITCH_MIND)) else RollType.ADVANTAGE
     saved = roll_saving_throw(combatant.saving_throws[SavingThrow.CON], dc, roll_type)
     if not saved:
         logger.info(f"{combatant} loses concentration on {combatant.concentration_effect}")
-        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which removes sets the concentration_effect to None
+        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which sets the concentration_effect to None
     else:
         logger.info(f"{combatant} maintains concentration on {combatant.concentration_effect}")
     return saved

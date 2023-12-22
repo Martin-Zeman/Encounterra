@@ -5,6 +5,7 @@ import logging
 
 logger = logging.getLogger("Encounterra")
 
+
 class OnHitAutoRestrained(OnHit):
     def __init__(self, skill, dc, name="On Hit Restrained"):
         self.skill = skill
@@ -15,7 +16,7 @@ class OnHitAutoRestrained(OnHit):
         logger.info(f"{target} is grappled and restrained")
         cond = ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, self.skill, self.dc, attacker, PhaseOfTurn.ACTION)
         apply_dc_condition(target, cond)
-        apply_condition(attacker, ConditionWithoutDC(Conditions.GRAPPLING, attacker, target))
+        apply_condition(attacker, ConditionWithoutDC(Conditions.GRAPPLING, attacker, None, target))
         return None
 
     def calculate_threat(self, attacker, target, **kwargs):

@@ -86,8 +86,9 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
         else:
             logger.info(f"{self.factory.combatant} fails to hide from {self.target}")
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         logger.info(f"{self.factory.combatant} is no longer hidden {self.target}")
+        return False
 
     def calculate_threat(self, **kwargs):
         return 0

@@ -343,7 +343,7 @@ def roll_dice(dice):
 
 
 def roll_saving_throw(bonus, dc, roll_type):
-    d20 = parse_dmg_dice('1d20')
+    d20 = [(1, 20)]
     if roll_type is RollType.STRAIGHT:
         roll = roll_dice(d20)
     elif roll_type is RollType.ADVANTAGE:
@@ -357,7 +357,7 @@ def roll_saving_throw(bonus, dc, roll_type):
 
 
 def roll_ability_check(bonus, dc, roll_type):
-    d20 = parse_dmg_dice('1d20')
+    d20 = [(1, 20)]
     if roll_type is RollType.STRAIGHT:
         return roll_dice(d20) + bonus >= dc
     elif roll_type is RollType.ADVANTAGE:

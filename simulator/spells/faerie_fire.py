@@ -115,9 +115,10 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
             self.factory.combatant.concentration_effect = self
             Map.get().effect_tracker.add(self)
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         self.factory.combatant.break_concentration()
         self.combatants.clear()
+        return False
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

@@ -131,12 +131,13 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier)
         self.combatants[0].ability_dmg_bonus += self.rage_bonus
         self.combatants[0].resistances.update([DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing])
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         self.combatants[0].resistances.remove(DamageType.Slashing)
         self.combatants[0].resistances.remove(DamageType.Bludgeoning)
         self.combatants[0].resistances.remove(DamageType.Piercing)
+        return False
 
     def calculate_threat(self, **kwargs):
         """

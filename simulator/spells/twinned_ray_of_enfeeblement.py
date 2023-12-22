@@ -128,9 +128,11 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         self.targets = targets
         self.factory = factory
         self.roll_type = RollType.STRAIGHT
+        self.combatant_0_name = str(self.combatants[0])  # Making a copy, because it can be deleted as combatant saves
+        self.combatant_1_name = str(self.combatants[1])  # Making a copy, because it can be deleted as combatant saves
 
     def __str__(self):
-        return f"Twinned Ray of Enfeeblement on {self.combatants[0]} and {self.combatants[1]}"
+        return f"Twinned Ray of Enfeeblement on {self.combatant_0_name} and {self.combatant_1_name}"
 
     def shorthand_str(self):
         return "Twinned Ray of Enfeeblement"
@@ -157,8 +159,10 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         return True
 
     def deactivate(self, **kwargs):
-        if self.factory.combatant.concentration_effect is self and not self.combatants:
+        if not self.combatants:
             self.factory.combatant.break_concentration()
+            return False
+        return True
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

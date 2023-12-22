@@ -176,8 +176,8 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
 
-    def deactivate(self):
-        pass
+    def deactivate(self, **kwargs):
+        return False
 
     def get_dmg_type(self):
         return self.factory.dmg_type

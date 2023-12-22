@@ -135,7 +135,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
             logger.info(f"{self.combatants[0]} failed the save against Hold Person")
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
-            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant))
+            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant, self))
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
 

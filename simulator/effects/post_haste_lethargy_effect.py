@@ -14,5 +14,5 @@ class PostHasteLethargyEffect(CombatantEffect, LimitedDurationEffect):
     def activate(self, **kwargs):
         pass
 
-    def deactivate(self):
-        pass
+    def deactivate(self, **kwargs):
+        return False

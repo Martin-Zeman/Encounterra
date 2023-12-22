@@ -146,11 +146,11 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
             self.factory.combatant.concentration_effect = self
             for combatant in self.combatants:
                 logger.info(f"{combatant} is put to sleep.")
-                apply_condition(combatant, ConditionWithoutDC(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self.factory.combatant))
+                apply_condition(combatant, ConditionWithoutDC(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self.factory.combatant, self))
         else:
             logger.info(f"Sleep failed to affect anyone. The rolled HP wasn't high enough.")
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         # TODO Remove free action from all enemies
         self.factory.combatant.break_concentration()
         for combatant in self.combatants:
