@@ -17,6 +17,7 @@ from ..threat_interfaces import DirectThreat, AoEThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
+
 class CloudOfDaggersFactory(DirectThreatFactory):
     level = 2
     range = SpellStats.Range.FEET_60.value
@@ -68,6 +69,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
 
     def calculate_max_threat(self):
         return CloudOfDaggers(self.find_best_args(self.combatant), self).calculate_threat()
+
 
 class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThreat, AoEThreat):
 
@@ -157,4 +159,3 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= CloudOfDaggersFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
-

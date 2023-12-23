@@ -35,6 +35,12 @@ def check_feasibility(combatant, action):
                 res &= battle_map.are_valid_coords(action.coord)
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 return res
+            case Action.HUNGER_OF_HADAR:
+                res &= action.factory.resource.has_resource(level=3) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.are_valid_coords(action.origin)
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                return res
             case Action.HASTE:
                 res &= action.factory.resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
@@ -310,6 +316,13 @@ def check_feasibility(combatant, action):
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.are_valid_coords(action.coord)
                 return res
+            case BonusAction.QUICKENED_HUNGER_OF_HADAR:
+                res &= action.factory.resource.has_resource(level=3) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= combatant.curr_sorcery_points > 1
+                res &= battle_map.are_valid_coords(action.origin)
+                return res
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
@@ -383,7 +396,7 @@ def check_feasibility_light(combatant, action):
             if not res:
                 return False
         match action_type:
-            case Action.FIREBALL:
+            case Action.FIREBALL | Action.HUNGER_OF_HADAR:
                 res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
@@ -529,7 +542,7 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.concentration_effect
                 res &= combatant.curr_sorcery_points > 1
                 return res
-            case BonusAction.QUICKENED_FIREBALL:
+            case BonusAction.QUICKENED_FIREBALL | BonusAction.QUICKENED_HUNGER_OF_HADAR:
                 res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1

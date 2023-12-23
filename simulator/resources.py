@@ -91,10 +91,7 @@ def use_resources(combatant, action):
                 subject.attack_fsm.trigger(str(action.factory))
             case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP:
                 pass  # sufficiently tracked by not having an action anymore
-            case Action.FIREBALL:
-                action.factory.resource.use_resource(level=3)
-                subject.already_cast_leveled_spell_this_turn = True
-            case Action.HASTE:
+            case Action.FIREBALL | Action.HASTE | Action.HUNGER_OF_HADAR:
                 action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_HASTE:
@@ -108,7 +105,7 @@ def use_resources(combatant, action):
             case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS | Action.SLEEP:
                 action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
-            case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH | Action.RAY_OF_ENFEEBLEMENT:
+            case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH | Action.RAY_OF_ENFEEBLEMENT | Action.FLAMING_SPHERE:
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
@@ -117,9 +114,6 @@ def use_resources(combatant, action):
                 subject.curr_wildshape_uses -= 1
             case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE:
                 pass  # Sufficiently tracked by not having an action anymore
-            case Action.FLAMING_SPHERE:
-                action.factory.resource.use_resource(level=2)
-                subject.already_cast_leveled_spell_this_turn = True
             case _:
                 logger.error("use_resources: Unknown action type")
     elif isinstance(action_type, BonusAction):
@@ -140,11 +134,7 @@ def use_resources(combatant, action):
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2
-            case BonusAction.QUICKENED_HASTE:
-                action.factory.resource.use_resource(level=3)
-                subject.already_cast_leveled_spell_this_turn = True
-                subject.curr_sorcery_points -= 2
-            case BonusAction.QUICKENED_FIREBALL:
+            case BonusAction.QUICKENED_FIREBALL | BonusAction.QUICKENED_HASTE | BonusAction.QUICKENED_HUNGER_OF_HADAR:
                 action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
                 subject.curr_sorcery_points -= 2

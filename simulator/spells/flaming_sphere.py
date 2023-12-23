@@ -52,7 +52,6 @@ class FlamingSphereFactory(DirectThreatFactory):
     def get_ability_name(self):
         return "Flaming Sphere"
 
-
     def create_all(self, previous_action_in_dag=None):
         # Getting coords around enemies
         battle_map = Map.get()

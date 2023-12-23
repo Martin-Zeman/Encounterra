@@ -78,6 +78,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         ret = FaerieFire(self.find_best_args(self.combatant), self).calculate_threat()
         return ret
 
+
 class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, CombatantEffect):
 
     def __init__(self, coord, factory,  **kwargs):
@@ -95,6 +96,9 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
 
     def get_effect_type(self):
         return EffectType.FAERIE_FIRE
+
+    def is_affecting(self, combatant):
+        return CombatantEffect.is_affecting(self, combatant)
 
     def activate(self, **kwargs):
         potentially_affected_combatants = Map.get().get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)

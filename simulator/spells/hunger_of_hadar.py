@@ -20,6 +20,7 @@ from ..threat_interfaces import DirectThreat, AoEThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
+
 class HungerOfHadarFactory(DirectThreatFactory):
     level = 3
     range = SpellStats.Range.FEET_150.value
@@ -27,7 +28,6 @@ class HungerOfHadarFactory(DirectThreatFactory):
     duration = SpellStats.Duration.INSTANTANEOUS
     concentration = True
     type = SpellStats.Type.HARMFUL
-    dmg_type = DamageType.Cold
 
     def __init__(self, dc, action_type, caster, resource):
         super().__init__()
@@ -38,6 +38,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         self.dmg_dice = "2d6"
         self.combatant = caster
         self.resource = resource
+        self.dmg_type = DamageType.Cold
 
     def __str__(self):
         """
@@ -47,7 +48,6 @@ class HungerOfHadarFactory(DirectThreatFactory):
 
     def get_ability_name(self):
         return "Hunger of Hadar"
-
 
     def find_best_args(self, combatant):
         # TODO Deprecated
@@ -99,14 +99,14 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     def on_start_of_turn(self, combatant):
         apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, self.dmg_type)
+        combatant.receive_dmg(dmg, self.factory.dmg_type)
 
     def on_end_of_turn(self, combatant):
         apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
-        self.dmg_type = DamageType.Acid
+        self.factory.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant, False, True)
-        self.dmg_type = DamageType.Cold
+        self.factory.dmg_type = DamageType.Cold
 
     def on_enter(self, combatant):
         apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
@@ -117,10 +117,10 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     def on_exit(self, combatant):
         remove_condition(combatant, Conditions.BLINDED, self.factory.combatant)
 
-    def is_affecting(self, combatant):
-        battle_map = Map.get()
-        coords = self.get_affected_coords()
-        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
+    # def is_affecting(self, combatant):
+    #     battle_map = Map.get()
+    #     coords = self.get_affected_coords()
+    #     return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
     def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)

@@ -46,7 +46,6 @@ class SpikeGrowthFactory(DirectThreatFactory):
     def get_ability_name(self):
         return "Spike Growth"
 
-
     def find_best_args(self, combatant):
         # TODO maybe find a smarter placement for this
         coord, _ = Map.get().find_best_placement_harmful_circular(combatant, SpikeGrowthFactory.range, SpellStats.TRANSLATE_RADIUS[SpikeGrowthFactory.target], self)
@@ -84,7 +83,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         self.factory = factory
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SPIKE_GROWTH else "") + f"Spike Growth at {np.squeeze(self.coord)}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_SPIKE_GROWTH else "") + f"Spike Growth at {np.squeeze(self.origin)}"
 
     def get_effect_type(self):
         return EffectType.SPIKE_GROWTH
@@ -109,10 +108,10 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, SpikeGrowthFactory.dmg_type)
 
-    def is_affecting(self, combatant):
-        battle_map = Map.get()
-        coords = self.get_affected_coords()
-        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
+    # def is_affecting(self, combatant):
+    #     battle_map = Map.get()
+    #     coords = self.get_affected_coords()
+    #     return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
     def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)

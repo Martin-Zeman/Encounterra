@@ -20,6 +20,7 @@ from ..utils.roll_types import ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 
+
 class TotemRageFactory(ThreatModifierFactory):
 
     def __init__(self, combatant):
@@ -38,7 +39,6 @@ class TotemRageFactory(ThreatModifierFactory):
 
     def get_ability_name(self):
         return "Totem Rage"
-
 
     def create(self, target):
         # Doesn't make much sense here
@@ -143,4 +143,3 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModi
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-

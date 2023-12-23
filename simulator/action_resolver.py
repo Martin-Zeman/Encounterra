@@ -536,7 +536,8 @@ class ActionResolver:
             case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE | Action.FAERIE_FIRE | \
                  BonusAction.QUICKENED_FAERIE_FIRE | Action.FLAMING_SPHERE | Action.HOLD_PERSON | \
                  BonusAction.QUICKENED_HOLD_PERSON | Action.TWINNED_HOLD_PERSON | Action.SPIKE_GROWTH | \
-                 BonusAction.QUICKENED_SPIKE_GROWTH | Action.BLESS | BonusAction.QUICKENED_BLESS:
+                 BonusAction.QUICKENED_SPIKE_GROWTH | Action.BLESS | BonusAction.QUICKENED_BLESS | \
+                 Action.HUNGER_OF_HADAR | BonusAction.QUICKENED_HUNGER_OF_HADAR:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 return ActionResult.NOP

@@ -15,6 +15,7 @@ from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
+
 class FireballFactory(DirectThreatFactory):
     level = 3
     range = SpellStats.Range.FEET_150.value
@@ -78,6 +79,7 @@ class FireballFactory(DirectThreatFactory):
 
     def calculate_max_threat(self):
         return Fireball(self.find_best_args(self.combatant), self).calculate_threat()
+
 
 class Fireball(Actoid, DirectThreat):
 

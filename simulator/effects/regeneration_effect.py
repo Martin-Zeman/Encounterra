@@ -29,3 +29,4 @@ class RegenerationEffect(CombatantEffect):
             else:
                 logger.info(f"{self.initiator}'s regeneration was suppressed by taking {self.suppression_dmg_type.name}")
             return True
+        return False

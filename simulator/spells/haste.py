@@ -17,8 +17,8 @@ from ..utils.roll_types import ThreatModifierType
 import logging
 
 
-
 logger = logging.getLogger("Encounterra")
+
 
 class HasteFactory(ThreatModifierFactory):
     level = 3
@@ -45,13 +45,11 @@ class HasteFactory(ThreatModifierFactory):
     def get_ability_name(self):
         return "Haste"
 
-
     def get_twinned_kwargs(self):
         return {'caster': self.combatant, 'resource': self.resource}
 
     def get_quickened_kwargs(self):
         return {'caster': self.combatant, 'resource': self.resource}
-
 
     def get_eligible_targets(self):
         swallower = get_swallower(self.combatant)
