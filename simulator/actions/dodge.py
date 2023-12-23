@@ -68,13 +68,14 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         self.combatants[0].is_dodging = True
         self.combatants[0].saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.ADVANTAGE)
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         logger.info(f"{self.combatants[0]}'s dodge fades")
         self.combatants[0].is_dodging = False
         try:
             self.combatants[0].saving_throws_roll_type_mod[SavingThrow.DEX].remove(RollType.ADVANTAGE)
         except KeyError:
             pass  # may not be present if called by reset
+        return False
 
     def calculate_threat(self, **kwargs):
         """

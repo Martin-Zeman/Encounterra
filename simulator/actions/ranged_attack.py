@@ -7,7 +7,8 @@ from cachetools.keys import hashkey
 from ..actions.actoid import FactoryFlags
 from ..actions.attack import AttackFactory, Attack
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from ..misc import Visibility, Conditions
+from ..misc import Visibility
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..threat_utils import mean_dmg, calc_p_hit
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA
 import logging
@@ -66,14 +67,14 @@ class RangedAttack(Attack):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        swallower = self.factory.combatant.get_swallower()
+        swallower = get_swallower(self.factory.combatant)
         if swallower:
             if swallower is self.target:
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # Makes barely any sense but ok
             return None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        # if self.factory.combatant.movement > 0 and not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        # if self.factory.combatant.movement > 0 and not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                                  distances,
                                                                                  inflate_to_dist=self.factory.combatant.size.value,

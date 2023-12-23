@@ -12,8 +12,10 @@ from .actions.dodge import DodgeFactory
 from .actions.flaming_sphere_ram import FlamingSphereRamFactory
 from .battle_map import Map
 from .effects.effect import EffectType
-from .misc import SavingThrow, Conditions, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
-    roll_dice, roll_ability_check, roll_saving_throw, ConditionWithDC, SkillCheck, PhaseOfTurn, ConditionWithoutDC
+from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
+    roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn
+from .conditions import Conditions, ConditionWithDC, ConditionWithoutDC, break_out_of_grapple, is_affected_by_any, \
+    is_affected_by, get_grappled, apply_condition, apply_dc_condition, remove_condition, remove_dc_condition
 from .feasibility import check_feasibility
 from .proto_combatant import ProtoCombatant
 from .resources import use_resources
@@ -22,6 +24,7 @@ from .spells.magic_missile import MagicMissileFactory
 from .utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
+
 
 class ActionResult(Enum):
     # TODO get rid of this
@@ -43,7 +46,7 @@ def has_advantage_saving_throw(saving_throw, target, is_spell_effect=False):
     if RollType.ADVANTAGE in target.saving_throws_roll_type_mod[saving_throw]:
         return True
     if saving_throw is SavingThrow.DEX and target.has_passive(
-            Passive.DANGER_SENSE) and not target.is_affected_by_any(Conditions.INCAPACITATED,
+            Passive.DANGER_SENSE) and not is_affected_by_any(target, Conditions.INCAPACITATED,
                                                                               Conditions.BLINDED,
                                                                               Conditions.DEAFENED):
         logger.info(f"{target} gains advantage through Danger Sense")
@@ -60,7 +63,7 @@ def has_advantage_saving_throw(saving_throw, target, is_spell_effect=False):
 def has_disadvantage_saving_throw(saving_throw, target):
     if RollType.DISADVANTAGE in target.saving_throws_roll_type_mod[saving_throw]:
         return True
-    if saving_throw is SavingThrow.DEX and target.is_affected_by_any(Conditions.RESTRAINED):
+    if saving_throw is SavingThrow.DEX and is_affected_by_any(target, Conditions.RESTRAINED):
         logger.info(f"{target} is restrained")
         return True
     return False
@@ -143,6 +146,7 @@ def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
         target.receive_dmg(dmg // 2, ability.dmg_type)
         logger.info(f"{ability.name} deals extra {dmg // 2} to {target}")
 
+
 class ActionResolver:
 
     def __init__(self, combatants, teams, effect_tracker):
@@ -157,11 +161,11 @@ class ActionResolver:
         if battle_map.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
-        if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
+        if is_affected_by_any(target, Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
             return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, EffectType.FAERIE_FIRE):
             return RollType.ADVANTAGE
-        if attacker.is_affected_by(Conditions.INVISIBLE):
+        if is_affected_by(attacker, Conditions.INVISIBLE):
             return RollType.ADVANTAGE
         if battle_map.effect_tracker.is_combatant_hidden_from(attacker, target):
             return RollType.ADVANTAGE
@@ -181,13 +185,13 @@ class ActionResolver:
         if battle_map.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) == 1:
+        if is_affected_by(target, Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) == 1:
             return RollType.ADVANTAGE
         if self.effect_tracker.is_affecting_combatant(target, EffectType.FAERIE_FIRE):
             return RollType.ADVANTAGE
-        if target.is_affected_by_any(Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
+        if is_affected_by_any(target, Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
             return RollType.ADVANTAGE
-        if attacker.is_affected_by(Conditions.INVISIBLE):
+        if is_affected_by(attacker, Conditions.INVISIBLE):
             return RollType.ADVANTAGE
         if target.wears_metal and (attack.factory.action_type is Action.SHOCKING_GRASP or attack.factory.action_type is BonusAction.QUICKENED_SHOCKING_GRASP or attack.factory.action_type is Action.TWINNED_SHOCKING_GRASP):
             return RollType.ADVANTAGE
@@ -208,11 +212,11 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if battle_map.is_enemy_adjacent(attacker):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
+        if is_affected_by(target, Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.INVISIBLE):
+        if is_affected_by(target, Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
-        if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED):
+        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -228,11 +232,11 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if battle_map.is_enemy_adjacent(attacker):
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
+        if is_affected_by(target, Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.INVISIBLE):
+        if is_affected_by(target, Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
-        if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED):
+        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -243,12 +247,12 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if target.is_dodging:
             return RollType.DISADVANTAGE
-        if attacker.is_affected_by_any(Conditions.PRONE, Conditions.POISONED):
+        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED):
             return RollType.DISADVANTAGE
         battle_map = Map.get()
-        if target.is_affected_by(Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
+        if is_affected_by(target, Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
             return RollType.DISADVANTAGE
-        if target.is_affected_by(Conditions.INVISIBLE):
+        if is_affected_by(target, Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -460,15 +464,15 @@ class ActionResolver:
                 reaction = target.prompt_after_hit_reaction(attacker, attack, rolled + attack.factory.to_hit)
                 self.resolve_action(reaction, target)
         if rolled + attack.factory.to_hit >= target.ac:  # Potentially missing this time
-            already_grappled = attacker.get_grappled()
+            already_grappled = get_grappled(attacker)
             if already_grappled:
                 logger.info(f"{attacker} is letting go of {already_grappled} to grapple another target")
-                already_grappled.remove_dc_condition(Conditions.GRAPPLED, initiator=attacker)
-                attacker.remove_condition(Conditions.GRAPPLING)
+                remove_dc_condition(already_grappled, Conditions.GRAPPLED, initiator=attacker)
+                remove_condition(attacker, Conditions.GRAPPLING)
             logger.info(f"{target} is grappled")
             cond = ConditionWithDC(Conditions.GRAPPLED, SkillCheck.ATHLETICS, attack.factory.dc, attacker, PhaseOfTurn.ACTION)
-            target.apply_dc_condition(cond)
-            attacker.apply_condition(ConditionWithoutDC(Conditions.GRAPPLING, attacker, target))
+            apply_dc_condition(target, cond)
+            apply_condition(attacker, ConditionWithoutDC(Conditions.GRAPPLING, attacker, None, target))
             return ActionResult.DMG
         else:
             logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
@@ -529,9 +533,16 @@ class ActionResolver:
                     resolve_dmg_saving_throw(actoid, dmg, combatant, True, True)
                     battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
                 return ActionResult.DMG
-            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE | Action.FAERIE_FIRE | BonusAction.QUICKENED_FAERIE_FIRE\
-                 | Action.FLAMING_SPHERE | Action.HOLD_PERSON | BonusAction.QUICKENED_HOLD_PERSON | Action.SPIKE_GROWTH | BonusAction.QUICKENED_SPIKE_GROWTH\
-                | Action.BLESS | BonusAction.QUICKENED_BLESS:
+            case Action.HASTE | Action.TWINNED_HASTE | BonusAction.QUICKENED_HASTE | Action.FAERIE_FIRE | \
+                 BonusAction.QUICKENED_FAERIE_FIRE | Action.FLAMING_SPHERE | Action.HOLD_PERSON | \
+                 BonusAction.QUICKENED_HOLD_PERSON | Action.TWINNED_HOLD_PERSON | Action.SPIKE_GROWTH | \
+                 BonusAction.QUICKENED_SPIKE_GROWTH | Action.BLESS | BonusAction.QUICKENED_BLESS | \
+                 Action.HUNGER_OF_HADAR | BonusAction.QUICKENED_HUNGER_OF_HADAR:
+                logger.info(f"{combatant} casts {actoid}")
+                actoid.activate()
+                return ActionResult.NOP
+            case Action.SLEEP | BonusAction.QUICKENED_SLEEP:
+                # TODO See if it can be merged into the previous one
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 return ActionResult.NOP
@@ -617,7 +628,7 @@ class ActionResolver:
                 return False
             case Movement.GET_UP_FROM_PRONE:
                 logger.info(f"{combatant} gets up from being prone")
-                combatant.remove_condition(Conditions.PRONE)  # resources already taken
+                remove_condition(combatant, Conditions.PRONE)  # resources already taken
                 return False
             case Action.CONSTRICT:
                 logger.info(f"{combatant} is trying to constrict {actoid.target}")
@@ -632,8 +643,8 @@ class ActionResolver:
                 if broken_out:# and getattr(grapple.initiator, "constricted_target", None):  # TODO this is a simplification
                     logger.info(f"{combatant} is has broken out of grapple")
                     # grapple.initiator.constricted_target = None
-                    grapple.initiator.remove_condition(Conditions.GRAPPLING)
-                    combatant.break_out_of_grapple()
+                    remove_condition(grapple.initiator, Conditions.GRAPPLING)
+                    break_out_of_grapple(combatant)
                 else:
                     logger.info(f"{combatant} remains grappled")
             case Action.GRAPPLE_ATTACK:
@@ -746,14 +757,14 @@ def check_concentration(combatant, dmg):
         return False
     if not combatant.is_alive():
         logger.info(f"Concentration on {combatant.concentration_effect} is broken as {combatant} is dead")
-        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which removes sets the concentration_effect to None
+        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which sets the concentration_effect to None
         return False
     dc = max(10, math.floor(dmg / 2))
     roll_type = RollType.STRAIGHT if not (combatant.has_passive(Passive.WAR_CASTER) or combatant.has_passive(Passive.ELDRITCH_MIND)) else RollType.ADVANTAGE
     saved = roll_saving_throw(combatant.saving_throws[SavingThrow.CON], dc, roll_type)
     if not saved:
         logger.info(f"{combatant} loses concentration on {combatant.concentration_effect}")
-        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which removes sets the concentration_effect to None
+        Map.get().effect_tracker.remove(combatant.concentration_effect)  # This will in turn call the deactivate which sets the concentration_effect to None
     else:
         logger.info(f"{combatant} maintains concentration on {combatant.concentration_effect}")
     return saved

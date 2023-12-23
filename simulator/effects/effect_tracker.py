@@ -20,36 +20,51 @@ class EffectTracker:
         self.effects.append(effect)
 
     def remove(self, effect):
-        try:
-            effect.deactivate()
-            self.effects.remove(effect)
-        except ValueError:
-            print("FIXME")
+        effect.deactivate()
+        self.effects.remove(effect)
 
-    def start_of_turn(self, combatant):
+    def start_of_turn_tick(self, combatant):
         """
         Manages all effects with a fixed duration measurable in rounds which end just before the beginning of combatant's turn.
-        Also manages effects which can be saved against at the beginning of a combatant's turn.
+        :param combatant: the initiating combatant
         :return:
         """
         effects = []
         for e in self.effects:
-            # if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
+            if e.initiator is combatant:
+                try:
+                    keep = e.start_of_turn_tick()
+                    if not keep:
+                        e.deactivate()
+                        continue  # Effect expired
+                except AttributeError:  # This skips
+                    pass
+            effects.append(e)  # Effect persists
+        self.effects = effects
+
+    def start_of_turn(self, combatant):
+        """
+        Manages effects which take effect at the start of a combatant's turn.
+        Also manages effects that can be saved against at the start of a combatant's turn.
+        :param combatant: the affected combatant
+        :return:
+        """
+        effects = []
+        for e in self.effects:
             if e.is_affecting(combatant):
                 if not e.start_of_turn():
                     e.deactivate()
-                    continue  # Effect's been saved against or expired
+                    continue  # Effect's been saved against
             effects.append(e)  # Effect persists
         self.effects = effects
 
     def end_of_turn(self, combatant):
         effects = []
         for e in self.effects:
-            # if getattr(e, "target", None) is combatant or combatant in getattr(e, "targets", []):
             if e.is_affecting(combatant):
-                if not e.end_of_turn():
-                    e.deactivate()
-                    continue  # Effect's been saved against
+                if not e.end_of_turn(combatant=combatant):
+                    if not e.deactivate(combatant=combatant):
+                        continue  # Effect's been saved against or somehow ceased on all combatants -> can be removed
             effects.append(e)
         self.effects = effects
 
@@ -92,10 +107,10 @@ class EffectTracker:
 
 # TODO add function for wildshape replacement
 
-    def remove_effect_by_type(self, combatant, type):
+    def remove_effect_by_type(self, combatant, efect_type):
         effects = []
         for e in self.effects:
-            if e.is_affecting(combatant) and e.get_effect_type() is type:
+            if e.is_affecting(combatant) and e.get_effect_type() is efect_type:
                 e.deactivate()
             else:
                 effects.append(e)

@@ -9,7 +9,8 @@ from ..battle_map import Map
 from ..effects.effect import EffectType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
-from ..misc import DamageType, SavingThrow, Size, Conditions, SkillCheck, Class
+from ..misc import DamageType, SavingThrow, Size, SkillCheck, Class
+from ..conditions import Conditions, remove_all_conditions_of_type
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -55,7 +56,7 @@ class GiantToad(Combatant):
     def on_die(self):
         if self.swallowed_target:
             logger.info(f"{self.swallowed_target} is spat out and no longer swallowed", extra={"team": self.team_color})
-            self.swallowed_target.remove_all_conditions_of_type(Conditions.SWALLOWED)  # This should remmove all the accompanying conditions too
+            remove_all_conditions_of_type(self.swallowed_target, Conditions.SWALLOWED)  # This should remmove all the accompanying conditions too
             if self.swallowed_target.is_alive():
                 battle_map = Map.get()
                 battle_map.effect_tracker.remove_effect_by_type(self.swallowed_target, EffectType.DIGESTION)

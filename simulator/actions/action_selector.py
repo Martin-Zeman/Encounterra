@@ -12,7 +12,8 @@ from ..actions.action_types import Movement, MovementThreatType, BonusAction
 from ..actions.break_grapple import BreakGrappleFactory
 from ..actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from ..battle_map import convert_path_to_increments, Map
-from ..misc import Conditions, get_factory_of_type
+from ..misc import get_factory_of_type
+from ..conditions import Conditions, needs_to_break_out_of_grapple, is_affected_by
 from ..threat_interfaces import AttackThreatModifier
 from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
 
@@ -532,10 +533,10 @@ def get_action(combatant):
     battle_map = Map.get()
     battle_map.clear_caches()
     combatant = combatant.get_current_form()  # Takes care of possible wildshape
-    grapple_cond = combatant.needs_to_break_out_of_grapple()
+    grapple_cond = needs_to_break_out_of_grapple(combatant)
     if grapple_cond and combatant.has_action:
         return BreakGrappleFactory(grapple_cond).create()
-    if combatant.is_affected_by(Conditions.PRONE) and combatant.movement >= combatant.speed / 2:
+    if is_affected_by(combatant, Conditions.PRONE) and combatant.movement >= combatant.speed / 2:
         return GetUpFactory().create()
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
     combatant.shortest_paths_cache = shortest_paths

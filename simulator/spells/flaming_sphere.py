@@ -13,7 +13,8 @@ from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow, Conditions
+from ..misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import AoEThreat, Threat
 from ..factory_interfaces import DirectThreatFactory
@@ -50,7 +51,6 @@ class FlamingSphereFactory(DirectThreatFactory):
 
     def get_ability_name(self):
         return "Flaming Sphere"
-
 
     def create_all(self, previous_action_in_dag=None):
         # Getting coords around enemies
@@ -110,11 +110,12 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         self.factory.combatant.concentration_effect = self
         self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self.factory.dc, self)))
 
-    def deactivate(self):
-        logger.info(f"Flaming Sphere disappears")  # TODO remove this
+    def deactivate(self, **kwargs):
+        logger.info(f"Flaming Sphere fades")  # TODO remove this
         self.factory.combatant.break_concentration()
         self.factory.combatant.get_current_form().bonus_action_factories = [baf for baf in self.factory.combatant.get_current_form().bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]
         self.factory.combatant.bonus_action_factories = [baf for baf in self.factory.combatant.bonus_action_factories if baf[0] is not BonusAction.FLAMING_SPHERE_RAM]  # Doesn't carry over with deactivation of wildshape
+        return False
 
     def enable(self):
         self.factory.combatant.bonus_action_factories.append((BonusAction.FLAMING_SPHERE_RAM, FlamingSphereRamFactory(self.factory.combatant, self.factory.dc, self)))
@@ -139,10 +140,10 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None  # Not possible while blinded
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

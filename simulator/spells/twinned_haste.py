@@ -12,7 +12,8 @@ from ..threat_utils import mean_dmg
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
 from functools import reduce, cache
-from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligile_attacks, Conditions, Visibility
+from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligile_attacks, Visibility
+from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..spells.haste import HasteFactory
 from ..utils.roll_types import ThreatModifierType
 
@@ -40,16 +41,15 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         """
         return "TwinnedHasteFactory"
 
-
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return []  # Let's not waste a twinned version on this
         battle_map = Map.get()
         allies = battle_map.get_allies_within_radius(self.combatant, HasteFactory.range)
         if not allies:
             return []  # Let's not waste a twinned version on this
-        ret = [a for a in allies if not a.is_affected_by(Conditions.SWALLOWED)]
+        ret = [a for a in allies if not is_affected_by(a, Conditions.SWALLOWED)]
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         ret = combinations(ret, 2)
@@ -118,7 +118,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
             target.add_hasted_factories()
             target.has_haste_action = True  # TODO Remove this
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         effect_tracker = Map.get().effect_tracker
         self.factory.combatant.break_concentration()
         for target in self.targets:
@@ -126,6 +126,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
             target.haste_action_factories.clear()
             effect_tracker.create_post_haste_lethargy(self.factory.combatant, target)
             target.has_haste_action = False  # TODO Remove this
+        return False
 
     def is_affecting(self, combatant):
         return combatant in self.targets
@@ -148,11 +149,11 @@ class TwinnedHaste(Actoid, Effect, Threat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None  # Better not waste a twinned version even though self could still be targeted
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             if self.targets[0] is self.factory.combatant:
                 coords_for_first = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
             else:

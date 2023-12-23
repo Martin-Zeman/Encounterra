@@ -11,12 +11,15 @@ from ..effects.aoe_spheric_effect import AoeSphericEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg, Conditions, ConditionWithoutDC
+from ..misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg
+from ..conditions import Conditions, ConditionWithoutDC, is_affected_by_any, get_swallower, apply_condition, \
+    remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_utils import mean_dmg_dc_attack
 from ..threat_interfaces import DirectThreat, AoEThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
+
 
 class HungerOfHadarFactory(DirectThreatFactory):
     level = 3
@@ -25,7 +28,6 @@ class HungerOfHadarFactory(DirectThreatFactory):
     duration = SpellStats.Duration.INSTANTANEOUS
     concentration = True
     type = SpellStats.Type.HARMFUL
-    dmg_type = DamageType.Cold
 
     def __init__(self, dc, action_type, caster, resource):
         super().__init__()
@@ -36,6 +38,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         self.dmg_dice = "2d6"
         self.combatant = caster
         self.resource = resource
+        self.dmg_type = DamageType.Cold
 
     def __str__(self):
         """
@@ -45,7 +48,6 @@ class HungerOfHadarFactory(DirectThreatFactory):
 
     def get_ability_name(self):
         return "Hunger of Hadar"
-
 
     def find_best_args(self, combatant):
         # TODO Deprecated
@@ -94,42 +96,41 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + "Hunger Of Hadar"
 
-
     def on_start_of_turn(self, combatant):
-        combatant.apply_condition(ConditionWithoutDC(Conditions.BLINDED, self))
+        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
-        combatant.receive_dmg(dmg, self.dmg_type)
+        combatant.receive_dmg(dmg, self.factory.dmg_type)
 
     def on_end_of_turn(self, combatant):
-        combatant.apply_condition(ConditionWithoutDC(Conditions.BLINDED, self))
+        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
-        self.dmg_type = DamageType.Acid
+        self.factory.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant, False, True)
-        self.dmg_type = DamageType.Cold
+        self.factory.dmg_type = DamageType.Cold
 
     def on_enter(self, combatant):
-        combatant.apply_condition(ConditionWithoutDC(Conditions.BLINDED, self))
+        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
 
     def on_move_within(self, combatant):
         pass
 
     def on_exit(self, combatant):
-        combatant.remove_condition(Conditions.BLINDED, self)
+        remove_condition(combatant, Conditions.BLINDED, self.factory.combatant)
 
-    def is_affecting(self, combatant):
-        battle_map = Map.get()
-        coords = self.get_affected_coords()
-        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
-
+    # def is_affecting(self, combatant):
+    #     battle_map = Map.get()
+    #     coords = self.get_affected_coords()
+    #     return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
     def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
         # TODO make the area difficult terrain
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         # TODO remove difficult terrain
         self.factory.combatant.break_concentration()
+        return False
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -165,10 +166,10 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

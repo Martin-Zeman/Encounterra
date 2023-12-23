@@ -4,7 +4,8 @@ from cachetools.keys import hashkey
 from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.spell import SpellStats
-from ..misc import DamageType, RollType, avg_roll, Conditions, Visibility
+from ..misc import DamageType, RollType, avg_roll, Visibility
+from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import mean_dmg
@@ -65,10 +66,10 @@ class FireboltFactory(DirectThreatFactory):
                 return "1d10"
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return [swallower]
-        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -142,14 +143,14 @@ class Firebolt(Actoid, DirectThreat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        swallower = self.factory.combatant.get_swallower()
+        swallower = get_swallower(self.factory.combatant)
         battle_map = Map.get()
         if swallower:
             if swallower is self.target:
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

@@ -12,8 +12,9 @@ from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.hold_person import HoldPersonFactory
 from ..spells.spell import SpellStats
-from ..misc import SavingThrow, Conditions, ConditionWithoutDC, ROUND_HORIZON, roll_saving_throw, Visibility, \
-    reconcile_roll_types
+from ..misc import SavingThrow, ROUND_HORIZON, roll_saving_throw, Visibility, reconcile_roll_types
+from ..conditions import Conditions, ConditionWithoutDC, is_affected_by_any, is_affected_by, get_swallower, \
+    apply_condition, remove_condition
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
 from ..threat_interfaces import Threat
@@ -22,6 +23,7 @@ import logging
 from ..utils.roll_types import ThreatModifierType, RollType
 
 logger = logging.getLogger("Encounterra")
+
 
 class TwinnedHoldPersonFactory(ThreatModifierFactory):
     level = 2
@@ -54,24 +56,23 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         return {'dc': self.dc, 'caster': self.combatant}
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return []  # Let's not waste a twinned version on this
         enemies = Map.get().get_enemies(self.combatant)
         if len(enemies) < 2:
             return []  # Let's not waste a twinned version on this
-        return combinations([e for e in enemies if e.is_humanoid and not e.is_affected_by(Conditions.SWALLOWED)], 2)
+        return combinations([e for e in enemies if e.is_humanoid and not is_affected_by(e, Conditions.SWALLOWED)], 2)
 
     def create_all(self, previous_action_in_dag=None):
-        targets = Map.get().get_enemies(self.combatant)
+        targets = self.get_eligible_targets()
         return [TwinnedHoldPerson(t, self) for t in targets]
 
-    def create(self, target):
-        return TwinnedHoldPerson(target, self)
-
+    def create(self, targets):
+        return TwinnedHoldPerson(targets, self)
 
     def calculate_threat_to_target(self, target, **kwargs):
-        if target.is_affected_by_any(Conditions.PARALYZED):
+        if is_affected_by_any(target, Conditions.PARALYZED):
             return 0
         if Map.get().get_cartesian_distance_combatants(self.combatant, target) > HoldPersonFactory.range:
             return 0
@@ -99,11 +100,10 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
             p_success *= p_success
         return total_threat
 
-
     def calculate_max_threat(self):
-        if self.combatant.get_swallower():
+        if get_swallower(self.combatant):
             return 0
-        targets = [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        targets = [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
         threats = sorted([self.calculate_threat_to_target(t) for t in targets], reverse=True)
         return (threats[0] if threats else 0) + (threats[1] if len(threats) > 1 else 0)
 
@@ -114,10 +114,11 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         EndOfTurnEffect.__init__(self, factory.combatant, targets, factory.saving_throw, factory.dc)
         self.factory = factory
-
+        self.combatant_0_name = str(self.combatants[0])  # Making a copy, because it can be deleted as combatant saves
+        self.combatant_1_name = str(self.combatants[1])  # Making a copy, because it can be deleted as combatant saves
 
     def __str__(self):
-        return f"Twinned Hold Person on {self.combatants[0]} and {self.combatants[1]}"
+        return f"Twinned Hold Person on {self.combatant_0_name} and {self.combatant_1_name}"
 
     def shorthand_str(self):
         return "Twinned Hold Person"
@@ -125,7 +126,7 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def get_effect_type(self):
         return EffectType.HOLD_PERSON
 
-    def activate(self,):
+    def activate(self, **kwargs):
         st = self.factory.saving_throw
         dc = self.factory.dc
         roll_type_modifiers_1 = copy.copy(self.combatants[0].saving_throws_roll_type_mod[st])
@@ -146,12 +147,12 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         saved_2 = roll_saving_throw(self.combatants[1].saving_throws[st], dc, reconcile_roll_types(roll_type_modifiers_2))
 
         if not saved_1:
-            self.combatants[0].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant, self))
             logger.info(f"{self.combatants[0]} failed the save against Hold Person")
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
         if not saved_2:
-            self.combatants[1].apply_condition(ConditionWithoutDC(Conditions.PARALYZED, self))
+            apply_condition(self.combatants[1], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant, self))
             logger.info(f"{self.combatants[1]} failed the save against Hold Person")
         else:
             logger.info(f"{self.combatants[1]} saved against Hold Person")
@@ -159,11 +160,31 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
 
-    def deactivate(self):
-        if self.factory.combatant.concentration_effect is self:
+    def end_of_turn(self, **kwargs):
+        combatant = kwargs["combatant"]
+        roll_type_modifiers = copy.copy(combatant.saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
+        if combatant.has_passive(Passive.MAGIC_RESISTANCE):
+            logger.info(f"{combatant} gains advantage against Hold Person through Magic Resistance")
+            roll_type_modifiers.add(RollType.ADVANTAGE)
+        elif combatant.has_passive(Passive.HEART_OF_HRUGGEK):
+            logger.info(f"{combatant} gains advantage against Hold Person through Heart of Hruggek")
+            roll_type_modifiers.add(RollType.ADVANTAGE)
+        saved = roll_saving_throw(combatant.saving_throws[self.st], self.dc, reconcile_roll_types(roll_type_modifiers))
+        if saved:
+            logger.info(f"{combatant} saved against {self}")
+            self.combatants = [c for c in self.combatants if c is not combatant]
+            return False
+        logger.info(f"{combatant} failed the save against {self}")
+        return True
+
+    def deactivate(self, **kwargs):
+        combatant = kwargs["combatant"]
+        remove_condition(combatant, Conditions.PARALYZED, self.factory.combatant)
+        if not self.combatants:
             self.factory.combatant.break_concentration()
-        self.combatants[0].remove_condition(Conditions.PARALYZED, self)
-        self.combatants[1].remove_condition(Conditions.PARALYZED, self)
+            return False
+        return True
+
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -175,11 +196,11 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None  # Not possible while blinded
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

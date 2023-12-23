@@ -9,15 +9,16 @@ from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, RollType, avg_roll, Conditions, Visibility, SavingThrow, reconcile_roll_types, \
-    roll_saving_throw, get_attack_factories, get_strength_based_attack_factories, ROUND_HORIZON
+from ..misc import RollType, avg_roll, Visibility, SavingThrow, reconcile_roll_types, \
+    roll_saving_throw, get_strength_based_attack_factories, ROUND_HORIZON
+from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-from ..threat_utils import mean_dmg, calc_p_hit
-from ..threat_interfaces import DirectThreat
+from ..threat_utils import calc_p_hit
+from ..threat_interfaces import Threat
 from ..factory_interfaces import DirectThreatFactory
 import logging
-from ..utils.roll_types import ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModifierType
+from ..utils.roll_types import ROLL_TYPE_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 
@@ -59,10 +60,10 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
         return {'caster': self.combatant, 'resource': self.resource}
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return [swallower]
-        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -114,7 +115,7 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 
-class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, DirectThreat):
+class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def __init__(self, target, factory, **kwargs):
         Actoid.__init__(self, ActoidFlags.IS_SPELL | ActoidFlags.IS_ATTACK_LIKE)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
@@ -136,7 +137,7 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, DirectTh
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
 
-    def end_of_turn(self):
+    def end_of_turn(self, **kwargs):
         roll_type_modifiers = copy.copy(self.combatants[0].saving_throws_roll_type_mod[self.st])
         if self.combatants[0].has_passive(Passive.MAGIC_RESISTANCE):
             logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Magic Resistance")
@@ -148,8 +149,9 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, DirectTh
         logger.info(f"{self.combatants[0]} failed the save against {self}")
         return True
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         self.factory.combatant.break_concentration()
+        return False  # There's only one target -> automatic removal
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -168,22 +170,22 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, DirectTh
         self.calculate_threat_delta.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
-    def calculate_threat_delta(self, modifiers, *args, **kwargs):
-        roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        modifiers[ThreatModifierType.ROLL_TYPE] = reconcile_roll_types({modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT), roll_type})
-        return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
+    # @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    # def calculate_threat_delta(self, modifiers, *args, **kwargs):
+    #     roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
+    #     modifiers[ThreatModifierType.ROLL_TYPE] = reconcile_roll_types({modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT), roll_type})
+    #     return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        swallower = self.factory.combatant.get_swallower()
+        swallower = get_swallower(self.factory.combatant)
         battle_map = Map.get()
         if swallower:
             if swallower is self.target:
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

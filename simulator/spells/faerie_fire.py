@@ -16,12 +16,14 @@ from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
 from functools import cache
-from ..misc import roll_saving_throw, reconcile_roll_types, SavingThrow, Conditions
+from ..misc import roll_saving_throw, reconcile_roll_types, SavingThrow
+from ..conditions import Conditions, is_affected_by_any, get_swallower, remove_condition
 import logging
 from ..threat_utils import calculate_threat_in_delta
 from ..utils.roll_types import ThreatModifierType, RollType
 
 logger = logging.getLogger("Encounterra")
+
 
 class FaerieFireFactory(ThreatModifierFactory):
     level = 1
@@ -76,6 +78,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         ret = FaerieFire(self.find_best_args(self.combatant), self).calculate_threat()
         return ret
 
+
 class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, CombatantEffect):
 
     def __init__(self, coord, factory,  **kwargs):
@@ -94,6 +97,9 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
     def get_effect_type(self):
         return EffectType.FAERIE_FIRE
 
+    def is_affecting(self, combatant):
+        return CombatantEffect.is_affecting(self, combatant)
+
     def activate(self, **kwargs):
         potentially_affected_combatants = Map.get().get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
         failed_count = 0
@@ -105,7 +111,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
             if not roll_saving_throw(pac.saving_throws[st], self.factory.dc, reconcile_roll_types(roll_type_modifiers)):
                 logger.info(f"{pac} failed the save against Faerie Fire")
                 failed_count += 1
-                pac.remove_condition(Conditions.INVISIBLE)
+                remove_condition(pac, Conditions.INVISIBLE)
                 self.combatants.append(pac)
             else:
                 logger.info(f"{pac} saved against Faerie Fire")
@@ -113,9 +119,10 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
             self.factory.combatant.concentration_effect = self
             Map.get().effect_tracker.add(self)
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         self.factory.combatant.break_concentration()
         self.combatants.clear()
+        return False
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -146,10 +153,10 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return Map.get().get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

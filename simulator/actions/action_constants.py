@@ -30,12 +30,14 @@ from ..spells.hold_person import HoldPersonFactory
 from ..spells.magic_missile import MagicMissileFactory
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
 from ..spells.shocking_grasp import ShockingGraspFactory
+from ..spells.sleep import SleepFactory
 from ..spells.twinned_hold_person import TwinnedHoldPersonFactory
 from ..spells.misty_step import MistyStepFactory
 from ..spells.scorching_ray import ScorchingRayFactory
 from ..spells.shield import ShieldFactory
 from ..spells.twinned_firebolt import TwinnedFireboltFactory
 from ..spells.twinned_haste import TwinnedHasteFactory
+from ..spells.twinned_ray_of_enfeeblement import TwinnedRayOfEnfeeblementFactory
 
 logger = logging.getLogger("Encounterra")
 
@@ -82,6 +84,8 @@ TO_FACTORY = {
     Action.VAMPIRIC_BITE: VampiricBiteFactory,
     Action.BLESS: BlessFactory,
     Action.RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
+    Action.TWINNED_RAY_OF_ENFEEBLEMENT: TwinnedRayOfEnfeeblementFactory,
+    Action.SLEEP: SleepFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -104,6 +108,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_FAERIE_FIRE: FaerieFireFactory,
     BonusAction.QUICKENED_BLESS: BlessFactory,
     BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
+    BonusAction.QUICKENED_SLEEP: SleepFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,

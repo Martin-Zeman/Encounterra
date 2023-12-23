@@ -4,6 +4,7 @@ import logging
 import random
 import math
 from contextlib import contextmanager
+from typing import Union, Any
 
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .action_resolver import check_concentration
@@ -13,8 +14,8 @@ from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
-from .misc import SavingThrow, Conditions, Size, ConditionWithDC, PhaseOfTurn, ConditionWithoutDC, \
-    SpellcastingResourceType, Class
+from .misc import SavingThrow, Size, SpellcastingResourceType, Class
+from .conditions import Conditions, is_affected_by, remove_condition
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
 from .abilities.rage import RageFactory
@@ -240,7 +241,7 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
-                case Action.MAGIC_MISSILE | Action.HASTE | Action.BLESS:
+                case Action.MAGIC_MISSILE | Action.HASTE | Action.BLESS | Action.RAY_OF_ENFEEBLEMENT | Action.SLEEP:
                     resource = kwargs.get("resource", self.spellslots)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
@@ -264,11 +265,6 @@ class Combatant(ProtoCombatant):
                 case Action.CONSTRICT:
                     self.constricted_target = None
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
-                    return self.action_factories[-1]
-                case Action.RAY_OF_ENFEEBLEMENT:
-                    resource = kwargs.get("resource", self.spellslots)
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
                 case _:
@@ -468,6 +464,12 @@ class Combatant(ProtoCombatant):
             Map.get().effect_tracker.remove_effect_by_type(self.get_original_form(), EffectType.WILDSHAPE)
         if dmg:
             check_concentration(self, dmg)
+            if is_affected_by(self, Conditions.AWAKENED_BY_DMG):
+                cond = remove_condition(self, Conditions.AWAKENED_BY_DMG)
+                if cond.effect and not cond.effect.combatants and cond.effect.initiator.concentration_effect is cond.effect:
+                    cond.effect.initiator.break_concentration()
+                    logger.info(f"Concentration on {cond.effect} is broken as the effect fades from the last combatant")
+                    Map.get().effect_tracker.remove(cond.effect)
         return dmg
 
     def receive_compound_dmg(self, dmg):
@@ -484,6 +486,12 @@ class Combatant(ProtoCombatant):
             Map.get().effect_tracker.remove_effect_by_type(self.get_original_form(), EffectType.WILDSHAPE)
         if total_dmg:
             check_concentration(self, total_dmg)
+            if is_affected_by(self, Conditions.AWAKENED_BY_DMG):
+                cond = remove_condition(self, Conditions.AWAKENED_BY_DMG)
+                if cond.effect and not cond.effect.combatants and cond.effect.initiator.concentration_effect is cond.effect:
+                    cond.effect.initiator.break_concentration()
+                    logger.info(f"Concentration on {cond.effect} is broken as the effect fades from the last combatant")
+                    Map.get().effect_tracker.remove(cond.effect)
         self.uncanny_dodge_active = False
 
     def heal(self, hp):
@@ -497,94 +505,6 @@ class Combatant(ProtoCombatant):
 
     def is_vulnerable_to(self, dmg_type):
         return dmg_type in self.vulnerabities
-
-    def apply_condition(self, condition: ConditionWithoutDC):
-        self.is_swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed # This is an optimization to speed up conditions look-up since it's done frequently
-        self.conditions.append(condition)
-
-    def remove_condition(self, condition: Conditions, initiator=None):
-        for idx, cond in enumerate(self.conditions):
-            if (not initiator or cond.initiator is initiator) and condition in cond.conditions:
-                self.is_swallowed = [False, None] if condition is Conditions.SWALLOWED else self.is_swallowed
-                del self.conditions[idx]
-                return
-
-    def remove_all_conditions_of_type(self, condition: Conditions):
-        self.is_swallowed = [False, None] if condition is Conditions.SWALLOWED else self.is_swallowed
-        self.dc_conditions = [dccond for dccond in self.dc_conditions if condition not in dccond.conditions]
-        self.conditions = [cond for cond in self.conditions if condition not in cond.conditions]
-
-    def is_affected_by(self, condition: Conditions):
-        for dc_cond in self.dc_conditions:
-            if condition in dc_cond.conditions:
-                return True
-        for cond in self.conditions:
-            if condition in cond.conditions:
-                return True
-        return condition in self.conditions
-
-
-    def get_swallower(self):
-        return self.is_swallowed[1]
-        # for dc_cond in self.dc_conditions:
-        #     if Conditions.SWALLOWED in dc_cond.conditions:
-        #         return dc_cond.initiator
-        # for cond in self.conditions:
-        #     if Conditions.SWALLOWED in cond.conditions:
-        #         return cond.initiator
-        # return None
-
-    def get_grappler(self):
-        for dc_cond in self.dc_conditions:
-            if Conditions.GRAPPLED in dc_cond.conditions:
-                return dc_cond.initiator
-        for cond in self.conditions:
-            if Conditions.GRAPPLED in cond.conditions:
-                return cond.initiator
-        return None
-
-    def get_grappled(self):
-        for dc_cond in self.dc_conditions:
-            if Conditions.GRAPPLING in dc_cond.conditions:
-                return dc_cond.target
-        for cond in self.conditions:
-            if Conditions.GRAPPLING in cond.conditions:
-                return cond.target
-        return None
-
-    def needs_to_break_out_of_grapple(self):
-        for dc_cond in self.dc_conditions:
-            if Conditions.GRAPPLED in dc_cond.conditions and dc_cond.phase is PhaseOfTurn.ACTION:
-                return dc_cond
-        return None
-
-    def break_out_of_grapple(self):
-        # TODO this is a simplification, there can potentially be multiple grapples by multiple targets
-        for idx, dc_cond in enumerate(self.dc_conditions):
-            if Conditions.GRAPPLED in dc_cond.conditions and dc_cond.phase is PhaseOfTurn.ACTION:
-                del self.dc_conditions[idx]
-                break
-
-    def is_affected_by_any(self, *args):
-        for condition in args:
-            for dc_cond in self.dc_conditions:
-                if condition in dc_cond.conditions:
-                    return True
-            for cond in self.conditions:
-                if condition in cond.conditions:
-                    return True
-        return False
-
-    def apply_dc_condition(self, condition: ConditionWithDC):
-        self.is_swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else self.is_swallowed  # This is an optimization to speed up conditions look-up since it's done frequently
-        self.dc_conditions.append(condition)
-
-    def remove_dc_condition(self, cond_to_remove: Conditions, initiator=None):
-        for idx, cond in enumerate(self.dc_conditions):
-            if (not initiator or cond.initiator is initiator) and cond_to_remove in cond.conditions:
-                self.is_swallowed = [False, None] if cond_to_remove is Conditions.SWALLOWED else self.is_swallowed
-                del self.dc_conditions[idx]
-                return
 
     def new_turn(self):
         self.has_action = True
@@ -677,7 +597,6 @@ class Combatant(ProtoCombatant):
 
     def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
         return None
-
 
     def calculate_action_plan(self, distances, shortest_paths):
         """

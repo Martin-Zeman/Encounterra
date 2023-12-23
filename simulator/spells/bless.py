@@ -6,7 +6,8 @@ from cachetools.keys import hashkey
 from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
-from ..misc import Conditions, get_attack_factories, ROUND_HORIZON
+from ..misc import get_attack_factories, ROUND_HORIZON
+from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..spells.spell import SpellStats
 from ..effects.effect import Effect, EffectType
 from ..actions.actoid import Actoid, ActoidFlags
@@ -47,10 +48,10 @@ class BlessFactory(ThreatModifierFactory):
         return {'caster': self.combatant, 'resource': self.resource}
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return [self.combatant]
-        return combinations([a for a in Map.get().get_allies_within_radius(self.combatant, BlessFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)], 3)
+        return combinations([a for a in Map.get().get_allies_within_radius(self.combatant, BlessFactory.range) if not is_affected_by(a, Conditions.SWALLOWED)], 3)
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -94,12 +95,13 @@ class Bless(Actoid, CombatantEffect, AttackThreatModifier):
                 mod.append('1d4')
             target.to_hit_dice_mod.append('1d4')
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         self.factory.combatant.break_concentration()
         for target in self.combatants:
             for mod in target.saving_throws_dice_mod.values():
                 mod.remove('1d4')
             target.to_hit_dice_mod.remove('1d4')
+        return False
 
     def is_affecting(self, combatant):
         return combatant in self.combatants
@@ -129,7 +131,7 @@ class Bless(Actoid, CombatantEffect, AttackThreatModifier):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             coords_for_first = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
                                                                             distances,
                                                                             inflate_to_dist=self.factory.combatant.size.value,

@@ -4,6 +4,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..battle_map import Map, map_toggled_cache_with_key
+from ..conditions import get_swallower
 from ..spells.spell import SpellStats
 import logging
 from ..actions.action_types import BonusAction
@@ -40,7 +41,7 @@ class MistyStepFactory(Factory):
         return "MistyStepFactory"
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return []  # Can't see while being swallowed
         return [(0, 0)]
@@ -76,7 +77,7 @@ class MistyStep(Actoid, Threat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if self.factory.combatant.get_swallower():
+        if get_swallower(self.factory.combatant):
             return None
         battle_map = Map.get()
         # if self.factory.combatant.movement > 0:

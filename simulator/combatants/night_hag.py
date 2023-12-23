@@ -30,6 +30,7 @@ class NightHag(Combatant):
         self.add_ability(Passive.MAGIC_RESISTANCE)
         self.add_ability(Action.MAGIC_MISSILE, resource=inf_uses)
         self.add_ability(Action.RAY_OF_ENFEEBLEMENT, resource=ray_of_enfeeblement_two_uses)
+        self.add_ability(Action.SLEEP, resource=sleep_two_uses)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4
         self.saving_throws[SavingThrow.DEX] = 2

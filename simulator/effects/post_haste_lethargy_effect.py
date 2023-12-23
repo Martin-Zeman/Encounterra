@@ -2,6 +2,7 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 
+
 class PostHasteLethargyEffect(CombatantEffect, LimitedDurationEffect):
     def __init__(self, initiator, combatant):
         CombatantEffect.__init__(self, initiator, combatants=[combatant])
@@ -13,5 +14,5 @@ class PostHasteLethargyEffect(CombatantEffect, LimitedDurationEffect):
     def activate(self, **kwargs):
         pass
 
-    def deactivate(self):
-        pass
+    def deactivate(self, **kwargs):
+        return False

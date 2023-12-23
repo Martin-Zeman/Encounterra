@@ -11,13 +11,14 @@ from ..threat_utils import mean_dmg
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
 from functools import reduce, cache
-from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligile_attacks, Conditions, Visibility
+from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligile_attacks, Visibility
+from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..utils.roll_types import ThreatModifierType
 import logging
 
 
-
 logger = logging.getLogger("Encounterra")
+
 
 class HasteFactory(ThreatModifierFactory):
     level = 3
@@ -44,19 +45,17 @@ class HasteFactory(ThreatModifierFactory):
     def get_ability_name(self):
         return "Haste"
 
-
     def get_twinned_kwargs(self):
         return {'caster': self.combatant, 'resource': self.resource}
 
     def get_quickened_kwargs(self):
         return {'caster': self.combatant, 'resource': self.resource}
 
-
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return [self.combatant]
-        ret = [a for a in Map.get().get_allies_within_radius(self.combatant, HasteFactory.range) if not a.is_affected_by(Conditions.SWALLOWED)]  # TODO do I want to keep this?
+        ret = [a for a in Map.get().get_allies_within_radius(self.combatant, HasteFactory.range) if not is_affected_by(a, Conditions.SWALLOWED)]  # TODO do I want to keep this?
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
@@ -129,13 +128,14 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
         self.target.add_hasted_factories()
         self.target.has_haste_action = True  # TODO Remove this
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         effect_tracker = Map.get().effect_tracker
         self.factory.combatant.break_concentration()
         self.target.ac -= 2
         self.target.haste_action_factories.clear()
         effect_tracker.create_post_haste_lethargy(self.factory.combatant, self.target)
         self.target.has_haste_action = False  # TODO Remove this
+        return False
 
     def is_affecting(self, combatant):
         return combatant is self.target
@@ -155,14 +155,14 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        swallower = self.factory.combatant.get_swallower()
+        swallower = get_swallower(self.factory.combatant)
         if swallower:
             if self.target is self.factory.combatant:
                 return [curr_coord]
             return None  # Not possible while blinded
         if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        elif not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        elif not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,

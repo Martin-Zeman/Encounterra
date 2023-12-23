@@ -2,7 +2,8 @@ from .actions.action_types import Action, BonusAction, HasteAction, Movement, Re
 from .battle_map import Map
 from .combatant_coords import Coords
 from .effects.effect import EffectType
-from .misc import Conditions, Size
+from .misc import Size
+from .conditions import Conditions, is_affected_by_any, get_grappled
 import logging
 import numpy as np
 
@@ -19,7 +20,7 @@ def check_feasibility(combatant, action):
     battle_map.clear_caches()
     action_type = action.factory.action_type
     if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+        if is_affected_by_any(combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         if isinstance(action_type, Action):
             res = combatant.has_action
@@ -33,6 +34,12 @@ def check_feasibility(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.are_valid_coords(action.coord)
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
+                return res
+            case Action.HUNGER_OF_HADAR:
+                res &= action.factory.resource.has_resource(level=3) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.are_valid_coords(action.origin)
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case Action.HASTE:
                 res &= action.factory.resource.has_resource(level=3) > 0
@@ -128,13 +135,13 @@ def check_feasibility(combatant, action):
                 return res
             case Action.DASH | HasteAction.HASTE_DASH:
                 # Technically, those actions are possible but make no sense
-                return res and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
+                return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED)
             case Action.DISENGAGE | HasteAction.HASTE_DISENGAGE:
-                return res and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED) and not combatant.has_disengaged
+                return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED) and not combatant.has_disengaged
             case Action.DODGE | Action.POUNCE:
                 return res
             case Action.BREAK_GRAPPLE:
-                return res and combatant.is_affected_by_any(Conditions.GRAPPLED)
+                return res and is_affected_by_any(combatant, Conditions.GRAPPLED)
             case Action.CONSTRICT:
                 return res and (action.target is combatant.constricted_target) if combatant.constricted_target else True
             case Action.WILDSHAPE:
@@ -154,7 +161,7 @@ def check_feasibility(combatant, action):
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
-                grappled_target = combatant.get_grappled()
+                grappled_target = get_grappled(combatant)
                 res &= grappled_target and grappled_target is action.target
                 return res
             case Action.FLAMING_SPHERE:
@@ -171,7 +178,7 @@ def check_feasibility(combatant, action):
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
-                grappled_target = combatant.get_grappled()
+                grappled_target = get_grappled(combatant)
                 res &= grappled_target and grappled_target is action.target
                 return res
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
@@ -206,7 +213,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
-            case Action.FAERIE_FIRE:
+            case Action.FAERIE_FIRE | Action.SLEEP:
                 res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
@@ -217,7 +224,7 @@ def check_feasibility(combatant, action):
                 logger.error("check_feasibility: Unknown action type")
                 return False
     elif isinstance(action_type, BonusAction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+        if is_affected_by_any(combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         res = combatant.has_bonus_action
         match action_type:
@@ -295,7 +302,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
-            case BonusAction.QUICKENED_FAERIE_FIRE:
+            case BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_SLEEP:
                 res &= action.factory.resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
@@ -308,6 +315,13 @@ def check_feasibility(combatant, action):
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 res &= combatant.curr_sorcery_points > 1
                 res &= battle_map.are_valid_coords(action.coord)
+                return res
+            case BonusAction.QUICKENED_HUNGER_OF_HADAR:
+                res &= action.factory.resource.has_resource(level=3) > 0
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= combatant.curr_sorcery_points > 1
+                res &= battle_map.are_valid_coords(action.origin)
                 return res
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
@@ -327,7 +341,7 @@ def check_feasibility(combatant, action):
                 logger.error("Unknown bonus action")
                 return False
     elif isinstance(action_type, Reaction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+        if is_affected_by_any(combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         match action_type:
             case Reaction.SHIELD:
@@ -340,14 +354,14 @@ def check_feasibility(combatant, action):
                 logger.error("Unknown reaction")
         return combatant.has_reaction
     elif isinstance(action_type, Movement):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+        if is_affected_by_any(combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
             return False
         match action_type:
             case Movement.STANDARD | Movement.DISENGAGED:
                 target_position = battle_map.get_combatant_position(combatant) + action.increment
                 movement_needed = 1 if not battle_map.is_difficult_terrain_at(target_position) else 2
                 res = combatant.movement >= movement_needed and battle_map.are_valid_coords(target_position.get()) and battle_map.are_empty_or_self(target_position, combatant)
-                res &= not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
+                res &= not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED)
                 return res
             case Movement.GET_UP_FROM_PRONE:
                 return combatant.movement >= (combatant.speed / 2)
@@ -373,7 +387,7 @@ def check_feasibility_light(combatant, action):
     battle_map = Map.get()
     action_type = action[0]
     if isinstance(action_type, Action) or isinstance(action_type, HasteAction):
-        # if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+        # if is_affected_by_any(combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
         #     return False
         if isinstance(action_type, Action):
             res = combatant.has_action
@@ -382,7 +396,7 @@ def check_feasibility_light(combatant, action):
             if not res:
                 return False
         match action_type:
-            case Action.FIREBALL:
+            case Action.FIREBALL | Action.HUNGER_OF_HADAR:
                 res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
@@ -442,9 +456,9 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case Action.DASH | HasteAction.HASTE_DASH:
-                return res and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED)
+                return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED)
             case Action.DISENGAGE | HasteAction.HASTE_DISENGAGE:
-                return res and not combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.RESTRAINED) and not combatant.has_disengaged  # Don't want to disengage twice
+                return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED) and not combatant.has_disengaged  # Don't want to disengage twice
             case Action.DODGE | Action.POUNCE:
                 return res
             case Action.CONSTRICT:
@@ -461,7 +475,7 @@ def check_feasibility_light(combatant, action):
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.swallowed_target
-                grappled_target = combatant.get_grappled()
+                grappled_target = get_grappled(combatant)
                 res &= grappled_target is not None and grappled_target.size.value <= Size.MEDIUM.value
                 return res
             case Action.FLAMING_SPHERE:
@@ -474,7 +488,7 @@ def check_feasibility_light(combatant, action):
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
                 res &= combatant.ammo[action[1].name] > 0
                 res &= not combatant.swallowed_target
-                grappled_target = combatant.get_grappled()
+                grappled_target = get_grappled(combatant)
                 res &= grappled_target is not None and grappled_target.size.value <= Size.MEDIUM.value
                 return res
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
@@ -486,7 +500,7 @@ def check_feasibility_light(combatant, action):
                 logger.error("check_feasibility_light: Unknown action type")
                 return False
     elif isinstance(action_type, BonusAction):
-        # if combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
+        # if is_affected_by_any(combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
         #     return False
         res = combatant.has_bonus_action
         match action_type:
@@ -528,7 +542,7 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.concentration_effect
                 res &= combatant.curr_sorcery_points > 1
                 return res
-            case BonusAction.QUICKENED_FIREBALL:
+            case BonusAction.QUICKENED_FIREBALL | BonusAction.QUICKENED_HUNGER_OF_HADAR:
                 res &= action[1].resource.has_resource(level=3) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
@@ -546,7 +560,7 @@ def check_feasibility_light(combatant, action):
                 logger.error("Unknown bonus action")
                 return False
     elif isinstance(action_type, Reaction):
-        if combatant.is_affected_by_any(Conditions.INCAPACITATED):
+        if is_affected_by_any(combatant, Conditions.INCAPACITATED):
             return False
         match action_type:
             case Reaction.SHIELD:
@@ -557,7 +571,7 @@ def check_feasibility_light(combatant, action):
                 logger.error("Unknown reaction")
         return combatant.has_reaction
     elif isinstance(action_type, Movement):
-        return combatant.movement > 0 and not combatant.is_affected_by_any(
+        return combatant.movement > 0 and not is_affected_by_any(combatant,
             Conditions.GRAPPLED,
             Conditions.RESTRAINED)
     else:

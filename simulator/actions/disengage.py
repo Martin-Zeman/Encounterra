@@ -9,7 +9,7 @@ from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
-from ..misc import Conditions
+from ..conditions import Conditions, is_affected_by_any
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
 import logging
@@ -74,9 +74,10 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         logger.info(f"{self.combatants[0]} disengages")
         self.factory.combatant.has_disengaged = True
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         logger.info(f"{self.combatants[0]}'s disengage fades")
         self.factory.combatant.has_disengaged = False
+        return False
 
     def calculate_threat(self, **kwargs):
         """
@@ -87,7 +88,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \
+        if is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \
                 or self.factory.combatant.movement == 0:
             return None  # Disenaging makes no sense if you can't move
         return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # It's a priority action, the coord is not relevant

@@ -1,6 +1,7 @@
 from ..battle_map import Map
 from ..effects.effect import EffectType
-from ..misc import DamageType, get_attack_factories, Conditions
+from ..misc import DamageType, get_attack_factories
+from ..conditions import Conditions, is_affected_by_any
 from ..actions.actoid import Actoid, FactoryFlags
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
@@ -130,12 +131,13 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier)
         self.combatants[0].ability_dmg_bonus += self.rage_bonus
         self.combatants[0].resistances.update([DamageType.Slashing, DamageType.Bludgeoning, DamageType.Piercing])
 
-    def deactivate(self):
+    def deactivate(self, **kwargs):
         logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         self.combatants[0].resistances.remove(DamageType.Slashing)
         self.combatants[0].resistances.remove(DamageType.Bludgeoning)
         self.combatants[0].resistances.remove(DamageType.Piercing)
+        return False
 
     def calculate_threat(self, **kwargs):
         """
@@ -156,6 +158,6 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier)
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

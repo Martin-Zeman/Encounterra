@@ -1,7 +1,7 @@
 from .action_types import HasteAction
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
 from ..battle_map import Map
-from ..misc import Conditions
+from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower, get_grappler
 import logging
 
 from ..threat_interfaces import AttackThreatModifier
@@ -10,6 +10,10 @@ from ..threat_utils import calc_p_hit
 from ..utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
+
+
+def s_affected_by_any(target, INCAPACITATED, RESTRAINED):
+    pass
 
 
 class GrappleAttackFactory(DirectThreatFactory):
@@ -33,10 +37,10 @@ class GrappleAttackFactory(DirectThreatFactory):
         return {'name': self.name, 'combatant': self.combatant, 'to_hit': self.to_hit}
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return []
-        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED) and e.get_grappler() is not self.combatant]
+        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED) and get_grappler(e) is not self.combatant]
 
     def create(self, target):
         return GrappleAttack(target, self)
@@ -49,7 +53,7 @@ class GrappleAttackFactory(DirectThreatFactory):
         targets = self.get_eligible_targets()
         max_threat = 0
         for target in targets:
-            if target.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED):
+            if s_affected_by_any(target, Conditions.INCAPACITATED, Conditions.RESTRAINED):
                 continue  # TODO: This is specific to Vampire Spawn, consider removing it
             p_hit = calc_p_hit(self.follow_up_attack.factory.to_hit, target.ac)
             max_threat = max(max_threat, p_hit * self.follow_up_attack.factory.calculate_threat_to_target(target))
@@ -58,10 +62,10 @@ class GrappleAttackFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         attack = kwargs["attack"]
         if attack.factory is self.follow_up_attack:
-            grappler_of_target = target.get_grappler()
+            grappler_of_target = get_grappler(target)
             if grappler_of_target is self.combatant:
                 return 0  # Already grappled by this combatant, won't bring any extra threat
-            if target.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED):
+            if s_affected_by_any(target, Conditions.INCAPACITATED, Conditions.RESTRAINED):
                 return 0
 
             p_hit = calc_p_hit(attack.factory.to_hit, target.ac)
@@ -97,10 +101,10 @@ class GrappleAttack(Actoid, AttackThreatModifier):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        swallower = self.factory.combatant.get_swallower()
+        swallower = get_swallower(self.factory.combatant)
         if swallower:
             return None
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                            distances,
                                                            inflate_to_dist=self.factory.combatant.size.value,

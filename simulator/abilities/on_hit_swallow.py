@@ -1,7 +1,9 @@
 from ..abilities.on_hit_effect import OnHit
 from ..battle_map import Map
 from ..effects.digestion_effect import DigestionEffect
-from ..misc import Conditions, ConditionWithoutDC, DamageType, ROUND_HORIZON
+from ..misc import DamageType, ROUND_HORIZON
+from ..conditions import Conditions, ConditionWithoutDC, apply_condition, remove_all_conditions_of_type, \
+    remove_condition
 import logging
 
 from ..threat_utils import mean_dmg_auto_hit
@@ -16,11 +18,11 @@ class OnHitSwallow(OnHit):
 
     def hit(self, attacker, attack, target, multiplier):
         logger.info(f"{target} is swallowed")
-        target.remove_all_conditions_of_type(Conditions.GRAPPLED)
-        attacker.remove_condition(Conditions.GRAPPLING)
-        target.apply_condition(ConditionWithoutDC(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))
+        remove_all_conditions_of_type(target, Conditions.GRAPPLED)
+        remove_condition(attacker, Conditions.GRAPPLING)
+        apply_condition(target, ConditionWithoutDC(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))
         attacker.swallowed_target = target
-        attacker.remove_condition(Conditions.GRAPPLING)
+        remove_condition(attacker, Conditions.GRAPPLING)
         # attacker.constricted_target = None
         battle_map = Map.get()
         battle_map.effect_tracker.add(DigestionEffect(attacker, [target]))

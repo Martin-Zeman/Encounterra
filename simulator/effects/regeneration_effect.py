@@ -18,8 +18,8 @@ class RegenerationEffect(CombatantEffect):
     def activate(self, **kwargs):
         pass
 
-    def deactivate(self):
-        pass
+    def deactivate(self, **kwargs):
+        return False
 
     def start_of_turn(self):
         if self.initiator.is_alive():
@@ -29,3 +29,4 @@ class RegenerationEffect(CombatantEffect):
             else:
                 logger.info(f"{self.initiator}'s regeneration was suppressed by taking {self.suppression_dmg_type.name}")
             return True
+        return False

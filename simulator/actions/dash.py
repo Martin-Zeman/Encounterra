@@ -7,7 +7,7 @@ from ..actions.action_types import BonusAction, HasteAction
 from ..actions.actoid import Actoid, ActoidFlags
 import logging
 from ..battle_map import Map, map_toggled_cache_with_key
-from ..misc import Conditions
+from ..conditions import Conditions, is_affected_by_any
 from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import Factory
 
@@ -71,7 +71,7 @@ class Dash(Actoid, AttackThreatModifier):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        if self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
+        if is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
             return None
         # if self.factory.combatant.movement > 0:
         return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)

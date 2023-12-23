@@ -13,8 +13,8 @@ from .combatant_coords import Coords
 from .obstacle import Obstacle
 from .proto_combatant import ProtoCombatant
 from .spells.spell import SpellStats
-from .misc import Conditions, Size, Visibility, THREE_QUARTERS_COVER_ERROR_THRESHOLD, HALF_COVER_ERROR_THRESHOLD, \
-    FULL_VISIBILITY_ERROR_THRESHOLD
+from .misc import Size, Visibility
+from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler
 from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors
 from .misc import Side, DistanceMetric
 from contextlib import contextmanager
@@ -695,7 +695,7 @@ class Map:
             return eligible_combatants
         for curr_combatant, coords in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and self.teams.are_enemies(curr_combatant, combatant):
-                if curr_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
+                if is_affected_by_any(curr_combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
                     continue
                 try:
                     pre_increment_dist = self.get_hop_distance_combatants(combatant, curr_combatant)
@@ -711,7 +711,7 @@ class Map:
         eligible_combatants = []
         for curr_combatant, pos in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and curr_combatant.is_alive() and self.teams.are_enemies(curr_combatant, combatant):
-                if curr_combatant.is_affected_by_any(Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
+                if is_affected_by_any(curr_combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.PETRIFIED):
                     continue
                 pre_increment_dist = self.get_hop_distance_coords(self.combatant_coordinate_cache[combatant].get(), self.combatant_coordinate_cache[curr_combatant].get())
                 post_increment_dist = self.get_hop_distance_coords(self.combatant_coordinate_cache[combatant].get() + increment, pos.get())
@@ -828,7 +828,7 @@ class Map:
         adjacent_coords = self.get_adjacent_coords(target_coords)
         for adjacent_coord in adjacent_coords:
             potential_ally = self.grid[adjacent_coord[0], adjacent_coord[1]].combatant
-            if potential_ally and potential_ally is not combatant and self.teams.are_allies(combatant, potential_ally) and not potential_ally.is_affected_by_any(Conditions.INCAPACITATED):
+            if potential_ally and potential_ally is not combatant and self.teams.are_allies(combatant, potential_ally) and not is_affected_by_any(potential_ally, Conditions.INCAPACITATED):
                 return True
         return False
 
@@ -1137,17 +1137,17 @@ class Map:
         """
         if combatant.get_original_form() is combatant and not combatant.is_alive():
             logger.info(f"{combatant} died")
-            grappler = combatant.get_grappler()
+            grappler = get_grappler(combatant)
             if grappler:
-                grappler.remove_condition(Conditions.GRAPPLING)
+                remove_condition(grappler, Conditions.GRAPPLING)
             combatant.on_die()
             self.remove_combatant(combatant)
             return None
         else:
             if not combatant.get_original_form().is_alive():
-                grappler = combatant.get_original_form().get_grappler()
+                grappler = get_grappler(combatant.get_original_form())
                 if grappler:
-                    grappler.remove_condition(Conditions.GRAPPLING)
+                    remove_condition(grappler, Conditions.GRAPPLING)
                 combatant.get_original_form().on_die()
                 logger.info(f"{combatant.get_original_form()} died")
                 self.remove_combatant(combatant.get_original_form())
@@ -1201,7 +1201,7 @@ class Map:
         bb = self.get_harmful_bounding_box(caster, radius)
         max_score = -sys.maxsize - 1
         best_placement = None
-        swallower = caster.get_swallower()
+        swallower = get_swallower(caster)
         if swallower:
             caster_coords = self.combatant_coordinate_cache[swallower].get()
         else:
@@ -1280,12 +1280,12 @@ class Map:
             case SpellStats.Target.RADIUS_10 | SpellStats.Target.RADIUS_20 | SpellStats.Target.RADIUS_30:
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
                     if ability_type is SpellStats.Type.HARMFUL:
-                        if self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
+                        if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template]:
                             affected_combatants.append(potential_target)
                     elif ability_type is SpellStats.Type.BUFF:
                         # generally you can opt only to target your allies with buff spells
-                        if self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
+                        if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
                                 target_template] and self.teams.are_allies(caster, potential_target):
                             affected_combatants.append(potential_target)
             case SpellStats.Target.CONE_15 | SpellStats.Target.CONE_30 | SpellStats.Target.CONE_60 | SpellStats.Target.CONE_90:
@@ -1295,12 +1295,12 @@ class Map:
                 radius = SpellStats.TRANSLATE_CONE[target_template]
                 origin = self.combatant_coordinate_cache[caster]
                 affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
-                affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords]
+                affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords and pt.is_alive()]
 
             case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_20:
                 affected_coords = self.get_coords_affected_by_square_aoe(origin, SpellStats.TRANSLATE_BOX[target_template])
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
-                    if self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:
+                    if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:
                         affected_combatants.append(potential_target)
             case _:
                 logger.error("Unrecognized ability target type")

@@ -39,6 +39,8 @@ class Action(Enum):
     BLESS = auto()
     RAY_OF_ENFEEBLEMENT = auto()
     TWINNED_RAY_OF_ENFEEBLEMENT = auto()
+    SLEEP = auto()
+    SHAKE_ALLY_AWAKE = auto()
 
 
 class BonusAction(Enum):
@@ -68,6 +70,7 @@ class BonusAction(Enum):
     QUICKENED_SHOCKING_GRASP = auto()
     QUICKENED_MAGIC_MISSILE = auto()
     QUICKENED_RAY_OF_ENFEEBLEMENT = auto()
+    QUICKENED_SLEEP = auto()
 
 
 class Reaction(Enum):
@@ -85,11 +88,13 @@ class Movement(Enum):
     GET_UP_FROM_PRONE = auto()
     DASH = auto()
 
+
 class MovementThreatType(Enum):
     STANDARD = auto()
     DISENGAGED = auto()
     DODGED = auto()
     MISTY_STEPPED = auto()
+
 
 class HasteAction(Enum):
     HASTE_MELEE_ATTACK = auto()

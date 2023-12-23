@@ -3,7 +3,8 @@ import math
 from .grapple_attack import GrappleAttack
 from ..actions.melee_attack import MeleeAttackFactory, MeleeAttack
 from ..battle_map import Map, map_position_toggled_cache
-from ..misc import Size, Conditions
+from ..misc import Size
+from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower, get_grappler
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -18,15 +19,15 @@ class VampiricBiteFactory(MeleeAttackFactory):
         return "Vampiric Bite"
 
     def get_eligible_targets(self):
-        swallower = self.combatant.get_swallower()
+        swallower = get_swallower(self.combatant)
         if swallower:
             return []
-        return [e for e in Map.get().get_enemies(self.combatant) if not e.is_affected_by(Conditions.SWALLOWED) and
-                (e.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED)
-                 or e.get_grappler() is self.combatant)]
+        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED) and
+                (is_affected_by_any(e, Conditions.INCAPACITATED, Conditions.RESTRAINED)
+                 or get_grappler(e) is self.combatant)]
 
     def create(self, target):
-        if target.get_grappler() is self.combatant or target.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED):
+        if get_grappler(target) is self.combatant or is_affected_by_any(target, Conditions.INCAPACITATED, Conditions.RESTRAINED):
             return VampiricBite(target, self)
         return []
 
@@ -44,10 +45,10 @@ class VampiricBite(MeleeAttack):
 
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        swallower = self.factory.combatant.get_swallower()
+        swallower = get_swallower(self.factory.combatant)
         if swallower:
             return None
-        if not self.factory.combatant.is_affected_by_any(Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
                                                            distances,
                                                            inflate_to_dist=self.factory.combatant.size.value,
@@ -63,6 +64,6 @@ class VampiricBite(MeleeAttack):
         preceding threat modifier grapple attack. This attack only generates threat if the target is already affected
         by the necessary pre-conditions.
         """
-        if self.target.get_grappler() is self.factory.combatant or self.target.is_affected_by_any(Conditions.INCAPACITATED, Conditions.RESTRAINED):
+        if get_grappler(self.target) is self.factory.combatant or is_affected_by_any(self.target, Conditions.INCAPACITATED, Conditions.RESTRAINED):
             return self.factory.calculate_threat_to_target(self.target, **kwargs)
         return 0  # In this case, the threat is fully captured by the preceding grapple

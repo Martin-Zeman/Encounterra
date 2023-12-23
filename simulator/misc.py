@@ -201,6 +201,7 @@ class SpellcastingResourceType(Enum):
     SPELLSLOTS = auto()
     SPECIAL = auto()
 
+
 class SavingThrow(Enum):
     STR = 1
     DEX = 2
@@ -244,26 +245,6 @@ TO_MAGICAL = {
 }
 
 
-class Conditions(Flag):
-    NONE = auto()
-    BLINDED = auto()
-    CHARMED = auto()
-    DEAFENED = auto()
-    FRIGHTENED = auto()
-    GRAPPLED = auto()
-    INCAPACITATED = auto()
-    INVISIBLE = auto()
-    PARALYZED = auto()
-    PETRIFIED = auto()
-    POISONED = auto()
-    PRONE = auto()
-    RESTRAINED = auto()
-    STUNNED = auto()
-    UNCONSCIOUS = auto()
-    SWALLOWED = auto()  # Meta-Condition
-    GRAPPLING = auto()  # Meta-Condition
-
-
 class PhaseOfTurn(Enum):
     START_OF_TURN = auto()
     END_OF_TURN = auto()
@@ -275,23 +256,6 @@ class Statistics(Enum):
     AT_LEAST_ONE_DIED = 2
     AT_LEAST_TWO_DIED = 3
     AT_LEAST_THREE_DIED = 4
-
-
-class ConditionWithoutDC:
-    def __init__(self, conditions, initiator, target=None):
-        self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
-        self.initiator = initiator
-        self.target = target  # If there is a target, e.g. GRAPPLING has a target
-
-
-class ConditionWithDC:
-    def __init__(self, conditions, st, dc, initiator, phase, target=None):
-        self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
-        self.st = st
-        self.dc = dc
-        self.initiator = initiator
-        self.phase = phase
-        self.target = target  # If there is a target, e.g. GRAPPLING has a target
 
 
 class Size(Enum):
@@ -318,7 +282,9 @@ class PlacementScenario(Enum):
     TOTALLY_RANDOM = 2
     # SURROUNDED = 3
 
+
 SIGN = {"+": 1, "-": -1}
+
 
 def reconcile_roll_types(types):
     """
@@ -357,6 +323,7 @@ def parse_dmg_dice(dice_string):
             sign = SIGN[seg]
     return res
 
+
 def avg_roll(dice_string):
     dice = parse_dmg_dice(dice_string)
     return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
@@ -376,7 +343,7 @@ def roll_dice(dice):
 
 
 def roll_saving_throw(bonus, dc, roll_type):
-    d20 = parse_dmg_dice('1d20')
+    d20 = [(1, 20)]
     if roll_type is RollType.STRAIGHT:
         roll = roll_dice(d20)
     elif roll_type is RollType.ADVANTAGE:
@@ -389,9 +356,8 @@ def roll_saving_throw(bonus, dc, roll_type):
     return roll + bonus >= dc
 
 
-
 def roll_ability_check(bonus, dc, roll_type):
-    d20 = parse_dmg_dice('1d20')
+    d20 = [(1, 20)]
     if roll_type is RollType.STRAIGHT:
         return roll_dice(d20) + bonus >= dc
     elif roll_type is RollType.ADVANTAGE:
@@ -426,8 +392,10 @@ def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
 def percentage_hp_loss(start_of_turn_hp, combatant):
     return 100 * (start_of_turn_hp - max(0, combatant.curr_hp)) / combatant.max_hp
 
+
 def percent_of_curr_hp(combatant, dmg):
     return dmg / (combatant.curr_hp * 0.01)
+
 
 def get_factory_of_type(factories, type):
     for f in factories:
