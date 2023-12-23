@@ -13,7 +13,7 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.hold_person import HoldPersonFactory
 from ..spells.spell import SpellStats
 from ..misc import SavingThrow, ROUND_HORIZON, roll_saving_throw, Visibility, reconcile_roll_types
-from ..conditions import Conditions, ConditionWithoutDC, is_affected_by_any, is_affected_by, get_swallower, \
+from ..conditions import Conditions, Condition, is_affected_by_any, is_affected_by, get_swallower, \
     apply_condition, remove_condition
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..threat_utils import get_saving_throw_success_prob, calculate_threat_in_delta
@@ -147,12 +147,12 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         saved_2 = roll_saving_throw(self.combatants[1].saving_throws[st], dc, reconcile_roll_types(roll_type_modifiers_2))
 
         if not saved_1:
-            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant, self))
+            apply_condition(self.combatants[0], Condition(Conditions.PARALYZED, self.factory.combatant, self))
             logger.info(f"{self.combatants[0]} failed the save against Hold Person")
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
         if not saved_2:
-            apply_condition(self.combatants[1], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant, self))
+            apply_condition(self.combatants[1], Condition(Conditions.PARALYZED, self.factory.combatant, self))
             logger.info(f"{self.combatants[1]} failed the save against Hold Person")
         else:
             logger.info(f"{self.combatants[1]} saved against Hold Person")

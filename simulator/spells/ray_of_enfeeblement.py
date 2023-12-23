@@ -167,7 +167,7 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        self.calculate_threat_delta.cache_clear()
+        # self.calculate_threat_delta.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
     # @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))

@@ -115,7 +115,7 @@ def use_resources(combatant, action):
             case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE:
                 pass  # Sufficiently tracked by not having an action anymore
             case _:
-                logger.error("use_resources: Unknown action type")
+                logger.error(f"use_resources: Unknown action type {action_type}")
     elif isinstance(action_type, BonusAction):
         subject.has_bonus_action = False
         match action_type:

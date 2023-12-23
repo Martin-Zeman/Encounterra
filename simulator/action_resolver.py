@@ -14,7 +14,7 @@ from .battle_map import Map
 from .effects.effect import EffectType
 from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
     roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn
-from .conditions import Conditions, ConditionWithDC, ConditionWithoutDC, break_out_of_grapple, is_affected_by_any, \
+from .conditions import Conditions, ConditionWithDC, Condition, break_out_of_grapple, is_affected_by_any, \
     is_affected_by, get_grappled, apply_condition, apply_dc_condition, remove_condition, remove_dc_condition
 from .feasibility import check_feasibility
 from .proto_combatant import ProtoCombatant
@@ -472,7 +472,7 @@ class ActionResolver:
             logger.info(f"{target} is grappled")
             cond = ConditionWithDC(Conditions.GRAPPLED, SkillCheck.ATHLETICS, attack.factory.dc, attacker, PhaseOfTurn.ACTION)
             apply_dc_condition(target, cond)
-            apply_condition(attacker, ConditionWithoutDC(Conditions.GRAPPLING, attacker, None, target))
+            apply_condition(attacker, Condition(Conditions.GRAPPLING, attacker, None, target))
             return ActionResult.DMG
         else:
             logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
@@ -726,7 +726,8 @@ class ActionResolver:
         :return:
         """
         for effect in effects:
-            match effect.get_effect_type():
+            effect_type = effect.get_effect_type()
+            match effect_type:
                 case EffectType.HASTE | EffectType.TWINNED_HASTE:
                     # resolves the part of the haste spell which needs to be applied every turn
                     combatant.movement = combatant.speed * 2
@@ -739,10 +740,10 @@ class ActionResolver:
                 case EffectType.RAGE | EffectType.TOTEM_RAGE | EffectType.WILDSHAPE | EffectType.DODGE | EffectType.DISENGAGE |\
                      EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
                     EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
-                     EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION:
+                     EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION | EffectType.SLEEP:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
-                    logger.error("Unknown effect")
+                    logger.error(f"Unknown effect {effect_type}")
 
 
 def check_concentration(combatant, dmg):

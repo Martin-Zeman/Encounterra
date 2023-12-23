@@ -2,7 +2,7 @@ from ..abilities.on_hit_effect import OnHit
 from ..battle_map import Map
 from ..effects.digestion_effect import DigestionEffect
 from ..misc import DamageType, ROUND_HORIZON
-from ..conditions import Conditions, ConditionWithoutDC, apply_condition, remove_all_conditions_of_type, \
+from ..conditions import Conditions, Condition, apply_condition, remove_all_conditions_of_type, \
     remove_condition
 import logging
 
@@ -20,7 +20,7 @@ class OnHitSwallow(OnHit):
         logger.info(f"{target} is swallowed")
         remove_all_conditions_of_type(target, Conditions.GRAPPLED)
         remove_condition(attacker, Conditions.GRAPPLING)
-        apply_condition(target, ConditionWithoutDC(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))
+        apply_condition(target, Condition(Conditions.BLINDED | Conditions.RESTRAINED | Conditions.SWALLOWED, attacker))
         attacker.swallowed_target = target
         remove_condition(attacker, Conditions.GRAPPLING)
         # attacker.constricted_target = None

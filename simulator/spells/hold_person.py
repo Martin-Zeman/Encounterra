@@ -10,7 +10,7 @@ from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import SavingThrow, ROUND_HORIZON, roll_saving_throw, Visibility, reconcile_roll_types
-from ..conditions import Conditions, ConditionWithoutDC, is_affected_by_any, is_affected_by, get_swallower, \
+from ..conditions import Conditions, Condition, is_affected_by_any, is_affected_by, get_swallower, \
     apply_condition, remove_condition
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
@@ -135,7 +135,7 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
             logger.info(f"{self.combatants[0]} failed the save against Hold Person")
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
-            apply_condition(self.combatants[0], ConditionWithoutDC(Conditions.PARALYZED, self.factory.combatant, self))
+            apply_condition(self.combatants[0], Condition(Conditions.PARALYZED, self.factory.combatant, self))
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
 

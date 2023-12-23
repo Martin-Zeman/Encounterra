@@ -26,7 +26,7 @@ class Conditions(Flag):
     AWAKENED_BY_DMG = auto()  # Meta-Condition
 
 
-class ConditionWithoutDC:
+class Condition:
     def __init__(self, conditions, initiator, effect=None, target=None):
         self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
         self.initiator = initiator
@@ -34,18 +34,22 @@ class ConditionWithoutDC:
         self.target = target  # If there is a target, e.g. GRAPPLING has a target
 
 
-class ConditionWithDC:
+# class ConditionWithoutDC(Condition):
+#     def __init__(self, conditions, initiator, effect=None, target=None):
+#         Condition.__init__(self, conditions, initiator, target)
+#         self.effect = effect
+#         self.target = target  # If there is a target, e.g. GRAPPLING has a target
+
+
+class ConditionWithDC(Condition):
     def __init__(self, conditions, st, dc, initiator, phase, effect=None, target=None):
-        self.conditions = conditions  # Could be multiples such as grapple + restrained go often together
+        Condition.__init__(self, conditions, initiator, effect, target)
         self.st = st
         self.dc = dc
-        self.initiator = initiator
         self.phase = phase
-        self.effect = effect
-        self.target = target  # If there is a target, e.g. GRAPPLING has a target
 
 
-def apply_condition(combatant, condition: ConditionWithoutDC):
+def apply_condition(combatant, condition: Condition):
     combatant.is_swallowed = [True, condition.initiator] if Conditions.SWALLOWED in condition.conditions else combatant.is_swallowed # This is an optimization to speed up conditions look-up since it's done frequently
     combatant.conditions.append(condition)
 

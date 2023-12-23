@@ -12,7 +12,7 @@ from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg
-from ..conditions import Conditions, ConditionWithoutDC, is_affected_by_any, get_swallower, apply_condition, \
+from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_utils import mean_dmg_dc_attack
@@ -97,19 +97,19 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_HUNGER_OF_HADAR else "") + "Hunger Of Hadar"
 
     def on_start_of_turn(self, combatant):
-        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
+        apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.factory.dmg_type)
 
     def on_end_of_turn(self, combatant):
-        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
+        apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         self.factory.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant, False, True)
         self.factory.dmg_type = DamageType.Cold
 
     def on_enter(self, combatant):
-        apply_condition(combatant, ConditionWithoutDC(Conditions.BLINDED, self.factory.combatant, self))
+        apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
 
     def on_move_within(self, combatant):
         pass

@@ -12,7 +12,7 @@ from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import roll_dice, ROUND_HORIZON, avg_roll
-from ..conditions import Conditions, ConditionWithoutDC, is_affected_by_any, get_swallower, apply_condition, \
+from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_utils import mean_dmg_dc_attack, calculate_threat_in_delta, get_saving_throw_fail_prob
@@ -127,11 +127,11 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
             else:
                 break
         CombatantEffect.__init__(self, factory.combatant, put_to_sleep)
-        self.coord = coord
+        self.origin = coord
         self.factory = factory
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + f"Sleep at {np.squeeze(self.coord)}"
+        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + f"Sleep at {np.squeeze(self.origin)}"
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBALL else "") + "Sleep"
@@ -146,7 +146,7 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
             self.factory.combatant.concentration_effect = self
             for combatant in self.combatants:
                 logger.info(f"{combatant} is put to sleep.")
-                apply_condition(combatant, ConditionWithoutDC(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self.factory.combatant, self))
+                apply_condition(combatant, Condition(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self.factory.combatant, self))
         else:
             logger.info(f"Sleep failed to affect anyone. The rolled HP wasn't high enough.")
 
@@ -159,12 +159,9 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        battle_map = Map.get()
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, SleepFactory.target, SleepFactory.type, self.coord)
         acc = 0
-        for aff in affected:
-            mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
+        for combatant in self.combatants:
+            acc += self.factory.calculate_threat_to_target(combatant)
         return acc
 
     def clear_cache(self):
@@ -180,11 +177,11 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_cartesian_range(Coords(self.coord),  # not actually combatant coords
+            return battle_map.get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,
                                                                  rng=SleepFactory.range,
                                                                  combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= SleepFactory.range:
+        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= SleepFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

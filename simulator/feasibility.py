@@ -221,7 +221,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case _:
-                logger.error("check_feasibility: Unknown action type")
+                logger.error(f"check_feasibility: Unknown action type {action_type}")
                 return False
     elif isinstance(action_type, BonusAction):
         if is_affected_by_any(combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
@@ -373,7 +373,7 @@ def check_feasibility(combatant, action):
     #             logger.error("Unknown free action")
     #             return False
     else:
-        logger.error("check_feasibility: Unknown action type")
+        logger.error(f"check_feasibility: Unknown action type {action_type}")
         return False
 
 
@@ -410,7 +410,7 @@ def check_feasibility_light(combatant, action):
                 res &= action[1].resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
-            case Action.FAERIE_FIRE | Action.BLESS:
+            case Action.FAERIE_FIRE | Action.BLESS | Action.SLEEP:
                 res &= action[1].resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
@@ -497,7 +497,7 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.ammo[action[1].name] > 0
                 return res
             case _:
-                logger.error("check_feasibility_light: Unknown action type")
+                logger.error(f"check_feasibility_light: Unknown action type {action_type}")
                 return False
     elif isinstance(action_type, BonusAction):
         # if is_affected_by_any(combatant, Conditions.INCAPACITATED, Conditions.STUNNED, Conditions.PARALYZED):
@@ -519,7 +519,7 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
                 return res
-            case BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS:
+            case BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS | BonusAction.QUICKENED_SLEEP:
                 res &= action[1].resource.has_resource(level=1) > 0
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.curr_sorcery_points > 1
@@ -575,7 +575,7 @@ def check_feasibility_light(combatant, action):
             Conditions.GRAPPLED,
             Conditions.RESTRAINED)
     else:
-        logger.error("check_feasibility_light: Unknown action type")
+        logger.error(f"check_feasibility_light: Unknown action type {action_type}")
         return False
 
 

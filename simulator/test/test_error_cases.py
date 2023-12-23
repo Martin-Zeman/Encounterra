@@ -14,7 +14,7 @@ from ..battle_map import Terrain, Map
 from ..combatants.giant_toad import GiantToad
 from ..logging.custom_logger import CustomLogger
 from ..misc import  PhaseOfTurn, SkillCheck
-from ..conditions import Conditions, ConditionWithoutDC, ConditionWithDC, is_affected_by, apply_condition, \
+from ..conditions import Conditions, Condition, ConditionWithDC, is_affected_by, apply_condition, \
     apply_dc_condition
 from ..session import Session
 from ..spells.fireball import Fireball
@@ -568,7 +568,7 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.curr_sorcery_points -= 5
-    apply_condition(test_draconic_sorcerer_5lvl, ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
+    apply_condition(test_draconic_sorcerer_5lvl, Condition(Conditions.PRONE, test_stone_giant))
 
     test_stone_giant.ammo[test_stone_giant.rock[1].name] = 0
     test_stone_giant.curr_hp = 46
@@ -741,7 +741,7 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
-    apply_condition(test_draconic_sorcerer_5lvl, ConditionWithoutDC(Conditions.PRONE, test_stone_giant))
+    apply_condition(test_draconic_sorcerer_5lvl, Condition(Conditions.PRONE, test_stone_giant))
 
     try:
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
@@ -934,7 +934,7 @@ def test_error_case_21(battle_map, teams, effect_tracker, test_totem_barbarian, 
 
     battle_map.build_adjacency_matrix()
 
-    apply_condition(test_moon_druid, ConditionWithoutDC(Conditions.PRONE, test_totem_barbarian))
+    apply_condition(test_moon_druid, Condition(Conditions.PRONE, test_totem_barbarian))
 
     try:
         actoid1 = get_action(test_moon_druid)
