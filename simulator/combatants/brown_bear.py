@@ -11,10 +11,13 @@ logger = logging.getLogger("Encounterra")
 
 class BrownBear(Combatant):
 
-    type = "Brown Bear"
+    name = "Brown Bear"
+    cls = Class.MONSTER.BEAST
+    level = 1
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.BEAST, level=1, hp=34, ac=11, init_bonus=0, spell_to_hit=0, speed=40, resistances=set(), dc=0)
+        super().__init__(num_or_name, hp=34, ac=11, init_bonus=0, spell_to_hit=0, speed=40, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)

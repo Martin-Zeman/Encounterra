@@ -56,7 +56,7 @@ class Session:
         self.num_simulations = 1
         self.map_size = 15
         self.statistic_collector = None
-        self.character_type_counter = {cls.type: 1 for cls in get_combatant_classes()}
+        self.character_type_counter = {cls.id: 1 for cls in get_combatant_classes()}
         self.teams = Teams()
         self.battle_map = Map(self.map_size, self.teams)
         self.placement_scenario = self.PlacementScenario.TWO_HALVES
@@ -81,8 +81,8 @@ class Session:
         self.round_manager = data['round_manager']
 
     def add_combatant(self, combatant_type, team):
-        if type(combatant_type) is not str:
-            combatant_type = combatant_type.type  # we want to allow both kinds of calls
+        if type(combatant_type) is not int:
+            combatant_type = combatant_type.id  # we want to allow both kinds of calls
         try:
             curr_count = self.character_type_counter[combatant_type]
         except KeyError:
@@ -91,71 +91,71 @@ class Session:
 
         # TODO use character_type_counter instead
         match combatant_type:
-            case Acolyte.type:
+            case Acolyte.id:
                 self.combatants.append(Acolyte(curr_count))
-            case Assassin.type:
+            case Assassin.id:
                 self.combatants.append(Assassin(curr_count))
-            case AssassinRogue3Lvl.type:
+            case AssassinRogue3Lvl.id:
                 self.combatants.append(AssassinRogue3Lvl(curr_count))
-            case AssassinRogue5Lvl.type:
+            case AssassinRogue5Lvl.id:
                 self.combatants.append(AssassinRogue5Lvl(curr_count))
-            case Bandit.type:
+            case Bandit.id:
                 self.combatants.append(Bandit(curr_count))
-            case BanditCaptain.type:
+            case BanditCaptain.id:
                 self.combatants.append(BanditCaptain(curr_count))
-            case Berserker.type:
+            case Berserker.id:
                 self.combatants.append(Berserker(curr_count))
-            case BrownBear.type:
+            case BrownBear.id:
                 self.combatants.append(BrownBear(curr_count))
-            case Bugbear.type:
+            case Bugbear.id:
                 self.combatants.append(Bugbear(curr_count))
-            case BugbearChief.type:
+            case BugbearChief.id:
                 self.combatants.append(BugbearChief(curr_count))
-            case Commoner.type:
+            case Commoner.id:
                 self.combatants.append(Commoner(curr_count))
-            case Cultist.type:
+            case Cultist.id:
                 self.combatants.append(Cultist(curr_count))
-            case CultistFanatic.type:
+            case CultistFanatic.id:
                 self.combatants.append(CultistFanatic(curr_count))
-            case DireWolf.type:
+            case DireWolf.id:
                 self.combatants.append(DireWolf(curr_count))
-            case DraconicSorcerer3Lvl.type:
+            case DraconicSorcerer3Lvl.id:
                 self.combatants.append(DraconicSorcerer3Lvl(curr_count))
-            case DraconicSorcerer5Lvl.type:
+            case DraconicSorcerer5Lvl.id:
                 self.combatants.append(DraconicSorcerer5Lvl(curr_count))
-            case DragonclawCultist.type:
+            case DragonclawCultist.id:
                 self.combatants.append(DragonclawCultist(curr_count))
-            case EvilMage.type:
+            case EvilMage.id:
                 self.combatants.append(EvilMage(curr_count))
-            case GiantConstrictorSnake.type:
+            case GiantConstrictorSnake.id:
                 self.combatants.append(GiantConstrictorSnake(curr_count))
-            case GiantSpider.type:
+            case GiantSpider.id:
                 self.combatants.append(GiantSpider(curr_count))
-            case GiantToad.type:
+            case GiantToad.id:
                 self.combatants.append(GiantToad(curr_count))
-            case Goblin.type:
+            case Goblin.id:
                 self.combatants.append(Goblin(curr_count))
-            case MoonDruid3Lvl.type:
+            case MoonDruid3Lvl.id:
                 self.combatants.append(MoonDruid3Lvl(curr_count))
-            case MoonDruid5Lvl.type:
+            case MoonDruid5Lvl.id:
                 self.combatants.append(MoonDruid5Lvl(curr_count))
-            case NeedleBlight.type:
+            case NeedleBlight.id:
                 self.combatants.append(NeedleBlight(curr_count))
-            case NightHag.type:
+            case NightHag.id:
                 self.combatants.append(NightHag(curr_count))
-            case Ogre.type:
+            case Ogre.id:
                 self.combatants.append(Ogre(curr_count))
-            case Quetzalcoatlus.type:
+            case Quetzalcoatlus.id:
                 self.combatants.append(Quetzalcoatlus(curr_count))
-            case SaberToothedTiger.type:
+            case SaberToothedTiger.id:
                 self.combatants.append(SaberToothedTiger(curr_count))
-            case StoneGiant.type:
+            case StoneGiant.id:
                 self.combatants.append(StoneGiant(curr_count))
-            case TotemBarbarian5Lvl.type:
+            case TotemBarbarian5Lvl.id:
                 self.combatants.append(TotemBarbarian5Lvl(curr_count))
-            case TwigBlight.type:
+            case TwigBlight.id:
                 self.combatants.append(TwigBlight(curr_count))
-            case VampireSpawn.type:
+            case VampireSpawn.id:
                 self.combatants.append(VampireSpawn(curr_count))
             case _:
                 logger.error("Unknown combatant type")

@@ -11,10 +11,13 @@ logger = logging.getLogger("Encounterra")
 
 class Acolyte(Combatant):
 
-    type = "Acolyte"
+    name = "Acolyte"
+    cls = Class.MONSTER.HUMANOID
+    level = 2
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=2, hp=9, ac=10, init_bonus=0, speed=30, spell_to_hit=4, resistances=set(), dc=12)
+        super().__init__(num_or_name, hp=9, ac=10, init_bonus=0, speed=30, spell_to_hit=4, resistances=set(), dc=12)
         self.club = self.add_ability(Action.MELEE_ATTACK, name="Club", combatant=self, to_hit=2, dmg_dice="1d4", dmg_bonus=0,
                                        dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Club", combatant=self, to_hit=2, dmg_dice="1d4", dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1)

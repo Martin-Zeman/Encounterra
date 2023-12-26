@@ -11,10 +11,13 @@ logger = logging.getLogger("Encounterra")
 
 class CultistFanatic(Combatant):
 
-    type = "Cultist Fanatic"
+    name = "Cultist Fanatic"
+    cls = Class.MONSTER.HUMANOID
+    level = 4
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=4, hp=33, ac=13, init_bonus=2, spell_to_hit=3, speed=30, resistances=set(), dc=11)
+        super().__init__(num_or_name, hp=33, ac=13, init_bonus=2, spell_to_hit=3, speed=30, resistances=set(), dc=11)
         self.dagger = self.add_ability(Action.MELEE_ATTACK,  name="Dagger", combatant=self, to_hit=4, dmg_dice="1d4", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Dagger", combatant=self, to_hit=4, dmg_dice="1d4", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS, cls=Class.CLERIC.DEATH_DOMAIN)

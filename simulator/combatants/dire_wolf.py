@@ -12,10 +12,13 @@ logger = logging.getLogger("Encounterra")
 
 class DireWolf(Combatant):
 
-    type = "Dire Wolf"
+    name = "Dire Wolf"
+    cls = Class.MONSTER.BEAST
+    level = 1
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.BEAST, level=1, hp=37, ac=14, init_bonus=2, spell_to_hit=0, speed=50, resistances=set(), dc=0)
+        super().__init__(num_or_name, hp=37, ac=14, init_bonus=2, spell_to_hit=0, speed=50, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, on_hit=[OnHitProne(SavingThrow.STR, 13)])
         self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="2d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
