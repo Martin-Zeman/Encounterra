@@ -1,10 +1,10 @@
 import copy
+import hashlib
 
 import logging
 import random
 import math
 from contextlib import contextmanager
-from typing import Union, Any
 
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .action_resolver import check_concentration
@@ -116,8 +116,8 @@ class Combatant(ProtoCombatant):
 
     @staticmethod
     def generate_unique_id(name, cls, level):
-        cls_str = f"{name}-{cls}-{level}"
-        return hash(cls_str)
+        unique_str = f"{name}-{cls}-{level}"
+        return hashlib.sha256(unique_str.encode()).hexdigest()[:10]
 
     def __str__(self):
         return self.name
