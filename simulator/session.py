@@ -87,9 +87,6 @@ class Session:
             curr_count = self.character_type_counter[combatant_type]
         except KeyError:
             logger.error(f"Unknown combatant type: {combatant_type}")
-            logger.error(f"MY DEBUG character_type_counter: {self.character_type_counter}")
-            cls_names_to_ids = {cls.name: cls.id for cls in get_combatant_classes()}
-            logger.error(f"MY DEBUG combatant class names: {cls_names_to_ids}")
             return
 
         # TODO use character_type_counter instead
