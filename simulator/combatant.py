@@ -117,7 +117,8 @@ class Combatant(ProtoCombatant):
     @staticmethod
     def generate_unique_id(name, cls, level):
         unique_str = f"{name}-{cls}-{level}"
-        return hashlib.sha256(unique_str.encode()).hexdigest()[:10]
+        hash_digest = hashlib.sha256(unique_str.encode()).hexdigest()
+        return int(hash_digest[:8], 16)
 
     def __str__(self):
         return self.name
