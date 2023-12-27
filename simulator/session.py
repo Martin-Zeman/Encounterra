@@ -86,7 +86,8 @@ class Session:
         try:
             curr_count = self.character_type_counter[combatant_type]
         except KeyError:
-            logger.error("Unknown combatant type")
+            logger.error(f"Unknown combatant type: {combatant_type}")
+            logger.error(f"MY DEBUG character_type_counter: {self.character_type_counter}")
             return
 
         # TODO use character_type_counter instead
@@ -158,7 +159,7 @@ class Session:
             case VampireSpawn.id:
                 self.combatants.append(VampireSpawn(curr_count))
             case _:
-                logger.error("Unknown combatant type")
+                logger.error(f"Unknown combatant type: {combatant_type}")
                 return
         self.character_type_counter[combatant_type] += 1
         self.teams.add_combatant_to_team(self.combatants[-1], team)

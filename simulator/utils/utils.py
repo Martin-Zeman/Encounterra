@@ -18,6 +18,7 @@ logger = logging.getLogger("Encounterra")
 
 HALF_SQUARE_DIAGONAL = math.sqrt(2) / 2
 
+
 def get_combatant_classes():
     # Import the top-level module
     module = importlib.import_module('simulator.combatants')
@@ -61,6 +62,7 @@ def get_available_wildshape_forms(level, action_type):
             case _:
                 logger.error("Incorrect character level. No wildshape forms added!")
     return []
+
 
 def preallocate_wildshape_forms(combatant, action_type, factory):
     available_forms = get_available_wildshape_forms(combatant.level, action_type)
