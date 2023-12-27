@@ -11,10 +11,13 @@ logger = logging.getLogger("Encounterra")
 
 class Berserker(Combatant):
 
-    type = "Berserker"
+    name = "Berserker"
+    cls = Class.MONSTER.HUMANOID
+    level = 4
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=4, hp=67, ac=13, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+        super().__init__(num_or_name, hp=67, ac=13, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.greataxe = self.add_ability(Action.MELEE_ATTACK,  name="Greataxe", combatant=self, to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.greataxe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Greataxe recklessly", combatant=self,
                                                to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing,

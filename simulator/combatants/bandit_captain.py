@@ -11,10 +11,13 @@ logger = logging.getLogger("Encounterra")
 
 class BanditCaptain(Combatant):
 
-    type = "Bandit Captain"
+    name = "Bandit Captain"
+    cls = Class.MONSTER.HUMANOID
+    level = 4
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=4, hp=65, ac=15, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+        super().__init__(num_or_name, hp=65, ac=15, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, uses_dex=True)
         self.dagger = self.add_ability(Action.MELEE_ATTACK,  name="Dagger", combatant=self, to_hit=5, dmg_dice="1d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, uses_dex=True)
         self.dagger_throw = self.add_ability(Action.RANGED_ATTACK, name="Thrown Dagger", combatant=self, to_hit=4, dmg_dice="1d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=12, crit_range=1, ammo=10, uses_dex=True)

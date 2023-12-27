@@ -121,7 +121,6 @@ class RecklessAttackFactory(DirectThreatFactory):
         if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
             baseline = mean_dmg(self.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
                                     target.ac, self.crit_range * ROLL_TYPE_CRIT_DELTA[RollType.ADVANTAGE], target.is_resistant_to(self.dmg_type))
-        # logger.warning(f"MY DEBUG {self} calculate_threat_to_target_delta baseline threat = {baseline}")
         mod_range = modifiers.get(ThreatModifierType.RANGE, 0)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
         # mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
@@ -197,7 +196,6 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         The delta in threat when modifiers are applied on this ability.
         """
         ret = self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
-        # logger.warning(f"MY DEBUG {self} calculate_threat_delta = {ret}")
         return ret
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))

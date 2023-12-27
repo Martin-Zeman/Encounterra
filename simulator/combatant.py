@@ -1,10 +1,10 @@
 import copy
+import hashlib
 
 import logging
 import random
 import math
 from contextlib import contextmanager
-from typing import Union, Any
 
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .action_resolver import check_concentration
@@ -29,13 +29,15 @@ logger = logging.getLogger("Encounterra")
 
 class Combatant(ProtoCombatant):
 
-    def __init__(self, num_or_name, cls, level, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=set(), immunities=[], vulnerabities=[]):
+    name = ""
+    cls = None
+    level = 0
+
+    def __init__(self, num_or_name, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=set(), immunities=[], vulnerabities=[]):
         if type(num_or_name) is int:
-            self.name = type(self).type + " " + str(num_or_name)
+            self.name = type(self).name + " " + str(num_or_name)
         else:
             self.name = num_or_name  # Wildshape case
-        self.cls = cls
-        self.level = level
         self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self))]
         self.dodge_factory = self.action_factories[0]
         self.disengage_factory = self.action_factories[1]
@@ -101,7 +103,7 @@ class Combatant(ProtoCombatant):
         self.to_hit_dice_mod = []
         self.shortest_paths_cache = None
         self.wears_metal = False
-        self.is_humanoid = type(cls) is not Class.MONSTER or cls is Class.MONSTER.HUMANOID
+        self.is_humanoid = type(self).cls is not Class.MONSTER or type(self).cls is Class.MONSTER.HUMANOID
         self.constricted_target = None
         self.swallowed_target = None
         self.is_swallowed = [False, None]  # [if swallowed, by whom]
@@ -111,6 +113,12 @@ class Combatant(ProtoCombatant):
         self.one_time_ac_bonus = 0
         self.current_wildshape_form = None
         self.original_form = self
+
+    @staticmethod
+    def generate_unique_id(name, cls, level):
+        unique_str = f"{name}-{cls}-{level}"
+        hash_digest = hashlib.sha256(unique_str.encode()).hexdigest()
+        return int(hash_digest[:8], 16)
 
     def __str__(self):
         return self.name
@@ -154,7 +162,7 @@ class Combatant(ProtoCombatant):
                         if spellslot_cls:
                             self.spellslots = spellslot_factory(spellslot_cls, self.level)
                         else:
-                            self.spellslots = spellslot_factory(self.cls, self.level)
+                            self.spellslots = spellslot_factory(type(self).cls, self.level)
                     # elif spell_resource_type is SpellcastingResourceType.SPECIAL:
                     #     resource = kwargs.get('resource', None)
                     #     if not resource:

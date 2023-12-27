@@ -11,10 +11,13 @@ logger = logging.getLogger("Encounterra")
 
 class DraconicSorcerer5Lvl(Combatant):
 
-    type = "Draconic Sorcerer 5Lvl"
+    name = "Draconic Sorcerer 5. Level"
+    cls = Class.SORCERER.DRACONIC_BLOODLINE
+    level = 5
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.SORCERER.DRACONIC_BLOODLINE, level=5, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
+        super().__init__(num_or_name, hp=43, ac=16, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
         self.staff = self.add_ability(Action.MELEE_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1,

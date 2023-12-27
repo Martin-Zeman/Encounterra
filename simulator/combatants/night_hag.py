@@ -12,10 +12,13 @@ logger = logging.getLogger("Encounterra")
 
 class NightHag(Combatant):
 
-    type = "Night Hag"
+    name = "Night Hag"
+    cls = Class.MONSTER.FIEND
+    level = 5
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.FIEND, level=5, hp=112, ac=17, init_bonus=2, speed=30, spell_to_hit=6, resistances={DamageType.Fire, DamageType.Cold, DamageType.Bludgeoning, DamageType.Slashing, DamageType.Piercing}, dc=14)
+        super().__init__(num_or_name, hp=112, ac=17, init_bonus=2, speed=30, spell_to_hit=6, resistances={DamageType.Fire, DamageType.Cold, DamageType.Bludgeoning, DamageType.Slashing, DamageType.Piercing}, dc=14)
         self.claws = self.add_ability(Action.MELEE_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice="2d8", dmg_bonus=4,
                          dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice="2d8", dmg_bonus=4,

@@ -11,10 +11,13 @@ logger = logging.getLogger("Encounterra")
 
 class AssassinRogue3Lvl(Combatant):
 
-    type = "Assassin Rogue 3Lvl"
+    name = "Assassin Rogue 5. Level"
+    cls = Class.ROGUE.ASSASSIN
+    level = 3
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.ROGUE.ASSASSIN, level=3, hp=21, ac=14, init_bonus=3, speed=30, spell_to_hit=0, resistances=set(), dc=13)
+        super().__init__(num_or_name, hp=21, ac=14, init_bonus=3, speed=30, spell_to_hit=0, resistances=set(), dc=13)
         self.rapier = self.add_ability(Action.MELEE_ATTACK, name="Rapier", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3,
                                        dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True)
         self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3,

@@ -14,6 +14,7 @@ s3 = boto3.client('s3')
 bucket_name = "encounterra-simulation-results"
 local_log_file_path = "/tmp/log.txt"
 
+
 def handler(event, context):
     if os.path.exists(local_log_file_path):
         os.remove(local_log_file_path)
@@ -31,9 +32,9 @@ def handler(event, context):
 
     session = Session()
     for blue_combatant in blue_team:
-        session.add_combatant(blue_combatant, Teams.Color.BLUE)
+        session.add_combatant(int(blue_combatant), Teams.Color.BLUE)
     for red_combatant in red_team:
-        session.add_combatant(red_combatant, Teams.Color.RED)
+        session.add_combatant(int(red_combatant), Teams.Color.RED)
     session.set_num_simulations(1)
     try:
         result = session.simulate(parallel=False)

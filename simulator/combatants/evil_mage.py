@@ -12,10 +12,13 @@ logger = logging.getLogger("Encounterra")
 
 class EvilMage(Combatant):
 
-    type = "Evil Mage"
+    name = "Evil Mage"
+    cls = Class.MONSTER.HUMANOID
+    level = 4
+    id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, Class.MONSTER.HUMANOID, level=4, hp=22, ac=12, init_bonus=2, speed=30, spell_to_hit=5, resistances=set(), dc=13)
+        super().__init__(num_or_name, hp=22, ac=12, init_bonus=2, speed=30, spell_to_hit=5, resistances=set(), dc=13)
         self.staff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,

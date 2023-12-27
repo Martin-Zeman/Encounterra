@@ -81,12 +81,13 @@ class WildshapeFactory(TransformerFactory):
     def calculate_max_threat(self):
         return self.calculate_threat()
 
+
 class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
 
     def __init__(self, combatant, form, factory):
         Actoid.__init__(self)
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
-        self.form = form(f"{factory.combatant} wildshaped into {form.type}")
+        self.form = form(f"{factory.combatant} wildshaped into {form.name}")
         # def wildshape_get(self):
         #     return combatant
 
@@ -94,7 +95,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.factory = factory
 
     def __str__(self):
-        return f"Wildshape of {self.factory.combatant} into {self.form.__class__.type}"
+        return f"Wildshape of {self.factory.combatant} into {self.form.__class__.name}"
 
     def get_effect_type(self):
         return EffectType.WILDSHAPE
@@ -105,7 +106,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         """
         battle_map = Map.get()
         battle_map.effect_tracker.add(self)
-        logger.info(f"{self.combatants[0]} wildshapes into {self.form.type}")
+        logger.info(f"{self.combatants[0]} wildshapes into {type(self.form).name}")
         battle_map.teams.replace_combatant(self.combatants[0], self.form)
         wildshape_coord = battle_map.find_wildshaped_coordinate(self.combatants[0], self.form.size)
         battle_map.remove_combatant(self.combatants[0])
