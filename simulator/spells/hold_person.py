@@ -139,25 +139,29 @@ class HoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         else:
             logger.info(f"{self.combatants[0]} saved against Hold Person")
 
-    def end_of_turn(self, **kwargs):
-        roll_type_modifiers = copy.copy(self.combatants[0].saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
-        if self.combatants[0].has_passive(Passive.MAGIC_RESISTANCE):
-            logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Magic Resistance")
+    def combatant_saved_at_end_of_turn(self, combatant):
+        roll_type_modifiers = copy.copy(combatant.saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
+        if combatant.has_passive(Passive.MAGIC_RESISTANCE):
+            logger.info(f"{combatant} gains advantage against Hold Person through Magic Resistance")
             roll_type_modifiers.add(RollType.ADVANTAGE)
-        elif self.combatants[0].has_passive(Passive.HEART_OF_HRUGGEK):
-            logger.info(f"{self.combatants[0]} gains advantage against Hold Person through Heart of Hruggek")
+        elif combatant.has_passive(Passive.HEART_OF_HRUGGEK):
+            logger.info(f"{combatant} gains advantage against Hold Person through Heart of Hruggek")
             roll_type_modifiers.add(RollType.ADVANTAGE)
-        saved = roll_saving_throw(self.combatants[0].saving_throws[self.st], self.dc, reconcile_roll_types(roll_type_modifiers))
+        saved = roll_saving_throw(combatant.saving_throws[self.st], self.dc, reconcile_roll_types(roll_type_modifiers))
         if saved:
-            logger.info(f"{self.combatants[0]} saved against {self}")
+            logger.info(f"{combatant} saved against {self}")
             return False
-        logger.info(f"{self.combatants[0]} failed the save against {self}")
+        logger.info(f"{combatant} failed the save against {self}")
         return True
 
-    def deactivate(self, **kwargs):
+    def deactivate(self):
         self.factory.combatant.break_concentration()
         remove_condition(self.combatants[0], Conditions.PARALYZED, self.factory.combatant)
-        return False  # There's only one target -> automatic removal
+
+    def deactivate_for_combatant(self, combatant):
+        if combatant is self.combatants[0]:
+            self.factory.combatant.break_concentration()
+            remove_condition(self.combatants[0], Conditions.PARALYZED, self.factory.combatant)
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

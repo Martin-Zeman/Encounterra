@@ -39,8 +39,8 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     # Tests the Misty Step movement + Firebolt
     assert dag.state == '0'
     transitions = dag.get_available_transitions()
-    assert "Dodge of Draconic Sorcerer 5Lvl 1_1" in transitions
-    assert "Disengage of Draconic Sorcerer 5Lvl 1_1" in transitions
+    assert "Dodge of Draconic Sorcerer 5. Level 1_1" in transitions
+    assert "Disengage of Draconic Sorcerer 5. Level 1_1" in transitions
     assert "ms_(7, 3)" in transitions
     assert "ms_(2, 3)" in transitions
     assert "m_(7, 3)" in transitions
@@ -51,10 +51,11 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     assert "Firebolt on Goblin 1_2" in transitions
     assert "Firebolt on Bugbear 1_2" in transitions
     assert "Twinned Firebolt on Goblin 1 and Bugbear 1_2" in transitions
-    assert "Dodge of Draconic Sorcerer 5Lvl 1_2" not in transitions # Even though it's possible, we don't support dodge after Misty Step, as it's very niche
-    assert "Disengage of Draconic Sorcerer 5Lvl 1_2" not in transitions # Even though it's possible, we don't support dodge after Misty Step, as it's very niche
+    assert "Dodge of Draconic Sorcerer 5. Level 1_2" not in transitions # Even though it's possible, we don't support dodge after Misty Step, as it's very niche
+    assert "Disengage of Draconic Sorcerer 5. Level 1_2" not in transitions # Even though it's possible, we don't support dodge after Misty Step, as it's very niche
     dag.trigger("Firebolt on Goblin 1_2")
     assert len(dag.get_available_transitions()) == 0
+
 
 def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
         battle_map.build_adjacency_matrix()
@@ -74,26 +75,27 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         transitions = dag.get_available_transitions()
         # Tests regular movement + quickened fireball
         assert dag.state == '0'
-        assert 'Dodge of Draconic Sorcerer 5Lvl 1_1' in transitions
-        assert 'Disengage of Draconic Sorcerer 5Lvl 1_1' in transitions
+        assert 'Dodge of Draconic Sorcerer 5. Level 1_1' in transitions
+        assert 'Disengage of Draconic Sorcerer 5. Level 1_1' in transitions
         dag.trigger("m_(2, 3)")
         transitions = dag.get_available_transitions()
         # Check that we have all the action (except for the Staff attack) available
         assert 'Quickened Fireball at [ 6 10]_1' in transitions
         assert 'Quickened Firebolt on Goblin 1_1' in transitions
-        assert 'Quickened Haste on Draconic Sorcerer 5Lvl 1_1' in transitions
+        assert 'Quickened Haste on Draconic Sorcerer 5. Level 1_1' in transitions
         assert 'Fireball at [ 6 10]_1' in transitions
         assert 'Firebolt on Goblin 1_1' in transitions
-        assert 'Haste on Draconic Sorcerer 5Lvl 1_1' in transitions
-        assert 'Dodge of Draconic Sorcerer 5Lvl 1_1' not in transitions  # Once you do a regular move, Dodge should not be available
-        assert 'Disengage of Draconic Sorcerer 5Lvl 1_1' not in transitions  # Once you do a regular move, Disengage should not be available
+        assert 'Haste on Draconic Sorcerer 5. Level 1_1' in transitions
+        assert 'Dodge of Draconic Sorcerer 5. Level 1_1' not in transitions  # Once you do a regular move, Dodge should not be available
+        assert 'Disengage of Draconic Sorcerer 5. Level 1_1' not in transitions  # Once you do a regular move, Disengage should not be available
         dag.trigger("Quickened Fireball at [ 6 10]_1")
         transitions = dag.get_available_transitions()
         # For the second action, coordinates are not taken into account
         assert 'Staff of Defence on Goblin 1_2' in transitions
         assert 'Firebolt on Goblin 1_2' in transitions
-        assert 'Dodge of Draconic Sorcerer 5Lvl 1_2' not in transitions
-        assert 'Disengage of Draconic Sorcerer 5Lvl 1_2' not in transitions
+        assert 'Dodge of Draconic Sorcerer 5. Level 1_2' not in transitions
+        assert 'Disengage of Draconic Sorcerer 5. Level 1_2' not in transitions
+
 
 def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     battle_map.build_adjacency_matrix()
@@ -117,16 +119,17 @@ def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracke
     # Check that we have all the action (except for the Staff attack) available
     assert 'Quickened Fireball at [ 6 10]_1' in transitions
     assert 'Quickened Firebolt on Goblin 1_1' in transitions
-    assert 'Quickened Haste on Draconic Sorcerer 5Lvl 1_1' in transitions
+    assert 'Quickened Haste on Draconic Sorcerer 5. Level 1_1' in transitions
     assert 'Fireball at [ 6 10]_1' in transitions
     assert 'Firebolt on Goblin 1_1' in transitions
-    assert 'Haste on Draconic Sorcerer 5Lvl 1_1' in transitions
-    assert 'Dodge of Draconic Sorcerer 5Lvl 1_1' not in transitions  # Once you do a regular move, Dodge should not be available
-    assert 'Disengage of Draconic Sorcerer 5Lvl 1_1' not in transitions  # Once you do a regular move, Disengage should not be available
+    assert 'Haste on Draconic Sorcerer 5. Level 1_1' in transitions
+    assert 'Dodge of Draconic Sorcerer 5. Level 1_1' not in transitions  # Once you do a regular move, Dodge should not be available
+    assert 'Disengage of Draconic Sorcerer 5. Level 1_1' not in transitions  # Once you do a regular move, Disengage should not be available
     dag.trigger("Fireball at [ 6 10]_1")
     transitions = dag.get_available_transitions()
     # For the second action, coordinates are not taken into account
     assert 'Quickened Firebolt on Goblin 1_2' in transitions
+
 
 def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     battle_map.build_adjacency_matrix()
@@ -150,19 +153,20 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
     # Check that we have all the action (except for the Staff attack) available
     assert 'Quickened Fireball at [ 6 10]_1' in transitions
     assert 'Quickened Firebolt on Goblin 1_1' in transitions
-    assert 'Quickened Haste on Draconic Sorcerer 5Lvl 1_1' in transitions
+    assert 'Quickened Haste on Draconic Sorcerer 5. Level 1_1' in transitions
     assert 'Fireball at [ 6 10]_1' in transitions
     assert 'Firebolt on Goblin 1_1' in transitions
-    assert 'Haste on Draconic Sorcerer 5Lvl 1_1' in transitions
+    assert 'Haste on Draconic Sorcerer 5. Level 1_1' in transitions
     assert 'Staff of Defence on Goblin 1_1' in transitions
-    assert 'Dodge of Draconic Sorcerer 5Lvl 1_1' not in transitions  # Once you do a regular move, Dodge should not be available
-    assert 'Disengage of Draconic Sorcerer 5Lvl 1_1' not in transitions  # Once you do a regular move, Disengage should not be available
+    assert 'Dodge of Draconic Sorcerer 5. Level 1_1' not in transitions  # Once you do a regular move, Dodge should not be available
+    assert 'Disengage of Draconic Sorcerer 5. Level 1_1' not in transitions  # Once you do a regular move, Disengage should not be available
     dag.trigger("Staff of Defence on Goblin 1_1")
     transitions = dag.get_available_transitions()
     # For the second action, coordinates are not taken into account, but Dodge is included
-    assert 'Quickened Haste on Draconic Sorcerer 5Lvl 1_2' in transitions
+    assert 'Quickened Haste on Draconic Sorcerer 5. Level 1_2' in transitions
     assert 'Quickened Fireball at [ 6 10]_2' in transitions
     assert 'Quickened Firebolt on Goblin 1_2' in transitions
+
 
 def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin,
                                                       test_bugbear):
@@ -190,6 +194,7 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
     dag.trigger("Staff of Defence on Goblin 1_2")
     assert len(dag.get_available_transitions()) == 0
 
+
 def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
@@ -207,7 +212,7 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
     dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests Dodge + movement + a quickened spell
     assert dag.state == '0'
-    dag.trigger("Dodge of Draconic Sorcerer 5Lvl 1_1")
+    dag.trigger("Dodge of Draconic Sorcerer 5. Level 1_1")
     assert dag.state == 'Dodged'
     transitions = dag.get_available_transitions()
     assert "do_(7, 3)" in transitions
@@ -216,9 +221,10 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
     transitions = dag.get_available_transitions()
     assert 'Quickened Fireball at [ 6 10]_2' in transitions
     assert 'Quickened Firebolt on Goblin 1_2' in transitions
-    assert 'Quickened Haste on Draconic Sorcerer 5Lvl 1_2' in transitions
-    dag.trigger("Quickened Haste on Draconic Sorcerer 5Lvl 1_2")
+    assert 'Quickened Haste on Draconic Sorcerer 5. Level 1_2' in transitions
+    dag.trigger("Quickened Haste on Draconic Sorcerer 5. Level 1_2")
     assert len(dag.get_available_transitions()) == 0
+
 
 def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
     battle_map.build_adjacency_matrix()
@@ -237,7 +243,7 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
     dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
     # Tests Disengage + movement + a quickened spell
     assert dag.state == '0'
-    dag.trigger("Disengage of Draconic Sorcerer 5Lvl 1_1")
+    dag.trigger("Disengage of Draconic Sorcerer 5. Level 1_1")
     # assert dag.state == 'Disengaged'
     transitions = dag.get_available_transitions()
     assert "di_(5, 3)" in transitions
@@ -246,7 +252,7 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
     transitions = dag.get_available_transitions()
     assert 'Quickened Fireball at [ 6 10]_2' in transitions
     assert 'Quickened Firebolt on Goblin 1_2' in transitions
-    assert 'Quickened Haste on Draconic Sorcerer 5Lvl 1_2' in transitions
+    assert 'Quickened Haste on Draconic Sorcerer 5. Level 1_2' in transitions
     dag.trigger("Quickened Firebolt on Goblin 1_2")
     assert len(dag.get_available_transitions()) == 0
 
@@ -263,9 +269,11 @@ def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, eff
     battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 4]))  # Have to set it for fireball placement
 
     class DummyEffect:
-        def deactivate(self, **kwargs):
+        def deactivate(self):
             test_draconic_sorcerer_5lvl.break_concentration()
-            return False
+
+        def deactivate_for_combatant(self, combatant):
+            assert False
 
         def is_affecting(self, combatant):
             return False
@@ -276,6 +284,7 @@ def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, eff
     action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     assert any(isinstance(obj, TwinnedFirebolt) for obj in action_plan)
     assert any(isinstance(obj, Fireball) for obj in action_plan)  # Quickened version
+
 
 def test_rage_before_attack(battle_map, teams, effect_tracker, test_bugbear, test_totem_barbarian):
     """
@@ -295,7 +304,7 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, test_bugbear, tes
 
     try:
         actoid1 = get_action(test_totem_barbarian)
-        assert str(actoid1) == 'Totem Rage of Totem Barbarian 5Lvl 1'
+        assert str(actoid1) == 'Totem Rage of Totem Barbarian 5. Level 1'
         action_resolver.resolve_action(actoid1, test_totem_barbarian)
         actoid2 = get_action(test_totem_barbarian)
         action_resolver.resolve_action(actoid2, test_totem_barbarian)
@@ -354,9 +363,10 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, test_bugbea
         actoid6 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid6, test_bugbear)
         actoid7 = get_action(test_bugbear)
-        assert str(actoid7) == "Morningstar on Totem Barbarian 5Lvl 1"
+        assert str(actoid7) == "Morningstar on Totem Barbarian 5. Level 1"
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
 
 def test_goblin_using_cunning_disengage(battle_map, teams, effect_tracker, test_goblin, test_bugbear):
     """

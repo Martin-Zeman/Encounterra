@@ -135,3 +135,7 @@ class MetaAction(Enum):
     QUICKENED_SPELL = auto()
     TWINNED_SPELL = auto()
     EMPOWERED_SPELL = auto()
+
+# TODO
+# class FreeAction(Enum):
+#     pass

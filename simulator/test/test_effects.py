@@ -5,10 +5,11 @@ import numpy as np
 from ..abilities.totem_rage import TotemRageFactory
 from ..action_resolver import ActionResolver
 from ..actions.action_types import Action
-from ..conditions import is_affected_by, Conditions
+from ..conditions import is_affected_by, Conditions, is_affected_by_any, get_grappler
 from ..effects.effect import EffectType
+from ..effects.regeneration_effect import RegenerationEffect
 from ..logging.custom_logger import CustomLogger
-from ..misc import SavingThrow
+from ..misc import SavingThrow, DamageType
 from ..spells.faerie_fire import FaerieFireFactory
 from ..spells.hunger_of_hadar import HungerOfHadarFactory
 from ..spells.spike_growth import SpikeGrowthFactory
@@ -17,7 +18,7 @@ from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
-    test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner
+    test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_vampire_spawn
 from ..actions.action_selector import get_action
 
 
@@ -192,3 +193,76 @@ def test_spheric_aoe_effects(battle_map, teams, effect_tracker, test_draconic_so
         assert False, f"Raised an exception {e}"
 
 
+def test_start_of_turn_digestion_effect(battle_map, teams, effect_tracker, test_giant_toad, test_goblin):
+    """
+    Tests that a combatant is properly discarded if died as a result of a digestion effect. Also that the digestion
+    effect is properly removed.
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_giant_toad, test_goblin]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_giant_toad, Teams.Color.RED)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 5]))
+
+    battle_map.build_adjacency_matrix()
+
+    test_giant_toad.bite[1].on_hit[0].dc = 20
+    test_giant_toad.bite[1].to_hit = 20
+    test_goblin.athletics = 1  # Making sure the goblin is grappled
+    test_goblin.ac = 1  # Making sure the goblin is grappled
+    test_goblin.curr_hp = 1000  # Making sure the goblin survives
+    bite = test_giant_toad.bite[1].create(test_goblin)
+
+    try:
+        action_resolver.resolve_action(bite, test_giant_toad)
+        assert is_affected_by_any(test_goblin, Conditions.GRAPPLED)
+        assert get_grappler(test_goblin) is test_giant_toad
+        assert not effect_tracker.is_affecting_combatant(test_goblin, EffectType.DIGESTION)
+        test_giant_toad.new_turn()
+        bite_and_swallow = test_giant_toad.bite_and_swallow[1].create(test_goblin)
+        action_resolver.resolve_action(bite_and_swallow, test_giant_toad)
+        assert effect_tracker.effects
+        assert effect_tracker.is_affecting_combatant(test_goblin, EffectType.DIGESTION)
+        test_goblin.curr_hp = 1  # Making sure digestion kills it
+        effect_tracker.start_of_turn(test_goblin)
+        assert not effect_tracker.is_affecting_combatant(test_goblin, EffectType.DIGESTION)
+        assert not effect_tracker.effects
+        assert not test_goblin.is_alive()
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_start_of_turn_regeneration_effect(battle_map, teams, effect_tracker, test_vampire_spawn, test_ogre):
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_vampire_spawn, test_ogre]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_vampire_spawn, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_vampire_spawn, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([4, 5]))
+
+    battle_map.build_adjacency_matrix()
+
+    test_ogre.greatclub_attack[1].dmg_bonus = 30
+    test_ogre.greatclub_attack[1].to_hit = 20
+    greatclub_attack = test_ogre.greatclub_attack[1].create(test_vampire_spawn)
+    test_vampire_spawn.ac = 1  # Making sure the goblin is grappled
+    test_vampire_spawn.curr_hp = 5  # Making sure the goblin survives
+    effect_tracker.add(RegenerationEffect(test_vampire_spawn, 10, DamageType.Radiant))
+
+    try:
+        effect_tracker.start_of_turn(test_vampire_spawn)
+        assert test_vampire_spawn.curr_hp == 15
+        assert effect_tracker.effects
+        assert effect_tracker.is_affecting_combatant(test_vampire_spawn, EffectType.REGENERATION)
+        action_resolver.resolve_action(greatclub_attack, test_ogre)
+        assert not test_vampire_spawn.is_alive()
+        effect_tracker.start_of_turn(test_vampire_spawn)
+        assert not effect_tracker.effects
+        assert not effect_tracker.is_affecting_combatant(test_vampire_spawn, EffectType.REGENERATION)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"

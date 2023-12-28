@@ -9,6 +9,7 @@ from .utils.roll_types import RollType
 logger = logging.getLogger("Encounterra")
 
 ROUND_HORIZON = 3
+SHORTER_ROUND_HORIZON = 2
 
 
 class Artificer(Enum):
@@ -289,7 +290,7 @@ SIGN = {"+": 1, "-": -1}
 def reconcile_roll_types(types):
     """
 
-    @param modifiers: set of modifiers
+    @param types: set of modifiers
     @return: resulting modifier
     """
     try:
@@ -303,6 +304,7 @@ def reconcile_roll_types(types):
     except KeyError:
         ret = RollType.STRAIGHT
     return ret
+
 
 @cache
 def parse_dmg_dice(dice_string):
@@ -389,17 +391,13 @@ def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
     return primary_dmg + secondary_dmg, numbers
 
 
-def percentage_hp_loss(start_of_turn_hp, combatant):
-    return 100 * (start_of_turn_hp - max(0, combatant.curr_hp)) / combatant.max_hp
-
-
 def percent_of_curr_hp(combatant, dmg):
     return dmg / (combatant.curr_hp * 0.01)
 
 
-def get_factory_of_type(factories, type):
+def get_factory_of_type(factories, factory_type):
     for f in factories:
-        if f[0] is type:
+        if f[0] is factory_type:
             return f[1]
     return None
 
@@ -416,7 +414,7 @@ def get_strength_based_attack_factories(combatant):
     return attacks
 
 
-def get_haste_eligile_attacks(combatant):
+def get_haste_eligible_attacks(combatant):
     attacks = [af[1] for af in combatant.action_factories if FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK in af[1].flags]
     return attacks
 
@@ -450,4 +448,3 @@ class Visibility(Enum):
 THREE_QUARTERS_COVER_ERROR_THRESHOLD = 0.25
 HALF_COVER_ERROR_THRESHOLD = 0.35
 FULL_VISIBILITY_ERROR_THRESHOLD = 0.45
-

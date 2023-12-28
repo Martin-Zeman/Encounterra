@@ -95,13 +95,15 @@ class Bless(Actoid, CombatantEffect, AttackThreatModifier):
                 mod.append('1d4')
             target.to_hit_dice_mod.append('1d4')
 
-    def deactivate(self, **kwargs):
+    def deactivate(self):
         self.factory.combatant.break_concentration()
         for target in self.combatants:
             for mod in target.saving_throws_dice_mod.values():
                 mod.remove('1d4')
             target.to_hit_dice_mod.remove('1d4')
-        return False
+
+    def deactivate_for_combatant(self, combatant):
+        assert False
 
     def is_affecting(self, combatant):
         return combatant in self.combatants

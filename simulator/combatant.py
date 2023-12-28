@@ -467,18 +467,17 @@ class Combatant(ProtoCombatant):
         :return: actual dmg received accounting for resistances, vulnerabilities and immunities
         """
         dmg = self._receive_dmg(dmg, dmg_type)
+        battle_map = Map.get()
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
-            Map.get().effect_tracker.remove_effect_by_type(self.get_original_form(), EffectType.WILDSHAPE)
+            battle_map.effect_tracker.remove_effect_from_combatant_by_type(self.get_original_form(), EffectType.WILDSHAPE)
         if dmg:
             check_concentration(self, dmg)
             if is_affected_by(self, Conditions.AWAKENED_BY_DMG):
                 cond = remove_condition(self, Conditions.AWAKENED_BY_DMG)
                 logger.info(f"{self} is awakened by taking damage")
-                if cond.effect and not cond.effect.combatants and cond.effect.initiator.concentration_effect is cond.effect:
-                    cond.effect.initiator.break_concentration()
-                    logger.info(f"Concentration on {cond.effect} is broken as the effect fades from the last combatant")
-                    Map.get().effect_tracker.remove(cond.effect)
+                if cond.effect:
+                    battle_map.effect_tracker.remove_effect_from_combatant(self, cond.effect)
         return dmg
 
     def receive_compound_dmg(self, dmg):
@@ -490,18 +489,17 @@ class Combatant(ProtoCombatant):
         total_dmg = 0
         for d in dmg:
             total_dmg += self._receive_dmg(d[0], d[1])
+        battle_map = Map.get()
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
-            Map.get().effect_tracker.remove_effect_by_type(self.get_original_form(), EffectType.WILDSHAPE)
+            battle_map.effect_tracker.remove_effect_from_combatant_by_type(self.get_original_form(), EffectType.WILDSHAPE)
         if total_dmg:
             check_concentration(self, total_dmg)
             if is_affected_by(self, Conditions.AWAKENED_BY_DMG):
                 cond = remove_condition(self, Conditions.AWAKENED_BY_DMG)
                 logger.info(f"{self} is awakened by taking damage")
-                if cond.effect and not cond.effect.combatants and cond.effect.initiator.concentration_effect is cond.effect:
-                    cond.effect.initiator.break_concentration()
-                    logger.info(f"Concentration on {cond.effect} is broken as the effect fades from the last combatant")
-                    Map.get().effect_tracker.remove(cond.effect)
+                if cond.effect:
+                    battle_map.effect_tracker.remove_effect_from_combatant(self, cond.effect)
         self.uncanny_dodge_active = False
 
     def heal(self, hp):

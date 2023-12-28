@@ -52,9 +52,9 @@ class EffectTracker:
         effects = []
         for e in self.effects:
             if e.is_affecting(combatant):
-                if not e.start_of_turn():
-                    e.deactivate()
-                    continue  # Effect's been saved against
+                if not e.start_of_turn_for_combatant(combatant):
+                    e.deactivate_for_combatant(combatant)  # TODO: at the moment this does nothing (regeneration and digestion only)
+                    continue  # Effect's been cancelled
             effects.append(e)  # Effect persists
         self.effects = effects
 
@@ -62,8 +62,8 @@ class EffectTracker:
         effects = []
         for e in self.effects:
             if e.is_affecting(combatant):
-                if not e.end_of_turn(combatant=combatant):
-                    if not e.deactivate(combatant=combatant):
+                if not e.combatant_saved_at_end_of_turn(combatant):
+                    if not e.deactivate_for_combatant(combatant):
                         continue  # Effect's been saved against or somehow ceased on all combatants -> can be removed
             effects.append(e)
         self.effects = effects
@@ -107,14 +107,18 @@ class EffectTracker:
 
 # TODO add function for wildshape replacement
 
-    def remove_effect_by_type(self, combatant, efect_type):
+    def remove_effect_from_combatant_by_type(self, combatant, effect_type):
         effects = []
         for e in self.effects:
-            if e.is_affecting(combatant) and e.get_effect_type() is efect_type:
-                e.deactivate()
+            if e.is_affecting(combatant) and e.get_effect_type() is effect_type:
+                e.deactivate_for_combatant(combatant)
             else:
                 effects.append(e)
         self.effects = effects
+
+    def remove_effect_from_combatant(self, combatant, effect):
+        if not effect.deactivate_for_combatant(combatant):
+            self.effects.remove(effect)
 
     def is_combatant_hidden_from(self, combatant, target):
         """

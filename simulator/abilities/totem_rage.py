@@ -104,7 +104,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModi
             [DamageType.Slashing, DamageType.Bludgeoning, DamageType.Fire, DamageType.Lightning, DamageType.Acid, DamageType.Cold,
              DamageType.Force, DamageType.Necrotic, DamageType.Poison, DamageType.Radiant, DamageType.Piercing])
 
-    def deactivate(self, **kwargs):
+    def deactivate(self):
         logger.info(f"{self.combatants[0]}'s rage fades")
         self.combatants[0].ability_dmg_bonus -= self.rage_bonus
         self.combatants[0].resistances.remove(DamageType.Slashing)
@@ -118,7 +118,9 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModi
         self.combatants[0].resistances.remove(DamageType.Piercing)
         self.combatants[0].resistances.remove(DamageType.Poison)
         self.combatants[0].resistances.remove(DamageType.Radiant)
-        return False
+
+    def deactivate_for_combatant(self, combatant):
+        assert False
 
     def calculate_threat(self, **kwargs):
         """

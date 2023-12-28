@@ -24,6 +24,7 @@ class Conditions(Flag):
     SWALLOWED = auto()  # Meta-Condition
     GRAPPLING = auto()  # Meta-Condition
     AWAKENED_BY_DMG = auto()  # Meta-Condition
+    CAN_BE_SHAKEN_AWAKE = auto()  # Meta-Condition
 
 
 class Condition:
@@ -72,7 +73,7 @@ def find_condition_index(condition_list, condition: Conditions, initiator=None) 
     return None
 
 
-def remove_condition(combatant, condition: Conditions, initiator=None) -> Union[None, Effect]:
+def remove_condition(combatant, condition: Conditions, initiator=None) -> Union[None, Condition]:
     """
     Remove a specific condition from the list.
 

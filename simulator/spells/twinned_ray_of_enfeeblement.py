@@ -144,8 +144,7 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
 
-    def end_of_turn(self, **kwargs):
-        combatant = kwargs["combatant"]
+    def combatant_saved_at_end_of_turn(self, combatant):
         roll_type_modifiers = copy.copy(combatant.saving_throws_roll_type_mod[self.st])
         if combatant.has_passive(Passive.MAGIC_RESISTANCE):
             logger.info(f"{combatant} gains advantage against Hold Person through Magic Resistance")
@@ -158,7 +157,12 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         logger.info(f"{combatant} failed the save against {self}")
         return True
 
-    def deactivate(self, **kwargs):
+    def deactivate(self):
+        self.combatants.clear()
+        self.factory.combatant.break_concentration()
+
+    def deactivate_for_combatant(self, combatant):
+        self.combatants.remove(combatant)
         if not self.combatants:
             self.factory.combatant.break_concentration()
             return False

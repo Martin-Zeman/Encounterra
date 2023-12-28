@@ -117,9 +117,11 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         Map.get().effect_tracker.add(self)
         self.factory.combatant.concentration_effect = self
 
-    def deactivate(self, **kwargs):
+    def deactivate(self):
         self.factory.combatant.break_concentration()
-        return False
+
+    def deactivate_for_combatant(self, combatant):
+        assert False
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

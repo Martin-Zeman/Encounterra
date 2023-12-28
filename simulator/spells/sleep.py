@@ -4,7 +4,8 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from ..actions.action_types import BonusAction
+from ..actions.action_types import BonusAction, Action
+from ..actions.shake_ally_awake import ShakeAllyAwakeFactory
 from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
 from ..effects.combatant_effect import CombatantEffect
@@ -116,7 +117,7 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         affected = Map.get().get_combatants_affected_by_aoe(factory.combatant, SleepFactory.target, SleepFactory.type, coord)
-        affected.sort(key=lambda combatant: combatant.curr_hp)
+        affected.sort(key=lambda cmbt: cmbt.curr_hp)
         put_to_sleep = []
         hp_acc = 0
         total_hp_affected = roll_dice([(5, 8)])
@@ -141,21 +142,42 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
 
     def activate(self, **kwargs):
         if self.combatants:
-            # TODO Add free action to all enemies
-            Map.get().effect_tracker.add(self)
+            battle_map = Map.get()
+            battle_map.effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
             for combatant in self.combatants:
                 logger.info(f"{combatant} is put to sleep.")
-                apply_condition(combatant, Condition(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self.factory.combatant, self))
+                apply_condition(combatant, Condition(Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG | Conditions.CAN_BE_SHAKEN_AWAKE, self.factory.combatant, self))
+            enemies = battle_map.get_enemies(self.factory.combatant)
+            for e in enemies:
+                e.action_factories.append((Action.SHAKE_ALLY_AWAKE, ShakeAllyAwakeFactory(e)))
         else:
             logger.info(f"Sleep failed to affect anyone. The rolled HP wasn't high enough.")
 
-    def deactivate(self, **kwargs):
-        # TODO Remove free action from all enemies
+    def _deactivate(self):
         self.factory.combatant.break_concentration()
+        enemies = Map.get().get_enemies(self.factory.combatant)
+        for e in enemies:
+            e.action_factories = [factory for factory in e.action_factories if not isinstance(factory[1], ShakeAllyAwakeFactory)]
+
+    def deactivate(self):
         for combatant in self.combatants:
-            remove_condition(combatant, Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG, self.factory.combatant)
-        return False  # There's only one target -> automatic removal
+            remove_condition(combatant, Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG | Conditions.CAN_BE_SHAKEN_AWAKE)
+            self.combatants.clear()
+            self._deactivate()
+
+    def deactivate_for_combatant(self, combatant):
+        remove_condition(combatant, Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG | Conditions.CAN_BE_SHAKEN_AWAKE)
+        try:
+            self.combatants.remove(combatant)
+        except ValueError:  # Happens when the last affected combatant is awaked by dmg, the condition's already been removed in receive_dmg/receive_compound_dmg
+            self._deactivate()
+            return False
+        if not self.combatants:
+            self._deactivate()
+            return False
+        return True
+
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

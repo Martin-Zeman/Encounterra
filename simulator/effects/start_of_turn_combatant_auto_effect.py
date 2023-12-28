@@ -11,5 +11,8 @@ class StartOfTurnAutoEffect(CombatantEffect):
     def activate(self, **kwargs):
         pass
 
-    def deactivate(self, **kwargs):
-        return False
+    def deactivate(self):
+        pass
+
+    def deactivate_for_combatant(self, combatant):
+        assert False

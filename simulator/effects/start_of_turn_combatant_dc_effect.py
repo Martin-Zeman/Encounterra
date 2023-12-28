@@ -12,14 +12,14 @@ class StartOfTurnEffect(CombatantEffect):
         self.st = st
         self.dc = dc
 
-    def start_of_turn(self):
+    def start_of_turn_for_combatant(self, combatant):
         """
 
         :return: False if the saved against the effect and can be removed, True otherwise
         """
-        saved = roll_saving_throw(self.combatants[0].saving_throws[self.st], self.dc, reconcile_roll_types(self.combatants[0].saving_throws_roll_type_mod[self.st]))
+        saved = roll_saving_throw(combatant.saving_throws[self.st], self.dc, reconcile_roll_types(combatant.saving_throws_roll_type_mod[self.st]))
         if saved:
-            logger.info(f"{self.combatants[0]} saved against {self}")
+            logger.info(f"{combatant} saved against {self}")
             return False
-        logger.info(f"{self.combatants[0]} failed the save against {self}")
+        logger.info(f"{combatant} failed the save against {self}")
         return True

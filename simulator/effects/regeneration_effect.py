@@ -18,15 +18,19 @@ class RegenerationEffect(CombatantEffect):
     def activate(self, **kwargs):
         pass
 
-    def deactivate(self, **kwargs):
-        return False
+    def deactivate(self):
+        pass
 
-    def start_of_turn(self):
-        if self.initiator.is_alive():
-            if self.suppression_dmg_type not in self.initiator.dmg_types_took_last_round:
-                logger.info(f"{self.initiator} regenerates {self.hp} HP")
-                self.initiator.heal(self.hp)
+    def deactivate_for_combatant(self, combatant):
+        pass
+
+    def start_of_turn_for_combatant(self, combatant):
+        assert self.initiator is combatant, "The initiator of the regeneration effect is not the target combatant!"
+        if combatant.is_alive():  # TODO do I need this?
+            if self.suppression_dmg_type not in combatant.dmg_types_took_last_round:
+                logger.info(f"{combatant} regenerates {self.hp} HP")
+                combatant.heal(self.hp)
             else:
-                logger.info(f"{self.initiator}'s regeneration was suppressed by taking {self.suppression_dmg_type.name}")
+                logger.info(f"{combatant}'s regeneration was suppressed by taking {self.suppression_dmg_type.name}")
             return True
         return False

@@ -12,6 +12,7 @@ from ..combatants.bandit_captain import BanditCaptain
 from ..combatants.twig_blight import TwigBlight
 from ..combatants.stone_giant import StoneGiant
 from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from ..combatants.vampire_spawn import VampireSpawn
 from ..effects.effect_tracker import EffectTracker
 from ..combatants.bugbear import Bugbear
 from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
@@ -89,6 +90,11 @@ def test_ogre():
 @pytest.fixture()
 def test_moon_druid():
     return MoonDruid5Lvl()
+
+
+@pytest.fixture()
+def test_vampire_spawn():
+    return VampireSpawn()
 
 
 @pytest.fixture()

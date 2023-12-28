@@ -12,7 +12,7 @@ from ..threat_utils import mean_dmg
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
 from functools import reduce, cache
-from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligile_attacks, Visibility
+from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligible_attacks, Visibility
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..spells.haste import HasteFactory
 from ..utils.roll_types import ThreatModifierType
@@ -73,7 +73,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         enemies = battle_map.get_enemies(target)
             # This doesn't take different attack ranges into account
         max_attack_dmg = 0
-        attacks = get_haste_eligile_attacks(target)
+        attacks = get_haste_eligible_attacks(target)
         for attack in attacks:
             potential_targets = battle_map.get_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:
@@ -118,7 +118,7 @@ class TwinnedHaste(Actoid, Effect, Threat):
             target.add_hasted_factories()
             target.has_haste_action = True  # TODO Remove this
 
-    def deactivate(self, **kwargs):
+    def deactivate(self):
         effect_tracker = Map.get().effect_tracker
         self.factory.combatant.break_concentration()
         for target in self.targets:
@@ -126,7 +126,9 @@ class TwinnedHaste(Actoid, Effect, Threat):
             target.haste_action_factories.clear()
             effect_tracker.create_post_haste_lethargy(self.factory.combatant, target)
             target.has_haste_action = False  # TODO Remove this
-        return False
+
+    def deactivate_for_combatant(self, combatant):
+        assert False
 
     def is_affecting(self, combatant):
         return combatant in self.targets

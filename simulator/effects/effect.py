@@ -41,10 +41,17 @@ class Effect(ABC):
         pass
 
     @abstractmethod
-    def deactivate(self, **kwargs):
+    def deactivate(self):
         """
-        Deactivate either the entire effect or its instance for a given combatant
-        :param kwargs: combatant=... for combatant effects where combatants may save independently at different times
+        Deactivate either the entire effect. This happens either when the effect expires or when the initiating
+        combatant loses concentration (by dmg, dying or falling unconscious)
+        """
+        pass
+
+    @abstractmethod
+    def deactivate_for_combatant(self, combatant):
+        """
+        Deactivate either the entire effect or its instance for a given combatant.
         :return: True if the Effect is still up (e.g. at least for one combatant), False otherwise
         """
         pass
@@ -53,10 +60,18 @@ class Effect(ABC):
     def is_affecting(self, combatant):
         return False
 
-    def end_of_turn(self, **kwargs):
+    def combatant_saved_at_end_of_turn(self, combatant):
+        """
+        :return: True by default for abilities that cannot be saved against.
+        """
         return True
 
-    def start_of_turn(self):
+    def start_of_turn_for_combatant(self, combatant):
+        """
+        AFAIK, there are no abilities that can be saved against at the start of a turn but there are effects that could
+        potentially kill a combatant.
+        :return: True by default for all abilities.
+        """
         return True
 
     def new_turn(self):

@@ -3,7 +3,7 @@ from .battle_map import Map
 from .combatant_coords import Coords
 from .effects.effect import EffectType
 from .misc import Size
-from .conditions import Conditions, is_affected_by_any, get_grappled
+from .conditions import Conditions, is_affected_by_any, get_grappled, is_affected_by
 import logging
 import numpy as np
 
@@ -113,6 +113,11 @@ def check_feasibility(combatant, action):
                 res &= combatant.ammo[action.factory.name] > 0
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
+                return res
+            case Action.SHAKE_ALLY_AWAKE:
+                res &= is_affected_by(action.target, Conditions.CAN_BE_SHAKEN_AWAKE)
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= 1
+                res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
             case Action.GRAPPLE_ATTACK | HasteAction.HASTE_GRAPPLE_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
@@ -430,7 +435,7 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.curr_sorcery_points > 1
                 res &= not combatant.concentration_effect
                 return res
-            case Action.FIREBOLT | Action.SHOCKING_GRASP:
+            case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.DODGE | Action.POUNCE | Action.CONSTRICT | Action.SHAKE_ALLY_AWAKE:
                 return res
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 return res and combatant.curr_sorcery_points > 0
@@ -459,10 +464,6 @@ def check_feasibility_light(combatant, action):
                 return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED)
             case Action.DISENGAGE | HasteAction.HASTE_DISENGAGE:
                 return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED) and not combatant.has_disengaged  # Don't want to disengage twice
-            case Action.DODGE | Action.POUNCE:
-                return res
-            case Action.CONSTRICT:
-                return res  # and not combatant.is_constricting
             case Action.WILDSHAPE:
                 return res and combatant.curr_wildshape_uses > 0
             case Action.PRE_SWALLOW_BITE:

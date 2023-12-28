@@ -52,8 +52,11 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
 
     class DummyEffect:
-        def deactivate(self, **kwargs):
+        def deactivate(self):
             test_draconic_sorcerer_5lvl.break_concentration()
+
+        def deactivate_for_combatant(self, combatant):
+            assert False
 
         def is_affecting(self, combatant):
             return False
@@ -1148,7 +1151,7 @@ def test_error_case_26(battle_map, teams, effect_tracker, test_ogre, test_dracon
 
     battle_map.build_adjacency_matrix()
 
-    action_types = [Action.SCORCHING_RAY, BonusAction.QUICKENED_SCORCHING_RAY]
+    action_types = [Action.SCORCHING_RAY, BonusAction.QUICKENED_SCORCHING_RAY, Action.HOLD_PERSON]
     actoids = []
     try:
         actoids.append(get_action(test_draconic_sorcerer_3lvl))
@@ -1294,65 +1297,6 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
         assert False, f"Raised an exception {e}"
     assert any([str(a).startswith("Pounce") for a in actoids])
 
-# def test_error_case_30(battle_map, teams, effect_tracker, test_giant_toad, test_moon_druid, test_totem_barbarian, test_draconic_sorcerer_5lvl):
-#     """
-#     Error in for the Moon Druid's "KeyError(<Encounterra.simulator.combatants.giant_toad.GiantToad object at 0x7fc56b5f9810>)"
-#     """
-#     # TODO failed to reproduce
-#     CustomLogger(logging.WARNING)
-#     battle_map.set_effect_tracker(effect_tracker)
-#     combatants = [test_giant_toad, test_moon_druid, test_totem_barbarian, test_draconic_sorcerer_5lvl]
-#     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-#
-#     battle_map.place_circular_element(np.array([4, 1]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-#     battle_map.place_circular_element(np.array([8, 2]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-#     battle_map.place_circular_element(np.array([10, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
-#     battle_map.place_circular_element(np.array([11, 5]), Terrain.DIFFICULT_TERRAIN, radius=0)
-#
-#     teams.add_combatant_to_team(test_giant_toad, Teams.Color.RED)
-#     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
-#     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
-#     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-#
-#     battle_map.set_combatant_coordinates(test_giant_toad, np.array([4, 8]))
-#     battle_map.set_combatant_coordinates(test_moon_druid, np.array([4, 11]))
-#     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([7, 11]))
-#     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([6, 10]))
-#     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE,
-#                                                                             test_moon_druid.wildshape_factory[1])
-#
-#     battle_map.build_adjacency_matrix()
-#     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-#     test_moon_druid.shortest_paths_cache = shortest_paths
-#     test_moon_druid.spellslots.use_resource(level=2)
-#
-#     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
-#     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
-#     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
-#     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
-#     test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
-#
-#     actoids = []
-#     try:
-#         ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
-#         ws = ws_factory.create(GiantToad)
-#         action_resolver.resolve_action(ws, test_moon_druid)
-#         assert test_moon_druid.get_current_form() is not test_moon_druid
-#         test_moon_druid.get_current_form().new_turn()
-#         test_moon_druid.get_current_form().receive_dmg(40, DamageType.Fire)
-#         assert test_moon_druid.get_current_form() is test_moon_druid
-#         test_giant_toad.receive_dmg(40, DamageType.Fire)
-#         battle_map.remove_combatant_if_dead(test_giant_toad)
-#         actoids.append(get_action(test_moon_druid))
-#         action_resolver.resolve_action(actoids[-1], test_moon_druid)
-#         actoids.append(get_action(test_moon_druid))
-#         action_resolver.resolve_action(actoids[-1], test_moon_druid)
-#         actoids.append(get_action(test_moon_druid))
-#         action_resolver.resolve_action(actoids[-1], test_moon_druid)
-#         actoids.append(get_action(test_moon_druid))
-#         action_resolver.resolve_action(actoids[-1], test_moon_druid)
-#     except Exception as e:
-#         assert False, f"Raised an exception {e}"
 
 def unify_combatants(session, battle_map):
     map_combatants_keys = list(battle_map.combatant_coordinate_cache.keys())

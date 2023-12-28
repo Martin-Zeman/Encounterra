@@ -89,7 +89,7 @@ def use_resources(combatant, action):
                     print("FIXME")
             case Action.GRAPPLE_ATTACK:
                 subject.attack_fsm.trigger(str(action.factory))
-            case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP:
+            case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP | Action.SHAKE_ALLY_AWAKE:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL | Action.HASTE | Action.HUNGER_OF_HADAR:
                 action.factory.resource.use_resource(level=3)

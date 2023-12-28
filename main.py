@@ -31,7 +31,7 @@ import time
 if __name__ == '__main__':
     CustomLogger(logging.INFO)
     session = Session()
-    session.add_combatant(MoonDruid5Lvl, Teams.Color.RED)
+    # session.add_combatant(MoonDruid5Lvl, Teams.Color.RED)
     # session.add_combatant(Acolyte, Teams.Color.BLUE)
     # session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
     # session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.BLUE)
@@ -50,6 +50,7 @@ if __name__ == '__main__':
     # session.add_combatant(TwigBlight, Teams.Color.RED)
     # session.add_combatant(TwigBlight, Teams.Color.RED)
     # session.add_combatant(NeedleBlight, Teams.Color.RED)
+    session.add_combatant(Goblin, Teams.Color.RED)
     session.add_combatant(Goblin, Teams.Color.RED)
     session.add_combatant(Goblin, Teams.Color.RED)
     # session.add_combatant(BrownBear, Teams.Color.BLUE)

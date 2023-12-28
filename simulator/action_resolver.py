@@ -617,7 +617,7 @@ class ActionResolver:
                  HasteAction.HASTE_BITE_AND_SWALLOW | Action.VAMPIRIC_BITE | Action.PRE_SWALLOW_BITE | \
                  HasteAction.HASTE_PRE_SWALLOW_BITE:
                 ret = self.resolve_attack(actoid, actoid.target, combatant)
-                battle_map.effect_tracker.remove_effect_by_type(combatant, EffectType.HIDE)
+                battle_map.effect_tracker.remove_effect_from_combatant_by_type(combatant, EffectType.HIDE)
                 return ret
             case Movement.STANDARD | Movement.DISENGAGED:
                 if not self.request_movement(combatant, actoid):
@@ -684,6 +684,9 @@ class ActionResolver:
             #     if result is ActionResult.DMG:
             #         combatant.constricted_target = actoid.target if actoid.target.is_alive() else None
             #     return result
+            case Action.SHAKE_ALLY_AWAKE:
+                logger.info(f"{actoid.target} is shaken awake by {combatant}")
+                battle_map.effect_tracker.remove_effect_from_combatant_by_type(actoid.target, EffectType.SLEEP)
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

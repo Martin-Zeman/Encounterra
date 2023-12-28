@@ -160,8 +160,7 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
             Map.get().effect_tracker.add(self)
             self.factory.combatant.concentration_effect = self
 
-    def end_of_turn(self, **kwargs):
-        combatant = kwargs["combatant"]
+    def combatant_saved_at_end_of_turn(self, combatant):
         roll_type_modifiers = copy.copy(combatant.saving_throws_roll_type_mod[self.st])  # Make a copy because it's related to this ability and not to all WIS saves
         if combatant.has_passive(Passive.MAGIC_RESISTANCE):
             logger.info(f"{combatant} gains advantage against Hold Person through Magic Resistance")
@@ -177,14 +176,17 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         logger.info(f"{combatant} failed the save against {self}")
         return True
 
-    def deactivate(self, **kwargs):
-        combatant = kwargs["combatant"]
+    def deactivate(self):
+        self.factory.combatant.break_concentration()
+        for combatant in self.combatants:
+            remove_condition(combatant, Conditions.PARALYZED, self.factory.combatant)
+
+    def deactivate_for_combatant(self, combatant):
         remove_condition(combatant, Conditions.PARALYZED, self.factory.combatant)
         if not self.combatants:
             self.factory.combatant.break_concentration()
             return False
         return True
-
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
