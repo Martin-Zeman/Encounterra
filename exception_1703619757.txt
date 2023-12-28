@@ -1,0 +1,2 @@
+Fuzzy test with Blue team [<class 'simulator.combatants.brown_bear.BrownBear'>, <class 'simulator.combatants.berserker.Berserker'>] and Red team [<class 'simulator.combatants.stone_giant.StoneGiant'>, <class 'simulator.combatants.bandit_captain.BanditCaptain'>, <class 'simulator.combatants.draconic_sorcerer_3lvl.DraconicSorcerer3Lvl'>, <class 'simulator.combatants.giant_constrictor_snake.GiantConstrictorSnake'>] raised an exception:
+'ConstrictFactory' object has no attribute 'attack'

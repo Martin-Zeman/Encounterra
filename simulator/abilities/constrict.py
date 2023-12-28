@@ -73,7 +73,6 @@ class ConstrictFactory(DirectThreatFactory):
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 
-
 class Constrict(Actoid, DirectThreat):
 
     def __init__(self, target, factory):
@@ -97,7 +96,7 @@ class Constrict(Actoid, DirectThreat):
                                                            inflate_to_dist=self.factory.combatant.size.value,
                                                            rng=1,
                                                            combatant=self.factory.combatant)
-        elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.attack.range):
+        elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.attack_factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
 
