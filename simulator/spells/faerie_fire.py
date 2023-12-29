@@ -134,7 +134,6 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
         for aff in affected:
             threat_delta = calculate_threat_in_delta(aff, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1]
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * threat_delta
-        # logger.warning(f"MY DEBUG {self} calculate_threat = {acc}")
         return -acc
 
     def clear_cache(self):

@@ -15,9 +15,10 @@ from ..battle_map import Terrain
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
 from ..effects.effect import EffectType
 from ..logging.custom_logger import CustomLogger
-from ..misc import DamageType
+from ..misc import DamageType, SavingThrow
 from ..conditions import Conditions, is_affected_by
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
+from ..spells.sleep import SleepFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag
@@ -912,6 +913,40 @@ def test_ray_of_enfeeblement(battle_map, teams, effect_tracker, test_totem_barba
 
         tolerance = 0.15 * pre_roe_dmg_dealt
         assert abs(pre_roe_dmg_dealt - 2 * post_roe_dmg_dealt) <= tolerance
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_ray_of_sleep_loss_of_concentration(battle_map, teams, effect_tracker, test_goblin, test_night_hag):
+    """
+    Test that Ray of Enfeeblement really does lower strength-based damage.
+    """
+    CustomLogger(logging.WARNING)
+    test_goblin_2 = copy.deepcopy(test_goblin)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_goblin, test_goblin_2, test_night_hag]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin_2, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_night_hag, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_goblin, np.array([4, 5]))
+    battle_map.set_combatant_coordinates(test_goblin_2, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(test_night_hag, np.array([9, 5]))
+    battle_map.build_adjacency_matrix()
+    test_night_hag.saving_throws[SavingThrow.CON] = 1  # Making sure the concentration check fails
+    try:
+        sleep_factory = SleepFactory(Action.SLEEP, test_night_hag, test_night_hag.resources[1])
+        sleep = sleep_factory.create(np.array([4, 5]))
+        action_resolver.resolve_action(sleep, test_night_hag)
+        assert is_affected_by(test_goblin, Conditions.UNCONSCIOUS)
+        assert is_affected_by(test_goblin_2, Conditions.UNCONSCIOUS)
+        assert test_night_hag.concentration_effect is sleep
+
+        test_night_hag.receive_dmg(50, DamageType.Force)
+
+        assert not is_affected_by(test_goblin, Conditions.UNCONSCIOUS)
+        assert not is_affected_by(test_goblin_2, Conditions.UNCONSCIOUS)
+        assert test_night_hag.concentration_effect is None
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

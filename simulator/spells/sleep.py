@@ -163,8 +163,8 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
     def deactivate(self):
         for combatant in self.combatants:
             remove_condition(combatant, Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG | Conditions.CAN_BE_SHAKEN_AWAKE)
-            self.combatants.clear()
-            self._deactivate()
+        self.combatants.clear()
+        self._deactivate()
 
     def deactivate_for_combatant(self, combatant):
         remove_condition(combatant, Conditions.UNCONSCIOUS | Conditions.AWAKENED_BY_DMG | Conditions.CAN_BE_SHAKEN_AWAKE)

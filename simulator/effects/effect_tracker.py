@@ -111,9 +111,9 @@ class EffectTracker:
         effects = []
         for e in self.effects:
             if e.is_affecting(combatant) and e.get_effect_type() is effect_type:
-                e.deactivate_for_combatant(combatant)
-            else:
-                effects.append(e)
+                if not e.deactivate_for_combatant(combatant):
+                    continue
+            effects.append(e)
         self.effects = effects
 
     def remove_effect_from_combatant(self, combatant, effect):
