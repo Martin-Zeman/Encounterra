@@ -448,3 +448,18 @@ class Visibility(Enum):
 THREE_QUARTERS_COVER_ERROR_THRESHOLD = 0.25
 HALF_COVER_ERROR_THRESHOLD = 0.35
 FULL_VISIBILITY_ERROR_THRESHOLD = 0.45
+
+
+def is_path_straight(path):
+    if not path or len(path) < 2:
+        return False
+
+    # Compare the direction of each step in the path
+    direction = None
+    for i in range(len(path) - 1):
+        current_direction = (path[i + 1][0] - path[i][0], path[i + 1][1] - path[i][1])
+        if direction and current_direction != direction:
+            return False
+        direction = current_direction
+
+    return True

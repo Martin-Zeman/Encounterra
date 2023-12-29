@@ -25,6 +25,7 @@ from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from simulator.combatants.vampire_spawn import VampireSpawn
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.assassin import Assassin
+from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 from simulator.teams import Teams
 import time
 
@@ -50,13 +51,14 @@ if __name__ == '__main__':
     # session.add_combatant(TwigBlight, Teams.Color.RED)
     # session.add_combatant(TwigBlight, Teams.Color.RED)
     # session.add_combatant(NeedleBlight, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.RED)
+    session.add_combatant(SaberToothedTiger, Teams.Color.RED)
+    session.add_combatant(SaberToothedTiger, Teams.Color.BLUE)
+    # session.add_combatant(Goblin, Teams.Color.RED)
+    # session.add_combatant(Goblin, Teams.Color.RED)
+    # session.add_combatant(Goblin, Teams.Color.RED)
     # session.add_combatant(BrownBear, Teams.Color.BLUE)
-    session.add_combatant(Bugbear, Teams.Color.RED)
-    session.add_combatant(Bugbear, Teams.Color.RED)
+    # session.add_combatant(Bugbear, Teams.Color.RED)
+    # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
     # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.RED)
     # session.add_combatant(StoneGiant, Teams.Color.BLUE)
@@ -66,7 +68,7 @@ if __name__ == '__main__':
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(EvilMage, Teams.Color.BLUE)
-    session.add_combatant(NightHag, Teams.Color.BLUE)
+    # session.add_combatant(NightHag, Teams.Color.BLUE)
     session.set_num_simulations(1)
     start_time = time.time()
     session.simulate(parallel=False)

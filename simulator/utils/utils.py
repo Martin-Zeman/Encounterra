@@ -5,7 +5,6 @@ import math
 import pkgutil
 from ..abilities.wildshape import Wildshape
 from ..actions.action_types import Action, BonusAction
-from ..combatant import Combatant
 from ..combatants.brown_bear import BrownBear
 from ..combatants.dire_wolf import DireWolf
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
@@ -69,4 +68,3 @@ def preallocate_wildshape_forms(combatant, action_type, factory):
     return [Wildshape(combatant, form, factory) for form in available_forms]
 
 from functools import cache
-

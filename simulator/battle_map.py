@@ -28,6 +28,7 @@ logger = logging.getLogger("Encounterra")
 
 SQRT_OF_TWO = 1.41421
 
+
 def reconstruct_from_shortest_path(shortest_path, source, target):
     """
     Works backwards using the shortest paths produced by Dijkstra to obtain a sequence of coordinates from source to
