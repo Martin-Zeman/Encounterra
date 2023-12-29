@@ -32,6 +32,7 @@ class Combatant(ProtoCombatant):
     name = ""
     cls = None
     level = 0
+    id = 0
 
     def __init__(self, num_or_name, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=set(), immunities=[], vulnerabities=[]):
         if type(num_or_name) is int:
