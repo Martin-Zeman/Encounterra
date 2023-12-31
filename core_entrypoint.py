@@ -20,6 +20,7 @@ def handler(event, context):
         os.remove(local_log_file_path)
     CustomLogger(logging.INFO, False, local_log_file_path)
     logger = logging.getLogger("Encounterra")
+    logger.info(f"MY DEBUG event {event}")
     # logger.info("------CORE LAMBDA STARTING------")
     Map.reset_singleton()
     core_input = event['core_input']
