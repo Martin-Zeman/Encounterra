@@ -163,7 +163,8 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         # TODO add function for wildshape replacement for effect tracker
 
     def deactivate_for_combatant(self, combatant):
-        assert False
+        self.deactivate()
+        return False
 
     def enable(self):
         """
