@@ -16,6 +16,7 @@ from ..utils.roll_types import ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModi
 
 logger = logging.getLogger("Encounterra")
 
+
 class FireboltFactory(DirectThreatFactory):
     level = 0
     range = SpellStats.Range.FEET_120.value

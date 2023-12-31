@@ -527,7 +527,7 @@ class ActionResolver:
                 return False
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 logger.info(f"{combatant} casts {actoid}")
-                affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target, actoid.factory.name, actoid.coord)
+                affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
                 dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                 for combatant in affected:
                     resolve_dmg_saving_throw(actoid, dmg, combatant, True, True)
