@@ -278,12 +278,6 @@ class DistanceMetric(Enum):
     CARTESIAN = auto()
 
 
-class PlacementScenario(Enum):
-    TWO_HALVES = 1
-    TOTALLY_RANDOM = 2
-    # SURROUNDED = 3
-
-
 SIGN = {"+": 1, "-": -1}
 
 

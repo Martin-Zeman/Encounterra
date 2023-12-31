@@ -47,9 +47,9 @@ logger = logging.getLogger("Encounterra")
 class Session:
 
     class PlacementScenario(Enum):
-        TWO_HALVES = 1
+        TWO_SIDES = 1
+        RANDOM = 3
         SURROUNDED = 2
-        TOTALLY_RANDOM = 3
 
     def __init__(self):
         self.combatants = []
@@ -59,7 +59,7 @@ class Session:
         self.character_type_counter = {cls.id: 1 for cls in get_combatant_classes()}
         self.teams = Teams()
         self.battle_map = Map(self.map_size, self.teams)
-        self.placement_scenario = self.PlacementScenario.TWO_HALVES
+        self.placement_scenario = self.PlacementScenario.TWO_SIDES
         self.round_manager = None
         self.effect_tracker = EffectTracker()
         self.battle_map.set_effect_tracker(self.effect_tracker)
@@ -195,17 +195,17 @@ class Session:
 
     def place_combatants_on_the_map(self):
         match self.placement_scenario:
-            case self.PlacementScenario.TWO_HALVES:
+            case self.PlacementScenario.TWO_SIDES:
                 for combatant in self.combatants:
                     team_color = self.teams.get_team_color_code(combatant)
                     right_bounds = [0, self.map_size // 2 - 1] if team_color is Teams.Color.BLUE else [self.map_size // 2 + 1, self.map_size - 1]
                     self.place_combatant(combatant, [0, self.map_size - 1], right_bounds)
-            case self.PlacementScenario.TOTALLY_RANDOM:
+            case self.PlacementScenario.RANDOM:
                 for combatant in self.combatants:
                     self.place_combatant(combatant, [0, self.map_size - 1], [0, self.map_size - 1])
             case _:
                 logger.error("Unsupported placement scenario. Going with default")
-                self.placement_scenario = self.PlacementScenario.TWO_HALVES
+                self.placement_scenario = self.PlacementScenario.TWO_SIDES
                 self.place_combatants_on_the_map()
 
     def place_random_elements_on_the_map(self):
