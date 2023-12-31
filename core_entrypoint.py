@@ -25,7 +25,7 @@ def handler(event, context):
     core_input = event['core_input']
     blue_team = core_input['blue']
     red_team = core_input['red']
-    combatant_placement = int(core_input['combatant_placement'])
+    combatant_placement = int(event['combatant_placement'])
     job_id = event['job_id']
     index = event['index']
 
