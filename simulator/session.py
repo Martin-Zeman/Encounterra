@@ -48,8 +48,8 @@ class Session:
 
     class PlacementScenario(Enum):
         TWO_SIDES = 1
-        RANDOM = 3
-        SURROUNDED = 2
+        RANDOM = 2
+        SURROUNDED = 3
 
     def __init__(self):
         self.combatants = []
@@ -196,11 +196,13 @@ class Session:
     def place_combatants_on_the_map(self):
         match self.placement_scenario:
             case self.PlacementScenario.TWO_SIDES:
+                logger.info("Combatant placement: Two Sides")
                 for combatant in self.combatants:
                     team_color = self.teams.get_team_color_code(combatant)
                     right_bounds = [0, self.map_size // 2 - 1] if team_color is Teams.Color.BLUE else [self.map_size // 2 + 1, self.map_size - 1]
                     self.place_combatant(combatant, [0, self.map_size - 1], right_bounds)
             case self.PlacementScenario.RANDOM:
+                logger.info("Combatant placement: Fully Random")
                 for combatant in self.combatants:
                     self.place_combatant(combatant, [0, self.map_size - 1], [0, self.map_size - 1])
             case _:
