@@ -25,12 +25,14 @@ def handler(event, context):
     core_input = event['core_input']
     blue_team = core_input['blue']
     red_team = core_input['red']
+    combatant_placement = int(core_input['combatant_placement'])
     job_id = event['job_id']
     index = event['index']
 
     subdirectory = f"{job_id}/{index}/"
 
     session = Session()
+    session.set_placement_scenario(Session.PlacementScenario(combatant_placement))
     for blue_combatant in blue_team:
         session.add_combatant(int(blue_combatant), Teams.Color.BLUE)
     for red_combatant in red_team:
