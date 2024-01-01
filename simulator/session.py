@@ -51,6 +51,15 @@ class Session:
         RANDOM = 2
         SURROUNDED = 3
 
+    class MapType(Enum):
+        BLANK = "blank"
+        OBSTACLES = "obstacles"
+        DIFFICULT_TERRAIN = "difficult_terrain"
+        OBSTACLES_AND_DIFFICULT_TERRAIN = "obstacles_and_difficult_terrain"
+        DOUBLE_OBSTACLES = "double_obstacles"
+        DOUBLE_DIFFICULT_TERRAIN = "double_difficult_terrain"
+        HALLWAY = "hallway"
+
     def __init__(self):
         self.combatants = []
         self.num_simulations = 1
@@ -210,15 +219,52 @@ class Session:
                 self.placement_scenario = self.PlacementScenario.TWO_SIDES
                 self.place_combatants_on_the_map()
 
-    def place_random_elements_on_the_map(self):
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
-        self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
+    def place_terrain_and_obstacles(self, map_type):
+        match map_type:
+            case Session.MapType.BLANK.value:
+                logger.info("Map Type: Blank")
+            case Session.MapType.OBSTACLES.value:
+                logger.info("Map Type: Obstacles")
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
+            case Session.MapType.DOUBLE_OBSTACLES.value:
+                logger.info("Map Type: Double Obstacles")
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
+            case Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value:
+                logger.info("Map Type: Obstacles & Difficult Terrain")
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN,random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.IMPASSABLE_TERRAIN, random.randint(0, 1))
+            case Session.MapType.DIFFICULT_TERRAIN.value:
+                logger.info("Map Type: Difficult Terrain")
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
+            case Session.MapType.DOUBLE_DIFFICULT_TERRAIN.value:
+                logger.info("Map Type: Double Difficult Terrain")
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
+                self.battle_map.place_circular_element((random.randint(0, self.map_size - 1), random.randint(0, self.map_size - 1)), Terrain.DIFFICULT_TERRAIN, random.randint(0, 1))
+            case Session.MapType.HALLWAY.value:
+                logger.info("Map Type: Hallway")
+                for idx in range(15):
+                    self.battle_map.place_circular_element((0, idx), Terrain.IMPASSABLE_TERRAIN, 0)
+                    self.battle_map.place_circular_element((1, idx), Terrain.IMPASSABLE_TERRAIN, 0)
+                    self.battle_map.place_circular_element((2, idx), Terrain.IMPASSABLE_TERRAIN, 0)
+                    self.battle_map.place_circular_element((3, idx), Terrain.IMPASSABLE_TERRAIN, 0)
+                    self.battle_map.place_circular_element((11, idx), Terrain.IMPASSABLE_TERRAIN, 0)
+                    self.battle_map.place_circular_element((12, idx), Terrain.IMPASSABLE_TERRAIN, 0)
+                    self.battle_map.place_circular_element((13, idx), Terrain.IMPASSABLE_TERRAIN, 0)
+                    self.battle_map.place_circular_element((14, idx), Terrain.IMPASSABLE_TERRAIN, 0)
+            case _:
+                logger.info("Map Type: Blank by Default")
 
     def simulate(self, parallel=False):
         self.round_manager = RoundManager(self.combatants, self.teams, self.effect_tracker)  # TODO remove the effect_tracker
-        self.place_random_elements_on_the_map()
         self.place_combatants_on_the_map()
         self.battle_map.build_adjacency_matrix()
         if parallel and self.num_simulations >= mp.cpu_count():

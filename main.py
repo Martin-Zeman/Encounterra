@@ -71,6 +71,7 @@ if __name__ == '__main__':
     # session.add_combatant(NightHag, Teams.Color.BLUE)
     session.set_num_simulations(1)
     start_time = time.time()
+    session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)
     session.simulate(parallel=False)
     print("---Simulation took {:.1f} seconds ---".format((time.time() - start_time)))
 

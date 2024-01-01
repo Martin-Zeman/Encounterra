@@ -56,6 +56,7 @@ def test_random_matchup():
             session.add_combatant(combatant, Teams.Color.RED)
 
         session.set_num_simulations(1)
+        session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)
         try:
             session.simulate(parallel=False)
         except Exception as e:

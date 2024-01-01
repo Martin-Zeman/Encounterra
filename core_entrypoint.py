@@ -26,6 +26,7 @@ def handler(event, context):
     blue_team = core_input['blue']
     red_team = core_input['red']
     combatant_placement = int(event['combatant_placement'])
+    map_type = event['map_type']
     job_id = event['job_id']
     index = event['index']
 
@@ -33,6 +34,7 @@ def handler(event, context):
 
     session = Session()
     session.set_placement_scenario(Session.PlacementScenario(combatant_placement))
+    session.place_terrain_and_obstacles(map_type)
     for blue_combatant in blue_team:
         session.add_combatant(int(blue_combatant), Teams.Color.BLUE)
     for red_combatant in red_team:
