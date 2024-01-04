@@ -3,7 +3,7 @@ import copy
 from enum import Enum, auto
 
 from .misc import Class
-from .resources import Resource, ResourceRefreshType
+from .resources import Resource, ResourceRefreshType, ResourceDepletionLevel
 
 logger = logging.getLogger("Encounterra")
 
@@ -1023,6 +1023,10 @@ class Spellslots(Resource):
 
     def has_resource(self, **kwargs):
         level = kwargs.get("level", None)
+        return self.curr_spellslots[level] > 0
+
+    def get_resource(self, **kwargs):
+        level = kwargs.get("level", None)
         return self.curr_spellslots[level]
 
     def use_resource(self, **kwargs):
@@ -1044,3 +1048,12 @@ class Spellslots(Resource):
             self.curr_spellslots = copy.deepcopy(spellslots)
         except KeyError:
             logger.error("Invalid Spellslots import resource!")
+
+    def deplete_resource(self, level: ResourceDepletionLevel):
+        match level:
+            case ResourceDepletionLevel.FULLY_DEPLETED:
+                self.curr_spellslots = {k: 0 for k, v in self.curr_spellslots.items()}
+            case ResourceDepletionLevel.PARTIALLY_DEPLETED:
+                self.curr_spellslots = {k: v // 2 for k, v in self.max_spellslots.items()}
+            case _:
+                pass

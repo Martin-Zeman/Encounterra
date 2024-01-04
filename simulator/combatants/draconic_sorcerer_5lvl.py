@@ -49,7 +49,6 @@ class DraconicSorcerer5Lvl(Combatant):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
 
-
     def prompt_aoo(self, moving_combatant):
         return None  # Saving reaction for Shield
 
@@ -74,7 +73,6 @@ class DraconicSorcerer5Lvl(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
-
 
     def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
         if self.spellslots.has_resource(level=1) and self.has_reaction and attack_roll < self.ac + 5:

@@ -525,7 +525,7 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_combatant_coordinates(combatant8, np.array([3, 10]))
     battle_map.build_adjacency_matrix()
 
-    test_totem_barbarian.curr_rage_uses -= 1
+    test_totem_barbarian.resources[0].use_resource()
     test_ogre.curr_hp -= 32
     combatant7.curr_hp -= 4
     combatant7.spellslots.use_resource(level=3)
@@ -1316,25 +1316,25 @@ def unify_combatants(session, battle_map):
                         break
 
 # Note: These tests become obsolete when certain refactorings take place
-def test_error_case_30():
-    """
-    Deserializes error objects after:
-    'NoneType' object is not iterable
-    """
-    CustomLogger(logging.WARNING)
-    with open('simulator/test/serialized_objects/battle_map_data_1703935141.pkl', 'rb') as f:
-        map_data = pickle.load(f)
-        Map.deserialize_data(map_data)
-
-    # Load the session
-    with open('simulator/test/serialized_objects/session_1703935141.pkl', 'rb') as f:
-        session_data = pickle.load(f)
-        session = Session()
-        session.deserialize_data(session_data)
-    battle_map = Map.get()
-    battle_map.effect_tracker = session.effect_tracker
-    battle_map.teams = session.teams
-    unify_combatants(session, Map.get())
-    actoid = get_action(session.combatants[session.combatants.index(session.round_manager.curr_combatant)])
-    session.round_manager.action_resolver.resolve_action(actoid, session.combatants[1])
+# def test_error_case_30():
+#     """
+#     Deserializes error objects after:
+#     'NoneType' object is not iterable
+#     """
+#     CustomLogger(logging.WARNING)
+#     with open('simulator/test/serialized_objects/battle_map_data_1703935141.pkl', 'rb') as f:
+#         map_data = pickle.load(f)
+#         Map.deserialize_data(map_data)
+#
+#     # Load the session
+#     with open('simulator/test/serialized_objects/session_1703935141.pkl', 'rb') as f:
+#         session_data = pickle.load(f)
+#         session = Session()
+#         session.deserialize_data(session_data)
+#     battle_map = Map.get()
+#     battle_map.effect_tracker = session.effect_tracker
+#     battle_map.teams = session.teams
+#     unify_combatants(session, Map.get())
+#     actoid = get_action(session.combatants[session.combatants.index(session.round_manager.curr_combatant)])
+#     session.round_manager.action_resolver.resolve_action(actoid, session.combatants[1])
 

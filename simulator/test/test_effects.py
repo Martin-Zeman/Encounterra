@@ -129,7 +129,7 @@ def test_limited_duration_effect_self_target(battle_map, teams, effect_tracker, 
 
     battle_map.build_adjacency_matrix()
 
-    totem_rage_factory = TotemRageFactory(test_totem_barbarian)
+    totem_rage_factory = TotemRageFactory(test_totem_barbarian, resource=test_totem_barbarian.resources[0])
     totem_rage = totem_rage_factory.create(test_totem_barbarian)
 
     try:

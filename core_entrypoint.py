@@ -1,5 +1,6 @@
 from simulator.logging.custom_logger import CustomLogger
 from simulator.misc import Statistics
+from simulator.resources import ResourceDepletionLevel
 from simulator.session import Session
 from simulator.teams import Teams
 from simulator.battle_map import Map
@@ -20,12 +21,13 @@ def handler(event, context):
         os.remove(local_log_file_path)
     CustomLogger(logging.INFO, False, local_log_file_path)
     logger = logging.getLogger("Encounterra")
-    # logger.info("------CORE LAMBDA STARTING------")
     Map.reset_singleton()
     core_input = event['core_input']
     blue_team = core_input['blue']
     red_team = core_input['red']
     combatant_placement = int(event['combatant_placement'])
+    blue_depletion_level = int(event['blue_depletion_level'])
+    red_depletion_level = int(event['red_depletion_level'])
     map_type = event['map_type']
     job_id = event['job_id']
     index = event['index']
@@ -35,10 +37,28 @@ def handler(event, context):
     session = Session()
     session.set_placement_scenario(Session.PlacementScenario(combatant_placement))
     session.place_terrain_and_obstacles(map_type)
+    match blue_depletion_level:
+        case ResourceDepletionLevel.FULLY_RESTED.value:
+            logger.info("Blue Team is fully rested")
+        case ResourceDepletionLevel.PARTIALLY_DEPLETED.value:
+            logger.info("Blue Team is partially depleted")
+        case ResourceDepletionLevel.FULLY_DEPLETED.value:
+            logger.info("Blue Team is fully depleted")
+        case _:
+            logger.error("Unknown resource depletion level for the Blue Team")
+    match red_depletion_level:
+        case ResourceDepletionLevel.FULLY_RESTED.value:
+            logger.info("Red Team is fully rested")
+        case ResourceDepletionLevel.PARTIALLY_DEPLETED.value:
+            logger.info("Red Team is partially depleted")
+        case ResourceDepletionLevel.FULLY_DEPLETED.value:
+            logger.info("Red Team is fully depleted")
+        case _:
+            logger.error("Unknown resource depletion level for the Red Team")
     for blue_combatant in blue_team:
-        session.add_combatant(int(blue_combatant), Teams.Color.BLUE)
+        session.add_combatant(int(blue_combatant), Teams.Color.BLUE, ResourceDepletionLevel(blue_depletion_level))
     for red_combatant in red_team:
-        session.add_combatant(int(red_combatant), Teams.Color.RED)
+        session.add_combatant(int(red_combatant), Teams.Color.RED, ResourceDepletionLevel(red_depletion_level))
     session.set_num_simulations(1)
     try:
         result = session.simulate(parallel=False)

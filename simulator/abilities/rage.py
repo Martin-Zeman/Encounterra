@@ -15,12 +15,15 @@ from ..utils.roll_types import ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 
+
 class RageFactory(ThreatModifierFactory):
 
-    def __init__(self, combatant):
+    def __init__(self, combatant, resource):
+        super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_MODIFIER
         self.flags |= FactoryFlags.TARGETS_SELF
         self.combatant = combatant
+        self.resource = resource
         self.action_type = BonusAction.RAGE
 
     def __str__(self):
@@ -29,10 +32,8 @@ class RageFactory(ThreatModifierFactory):
         """
         return "RageFactory"
 
-
     def get_ability_name(self):
         return "Rage"
-
 
     @staticmethod
     def get_rage_bonus(level):

@@ -17,6 +17,7 @@ from ..effects.effect import EffectType
 from ..logging.custom_logger import CustomLogger
 from ..misc import DamageType, SavingThrow
 from ..conditions import Conditions, is_affected_by
+from ..resources import ResourceDepletionLevel
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
 from ..spells.sleep import SleepFactory
 from ..teams import Teams
@@ -875,7 +876,7 @@ def test_ray_of_enfeeblement(battle_map, teams, effect_tracker, test_totem_barba
     battle_map.build_adjacency_matrix()
     FULL_HP = 1000
     test_night_hag.curr_hp = FULL_HP  # Making sure she doesn't die
-    test_totem_barbarian.curr_rage_uses = 0
+    test_totem_barbarian.resources[0].deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)
 
     try:
         pre_roe_actoids = []
