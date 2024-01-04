@@ -32,6 +32,7 @@ from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
 from .effects.effect_tracker import EffectTracker
+from .resources import ResourceDepletionLevel
 from .utils.utils import get_combatant_classes
 from .battle_map import *
 from .round_manager import *
@@ -89,7 +90,7 @@ class Session:
         self.effect_tracker = data['effect_tracker']
         self.round_manager = data['round_manager']
 
-    def add_combatant(self, combatant_type, team):
+    def add_combatant(self, combatant_type, team, resource_depletion_level=ResourceDepletionLevel.FULLY_RESTED):
         if type(combatant_type) is not int:
             combatant_type = combatant_type.id  # we want to allow both kinds of calls
         try:
@@ -170,6 +171,7 @@ class Session:
                 logger.error(f"Unknown combatant type: {combatant_type}")
                 return
         self.character_type_counter[combatant_type] += 1
+        self.combatants[-1].deplete_resources(resource_depletion_level)
         self.teams.add_combatant_to_team(self.combatants[-1], team)
 
     def set_map_type(self):

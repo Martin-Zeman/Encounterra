@@ -9,6 +9,12 @@ from .conditions import Conditions, is_affected_by
 logger = logging.getLogger("Encounterra")
 
 
+class ResourceDepletionLevel(Enum):
+    FULLY_RESTED = 1
+    PARTIALLY_DEPLETED = 2
+    FULLY_DEPLETED = 3
+
+
 class ResourceRefreshType(Enum):
     LONG_REST = auto()
     SHORT_REST = auto()
@@ -17,11 +23,15 @@ class ResourceRefreshType(Enum):
 
 class Resource(ABC):
 
-    def __init__(self, refresh_type):
+    def __init__(self, refresh_type: ResourceRefreshType):
         self.refresh_type = refresh_type
 
     @abstractmethod
     def has_resource(self, **kwargs):
+        pass
+
+    @abstractmethod
+    def get_resource(self, **kwargs):
         pass
 
     @abstractmethod
@@ -40,6 +50,10 @@ class Resource(ABC):
     def import_resource(self, **kwargs):
         pass
 
+    @abstractmethod
+    def deplete_resource(self, level: ResourceDepletionLevel):
+        pass
+
 
 class Uses(Resource):
     def __init__(self, uses, refresh_type=ResourceRefreshType.LONG_REST):
@@ -49,6 +63,9 @@ class Uses(Resource):
 
     def has_resource(self, **kwargs):
         return self.curr_uses > 0
+
+    def get_resource(self, **kwargs):
+        return self.curr_uses
 
     def use_resource(self, **kwargs):
         self.curr_uses -= 1
@@ -64,6 +81,15 @@ class Uses(Resource):
             self.curr_uses = kwargs["uses"]
         except KeyError:
             logger.error("Invalid Uses import resource!")
+
+    def deplete_resource(self, level: ResourceDepletionLevel):
+        match level:
+            case ResourceDepletionLevel.FULLY_DEPLETED:
+                self.curr_uses = 0
+            case ResourceDepletionLevel.PARTIALLY_DEPLETED:
+                self.curr_uses = self.max_uses // 2
+            case _:
+                pass
 
 
 def use_resources(combatant, action):
@@ -122,7 +148,7 @@ def use_resources(combatant, action):
             case BonusAction.BONUS_MELEE_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK:
                 subject.ammo[action.factory.name] -= 1
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
-                subject.curr_rage_uses -= 1
+                action.factory.resource.use_resource()
             case BonusAction.MISTY_STEP:
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
@@ -189,13 +215,6 @@ def reset_resources(combatant):
     # Currently no dynamic resources for actions
     # for action in combatant.actions:
     #     pass
-
-    for bonus_action in combatant.bonus_action_factories:
-        match bonus_action[0]:
-            case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
-                combatant.curr_rage_uses = combatant.max_rage_uses
-            case _:
-                pass
 
     if hasattr(combatant, "curr_sorcery_points"):
         combatant.curr_sorcery_points = combatant.max_sorcery_points

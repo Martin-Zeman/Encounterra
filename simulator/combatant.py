@@ -22,6 +22,7 @@ from .abilities.rage import RageFactory
 from .actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKENED, TO_TWINNED
 from .actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
 from .proto_combatant import ProtoCombatant
+from .resources import ResourceDepletionLevel
 from .spellslots import spellslot_factory
 
 logger = logging.getLogger("Encounterra")
@@ -228,10 +229,14 @@ class Combatant(ProtoCombatant):
                 case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE \
                      | Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
                     factory = TO_FACTORY[action_type]
+                    try:
+                        suppress = kwargs.pop("suppress")
+                    except KeyError:
+                        suppress = False
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.action_factories[-1]
                     self.ammo[just_added[1].name] = just_added[1].ammo
-                    if "suppress" not in kwargs.keys():
+                    if not suppress:
                         self.display_abilities.append(just_added[1].name)
                     return just_added
                 case Action.GRAPPLE_ATTACK:
@@ -297,15 +302,12 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append(self.bonus_action_factories[-1][1].name)
                     return self.bonus_action_factories[-1]
                 case BonusAction.RAGE:
-                    self.max_rage_uses = RageFactory.get_rage_uses(self.level)
-                    self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case BonusAction.TOTEM_RAGE:
-                    self.max_rage_uses = RageFactory.get_rage_uses(self.level)
-                    self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    resource = kwargs.get("resource", None)
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case BonusAction.MISTY_STEP:
@@ -565,6 +567,10 @@ class Combatant(ProtoCombatant):
             if FactoryFlags.HAS_AMMO in f[1].flags:
                 self.ammo[f[1].name] = f[1].ammo
         self.one_time_ac_bonus = 0  # Not really needed
+
+    def deplete_resources(self, level: ResourceDepletionLevel):
+        for r in self.resources:
+            r.deplete_resource(level)
 
     @contextmanager
     def as_if_used_action_enabler(self, action):
