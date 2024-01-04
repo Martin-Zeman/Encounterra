@@ -174,7 +174,7 @@ class Combatant(ProtoCombatant):
                     #     logger.error("Unknown spellcasting resource type!")
                     #     return None
 
-                    self.display_abilities.append("Spellcasting")
+                    # self.display_abilities.append("Spellcasting")
                 case Passive.METAMAGIC:
                     self.curr_sorcery_points = kwargs["sorcery_points"]
                     self.max_sorcery_points = kwargs["sorcery_points"]
@@ -217,6 +217,8 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Dark Devotion")
                 case Passive.BLINDSIGHT:
                     self.display_abilities.append("Blindsight")
+                case Passive.ASSASSINATE:
+                    self.display_abilities.append("Assassinate")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -229,7 +231,8 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, factory(**kwargs, action_type=action_type)))
                     just_added = self.action_factories[-1]
                     self.ammo[just_added[1].name] = just_added[1].ammo
-                    self.display_abilities.append(just_added[1].name)
+                    if "suppress" not in kwargs.keys():
+                        self.display_abilities.append(just_added[1].name)
                     return just_added
                 case Action.GRAPPLE_ATTACK:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
@@ -261,12 +264,12 @@ class Combatant(ProtoCombatant):
                 case Action.WILDSHAPE:
                     self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
                     self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append("Wildshape")
                     # def wildshape_get(self):
                     #     return self if self.current_wildshape_form is None else self.current_wildshape_form
                     # self.get_current_form = wildshape_get.__get__(self, Combatant)
-                    return self.bonus_action_factories[-1]
+                    return self.action_factories[-1]
                 case Action.POUNCE:
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
@@ -291,24 +294,24 @@ class Combatant(ProtoCombatant):
                 case BonusAction.PAM_BONUS_ATTACK:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](**kwargs, action_type=action_type)))
                     self.pam_factory = self.bonus_action_factories[-1]
-                    self.display_abilities.append(self.action_factories[-1][1].name)
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].name)
                     return self.bonus_action_factories[-1]
                 case BonusAction.RAGE:
                     self.max_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case BonusAction.TOTEM_RAGE:
                     self.max_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.curr_rage_uses = RageFactory.get_rage_uses(self.level)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case BonusAction.MISTY_STEP:
                     resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case BonusAction.CUNNING_DISENGAGE | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))  # TODO
@@ -335,7 +338,7 @@ class Combatant(ProtoCombatant):
                     # def wildshape_get(self):
                     #     return self if self.current_wildshape_form is None else self.current_wildshape_form
                     # self.get_current_form = wildshape_get.__get__(self, Combatant)
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required
@@ -350,15 +353,15 @@ class Combatant(ProtoCombatant):
                 case Reaction.SHIELD:
                     resource = kwargs.get("resource", self.spellslots)
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    self.display_abilities.append(self.reaction_factories[-1][1].get_ability_name())
                     return self.reaction_factories[-1]
                 case Reaction.UNCANNY_DODGE:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](self)))
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                    self.display_abilities.append(self.reaction_factories[-1][1].get_ability_name())
                     return self.reaction_factories[-1]
                 case Reaction.PARRY:
                     self.reaction_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
-                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name() + f" : {kwargs['ac']}")
+                    self.display_abilities.append(self.reaction_factories[-1][1].get_ability_name() + f" : {kwargs['ac']}")
                     return self.reaction_factories[-1]
                 case _:
                     logger.error("Unknown reaction")

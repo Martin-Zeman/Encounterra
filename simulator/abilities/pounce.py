@@ -24,7 +24,6 @@ class PounceFactory(DirectThreatFactory):
         self.action_type = Action.POUNCE
         self.flags |= FactoryFlags.IS_MELEE
 
-
     def __str__(self):
         return "PounceFactory"
 

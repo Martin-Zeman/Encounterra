@@ -25,7 +25,6 @@ class ConstrictFactory(DirectThreatFactory):
         self.action_type = Action.CONSTRICT
         self.flags |= FactoryFlags.IS_MELEE
 
-
     def __str__(self):
         return "ConstrictFactory"
 

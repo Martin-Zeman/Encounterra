@@ -22,8 +22,8 @@ class SaberToothedTiger(Combatant):
         self.size = Size.LARGE
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="1d10", dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.pounce_claws = self.add_ability(Action.MELEE_ATTACK,  name="PounceClaws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, on_hit=[OnHitProne(SavingThrow.STR, 14)])
-        self.claws = self.add_ability(Action.POUNCE, combatant=self, primary_attack=self.pounce_claws, secondary_attack=self.bite, distance=4)
+        self.pounce_claws = self.add_ability(Action.MELEE_ATTACK,  name="PounceClaws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, on_hit=[OnHitProne(SavingThrow.STR, 14)], suppress=True)
+        self.pounce = self.add_ability(Action.POUNCE, combatant=self, primary_attack=self.pounce_claws, secondary_attack=self.bite, distance=4)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4

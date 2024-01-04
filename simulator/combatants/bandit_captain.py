@@ -34,7 +34,6 @@ class BanditCaptain(Combatant):
         self.acrobatics = 3
         self.passive_perception = 10
 
-
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_state('1')
@@ -45,7 +44,6 @@ class BanditCaptain(Combatant):
         self.attack_fsm.add_transition(str(self.dagger[1]), '2', 'nop')
         self.attack_fsm.add_transition(str(self.dagger_throw[1]), '0', '3')
         self.attack_fsm.add_transition(str(self.dagger_throw[1]), '3', 'nop')
-
 
     def export_resources(self):
         return {

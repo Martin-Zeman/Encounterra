@@ -21,7 +21,7 @@ class VampireSpawn(Combatant):
         self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=6, dmg_dice="2d4", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.bite = self.add_ability(Action.VAMPIRIC_BITE,  name="Bite", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,
                                      on_hit=[OnHitHpMaxReduceAndHeal('2d6', DamageType.Necrotic, 1, "Blood Drain")])
-        self.grapple = self.add_ability(Action.GRAPPLE_ATTACK, name="Claw Grapple", combatant=self, to_hit=6, attack_range=1, dc=13, follow_up_attack=self.bite[1])
+        self.grapple = self.add_ability(Action.GRAPPLE_ATTACK, name="Claws", combatant=self, to_hit=6, attack_range=1, dc=13, follow_up_attack=self.bite[1])
         self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=6, dmg_dice="2d4", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Passive.REGENERATION, hp=10, suppression_dmg_type=DamageType.Radiant)
         self.build_attack_fms()

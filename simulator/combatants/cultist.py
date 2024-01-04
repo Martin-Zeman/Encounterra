@@ -20,7 +20,7 @@ class Cultist(Combatant):
         super().__init__(num_or_name, hp=9, ac=12, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.add_ability(Passive.HEART_OF_HRUGGEK)
+        self.add_ability(Passive.DARK_DEVOTION)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 0
         self.saving_throws[SavingThrow.DEX] = 1
