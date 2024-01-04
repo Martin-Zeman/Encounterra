@@ -46,7 +46,6 @@ class RoundManager:
                     combatant.available_wildshape_forms = preallocate_wildshape_forms(combatant, Action.WILDSHAPE, af[1])
                     break
 
-
     def goes_before_in_initiative(self, combatant1, combatant2):
         return True if self.combatants.index(combatant1) < self.combatants.index(combatant2) else False
 
@@ -58,7 +57,6 @@ class RoundManager:
         for combatant in self.combatants:
             reset_resources(combatant)
         Map.get().reset(combatant_initial_positions)
-
 
     def simulate_n(self, n=1, result_queue=None):
         if n > 0:
@@ -134,6 +132,9 @@ class RoundManager:
                     self.effect_tracker.end_of_turn(combatant)
                     combatant.on_end_of_turn()
                     continue
+                if self.is_only_one_team_standing():
+                    done = True
+                    break  # The last remaining enemy could have died, we want to break before getting the next action
                 while True:
                     action = get_action(combatant)
                     if action is None:

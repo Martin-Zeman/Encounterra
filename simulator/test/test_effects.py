@@ -4,7 +4,7 @@ import numpy as np
 
 from ..abilities.totem_rage import TotemRageFactory
 from ..action_resolver import ActionResolver
-from ..actions.action_types import Action
+from ..actions.action_types import Action, BonusAction
 from ..conditions import is_affected_by, Conditions, is_affected_by_any, get_grappler
 from ..effects.effect import EffectType
 from ..effects.regeneration_effect import RegenerationEffect
@@ -129,7 +129,7 @@ def test_limited_duration_effect_self_target(battle_map, teams, effect_tracker, 
 
     battle_map.build_adjacency_matrix()
 
-    totem_rage_factory = TotemRageFactory(test_totem_barbarian, resource=test_totem_barbarian.resources[0])
+    totem_rage_factory = TotemRageFactory(test_totem_barbarian, resource=test_totem_barbarian.resources[BonusAction.TOTEM_RAGE])
     totem_rage = totem_rage_factory.create(test_totem_barbarian)
 
     try:

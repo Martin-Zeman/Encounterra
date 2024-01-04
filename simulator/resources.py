@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod, ABC
 from enum import Enum, auto
 
-from .actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction
+from .actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction, Passive
 from .battle_map import Map
 from .conditions import Conditions, is_affected_by
 
@@ -67,8 +67,8 @@ class Uses(Resource):
     def get_resource(self, **kwargs):
         return self.curr_uses
 
-    def use_resource(self, **kwargs):
-        self.curr_uses -= 1
+    def use_resource(self, uses=1, **kwargs):
+        self.curr_uses -= uses
 
     def reset(self):
         self.curr_uses = self.max_uses
@@ -123,11 +123,11 @@ def use_resources(combatant, action):
             case Action.TWINNED_HASTE:
                 action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.curr_sorcery_points -= 3
+                subject.resources[Passive.METAMAGIC].use_resource(3)
             case Action.TWINNED_HOLD_PERSON | Action.TWINNED_RAY_OF_ENFEEBLEMENT:
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.curr_sorcery_points -= 2
+                subject.resources[Passive.METAMAGIC].use_resource(2)
             case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS | Action.SLEEP:
                 action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
@@ -135,9 +135,9 @@ def use_resources(combatant, action):
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
-                subject.curr_sorcery_points -= 1
+                subject.resources[Passive.METAMAGIC].use_resource()
             case Action.WILDSHAPE:
-                subject.curr_wildshape_uses -= 1
+                subject.resources[Action.WILDSHAPE].use_resource()
             case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE:
                 pass  # Sufficiently tracked by not having an action anymore
             case _:
@@ -155,21 +155,21 @@ def use_resources(combatant, action):
             case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS | BonusAction.QUICKENED_SLEEP:
                 action.factory.resource.use_resource(level=1)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.curr_sorcery_points -= 2
+                subject.resources[Passive.METAMAGIC].use_resource(2)
             case BonusAction.QUICKENED_SCORCHING_RAY | BonusAction.QUICKENED_FLAMING_SPHERE | BonusAction.QUICKENED_HOLD_PERSON | BonusAction.QUICKENED_SPIKE_GROWTH | BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT:
                 action.factory.resource.use_resource(level=2)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.curr_sorcery_points -= 2
+                subject.resources[Passive.METAMAGIC].use_resource(2)
             case BonusAction.QUICKENED_FIREBALL | BonusAction.QUICKENED_HASTE | BonusAction.QUICKENED_HUNGER_OF_HADAR:
                 action.factory.resource.use_resource(level=3)
                 subject.already_cast_leveled_spell_this_turn = True
-                subject.curr_sorcery_points -= 2
+                subject.resources[Passive.METAMAGIC].use_resource(2)
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
-                subject.curr_sorcery_points -= 2
+                subject.resources[Passive.METAMAGIC].use_resource(2)
             case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
                 pass  # Sufficiently tracked by not having a bonus action anymore
             case BonusAction.MOON_WILDSHAPE:
-                subject.curr_wildshape_uses -= 1
+                subject.resources[Action.WILDSHAPE].use_resource()
             case _:
                 logger.error("Unknown bonus action type")
     elif isinstance(action_type, Reaction):
@@ -216,7 +216,7 @@ def reset_resources(combatant):
     # for action in combatant.actions:
     #     pass
 
-    if hasattr(combatant, "curr_sorcery_points"):
-        combatant.curr_sorcery_points = combatant.max_sorcery_points
+    # if hasattr(combatant, "curr_sorcery_points"):
+    #     combatant.curr_sorcery_points = combatant.max_sorcery_points
 
 

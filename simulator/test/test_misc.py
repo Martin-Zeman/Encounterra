@@ -5,9 +5,12 @@ import pytest
 
 from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver
+from ..actions.action_selector import get_action
 from ..actions.action_types import BonusAction, Action
 from ..battle_map import Map
 from ..combatants.giant_toad import GiantToad
+from ..conditions import is_affected_by, Conditions
+from ..effects.effect import EffectType
 from ..logging.custom_logger import CustomLogger
 from ..misc import DamageType
 from ..spells.flaming_sphere import FlamingSphereFactory
@@ -108,3 +111,68 @@ def test_map_position_toggled_cache(battle_map, teams, effect_tracker, test_gobl
     battle_map.move_combatant(test_goblin, np.array([8, 13]))
     threat_after = shortbow.calculate_threat()
     assert threat_before == threat_after
+
+
+def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
+    """
+    We assert that get_surviving_teams behaves correctly when the last combatant standing is a wildshaped druid who
+    just digested the last enemy
+    """
+    CustomLogger(logging.WARNING)
+
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([2, 2]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))
+    battle_map.build_adjacency_matrix()
+    combatants = [test_moon_druid, test_bugbear]
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    class DummyFactory:
+        def __init__(self):
+            self.combatant = None
+    class DummyEffect:
+        def __init__(self):
+            self.factory = DummyFactory()
+            self.initiator = test_moon_druid
+        def deactivate(self):
+            test_moon_druid.break_concentration()
+
+        def deactivate_for_combatant(self, combatant):
+            assert False
+
+        def is_affecting(self, combatant):
+            return False
+
+        def get_effect_type(self):
+            return EffectType.FAERIE_FIRE
+    dummy_effect = DummyEffect()
+    test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
+    battle_map.effect_tracker.add(dummy_effect)
+
+    try:
+        actoid1 = get_action(test_moon_druid)
+        assert test_moon_druid.curr_hp == 42
+        assert str(actoid1) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        action_resolver.resolve_action(actoid1, test_moon_druid)
+        assert test_moon_druid.get_current_form() is not test_moon_druid
+        assert test_moon_druid.current_wildshape_form is not None
+        assert test_moon_druid.get_current_form().curr_hp == 39
+        test_bugbear.curr_hp = 100  # Making sure it survives
+        test_bugbear.ac = 0  # Making sure the toad hits
+        test_moon_druid.new_turn()
+        actoid2 = get_action(test_moon_druid)
+        assert str(actoid2) == "Toad Bite on Bugbear 1"
+        action_resolver.resolve_action(actoid2, test_moon_druid)
+        test_moon_druid.new_turn()
+        actoid3 = get_action(test_moon_druid)
+        assert str(actoid3) == "Toad Bite and Swallow on Bugbear 1"
+        action_resolver.resolve_action(actoid3, test_moon_druid)
+        assert is_affected_by(test_bugbear, Conditions.SWALLOWED)
+        test_bugbear.curr_hp = 1  # Making sure digestion kills it
+        effect_tracker.start_of_turn(test_bugbear)
+        assert not test_bugbear.is_alive()
+        assert len(battle_map.teams.get_surviving_teams()) == 1
+    except Exception as e:
+        assert False, f"Exception occurred: {e}"

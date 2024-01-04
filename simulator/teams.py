@@ -30,7 +30,6 @@ class Teams:
             self.team_book[team_color] = [combatant]
         combatant.add_team(team_color)
 
-
     def replace_combatant(self, combatant_old, combatant_new):
         """
         Helper function for wildshape
@@ -40,13 +39,11 @@ class Teams:
         self.team_book[self.reverse_team_book[combatant_new]].remove(combatant_old)
         self.team_book[self.reverse_team_book[combatant_new]].append(combatant_new)
 
-
     def get_team_color_code(self, combatant):
         return str(self.reverse_team_book[combatant])
 
     def get_team_color(self, combatant):
         return self.reverse_team_book[combatant]
-
 
     def get_surviving_teams(self):
         return [name for name, combatants in self.team_book.items() if any(ch.is_alive() for ch in combatants)]

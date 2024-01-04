@@ -97,7 +97,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of the following types: np.array, action, bonus action
         """
-        if self.best_wildshape_plan_data is None and self.combatant.curr_wildshape_uses:
+        if self.best_wildshape_plan_data is None and self.combatant.resources[Action.WILDSHAPE].has_resource():
             ws_fsm, ws_transition_name_to_action = generate_wildshape_proto_dag(self.combatant)
             if ws_transition_name_to_action:  # Could be out of wildshape uses
                 ws_proto_dag, ws_movement_trans_to_coord_and_type, ws_transition_to_eligible_coords = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)

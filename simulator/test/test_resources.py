@@ -2,13 +2,14 @@ import logging
 
 import numpy as np
 
-from ..actions.action_types import Action
+from ..actions.action_types import Action, BonusAction, Passive
 from ..logging.custom_logger import CustomLogger
 from ..resources import use_resources, ResourceDepletionLevel
 from ..spells.fireball import FireballFactory
 from ..spells.firebolt import FireboltFactory
 from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, teams, effect_tracker, battle_map
+from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_moon_druid, teams, effect_tracker, battle_map
+
 
 def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
     CustomLogger(logging.WARNING)
@@ -76,31 +77,47 @@ def test_deplete_resource_spellslots(battle_map, teams, effect_tracker, test_dra
 
 def test_deplete_resource_uses(battle_map, teams, effect_tracker, test_totem_barbarian):
     CustomLogger(logging.WARNING)
-    assert test_totem_barbarian.resources[0].has_resource()
-    assert test_totem_barbarian.resources[0].get_resource() == 3
-    test_totem_barbarian.resources[0].use_resource()
-    assert test_totem_barbarian.resources[0].get_resource() == 2
-    test_totem_barbarian.resources[0].use_resource()
-    assert test_totem_barbarian.resources[0].get_resource() == 1
-    test_totem_barbarian.resources[0].use_resource()
-    assert test_totem_barbarian.resources[0].get_resource() == 0
-    assert not test_totem_barbarian.resources[0].has_resource()
-    test_totem_barbarian.resources[0].deplete_resource(ResourceDepletionLevel.PARTIALLY_DEPLETED)
-    assert test_totem_barbarian.resources[0].get_resource() == 1
-    test_totem_barbarian.resources[0].deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)
-    assert test_totem_barbarian.resources[0].get_resource() == 0
-    assert not test_totem_barbarian.resources[0].has_resource()
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].has_resource()
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 3
+    test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].use_resource()
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 2
+    test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].use_resource()
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 1
+    test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].use_resource()
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 0
+    assert not test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].has_resource()
+    test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].deplete_resource(ResourceDepletionLevel.PARTIALLY_DEPLETED)
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 1
+    test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 0
+    assert not test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].has_resource()
 
 
-def test_deplete_resources_uses_on_combatant(battle_map, teams, effect_tracker, test_totem_barbarian):
+def test_deplete_resources_uses_on_combatant(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid, test_draconic_sorcerer_5lvl):
     CustomLogger(logging.WARNING)
-    assert test_totem_barbarian.resources[0].has_resource()
-    assert test_totem_barbarian.resources[0].get_resource() == 3
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].has_resource()
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 3
     test_totem_barbarian.deplete_resources(ResourceDepletionLevel.PARTIALLY_DEPLETED)
-    assert test_totem_barbarian.resources[0].get_resource() == 1
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 1
     test_totem_barbarian.deplete_resources(ResourceDepletionLevel.FULLY_DEPLETED)
-    assert test_totem_barbarian.resources[0].get_resource() == 0
-    assert not test_totem_barbarian.resources[0].has_resource()
+    assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 0
+    assert not test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].has_resource()
+
+    assert test_moon_druid.resources[Action.WILDSHAPE].has_resource()
+    assert test_moon_druid.resources[Action.WILDSHAPE].get_resource() == 2
+    test_moon_druid.deplete_resources(ResourceDepletionLevel.PARTIALLY_DEPLETED)
+    assert test_moon_druid.resources[Action.WILDSHAPE].get_resource() == 1
+    test_moon_druid.deplete_resources(ResourceDepletionLevel.FULLY_DEPLETED)
+    assert test_moon_druid.resources[Action.WILDSHAPE].get_resource() == 0
+    assert not test_moon_druid.resources[Action.WILDSHAPE].has_resource()
+
+    assert test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].has_resource()
+    assert test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].get_resource() == 5
+    test_draconic_sorcerer_5lvl.deplete_resources(ResourceDepletionLevel.PARTIALLY_DEPLETED)
+    assert test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].get_resource() == 2
+    test_draconic_sorcerer_5lvl.deplete_resources(ResourceDepletionLevel.FULLY_DEPLETED)
+    assert test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].get_resource() == 0
+    assert not test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].has_resource()
 
 
 def test_deplete_resources_on_combatant_with_no_resources(battle_map, teams, effect_tracker, test_goblin):

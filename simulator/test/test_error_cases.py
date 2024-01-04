@@ -8,7 +8,7 @@ import pickle
 
 from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver
-from ..actions.action_types import BonusAction, Action
+from ..actions.action_types import BonusAction, Action, Passive
 from ..actions.movement import MovementIncrement
 from ..battle_map import Terrain, Map
 from ..combatants.giant_toad import GiantToad
@@ -474,7 +474,7 @@ def test_error_case_10(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
-    test_draconic_sorcerer_5lvl.curr_sorcery_points -= 4
+    test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].use_resource(4)
 
     try:
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
@@ -525,11 +525,11 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     battle_map.set_combatant_coordinates(combatant8, np.array([3, 10]))
     battle_map.build_adjacency_matrix()
 
-    test_totem_barbarian.resources[0].use_resource()
+    test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].use_resource()
     test_ogre.curr_hp -= 32
     combatant7.curr_hp -= 4
     combatant7.spellslots.use_resource(level=3)
-    combatant7.curr_sorcery_points -= 5
+    combatant7.resources[Passive.METAMAGIC].use_resource(5)
 
     try:
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
@@ -570,7 +570,7 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
-    test_draconic_sorcerer_5lvl.curr_sorcery_points -= 5
+    test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].use_resource(5)
     apply_condition(test_draconic_sorcerer_5lvl, Condition(Conditions.PRONE, test_stone_giant))
 
     test_stone_giant.ammo[test_stone_giant.rock[1].name] = 0
@@ -614,7 +614,7 @@ def test_error_case_13(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
-    test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
+    test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].use_resource(5)
 
     try:
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
@@ -657,7 +657,7 @@ def test_error_case_14(battle_map, teams, effect_tracker, test_draconic_sorcerer
 
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
-    test_draconic_sorcerer_5lvl.curr_sorcery_points = 2
+    test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].use_resource(2)
 
     try:
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
@@ -700,7 +700,7 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=1)
-    test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
+    test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].use_resource(5)
 
     try:
         actoid1 = get_action(test_draconic_sorcerer_5lvl)
@@ -743,7 +743,7 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
 
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
-    test_draconic_sorcerer_5lvl.curr_sorcery_points = 0
+    test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].use_resource(5)
     apply_condition(test_draconic_sorcerer_5lvl, Condition(Conditions.PRONE, test_stone_giant))
 
     try:
@@ -1322,12 +1322,12 @@ def unify_combatants(session, battle_map):
 #     'NoneType' object is not iterable
 #     """
 #     CustomLogger(logging.WARNING)
-#     with open('simulator/test/serialized_objects/battle_map_data_1703935141.pkl', 'rb') as f:
+#     with open('simulator/test/serialized_objects/battle_map_data_1704372003.pkl', 'rb') as f:
 #         map_data = pickle.load(f)
 #         Map.deserialize_data(map_data)
 #
 #     # Load the session
-#     with open('simulator/test/serialized_objects/session_1703935141.pkl', 'rb') as f:
+#     with open('simulator/test/serialized_objects/session_1704372003.pkl', 'rb') as f:
 #         session_data = pickle.load(f)
 #         session = Session()
 #         session.deserialize_data(session_data)

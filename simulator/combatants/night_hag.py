@@ -26,9 +26,9 @@ class NightHag(Combatant):
         ray_of_enfeeblement_two_uses = Uses(2, ResourceRefreshType.LONG_REST)
         sleep_two_uses = Uses(2, ResourceRefreshType.LONG_REST)
         inf_uses = Uses(math.inf, ResourceRefreshType.LONG_REST)
-        self.resources.append(ray_of_enfeeblement_two_uses)
-        self.resources.append(sleep_two_uses)
-        self.resources.append(inf_uses)
+        self.resources[Action.RAY_OF_ENFEEBLEMENT] = ray_of_enfeeblement_two_uses
+        self.resources[Action.SLEEP] = sleep_two_uses
+        self.resources[Action.MAGIC_MISSILE] = inf_uses
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPECIAL)
         self.add_ability(Passive.MAGIC_RESISTANCE)
         self.add_ability(Action.MAGIC_MISSILE, resource=inf_uses)
@@ -60,7 +60,7 @@ class NightHag(Combatant):
     def export_resources(self):
         return {
             'movement': self.movement,
-            'resources': [r.export_resource() for r in self.resources],
+            'resources': {k: v.export_resource() for k, v in self.resources.items()},
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
@@ -70,8 +70,8 @@ class NightHag(Combatant):
 
     def import_resources(self, resources):
         self.movement = resources['movement']
-        for idx, r in enumerate(resources['resources']):
-            self.resources[idx].import_resource(uses=r)
+        for k, v in self.resources.items():
+            v.import_resource(uses=resources['resources'][k])
         self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']

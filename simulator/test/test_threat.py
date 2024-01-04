@@ -56,6 +56,7 @@ def test_get_path_to_combatant_medium_to_medium_one_partial_spike_growth(battle_
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(5 * -5.0 - 2.649 * DZ_CONSTANT, 0.001)
 
+
 def test_get_path_to_combatant_large_to_medium_one_aoe(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, effect_tracker):
     """
     Make it so that the large combatant is only hit by the AoE due to its size. The moving combatant is of size large. Make sure the
@@ -118,6 +119,7 @@ def test_get_path_to_combatant_medium_to_medium_two_overlapping_aoe(battle_map, 
     accumulate_threat_along_path.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(-20.0 - 2.649 * DZ_CONSTANT, 0.0001)
+
 
 def test_get_path_to_combatant_large_to_medium_two_overlapping_aoe(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, effect_tracker):
     """
@@ -280,6 +282,7 @@ def test_get_path_to_coord_large_stepping_away_from_huge_aoo(battle_map, teams, 
     accumulate_threat_along_path.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-2.649 * DZ_CONSTANT, 0.001)
+
 
 def test_get_path_to_cord_large_stepping_away_from_two_medium_aoo(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, effect_tracker):
     """
@@ -471,6 +474,7 @@ def test_ranged_spell_with_enemy_adjacent(battle_map, teams, effect_tracker, tes
     firebolt.clear_cache()
     threat_no_enemy_adjacent = firebolt.calculate_threat()
     assert threat_no_enemy_adjacent > threat_enemy_adjacent
+
 
 def test_ranged_attack_with_enemy_adjacent(battle_map, teams, effect_tracker, test_goblin, test_bugbear):
     """

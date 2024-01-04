@@ -57,7 +57,6 @@ class MoonDruid5Lvl(Combatant):
 
     def reset(self):
         super().reset()
-        self.curr_wildshape_uses = self.max_wildshape_uses
         for ws in self.available_wildshape_forms:
             ws.form.reset()
 
@@ -78,7 +77,7 @@ class MoonDruid5Lvl(Combatant):
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
             'attack_state_machine': self.attack_fsm.state,
-            'curr_wildshape_uses':  self.curr_wildshape_uses
+            'wildshape_uses':  self.resources[Action.WILDSHAPE].export_resource()
         }
 
     def import_resources(self, resources):
@@ -89,7 +88,7 @@ class MoonDruid5Lvl(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
-        self.curr_wildshape_uses = resources['curr_wildshape_uses']
+        self.resources[Action.WILDSHAPE].import_resource(uses=resources['wildshape_uses'])
 
     @cache
     def get_dijkstra_from_cache(self):

@@ -59,15 +59,13 @@ class GiantToad(Combatant):
     def on_die(self):
         if self.swallowed_target:
             logger.info(f"{self.swallowed_target} is spat out and no longer swallowed", extra={"team": self.team_color})
-            remove_all_conditions_of_type(self.swallowed_target, Conditions.SWALLOWED)  # This should remmove all the accompanying conditions too
+            remove_all_conditions_of_type(self.swallowed_target, Conditions.SWALLOWED)  # This should remove all the accompanying conditions too
             if self.swallowed_target.is_alive():
                 battle_map = Map.get()
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(self.swallowed_target, EffectType.DIGESTION)
                 free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
-                                                              None,
                                                               inflate_to_dist=self.swallowed_target.size.value,
                                                               rng=1, combatant=self.swallowed_target)
-                self.swallowed_target = None
                 if not free_coords:
                     logger.error("No space around the dead Giant Toad to spit out the swallowed combatant")
                     return

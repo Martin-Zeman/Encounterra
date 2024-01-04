@@ -993,7 +993,6 @@ class Map:
         ret.append(tuple(self.get_combatant_position(combatant).get()[0]))
         return ret
 
-
     def get_adjacent_coords(self, coords: Coords):
         """
         Returns accessible squares adjacent to a given coordinate
@@ -1030,7 +1029,6 @@ class Map:
         adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance_coords(coord, my_location.get()))
         return adjacent_coords[0][0]
 
-
     def calc_dijkstra(self, combatant):
         """
         Calculates the Dijkstra algorithm for a given combatant. Currently used only for testing
@@ -1041,7 +1039,6 @@ class Map:
         mask = self.build_combatant_adjacency_mask(combatant)
         distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
         return distances, shortest_paths
-
 
     def get_path_to_combatant(self, combatant, target, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
         """
@@ -1092,7 +1089,6 @@ class Map:
             self.printDijkstra(distances, my_location.get(), np.array([target_coord]), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
-
     def get_effect_path_to_coord(self, current_coord, target_coord, shortest_paths):
         """
         Similar to get_path_to_coord but for moving effects such as a spiritual weapon or flaming sphere
@@ -1103,7 +1099,6 @@ class Map:
         """
         return reconstruct_from_shortest_path(shortest_paths, current_coord, target_coord)
 
-
     def get_combatant_position(self, combatant):
         try:
             if not combatant.is_swallowed[0]:
@@ -1113,8 +1108,6 @@ class Map:
         except KeyError as e:
             # logger.error(f"Combatant doesn't exist {e}")
             return None
-
-
 
     def remove_combatant(self, combatant):
         """
@@ -1394,8 +1387,11 @@ class Map:
         :param coords: theoretical root coordinate for combatant
         :return: dict mapping enemy -> Visibility
         """
-        combatant_coords = Coords(coords, combatant.size)
-        ret = {e: self.get_visibility(combatant_coords, self.get_combatant_position(e)) for e in self.get_combatants(combatant)}
+        if not get_swallower(combatant):
+            combatant_coords = Coords(coords, combatant.size)
+            ret = {e: self.get_visibility(combatant_coords, self.get_combatant_position(e)) for e in self.get_combatants(combatant)}
+        else:
+            ret = {e: Visibility.NONE for e in self.get_combatants(combatant)}
         ret[combatant] = Visibility.FULL
         return ret
 

@@ -22,7 +22,7 @@ from .abilities.rage import RageFactory
 from .actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKENED, TO_TWINNED
 from .actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
 from .proto_combatant import ProtoCombatant
-from .resources import ResourceDepletionLevel
+from .resources import ResourceDepletionLevel, Uses, ResourceRefreshType
 from .spellslots import spellslot_factory
 
 logger = logging.getLogger("Encounterra")
@@ -65,7 +65,7 @@ class Combatant(ProtoCombatant):
         self.has_bonus_action = True
         self.has_reaction = True
         self.has_haste_action = False
-        self.resources = []
+        self.resources = dict()
         self.speed = speed // 5
         self.movement = speed // 5
         self.ammo = {}  # Dict of type Attack Factory Name -> current ammo, TODO: Unify with resources
@@ -177,8 +177,8 @@ class Combatant(ProtoCombatant):
 
                     # self.display_abilities.append("Spellcasting")
                 case Passive.METAMAGIC:
-                    self.curr_sorcery_points = kwargs["sorcery_points"]
-                    self.max_sorcery_points = kwargs["sorcery_points"]
+                    sorcery_points = Uses(self.level, ResourceRefreshType.LONG_REST)
+                    self.resources[Passive.METAMAGIC] = sorcery_points
                     self.display_abilities.append("Metamagic")
                 case Passive.PACK_TACTICS:
                     self.has_pack_tactics = True
@@ -267,8 +267,8 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))
                     return self.action_factories[-1]
                 case Action.WILDSHAPE:
-                    self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
-                    self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
+                    wildshape_uses = Uses(TO_FACTORY[action_type].get_wildshape_uses(self.level), ResourceRefreshType.SHORT_REST)
+                    self.resources[Action.WILDSHAPE] = wildshape_uses
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append("Wildshape")
                     # def wildshape_get(self):
@@ -334,8 +334,8 @@ class Combatant(ProtoCombatant):
                         (action_type, TO_FACTORY[action_type](action_type, self, resource)))
                     return self.bonus_action_factories[-1]
                 case BonusAction.MOON_WILDSHAPE:
-                    self.max_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
-                    self.curr_wildshape_uses = TO_FACTORY[action_type].get_wildshape_uses(self.level)
+                    wildshape_uses = Uses(TO_FACTORY[action_type].get_wildshape_uses(self.level), ResourceRefreshType.SHORT_REST)
+                    self.resources[Action.WILDSHAPE] = wildshape_uses  # Yes, this is WILDSHAPE on purpose, it makes resource management easier
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, action_type)))
                     # def wildshape_get(self):
                     #     return self if self.current_wildshape_form is None else self.current_wildshape_form
@@ -547,7 +547,7 @@ class Combatant(ProtoCombatant):
         self.is_dodging = False
         if self.spellslots:
             self.spellslots.reset()
-        for r in self.resources:
+        for r in self.resources.values():
             r.reset()
         self.already_cast_leveled_spell_this_turn = False
         if self.shield_spell_active:
@@ -569,7 +569,7 @@ class Combatant(ProtoCombatant):
         self.one_time_ac_bonus = 0  # Not really needed
 
     def deplete_resources(self, level: ResourceDepletionLevel):
-        for r in self.resources:
+        for r in self.resources.values():
             r.deplete_resource(level)
 
     @contextmanager

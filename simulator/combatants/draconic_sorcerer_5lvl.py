@@ -1,6 +1,7 @@
 import copy
 
 from ..actions.action_types import Action, BonusAction, Reaction, Passive, MetaAction
+from ..resources import ResourceRefreshType, Uses
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, get_factory_of_type, SavingThrow, Class, SpellcastingResourceType
@@ -30,7 +31,7 @@ class DraconicSorcerer5Lvl(Combatant):
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.SCORCHING_RAY)
         self.add_ability(Reaction.SHIELD)
-        self.add_ability(Passive.METAMAGIC, sorcery_points=self.level)
+        self.add_ability(Passive.METAMAGIC)
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.add_ability(Action.HOLD_PERSON)
@@ -56,7 +57,7 @@ class DraconicSorcerer5Lvl(Combatant):
         return {
             'movement': self.movement,
             'spellslots': self.spellslots.export_resource(),
-            'sorcery_points': self.curr_sorcery_points,
+            'sorcery_points': self.resources[Passive.METAMAGIC].export_resource(),
             'cast_leveled_spell': self.already_cast_leveled_spell_this_turn,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
@@ -67,7 +68,7 @@ class DraconicSorcerer5Lvl(Combatant):
     def import_resources(self, resources):
         self.movement = resources['movement']
         self.spellslots.import_resource(spellslots=resources['spellslots'])
-        self.curr_sorcery_points = resources['sorcery_points']
+        self.resources[Passive.METAMAGIC].import_resource(uses=resources['sorcery_points'])
         self.already_cast_leveled_spell_this_turn = resources['cast_leveled_spell']
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']

@@ -22,7 +22,7 @@ class TotemBarbarian5Lvl(Combatant):
         self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=7, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, uses_dex=False)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         rage_uses = Uses(RageFactory.get_rage_uses(self.level), ResourceRefreshType.LONG_REST)
-        self.resources.append(rage_uses)
+        self.resources[BonusAction.TOTEM_RAGE] = rage_uses
         self.add_ability(BonusAction.TOTEM_RAGE, resource=rage_uses)
         self.add_ability(Passive.DANGER_SENSE)
         self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
@@ -54,7 +54,7 @@ class TotemBarbarian5Lvl(Combatant):
             'movement': self.movement,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
-            'resources': [r.export_resource() for r in self.resources],
+            'totem_rage_uses': self.resources[BonusAction.TOTEM_RAGE].export_resource(),
             'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state
         }
@@ -64,8 +64,7 @@ class TotemBarbarian5Lvl(Combatant):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
-        for idx, r in enumerate(resources['resources']):
-            self.resources[idx].import_resource(uses=r)
+        self.resources[BonusAction.TOTEM_RAGE].import_resource(uses=resources['totem_rage_uses'])
         self.attack_fsm.state = resources['attack_fsm_state']
 
     def prompt_aoo(self, moving_combatant):
