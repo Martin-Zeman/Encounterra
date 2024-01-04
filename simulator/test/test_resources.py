@@ -3,8 +3,11 @@ import logging
 import numpy as np
 
 from ..actions.action_types import Action, BonusAction, Passive
+from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
 from ..logging.custom_logger import CustomLogger
 from ..resources import use_resources, ResourceDepletionLevel
+from ..session import Session
 from ..spells.fireball import FireballFactory
 from ..spells.firebolt import FireboltFactory
 from ..teams import Teams
@@ -127,3 +130,14 @@ def test_deplete_resources_on_combatant_with_no_resources(battle_map, teams, eff
         test_goblin.deplete_resources(ResourceDepletionLevel.FULLY_DEPLETED)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+
+def test_resource_depletion_on_session(battle_map, teams, effect_tracker, test_totem_barbarian):
+    session = Session()
+    session.add_combatant(DraconicSorcerer5Lvl.id, Teams.Color.BLUE, ResourceDepletionLevel.FULLY_DEPLETED)
+    session.add_combatant(MoonDruid5Lvl.id, Teams.Color.RED, ResourceDepletionLevel.PARTIALLY_DEPLETED)
+    assert session.combatants[0].spellslots.get_resource(level=3) == 0
+    assert session.combatants[0].spellslots.get_resource(level=2) == 0
+    assert session.combatants[0].spellslots.get_resource(level=1) == 0
+    assert not session.combatants[0].resources[Passive.METAMAGIC].has_resource()
+    assert session.combatants[1].resources[Action.WILDSHAPE].get_resource() == 1

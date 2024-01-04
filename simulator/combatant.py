@@ -165,6 +165,7 @@ class Combatant(ProtoCombatant):
                             self.spellslots = spellslot_factory(spellslot_cls, self.level)
                         else:
                             self.spellslots = spellslot_factory(type(self).cls, self.level)
+                        self.resources[Passive.SPELLCASTING] = self.spellslots  # TODO remove the above
                     # elif spell_resource_type is SpellcastingResourceType.SPECIAL:
                     #     resource = kwargs.get('resource', None)
                     #     if not resource:
