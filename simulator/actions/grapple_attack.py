@@ -55,8 +55,8 @@ class GrappleAttackFactory(DirectThreatFactory):
         for target in targets:
             if s_affected_by_any(target, Conditions.INCAPACITATED, Conditions.RESTRAINED):
                 continue  # TODO: This is specific to Vampire Spawn, consider removing it
-            p_hit = calc_p_hit(self.follow_up_attack.factory.to_hit, target.ac)
-            max_threat = max(max_threat, p_hit * self.follow_up_attack.factory.calculate_threat_to_target(target))
+            p_hit = calc_p_hit(self.follow_up_attack.to_hit, target.ac)
+            max_threat = max(max_threat, p_hit * self.follow_up_attack.calculate_threat_to_target(target))
         return max_threat
 
     def calculate_threat_to_target(self, target, **kwargs):
