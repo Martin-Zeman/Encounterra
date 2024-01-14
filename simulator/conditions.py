@@ -26,6 +26,9 @@ class Conditions(Flag):
     AWAKENED_BY_DMG = auto()  # Meta-Condition
     CAN_BE_SHAKEN_AWAKE = auto()  # Meta-Condition
 
+    def __reduce_ex__(self, proto):
+        return self.__class__, (self.value,)
+
 
 class Condition:
     def __init__(self, conditions, initiator, effect=None, target=None):

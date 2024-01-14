@@ -99,9 +99,9 @@ def handler(event, context):
                 pickle.dump(session.serialize_data(), f)
             with open(exception_data_path, 'w') as f:
                 f.write(f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception:\n{e}")
-            s3.upload_file(battle_map_data_path, crash_bucket_name, battle_map_data)
-            s3.upload_file(session_data_path, crash_bucket_name, session_data)
-            s3.upload_file(exception_data_path, crash_bucket_name, exception_data)
+            s3.upload_file(battle_map_data_path, crash_bucket_name, f"{job_id}/" + battle_map_data)
+            s3.upload_file(session_data_path, crash_bucket_name, f"{job_id}/" + session_data)
+            s3.upload_file(exception_data_path, crash_bucket_name, f"{job_id}/" + exception_data)
         except Exception as serialization_e:
             logger.error(f"Failed to serialize and upload objects: {serialization_e}")
         exit(1)
