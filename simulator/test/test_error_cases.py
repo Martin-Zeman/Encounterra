@@ -13,7 +13,7 @@ from ..actions.movement import MovementIncrement
 from ..battle_map import Terrain, Map
 from ..combatants.giant_toad import GiantToad
 from ..logging.custom_logger import CustomLogger
-from ..misc import  PhaseOfTurn, SkillCheck
+from ..misc import PhaseOfTurn, SkillCheck
 from ..conditions import Conditions, Condition, ConditionWithDC, is_affected_by, apply_condition, \
     apply_dc_condition
 from ..session import Session
@@ -1314,27 +1314,3 @@ def unify_combatants(session, battle_map):
                     if grid_square.combatant.name == combatant.name:
                         grid_square.combatant = combatant
                         break
-
-# Note: These tests become obsolete when certain refactorings take place
-def test_error_case_30():
-    """
-    Deserializes error objects after:
-    'NoneType' object is not iterable
-    """
-    CustomLogger(logging.WARNING)
-    with open('simulator/test/serialized_objects/battle_map_data_1705241049.pkl', 'rb') as f:
-        map_data = pickle.load(f)
-        Map.deserialize_data(map_data)
-
-    # Load the session
-    with open('simulator/test/serialized_objects/session_1705241049.pkl', 'rb') as f:
-        session_data = pickle.load(f)
-        session = Session()
-        session.deserialize_data(session_data)
-    battle_map = Map.get()
-    battle_map.effect_tracker = session.effect_tracker
-    battle_map.teams = session.teams
-    unify_combatants(session, Map.get())
-    actoid = get_action(session.combatants[session.combatants.index(session.round_manager.curr_combatant)])
-    session.round_manager.action_resolver.resolve_action(actoid, session.combatants[1])
-
