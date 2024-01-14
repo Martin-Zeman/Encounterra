@@ -35,14 +35,12 @@ class StoneGiant(Combatant):
         self.acrobatics = 2
         self.passive_perception = 14
 
-
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_state('1')
         self.attack_fsm.add_transition(str(self.club[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.club[1]), '1', 'nop')
         self.attack_fsm.add_transition(str(self.rock[1]), '0', 'nop')
-
 
     def export_resources(self):
         return {
@@ -61,7 +59,6 @@ class StoneGiant(Combatant):
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_fsm_state'])
         self.ammo = resources['ammo']
-
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

@@ -105,7 +105,7 @@ class Combatant(ProtoCombatant):
         self.to_hit_dice_mod = []
         self.shortest_paths_cache = None
         self.wears_metal = False
-        self.is_humanoid = type(self).cls is not Class.MONSTER or type(self).cls is Class.MONSTER.HUMANOID
+        self.is_humanoid = type(type(self).cls) is not Class.MONSTER or type(self).cls is Class.MONSTER.HUMANOID
         self.constricted_target = None
         self.swallowed_target = None
         self.is_swallowed = [False, None]  # [if swallowed, by whom]
