@@ -102,38 +102,44 @@ def update_credits(user_id: str, credits_to_deduct: int):
         raise
 
 
-def zip_s3_bucket_objects_and_get_presigned_url(bucket_name, job_id, aggregated_stats_path):
+def zip_s3_bucket_objects_and_get_presigned_url(bckt_name, job_id, aggr_stats_path):
     # Define the local zip path and the s3 zip object key
     local_zip_path = "/tmp/results.zip"
     s3_zip_object_key = f"{job_id}/results.zip"
 
     # List all objects under the specified prefix
-    objects = s3.list_objects_v2(Bucket=bucket_name, Prefix=job_id)
+    objects = s3.list_objects_v2(Bucket=bckt_name, Prefix=job_id)
 
     # Create a zip file and add the S3 objects to it
     with zipfile.ZipFile(local_zip_path, 'w') as zf:
-        zf.write(aggregated_stats_path, os.path.basename(aggregated_stats_path))
+        # Add aggregated statistics file without iteration number
+        zf.write(aggr_stats_path, arcname=os.path.basename(aggr_stats_path))
+
         for obj in objects.get('Contents', []):
             object_key = obj['Key']
             local_file_path = f"/tmp/{os.path.basename(object_key)}"
 
-            # Download the object to a local file
-            s3.download_file(bucket_name, object_key, local_file_path)
+            # Extract iteration number from object key (assuming the format 'iteration_number/filename')
+            iteration_number = object_key.split('/')[1]  # Adjust index based on your object key format
 
-            # Add the object to the zip file with its relative path
-            zf.write(local_file_path, object_key[len(job_id) + 1:])
+            # Download the object to a local file
+            s3.download_file(bckt_name, object_key, local_file_path)
+
+            # Add the object to the zip file with iteration number prepended to its filename
+            modified_filename = f"{iteration_number}_{os.path.basename(object_key)}"
+            zf.write(local_file_path, arcname=modified_filename)
 
             # Optional: remove the temporary local file after adding to zip (to free up space)
             os.remove(local_file_path)
 
     # Upload the zip file to S3
-    s3.upload_file(local_zip_path, bucket_name, s3_zip_object_key)
+    s3.upload_file(local_zip_path, bckt_name, s3_zip_object_key)
 
     # Generate a presigned URL for the zip file
     s3_url = s3.generate_presigned_url(
         'get_object',
         Params={
-            'Bucket': bucket_name,
+            'Bucket': bckt_name,
             'Key': s3_zip_object_key
         },
         ExpiresIn=86400
