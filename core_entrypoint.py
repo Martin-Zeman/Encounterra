@@ -86,6 +86,7 @@ def handler(event, context):
         logger.error(f"{job_id}:{index} FAILURE: {e}")
         try:
             timestamp = int(time.time())
+            logger.info(f"Serializing error with timestamp: {timestamp}")
             battle_map_data = f'battle_map_data_{timestamp}.pkl'
             battle_map_data_path = '/tmp/' + battle_map_data
             session_data = f'session_{timestamp}.pkl'
