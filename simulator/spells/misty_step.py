@@ -14,6 +14,7 @@ from ..factory_interfaces import Factory
 
 logger = logging.getLogger("Encounterra")
 
+
 class MistyStepFactory(Factory):
     level = 2
     range = SpellStats.Range.FEET_30.value
@@ -46,9 +47,11 @@ class MistyStepFactory(Factory):
             return []  # Can't see while being swallowed
         return [(0, 0)]
         # battle_map = Map.get()
-        # # TODO Add visibility
+        # # # TODO Add visibility
         # return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatant),
-        #                                                      rng=MistyStepFactory.range)
+        #                                                          distances,
+        #                                                          inflate_to_dist=self.combatant.size.value,
+        #                                                          rng=MistyStepFactory.range)
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -56,7 +59,6 @@ class MistyStepFactory(Factory):
 
     def create(self, coord):
         return MistyStep(coord, self)
-
 
 
 class MistyStep(Actoid, Threat):

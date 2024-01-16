@@ -6,6 +6,7 @@ import pytest
 import pickle
 
 from ..battle_map import Map
+from ..combatants.berserker import Berserker
 from ..combatants.brown_bear import BrownBear
 from ..combatants.bugbear import Bugbear
 from ..combatants.dire_wolf import DireWolf

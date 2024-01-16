@@ -1,3 +1,6 @@
+import pickle
+import time
+
 from simulator.logging.custom_logger import CustomLogger
 from simulator.misc import Statistics
 from simulator.resources import ResourceDepletionLevel
@@ -12,7 +15,8 @@ import os
 
 dynamodb = boto3.client('dynamodb', region_name='eu-west-1')  # TODO remove the region
 s3 = boto3.client('s3')
-bucket_name = "encounterra-simulation-results"
+results_bucket_name = "encounterra-simulation-results"
+crash_bucket_name = "encounterra-simulation-crashes"
 local_log_file_path = "/tmp/log.txt"
 
 
@@ -66,7 +70,7 @@ def handler(event, context):
         blue_victory = result[Teams.Color.BLUE][Statistics.VICTORIES]
 
         s3_object_key = subdirectory + f'{"blue" if blue_victory == 1 else "red"}_victory_log.txt'
-        s3.upload_file(local_log_file_path, bucket_name, s3_object_key)
+        s3.upload_file(local_log_file_path, results_bucket_name, s3_object_key)
         # logger.info(f"{job_id}:{index} SUCCESS")
         return {
             'blue_victory': result[Teams.Color.BLUE][Statistics.VICTORIES],
@@ -80,4 +84,24 @@ def handler(event, context):
         }
     except Exception as e:
         logger.error(f"{job_id}:{index} FAILURE: {e}")
+        try:
+            timestamp = int(time.time())
+            logger.info(f"Serializing error with timestamp: {timestamp}")
+            battle_map_data = f'battle_map_data_{timestamp}.pkl'
+            battle_map_data_path = '/tmp/' + battle_map_data
+            session_data = f'session_{timestamp}.pkl'
+            session_data_path = '/tmp/' + session_data
+            exception_data = f'exception_{timestamp}.txt'
+            exception_data_path = '/tmp/' + exception_data
+            with open(battle_map_data_path, 'wb') as f:
+                pickle.dump(Map.serialize_data(), f)
+            with open(session_data_path, 'wb') as f:
+                pickle.dump(session.serialize_data(), f)
+            with open(exception_data_path, 'w') as f:
+                f.write(f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception:\n{e}")
+            s3.upload_file(battle_map_data_path, crash_bucket_name, f"{job_id}/" + battle_map_data)
+            s3.upload_file(session_data_path, crash_bucket_name, f"{job_id}/" + session_data)
+            s3.upload_file(exception_data_path, crash_bucket_name, f"{job_id}/" + exception_data)
+        except Exception as serialization_e:
+            logger.error(f"Failed to serialize and upload objects: {serialization_e}")
         exit(1)
