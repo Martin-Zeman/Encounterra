@@ -182,8 +182,11 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         acc = 0
+        battle_map = Map.get()
         for combatant in self.combatants:
-            acc += self.factory.calculate_threat_to_target(combatant)
+            threat = self.factory.calculate_threat_to_target(combatant)
+            # Discourage self-targeting
+            acc += threat * (1 if battle_map.teams.are_enemies(self.factory.combatant, combatant) else -4 if combatant.is_alive() else 0)
         return acc
 
     def clear_cache(self):
