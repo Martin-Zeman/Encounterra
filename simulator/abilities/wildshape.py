@@ -239,6 +239,8 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
                         result_matrix[col, row] = 1  # Take care that axes are swapped here
             # Here we're only interested in the coords with the lowest distance from the original coordinate
             all_coords = np.argwhere(result_matrix == 1).tolist()
+            if not all_coords:
+                return None
             all_coords.sort(key=lambda coord: distances[coord[0] * battle_map.size + coord[1]])
             final_coords = list()
             curr_coord = all_coords[0]
