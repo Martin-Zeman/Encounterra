@@ -128,6 +128,7 @@ class Passive(Enum):
     DARK_DEVOTION = auto()
     BLINDSIGHT = auto()
     MAGIC_RESISTANCE = auto()
+    CHARM_IMMUNITY = auto()
 
 
 class MetaAction(Enum):

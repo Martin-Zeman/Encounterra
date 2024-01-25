@@ -4,7 +4,7 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from ..actions.action_types import BonusAction, Action
+from ..actions.action_types import BonusAction, Action, Passive
 from ..actions.shake_ally_awake import ShakeAllyAwakeFactory
 from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
@@ -43,6 +43,7 @@ class SleepFactory(DirectThreatFactory):
         self.action_type = action_type  # SLEEP, QUICKENED_SLEEP
         self.combatant = caster
         self.resource = resource
+        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
 
     def __str__(self):
         """
@@ -76,6 +77,8 @@ class SleepFactory(DirectThreatFactory):
         """
         if target.curr_hp > SleepFactory.max_sleep_hp:
             return 0
+        if target.has_passive(Passive.CHARM_IMMUNITY):
+            return 0
         if is_affected_by_any(target, Conditions.PARALYZED, Conditions.UNCONSCIOUS, Conditions.STUNNED):
             return 0
         if Map.get().get_cartesian_distance_combatants(self.combatant, target) > SleepFactory.range:
@@ -87,10 +90,10 @@ class SleepFactory(DirectThreatFactory):
         # This is an approximation, we're only looking at the best action overall, not the action + bonus_action combo
         max_action_threat = 0
         for f in target.action_factories:
-            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[1].flags:
                 max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
         for f in target.bonus_action_factories:
-            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[1].flags:
                 max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
         prevented_threat_out_acc += max_action_threat
 
