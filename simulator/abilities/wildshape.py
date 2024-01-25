@@ -245,7 +245,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
             min_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
             curr_distance = min_distance
             idx = 1
-            while curr_distance == min_distance:
+            while idx < len(all_coords) and curr_distance == min_distance:
                 final_coords.append(tuple(curr_coord))
                 curr_coord = all_coords[idx]
                 curr_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]

@@ -221,6 +221,8 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Blindsight")
                 case Passive.ASSASSINATE:
                     self.display_abilities.append("Assassinate")
+                case Passive.CHARM_IMMUNITY:
+                    self.display_abilities.append("Charm Immunity")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
