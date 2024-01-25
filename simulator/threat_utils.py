@@ -137,7 +137,7 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
     max_threat = 0
     for pa in potential_attackers:
         for f in pa.action_factories:
-            if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)
@@ -147,7 +147,7 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
         min_threat = 0
         max_threat = 0
         for f in pa.bonus_action_factories:
-            if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)
@@ -157,7 +157,7 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
         min_threat = 0
         max_threat = 0
         for f in pa.haste_action_factories:
-            if factory_flags & f[1].flags and not f[1].flags & FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)

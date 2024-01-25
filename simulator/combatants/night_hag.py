@@ -31,6 +31,7 @@ class NightHag(Combatant):
         self.resources[Action.MAGIC_MISSILE] = inf_uses
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPECIAL)
         self.add_ability(Passive.MAGIC_RESISTANCE)
+        self.add_ability(Passive.CHARM_IMMUNITY)
         self.add_ability(Action.MAGIC_MISSILE, resource=inf_uses)
         self.add_ability(Action.RAY_OF_ENFEEBLEMENT, resource=ray_of_enfeeblement_two_uses)
         self.add_ability(Action.SLEEP, resource=sleep_two_uses)
