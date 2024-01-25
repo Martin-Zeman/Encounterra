@@ -20,6 +20,7 @@ class ShakeAllyAwakeFactory(Factory):
         super().__init__()
         self.combatant = combatant
         self.action_type = Action.SHAKE_ALLY_AWAKE
+        self.range = 1
 
     def __str__(self):
         """
