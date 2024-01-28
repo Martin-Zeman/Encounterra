@@ -164,12 +164,14 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         logger.info(f"{combatant} is burned by Flaming Sphere for {dmg} damage")
         combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
+        Map.get().remove_combatant_if_dead(combatant)
 
     def on_enter(self, combatant):
         # It's not explicitly written in the rules, but it makes sense
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         logger.info(f"{combatant} is burned by Flaming Sphere for {dmg} damage")
         combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
+        Map.get().remove_combatant_if_dead(combatant)
 
     def on_move_within(self, combatant):
         return 0

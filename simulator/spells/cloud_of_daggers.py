@@ -91,6 +91,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def on_start_of_turn(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
+        Map.get().remove_combatant_if_dead(combatant)
 
     def on_end_of_turn(self, combatant):
         pass
@@ -98,6 +99,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def on_enter(self, combatant):
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
+        Map.get().remove_combatant_if_dead(combatant)
 
     def on_move_within(self, combatant):
         return 0

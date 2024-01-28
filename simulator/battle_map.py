@@ -58,7 +58,6 @@ def reconstruct_from_shortest_path(shortest_path, source, target):
     return path
 
 
-
 def convert_path_to_increments(path):
     """
     Converts a sequence of coordinates to a sequence of coordinate increments
@@ -82,6 +81,7 @@ class Terrain(Enum):
 class Occupancy(Enum):
     FREE = 1
     OCCUPIED_BY_COMBATANT = 2
+
 
 class GridSquare:
     def __init__(self, dummy):
@@ -164,6 +164,7 @@ def map_position_toggled_cache(func):
     is False, caching is bypassed, and the method is executed normally without caching.
     """
     cached_func = cache(func)
+
     def call_func(*args, **kwargs):
         battle_map = Map.get()
         if battle_map.cache_enabled:
@@ -173,6 +174,7 @@ def map_position_toggled_cache(func):
 
     call_func.cache_clear = cached_func.cache_clear
     return call_func
+
 
 def map_toggled_cache_with_key(key):
     """
@@ -184,8 +186,10 @@ def map_toggled_cache_with_key(key):
     is False, caching is bypassed, and the method is executed normally without caching.
     """
     parametrized_cache = cached(cache={}, key=key)
+
     def _map_toggled_cache_with_key(func):
         cached_func = parametrized_cache(func)
+
         def call_func(*args, **kwargs):
             battle_map = Map.get()
             if battle_map.cache_enabled:
@@ -207,8 +211,10 @@ def toggled_cache(key):
     is False, caching is bypassed, and the method is executed normally without caching.
     """
     parametrized_cache = cached(cache={}, key=key)
+
     def _toggled_cache(func):
         cached_func = parametrized_cache(func)
+
         def call_func(*args, **kwargs):
             if args[0].cache_enabled:
                 return cached_func(*args, **kwargs)
@@ -219,6 +225,7 @@ def toggled_cache(key):
         return call_func
 
     return _toggled_cache
+
 
 class Map:
     _instance = None
@@ -283,7 +290,6 @@ class Map:
             cls._instance.cache_enabled = data['cache_enabled']
             cls._instance.combat_round = data['combat_round']
 
-
     def __str__(self):
         string_repr = ""
         for y in range(self.size - 1, -1, -1):
@@ -340,6 +346,7 @@ class Map:
                 return max(1, orig_dist_hop_func(subject1, subject2) + dist)
             else:
                 return orig_dist_hop_func(subject1, subject2)
+
         def monkeypatch_cartesian_dist(subject1, subject2):
             if subject1 is combatant1 and subject2 is combatant2:
                 return max(1.0, orig_dist_cartesian_func(subject1, subject2) + dist)
@@ -386,7 +393,6 @@ class Map:
                 self.cache_enabled = True
         else:
             yield False
-
 
     def find_wildshaped_coordinate(self, combatant, size: Size, orig_coords: tuple=None):  # TODO caching cancidate
         """
@@ -508,7 +514,6 @@ class Map:
         self.base_adjacency_matrix = adj
         # print("---build_adjacency_matrix took %s seconds ---" % (time.time() - start_time))
 
-
     def build_flaming_sphere_adjacency_matrix(self):
         N = self.size
         Nsq = N ** 2
@@ -540,7 +545,6 @@ class Map:
         for coord in self.impassable_set:
             adj[:, :, max(0, coord[0]):(coord[0] + 1), max(0, coord[1]):(coord[1] + 1)].fill(0)
         return adj_reshaped
-
 
     def build_combatant_adjacency_mask(self, combatant, consider_aoo=False):
         """
@@ -1125,30 +1129,23 @@ class Map:
 
     def remove_combatant_if_dead(self, combatant):
         """
-        Removes a dead combatant from the grid
-        :param combatant:
-        :return: new target which can be either None in case both forms are dead or the combatant's original form
+        Removes a dead combatant or its original form from the grid.
+        Note that wildshape removes itself via receive_dmg.
+        :param combatant: The combatant to be checked and potentially removed.
+        :return: True if the combatant's original form is alive, False otherwise
         """
-        if combatant.get_original_form() is combatant and not combatant.is_alive():
-            logger.info(f"{combatant} died")
-            grappler = get_grappler(combatant)
+        original_form = combatant.get_original_form()
+        target_to_remove = original_form if original_form is not combatant else combatant
+
+        if not target_to_remove.is_alive():
+            grappler = get_grappler(target_to_remove)
             if grappler:
                 remove_condition(grappler, Conditions.GRAPPLING)
-            combatant.on_die()
-            self.remove_combatant(combatant)
-            return None
-        else:
-            if not combatant.get_original_form().is_alive():
-                grappler = get_grappler(combatant.get_original_form())
-                if grappler:
-                    remove_condition(grappler, Conditions.GRAPPLING)
-                combatant.get_original_form().on_die()
-                logger.info(f"{combatant.get_original_form()} died")
-                self.remove_combatant(combatant.get_original_form())
-                return None
-            else:
-                return combatant.get_original_form()
-
+            target_to_remove.on_die()
+            logger.info(f"{target_to_remove} died")
+            self.remove_combatant(target_to_remove)
+            return False
+        return True
 
     def reset(self, combatant_initial_positions):
         """
@@ -1300,7 +1297,6 @@ class Map:
                 logger.error("Unrecognized ability target type")
         return affected_combatants
 
-
     def get_enemies_within_radius_sorted_by_distance(self, combatant, radius):
         enemies = [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance_combatants(e, combatant) <= radius]
         distances = [self.get_cartesian_distance_combatants(e, combatant) for e in enemies]
@@ -1446,4 +1442,3 @@ class Map:
         self.get_free_coords_in_cartesian_range.cache_clear()
         self.get_free_coords_in_hop_range.cache_clear()
         self.find_best_placement_harmful_circular.cache_clear()
-

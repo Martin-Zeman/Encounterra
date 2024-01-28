@@ -144,7 +144,7 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
 
     try:
         actoid1 = get_action(test_moon_druid)
-        assert str(actoid1) =="(0, 1)"
+        assert str(actoid1) == "(0, 1)"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         actoid2 = get_action(test_moon_druid)
         assert str(actoid2) == "(0, 1)"
@@ -269,6 +269,63 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.curr_hp == 33
         actoid3 = get_action(test_moon_druid)
         assert not str(actoid3).startswith("Wildshape")
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_removed_from_battlemap_when_killed_by_carry_over_damage_in_wildshape(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
+    """
+    We assert that the carry-over damage from wildshape will remove the druid from the map when killed by it.
+    """
+    CustomLogger(logging.WARNING)
+
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([2, 2]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))
+    battle_map.build_adjacency_matrix()
+    combatants = [test_moon_druid, test_bugbear]
+    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    class DummyFactory:
+        def __init__(self):
+            self.combatant = None
+    class DummyEffect:
+        def __init__(self):
+            self.factory = DummyFactory()
+            self.initiator = test_moon_druid
+        def deactivate(self):
+            test_moon_druid.break_concentration()
+
+        def deactivate_for_combatant(self, combatant):
+            assert False
+
+        def is_affecting(self, combatant):
+            return False
+
+        def get_effect_type(self):
+            return EffectType.FAERIE_FIRE
+    dummy_effect = DummyEffect()
+    test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
+    battle_map.effect_tracker.add(dummy_effect)
+    test_moon_druid.curr_hp = 1
+
+    try:
+        actoid1 = get_action(test_moon_druid)
+        assert test_moon_druid.curr_hp == 1
+        assert str(actoid1) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        action_resolver.resolve_action(actoid1, test_moon_druid)
+        assert test_moon_druid.get_current_form() is not test_moon_druid
+        assert test_moon_druid.current_wildshape_form is not None
+        assert test_moon_druid.get_current_form().curr_hp == 39
+        wildshaped_moon_druid = test_moon_druid.get_current_form()
+        wildshaped_moon_druid.receive_dmg(40, DamageType.Slashing)
+        battle_map.remove_combatant_if_dead(wildshaped_moon_druid)
+        assert not wildshaped_moon_druid.is_alive()
+        assert not test_moon_druid.is_alive()
+        assert test_moon_druid.get_current_form() is test_moon_druid
+        assert test_moon_druid not in battle_map.combatant_coordinate_cache.keys()
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -935,9 +992,9 @@ def test_ray_of_enfeeblement(battle_map, teams, effect_tracker, test_totem_barba
         assert False, f"Raised an exception {e}"
 
 
-def test_ray_of_sleep_loss_of_concentration(battle_map, teams, effect_tracker, test_goblin, test_night_hag):
+def test_sleep_loss_of_concentration(battle_map, teams, effect_tracker, test_goblin, test_night_hag):
     """
-    Test that Ray of Enfeeblement really does lower strength-based damage.
+    Test that targets put to sleep by the Sleep spell are awaken when the caster loses concentration.
     """
     CustomLogger(logging.WARNING)
     test_goblin_2 = copy.deepcopy(test_goblin)

@@ -291,7 +291,7 @@ class ActionResolver:
                 logger.info(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
                              extra={"team": self.teams.get_team(caster)})
                 curr_target.receive_dmg(dmg, dmg_type)
-                battle_map.remove_combatant_if_dead(curr_target)  # could be a wildshaped druid
+                battle_map.remove_combatant_if_dead(curr_target)
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
                         if not potential_target.is_alive():
@@ -341,7 +341,7 @@ class ActionResolver:
             logger.info(f"{spell.shorthand_str()} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
             target.receive_dmg(dmg, spell.factory.dmg_type)
-            Map.get().remove_combatant_if_dead(target)  # could be a wildshaped druid
+            Map.get().remove_combatant_if_dead(target)
             return ActionResult.DMG
         else:
             logger.info(f"{spell.shorthand_str()} misses {target}", extra={"team": self.teams.get_team(caster)})

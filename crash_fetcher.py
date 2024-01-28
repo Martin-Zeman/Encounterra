@@ -1,3 +1,5 @@
+import copy
+
 import boto3
 import argparse
 import os
@@ -5,41 +7,57 @@ import re
 from botocore.exceptions import NoCredentialsError
 
 
+def extract_id(filename):
+    match = re.search(r'(\d+)\.(pkl|txt)$', filename)
+    if match:
+        return match.group(1)
+    return None
+
+
 def list_latest_files(bucket_name, prefix=''):
     s3 = boto3.client('s3')
     paginator = s3.get_paginator('list_objects_v2')
     page_iterator = paginator.paginate(Bucket=bucket_name, Prefix=prefix)
 
-    latest_files = {}
     latest_time = None
+    latest_id = ''
+    all_file_names = []
 
     for page in page_iterator:
         for obj in page['Contents']:
             file_time = obj['LastModified']
+            file_name = obj['Key']
+            all_file_names.append(file_name)
             if latest_time is None or file_time > latest_time:
                 latest_time = file_time
-                latest_files = {
-                    'battle_map': '',
-                    'session': '',
-                    'exception': ''
-                }
+                latest_id = extract_id(file_name)
 
-            if file_time == latest_time:
-                file_name = obj['Key']
-                if file_name.endswith('.pkl') and 'battle_map_data' in file_name:
-                    latest_files['battle_map'] = file_name
-                elif file_name.endswith('.pkl') and 'session' in file_name:
-                    latest_files['session'] = file_name
-                elif file_name.endswith('.txt') and 'exception' in file_name:
-                    latest_files['exception'] = file_name
+    latest_files = {}
+    for file_name in all_file_names:
+        if latest_id in file_name:
+            if file_name.endswith('.pkl') and 'battle_map_data' in file_name:
+                latest_files['battle_map'] = file_name
+            elif file_name.endswith('.pkl') and 'session' in file_name:
+                latest_files['session'] = file_name
+            elif file_name.endswith('.txt') and 'exception' in file_name:
+                latest_files['exception'] = file_name
 
     return latest_files
+
+
+def get_exception_content(file_path, crash_number):
+    exception_content = f"\nCrash Number: {crash_number}"
+    with open(file_path, 'r') as file:
+        exception_content += "\nException content:\n"
+        exception_content += file.read()
+    return exception_content
 
 
 def download_files(bucket_name, file_names, download_path, print_exception=False):
     s3 = boto3.resource('s3')
     crash_number = None
 
+    exception_content = ''
     for file_type, file_name in file_names.items():
         if file_name:
             download_to = os.path.join(download_path, file_name.split('/')[-1])
@@ -52,24 +70,23 @@ def download_files(bucket_name, file_names, download_path, print_exception=False
                     crash_number = match.group(1)
 
             if print_exception and file_type == 'exception':
-                print_exception_content(download_to, crash_number)
-
-
-def print_exception_content(file_path, crash_number):
-    print(f"\nCrash Number: {crash_number}")
-    with open(file_path, 'r') as file:
-        print("\nException content:\n")
-        print(file.read())
+                exception_content = get_exception_content(download_to, crash_number)
+    print(exception_content)
 
 
 def delete_files(bucket_name, identifier):
     s3 = boto3.resource('s3')
     bucket = s3.Bucket(bucket_name)
-    files = bucket.objects.filter(Prefix=identifier)
+    deleted_files = []
 
-    for file in files:
-        file.delete()
-        print(f"Deleted {file.key}")
+    for obj in bucket.objects.all():
+        if identifier in obj.key:
+            obj.delete()
+            deleted_files.append(obj.key)
+            print(f"Deleted {obj.key}")
+
+    if not deleted_files:
+        print(f"No files found with identifier {identifier}")
 
 
 def main():
@@ -82,10 +99,11 @@ def main():
     args = parser.parse_args()
 
     bucket_name = 'encounterra-simulation-crashes'
-    latest_files = list_latest_files(bucket_name)
+    if args.download_path:
+        latest_files = list_latest_files(bucket_name)
 
-    if latest_files:
-        download_files(bucket_name, latest_files, args.download_path, args.print_exception)
+        if latest_files:
+            download_files(bucket_name, latest_files, args.download_path, args.print_exception)
 
     if args.delete:
         delete_files(bucket_name, args.delete)

@@ -926,6 +926,7 @@ def test_find_wildshaped_coordinate_large_two_options(battle_map, teams, test_mo
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.LARGE)
     assert np.array_equal(coord, np.array([5, 6]))
 
+
 def test_find_wildshaped_coordinate_huge_one_options(battle_map, teams, test_moon_druid):
     """
     We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a huge creature.
@@ -939,6 +940,7 @@ def test_find_wildshaped_coordinate_huge_one_options(battle_map, teams, test_moo
     test_moon_druid.shortest_paths_cache = shortest_paths
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
     assert np.array_equal(coord, np.array([0, 0]))
+
 
 def test_find_wildshaped_coordinate_huge_three_options_variant_1(battle_map, teams, test_moon_druid):
     """
@@ -965,6 +967,7 @@ def test_find_wildshaped_coordinate_huge_three_options_variant_2(battle_map, tea
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
     assert np.array_equal(coord, np.array([12, 8]))
 
+
 def test_find_wildshaped_coordinate_huge_four_options(battle_map, teams, test_moon_druid):
     """
     The druid wants to wildshape into a huge creature. The druid's near the top right edge of the map and they're in open terrain there's four
@@ -990,6 +993,7 @@ def test_find_wildshaped_coordinate_huge_nine_options(battle_map, teams, test_mo
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
     assert np.array_equal(coord, np.array([4, 12]))
 
+
 def test_find_wildshaped_coordinate_enemies_around(battle_map, teams, test_moon_druid, test_ogre, test_bugbear):
     """
     The druid wants to wildshape into a large creature. There's two enemies around so the best option is to side step and transform.
@@ -1008,6 +1012,7 @@ def test_find_wildshaped_coordinate_enemies_around(battle_map, teams, test_moon_
     test_moon_druid.shortest_paths_cache = shortest_paths
     coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.LARGE, np.array([1, 9]))
     assert np.array_equal(coord, np.array([0, 8])) or np.array_equal(coord, np.array([0, 9])) or np.array_equal(coord, np.array([0, 10]))
+
 
 @pytest.mark.parametrize("size", [Size.SMALL, Size.MEDIUM])
 def test_get_visibility_small_medium(battle_map, size):

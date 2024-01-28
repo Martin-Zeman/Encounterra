@@ -100,6 +100,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
         dmg = roll_spell_dmg(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.factory.dmg_type)
+        Map.get().remove_combatant_if_dead(combatant)
 
     def on_end_of_turn(self, combatant):
         apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
