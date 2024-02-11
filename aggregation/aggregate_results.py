@@ -16,12 +16,15 @@ s3 = boto3.client('s3')
 bucket_name = "encounterra-simulation-results"
 aggregated_stats_path = "/tmp/aggregated_statistics.txt"
 
+STANDARD_TEAM_SIZE = 4
+
 
 class Statistics(Enum):
     VICTORIES = 1
     AT_LEAST_ONE_DIED = 2
     AT_LEAST_TWO_DIED = 3
     AT_LEAST_THREE_DIED = 4
+    CLASSIFICATION = 5
 
 
 def update_simulation_result(job_id: str,  s3_url: str, stats: str, success: bool):
@@ -148,6 +151,37 @@ def zip_s3_bucket_objects_and_get_presigned_url(bckt_name, job_id, aggr_stats_pa
     return s3_url
 
 
+def classify_encounter(difficulty_statistics, total_iterations, team_size):
+    classification = "Easy"
+    team_size_modifier = team_size / STANDARD_TEAM_SIZE
+
+    for color, stats in difficulty_statistics.items():
+        victories = stats[Statistics.VICTORIES.name]
+        total_deaths = (
+                stats[Statistics.AT_LEAST_ONE_DIED.name] +
+                stats[Statistics.AT_LEAST_TWO_DIED.name] +
+                stats[Statistics.AT_LEAST_THREE_DIED.name]
+        )
+
+        at_least_one_died_percentage = stats[Statistics.AT_LEAST_ONE_DIED.name] / total_iterations * team_size_modifier
+        at_least_two_died_percentage = stats[Statistics.AT_LEAST_TWO_DIED.name] / total_iterations * team_size_modifier
+
+        if victories == total_iterations:
+            if total_deaths == 0:
+                classification = "Easy"
+            elif at_least_one_died_percentage <= 0.2:
+                classification = "Medium"
+            else:
+                classification = "Hard"
+        else:
+            if at_least_two_died_percentage <= 0.4:
+                classification = "Hard"
+            else:
+                classification = "Deadly"
+
+    return classification
+
+
 def handler(event, context):
     logger.setLevel(logging.INFO)
     logger.info("------AGGREGATION LAMBDA STARTING------")
@@ -156,6 +190,8 @@ def handler(event, context):
     job_id = event["job_id"]
     user_id = event["user_id"]
     credit_cost = event["credit_cost"]
+    blue_team_size = len(event['core_input']['blue'])
+    red_team_size = len(event['core_input']['red'])
 
     iterations = get_iterations(job_id)
     if iterations != len(results_array):
@@ -174,6 +210,12 @@ def handler(event, context):
         statistics['RED'][Statistics.AT_LEAST_TWO_DIED.name] += result.get('red_at_least_two_died', 0)
         statistics['BLUE'][Statistics.AT_LEAST_THREE_DIED.name] += result.get('blue_at_least_three_died', 0)
         statistics['RED'][Statistics.AT_LEAST_THREE_DIED.name] += result.get('red_at_least_three_died', 0)
+
+    blue_classification = classify_encounter(statistics, iterations, blue_team_size)
+    statistics['BLUE'][Statistics.CLASSIFICATION.name] = blue_classification['BLUE']
+    red_classification = classify_encounter(statistics, iterations, red_team_size)
+    statistics['RED'][Statistics.CLASSIFICATION.name] = red_classification['RED']
+
     statistics = json.dumps(statistics)
 
     try:

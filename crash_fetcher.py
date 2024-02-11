@@ -32,6 +32,7 @@ def list_latest_files(bucket_name, prefix=''):
                 latest_time = file_time
                 latest_id = extract_id(file_name)
 
+    print(f"Latest Timestamp: {latest_time}")
     latest_files = {}
     for file_name in all_file_names:
         if latest_id in file_name:
