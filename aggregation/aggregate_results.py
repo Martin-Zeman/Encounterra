@@ -190,8 +190,10 @@ def handler(event, context):
     job_id = event["job_id"]
     user_id = event["user_id"]
     credit_cost = event["credit_cost"]
-    blue_team_size = len(event['core_input']['blue'])
-    red_team_size = len(event['core_input']['red'])
+    logger.info(f"MY DEBUG core_input: {event['core_input']}")
+    logger.info(f"MY DEBUG core_input[0]: {event['core_input'][0]}")
+    blue_team_size = len(event['core_input'][0]['blue'])
+    red_team_size = len(event['core_input'][0]['red'])
 
     iterations = get_iterations(job_id)
     if iterations != len(results_array):
