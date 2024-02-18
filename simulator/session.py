@@ -28,6 +28,7 @@ from .combatants.ogre import Ogre
 from .combatants.quetzalcoatlus import Quetzalcoatlus
 from .combatants.saber_toothed_tiger import SaberToothedTiger
 from .combatants.stone_giant import StoneGiant
+from .combatants.totem_barbarian_3lvl import TotemBarbarian3Lvl
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
@@ -161,6 +162,8 @@ class Session:
                 self.combatants.append(SaberToothedTiger(curr_count))
             case StoneGiant.id:
                 self.combatants.append(StoneGiant(curr_count))
+            case TotemBarbarian3Lvl.id:
+                self.combatants.append(TotemBarbarian3Lvl(curr_count))
             case TotemBarbarian5Lvl.id:
                 self.combatants.append(TotemBarbarian5Lvl(curr_count))
             case TwigBlight.id:
