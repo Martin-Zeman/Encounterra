@@ -432,7 +432,11 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     sequence_to_threat = dict()  # Overall threat score of a sequence: sequence idx -> [movement threat, action threat]
     sequence_idx_to_transition_step_threat = dict()
     coord_to_sequence_ids = dict()  # Maps coord (and movement type) to all sequences which end in that coord
-    current_coords = battle_map.get_combatant_position(combatant)
+    current_coords = battle_map.get_combatant_position(combatant).get()[0]
+    try:
+        del movement_transition_to_coord_and_type[f"ms_({current_coords[0]}, {current_coords[1]})"]  # Removing Misty Step to current coordinate
+    except KeyError:
+        pass
 
     def DFS(dag, current_state, current_sequence, coord):
         if current_state == 'nop':
@@ -516,7 +520,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                     except KeyError:  # or different kind which represents some type of movement
                         pass  # Skipping
                 sequence_to_threat[idx] = [sequence_to_threat[idx][-1], threat_acc * feasibility_multiplier]  # Overwrite the movement threat tuple with the final movement and transition total
-                sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords.get()[0]) else 0  # Small bias towards current position prevents oscillations
+                sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords) else 0  # Small bias towards current position prevents oscillations
 
     sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
     return get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, sequence_idx_to_transition_step_threat, distances), transition_name_to_ms_path
