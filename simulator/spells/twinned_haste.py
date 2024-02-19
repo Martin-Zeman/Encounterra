@@ -5,8 +5,9 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..effects.effect import Effect, EffectType
+from ..effects.effect import EffectType
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_utils import mean_dmg
 from ..threat_interfaces import Threat
@@ -18,6 +19,7 @@ from ..spells.haste import HasteFactory
 from ..utils.roll_types import ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
+
 
 class TwinnedHasteFactory(ThreatModifierFactory):
     level = 3
@@ -94,10 +96,11 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         return max_attack_dmg * ROUND_HORIZON
 
 
-class TwinnedHaste(Actoid, Effect, Threat):
+class TwinnedHaste(Actoid, LimitedDurationEffect, Threat):
 
     def __init__(self, targets, factory):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.targets = targets
         self.factory = factory
 

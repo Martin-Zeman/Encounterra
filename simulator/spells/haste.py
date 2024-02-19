@@ -104,6 +104,7 @@ class HasteFactory(ThreatModifierFactory):
             return 0
         return max([self.calculate_threat_to_target(t) for t in targets])
 
+
 class Haste(Actoid, LimitedDurationEffect, Threat):
 
     def __init__(self, target, factory):
