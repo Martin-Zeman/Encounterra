@@ -24,6 +24,7 @@ from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from simulator.combatants.goblin import Goblin
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from simulator.combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
 from simulator.combatants.vampire_spawn import VampireSpawn
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.assassin import Assassin
@@ -34,12 +35,13 @@ import time
 if __name__ == '__main__':
     CustomLogger(logging.INFO)
     session = Session()
-    # session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
-    session.add_combatant(MoonDruid3Lvl, Teams.Color.BLUE)
+    session.add_combatant(MoonDruid5Lvl, Teams.Color.RED)
+    # session.add_combatant(MoonDruid3Lvl, Teams.Color.BLUE)
     # session.add_combatant(Acolyte, Teams.Color.BLUE)
     session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
     session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.RED)
-    # session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
+    session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
+    session.add_combatant(AssassinRogue3Lvl, Teams.Color.BLUE)
     # session.add_combatant(Assassin, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
@@ -63,8 +65,8 @@ if __name__ == '__main__':
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
-    # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.RED)
-    session.add_combatant(TotemBarbarian3Lvl, Teams.Color.RED)
+    session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
+    # session.add_combatant(TotemBarbarian3Lvl, Teams.Color.RED)
     # session.add_combatant(StoneGiant, Teams.Color.BLUE)
     # session.add_combatant(VampireSpawn, Teams.Color.RED)
     # session.add_combatant(DragonclawCultist, Teams.Color.BLUE)

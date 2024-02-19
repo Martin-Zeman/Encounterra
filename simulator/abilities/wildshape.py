@@ -15,6 +15,7 @@ import logging
 
 logger = logging.getLogger("Encounterra")
 
+
 class WildshapeFactory(TransformerFactory):
 
     def __init__(self, combatant, action_type):
@@ -28,7 +29,6 @@ class WildshapeFactory(TransformerFactory):
         Important for FSM building
         """
         return "WildshapeFactory"
-
 
     def get_ability_name(self):
         return "Wildshape"
@@ -62,7 +62,6 @@ class WildshapeFactory(TransformerFactory):
                     return [Size.LARGE, Size.HUGE]
                 case _:
                     logger.error("Incorrect character level. No wildshape forms added!")
-
 
     def create_all(self, previous_action_in_dag=None):
         # TODO Filter out those who cannot fit to the current position by size
@@ -125,6 +124,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         self.form.action_factories.extend([af for af in self.combatants[0].action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in af[1].flags])
         self.form.bonus_action_factories.extend([baf for baf in self.combatants[0].bonus_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in baf[1].flags])
         self.form.haste_action_factories.extend([haf for haf in self.combatants[0].haste_action_factories if FactoryFlags.TRANSITIONS_TO_WILDSHAPE in haf[1].flags])
+        self.form.curr_init = self.combatants[0].curr_init
         for af in self.form.action_factories:
             af[1].combatant = self.form
         for baf in self.form.bonus_action_factories:
