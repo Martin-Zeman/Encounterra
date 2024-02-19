@@ -1,5 +1,6 @@
 import pickle
 import time
+from datetime import datetime
 
 from simulator.logging.custom_logger import CustomLogger
 from simulator.misc import Statistics
@@ -36,6 +37,8 @@ def handler(event, context):
     job_id = event['job_id']
     index = event['index']
 
+    date_suffix = datetime.now().strftime("%Y%m%d-%H%M")
+    job_id_with_suffix = f"{job_id}_{date_suffix}"
     subdirectory = f"{job_id}/{index}/"
 
     session = Session()
@@ -99,9 +102,10 @@ def handler(event, context):
                 pickle.dump(session.serialize_data(), f)
             with open(exception_data_path, 'w') as f:
                 f.write(f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception:\n{e}")
-            s3.upload_file(battle_map_data_path, crash_bucket_name, f"{job_id}/" + battle_map_data)
-            s3.upload_file(session_data_path, crash_bucket_name, f"{job_id}/" + session_data)
-            s3.upload_file(exception_data_path, crash_bucket_name, f"{job_id}/" + exception_data)
+            s3.upload_file(battle_map_data_path, crash_bucket_name, f"{job_id_with_suffix}/" + battle_map_data)
+            s3.upload_file(session_data_path, crash_bucket_name, f"{job_id_with_suffix}/" + session_data)
+            s3.upload_file(exception_data_path, crash_bucket_name, f"{job_id_with_suffix}/" + exception_data)
+            s3.upload_file(local_log_file_path, crash_bucket_name, f"{job_id_with_suffix}/log_{timestamp}.txt")
         except Exception as serialization_e:
             logger.error(f"Failed to serialize and upload objects: {serialization_e}")
         exit(1)
