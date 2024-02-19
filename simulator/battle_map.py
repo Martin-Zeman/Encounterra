@@ -318,15 +318,17 @@ class Map:
         :return: the original coordiantes if new given coordiantes are valid, None otherwise
         """
         if coords is not None:
-            original_coords = self.get_combatant_position(combatant)
+            original_coords = self.get_combatant_position(combatant).get()[0]
             original_logger_level = logger.level
             try:
                 logger.setLevel(logging.WARNING)
+                combatant.shortest_paths_cache[(original_coords[0], original_coords[1])] = original_coords  # For wildshape searching purposes
                 # self.cache_enabled = False
                 self.move_combatant(combatant, coords)
-                yield original_coords.get()[0]
+                yield original_coords
             finally:
-                self.move_combatant(combatant, original_coords.get()[0])
+                self.move_combatant(combatant, original_coords)
+                del combatant.shortest_paths_cache[(original_coords[0], original_coords[1])]
                 # self.cache_enabled = True
                 logger.setLevel(original_logger_level)
         else:
@@ -417,17 +419,15 @@ class Map:
         start_col = max(before_wildshape_coordinate[1] - size.value, 0)
         end_col = before_wildshape_coordinate[1]
 
-        possible_root_coordinates = []
-        for row in range(start_row, end_row + 1):
-            for col in range(start_col, end_col + 1):
-                possible_root_coordinates.append((row, col))
+        possible_root_coordinates = [(row, col) for row in range(start_row, end_row + 1)
+                                     for col in range(start_col, end_col + 1)]
 
         result_coordinates = []
-        for coord in possible_root_coordinates:
-            if coord[0] - size.value < 0 or coord[1] + size.value >= self.size:
+        for root_coord in possible_root_coordinates:
+            if root_coord[0] - size.value < 0 or root_coord[1] + size.value >= self.size:
                 continue
-            if np.all(map_accessibility_matrix[coord[0] - size.value:coord[0] + 1, coord[1]:coord[1] + size.value + 1] > 0):
-                result_coordinates.append((coord[1], self.size - 1 - coord[0]))  # Convert back to battle_map coords
+            if np.all(map_accessibility_matrix[root_coord[0] - size.value:root_coord[0] + 1, root_coord[1]:root_coord[1] + size.value + 1] > 0):
+                result_coordinates.append((root_coord[1], self.size - 1 - root_coord[0]))  # Convert back to battle_map coords
 
         original_coordinate = (before_wildshape_coordinate[1], self.size - 1 - before_wildshape_coordinate[0])
         result_coordinates.sort(key=lambda point: euclidean(original_coordinate, point))

@@ -32,6 +32,7 @@ from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
 
+
 def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear):
     """
     This test case is based on a scenario encountered during fuzzy testing. We make sure that test_draconic_sorcerer_5lvl doesn't hit
@@ -63,6 +64,7 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     dummy_effect = DummyEffect()
     test_draconic_sorcerer_5lvl.concentration_effect = dummy_effect  # Make sure the sorcerer won't opt for Hold Person
 
+    test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     new_coord = copy.copy(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get())
     for ba in action_plan:
@@ -72,6 +74,7 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     assert battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     assert isinstance(action_plan[0], Fireball) or isinstance(action_plan[0], Firebolt)
     assert isinstance(action_plan[1], Fireball) or isinstance(action_plan[1], Firebolt)
+
 
 def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear):
     """
@@ -95,6 +98,7 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     battle_map.build_adjacency_matrix()
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
+    test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     try:
         fireball = next(a for a in action_plan if isinstance(a, Fireball))
@@ -157,6 +161,7 @@ def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_
         action_resolver.resolve_action(actoid9, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
 
 def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant):
     """
@@ -244,6 +249,7 @@ def test_error_case_5(battle_map, teams, effect_tracker, test_draconic_sorcerer_
         action_resolver.resolve_action(actoid8, test_draconic_sorcerer_5lvl)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
 
 def test_error_case_6(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_ogre):
     """
@@ -367,6 +373,7 @@ def test_error_case_7(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 def test_error_case_8(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre):
     """
     This test case is based on a scenario encountered during fuzzy testing.
@@ -410,6 +417,7 @@ def test_error_case_8(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 def test_error_case_9(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre):
     """
     This test case is based on a scenario encountered during fuzzy testing.
@@ -451,6 +459,7 @@ def test_error_case_9(battle_map, teams, effect_tracker, test_draconic_sorcerer_
 
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
 
 def test_error_case_10(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin, test_stone_giant):
     """

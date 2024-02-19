@@ -17,11 +17,14 @@ from ..utils.roll_types import ThreatModifierType
 
 
 def test_as_if_combatant_position(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
+    battle_map.build_adjacency_matrix()
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
 
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7]))
+    distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
+    test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
 
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5
     battle_map.clear_caches()
