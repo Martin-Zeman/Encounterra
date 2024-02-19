@@ -29,6 +29,7 @@ from simulator.combatants.vampire_spawn import VampireSpawn
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.assassin import Assassin
 from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
+from simulator.combatants.giant_toad import GiantToad
 from simulator.teams import Teams
 import time
 
@@ -42,6 +43,7 @@ if __name__ == '__main__':
     session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.RED)
     session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
     session.add_combatant(AssassinRogue3Lvl, Teams.Color.BLUE)
+    session.add_combatant(GiantToad, Teams.Color.BLUE)
     # session.add_combatant(Assassin, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
