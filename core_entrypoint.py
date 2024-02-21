@@ -1,5 +1,6 @@
 import pickle
 import time
+import traceback
 from datetime import datetime
 
 from simulator.logging.custom_logger import CustomLogger
@@ -86,7 +87,8 @@ def handler(event, context):
             'red_at_least_three_died': result[Teams.Color.RED][Statistics.AT_LEAST_THREE_DIED],
         }
     except Exception as e:
-        logger.error(f"{job_id}:{index} FAILURE: {e}")
+        error_message = traceback.format_exc()
+        logger.error(f"{job_id}:{index} FAILURE: {error_message}")
         try:
             timestamp = int(time.time())
             logger.info(f"Serializing error with timestamp: {timestamp}")
