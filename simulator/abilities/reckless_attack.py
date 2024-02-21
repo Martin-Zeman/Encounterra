@@ -61,10 +61,8 @@ class RecklessAttackFactory(DirectThreatFactory):
         """
         return "RecklessAttackFactory" + self.name
 
-
     def get_ability_name(self):
         return "Reckless Attack"
-
 
     def get_eligible_targets(self):
         swallower = get_swallower(self.combatant)

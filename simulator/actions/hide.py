@@ -10,7 +10,7 @@ from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..misc import Visibility, roll_ability_check
-from ..conditions import Conditions, is_affected_by_any, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower, is_affected_by
 from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import ThreatModifierFactory
 import logging
@@ -38,9 +38,9 @@ class HideFactory(ThreatModifierFactory):
 
     def create_all(self, previous_action_in_dag=None):
         if get_swallower(self.combatant):
-            return None
+            return []
         battle_map = Map.get()
-        return [Hide(e, self) for e in Map.get().get_enemies(self.combatant) if not battle_map.effect_tracker.is_combatant_hidden_from(self.combatant, e)]
+        return [Hide(e, self) for e in Map.get().get_enemies(self.combatant) if not battle_map.effect_tracker.is_combatant_hidden_from(self.combatant, e) and not is_affected_by(e, Conditions.SWALLOWED)]
 
     def create(self, target):
         return Hide(target, self)
@@ -122,7 +122,7 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return [coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if not self.target.is_swallowed[0] and vis_dict[self.target] is Visibility.NONE]
+            return [coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE]
         elif battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])][self.target] is Visibility.NONE:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

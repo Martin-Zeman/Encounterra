@@ -42,6 +42,8 @@ def list_latest_files(bucket_name, prefix=''):
                 latest_files['session'] = file_name
             elif file_name.endswith('.txt') and 'exception' in file_name:
                 latest_files['exception'] = file_name
+            elif file_name.endswith('.txt') and 'log' in file_name:
+                latest_files['log'] = file_name
 
     return latest_files
 

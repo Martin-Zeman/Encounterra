@@ -25,4 +25,5 @@ class DigestionEffect(StartOfTurnAutoEffect):
         return True
 
     def deactivate_for_combatant(self, combatant):
-        pass  # The only way this can be deactivated for the combatant is if the combatant's dead, no need to do anything else
+        return False
+        # pass  # The only way this can be deactivated for the combatant is if the combatant's dead, no need to do anything else
