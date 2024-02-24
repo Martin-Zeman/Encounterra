@@ -55,11 +55,9 @@ class FlamingSphereFactory(DirectThreatFactory):
     def create_all(self, previous_action_in_dag=None):
         # Getting coords around enemies
         battle_map = Map.get()
-        enemies = battle_map.get_enemies(self.combatant)
+        enemies = battle_map.get_non_swallowed_enemies(self.combatant)
         coords = set()
         for enemy in enemies:
-            if get_swallower(enemy):
-                continue
             # Just take the one that is on the far side of the enemy from the combatant's PoV
             coords_around_enemy = list(battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1))
             coords_around_enemy.sort(key=lambda coord: battle_map.get_cartesian_distance_coords(np.array([coord]), battle_map.get_combatant_position(self.combatant).get()), reverse=True)
@@ -84,7 +82,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         return 0  # No need
 
     def calculate_max_threat(self):
-        targets = Map.get().get_enemies(self.combatant)
+        targets = Map.get().get_non_swallowed_enemies(self.combatant)
         if not targets:
             return 0
         return max([self.calculate_threat_to_target(t) for t in targets])
@@ -130,7 +128,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         # Get the average ram damage times ROUND_HORIZON. This is a rough estimation
-        enemies = Map.get().get_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)
+        enemies = Map.get().get_non_swallowed_enemies_within_hop_distance(self.factory.combatant, FlamingSphereFactory.range)
         if not enemies:
             return 0
         acc = 0

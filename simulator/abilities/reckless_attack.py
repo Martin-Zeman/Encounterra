@@ -69,7 +69,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         if swallower:
             return [swallower]
         battle_map = Map.get()
-        return [e for e in battle_map.get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+        return [e for e in battle_map.get_non_swallowed_enemies(self.combatant)]
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -80,7 +80,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         Helper function which calculates the average potential threat_out over all potential targets including all possible mods
         """
         battle_map = Map.get()
-        potential_targets = battle_map.get_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
+        potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         if not potential_targets:
             return 0
         def mean_dmg_delta(acc, pt):

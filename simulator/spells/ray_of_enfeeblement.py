@@ -63,7 +63,7 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return [swallower]
-        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_non_swallowed_enemies(self.combatant)]
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()

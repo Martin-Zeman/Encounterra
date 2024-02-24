@@ -40,7 +40,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
 
     def create_all(self, previous_action_in_dag=None):
         battle_map = Map.get()
-        enemies = [e for e in battle_map.get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+        enemies = [e for e in battle_map.get_non_swallowed_enemies(self.combatant)]
         result = []
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV
@@ -64,9 +64,8 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         return 0  # No need
 
-
     def calculate_max_threat(self):
-        enemies = [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+        enemies = [e for e in Map.get().get_non_swallowed_enemies(self.combatant)]
         return max([self.calculate_threat_to_target(e) for e in enemies])
 
 

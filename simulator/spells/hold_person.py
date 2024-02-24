@@ -59,7 +59,7 @@ class HoldPersonFactory(ThreatModifierFactory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return []  # Must be able to see
-        return [e for e in Map.get().get_enemies(self.combatant) if e.is_humanoid and not is_affected_by(e, Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_non_swallowed_enemies(self.combatant) if e.is_humanoid]
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()

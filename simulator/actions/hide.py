@@ -40,7 +40,7 @@ class HideFactory(ThreatModifierFactory):
         if get_swallower(self.combatant):
             return []
         battle_map = Map.get()
-        return [Hide(e, self) for e in Map.get().get_enemies(self.combatant) if not battle_map.effect_tracker.is_combatant_hidden_from(self.combatant, e) and not is_affected_by(e, Conditions.SWALLOWED)]
+        return [Hide(e, self) for e in Map.get().get_non_swallowed_enemies(self.combatant) if not battle_map.effect_tracker.is_combatant_hidden_from(self.combatant, e)]
 
     def create(self, target):
         return Hide(target, self)

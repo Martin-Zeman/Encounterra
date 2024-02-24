@@ -875,7 +875,7 @@ class Map:
             sub2_closest_coord = coords2[min_dist_index % dist_mat.shape[1], :]
             res = np.max(np.abs(sub1_closest_coord - sub2_closest_coord))
         except TypeError:
-            res = None
+            res = None  # TODO This case it not really handled anywhere
         return res
 
     @cached(cache={}, key=lambda self, combatant1, combatant2: hashkey(combatant1.name, combatant2.name))
@@ -1298,7 +1298,7 @@ class Map:
         return affected_combatants
 
     def get_enemies_within_radius_sorted_by_distance(self, combatant, radius):
-        enemies = [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_cartesian_distance_combatants(e, combatant) <= radius]
+        enemies = [e for e in self.teams.get_enemies(combatant) if self.get_cartesian_distance_combatants(e, combatant) <= radius]
         distances = [self.get_cartesian_distance_combatants(e, combatant) for e in enemies]
         enemies.sort(key=lambda e: self.get_cartesian_distance_combatants(e, combatant))
         distances.sort()
@@ -1402,32 +1402,35 @@ class Map:
         self.visibility_dict_for_all_coords = {coord: self.get_visibility_dict(combatant, np.array(coord)) for coord in shortest_paths.keys()}
         self.visibility_dict_for_all_coords[tuple(current_position)] = self.get_visibility_dict(combatant, current_position)
 
-    def get_adjacent_enemies(self, combatant):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) == 1]
+    def get_non_swallowed_adjacent_enemies(self, combatant):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) == 1]
 
-    def get_enemies_within_radius(self, combatant, radius):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) <= radius]
+    def get_non_swallowed_enemies_within_radius(self, combatant, radius):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) <= radius]
 
-    def get_allies_within_radius(self, combatant, radius):
-        return [a for a in self.teams.get_allies(combatant) if a.is_alive() and self.get_hop_distance_combatants(a, combatant) <= radius]
+    def get_non_swallowed_allies_within_radius(self, combatant, radius):
+        return [a for a in self.teams.get_allies(combatant) if a.is_alive() and not get_swallower(a) and self.get_hop_distance_combatants(a, combatant) <= radius]
 
     def get_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive()]
+
+    def get_non_swallowed_enemies(self, combatant):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e)]
 
     def get_combatants(self, combatant):
         return [c for c in self.combatant_coordinate_cache.keys() if c.is_alive() and c is not combatant]
 
     def get_allies(self, combatant):
-        return [a for a in self.teams.get_allies(combatant) if a.is_alive()]
+        return [a for a in self.teams.get_allies(combatant) if a.is_alive() and not get_swallower(a)]
 
-    def get_enemies_within_hop_distance(self, combatant, distance):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) <= distance]
+    def get_non_swallowed_enemies_within_hop_distance(self, combatant, distance):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) <= distance]
 
-    def get_enemies_without_hop_distance(self, combatant, distance):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) > distance]
+    def get_non_swallowed_enemies_without_hop_distance(self, combatant, distance):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) > distance]
 
-    def get_enemies_within_their_movement_range(self, combatant):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and self.get_hop_distance_combatants(e, combatant) <= e.movement + 1]
+    def get_non_swallowed_enemies_within_their_movement_range(self, combatant):
+        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) <= e.movement + 1]
 
     def is_difficult_terrain_at(self, coords: Coords):
         vec_is_difficult_terrain = np.vectorize(GridSquare.is_difficult_terrain)

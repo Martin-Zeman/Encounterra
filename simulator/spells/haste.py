@@ -55,7 +55,7 @@ class HasteFactory(ThreatModifierFactory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return [self.combatant]
-        ret = [a for a in Map.get().get_allies_within_radius(self.combatant, HasteFactory.range) if not is_affected_by(a, Conditions.SWALLOWED)]  # TODO do I want to keep this?
+        ret = Map.get().get_non_swallowed_allies_within_radius(self.combatant, HasteFactory.range)
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         return ret
@@ -80,7 +80,7 @@ class HasteFactory(ThreatModifierFactory):
         max_attack_dmg = 0
         attacks = get_haste_eligible_attacks(target)
         for attack in attacks:
-            potential_targets = battle_map.get_enemies_within_hop_distance(target, target.speed + attack.range + 1)
+            potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:
                 continue
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets, 0)

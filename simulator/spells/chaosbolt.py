@@ -68,7 +68,7 @@ class ChaosboltFactory(DirectThreatFactory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return [swallower]
-        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_non_swallowed_enemies(self.combatant)]
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -84,7 +84,7 @@ class ChaosboltFactory(DirectThreatFactory):
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ChaosboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
-            other_potential_targets = battle_map.get_enemies_within_radius(self.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
+            other_potential_targets = battle_map.get_non_swallowed_enemies_within_radius(self.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
             other_potential_targets.remove(self.target)
             P_SAME = 4 / 43  # 8/86 = 4 / 43
             p_acc = P_SAME
@@ -139,7 +139,7 @@ class Chaosbolt(Actoid, DirectThreat):
         battle_map = Map.get()
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
-        potential_targets = battle_map.get_enemies_within_radius(self.factory.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
+        potential_targets = battle_map.get_non_swallowed_enemies_within_radius(self.factory.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
         potential_targets.remove(self.target)
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME

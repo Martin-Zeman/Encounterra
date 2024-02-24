@@ -63,7 +63,7 @@ class AttackFactory(DirectThreatFactory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return [swallower]
-        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+        return [e for e in Map.get().get_non_swallowed_enemies(self.combatant)]
 
     def create(self, target):
         return Attack(target, self)

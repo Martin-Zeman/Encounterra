@@ -59,10 +59,10 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return []  # Let's not waste a twinned version on this
-        enemies = Map.get().get_enemies(self.combatant)
+        enemies = Map.get().get_non_swallowed_enemies(self.combatant)
         if len(enemies) < 2:
             return []  # Let's not waste a twinned version on this
-        return combinations([e for e in enemies if e.is_humanoid and not is_affected_by(e, Conditions.SWALLOWED)], 2)
+        return combinations([e for e in enemies if e.is_humanoid], 2)
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -103,7 +103,7 @@ class TwinnedHoldPersonFactory(ThreatModifierFactory):
     def calculate_max_threat(self):
         if get_swallower(self.combatant):
             return 0
-        targets = [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+        targets = [e for e in Map.get().get_non_swallowed_enemies(self.combatant)]
         threats = sorted([self.calculate_threat_to_target(t) for t in targets], reverse=True)
         return (threats[0] if threats else 0) + (threats[1] if len(threats) > 1 else 0)
 

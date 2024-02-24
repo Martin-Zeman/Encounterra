@@ -142,7 +142,7 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
     @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
     @return: estimated change in dmg, negative for advantage, positive for disadvantage
     """
-    potential_attackers = Map.get().get_enemies_within_hop_distance(combatant, threat_radius)
+    potential_attackers = Map.get().get_non_swallowed_enemies_within_hop_distance(combatant, threat_radius)
     incoming_threat_max_delta_acc = 0
     incoming_threat_min_delta_acc = 0
     min_threat = 0
@@ -190,7 +190,7 @@ def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags)
     @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
     @return: estimated change in dmg, negative for advantage, positive for disadvantage
     """
-    potential_attackers = battle_map.get_enemies_within_hop_distance(combatant, threat_radius)
+    potential_attackers = battle_map.get_non_swallowed_enemies_within_hop_distance(combatant, threat_radius)
     incoming_threat_acc = 0
     counter = 0
     for pa in potential_attackers:
@@ -267,7 +267,7 @@ def get_danger_zone_threat(coords, combatant, delta=0):
     :return: danger zone threat (positive)
     """
     battle_map = Map.get()
-    enemies = [e for e in battle_map.get_enemies(combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+    enemies = [e for e in battle_map.get_non_swallowed_enemies(combatant)]
     acc = reduce(lambda ac, e: ac + (
         e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
         battle_map.get_hop_distance_coords(battle_map.get_combatant_position(e).get(), coords) + delta <= e.speed +

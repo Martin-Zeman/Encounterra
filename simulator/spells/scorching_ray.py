@@ -55,7 +55,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         if swallower:
             return [[swallower, swallower, swallower]]
         # Range is so big that it doesn't matter
-        return combinations_with_replacement([e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)], 3)
+        return combinations_with_replacement([e for e in Map.get().get_non_swallowed_enemies(self.combatant)], 3)
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -103,7 +103,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         if swallower:
             targets = [swallower]
         else:
-            targets = [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+            targets = [e for e in Map.get().get_non_swallowed_enemies(self.combatant)]
         if not targets:
             return 0
         return max([self.calculate_threat_to_target(t) for t in targets])

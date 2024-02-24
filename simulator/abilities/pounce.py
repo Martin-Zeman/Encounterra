@@ -35,7 +35,7 @@ class PounceFactory(DirectThreatFactory):
         if swallower:
             return []
         battle_map = Map.get()
-        return [e for e in battle_map.get_enemies_without_hop_distance(self.combatant, self.distance - 1) if not is_affected_by(e, Conditions.SWALLOWED)]
+        return [e for e in battle_map.get_non_swallowed_enemies_without_hop_distance(self.combatant, self.distance - 1)]
 
     def create(self, target):
         return Pounce(target, self)

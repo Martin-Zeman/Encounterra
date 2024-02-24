@@ -22,7 +22,7 @@ class VampiricBiteFactory(MeleeAttackFactory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return []
-        return [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED) and
+        return [e for e in Map.get().get_non_swallowed_enemies(self.combatant) if
                 (is_affected_by_any(e, Conditions.INCAPACITATED, Conditions.RESTRAINED)
                  or get_grappler(e) is self.combatant)]
 

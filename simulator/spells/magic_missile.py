@@ -54,7 +54,7 @@ class MagicMissileFactory(DirectThreatFactory):
         if swallower:
             return [swallower, swallower, swallower]
         # Range is so big that it doesn't matter
-        return combinations_with_replacement([e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)], 3)
+        return combinations_with_replacement([e for e in Map.get().get_non_swallowed_enemies(self.combatant)], 3)
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -82,7 +82,7 @@ class MagicMissileFactory(DirectThreatFactory):
     def calculate_max_threat(self):
         if get_swallower(self.combatant):
             return 0  # Must be able to see
-        targets = [e for e in Map.get().get_enemies(self.combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
+        targets = [e for e in Map.get().get_non_swallowed_enemies(self.combatant)]
         for t in targets:
             threat = self.calculate_threat_to_target(t)
             # We just need one enemy within range which assures we can deal the damage (which is target-agnostic)

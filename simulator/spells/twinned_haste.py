@@ -48,10 +48,9 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         if swallower:
             return []  # Let's not waste a twinned version on this
         battle_map = Map.get()
-        allies = battle_map.get_allies_within_radius(self.combatant, HasteFactory.range)
-        if not allies:
+        ret = battle_map.get_non_swallowed_allies_within_radius(self.combatant, HasteFactory.range)
+        if not ret:
             return []  # Let's not waste a twinned version on this
-        ret = [a for a in allies if not is_affected_by(a, Conditions.SWALLOWED)]
         ret.append(self.combatant)
         ret = [a for a in ret if len(a.haste_action_factories) == 0]
         ret = combinations(ret, 2)
@@ -77,7 +76,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         max_attack_dmg = 0
         attacks = get_haste_eligible_attacks(target)
         for attack in attacks:
-            potential_targets = battle_map.get_enemies_within_hop_distance(target, target.speed + attack.range + 1)
+            potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:
                 continue
             dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, attack.crit_range, pt.is_resistant_to(attack.dmg_type)), potential_targets, 0)
