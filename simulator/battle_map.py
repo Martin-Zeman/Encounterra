@@ -814,22 +814,22 @@ class Map:
                 nearest = potential_target
         return nearest, min_dist, target_coord
 
-
     def is_enemy_adjacent(self, combatant):
         nearest, dist, _ = self.get_nearest(combatant)
         if nearest and dist == 1:
             return True
         return False
 
-
     def is_ally_adjacent_to_target(self, combatant, target):
         """
         Used for pack tactics to determine if an ally that is not incapacitated is adjacent to a combatant
         :param combatant: the combatant to test if they benefit from pack tactics
         :param target: the target combatant
-        :return: True if there's a non-incapacited ally adjacent
+        :return: True if there's a non-incapacitated ally adjacent
         """
-        target_coords = self.combatant_coordinate_cache[target]
+        target_coords = self.get_combatant_position(target)
+        if not target_coords:
+            return False
         adjacent_coords = self.get_adjacent_coords(target_coords)
         for adjacent_coord in adjacent_coords:
             potential_ally = self.grid[adjacent_coord[0], adjacent_coord[1]].combatant

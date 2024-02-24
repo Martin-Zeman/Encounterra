@@ -81,6 +81,8 @@ class FireboltFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
+        if get_swallower(target):
+            return 0
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= FireboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]

@@ -7,6 +7,7 @@ from ..utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
 
+
 class OnHitSneakAttack(OnHit):
 
     @staticmethod
@@ -35,6 +36,7 @@ class OnHitSneakAttack(OnHit):
             case _:
                 logger.error("Incorrect caster level of Sneak Attack")
                 return "1d6"
+
     def __init__(self, dmg_dize, dmg_type, crit_range, name="Sneak Attack"):
         self.dmg_dice = dmg_dize
         self.dmg_type = dmg_type

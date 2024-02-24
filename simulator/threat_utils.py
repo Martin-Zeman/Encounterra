@@ -19,6 +19,7 @@ from .utils.roll_types import RollType
 DZ_CONSTANT = 0.33
 MAX_HP_MODIFIER_MULTIPLIER = 1.25
 
+
 @cache
 def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range=1, is_resistant=False):
     """
@@ -53,6 +54,8 @@ def calc_p_hit(to_hit, ac):
     """
     rv = randint(1, 21, to_hit)
     return 1.0 - rv.cdf(ac - 1)
+
+
 @cache
 def mean_dmg_auto_hit(dmg_dice, is_resistant=False):
     """
@@ -67,7 +70,7 @@ def mean_dmg_auto_hit(dmg_dice, is_resistant=False):
 
 
 @cache
-def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increment, crit_range=1,  is_resistant=False):
+def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increment, crit_range=1, is_resistant=False):
     """
     Calculates the increase in mean dmg for an attack-like ability using a flat to-hit bonus
     @param to_hit: to hit bonus
@@ -77,7 +80,13 @@ def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increm
     @param to_hit_increment:
     @return: mean damage increment not accounting for critical failures
     """
-    return mean_dmg(to_hit + to_hit_increment, dmg_dice, dmg_bonus, ac, crit_range, is_resistant) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range, is_resistant)
+    return mean_dmg(to_hit + to_hit_increment, dmg_dice, dmg_bonus, ac, crit_range, is_resistant) - mean_dmg(to_hit,
+                                                                                                             dmg_dice,
+                                                                                                             dmg_bonus,
+                                                                                                             ac,
+                                                                                                             crit_range,
+                                                                                                             is_resistant)
+
 
 @cache
 def dmg_increment_for_dmg_flat(to_hit, dmg_dice, dmg_bonus, ac, dmg_increment):
@@ -94,7 +103,7 @@ def dmg_increment_for_dmg_flat(to_hit, dmg_dice, dmg_bonus, ac, dmg_increment):
 
 
 @cache
-def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus, crit_range=1,  is_resistant=False):
+def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus, crit_range=1, is_resistant=False):
     """
     Calculates the decrease in mean dmg received for an attack-like ability using a flat AC bonus
     @param to_hit: to hit bonus
@@ -104,7 +113,9 @@ def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus, crit_ra
     @param ac_bonus: bonus to target's AC
     @return: mean damage decrement not accounting for critical failures (positive value)
     """
-    return mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range, is_resistant) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac + ac_bonus, crit_range, is_resistant)
+    return mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, crit_range, is_resistant) - mean_dmg(to_hit, dmg_dice, dmg_bonus,
+                                                                                          ac + ac_bonus, crit_range,
+                                                                                          is_resistant)
 
 
 @cache
@@ -118,7 +129,8 @@ def mean_dmg_bonus_increment_for_to_hit_bonus_dice(to_hit, dmg_dice, dmg_bonus, 
     @param bonus_dice_size:
     @return: mean damage increment not accounting for critical failures
     """
-    return mean_dmg(to_hit + (1.0 + bonus_dice_size) / 2.0, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac)
+    return mean_dmg(to_hit + (1.0 + bonus_dice_size) / 2.0, dmg_dice, dmg_bonus, ac) - mean_dmg(to_hit, dmg_dice,
+                                                                                                dmg_bonus, ac)
 
 
 def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags):
@@ -137,7 +149,8 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
     max_threat = 0
     for pa in potential_attackers:
         for f in pa.action_factories:
-            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[1].flags:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[
+                1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)
@@ -147,7 +160,8 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
         min_threat = 0
         max_threat = 0
         for f in pa.bonus_action_factories:
-            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[1].flags:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[
+                1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)
@@ -157,13 +171,15 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
         min_threat = 0
         max_threat = 0
         for f in pa.haste_action_factories:
-            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[1].flags:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA not in f[
+                1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)
         incoming_threat_max_delta_acc += max_threat
         incoming_threat_min_delta_acc += min_threat
     return incoming_threat_min_delta_acc, incoming_threat_max_delta_acc
+
 
 def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags):
     """
@@ -195,6 +211,7 @@ def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags)
     incoming_threat_acc /= counter
     return incoming_threat_acc
 
+
 @cache
 def get_saving_throw_success_prob(dc, st_bonus):
     """
@@ -207,6 +224,7 @@ def get_saving_throw_success_prob(dc, st_bonus):
     p_fail = rv.cdf(dc - 1)
     return 1 - p_fail
 
+
 @cache
 def get_saving_throw_fail_prob(dc, st_bonus):
     """
@@ -217,6 +235,7 @@ def get_saving_throw_fail_prob(dc, st_bonus):
     """
     rv = randint(1, 21, st_bonus)
     return rv.cdf(dc - 1)
+
 
 @cache
 def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=False):
@@ -236,6 +255,7 @@ def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_resistant=Fal
     final_avg_dmg = fail_dmg + avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else fail_dmg
     return final_avg_dmg if not is_resistant else final_avg_dmg / 2
 
+
 def get_danger_zone_threat(coords, combatant, delta=0):
     """
     Adds potential threat projected by the virtue of being near an enemy. It adds up all the projected threat for all
@@ -248,9 +268,12 @@ def get_danger_zone_threat(coords, combatant, delta=0):
     """
     battle_map = Map.get()
     enemies = [e for e in battle_map.get_enemies(combatant) if not is_affected_by(e, Conditions.SWALLOWED)]
-    acc = reduce(lambda acc, e: acc + (e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
-        battle_map.get_hop_distance_coords(battle_map.get_combatant_position(e).get(), coords) + delta <= e.speed + e.danger_zone_attack[1].range else 0), enemies, 0)
+    acc = reduce(lambda ac, e: ac + (
+        e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
+        battle_map.get_hop_distance_coords(battle_map.get_combatant_position(e).get(), coords) + delta <= e.speed +
+        e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
+
 
 def get_threat_for_staying_at_coord(coords, combatant):
     """
@@ -278,7 +301,8 @@ def get_threat_for_staying_at_coord(coords, combatant):
 
 
 # @cached(cache={}, key=lambda curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
-def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged=False, dodged=False):
+def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged=False,
+                                         dodged=False):
     """
     A helper caching function which accumulates threats from AoE and AoO along a path.
     Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
@@ -316,7 +340,9 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant,
     return threat_acc
 
 
-@cached(cache={}, key=lambda path, combatant, effect_to_coords, disengaged=False, dodged=False: hashkey(tuple(path), disengaged, dodged))
+@cached(cache={},
+        key=lambda path, combatant, effect_to_coords, disengaged=False, dodged=False: hashkey(tuple(path), disengaged,
+                                                                                              dodged))
 def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
@@ -333,12 +359,14 @@ def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=F
     threat_along_path = [-get_threat_for_staying_at_coord(curr_coords.get(), combatant)]
     curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
     for increment in path:
-        t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged)
+        t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged,
+                                                 dodged)
         assert t <= 0
         threat_acc += t
         curr_coords_data += increment
         threat_along_path.append(threat_acc - get_threat_for_staying_at_coord(curr_coords_data, combatant))
     return tuple(threat_along_path)
+
 
 def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
     """
@@ -367,7 +395,8 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
         previous_ms_state = states[-1]
         transition_to_threat = dict()
         for increment in path:
-            curr_threat = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, False, False)
+            curr_threat = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords,
+                                                               False, False)
             curr_coords_data += increment
             coords.append(copy.copy(curr_coords_data[0]))
             new_state_name = str(tuple(curr_coords_data[0]))
@@ -409,20 +438,22 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
         MINUS_INF = -sys.maxsize - 1
         threat = dict.fromkeys(sorted_states, MINUS_INF)
         threat[sorted_states[0]] = 0
-        max_threat_backwards_transition = {sorted_states[0]: None}  # it's guaranteed that the first state is the initial coord
+        max_threat_backwards_transition = {
+            sorted_states[0]: None}  # it's guaranteed that the first state is the initial coord
         for state in sorted_states:
             try:
                 for transition_name, target_state in ms_dag.forward_transitions[state]:
-                    threat_acc = ((0 if transition_name.startswith("ms") else transition_to_threat[transition_name]) + threat[state]) if threat[state] > MINUS_INF else 0
+                    threat_acc = ((0 if transition_name.startswith("ms") else transition_to_threat[transition_name]) +
+                                  threat[state]) if threat[state] > MINUS_INF else 0
                     if threat_acc > threat[target_state]:
                         threat[target_state] = threat_acc
                         max_threat_backwards_transition[target_state] = (transition_name, state)
             except KeyError:
                 pass  # Ok, for the last state in each branch as they are leaves and have no out edges
 
-        max_threat_path = reconstruct_path_through_dag(sorted_states[-1], sorted_states[0], max_threat_backwards_transition)
+        max_threat_path = reconstruct_path_through_dag(sorted_states[-1], sorted_states[0],
+                                                       max_threat_backwards_transition)
         threat_acc += threat[states[-1]]  # the last ms state was added last which represents the longest (best) path
     # account for the final destination
     threat_acc -= get_threat_for_staying_at_coord(curr_coords_data if path else curr_coords.get(), combatant)
     return (threat_acc,), max_threat_path
-
