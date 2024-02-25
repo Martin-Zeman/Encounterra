@@ -102,7 +102,7 @@ class Combatant(ProtoCombatant):
         self.saving_throws_dice_mod = {SavingThrow.STR: [], SavingThrow.DEX: [], SavingThrow.CON: [], SavingThrow.INT: [], SavingThrow.WIS: [], SavingThrow.CHA: []}
         self.saving_throws_roll_type_mod = {SavingThrow.STR: set(), SavingThrow.DEX: set(), SavingThrow.CON: set(), SavingThrow.INT: set(), SavingThrow.WIS: set(), SavingThrow.CHA: set()}
         self.to_hit_flat_mod = 0
-        self.to_hit_dice_mod = []
+        self.to_hit_dice_mod = []  # In string format for easier removal
         self.shortest_paths_cache = None
         self.wears_metal = False
         self.is_humanoid = type(type(self).cls) is not Class.MONSTER or type(self).cls is Class.MONSTER.HUMANOID

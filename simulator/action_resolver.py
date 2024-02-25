@@ -330,7 +330,7 @@ class ActionResolver:
         elif rolled == 20:
             multiplier = 2
         for bonus_die in caster.to_hit_dice_mod:
-            bonus_dice_roll = roll_dice(bonus_die)
+            bonus_dice_roll = roll_dice(parse_dmg_dice(bonus_die))
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(caster)})
             rolled += bonus_dice_roll
         if caster.to_hit_flat_mod:
@@ -453,7 +453,7 @@ class ActionResolver:
             logger.info("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
             return ActionResult.MISS
         for bonus_die in attacker.to_hit_dice_mod:
-            bonus_dice_roll = roll_dice(bonus_die)
+            bonus_dice_roll = roll_dice(parse_dmg_dice(bonus_die))
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(attacker)})
             rolled += bonus_dice_roll
         if attacker.to_hit_flat_mod:
