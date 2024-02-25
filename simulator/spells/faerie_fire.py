@@ -36,7 +36,7 @@ class FaerieFireFactory(ThreatModifierFactory):
 
     def __init__(self, dc, action_type, caster, resource):
         super().__init__()
-        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
+        self.flags |= FactoryFlags.PREVENT_ENDLESS_RECURSION
         self.dc = dc
         self.action_type = action_type  # QUICKENED_FAERIE_FIRE, FAERIE_FIRE
         self.combatant = caster

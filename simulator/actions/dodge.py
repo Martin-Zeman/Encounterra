@@ -24,7 +24,7 @@ class DodgeFactory(ThreatModifierFactory):
         super().__init__()
         self.combatant = combatant
         self.action_type = Action.DODGE
-        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
+        self.flags |= FactoryFlags.PREVENT_ENDLESS_RECURSION
 
     def __str__(self):
         """

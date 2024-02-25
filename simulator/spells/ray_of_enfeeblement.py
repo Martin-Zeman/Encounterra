@@ -35,7 +35,7 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
-        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
+        self.flags |= FactoryFlags.PREVENT_ENDLESS_RECURSION
         self.to_hit = caster.spell_to_hit
         self.dc = caster.dc
         self.action_type = action_type  # RAY_OF_ENFEEBLEMENT, TWINNED_RAY_OF_ENFEEBLEMENT, QUICKENED_RAY_OF_ENFEEBLEMENT
@@ -76,7 +76,7 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
         max_threat = 0
         p_hit = calc_p_hit(self.to_hit, target.ac)
         afs = get_strength_based_attack_factories(target)
-        for af in afs:
+        for af in (a for a in afs if FactoryFlags.PREVENT_ENDLESS_RECURSION not in a.flags):
             dmg_inc = af.calculate_threat_to_target(self.combatant) / 2
             max_threat = max(dmg_inc, max_threat)
         return p_hit * max_threat * ROUND_HORIZON
@@ -162,7 +162,7 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         max_threat = 0
         p_hit = calc_p_hit(to_hit_total, self.target.ac)
         afs = get_strength_based_attack_factories(self.target)
-        for af in afs:
+        for af in (a for a in afs if FactoryFlags.PREVENT_ENDLESS_RECURSION not in a.flags):
             dmg_inc = af.calculate_threat_to_target(self.factory.combatant) / 2
             max_threat = max(dmg_inc, max_threat)
         return p_hit * max_threat * ROUND_HORIZON

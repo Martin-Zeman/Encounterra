@@ -37,5 +37,5 @@ class FactoryFlags(Flag):
     HAS_AMMO = auto()
     TARGETS_COORDS = auto()
     TARGETS_SELF = auto()
-    USES_CALCULATE_THREAT_IN_DELTA = auto()  # This is a very technical one which helps prevent endless recursion
+    PREVENT_ENDLESS_RECURSION = auto()  # This is a very technical one which helps prevent endless recursion
     TRANSITIONS_TO_WILDSHAPE = auto()

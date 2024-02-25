@@ -1,2 +1,0 @@
-Fuzzy test with Blue team [<class 'simulator.combatants.vampire_spawn.VampireSpawn'>, <class 'simulator.combatants.berserker.Berserker'>, <class 'simulator.combatants.giant_spider.GiantSpider'>] and Red team [<class 'simulator.combatants.twig_blight.TwigBlight'>, <class 'simulator.combatants.moon_druid_3lvl.MoonDruid3Lvl'>] raised an exception:
-<Encounterra.simulator.combatants.giant_toad.GiantToad object at 0x7f63a7c5c450>

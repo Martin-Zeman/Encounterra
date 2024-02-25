@@ -36,7 +36,7 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, resource):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
-        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
+        self.flags |= FactoryFlags.PREVENT_ENDLESS_RECURSION
         self.to_hit = caster.spell_to_hit
         self.dc = caster.dc
         self.action_type = action_type  # RAY_OF_ENFEEBLEMENT, TWINNED_RAY_OF_ENFEEBLEMENT, QUICKENED_RAY_OF_ENFEEBLEMENT

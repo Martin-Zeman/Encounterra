@@ -33,7 +33,7 @@ class HoldPersonFactory(ThreatModifierFactory):
 
     def __init__(self, dc, action_type, caster, resource):
         super().__init__()
-        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
+        self.flags |= FactoryFlags.PREVENT_ENDLESS_RECURSION
         self.dc = dc
         self.action_type = action_type  # HOLD_PERSON, QUICKENED_HOLD_PERSON
         self.combatant = caster

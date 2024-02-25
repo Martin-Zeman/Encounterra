@@ -32,7 +32,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
         self.flags |= FactoryFlags.HAS_AMMO
         self.flags |= FactoryFlags.IS_MELEE
-        self.flags |= FactoryFlags.USES_CALCULATE_THREAT_IN_DELTA
+        self.flags |= FactoryFlags.PREVENT_ENDLESS_RECURSION
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
