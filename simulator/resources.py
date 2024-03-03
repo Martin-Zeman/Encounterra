@@ -138,7 +138,7 @@ def use_resources(combatant, action):
                 subject.resources[Passive.METAMAGIC].use_resource()
             case Action.WILDSHAPE:
                 subject.resources[Action.WILDSHAPE].use_resource()
-            case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE:
+            case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE | Action.NOP:  # TODO NOP probably not needed
                 pass  # Sufficiently tracked by not having an action anymore
             case _:
                 logger.error(f"use_resources: Unknown action type {action_type}")
@@ -166,7 +166,7 @@ def use_resources(combatant, action):
                 subject.resources[Passive.METAMAGIC].use_resource(2)
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
                 subject.resources[Passive.METAMAGIC].use_resource(2)
-            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
+            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.NOP:  # TODO NOP probably not needed
                 pass  # Sufficiently tracked by not having a bonus action anymore
             case BonusAction.MOON_WILDSHAPE:
                 subject.resources[Action.WILDSHAPE].use_resource()

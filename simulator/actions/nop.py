@@ -20,7 +20,7 @@ class NopFactory(DirectThreatFactory):
         """
         Important for FSM building
         """
-        return "NOP"
+        return "NopFactory"
 
     def create_all(self, previous_action_in_dag=None):
         return [Nop(self)]

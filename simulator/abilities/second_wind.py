@@ -45,16 +45,17 @@ class SecondWindFactory(DirectThreatFactory):
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies
         """
-        return min(get_missing_hp(self.combatant), percentile_roll((1, 10), 70) + self.combatant.level)
+        # return min(get_missing_hp(self.combatant), percentile_roll((1, 10), 70) + self.combatant.level)
+        return self.calculate_max_threat()
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         return 0
 
     def calculate_max_threat(self):
-        # missing_hp = get_missing_hp(self.combatant)
-        # healing = percentile_roll((1, 10), 70) + self.combatant.level
-        # return min([missing_hp - healing, missing_hp, healing])
-        return min(get_missing_hp(self.combatant), percentile_roll((1, 10), 70) + self.combatant.level)
+        missing_hp = get_missing_hp(self.combatant)
+        healing = percentile_roll((1, 10), 70) + self.combatant.level
+        return min([missing_hp - healing, missing_hp, healing])
+        # return min(get_missing_hp(self.combatant), percentile_roll((1, 10), 70) + self.combatant.level)
 
 
 class SecondWind(Actoid, DirectThreat):
@@ -70,7 +71,8 @@ class SecondWind(Actoid, DirectThreat):
         return "Second Wind"
 
     def calculate_threat(self, **kwargs):
-        return min(get_missing_hp(self.factory.combatant), percentile_roll((1, 10), 70) + self.factory.combatant.level)
+        # return min(get_missing_hp(self.factory.combatant), percentile_roll((1, 10), 70) + self.factory.combatant.level)
+        return self.factory.calculate_max_threat()
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
