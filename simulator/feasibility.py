@@ -342,6 +342,8 @@ def check_feasibility(combatant, action):
                 return res and combatant.resources[Action.WILDSHAPE].has_resource()
             case BonusAction.FLAMING_SPHERE_RAM:
                 return res  # TODO add more conditions
+            case BonusAction.SECOND_WIND:
+                return res and combatant.resources[BonusAction.SECOND_WIND].has_resource()
             case _:
                 logger.error("Unknown bonus action")
                 return False
@@ -557,6 +559,8 @@ def check_feasibility_light(combatant, action):
                 return res
             case BonusAction.MOON_WILDSHAPE:
                 return res and combatant.resources[Action.WILDSHAPE].has_resource()
+            case BonusAction.SECOND_WIND:
+                return res and combatant.resources[BonusAction.SECOND_WIND].has_resource()
             case _:
                 logger.error("Unknown bonus action")
                 return False

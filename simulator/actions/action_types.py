@@ -2,6 +2,7 @@ from enum import Enum, auto
 
 
 class Action(Enum):
+    NOP = auto()
     MELEE_ATTACK = auto()
     RANGED_ATTACK = auto()
     RECKLESS_ATTACK = auto()
@@ -44,6 +45,7 @@ class Action(Enum):
 
 
 class BonusAction(Enum):
+    NOP = auto()
     BONUS_MELEE_ATTACK = auto()
     BONUS_RANGED_ATTACK = auto()
     PAM_BONUS_ATTACK = auto()
@@ -71,6 +73,7 @@ class BonusAction(Enum):
     QUICKENED_MAGIC_MISSILE = auto()
     QUICKENED_RAY_OF_ENFEEBLEMENT = auto()
     QUICKENED_SLEEP = auto()
+    SECOND_WIND = auto()
 
 
 class Reaction(Enum):
@@ -129,6 +132,7 @@ class Passive(Enum):
     BLINDSIGHT = auto()
     MAGIC_RESISTANCE = auto()
     CHARM_IMMUNITY = auto()
+    GREAT_WEAPON_FIGHTING = auto()
 
 
 class MetaAction(Enum):

@@ -402,7 +402,8 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, se
             break
         while max_idx - 1 >= 0 and sequence_idx_to_transition_step_threat[idx][max_idx] == sequence_idx_to_transition_step_threat[idx][max_idx - 1]:
             max_idx -= 1
-        sequences[idx] = sequences[idx][:max_idx + 1]
+        idx_diff = len(sequence_idx_to_transition_step_threat[idx]) - 1 - max_idx
+        sequences[idx] = sequences[idx][:len(sequences[idx]) - idx_diff + 1]
 
     sorted_sequences.sort(key=lambda idx: len(sequences[idx]))
     return sequences[sorted_sequences[0]]
@@ -517,6 +518,11 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                             for existing_delta_effect in battle_map.effect_tracker.get_affecting_combatant(combatant):
                                 if isinstance(existing_delta_effect, AttackThreatModifier):
                                     threat_acc += existing_delta_effect.calculate_threat_for_attack(combatant, action)
+                            # TODO Replace this with NOP
+                            # try:
+                            #     sequence_idx_to_transition_step_threat[idx].append(threat_acc)
+                            # except KeyError:
+                            #     sequence_idx_to_transition_step_threat[idx] = [threat_acc]
                     except KeyError:  # or different kind which represents some type of movement
                         pass  # Skipping
                 sequence_to_threat[idx] = [sequence_to_threat[idx][-1], threat_acc * feasibility_multiplier]  # Overwrite the movement threat tuple with the final movement and transition total

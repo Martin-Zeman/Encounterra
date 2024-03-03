@@ -30,19 +30,20 @@ from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.assassin import Assassin
 from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 from simulator.combatants.giant_toad import GiantToad
+from simulator.combatants.fighter_1lvl import Fighter1Lvl
 from simulator.teams import Teams
 import time
 
 if __name__ == '__main__':
     CustomLogger(logging.INFO)
     session = Session()
-    session.add_combatant(MoonDruid5Lvl, Teams.Color.RED)
+    # session.add_combatant(MoonDruid5Lvl, Teams.Color.RED)
     # session.add_combatant(MoonDruid3Lvl, Teams.Color.BLUE)
     # session.add_combatant(Acolyte, Teams.Color.BLUE)
-    session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
-    session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.RED)
-    session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
-    session.add_combatant(AssassinRogue3Lvl, Teams.Color.BLUE)
+    # session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
+    # session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.RED)
+    # session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
+    # session.add_combatant(AssassinRogue3Lvl, Teams.Color.BLUE)
     # session.add_combatant(GiantToad, Teams.Color.BLUE)
     # session.add_combatant(Assassin, Teams.Color.RED)
     # session.add_combatant(Ogre, Teams.Color.RED)
@@ -64,10 +65,10 @@ if __name__ == '__main__':
     # session.add_combatant(Goblin, Teams.Color.RED)
     # session.add_combatant(Goblin, Teams.Color.RED)
     # session.add_combatant(BrownBear, Teams.Color.BLUE)
-    # session.add_combatant(Bugbear, Teams.Color.RED)
+    session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(FaurungDt, Teams.Color.BLUE)
-    session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
+    # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
     # session.add_combatant(TotemBarbarian3Lvl, Teams.Color.RED)
     # session.add_combatant(StoneGiant, Teams.Color.BLUE)
     # session.add_combatant(VampireSpawn, Teams.Color.RED)
@@ -77,6 +78,7 @@ if __name__ == '__main__':
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(EvilMage, Teams.Color.BLUE)
     # session.add_combatant(NightHag, Teams.Color.BLUE)
+    session.add_combatant(Fighter1Lvl, Teams.Color.BLUE)
     session.set_num_simulations(1)
     start_time = time.time()
     session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)

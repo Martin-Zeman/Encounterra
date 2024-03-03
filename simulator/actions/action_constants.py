@@ -9,6 +9,7 @@ from ..abilities.constrict import ConstrictFactory
 from ..abilities.pounce import PounceFactory
 from ..abilities.rage import RageFactory
 from ..abilities.reckless_attack import RecklessAttackFactory
+from ..abilities.second_wind import SecondWindFactory
 from ..abilities.totem_rage import TotemRageFactory
 from ..abilities.uncanny_dodge import UncannyDodgeFactory
 from ..abilities.wildshape import WildshapeFactory
@@ -109,6 +110,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_BLESS: BlessFactory,
     BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
     BonusAction.QUICKENED_SLEEP: SleepFactory,
+    BonusAction.SECOND_WIND: SecondWindFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,

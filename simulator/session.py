@@ -16,6 +16,7 @@ from .combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
 from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from .combatants.dragonclaw_cultist import DragonclawCultist
 from .combatants.evil_mage import EvilMage
+from .combatants.fighter_1lvl import Fighter1Lvl
 from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
@@ -138,6 +139,8 @@ class Session:
                 self.combatants.append(DragonclawCultist(curr_count))
             case EvilMage.id:
                 self.combatants.append(EvilMage(curr_count))
+            case Fighter1Lvl.id:
+                self.combatants.append(Fighter1Lvl(curr_count))
             case GiantConstrictorSnake.id:
                 self.combatants.append(GiantConstrictorSnake(curr_count))
             case GiantSpider.id:

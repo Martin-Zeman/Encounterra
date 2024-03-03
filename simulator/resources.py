@@ -170,6 +170,8 @@ def use_resources(combatant, action):
                 pass  # Sufficiently tracked by not having a bonus action anymore
             case BonusAction.MOON_WILDSHAPE:
                 subject.resources[Action.WILDSHAPE].use_resource()
+            case BonusAction.SECOND_WIND:
+                subject.resources[BonusAction.SECOND_WIND].use_resource()
             case _:
                 logger.error("Unknown bonus action type")
     elif isinstance(action_type, Reaction):

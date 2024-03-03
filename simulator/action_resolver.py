@@ -13,7 +13,7 @@ from .actions.flaming_sphere_ram import FlamingSphereRamFactory
 from .battle_map import Map
 from .effects.effect import EffectType
 from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
-    roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn
+    roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll
 from .conditions import Conditions, ConditionWithDC, Condition, break_out_of_grapple, is_affected_by_any, \
     is_affected_by, get_grappled, apply_condition, apply_dc_condition, remove_condition, remove_dc_condition
 from .feasibility import check_feasibility
@@ -394,7 +394,10 @@ class ActionResolver:
         if rolled + attack.factory.to_hit >= (target.ac + target.one_time_ac_bonus):  # Potentially missing this time
             target.one_time_ac_bonus = 0
             dice = parse_dmg_dice(attack.factory.dmg_dice)
-            dmg_dice_sum = roll_dice(dice)
+            if FactoryFlags.TWO_HANDED in attack.factory.flags and attacker.has_passive(Passive.GREAT_WEAPON_FIGHTING):
+                dmg_dice_sum = roll_dice_with_reroll(dice, 2)
+            else:
+                dmg_dice_sum = roll_dice(dice)
             # logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
             extra_dmg = [(multiplier * roll_dice(parse_dmg_dice(e[0])), e[1]) for e in attack.factory.extra_dmg]
             # logger.info(f"and {extra_dmg} on the extra dmg dice", extra={"team": self.teams.get_team(attacker)})
@@ -687,6 +690,10 @@ class ActionResolver:
             case Action.SHAKE_ALLY_AWAKE:
                 logger.info(f"{actoid.target} is shaken awake by {combatant}")
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(actoid.target, EffectType.SLEEP)
+            case BonusAction.SECOND_WIND:
+                heal_hp = roll_dice([(1, 10)]) + combatant.level
+                combatant.heal(heal_hp)
+                logger.info(f"{combatant} uses Second Wind and heals for {heal_hp} damage")
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

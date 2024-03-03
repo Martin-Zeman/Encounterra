@@ -10,6 +10,7 @@ from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .action_resolver import check_concentration
 from .actions.actoid import FactoryFlags
 from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from .actions.nop import NopFactory
 from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
@@ -40,10 +41,10 @@ class Combatant(ProtoCombatant):
             self.name = type(self).name + " " + str(num_or_name)
         else:
             self.name = num_or_name  # Wildshape case
-        self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self))]
+        self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self)), (Action.NOP, NopFactory(Action.NOP, self))]
         self.dodge_factory = self.action_factories[0]
         self.disengage_factory = self.action_factories[1]
-        self.bonus_action_factories = []
+        self.bonus_action_factories = [(BonusAction.NOP, NopFactory(BonusAction.NOP, self))]
         self.reaction_factories = []
         self.danger_zone_attack = None
         self.haste_action_factories = []
@@ -304,11 +305,7 @@ class Combatant(ProtoCombatant):
                     self.pam_factory = self.bonus_action_factories[-1]
                     self.display_abilities.append(self.bonus_action_factories[-1][1].name)
                     return self.bonus_action_factories[-1]
-                case BonusAction.RAGE:
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
-                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
-                    return self.bonus_action_factories[-1]
-                case BonusAction.TOTEM_RAGE:
+                case BonusAction.RAGE | BonusAction.TOTEM_RAGE | BonusAction.SECOND_WIND:
                     resource = kwargs.get("resource", None)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
