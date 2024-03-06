@@ -45,7 +45,7 @@ class Nop(Actoid, DirectThreat):
         self.factory = factory
 
     def __str__(self):
-        return f"NOP"
+        return f"NOP of {self.factory.combatant}"
 
     def shorthand_str(self):
         return f"NOP"

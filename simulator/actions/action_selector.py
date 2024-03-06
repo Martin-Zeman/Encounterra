@@ -536,7 +536,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                 sequence_to_threat[idx] = [sequence_to_threat[idx][-1], threat_acc * feasibility_multiplier]  # Overwrite the movement threat tuple with the final movement and transition total
                 sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords) else 0  # Small bias towards current position prevents oscillations
 
-    sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
+    # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
+    sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True)
     return get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, transition_name_to_action), transition_name_to_ms_path
 
 
