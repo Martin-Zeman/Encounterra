@@ -10,6 +10,7 @@ from ..spells.haste import HasteFactory
 from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, teams, effect_tracker, battle_map
 
+
 def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian):
     """
     We assert that a hasted bugbear utilizes both its regular attack and hasted attack independently, although each attack must be used

@@ -414,6 +414,8 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
                 filtered_sequence.append(transition)
         except KeyError:
             filtered_sequence.append(transition)
+    if len(filtered_sequence) == 1:
+        return None  # This means the only non-movement action was a NOP and there's only movement left
     return filtered_sequence
 
 

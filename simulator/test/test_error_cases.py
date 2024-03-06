@@ -1263,6 +1263,7 @@ def test_error_case_28(battle_map, teams, effect_tracker, test_moon_druid, test_
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
+
 def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_bugbear, test_evil_mage):
     """
     Error in for the Saber-Toother Tiger's "TypeError("unsupported operand type(s) for +: 'Size' and 'int'")"
@@ -1270,6 +1271,7 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
     test_sabertoother_tiger_2 = copy.deepcopy(test_sabertoother_tiger)
+    test_sabertoother_tiger_2.name = "Saber-Toothed Tiger 2"
     combatants = [test_moon_druid, test_sabertoother_tiger, test_sabertoother_tiger_2, test_bugbear, test_evil_mage]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 

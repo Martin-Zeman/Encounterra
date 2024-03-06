@@ -1,3 +1,4 @@
+from .action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache
 from ..conditions import Conditions, is_affected_by_any
 from ..actions.actoid import Actoid
@@ -45,7 +46,7 @@ class Nop(Actoid, DirectThreat):
         self.factory = factory
 
     def __str__(self):
-        return f"NOP of {self.factory.combatant}"
+        return f"{'Bonus ' if isinstance(self.factory.action_type, BonusAction) else ''}NOP of {self.factory.combatant}"
 
     def shorthand_str(self):
         return f"NOP"

@@ -32,11 +32,9 @@ class Cultist(Combatant):
         self.acrobatics = 1
         self.passive_perception = 10
 
-
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_transition(str(self.scimitar[1]), '0', 'nop')
-
 
     def export_resources(self):
         return {
