@@ -136,11 +136,11 @@ class Passive(Enum):
 
 
 class MetaAction(Enum):
-    DONE = auto()
     QUICKENED_SPELL = auto()
     TWINNED_SPELL = auto()
     EMPOWERED_SPELL = auto()
 
+
 # TODO
-# class FreeAction(Enum):
-#     pass
+class FreeAction(Enum):
+    ACTION_SURGE = auto()

@@ -6,10 +6,14 @@ import random
 import math
 from contextlib import contextmanager
 
+from .abilities.action_surge import ActionSurgeFactory
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
+from .abilities.rage import RageFactory
 from .action_resolver import check_concentration
+from .actions.action_surge_plan_strategy import ActionSurgePlanStrategy
 from .actions.actoid import FactoryFlags
 from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from .actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
 from .actions.nop import NopFactory
 from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
@@ -19,9 +23,8 @@ from .misc import SavingThrow, Size, SpellcastingResourceType, Class
 from .conditions import Conditions, is_affected_by, remove_condition
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
-from .abilities.rage import RageFactory
 from .actions.action_constants import TO_FACTORY, TO_HASTED, TO_QUICKENED, TO_TWINNED
-from .actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction
+from .actions.action_types import Passive, Action, BonusAction, Reaction, HasteAction, MetaAction, FreeAction
 from .proto_combatant import ProtoCombatant
 from .resources import ResourceDepletionLevel, Uses, ResourceRefreshType
 from .spellslots import spellslot_factory
@@ -46,6 +49,7 @@ class Combatant(ProtoCombatant):
         self.disengage_factory = self.action_factories[1]
         self.bonus_action_factories = [(BonusAction.NOP, NopFactory(BonusAction.NOP, self))]
         self.reaction_factories = []
+        self.free_action_factories = []
         self.danger_zone_attack = None
         self.haste_action_factories = []
         self.action_plan_strategy = DefaultActionPlanStrategy(self)
@@ -116,6 +120,7 @@ class Combatant(ProtoCombatant):
         self.one_time_ac_bonus = 0
         self.current_wildshape_form = None
         self.original_form = self
+        self.weapon_dmg_dealt_this_turn = 0
 
     @staticmethod
     def generate_unique_id(name, cls, level):
@@ -305,9 +310,16 @@ class Combatant(ProtoCombatant):
                     self.pam_factory = self.bonus_action_factories[-1]
                     self.display_abilities.append(self.bonus_action_factories[-1][1].name)
                     return self.bonus_action_factories[-1]
-                case BonusAction.RAGE | BonusAction.TOTEM_RAGE | BonusAction.SECOND_WIND:
-                    resource = kwargs.get("resource", None)
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
+                case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
+                    rage_uses = Uses(RageFactory.get_rage_uses(self.level), ResourceRefreshType.LONG_REST)
+                    self.resources[action_type] = rage_uses
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    return self.bonus_action_factories[-1]
+                case BonusAction.SECOND_WIND:
+                    second_wind_uses = Uses(1, ResourceRefreshType.SHORT_REST)
+                    self.resources[BonusAction.SECOND_WIND] = second_wind_uses
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
                 case BonusAction.MISTY_STEP:
@@ -341,6 +353,7 @@ class Combatant(ProtoCombatant):
                     #     return self if self.current_wildshape_form is None else self.current_wildshape_form
                     # self.get_current_form = wildshape_get.__get__(self, Combatant)
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
                     return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required
@@ -420,6 +433,18 @@ class Combatant(ProtoCombatant):
                     # TODO
                 case _:
                     logger.error("Unknown meta action")
+                    return None
+        elif isinstance(action_type, FreeAction):
+            match action_type:
+                case FreeAction.ACTION_SURGE:
+                    action_surge_uses = Uses(ActionSurgeFactory.get_action_surge_uses(self.level), ResourceRefreshType.SHORT_REST)
+                    self.resources[FreeAction.ACTION_SURGE] = action_surge_uses
+                    self.free_action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    self.display_abilities.append(self.free_action_factories[-1][1].get_ability_name())
+                    self.action_plan_strategy = ActionSurgePlanStrategy(self)
+                    return self.free_action_factories[-1]
+                case _:
+                    logger.error("Unknown free action")
                     return None
         else:
             logger.error("Unknown high level action class")

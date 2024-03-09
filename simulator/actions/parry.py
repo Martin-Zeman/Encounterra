@@ -5,6 +5,7 @@ from ..factory_interfaces import DirectThreatFactory
 
 logger = logging.getLogger("Encounterra")
 
+
 class ParryFactory(DirectThreatFactory):
 
     def __init__(self, ac):
@@ -18,7 +19,6 @@ class ParryFactory(DirectThreatFactory):
         """
         return "ParryFactory"
 
-
     def get_ability_name(self):
         return "Parry"
 
@@ -31,7 +31,7 @@ class ParryFactory(DirectThreatFactory):
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         return 0
 
-    def create(self):
+    def create(self, target):
         return Parry(self)
 
 

@@ -3,6 +3,7 @@ import logging
 from .grapple_attack import GrappleAttackFactory
 from .parry import ParryFactory
 from .vampiric_bite import VampiricBiteFactory
+from ..abilities.action_surge import ActionSurgeFactory
 from ..abilities.bite_and_swallow import BiteAndSwallowFactory
 from ..abilities.pre_swallow_bite import PreSwallowBiteFactory
 from ..abilities.constrict import ConstrictFactory
@@ -13,7 +14,7 @@ from ..abilities.second_wind import SecondWindFactory
 from ..abilities.totem_rage import TotemRageFactory
 from ..abilities.uncanny_dodge import UncannyDodgeFactory
 from ..abilities.wildshape import WildshapeFactory
-from ..actions.action_types import Action, BonusAction, HasteAction, Reaction, MovementThreatType
+from ..actions.action_types import Action, BonusAction, HasteAction, Reaction, MovementThreatType, FreeAction
 from ..actions.dash import DashFactory
 from ..actions.disengage import DisengageFactory
 from ..actions.dodge import DodgeFactory
@@ -124,7 +125,9 @@ TO_FACTORY = {
     HasteAction.HASTE_RANGED_ATTACK: RangedAttackFactory,
     HasteAction.HASTE_DISENGAGE: DisengageFactory,
     HasteAction.HASTE_HIDE: HideFactory,
-    HasteAction.HASTE_DASH: None
+    HasteAction.HASTE_DASH: None,
+
+    FreeAction.ACTION_SURGE: ActionSurgeFactory
 }
 
 TO_QUICKENED = {

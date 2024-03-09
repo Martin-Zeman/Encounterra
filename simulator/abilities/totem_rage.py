@@ -23,12 +23,11 @@ logger = logging.getLogger("Encounterra")
 
 class TotemRageFactory(ThreatModifierFactory):
 
-    def __init__(self, combatant, resource):
+    def __init__(self, combatant):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_MODIFIER
         self.flags |= FactoryFlags.TARGETS_SELF
         self.combatant = combatant
-        self.resource = resource
         self.action_type = BonusAction.TOTEM_RAGE
 
     def __str__(self):

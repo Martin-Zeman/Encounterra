@@ -33,8 +33,9 @@ def assert_keywords_in_log(file_path, keywords):
     with open(file_path, 'r') as f:
         log_content = f.read()
 
-    for keyword in keywords:
-        assert keyword in log_content, f"Keyword '{keyword}' not found in log file."
+    missing_keywords = [keyword for keyword in keywords if keyword not in log_content]
+    if missing_keywords:
+        assert False, f"The following keywords were not found in the log: {missing_keywords}"
 
 
 def assert_victories_with_tolerance(results, team_color, expected_percentage, tolerance_percentage):
@@ -65,6 +66,8 @@ def assert_victories_with_tolerance(results, team_color, expected_percentage, to
 @pytest.mark.slow
 def test_matchup_1():
     log_path = "/tmp/test_matchup_1_log.txt"
+    if os.path.exists(log_path):
+        os.remove(log_path)
     CustomLogger(logging.INFO, False, log_path)
     blue_team = [DraconicSorcerer5Lvl, AssassinRogue3Lvl]
     red_team = [MoonDruid5Lvl, DraconicSorcerer3Lvl]
@@ -87,7 +90,7 @@ def test_matchup_1():
     for combatant in red_team:
         session.add_combatant(combatant, Teams.Color.RED)
 
-    session.set_num_simulations(2)
+    session.set_num_simulations(20)
     session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)
     try:
         results = session.simulate(parallel=False)
@@ -95,9 +98,8 @@ def test_matchup_1():
         assert_victories_with_tolerance(results, Teams.Color.BLUE, 90, 10)
         assert_victories_with_tolerance(results, Teams.Color.RED, 10, 10)
         os.remove(log_path)
-    except AssertionError as ae:
-        logger.error(f"Test failed with: {ae}")
-        assert False
+    except AssertionError:
+        raise
     except Exception as e:
         timestamp = int(time.time())
         with open(os.path.join(SERIALIZE_DIR, f'battle_map_data_{timestamp}.pkl'), 'wb') as f:

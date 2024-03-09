@@ -23,6 +23,9 @@ class NopFactory(DirectThreatFactory):
         """
         return "NopFactory"
 
+    def get_ability_name(self):
+        return "Nop"
+
     def create_all(self, previous_action_in_dag=None):
         return [Nop(self)]
 

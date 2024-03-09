@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod, ABC
 from enum import Enum, auto
 
-from .actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction, Passive
+from .actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction, Passive, FreeAction
 from .battle_map import Map
 from .conditions import Conditions, is_affected_by
 
@@ -200,8 +200,13 @@ def use_resources(combatant, action):
                 logger.error("Unknown movement type")
     elif isinstance(action_type, HasteAction):
         subject.has_haste_action = False
-    # elif isinstance(action_type, FreeAction):
-    #     pass  # no resources needed
+    elif isinstance(action_type, FreeAction):
+        match action_type:
+            case FreeAction.ACTION_SURGE:
+                subject.resources[FreeAction.ACTION_SURGE].use_resource()
+            case _:
+                logger.error("Unknown free action type")
+        pass  # no resources needed
     else:
         logger.error("Unknown high level action class")
 

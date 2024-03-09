@@ -6,7 +6,7 @@ from functools import reduce
 from collections import Counter
 from typing import Dict
 
-from .actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
+from .actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction, FreeAction
 from .actions.actoid import FactoryFlags
 from .actions.dodge import DodgeFactory
 from .actions.flaming_sphere_ram import FlamingSphereRamFactory
@@ -694,6 +694,9 @@ class ActionResolver:
                 heal_hp = roll_dice([(1, 10)]) + combatant.level
                 combatant.heal(heal_hp)
                 logger.info(f"{combatant} uses Second Wind and heals for {heal_hp} damage")
+            case FreeAction.ACTION_SURGE:
+                logger.info(f"{combatant} uses Action Surge")
+                combatant.has_action = True
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

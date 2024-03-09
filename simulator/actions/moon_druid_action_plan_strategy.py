@@ -11,6 +11,7 @@ from ..battle_map import Map
 
 logger = logging.getLogger("Encounterra")
 
+
 def evaluate_combination_eligibility(actions, transition_name_to_action):
     """
     A helper function which evaluates whether a non-wildshape action precedes a wildshape action in a list of actions.
@@ -41,6 +42,7 @@ def evaluate_combination_eligibility(actions, transition_name_to_action):
         return True, None
     return False, None
 
+
 def get_moon_wildshape_action(action_plan):
     """
     A helper function which iterates through a list of actions and returns the moon wildshape it contains
@@ -54,12 +56,12 @@ def get_moon_wildshape_action(action_plan):
         except KeyError:
             pass
 
+
 class MoonDruidActionPlanStrategy(ActionPlanStrategy):
 
     def __init__(self, combatant):
         super().__init__(combatant)
         self.best_wildshape_plan_data = None
-
 
     def combine_action_plans(self, regular_action_plan, ws_action_plan, non_wildshape_action, distances, shortest_paths):
         """
@@ -102,7 +104,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
             if ws_transition_name_to_action:  # Could be out of wildshape uses
                 ws_proto_dag, ws_movement_trans_to_coord_and_type, ws_transition_to_eligible_coords = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
                 if ws_proto_dag is not None:
-                    ws_best_sequence, ws_transition_name_to_ms_path = find_best_sequence(self.combatant, ws_proto_dag, ws_transition_name_to_action, ws_transition_to_eligible_coords, ws_movement_trans_to_coord_and_type, distances, shortest_paths)
+                    ws_best_sequence, ws_transition_name_to_ms_path, _ = find_best_sequence(self.combatant, ws_proto_dag, ws_transition_name_to_action, ws_transition_to_eligible_coords, ws_movement_trans_to_coord_and_type, distances, shortest_paths)
                     self.best_wildshape_plan_data = ws_transition_name_to_action, ws_movement_trans_to_coord_and_type, ws_best_sequence, ws_transition_name_to_ms_path
 
         # get_aoe_and_aoo_threat_for_increment.cache_clear()
@@ -110,7 +112,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             return None
-        best_sequence, transition_name_to_ms_path = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
+        best_sequence, transition_name_to_ms_path, _ = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
         if best_sequence is None:
             return None
         need_to_combine, non_wildshape_action = evaluate_combination_eligibility(best_sequence, transition_name_to_action)

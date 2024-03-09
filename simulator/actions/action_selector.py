@@ -371,7 +371,7 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
     do not add any additional threat.
     3. Sort: It sorts the sequences by their length in ascending order.
 
-    The function is designed to be used in the context of the `get_movement_for_next_turn` function. It helps in selecting the most optimal
+    The function is designed to be used in the context of the `get_movement_and_threat_for_next_turn` function. It helps in selecting the most optimal
     action sequence among sets of actions with equal threat but different orders.
 
     :param sequences: List of all action sequences in no particular order.
@@ -379,10 +379,11 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
     :param sequence_to_threat: A dictionary mapping sequence index to its threat value.
     :param distances: A pre-computed dictionary of distances to all coordinates.
 
-    :return: The action sequence with maximum threat and more distant coordinate requirement after minimization.
+    :return: A tuple of the action sequence with maximum threat and more distant coordinate requirement after
+    minimization and the maximum threat.
     """
     if not sorted_sequences:
-        return None
+        return None, 0
     max_threat = sequence_to_threat[sorted_sequences[0]]
     idx = 0
     while idx < len(sorted_sequences) and sequence_to_threat[sorted_sequences[idx]] == max_threat:
@@ -394,18 +395,10 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
         if dist < min_dist:
             min_dist = dist
     sorted_sequences = [idx for idx in sorted_sequences if get_dist_to_action_sequence_coord(sequences[idx], distances) == min_dist]
-    # for idx in sorted_sequences:
-    #     try:
-    #         max_idx = len(sequence_idx_to_transition_step_threat[idx]) - 1
-    #     except KeyError:
-    #         break
-    #     while max_idx - 1 >= 0 and sequence_idx_to_transition_step_threat[idx][max_idx] == sequence_idx_to_transition_step_threat[idx][max_idx - 1]:
-    #         max_idx -= 1
-    #     idx_diff = len(sequence_idx_to_transition_step_threat[idx]) - 1 - max_idx
-    #     sequences[idx] = sequences[idx][:len(sequences[idx]) - idx_diff + 1]
 
     sorted_sequences.sort(key=lambda idx: len(sequences[idx]))
     best_sequence = sequences[sorted_sequences[0]]
+    best_threat = sequence_to_threat[sorted_sequences[0]]
     filtered_sequence = []
     for transition in best_sequence:
         try:
@@ -415,11 +408,11 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
         except KeyError:
             filtered_sequence.append(transition)
     if len(filtered_sequence) == 1:
-        return None  # This means the only non-movement action was a NOP and there's only movement left
-    return filtered_sequence
+        return None, 0 # This means the only non-movement action was a NOP and there's only movement left
+    return filtered_sequence, best_threat
 
 
-def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_transition_to_coord_and_type, distances, shortest_paths):
+def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_transition_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier=0.5):
     """
     Finds the path through the DAG which represents the movement and actions with the highest calculated threat.
     We're taking advantage of the fact that as a result of the DFS traversal the coordinates in generated sequences are block-wise.
@@ -517,9 +510,9 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                                 if not eligible_coords:
                                     continue  # e.g. when there's no place to hide
                                 remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
-                                feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else 0.5
+                                feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
                             else:
-                                feasibility_multiplier = 1 if distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else 0.5
+                                feasibility_multiplier = 1 if distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
                             threat_acc += action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
                             if delta_action:
                                 threat_acc += delta_action.calculate_threat_for_attack(combatant, action)
@@ -540,7 +533,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
 
     # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
     sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True)
-    return get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, transition_name_to_action), transition_name_to_ms_path
+    nearest_and_minimized_sequence, max_threat = get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, transition_name_to_action)
+    return nearest_and_minimized_sequence, transition_name_to_ms_path, max_threat
 
 
 def get_action(combatant):

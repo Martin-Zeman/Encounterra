@@ -1,4 +1,4 @@
-from .actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction, Passive
+from .actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction, Passive, FreeAction
 from .battle_map import Map
 from .combatant_coords import Coords
 from .effects.effect import EffectType
@@ -579,6 +579,12 @@ def check_feasibility_light(combatant, action):
         return combatant.movement > 0 and not is_affected_by_any(combatant,
             Conditions.GRAPPLED,
             Conditions.RESTRAINED)
+    elif isinstance(action_type, FreeAction):
+        match action_type:
+            case FreeAction.ACTION_SURGE:
+                return combatant.resources[FreeAction.ACTION_SURGE].has_resource()
+            case _:
+                logger.error("Unknown free action")
     else:
         logger.error(f"check_feasibility_light: Unknown action type {action_type}")
         return False

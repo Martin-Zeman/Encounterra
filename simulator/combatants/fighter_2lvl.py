@@ -1,5 +1,5 @@
-from ..abilities.rage import RageFactory
-from ..actions.action_types import Action, Reaction, BonusAction, Passive
+from ..abilities.action_surge import ActionSurgeFactory
+from ..actions.action_types import Action, Reaction, BonusAction, Passive, FreeAction
 from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
@@ -9,19 +9,20 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class Fighter1Lvl(Combatant):
+class Fighter2Lvl(Combatant):
 
-    name = "Fighter 1. Level"
+    name = "Fighter 2. Level"
     cls = Class.FIGHTER.BEFORE_SUBCLASS
-    level = 1
+    level = 2
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=12, ac=16, init_bonus=0, spell_to_hit=0, speed=30, resistances=set(), dc=0)
+        super().__init__(num_or_name, hp=20, ac=16, init_bonus=0, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.greatsword = self.add_ability(Action.MELEE_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)
         self.handaxe = self.add_ability(Action.RANGED_ATTACK, name="Handaxe", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=12, crit_range=1, uses_dex=False, ammo=2)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(BonusAction.SECOND_WIND)
+        self.add_ability(FreeAction.ACTION_SURGE)
         self.add_ability(Passive.GREAT_WEAPON_FIGHTING)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 5
@@ -45,6 +46,7 @@ class Fighter1Lvl(Combatant):
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
             'second_wind_uses': self.resources[BonusAction.SECOND_WIND].export_resource(),
+            'action_surge_uses': self.resources[FreeAction.ACTION_SURGE].export_resource(),
             'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state
         }
@@ -55,6 +57,7 @@ class Fighter1Lvl(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.resources[BonusAction.SECOND_WIND].import_resource(uses=resources['second_wind_uses'])
+        self.resources[FreeAction.ACTION_SURGE].import_resource(uses=resources['action_surge_uses'])
         self.attack_fsm.state = resources['attack_fsm_state']
 
     def prompt_aoo(self, moving_combatant):
