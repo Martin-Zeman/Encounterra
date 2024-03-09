@@ -48,7 +48,7 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
 
     try:
         actoid1 = get_action(test_moon_druid)
-        assert str(actoid1) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         actoid2 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid2, test_moon_druid)
@@ -62,7 +62,7 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
             action_resolver.resolve_action(actoid5, test_moon_druid)
             actoid6 = get_action(test_moon_druid)
         # It can attack at any of those moments but latest at actoid6
-        assert str(actoid4) == "Toad Bite on Bugbear 1" or str(actoid5) == "Toad Bite on Bugbear 1" or str(actoid6) == "Toad Bite on Bugbear 1"
+        assert str(actoid4) == "Toad Bite on Bugbear (1)" or str(actoid5) == "Toad Bite on Bugbear (1)" or str(actoid6) == "Toad Bite on Bugbear (1)"
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -90,7 +90,7 @@ def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, t
         assert str(actoid1).startswith("Flaming Sphere")  # We've selected a goblin to make Flaming Sphere to win out over Hold Person
         action_resolver.resolve_action(actoid1, test_moon_druid)
         actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        assert str(actoid2) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid2, test_moon_druid)
         actoid3 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid3, test_moon_druid)
@@ -104,8 +104,8 @@ def test_wildshape_with_concentration_spell(battle_map, teams, effect_tracker, t
         actoid6 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid6, test_moon_druid)
         actoid7 = get_action(test_moon_druid)
-        assert str(actoid5) == "Toad Bite on Goblin 1" or str(actoid6) == "Toad Bite on Goblin 1"
-        assert str(actoid5) == "Flaming Sphere Ram into Goblin 1" or str(actoid6) == "Flaming Sphere Ram into Goblin 1"
+        assert str(actoid5) == "Toad Bite on Goblin (1)" or str(actoid6) == "Toad Bite on Goblin (1)"
+        assert str(actoid5) == "Flaming Sphere Ram into Goblin (1)" or str(actoid6) == "Flaming Sphere Ram into Goblin (1)"
         assert str(actoid7) == "None"
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -163,7 +163,7 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
         assert actoid7.factory.concentration
         action_resolver.resolve_action(actoid7, test_moon_druid)
         actoid8 = get_action(test_moon_druid)
-        assert str(actoid8) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        assert str(actoid8) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid8, test_moon_druid)
         actoid9 = get_action(test_moon_druid)
         assert str(actoid9) == "None"
@@ -182,7 +182,7 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
         actoid15 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid15, test_moon_druid)
         second_turn_actoids = [str(actoid10), str(actoid11), str(actoid12), str(actoid13), str(actoid14), str(actoid15)]
-        assert any(act == "Toad Bite on Bugbear 1" for act in second_turn_actoids)
+        assert any(act == "Toad Bite on Bugbear (1)" for act in second_turn_actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -229,7 +229,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     try:
         actoid1 = get_action(test_moon_druid)
         assert test_moon_druid.curr_hp == 42
-        assert str(actoid1) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
@@ -240,11 +240,11 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
 
         test_moon_druid.new_turn()
         actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "Toad Bite on Bugbear 1"
+        assert str(actoid2) == "Toad Bite on Bugbear (1)"
         action_resolver.resolve_action(actoid2, test_moon_druid)
         test_moon_druid.new_turn()
         actoid3 = get_action(test_moon_druid)
-        assert str(actoid3) == "Toad Bite and Swallow on Bugbear 1"
+        assert str(actoid3) == "Toad Bite and Swallow on Bugbear (1)"
         action_resolver.resolve_action(actoid3, test_moon_druid)
         assert is_affected_by(test_bugbear, Conditions.SWALLOWED)
         test_moon_druid.get_current_form().receive_dmg(40, DamageType.Slashing)
@@ -258,7 +258,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.curr_hp == 41
         test_moon_druid.new_turn()
         actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "Wildshape of Moon Druid 5. Level 1 into Brown Bear"
+        assert str(actoid2) == "Wildshape of Moon Druid 5th LVL (1) into Brown Bear"
         action_resolver.resolve_action(actoid2, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
@@ -314,7 +314,7 @@ def test_removed_from_battlemap_when_killed_by_carry_over_damage_in_wildshape(ba
     try:
         actoid1 = get_action(test_moon_druid)
         assert test_moon_druid.curr_hp == 1
-        assert str(actoid1) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
@@ -369,7 +369,7 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
 
     try:
         actoid1 = get_action(test_moon_druid)
-        assert str(actoid1) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         actoid2 = get_action(test_moon_druid)
         action_resolver.resolve_action(actoid2, test_moon_druid)
@@ -382,7 +382,7 @@ def test_others_can_attack_wildshape(battle_map, teams, effect_tracker, test_moo
         if is_affected_by(test_bugbear, Conditions.GRAPPLED):
             assert str(actoid5) == "Break Grapple"
         else:
-            assert str(actoid5) == "Morningstar on Moon Druid 5. Level 1 wildshaped into Giant Toad"
+            assert str(actoid5) == "Morningstar on Moon Druid 5th LVL (1) wildshaped into Giant Toad"
         action_resolver.resolve_action(actoid5, test_bugbear)
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -458,7 +458,7 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
 
     try:
         actoid1 = get_action(test_giant_toad)
-        assert str(actoid1) == "Bite on Bugbear 1"
+        assert str(actoid1) == "Bite on Bugbear (1)"
         result = action_resolver.resolve_action(actoid1, test_giant_toad)
         if result is ActionResult.DMG:
             assert is_affected_by(test_bugbear, Conditions.GRAPPLED)
@@ -467,7 +467,7 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
             assert str(actoid2) == "None"
             test_giant_toad.new_turn()
             actoid3 = get_action(test_giant_toad)
-            assert str(actoid3) == "Bite and Swallow on Bugbear 1"
+            assert str(actoid3) == "Bite and Swallow on Bugbear (1)"
             swallowed = action_resolver.resolve_action(actoid3, test_giant_toad)
             if swallowed is ActionResult.DMG:
                 assert test_giant_toad.swallowed_target is test_bugbear
@@ -661,12 +661,12 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
         actoid5 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid5, test_assassin_rogue)
         actoid6 = get_action(test_assassin_rogue)
-        assert str(actoid6) == "Cunning Hide of Assassin Rogue 5. Level 1 from Ogre 1"
+        assert str(actoid6) == "Cunning Hide of Assassin Rogue 5th LVL (1) from Ogre (1)"
         action_resolver.resolve_action(actoid6, test_assassin_rogue)
         actoid7 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid7, test_assassin_rogue)
         actoid8 = get_action(test_assassin_rogue)
-        assert str(actoid8) == "Shortbow on Ogre 1"
+        assert str(actoid8) == "Shortbow on Ogre (1)"
         action_resolver.resolve_action(actoid8, test_assassin_rogue)
         actoid9 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid9, test_assassin_rogue)
@@ -686,8 +686,8 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
         actoid16 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid16, test_assassin_rogue)
         second_turn_actoids = [actoid11, actoid12, actoid13, actoid14, actoid15, actoid16]
-        assert any(str(act) == "Cunning Hide of Assassin Rogue 5. Level 1 from Ogre 1" for act in second_turn_actoids)
-        assert any(str(act) == "Shortbow on Ogre 1" for act in second_turn_actoids)
+        assert any(str(act) == "Cunning Hide of Assassin Rogue 5th LVL (1) from Ogre (1)" for act in second_turn_actoids)
+        assert any(str(act) == "Shortbow on Ogre (1)" for act in second_turn_actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -790,7 +790,7 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_in_melee(battle_map, teams, ef
         assert str(actoid1).startswith("(")
         action_resolver.resolve_action(actoid1, test_assassin_rogue)
         actoid2 = get_action(test_assassin_rogue)
-        assert str(actoid2) == "Cunning Hide of Assassin Rogue 5. Level 1 from Stone Giant 1"
+        assert str(actoid2) == "Cunning Hide of Assassin Rogue 5th LVL (1) from Stone Giant (1)"
         action_resolver.resolve_action(actoid2, test_assassin_rogue)
         actoid3 = get_action(test_assassin_rogue)
         assert str(actoid3) == "(1, 1)"
@@ -838,7 +838,7 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
 
     try:
         actoid1 = get_action(test_assassin_rogue)
-        assert str(actoid1) == "Cunning Disengage of Assassin Rogue 5. Level 1"
+        assert str(actoid1) == "Cunning Disengage of Assassin Rogue 5th LVL (1)"
         action_resolver.resolve_action(actoid1, test_assassin_rogue)
         actoid2 = get_action(test_assassin_rogue)
         action_resolver.resolve_action(actoid2, test_assassin_rogue)

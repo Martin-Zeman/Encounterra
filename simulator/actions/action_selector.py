@@ -384,9 +384,9 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
     """
     if not sorted_sequences:
         return None, 0
-    max_threat = sequence_to_threat[sorted_sequences[0]]
+    max_threat = sum(sequence_to_threat[sorted_sequences[0]])
     idx = 0
-    while idx < len(sorted_sequences) and sequence_to_threat[sorted_sequences[idx]] == max_threat:
+    while idx < len(sorted_sequences) and sum(sequence_to_threat[sorted_sequences[idx]]) == max_threat:
         idx += 1
     sorted_sequences = sorted_sequences[:idx]
     min_dist = sys.maxsize
@@ -396,20 +396,24 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
             min_dist = dist
     sorted_sequences = [idx for idx in sorted_sequences if get_dist_to_action_sequence_coord(sequences[idx], distances) == min_dist]
 
+    # Filter out the NOP transitions
+    for idx in sorted_sequences:
+        filtered_sequence = []
+        for tr in sequences[idx]:
+            try:
+                action_type = transition_name_to_action[tr].factory.action_type
+                if action_type not in [Action.NOP, BonusAction.NOP]:
+                    filtered_sequence.append(tr)
+            except KeyError:
+                filtered_sequence.append(tr)
+        sequences[idx] = filtered_sequence
+
     sorted_sequences.sort(key=lambda idx: len(sequences[idx]))
     best_sequence = sequences[sorted_sequences[0]]
-    best_threat = sequence_to_threat[sorted_sequences[0]]
-    filtered_sequence = []
-    for transition in best_sequence:
-        try:
-            action_type = transition_name_to_action[transition].factory.action_type
-            if action_type is not Action.NOP and action_type is not BonusAction.NOP:
-                filtered_sequence.append(transition)
-        except KeyError:
-            filtered_sequence.append(transition)
-    if len(filtered_sequence) == 1:
-        return None, 0 # This means the only non-movement action was a NOP and there's only movement left
-    return filtered_sequence, best_threat
+    best_out_threat = sequence_to_threat[sorted_sequences[0]]  # We're only interested in the out threat
+    if len(best_sequence) == 1:
+        return None, 0  # This means the only non-movement action was a NOP and there's only movement left
+    return best_sequence, best_out_threat
 
 
 def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_transition_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier=0.5):
@@ -441,6 +445,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
         del movement_transition_to_coord_and_type[f"ms_({current_coords[0]}, {current_coords[1]})"]  # Removing Misty Step to current coordinate
     except KeyError:
         pass
+    except TypeError:
+        print("FIXME")
 
     def DFS(dag, current_state, current_sequence, coord):
         if current_state == 'nop':
@@ -560,6 +566,7 @@ def get_action(combatant):
             return combatant.action_plan.pop(0)
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)
     if not combatant.action_plan:
+        logger.info("FIXME MY DEBUG None action plan")
         return None  # Either no action possible or all actions already used
     # print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
     return combatant.action_plan.pop(0)

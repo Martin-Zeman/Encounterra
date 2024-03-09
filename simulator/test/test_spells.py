@@ -38,8 +38,8 @@ def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, t
         actoid1 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid1, test_bugbear)
         actoid2 = get_action(test_bugbear)
-        assert str(actoid1) == "Morningstar on Totem Barbarian 5. Level 1" or str(actoid2) == "Morningstar on Totem Barbarian 5. Level 1"
-        assert str(actoid1) == "Hasted Morningstar on Totem Barbarian 5. Level 1" or str(actoid2) == "Hasted Morningstar on Totem Barbarian 5. Level 1"
+        assert str(actoid1) == "Morningstar on Totem Barbarian 5th LVL (1)" or str(actoid2) == "Morningstar on Totem Barbarian 5th LVL (1)"
+        assert str(actoid1) == "Hasted Morningstar on Totem Barbarian 5th LVL (1)" or str(actoid2) == "Hasted Morningstar on Totem Barbarian 5th LVL (1)"
         action_resolver.resolve_action(actoid2, test_bugbear)
         actoid3 = get_action(test_bugbear)
         assert str(actoid3) == "None"

@@ -14,7 +14,7 @@ logger = logging.getLogger("Encounterra")
 
 class MoonDruid3Lvl(Combatant):
 
-    name = "Moon Druid 3. Level"
+    name = "Moon Druid 3rd LVL"
     cls = Class.DRUID.CIRCLE_OF_MOON
     level = 3
     id = Combatant.generate_unique_id(name, cls, level)

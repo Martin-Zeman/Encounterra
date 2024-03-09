@@ -75,11 +75,11 @@ def test_matchup_1():
     logger.info(f"Blue team: {[str(c) for c in blue_team]}")
     logger.info(f"Red team: {[str(c) for c in red_team]}")
     keywords = [
-        "Moon Druid 5. Level 1 wildshapes into",
-        "Assassin Rogue 3. Level 1 attempts to hide",
+        "Moon Druid 5th LVL (1) wildshapes into",
+        "Assassin Rogue 3rd LVL (1) attempts to hide",
         "Activating Sneak Attack",
-        "Draconic Sorcerer 3. Level 1 casts Quickened"
-        "Draconic Sorcerer 5. Level 1 casts Quickened"
+        "Draconic Sorcerer 3rd LVL (1) casts Quickened"
+        "Draconic Sorcerer 5th LVL (1) casts Quickened"
     ]
 
     Map.reset_singleton()

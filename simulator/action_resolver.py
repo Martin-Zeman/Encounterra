@@ -419,7 +419,8 @@ class ActionResolver:
                     if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
                         logger.info(f"With extra {on_hit_dmg[0]} damage from {oh.name}", extra={"team": self.teams.get_team(attacker)})
                         total_compound_dmg.append(on_hit_dmg)
-            target.receive_compound_dmg(total_compound_dmg)
+            actual_dmg_dealt = target.receive_compound_dmg(total_compound_dmg)
+            attacker.weapon_dmg_dealt_this_turn = actual_dmg_dealt if multiplier == 1 else actual_dmg_dealt - dmg_dice_sum  # This is used for Action Surge (crit dmg is an approximation)
             battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
 
             return ActionResult.DMG
@@ -723,12 +724,15 @@ class ActionResolver:
         """
         combatant = combatant.get_current_form()  # Takes care of possible wildshape
         if action is None:
+            logger.info("FIXME MY DEBUG 1 action is None")
             return None
         if not check_feasibility(combatant, action):
             action = self.handle_error_case(action, combatant)
             if action is None:
+                logger.info("FIXME MY DEBUG 1 action is None Error Case")
                 return None
         use_resources(combatant, action)
+        logger.info(f"FIXME MY DEBUG 1 resolving action: {action}")
         return self.resolve_by_actoid_flags(action, combatant)
 
     def resolve_effects(self, effects, combatant):

@@ -11,7 +11,7 @@ logger = logging.getLogger("Encounterra")
 
 class TotemBarbarian3Lvl(Combatant):
 
-    name = "Totem Barbarian 3. Level"
+    name = "Totem Barbarian 3rd LVL"
     cls = Class.BARBARIAN.PATH_OF_THE_TOTEM_WARRIOR
     level = 3
     id = Combatant.generate_unique_id(name, cls, level)

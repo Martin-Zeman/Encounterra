@@ -1,3 +1,5 @@
+import copy
+
 from ..abilities.rage import RageFactory
 from ..actions.action_types import Action, Reaction, BonusAction, Passive
 from ..resources import Uses, ResourceRefreshType
@@ -11,7 +13,7 @@ logger = logging.getLogger("Encounterra")
 
 class Fighter1Lvl(Combatant):
 
-    name = "Fighter 1. Level"
+    name = "Fighter 1st LVL"
     cls = Class.FIGHTER.BEFORE_SUBCLASS
     level = 1
     id = Combatant.generate_unique_id(name, cls, level)
@@ -46,7 +48,8 @@ class Fighter1Lvl(Combatant):
             'has_bonus_action': self.has_bonus_action,
             'second_wind_uses': self.resources[BonusAction.SECOND_WIND].export_resource(),
             'has_haste_action': self.has_haste_action,
-            'attack_fsm_state': self.attack_fsm.state
+            'attack_fsm_state': self.attack_fsm.state,
+            'ammo': copy.deepcopy(self.ammo)
         }
 
     def import_resources(self, resources):
@@ -56,6 +59,7 @@ class Fighter1Lvl(Combatant):
         self.has_haste_action = resources['has_haste_action']
         self.resources[BonusAction.SECOND_WIND].import_resource(uses=resources['second_wind_uses'])
         self.attack_fsm.state = resources['attack_fsm_state']
+        self.ammo = resources['ammo']
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:

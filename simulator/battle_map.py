@@ -299,7 +299,7 @@ class Map:
                 combatant = square.combatant
                 if combatant and not combatant.is_swallowed[1]:
                     # row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + str(combatant)[-1] + "\x1b[0m\t"
-                    row_text += str(combatant)[0] + str(combatant)[-1] + "\t"
+                    row_text += str(combatant)[0] + str(combatant)[-2] + "\t"  # -2 takes the number between the parenthesis
                 elif square.terrain is Terrain.DIFFICULT_TERRAIN:
                     row_text += "**\t"
                 elif square.terrain is Terrain.IMPASSABLE_TERRAIN:

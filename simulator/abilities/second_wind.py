@@ -13,6 +13,8 @@ logger = logging.getLogger("Encounterra")
 
 class SecondWindFactory(DirectThreatFactory):
 
+    SECOND_WIND_TRIGGER_PERCENTILE = 70
+
     def __init__(self, combatant):
         super().__init__()
         self.flags |= FactoryFlags.IS_DIRECT_THREAT
@@ -52,8 +54,10 @@ class SecondWindFactory(DirectThreatFactory):
 
     def calculate_max_threat(self):
         missing_hp = get_missing_hp(self.combatant)
-        healing = percentile_roll((1, 10), 70) + self.combatant.level
-        return min([missing_hp - healing, missing_hp, healing])
+        healing = percentile_roll((1, 10), self.SECOND_WIND_TRIGGER_PERCENTILE) + self.combatant.level
+        if missing_hp >= healing:
+            return healing
+        return 0
         # return min(get_missing_hp(self.combatant), percentile_roll((1, 10), 70) + self.combatant.level)
 
 

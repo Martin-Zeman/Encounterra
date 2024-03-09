@@ -374,6 +374,12 @@ def check_feasibility(combatant, action):
                 return combatant.movement >= (combatant.speed / 2)
             case _:
                 logger.error("Unknown movement")
+    elif isinstance(action_type, FreeAction):
+        match action_type:
+            case FreeAction.ACTION_SURGE:
+                return combatant.resources[FreeAction.ACTION_SURGE].has_resource()
+            case _:
+                logger.error("Unknown free action")
     # elif isinstance(action_type, FreeAction):
     #     match action_type:
     #         case _:

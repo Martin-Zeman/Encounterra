@@ -41,7 +41,7 @@ class Combatant(ProtoCombatant):
 
     def __init__(self, num_or_name, hp, ac, init_bonus, spell_to_hit, speed, dc, resistances=set(), immunities=[], vulnerabities=[]):
         if type(num_or_name) is int:
-            self.name = type(self).name + " " + str(num_or_name)
+            self.name = type(self).name + f" ({num_or_name})"
         else:
             self.name = num_or_name  # Wildshape case
         self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self)), (Action.NOP, NopFactory(Action.NOP, self))]
@@ -532,6 +532,7 @@ class Combatant(ProtoCombatant):
                 if cond.effect:
                     battle_map.effect_tracker.remove_effect_from_combatant(self, cond.effect)
         self.uncanny_dodge_active = False
+        return total_dmg
 
     def heal(self, hp):
         self.curr_hp = min(self.curr_hp + hp, self.max_hp + self.max_hp_modifier)
@@ -562,6 +563,7 @@ class Combatant(ProtoCombatant):
         self.action_plan = None
         if self.constricted_target and not self.constricted_target.is_alive():
             self.constricted_target = None
+        self.weapon_dmg_dealt_this_turn = 0
 
     def reset(self):
         self.has_action = True

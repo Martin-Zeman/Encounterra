@@ -56,7 +56,7 @@ def test_get_hop_distance_overlapping_large_huge(battle_map, test_draconic_sorce
 # def test_as_if_dist_from_combatant(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
 #     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
 #     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-#     test_goblin2 = Goblin("Goblin 2")
+#     test_goblin2 = Goblin("Goblin (2)")
 #     teams.add_combatant_to_team(test_goblin2, Teams.Color.RED)
 #
 #     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
@@ -92,7 +92,7 @@ def test_get_hop_distance_overlapping_large_huge(battle_map, test_draconic_sorce
 def test_as_if_dist_delta_from_combatant(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    test_goblin2 = Goblin("Goblin 2")
+    test_goblin2 = Goblin("Goblin (2)")
     teams.add_combatant_to_team(test_goblin2, Teams.Color.RED)
 
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
