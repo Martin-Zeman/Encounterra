@@ -1,7 +1,7 @@
 import logging
 
 from .action_types import FreeAction
-from .default_action_plan_strategy import DefaultActionPlanStrategy, extract_movement
+from .default_action_plan_strategy import DefaultActionPlanStrategy
 from ..abilities.action_surge import ActionSurgeFactory
 from ..actions.action_dag import generate_proto_dag
 from ..actions.action_selector import find_best_sequence, build_action_dag, translate_sequence_to_actions
@@ -20,8 +20,6 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of the following types: np.array, action, bonus action
         """
-        # start_time = time.time()
-        # get_aoe_and_aoo_threat_for_increment.cache_clear()
         proto_dag, transition_name_to_action = generate_proto_dag(self.combatant)
         dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
         if dag is None:
@@ -46,10 +44,4 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
                 if max_threat >= self.combatant.weapon_dmg_dealt_this_turn * self.ACTION_SURGE_TOLERANCE_DELTA:
                     return [ActionSurgeFactory(self.combatant).create(None)]
             return None
-        # logger.info(f"{self.combatant}'s plan {longest_pth}")# TODO FIXME
-        # print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
-        try:
-            return translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)
-        except TypeError:
-            print("FIXME")
-            return None
+        return translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)

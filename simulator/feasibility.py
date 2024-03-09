@@ -238,9 +238,9 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case BonusAction.RAGE:
-                return res and action.factory.resource.has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
+                return res and combatant.resources[BonusAction.RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
             case BonusAction.TOTEM_RAGE:
-                return res and action.factory.resource.has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
+                return res and combatant.resources[BonusAction.TOTEM_RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
             case BonusAction.MISTY_STEP:
                 res &= action.factory.resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
@@ -516,9 +516,9 @@ def check_feasibility_light(combatant, action):
             case BonusAction.PAM_BONUS_ATTACK | BonusAction.NOP:  # TODO Remove this
                 return res
             case BonusAction.RAGE:
-                return res and action[1].resource.has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
+                return res and combatant.resources[BonusAction.RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
             case BonusAction.TOTEM_RAGE:
-                return res and action[1].resource.has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
+                return res and combatant.resources[BonusAction.TOTEM_RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
             case BonusAction.MISTY_STEP:
                 res &= action[1].resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
