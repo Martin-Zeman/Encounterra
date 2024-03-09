@@ -42,6 +42,7 @@ class Action(Enum):
     TWINNED_RAY_OF_ENFEEBLEMENT = auto()
     SLEEP = auto()
     SHAKE_ALLY_AWAKE = auto()
+    THUNDERWAVE = auto()
 
 
 class BonusAction(Enum):
@@ -74,6 +75,8 @@ class BonusAction(Enum):
     QUICKENED_RAY_OF_ENFEEBLEMENT = auto()
     QUICKENED_SLEEP = auto()
     SECOND_WIND = auto()
+    HEALING_WORD = auto()
+    SHILLELAGH = auto()
 
 
 class Reaction(Enum):

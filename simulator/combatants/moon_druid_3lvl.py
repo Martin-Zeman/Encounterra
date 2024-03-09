@@ -88,7 +88,3 @@ class MoonDruid3Lvl(Combatant):
         self.attack_fsm.set_state(resources['attack_state_machine'])
         self.resources[Action.WILDSHAPE].import_resource(uses=resources['wildshape_uses'])
 
-    @cache
-    def get_dijkstra_from_cache(self):
-        sizes = WildshapeFactory.get_wildshape_form_sizes(self.level, BonusAction.MOON_WILDSHAPE)
-
