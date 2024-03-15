@@ -107,6 +107,7 @@ def find_fov_vectors(observer: Coords, target: Coords | Obstacle):
         return vectors[0][0] / np.linalg.norm(vectors[0][0]), vectors[1][0] / np.linalg.norm(vectors[1][0])
     return vectors[1][0] / np.linalg.norm(vectors[1][0]), vectors[0][0] / np.linalg.norm(vectors[0][0])
 
+
 def get_bounding_box(combatant1: Coords, combatant2: Coords):
     """
     Calculates a bounding box which encloses both combatants

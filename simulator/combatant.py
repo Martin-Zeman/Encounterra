@@ -257,7 +257,7 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, resource, has_spell_sculpting=False)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
-                case Action.HOLD_PERSON | Action.FLAMING_SPHERE | Action.FAERIE_FIRE:
+                case Action.HOLD_PERSON | Action.FLAMING_SPHERE | Action.FAERIE_FIRE | Action.THUNDERWAVE:
                     resource = kwargs.get("resource", self.spellslots)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
@@ -330,7 +330,7 @@ class Combatant(ProtoCombatant):
                 case BonusAction.CUNNING_DISENGAGE | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))  # TODO
                     return self.bonus_action_factories[-1]
-                case BonusAction.QUICKENED_FIREBALL:
+                case BonusAction.QUICKENED_FIREBALL | BonusAction.QUICKENED_THUNDERWAVE:
                     resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append(
                         (action_type, TO_FACTORY[action_type](self.dc, action_type, self, resource, has_spell_sculpting=False)))

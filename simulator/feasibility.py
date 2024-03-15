@@ -225,6 +225,13 @@ def check_feasibility(combatant, action):
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
+            case Action.THUNDERWAVE:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.are_valid_coords(np.array([action.coord]))
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(),
+                                                                np.array([action.coord])) <= action.factory.range
+                return res
             case _:
                 logger.error(f"check_feasibility: Unknown action type {action_type}")
                 return False
@@ -313,6 +320,12 @@ def check_feasibility(combatant, action):
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                return res
+            case BonusAction.QUICKENED_THUNDERWAVE:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.are_valid_coords(np.array([action.coord]))
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FIREBALL:
                 res &= action.factory.resource.has_resource(level=3)
@@ -419,7 +432,7 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.concentration_effect
                 # res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
-            case Action.CHAOSBOLT | Action.MAGIC_MISSILE:
+            case Action.CHAOSBOLT | Action.MAGIC_MISSILE | Action.THUNDERWAVE:
                 res &= action[1].resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
@@ -523,7 +536,7 @@ def check_feasibility_light(combatant, action):
                 res &= action[1].resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
-            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE:
+            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_THUNDERWAVE:
                 res &= action[1].resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1

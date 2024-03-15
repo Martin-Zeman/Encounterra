@@ -2,12 +2,13 @@ import copy
 
 import pytest
 from ..actions.action_types import Passive, Action
-from ..battle_map import Terrain, Coords, Map
+from ..battle_map import Terrain, Coords
 from ..combatants.goblin import Goblin
 from ..misc import DistanceMetric, Size, Side, Visibility
 from ..conditions import Conditions, Condition, apply_condition, remove_condition
 from ..spells.fireball import FireballFactory
 from ..spells.spell import SpellStats
+from ..spells.thunderwave import ThunderwaveFactory
 from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
     teams, effect_tracker, battle_map
@@ -846,7 +847,7 @@ def test_find_best_placement_harmful_square(battle_map, teams, test_draconic_sor
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 5]))
     # 10ft square
     coord, score, affected = battle_map.find_best_placement_harmful_square(test_draconic_sorcerer_5lvl, 20, 2)
-    assert np.array_equal(coord, np.array([[4, 4]]))
+    assert np.array_equal(coord, np.array([4, 4]))
     assert score == 2
     assert test_goblin in affected
     assert test_bugbear not in affected
@@ -859,6 +860,36 @@ def test_find_best_placement_harmful_square(battle_map, teams, test_draconic_sor
     assert score == 1
     assert test_goblin in affected or test_bugbear in affected or test_stone_giant in affected
     assert test_totem_barbarian not in affected
+
+
+def test_find_best_placement_harmful_square_thunderwave(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant):
+    # test_goblin.size = Size.LARGE
+    test_stone_giant.size = Size.MEDIUM  # downsize the giant for the sake of this test
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 4]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([4, 4]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 6]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 6]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 5]))
+
+    twf = ThunderwaveFactory(test_draconic_sorcerer_5lvl.dc, Action.THUNDERWAVE, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
+    coord = twf.find_best_args(test_draconic_sorcerer_5lvl)
+    assert np.array_equal(coord, np.array([4, 3]))
+
+    # Now let's move the caster in order to test the range of Thunderwave
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([2, 4]))
+    coord = twf.find_best_args(test_draconic_sorcerer_5lvl)
+    assert np.array_equal(coord, np.array([3, 3]))
+
+    # Now let's move the ally up to make sure all enemies can be hit
+    battle_map.move_combatant(test_totem_barbarian, np.array([4, 7]))
+    coord = twf.find_best_args(test_draconic_sorcerer_5lvl)
+    assert np.array_equal(coord, np.array([3, 4]))
+
 
 def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian):
     test_goblin.size = Size.LARGE

@@ -137,7 +137,6 @@ class RoundManager:
                     break  # The last remaining enemy could have died, we want to break before getting the next action
                 while True:
                     action = get_action(combatant)
-                    logger.info(f"FIXME MY DEBUG got action: {action}")
                     if action is None:
                         break
                     resolution = self.action_resolver.resolve_action(action, combatant)

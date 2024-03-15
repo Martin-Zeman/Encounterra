@@ -33,6 +33,7 @@ from ..spells.magic_missile import MagicMissileFactory
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
 from ..spells.shocking_grasp import ShockingGraspFactory
 from ..spells.sleep import SleepFactory
+from ..spells.thunderwave import ThunderwaveFactory
 from ..spells.twinned_hold_person import TwinnedHoldPersonFactory
 from ..spells.misty_step import MistyStepFactory
 from ..spells.scorching_ray import ScorchingRayFactory
@@ -88,6 +89,7 @@ TO_FACTORY = {
     Action.RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
     Action.TWINNED_RAY_OF_ENFEEBLEMENT: TwinnedRayOfEnfeeblementFactory,
     Action.SLEEP: SleepFactory,
+    Action.THUNDERWAVE: ThunderwaveFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -112,6 +114,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
     BonusAction.QUICKENED_SLEEP: SleepFactory,
     BonusAction.SECOND_WIND: SecondWindFactory,
+    BonusAction.QUICKENED_THUNDERWAVE: ThunderwaveFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,

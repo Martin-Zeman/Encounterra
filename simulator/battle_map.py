@@ -1223,20 +1223,20 @@ class Map:
         best_affected = None
         caster_coords = self.combatant_coordinate_cache[caster].get()
         for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
-            curr_coord = np.array([[x, y]])
+            curr_coords = Coords(np.array([x, y]), Size(length - 1))  # Have to convert to combatant sizes
             affected = []
-            if self.get_cartesian_distance_coords(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
+            if self.get_cartesian_distance_coords(caster_coords, curr_coords.get()) > spell_range or any((caster_coords[:] == curr_coords).all(1)):
                 continue  # Skip those outside of spell range and those taken up by the caster
             score = 0
             for combatant, coords in self.combatant_coordinate_cache.items():
-                if any((coords.get()[:] >= curr_coord).all(1)) and any((coords.get()[:] < curr_coord + length).all(1)):
+                if self.get_cartesian_distance_coords(coords.get(), curr_coords.get()) == 0:
                     score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
                     affected.append(combatant)
             if score > max_score:
                 max_score = score
-                best_placement = curr_coord
+                best_placement = curr_coords
                 best_affected = affected
-        return best_placement, max_score, best_affected
+        return best_placement.get()[0], max_score, best_affected
 
     def get_coords_affected_by_square_aoe(self, origin, length):
         """
@@ -1288,7 +1288,7 @@ class Map:
                 affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
                 affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords and pt.is_alive()]
 
-            case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_20:
+            case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_15 | SpellStats.Target.BOX_20:
                 affected_coords = self.get_coords_affected_by_square_aoe(origin, SpellStats.TRANSLATE_BOX[target_template])
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
                     if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:

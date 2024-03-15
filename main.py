@@ -7,6 +7,7 @@ from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.bugbear_chief import BugbearChief
 from simulator.combatants.cultist_fanatic import CultistFanatic
 from simulator.combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
+from simulator.combatants.druid_1lvl import Druid1Lvl
 from simulator.combatants.evil_mage import EvilMage
 from simulator.combatants.fighter_2lvl import Fighter2Lvl
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
@@ -80,8 +81,9 @@ if __name__ == '__main__':
     # session.add_combatant(EvilMage, Teams.Color.BLUE)
     # session.add_combatant(NightHag, Teams.Color.BLUE)
     session.add_combatant(Fighter1Lvl, Teams.Color.BLUE)
-    session.add_combatant(Fighter1Lvl, Teams.Color.BLUE)
-    session.add_combatant(Fighter2Lvl, Teams.Color.RED)
+    # session.add_combatant(Fighter1Lvl, Teams.Color.BLUE)
+    # session.add_combatant(Fighter2Lvl, Teams.Color.RED)
+    session.add_combatant(Druid1Lvl, Teams.Color.RED)
     session.set_num_simulations(1)
     start_time = time.time()
     session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)

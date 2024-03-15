@@ -77,6 +77,7 @@ class BonusAction(Enum):
     SECOND_WIND = auto()
     HEALING_WORD = auto()
     SHILLELAGH = auto()
+    QUICKENED_THUNDERWAVE = auto()
 
 
 class Reaction(Enum):

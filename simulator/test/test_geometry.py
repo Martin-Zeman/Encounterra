@@ -1,7 +1,7 @@
 import pytest
 
-from ..geometry import *
 from ..misc import Size
+from ..geometry import *
 from ..spells.spell import *
 import numpy as np
 from ..test.fixtures import test_stone_giant, test_ogre, test_bugbear
@@ -76,6 +76,7 @@ def test_do_squares_overlap():
     assert not do_squares_overlap(np.array([2, 2]), 2, np.array([4, 4]), 3)
     assert not do_squares_overlap(np.array([2, 2]), 1, np.array([4, 4]), 3)
 
+
 def test_angle_between_vectors():
     assert angle_between_vectors(np.array([0, 1]), np.array([1, 0])) == pytest.approx(90.0, 0.0001)
     assert angle_between_vectors(np.array([0, 1]), np.array([1, -1])) == pytest.approx(135.0, 0.0001)
@@ -111,7 +112,6 @@ def test_find_fov_vectors(test_stone_giant, test_ogre, test_bugbear):
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([-0.5, 3.5]) / np.linalg.norm(np.array([-0.5, 3.5])), point) for point in outlines])
     assert any([np.array_equal(np.array([2.5, 3.5]) / np.linalg.norm(np.array([2.5, 3.5])), point) for point in outlines])
-
 
 
 def test_get_bounding_box():

@@ -124,7 +124,7 @@ def use_resources(combatant, action):
                 action.factory.resource.use_resource(level=2)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.resources[Passive.METAMAGIC].use_resource(2)
-            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS | Action.SLEEP:
+            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS | Action.SLEEP | Action.THUNDERWAVE:
                 action.factory.resource.use_resource(level=1)
                 combatant.already_cast_leveled_spell_this_turn = True
             case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH | Action.RAY_OF_ENFEEBLEMENT | Action.FLAMING_SPHERE:
@@ -148,7 +148,7 @@ def use_resources(combatant, action):
             case BonusAction.MISTY_STEP:
                 action.factory.resource.use_resource(level=2)
                 combatant.already_cast_leveled_spell_this_turn = True
-            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS | BonusAction.QUICKENED_SLEEP:
+            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_BLESS | BonusAction.QUICKENED_SLEEP | BonusAction.QUICKENED_THUNDERWAVE:
                 action.factory.resource.use_resource(level=1)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.resources[Passive.METAMAGIC].use_resource(2)

@@ -1,4 +1,4 @@
-from enum import Enum, Flag, auto
+from enum import Enum, auto
 import random
 import re
 from functools import reduce, cache

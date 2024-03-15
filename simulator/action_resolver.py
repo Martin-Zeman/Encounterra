@@ -110,6 +110,7 @@ def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True, is_spel
             dmg = dmg // 2
             logger.info(f"{ability.shorthand_str()} deals {dmg} to {target}")
             target.receive_dmg(dmg, ability.factory.dmg_type)
+    return saved
 
 
 def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
@@ -698,6 +699,16 @@ class ActionResolver:
             case FreeAction.ACTION_SURGE:
                 logger.info(f"{combatant} uses Action Surge")
                 combatant.has_action = True
+            case Action.THUNDERWAVE | BonusAction.QUICKENED_THUNDERWAVE:
+                logger.info(f"{combatant} casts {actoid}")
+                affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target,
+                                                                     actoid.factory.type, actoid.coord)
+                dmg = roll_spell_dmg(actoid.factory.dmg_dice)
+                for combatant in affected:
+                    saved = resolve_dmg_saving_throw(actoid, dmg, combatant, True, True)
+                    if battle_map.remove_combatant_if_dead(combatant) and not saved:  # could be a wildshaped druid
+                        pass # TODO Push 10ft
+                return ActionResult.DMG
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 
@@ -724,15 +735,12 @@ class ActionResolver:
         """
         combatant = combatant.get_current_form()  # Takes care of possible wildshape
         if action is None:
-            logger.info("FIXME MY DEBUG 1 action is None")
             return None
         if not check_feasibility(combatant, action):
             action = self.handle_error_case(action, combatant)
             if action is None:
-                logger.info("FIXME MY DEBUG 1 action is None Error Case")
                 return None
         use_resources(combatant, action)
-        logger.info(f"FIXME MY DEBUG 1 resolving action: {action}")
         return self.resolve_by_actoid_flags(action, combatant)
 
     def resolve_effects(self, effects, combatant):
