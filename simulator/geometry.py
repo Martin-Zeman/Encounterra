@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+from scipy.spatial.distance import euclidean
 
 from .combatant_coords import Coords
 from .obstacle import Obstacle
@@ -119,3 +120,40 @@ def get_bounding_box(combatant1: Coords, combatant2: Coords):
     bottom_left = np.min(combined, axis=0)
     top_right = np.max(combined, axis=0)
     return bottom_left, top_right
+
+
+def find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance):
+    """
+    Find the nearest valid grid coordinate to target_coords from init_coords,
+    ensuring the Chebyshev distance does not exceed max_distance. Starts searching
+    from max_distance, moving towards the target if necessary.
+
+    :param target_coords: The target coordinates as a numpy array [x, y].
+    :param init_coords: The initial coordinates as a numpy array [x, y].
+    :param max_distance: The maximum allowed Chebyshev distance.
+    :return: The adjusted coordinates as a numpy array [x, y] if within max_distance, else init_coords.
+    """
+    # Directly check if the rounded target is within the allowed distance first
+    rounded_coords = np.round(target_coords).astype(int)
+    if np.max(np.abs(rounded_coords - init_coords)) <= max_distance:
+        return rounded_coords
+
+    # Start from the maximum distance and move inward
+    for d in range(max_distance, 1, -1):
+        # Explore the perimeter of the square defined by the Chebyshev distance d
+        potential_points = [
+            init_coords + (d, d),
+            init_coords + (d + 1, d),
+            init_coords + (d, d + 1),
+            init_coords + (d - 1, d),
+            init_coords + (d, d - 1),
+            init_coords + (d + 1, d + 1),
+            init_coords + (d - 1, d - 1)
+        ]
+        potential_points = [pp for pp in potential_points if np.max(np.abs(np.array([pp[0], pp[1]]) - init_coords)) == d]
+        potential_points.sort(key=lambda point: euclidean(target_coords, point))
+        if potential_points:
+            return potential_points[0]
+
+    # If no valid coordinate is found within the constraints, return the initial coordinates
+    return init_coords

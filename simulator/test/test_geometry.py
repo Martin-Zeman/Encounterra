@@ -149,3 +149,39 @@ def test_get_bounding_box():
     bottom_left, top_right = get_bounding_box(coords1, coords2)
     assert np.array_equal(np.array([1, 11]), bottom_left)
     assert np.array_equal(np.array([10, 14]), top_right)
+
+
+def test_find_nearest_valid_coordinate_chebyshev_max_distance():
+    init_coords = np.array([5, 5])
+    target_coords = np.array([9, 9])  # Target is exactly at max_distance
+    max_distance = 4
+    expected = np.array([9, 9])
+    result = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance)
+    np.testing.assert_array_equal(result, expected)
+
+
+def test_find_nearest_valid_coordinate_chebyshev_within_max_distance_without_adjustment():
+    init_coords = np.array([5, 5])
+    target_coords = np.array([7, 6])  # Target is within max_distance without needing rounding
+    max_distance = 3
+    expected = np.array([7, 6])
+    result = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance)
+    np.testing.assert_array_equal(result, expected)
+
+
+def test_find_nearest_valid_coordinate_chebyshev_return_initial_when_target_too_far():
+    init_coords = np.array([5, 5])
+    target_coords = np.array([10, 10])  # Target is beyond max_distance
+    max_distance = 2
+    expected = np.array([7, 7])
+    result = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance)
+    np.testing.assert_array_equal(result, expected)
+
+
+def test_find_nearest_valid_coordinate_chebyshev_rounding_to_nearest_valid_coordinate():
+    init_coords = np.array([5, 5])
+    target_coords = np.array([6.7, 7.2])  # Target requires rounding
+    max_distance = 3
+    expected = np.array([7, 7])
+    result = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance)
+    np.testing.assert_array_equal(result, expected)

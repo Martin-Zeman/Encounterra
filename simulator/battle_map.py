@@ -15,7 +15,8 @@ from .proto_combatant import ProtoCombatant
 from .spells.spell import SpellStats
 from .misc import Size, Visibility
 from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler
-from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors
+from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors, \
+    find_nearest_valid_coordinate_chebyshev
 from .misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
@@ -1445,3 +1446,20 @@ class Map:
         self.get_free_coords_in_cartesian_range.cache_clear()
         self.get_free_coords_in_hop_range.cache_clear()
         self.find_best_placement_harmful_circular.cache_clear()
+
+    def push_combatant_away_from(self, target_combatant, from_combatant, distance):
+        from_coords = self.get_combatant_position(from_combatant)
+        init_coords = self.get_combatant_position(target_combatant)
+        if not from_coords or not init_coords:
+            return
+        from_coords = from_coords.get()[0]
+        init_coords = init_coords.get()[0]
+        direction = np.linalg.norm(init_coords - from_coords)
+        for dist in range(distance, 1, -1):
+            delta = direction * distance
+            target_coords = init_coords + delta
+            nearest_grid_coord = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, distance)
+            target_coords = Coords(nearest_grid_coord, target_combatant.size)
+            if self.are_valid_coords(target_coords.get()) and self.are_empty(target_coords):
+                self.move_combatant(target_combatant, target_coords)
+                return
