@@ -1,4 +1,5 @@
 import copy
+import math
 from functools import cache
 
 import numpy as np
@@ -16,7 +17,7 @@ from .spells.spell import SpellStats
 from .misc import Size, Visibility
 from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler
 from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors, \
-    find_nearest_valid_coordinate_chebyshev
+    find_nearest_valid_coordinate_chebyshev, angle_between_vectors_rad
 from .misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
@@ -1237,7 +1238,9 @@ class Map:
                 max_score = score
                 best_placement = curr_coords
                 best_affected = affected
-        return best_placement.get()[0], max_score, best_affected
+        if best_placement is not None:
+            return best_placement.get()[0], max_score, best_affected
+        return None, None, None
 
     def get_coords_affected_by_square_aoe(self, origin, length):
         """
@@ -1447,19 +1450,25 @@ class Map:
         self.get_free_coords_in_hop_range.cache_clear()
         self.find_best_placement_harmful_circular.cache_clear()
 
-    def push_combatant_away_from(self, target_combatant, from_combatant, distance):
-        from_coords = self.get_combatant_position(from_combatant)
+    def push_combatant_away_from(self, origin, target_combatant, distance):
         init_coords = self.get_combatant_position(target_combatant)
-        if not from_coords or not init_coords:
+        if not init_coords:
             return
-        from_coords = from_coords.get()[0]
+        init_center = init_coords.get_center()
         init_coords = init_coords.get()[0]
-        direction = np.linalg.norm(init_coords - from_coords)
-        for dist in range(distance, 1, -1):
-            delta = direction * distance
+        direction = init_center - origin
+        direction /= np.linalg.norm(direction)
+        if any(True for d in direction if math.isnan(d)):
+            return  # Protection against (0, 0) vector
+        for dist in range(distance, 0, -1):
+            delta = direction * dist
+            angle = angle_between_vectors_rad(np.array([0, 1]), delta) % (math.pi / 2)
+            if angle != 0:
+                delta /= math.sin(angle)  # Compensate for diagonals needing a longer push
             target_coords = init_coords + delta
             nearest_grid_coord = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, distance)
             target_coords = Coords(nearest_grid_coord, target_combatant.size)
-            if self.are_valid_coords(target_coords.get()) and self.are_empty(target_coords):
-                self.move_combatant(target_combatant, target_coords)
+            if self.are_valid_coords(target_coords.get()) and self.are_empty_or_self(target_coords, target_combatant):
+                self.move_combatant(target_combatant, nearest_grid_coord)
+                logger.info(f"{target_combatant} is pushed to {nearest_grid_coord}")
                 return

@@ -80,8 +80,8 @@ def do_squares_overlap(origin1: np.array, length1, origin2: np.array, length2):
 def angle_between_vectors(vector_1: np.array, vector_2: np.array):
     """
     Calculates the angle (in degrees) between two points and a given center point
-    :param point1: The first vector
-    :param point2: The second vector
+    :param vector_1: The first vector
+    :param vector_2: The second vector
     :return: The convex angle (in degrees) formed by the two vectors.
     """
     dot_prod = np.dot(vector_1, vector_2)
@@ -90,6 +90,20 @@ def angle_between_vectors(vector_1: np.array, vector_2: np.array):
     angle_rad = math.acos(max(-1.0, min(dot_prod / mag_2 / mag_1, 1.0)))
     angle_deg = math.degrees(angle_rad) % 360
     return angle_deg if (angle_deg - 180 < 0) else 360 - angle_deg
+
+
+def angle_between_vectors_rad(vector_1: np.array, vector_2: np.array):
+    """
+    Calculates the angle (in radians) between two vectors.
+    :param vector_1: The first vector
+    :param vector_2: The second vector
+    :return: The convex angle (in radians) formed by the two vectors.
+    """
+    dot_prod = np.dot(vector_1, vector_2)
+    mag_1 = np.linalg.norm(vector_1)
+    mag_2 = np.linalg.norm(vector_2)
+    angle_rad = math.acos(max(-1.0, min(dot_prod / (mag_1 * mag_2), 1.0)))
+    return angle_rad
 
 
 def find_fov_vectors(observer: Coords, target: Coords | Obstacle):

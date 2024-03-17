@@ -87,6 +87,16 @@ def test_angle_between_vectors():
     assert angle_between_vectors(np.array([0, 4]), np.array([4, 4])) == pytest.approx(45.0, 0.0001)
 
 
+def test_angle_between_vectors_rad():
+    assert angle_between_vectors_rad(np.array([0, 1]), np.array([1, 0])) == pytest.approx(math.radians(90.0), 0.0001)
+    assert angle_between_vectors_rad(np.array([0, 1]), np.array([1, -1])) == pytest.approx(math.radians(135.0), 0.0001)
+    assert angle_between_vectors_rad(np.array([0, 1]), np.array([0, -1])) == pytest.approx(math.radians(180.0), 0.0001)
+    assert angle_between_vectors_rad(np.array([0, 2]), np.array([-1, 2])) == pytest.approx(math.radians(26.5650), 0.0001)
+    assert angle_between_vectors_rad(np.array([1, 0.5]), np.array([1.5, -1])) == pytest.approx(math.radians(60.2551), 0.0001)
+    assert angle_between_vectors_rad(np.array([6, 4]), np.array([6, 4])) == pytest.approx(math.radians(0), 0.0001)
+    assert angle_between_vectors_rad(np.array([0, 4]), np.array([4, 4])) == pytest.approx(math.radians(45.0), 0.0001)
+
+
 def test_find_fov_vectors(test_stone_giant, test_ogre, test_bugbear):
     # Directly side by side
     outlines = find_fov_vectors(Coords(np.array([3, 7]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
