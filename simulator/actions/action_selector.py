@@ -538,7 +538,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                 sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords) else 0  # Small bias towards current position prevents oscillations
 
     sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
-    # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True)
+    # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True) This has significance to NOP, 'sequence_to_threat[x][1] > 0' precludes NOP being selected. I should check Fighter vs Fighter again
     nearest_and_minimized_sequence, max_threat = get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, transition_name_to_action)
     return nearest_and_minimized_sequence, transition_name_to_ms_path, max_threat
 
