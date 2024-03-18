@@ -537,8 +537,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                 sequence_to_threat[idx] = [sequence_to_threat[idx][-1], threat_acc * feasibility_multiplier]  # Overwrite the movement threat tuple with the final movement and transition total
                 sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords) else 0  # Small bias towards current position prevents oscillations
 
-    # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
-    sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True)
+    sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
+    # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True)
     nearest_and_minimized_sequence, max_threat = get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, transition_name_to_action)
     return nearest_and_minimized_sequence, transition_name_to_ms_path, max_threat
 
@@ -566,6 +566,7 @@ def get_action(combatant):
             return combatant.action_plan.pop(0)
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)
     if not combatant.action_plan:
+        combatant.calculate_action_plan(distances, shortest_paths)
         return None  # Either no action possible or all actions already used
     # print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
     return combatant.action_plan.pop(0)

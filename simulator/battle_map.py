@@ -767,11 +767,12 @@ class Map:
         self.combatant_coordinate_cache[combatant].set(new_coords)
         logger.info(f"{combatant} moved to {new_coords[0]}", extra={"team": self.teams.get_team(combatant)})
 
-    def move_combatant(self, combatant, new_coords: np.array):
+    def move_combatant(self, combatant, new_coords: np.array, log=True):
         """
         Removes the combatant from the old coordinate and moves them to a new one
         :param combatant:
         :param new_coords:
+        :param log: Should the movement be logged
         :return:
         """
         old_coords = self.get_combatant_position(combatant).get()
@@ -783,7 +784,8 @@ class Map:
         for new_coord in new_coords_data:
             self.grid[new_coord[0], new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coords
-        logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
+        if log:
+            logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
 
     def set_combatant_coordinates(self, combatant, coords: np.array):
         coords = Coords(coords, combatant.size)
@@ -1469,6 +1471,6 @@ class Map:
             nearest_grid_coord = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, distance)
             target_coords = Coords(nearest_grid_coord, target_combatant.size)
             if self.are_valid_coords(target_coords.get()) and self.are_empty_or_self(target_coords, target_combatant):
-                self.move_combatant(target_combatant, nearest_grid_coord)
+                self.move_combatant(target_combatant, nearest_grid_coord, False)
                 logger.info(f"{target_combatant} is pushed to {nearest_grid_coord}")
                 return
