@@ -2,6 +2,8 @@ import numpy as np
 
 from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
+from ..effects.spheric_aoe import SphericAoe
+from ..effects.square_aoe import SquareAoe
 from ..spells.spell import SpellStats
 from ..actions.action_types import BonusAction
 from ..actions.actoid import Actoid, ActoidFlags
@@ -69,10 +71,11 @@ class ThunderwaveFactory(ThreatModifierFactory):
         return ret
 
 
-class Thunderwave(Actoid, DirectThreat):
+class Thunderwave(Actoid, DirectThreat, SquareAoe):
 
     def __init__(self, coord, factory,  **kwargs):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
+        SquareAoe.__init__(self, coord, SpellStats.TRANSLATE_BOX[ThunderwaveFactory.target])
         self.coord = coord
         self.factory = factory
 
@@ -90,7 +93,7 @@ class Thunderwave(Actoid, DirectThreat):
         for aff in affected:
             mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
-        return -acc
+        return acc
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Not relevant for this ability

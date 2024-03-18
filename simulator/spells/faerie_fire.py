@@ -74,7 +74,7 @@ class FaerieFireFactory(ThreatModifierFactory):
         For the given target ally it finds the attack with the highest mean dmg across all enemies withing range. It then adds
         estimated dmg prevention given by the AC bonus and by the saving throw advantage.
         """
-        ret = calculate_threat_in_delta(target, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1]
+        _, ret = calculate_threat_in_delta(target, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)
         return -ret
 
     def calculate_max_threat(self):
@@ -135,9 +135,9 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
         affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
         acc = 0
         for aff in affected:
-            threat_delta = calculate_threat_in_delta(aff, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1]
+            _, threat_delta = calculate_threat_in_delta(aff, 13, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * threat_delta
-        return -acc
+        return acc
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()

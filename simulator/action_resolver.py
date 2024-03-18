@@ -705,10 +705,10 @@ class ActionResolver:
                                                                      actoid.factory.type, actoid.coord)
                 dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                 for aff in affected:
-                    saved = resolve_dmg_saving_throw(actoid, dmg, combatant, True, True)
-                    if battle_map.remove_combatant_if_dead(combatant) and not saved:  # could be a wildshaped druid
+                    saved = resolve_dmg_saving_throw(actoid, dmg, aff, True, True)
+                    if battle_map.remove_combatant_if_dead(aff) and not saved:  # could be a wildshaped druid
                         origin = battle_map.get_combatant_position(combatant).get_center()
-                        if not origin:
+                        if origin is None:
                             continue
                         battle_map.push_combatant_away_from(origin, aff, 2)
                 return ActionResult.DMG

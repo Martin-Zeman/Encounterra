@@ -22,7 +22,8 @@ from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
 from ..spells.sleep import SleepFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
-    test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag
+    test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
+    test_druid_lvl_1, test_fighter_lvl_1
 from ..utils.utils import preallocate_wildshape_forms
 
 from ..test.test_singleton import SingletonClass
@@ -1039,3 +1040,24 @@ def test_singleton_1():
 def test_singleton_2():
     obj1 = SingletonClass(20)
     assert obj1.number == 20
+
+
+def test_faerie_fire(battle_map, teams, effect_tracker, test_druid_lvl_1, test_fighter_lvl_1):
+    """
+    Based on a failure where the placement of Faerie Fire didn't make any sense. This was the basis for increasing
+    the threat_radius of Faerie Fire so that the druid casts it from their current location.
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    battle_map.place_circular_element(np.array([6, 3]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 2]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 7]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    combatants = [test_druid_lvl_1, test_fighter_lvl_1]
+    teams.add_combatant_to_team(test_fighter_lvl_1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_druid_lvl_1, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([0, 10]))
+    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([13, 8]))
+    battle_map.build_adjacency_matrix()
+
+    actoid1 = get_action(test_druid_lvl_1)
+    assert str(actoid1) == "Faerie Fire at [10  5]"

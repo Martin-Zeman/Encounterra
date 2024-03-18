@@ -13,6 +13,7 @@ import logging
 
 logger = logging.getLogger("Encounterra")
 
+
 class PounceFactory(DirectThreatFactory):
 
     def __init__(self, combatant, primary_attack, secondary_attack, distance):
