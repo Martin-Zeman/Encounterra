@@ -355,6 +355,10 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
                     return self.bonus_action_factories[-1]
+                case BonusAction.SHILLELAGH:
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource, **kwargs)))
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                 case _:
                     pass  # no resources required
         elif isinstance(action_type, Reaction):

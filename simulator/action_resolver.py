@@ -519,7 +519,7 @@ class ActionResolver:
         battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:
-            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | HasteAction.HASTE_DISENGAGE:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | BonusAction.SHILLELAGH |HasteAction.HASTE_DISENGAGE:
                 actoid.activate()
                 return False
             case Action.RECKLESS_ATTACK:

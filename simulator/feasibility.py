@@ -361,7 +361,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
-            case BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.NOP:
+            case BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.NOP | BonusAction.SHILLELAGH:
                 return res
             case BonusAction.CUNNING_DISENGAGE:
                 return res and not combatant.has_disengaged
@@ -588,7 +588,7 @@ def check_feasibility_light(combatant, action):
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
             case BonusAction.CUNNING_DISENGAGE:
                 return res and not combatant.has_disengaged  # Don't want to disengage twice
-            case BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
+            case BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.SHILLELAGH:
                 return res
             case BonusAction.MOON_WILDSHAPE:
                 return res and combatant.resources[Action.WILDSHAPE].has_resource()

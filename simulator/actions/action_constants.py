@@ -31,6 +31,7 @@ from ..spells.haste import HasteFactory
 from ..spells.hold_person import HoldPersonFactory
 from ..spells.magic_missile import MagicMissileFactory
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
+from ..spells.shillelagh import ShillelaghFactory
 from ..spells.shocking_grasp import ShockingGraspFactory
 from ..spells.sleep import SleepFactory
 from ..spells.thunderwave import ThunderwaveFactory
@@ -115,6 +116,7 @@ TO_FACTORY = {
     BonusAction.QUICKENED_SLEEP: SleepFactory,
     BonusAction.SECOND_WIND: SecondWindFactory,
     BonusAction.QUICKENED_THUNDERWAVE: ThunderwaveFactory,
+    BonusAction.SHILLELAGH: ShillelaghFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
