@@ -6,6 +6,8 @@ import pickle
 
 from ..battle_map import Map
 from ..combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
+from ..combatants.druid_1lvl import Druid1Lvl
+from ..combatants.fighter_1lvl import Fighter1Lvl
 from ..logging.custom_logger import CustomLogger
 from ..misc import Statistics
 from ..session import Session
@@ -97,6 +99,63 @@ def test_matchup_1():
         assert_keywords_in_log(log_path, keywords)
         assert_victories_with_tolerance(results, Teams.Color.BLUE, 90, 10)
         assert_victories_with_tolerance(results, Teams.Color.RED, 10, 10)
+        os.remove(log_path)
+    except AssertionError:
+        raise
+    except Exception as e:
+        timestamp = int(time.time())
+        with open(os.path.join(SERIALIZE_DIR, f'battle_map_data_{timestamp}.pkl'), 'wb') as f:
+            pickle.dump(Map.serialize_data(), f)
+        with open(os.path.join(SERIALIZE_DIR, f'session_{timestamp}.pkl'), 'wb') as f:
+            pickle.dump(session.serialize_data(), f)
+        with open(os.path.join(SERIALIZE_DIR, f'exception_{timestamp}.txt'), 'w') as f:
+            f.write(f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception:\n{e}")
+        os.remove(log_path)
+
+        assert False, f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception {e}"
+
+
+@pytest.mark.slow
+def test_matchup_2():
+    log_path = "/tmp/test_matchup_2_log.txt"
+    if os.path.exists(log_path):
+        os.remove(log_path)
+    CustomLogger(logging.INFO, False, log_path)
+    blue_team = [Druid1Lvl, Fighter1Lvl]
+    red_team = [Druid1Lvl, Fighter1Lvl]
+    logger.info(f"Starting a statistical test with:")
+    logger.info(f"Blue team: {[str(c) for c in blue_team]}")
+    logger.info(f"Red team: {[str(c) for c in red_team]}")
+    keywords = [
+        "Druid 1st LVL (1) casts Thunderwave",
+        "Druid 1st LVL (2) casts Thunderwave",
+        "Fighter 1st LVL (1) attacks Druid 1st LVL (2) with Greatsword",
+        "Fighter 1st LVL (2) attacks Druid 1st LVL (1) with Greatsword",
+        "Fighter 1st LVL (1) attacks Fighter 1st LVL (2) with Greatsword",
+        "Fighter 1st LVL (2) attacks Fighter 1st LVL (1) with Greatsword",
+        "Druid 1st LVL (1) casts Faerie Fire",
+        "Druid 1st LVL (2) casts Faerie Fire",
+        "Fighter 1st LVL (1) uses Second Wind",
+        "Fighter 1st LVL (2) uses Second Wind",
+        "Druid 1st LVL (1) casts Shillelagh on Quarterstaff",
+        "Druid 1st LVL (2) casts Shillelagh on Quarterstaff"
+    ]
+
+    Map.reset_singleton()
+    session = Session()
+
+    for combatant in blue_team:
+        session.add_combatant(combatant, Teams.Color.BLUE)
+    for combatant in red_team:
+        session.add_combatant(combatant, Teams.Color.RED)
+
+    session.set_num_simulations(50)
+    session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)
+    try:
+        results = session.simulate(parallel=False)
+        assert_keywords_in_log(log_path, keywords)
+        assert_victories_with_tolerance(results, Teams.Color.BLUE, 50, 15)
+        assert_victories_with_tolerance(results, Teams.Color.RED, 50, 15)
         os.remove(log_path)
     except AssertionError:
         raise

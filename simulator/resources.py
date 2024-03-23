@@ -168,6 +168,13 @@ def use_resources(combatant, action):
                 combatant.resources[Action.WILDSHAPE].use_resource()
             case BonusAction.SECOND_WIND:
                 combatant.resources[BonusAction.SECOND_WIND].use_resource()
+            case BonusAction.HEALING_WORD:
+                action.factory.resource.use_resource(level=1)
+                combatant.already_cast_leveled_spell_this_turn = True
+            case BonusAction.TWINNED_HEALING_WORD:
+                action.factory.resource.use_resource(level=1)
+                combatant.already_cast_leveled_spell_this_turn = True
+                combatant.resources[Passive.METAMAGIC].use_resource(1)
             case _:
                 logger.error("Unknown bonus action type")
     elif isinstance(action_type, Reaction):

@@ -28,6 +28,7 @@ from ..spells.fireball import FireballFactory
 from ..spells.firebolt import FireboltFactory
 from ..spells.flaming_sphere import FlamingSphereFactory
 from ..spells.haste import HasteFactory
+from ..spells.healing_word import HealingWordFactory
 from ..spells.hold_person import HoldPersonFactory
 from ..spells.magic_missile import MagicMissileFactory
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
@@ -35,6 +36,7 @@ from ..spells.shillelagh import ShillelaghFactory
 from ..spells.shocking_grasp import ShockingGraspFactory
 from ..spells.sleep import SleepFactory
 from ..spells.thunderwave import ThunderwaveFactory
+from ..spells.twinned_healing_word import TwinnedHealingWordFactory
 from ..spells.twinned_hold_person import TwinnedHoldPersonFactory
 from ..spells.misty_step import MistyStepFactory
 from ..spells.scorching_ray import ScorchingRayFactory
@@ -117,6 +119,8 @@ TO_FACTORY = {
     BonusAction.SECOND_WIND: SecondWindFactory,
     BonusAction.QUICKENED_THUNDERWAVE: ThunderwaveFactory,
     BonusAction.SHILLELAGH: ShillelaghFactory,
+    BonusAction.HEALING_WORD: HealingWordFactory,
+    BonusAction.TWINNED_HEALING_WORD: TwinnedHealingWordFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
@@ -153,7 +157,8 @@ TO_TWINNED = {
     Action.HASTE: Action.TWINNED_HASTE,
     Action.HOLD_PERSON: Action.TWINNED_HOLD_PERSON,
     Action.SHOCKING_GRASP: Action.TWINNED_SHOCKING_GRASP,
-    Action.RAY_OF_ENFEEBLEMENT: Action.TWINNED_RAY_OF_ENFEEBLEMENT
+    Action.RAY_OF_ENFEEBLEMENT: Action.TWINNED_RAY_OF_ENFEEBLEMENT,
+    BonusAction.HEALING_WORD: BonusAction.TWINNED_HEALING_WORD
 }
 
 TO_HASTED = {

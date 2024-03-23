@@ -712,6 +712,11 @@ class ActionResolver:
                             continue
                         battle_map.push_combatant_away_from(origin, aff, 2)
                 return ActionResult.DMG
+            case BonusAction.HEALING_WORD:
+                logger.info(f"{combatant} casts {actoid}")
+                heal_hp = roll_spell_dmg(actoid.factory.heal_dice) + actoid.factory.mod
+                actoid.target.heal(heal_hp)
+                logger.info(f"{combatant} is healed for {heal_hp} damage")
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

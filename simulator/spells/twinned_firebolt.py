@@ -17,6 +17,7 @@ from ..utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, 
 
 logger = logging.getLogger("Encounterra")
 
+
 class TwinnedFireboltFactory(DirectThreatFactory):
     level = 0
     range = SpellStats.Range.FEET_120.value
@@ -92,6 +93,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         targets = [e for e in Map.get().get_non_swallowed_enemies(self.combatant)]
         threats = sorted([self.calculate_threat_to_target(t) for t in targets], reverse=True)
         return (threats[0] if threats else 0) + (threats[1] if len(threats) > 1 else 0)
+
 
 class TwinnedFirebolt(Actoid, DirectThreat):
 

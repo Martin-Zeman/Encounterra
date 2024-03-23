@@ -27,7 +27,7 @@ class Druid1Lvl(Combatant):
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(Action.FAERIE_FIRE)
         self.add_ability(Action.THUNDERWAVE)
-        self.add_ability(BonusAction.HEALING_WORD)
+        self.add_ability(BonusAction.HEALING_WORD, mod=3)
         self.add_ability(BonusAction.SHILLELAGH, original_attack=self.quarterstaff[1], new_attack=self.shillelagh_quarterstaff[1])
         self.danger_zone_attack = self.quarterstaff
         self.build_attack_fms()

@@ -76,6 +76,7 @@ class BonusAction(Enum):
     QUICKENED_SLEEP = auto()
     SECOND_WIND = auto()
     HEALING_WORD = auto()
+    TWINNED_HEALING_WORD = auto()
     SHILLELAGH = auto()
     QUICKENED_THUNDERWAVE = auto()
 

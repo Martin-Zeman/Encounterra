@@ -1423,6 +1423,9 @@ class Map:
     def get_non_swallowed_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e)]
 
+    def get_non_swallowed_allies(self, combatant):
+        return [e for e in self.teams.get_allies(combatant) if e.is_alive() and not get_swallower(e)]
+
     def get_combatants(self, combatant):
         return [c for c in self.combatant_coordinate_cache.keys() if c.is_alive() and c is not combatant]
 

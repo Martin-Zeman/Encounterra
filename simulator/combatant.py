@@ -359,6 +359,10 @@ class Combatant(ProtoCombatant):
                     resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource, **kwargs)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                case BonusAction.HEALING_WORD:
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self, resource, **kwargs)))
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                 case _:
                     pass  # no resources required
         elif isinstance(action_type, Reaction):

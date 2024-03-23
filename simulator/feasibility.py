@@ -371,6 +371,21 @@ def check_feasibility(combatant, action):
                 return res  # TODO add more conditions
             case BonusAction.SECOND_WIND:
                 return res and combatant.resources[BonusAction.SECOND_WIND].has_resource()
+            case BonusAction.HEALING_WORD:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_allies(combatant, action.target)
+                return res
+            case BonusAction.TWINNED_HEALING_WORD:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.resources[Passive.METAMAGIC].get_resource() > 0
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
+                res &= battle_map.teams.are_allies(combatant, action.targets[0])
+                res &= battle_map.teams.are_allies(combatant, action.targets[1])
+                return res
             case _:
                 logger.error("Unknown bonus action")
                 return False
@@ -594,6 +609,16 @@ def check_feasibility_light(combatant, action):
                 return res and combatant.resources[Action.WILDSHAPE].has_resource()
             case BonusAction.SECOND_WIND:
                 return res and combatant.resources[BonusAction.SECOND_WIND].has_resource()
+            case BonusAction.HEALING_WORD:
+                res &= action[1].resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                return res
+            case BonusAction.TWINNED_HEALING_WORD:
+                res &= action[1].resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.resources[Passive.METAMAGIC].get_resource() > 0
+                res &= (len(battle_map.teams.get_allies(combatant)) > 0)
+                return res
             case _:
                 logger.error("Unknown bonus action")
                 return False
