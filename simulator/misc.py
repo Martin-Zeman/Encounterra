@@ -1,7 +1,8 @@
-from enum import Enum, Flag, auto
+from enum import Enum, auto
 import random
 import re
 from functools import reduce, cache
+from itertools import product
 from .actions.actoid import FactoryFlags
 import logging
 from .utils.roll_types import RollType
@@ -27,6 +28,7 @@ class Barbarian(Enum):
     PATH_OF_THE_TOTEM_WARRIOR = "Path of the Totem Warrior"
     PATH_OF_THE_ZEALOT = "Path of the Zealot"
     PATH_OF_WILD_MAGIC = "Path of the Wild Magic"
+    BEFORE_SUBCLASS = ""
 
 
 class Bard(Enum):
@@ -38,6 +40,7 @@ class Bard(Enum):
     COLLEGE_OF_SWORDS = "College of Swords"
     COLLEGE_OF_VALOR = "College of Valor"
     COLLEGE_OF_WHISPERS = "College of Whispers"
+    BEFORE_SUBCLASS = ""
 
 
 class Cleric(Enum):
@@ -65,6 +68,7 @@ class Druid(Enum):
     CIRCLE_OF_LAND = "Circle of Land"
     CIRCLE_OF_MOON = "Circle of Moon"
     CIRCLE_OF_SHEPHERD = "Circle of Shepherd"
+    BEFORE_SUBCLASS = ""
 
 
 class Fighter(Enum):
@@ -77,6 +81,7 @@ class Fighter(Enum):
     RUNE_KNIGHT = "Rune Knight"
     SAMURAI = "Samurai"
     PURPLE_DRAGON_KNIGHT = "Purple Dragon Knight"
+    BEFORE_SUBCLASS = ""
 
 
 class Paladin(Enum):
@@ -89,6 +94,7 @@ class Paladin(Enum):
     OATH_OF_WATCHERS = "Oath of Watchers"
     OATH_OF_VENGEANCE = "Oath of Vengeance"
     OATHBREAKER = "Oathbreaker"
+    BEFORE_SUBCLASS = ""
 
 
 class Ranger(Enum):
@@ -100,6 +106,7 @@ class Ranger(Enum):
     HUNTER = "Hunter"
     MONSTER_SLAYER = "Monster Slayer"
     SWARMKEEPER = "Swarmkeeper"
+    BEFORE_SUBCLASS = ""
 
 
 class Rogue(Enum):
@@ -112,6 +119,7 @@ class Rogue(Enum):
     SOULKNIFE = "Soulknife"
     SWASHBUCKLER = "Swashbuckler"
     THIEF = "Thief"
+    BEFORE_SUBCLASS = ""
 
 
 class Monk(Enum):
@@ -125,6 +133,7 @@ class Monk(Enum):
     WAY_OF_THE_LONG_DEATH = "Way of the Long Death"
     WAY_OF_THE_OPEN_HAND = "Way of the Open Hand"
     WAY_OF_THE_SUN_SOUL = "Way of the Sun Soul"
+    BEFORE_SUBCLASS = ""
 
 
 class Sorcerer(Enum):
@@ -163,6 +172,7 @@ class Wizard(Enum):
     NECROMANCY = "Necromancy"
     TRANSMUTATION = "Transmutation"
     WAR_MAGIC = "War Magic"
+    BEFORE_SUBCLASS = ""
 
 
 class Monster(Enum):
@@ -320,9 +330,31 @@ def parse_dmg_dice(dice_string):
     return res
 
 
+@cache
 def avg_roll(dice_string):
     dice = parse_dmg_dice(dice_string)
     return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
+
+
+@cache
+def generate_outcomes(dice):
+    # Generate all possible outcomes for a given dice configuration
+    outcomes = []
+    for _ in range(dice[0]):
+        outcomes.append(range(1, dice[1] + 1))
+    return list(product(*outcomes))
+
+
+def find_percentile_value(outcomes, percentile):
+    # Find the value at the given percentile in the sorted outcomes
+    index = int(len(outcomes) * (percentile / 100.0))
+    return sorted(outcomes)[index]
+
+@cache
+def percentile_roll(dice, percentile):
+    # Generate and sum all possible outcomes
+    all_outcomes = [sum(combination) for combination in generate_outcomes(dice)]
+    return find_percentile_value(all_outcomes, percentile)
 
 
 def roll_dice(dice):
@@ -335,6 +367,25 @@ def roll_dice(dice):
     for d in dice:
         for _ in range(d[0]):
             dice_sum += random.randint(1, d[1])
+    return dice_sum
+
+
+def roll_dice_with_reroll(dice, reroll_max_value):
+    """
+    Function for rolling dice which re-rolls results less than a given value. The re-rolled value must be used.
+    @param dice: list of tuples of (# of dice (1..inf), dice sizes (4, 6, 8, 10, 12))
+    @param reroll_max_value: the maximum die value to be rerolled
+    @return:
+    """
+    dice_sum = 0
+    for d in dice:
+        for _ in range(d[0]):
+            rolled = random.randint(1, d[1])
+            if rolled <= reroll_max_value:
+                rerolled = random.randint(1, d[1])
+                logger.info(f"Re-rolling {rolled} as {rerolled}")
+                rolled = rerolled
+            dice_sum += rolled
     return dice_sum
 
 
@@ -457,3 +508,7 @@ def is_path_straight(path):
         direction = current_direction
 
     return True
+
+
+def get_missing_hp(combatant):
+    return combatant.max_hp + combatant.max_hp_modifier - combatant.curr_hp

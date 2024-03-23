@@ -3,6 +3,8 @@ import pytest
 from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from ..combatants.dire_wolf import DireWolf
 from ..combatants.dragonclaw_cultist import DragonclawCultist
+from ..combatants.druid_1lvl import Druid1Lvl
+from ..combatants.fighter_1lvl import Fighter1Lvl
 from ..combatants.giant_toad import GiantToad
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
 from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
@@ -90,6 +92,14 @@ def test_ogre():
 @pytest.fixture()
 def test_moon_druid():
     return MoonDruid5Lvl()
+
+@pytest.fixture()
+def test_druid_lvl_1():
+    return Druid1Lvl()
+
+@pytest.fixture()
+def test_fighter_lvl_1():
+    return Fighter1Lvl()
 
 
 @pytest.fixture()

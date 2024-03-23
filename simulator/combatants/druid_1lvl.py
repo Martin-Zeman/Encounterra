@@ -12,53 +12,39 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class MoonDruid5Lvl(Combatant):
+class Druid1Lvl(Combatant):
 
-    name = "Moon Druid 5th LVL"
-    cls = Class.DRUID.CIRCLE_OF_MOON
-    level = 5
+    name = "Druid 1st LVL"
+    cls = Class.DRUID.BEFORE_SUBCLASS
+    level = 1
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=42, ac=15, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
-        self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
+        super().__init__(num_or_name, hp=11, ac=12, init_bonus=1, speed=35, spell_to_hit=5, resistances=set(), dc=13)
+        self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.shillelagh_quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Shillelagh Quarterstaff", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.BludgeoningMagical, attack_range=1, ammo=0)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
-        self.add_ability(Action.FLAMING_SPHERE)
-        self.add_ability(Action.HOLD_PERSON)
         self.add_ability(Action.FAERIE_FIRE)
-        self.add_ability(Action.SPIKE_GROWTH)
-        self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=4, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
-        self.danger_zone_attack = self.scimitar
-        self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)
-        self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
+        self.add_ability(Action.THUNDERWAVE)
+        self.add_ability(BonusAction.HEALING_WORD, mod=3)
+        self.add_ability(BonusAction.SHILLELAGH, original_attack=self.quarterstaff[1], new_attack=self.shillelagh_quarterstaff[1])
+        self.danger_zone_attack = self.quarterstaff
         self.build_attack_fms()
-        self.saving_throws[SavingThrow.STR] = -1
+        self.saving_throws[SavingThrow.STR] = 0
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 3
         self.saving_throws[SavingThrow.INT] = 4
-        self.saving_throws[SavingThrow.WIS] = 7
+        self.saving_throws[SavingThrow.WIS] = 5
         self.saving_throws[SavingThrow.CHA] = 1
-        self.athletics = 2
-        self.acrobatics = 1
-        self.passive_perception = 17
+        self.athletics = 0
+        self.acrobatics = -1
+        self.passive_perception = 13
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_transition(str(self.scimitar[1]), '0', 'nop')
-        self.attack_fsm.add_transition(str(self.longbow[1]), '0', 'nop')
-
-
-    def new_turn(self):
-        super().new_turn()
-        self.action_plan_strategy.best_wildshape_plan_data = None
-        if self.current_wildshape_form is not None:
-            self.current_wildshape_form.new_turn()
-
-    def reset(self):
-        super().reset()
-        for ws in self.available_wildshape_forms:
-            ws.form.reset()
+        self.attack_fsm.add_transition(str(self.quarterstaff[1]), '0', 'nop')
+        self.attack_fsm.add_transition(str(self.shillelagh_quarterstaff[1]), '0', 'nop')
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
@@ -77,7 +63,7 @@ class MoonDruid5Lvl(Combatant):
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
             'attack_state_machine': self.attack_fsm.state,
-            'wildshape_uses':  self.resources[Action.WILDSHAPE].export_resource()
+            'ammo': copy.deepcopy(self.ammo)
         }
 
     def import_resources(self, resources):
@@ -88,5 +74,5 @@ class MoonDruid5Lvl(Combatant):
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
-        self.resources[Action.WILDSHAPE].import_resource(uses=resources['wildshape_uses'])
+        self.ammo = resources['ammo']
 

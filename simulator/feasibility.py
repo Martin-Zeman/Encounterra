@@ -1,4 +1,4 @@
-from .actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction, Passive
+from .actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction, Passive, FreeAction
 from .battle_map import Map
 from .combatant_coords import Coords
 from .effects.effect import EffectType
@@ -143,7 +143,7 @@ def check_feasibility(combatant, action):
                 return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED)
             case Action.DISENGAGE | HasteAction.HASTE_DISENGAGE:
                 return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED) and not combatant.has_disengaged
-            case Action.DODGE | Action.POUNCE:
+            case Action.DODGE | Action.POUNCE | Action.NOP:
                 return res
             case Action.BREAK_GRAPPLE:
                 return res and is_affected_by_any(combatant, Conditions.GRAPPLED)
@@ -218,12 +218,26 @@ def check_feasibility(combatant, action):
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
-            case Action.FAERIE_FIRE | Action.SLEEP:
+            case Action.SLEEP:
                 res &= action.factory.resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                return res
+            case Action.FAERIE_FIRE:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= battle_map.are_valid_coords(np.array([action.origin]))
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
+                return res
+            case Action.THUNDERWAVE:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.are_valid_coords(np.array([action.coord]))
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(),
+                                                                action.get_affected_coords()) <= action.factory.range
                 return res
             case _:
                 logger.error(f"check_feasibility: Unknown action type {action_type}")
@@ -238,9 +252,9 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case BonusAction.RAGE:
-                return res and action.factory.resource.has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
+                return res and combatant.resources[BonusAction.RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
             case BonusAction.TOTEM_RAGE:
-                return res and action.factory.resource.has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
+                return res and combatant.resources[BonusAction.TOTEM_RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
             case BonusAction.MISTY_STEP:
                 res &= action.factory.resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
@@ -307,12 +321,25 @@ def check_feasibility(combatant, action):
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
-            case BonusAction.QUICKENED_FAERIE_FIRE | BonusAction.QUICKENED_SLEEP:
+            case BonusAction.QUICKENED_SLEEP:
                 res &= action.factory.resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                return res
+            case BonusAction.QUICKENED_FAERIE_FIRE:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= battle_map.are_valid_coords(np.array([action.origin]))
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
+                return res
+            case BonusAction.QUICKENED_THUNDERWAVE:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= battle_map.are_valid_coords(np.array([action.coord]))
+                res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FIREBALL:
                 res &= action.factory.resource.has_resource(level=3)
@@ -334,7 +361,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
-            case BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
+            case BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.NOP | BonusAction.SHILLELAGH:
                 return res
             case BonusAction.CUNNING_DISENGAGE:
                 return res and not combatant.has_disengaged
@@ -342,6 +369,23 @@ def check_feasibility(combatant, action):
                 return res and combatant.resources[Action.WILDSHAPE].has_resource()
             case BonusAction.FLAMING_SPHERE_RAM:
                 return res  # TODO add more conditions
+            case BonusAction.SECOND_WIND:
+                return res and combatant.resources[BonusAction.SECOND_WIND].has_resource()
+            case BonusAction.HEALING_WORD:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_allies(combatant, action.target)
+                return res
+            case BonusAction.TWINNED_HEALING_WORD:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.resources[Passive.METAMAGIC].get_resource() > 0
+                res &= action.targets[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[0]) <= action.factory.range
+                res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
+                res &= battle_map.teams.are_allies(combatant, action.targets[0])
+                res &= battle_map.teams.are_allies(combatant, action.targets[1])
+                return res
             case _:
                 logger.error("Unknown bonus action")
                 return False
@@ -372,6 +416,12 @@ def check_feasibility(combatant, action):
                 return combatant.movement >= (combatant.speed / 2)
             case _:
                 logger.error("Unknown movement")
+    elif isinstance(action_type, FreeAction):
+        match action_type:
+            case FreeAction.ACTION_SURGE:
+                return combatant.resources[FreeAction.ACTION_SURGE].has_resource()
+            case _:
+                logger.error("Unknown free action")
     # elif isinstance(action_type, FreeAction):
     #     match action_type:
     #         case _:
@@ -411,7 +461,7 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.concentration_effect
                 # res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
-            case Action.CHAOSBOLT | Action.MAGIC_MISSILE:
+            case Action.CHAOSBOLT | Action.MAGIC_MISSILE | Action.THUNDERWAVE:
                 res &= action[1].resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
@@ -435,7 +485,7 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 res &= not combatant.concentration_effect
                 return res
-            case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.DODGE | Action.POUNCE | Action.CONSTRICT | Action.SHAKE_ALLY_AWAKE:
+            case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.DODGE | Action.POUNCE | Action.CONSTRICT | Action.SHAKE_ALLY_AWAKE | Action.NOP:
                 return res
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 return res and combatant.resources[Passive.METAMAGIC].get_resource() > 0
@@ -505,17 +555,17 @@ def check_feasibility_light(combatant, action):
         #     return False
         res = combatant.has_bonus_action
         match action_type:
-            case BonusAction.PAM_BONUS_ATTACK:  # TODO Remove this
+            case BonusAction.PAM_BONUS_ATTACK | BonusAction.NOP:  # TODO Remove this
                 return res
             case BonusAction.RAGE:
-                return res and action[1].resource.has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
+                return res and combatant.resources[BonusAction.RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)
             case BonusAction.TOTEM_RAGE:
-                return res and action[1].resource.has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
+                return res and combatant.resources[BonusAction.TOTEM_RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.TOTEM_RAGE)
             case BonusAction.MISTY_STEP:
                 res &= action[1].resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 return res
-            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE:
+            case BonusAction.QUICKENED_CHAOSBOLT | BonusAction.QUICKENED_MAGIC_MISSILE | BonusAction.QUICKENED_THUNDERWAVE:
                 res &= action[1].resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
@@ -553,10 +603,22 @@ def check_feasibility_light(combatant, action):
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
             case BonusAction.CUNNING_DISENGAGE:
                 return res and not combatant.has_disengaged  # Don't want to disengage twice
-            case BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
+            case BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.SHILLELAGH:
                 return res
             case BonusAction.MOON_WILDSHAPE:
                 return res and combatant.resources[Action.WILDSHAPE].has_resource()
+            case BonusAction.SECOND_WIND:
+                return res and combatant.resources[BonusAction.SECOND_WIND].has_resource()
+            case BonusAction.HEALING_WORD:
+                res &= action[1].resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                return res
+            case BonusAction.TWINNED_HEALING_WORD:
+                res &= action[1].resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= combatant.resources[Passive.METAMAGIC].get_resource() > 0
+                res &= (len(battle_map.teams.get_allies(combatant)) > 0)
+                return res
             case _:
                 logger.error("Unknown bonus action")
                 return False
@@ -575,6 +637,12 @@ def check_feasibility_light(combatant, action):
         return combatant.movement > 0 and not is_affected_by_any(combatant,
             Conditions.GRAPPLED,
             Conditions.RESTRAINED)
+    elif isinstance(action_type, FreeAction):
+        match action_type:
+            case FreeAction.ACTION_SURGE:
+                return combatant.resources[FreeAction.ACTION_SURGE].has_resource()
+            case _:
+                logger.error("Unknown free action")
     else:
         logger.error(f"check_feasibility_light: Unknown action type {action_type}")
         return False

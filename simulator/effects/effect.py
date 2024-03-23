@@ -25,6 +25,7 @@ class EffectType(Enum):
     BLESS = auto()
     RAY_OF_ENFEEBLEMENT = auto()
     SLEEP = auto()
+    SHILLELAGH = auto()
 
 
 class Effect(ABC):

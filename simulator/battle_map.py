@@ -1,4 +1,5 @@
 import copy
+import math
 from functools import cache
 
 import numpy as np
@@ -15,7 +16,8 @@ from .proto_combatant import ProtoCombatant
 from .spells.spell import SpellStats
 from .misc import Size, Visibility
 from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler
-from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors
+from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors, \
+    find_nearest_valid_coordinate_chebyshev, angle_between_vectors_rad
 from .misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
@@ -299,7 +301,7 @@ class Map:
                 combatant = square.combatant
                 if combatant and not combatant.is_swallowed[1]:
                     # row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + str(combatant)[-1] + "\x1b[0m\t"
-                    row_text += str(combatant)[0] + str(combatant)[-1] + "\t"
+                    row_text += str(combatant)[0] + str(combatant)[-2] + "\t"  # -2 takes the number between the parenthesis
                 elif square.terrain is Terrain.DIFFICULT_TERRAIN:
                     row_text += "**\t"
                 elif square.terrain is Terrain.IMPASSABLE_TERRAIN:
@@ -765,11 +767,12 @@ class Map:
         self.combatant_coordinate_cache[combatant].set(new_coords)
         logger.info(f"{combatant} moved to {new_coords[0]}", extra={"team": self.teams.get_team(combatant)})
 
-    def move_combatant(self, combatant, new_coords: np.array):
+    def move_combatant(self, combatant, new_coords: np.array, log=True):
         """
         Removes the combatant from the old coordinate and moves them to a new one
         :param combatant:
         :param new_coords:
+        :param log: Should the movement be logged
         :return:
         """
         old_coords = self.get_combatant_position(combatant).get()
@@ -781,7 +784,8 @@ class Map:
         for new_coord in new_coords_data:
             self.grid[new_coord[0], new_coord[1]].set_combatant(combatant)
         self.combatant_coordinate_cache[combatant] = new_coords
-        logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
+        if log:
+            logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
 
     def set_combatant_coordinates(self, combatant, coords: np.array):
         coords = Coords(coords, combatant.size)
@@ -1223,20 +1227,22 @@ class Map:
         best_affected = None
         caster_coords = self.combatant_coordinate_cache[caster].get()
         for x, y in [(x, y) for x in range(bb[0][0], bb[1][0]) for y in range(bb[0][1], bb[1][1])]:
-            curr_coord = np.array([[x, y]])
+            curr_coords = Coords(np.array([x, y]), Size(length - 1))  # Have to convert to combatant sizes
             affected = []
-            if self.get_cartesian_distance_coords(caster_coords, curr_coord) > spell_range or any((caster_coords[:] == curr_coord).all(1)):
+            if self.get_cartesian_distance_coords(caster_coords, curr_coords.get()) > spell_range or any((caster_coords[:] == curr_coords).all(1)):
                 continue  # Skip those outside of spell range and those taken up by the caster
             score = 0
             for combatant, coords in self.combatant_coordinate_cache.items():
-                if any((coords.get()[:] >= curr_coord).all(1)) and any((coords.get()[:] < curr_coord + length).all(1)):
+                if self.get_cartesian_distance_coords(coords.get(), curr_coords.get()) == 0:
                     score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
                     affected.append(combatant)
             if score > max_score:
                 max_score = score
-                best_placement = curr_coord
+                best_placement = curr_coords
                 best_affected = affected
-        return best_placement, max_score, best_affected
+        if best_placement is not None:
+            return best_placement.get()[0], max_score, best_affected
+        return None, None, None
 
     def get_coords_affected_by_square_aoe(self, origin, length):
         """
@@ -1288,7 +1294,7 @@ class Map:
                 affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
                 affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords and pt.is_alive()]
 
-            case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_20:
+            case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_15 | SpellStats.Target.BOX_20:
                 affected_coords = self.get_coords_affected_by_square_aoe(origin, SpellStats.TRANSLATE_BOX[target_template])
                 for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
                     if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:
@@ -1417,6 +1423,9 @@ class Map:
     def get_non_swallowed_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e)]
 
+    def get_non_swallowed_allies(self, combatant):
+        return [e for e in self.teams.get_allies(combatant) if e.is_alive() and not get_swallower(e)]
+
     def get_combatants(self, combatant):
         return [c for c in self.combatant_coordinate_cache.keys() if c.is_alive() and c is not combatant]
 
@@ -1445,3 +1454,26 @@ class Map:
         self.get_free_coords_in_cartesian_range.cache_clear()
         self.get_free_coords_in_hop_range.cache_clear()
         self.find_best_placement_harmful_circular.cache_clear()
+
+    def push_combatant_away_from(self, origin, target_combatant, distance):
+        init_coords = self.get_combatant_position(target_combatant)
+        if not init_coords:
+            return
+        init_center = init_coords.get_center()
+        init_coords = init_coords.get()[0]
+        direction = init_center - origin
+        direction /= np.linalg.norm(direction)
+        if any(True for d in direction if math.isnan(d)):
+            return  # Protection against (0, 0) vector
+        for dist in range(distance, 0, -1):
+            delta = direction * dist
+            angle = angle_between_vectors_rad(np.array([0, 1]), delta) % (math.pi / 2)
+            if angle != 0:
+                delta /= math.sin(angle)  # Compensate for diagonals needing a longer push
+            target_coords = init_coords + delta
+            nearest_grid_coord = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, distance)
+            target_coords = Coords(nearest_grid_coord, target_combatant.size)
+            if self.are_valid_coords(target_coords.get()) and self.are_empty_or_self(target_coords, target_combatant):
+                self.move_combatant(target_combatant, nearest_grid_coord, False)
+                logger.info(f"{target_combatant} is pushed to {nearest_grid_coord}")
+                return

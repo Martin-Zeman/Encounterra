@@ -14,7 +14,7 @@ logger = logging.getLogger("Encounterra")
 
 class MoonDruid3Lvl(Combatant):
 
-    name = "Moon Druid 3. Level"
+    name = "Moon Druid 3rd LVL"
     cls = Class.DRUID.CIRCLE_OF_MOON
     level = 3
     id = Combatant.generate_unique_id(name, cls, level)
@@ -31,7 +31,6 @@ class MoonDruid3Lvl(Combatant):
         self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=3, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
         self.danger_zone_attack = self.scimitar
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)
-        self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 1
@@ -88,8 +87,4 @@ class MoonDruid3Lvl(Combatant):
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
         self.resources[Action.WILDSHAPE].import_resource(uses=resources['wildshape_uses'])
-
-    @cache
-    def get_dijkstra_from_cache(self):
-        sizes = WildshapeFactory.get_wildshape_form_sizes(self.level, BonusAction.MOON_WILDSHAPE)
 

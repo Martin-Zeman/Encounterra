@@ -2,15 +2,16 @@ import copy
 
 import pytest
 from ..actions.action_types import Passive, Action
-from ..battle_map import Terrain, Coords, Map
+from ..battle_map import Terrain, Coords
 from ..combatants.goblin import Goblin
 from ..misc import DistanceMetric, Size, Side, Visibility
 from ..conditions import Conditions, Condition, apply_condition, remove_condition
 from ..spells.fireball import FireballFactory
 from ..spells.spell import SpellStats
+from ..spells.thunderwave import ThunderwaveFactory
 from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
-    teams, effect_tracker, battle_map
+    teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1
 import numpy as np
 
 from ..utils.roll_types import ThreatModifierType
@@ -56,7 +57,7 @@ def test_get_hop_distance_overlapping_large_huge(battle_map, test_draconic_sorce
 # def test_as_if_dist_from_combatant(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
 #     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
 #     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-#     test_goblin2 = Goblin("Goblin 2")
+#     test_goblin2 = Goblin("Goblin (2)")
 #     teams.add_combatant_to_team(test_goblin2, Teams.Color.RED)
 #
 #     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
@@ -92,7 +93,7 @@ def test_get_hop_distance_overlapping_large_huge(battle_map, test_draconic_sorce
 def test_as_if_dist_delta_from_combatant(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    test_goblin2 = Goblin("Goblin 2")
+    test_goblin2 = Goblin("Goblin (2)")
     teams.add_combatant_to_team(test_goblin2, Teams.Color.RED)
 
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
@@ -846,7 +847,7 @@ def test_find_best_placement_harmful_square(battle_map, teams, test_draconic_sor
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 5]))
     # 10ft square
     coord, score, affected = battle_map.find_best_placement_harmful_square(test_draconic_sorcerer_5lvl, 20, 2)
-    assert np.array_equal(coord, np.array([[4, 4]]))
+    assert np.array_equal(coord, np.array([4, 4]))
     assert score == 2
     assert test_goblin in affected
     assert test_bugbear not in affected
@@ -859,6 +860,46 @@ def test_find_best_placement_harmful_square(battle_map, teams, test_draconic_sor
     assert score == 1
     assert test_goblin in affected or test_bugbear in affected or test_stone_giant in affected
     assert test_totem_barbarian not in affected
+
+
+def test_find_best_placement_harmful_square_thunderwave(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant):
+    # test_goblin.size = Size.LARGE
+    test_stone_giant.size = Size.MEDIUM  # downsize the giant for the sake of this test
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 4]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([4, 4]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 6]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 6]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 5]))
+
+    twf = ThunderwaveFactory(test_draconic_sorcerer_5lvl.dc, Action.THUNDERWAVE, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
+    coord = twf.find_best_args(test_draconic_sorcerer_5lvl)
+    assert np.array_equal(coord, np.array([4, 3]))
+
+    # Now let's move the caster in order to test the range of Thunderwave
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([2, 4]))
+    coord = twf.find_best_args(test_draconic_sorcerer_5lvl)
+    assert np.array_equal(coord, np.array([3, 3]))
+
+    # Now let's move the ally up to make sure all enemies can be hit
+    battle_map.move_combatant(test_totem_barbarian, np.array([4, 7]))
+    coord = twf.find_best_args(test_draconic_sorcerer_5lvl)
+    assert np.array_equal(coord, np.array([3, 4]))
+
+
+def test_find_best_placement_harmful_square_thunderwave_out_of_spell_range(battle_map, teams, test_druid_lvl_1, test_fighter_lvl_1):
+    teams.add_combatant_to_team(test_fighter_lvl_1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_druid_lvl_1, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([14, 3]))
+    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([2, 9]))
+    twf = ThunderwaveFactory(test_druid_lvl_1.dc, Action.THUNDERWAVE, test_druid_lvl_1, test_druid_lvl_1.spellslots)
+    coords = twf.find_best_args(test_druid_lvl_1)
+    assert coords is None
+
 
 def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian):
     test_goblin.size = Size.LARGE
@@ -875,6 +916,7 @@ def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, test_draconic_
     assert test_goblin in combatants
     assert test_bugbear in combatants
     assert test_totem_barbarian not in combatants
+
 
 def test_get_combatants_affected_by_aoe_square(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre):
     test_goblin.size = Size.LARGE
@@ -897,6 +939,7 @@ def test_get_combatants_affected_by_aoe_square(battle_map, teams, test_draconic_
     assert test_totem_barbarian not in combatants
     assert test_stone_giant in combatants
     assert test_ogre not in combatants
+
 
 def test_get_enemies_within_radius_sorted_by_distance(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian):
     test_goblin.size = Size.LARGE
@@ -1065,12 +1108,14 @@ def test_get_visibility_large_and_huge_one_obstacle(battle_map):
     battle_map.place_circular_element(np.array([4, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     assert battle_map.get_visibility(Coords(np.array([0, 0]), Size.LARGE), Coords(np.array([6, 4]), Size.HUGE)) is Visibility.HALF_COVER
 
+
 def test_get_visibility_large_and_huge_1(battle_map):
     battle_map.place_circular_element(np.array([7, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([7, 5]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     assert battle_map.get_visibility(Coords(np.array([0, 0]), Size.LARGE), Coords(np.array([9, 4]), Size.HUGE)) is Visibility.FULL
     battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     assert battle_map.get_visibility(Coords(np.array([0, 0]), Size.LARGE), Coords(np.array([9, 4]), Size.HUGE)) is Visibility.THREE_QUARTERS_COVER
+
 
 def test_get_visibility_large_and_huge_2(battle_map):
     battle_map.place_circular_element(np.array([5, 3]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -1084,9 +1129,11 @@ def test_get_visibility_large_and_huge_2(battle_map):
     assert battle_map.get_visibility(Coords(np.array([9, 5]), Size.HUGE), Coords(np.array([3, 9]), Size.LARGE)) is Visibility.THREE_QUARTERS_COVER
     assert battle_map.get_visibility(Coords(np.array([9, 5]), Size.HUGE), Coords(np.array([1, 11]), Size.LARGE)) is Visibility.THREE_QUARTERS_COVER
 
+
 def test_get_visibility_no_obstacles(battle_map):
     assert battle_map.get_visibility(Coords(np.array([0, 0]), Size.LARGE), Coords(np.array([9, 4]), Size.HUGE)) is Visibility.FULL
     assert battle_map.get_visibility(Coords(np.array([0, 0]), Size.MEDIUM), Coords(np.array([1, 0]), Size.MEDIUM)) is Visibility.FULL
+
 
 def test_get_visibility_dict(battle_map, teams, test_goblin, test_bugbear, test_ogre):
     battle_map.place_circular_element(np.array([7, 7]), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -1110,8 +1157,8 @@ def test_get_visibility_dict(battle_map, teams, test_goblin, test_bugbear, test_
     assert visibility[test_ogre_2] is Visibility.FULL
     assert visibility[test_ogre_3] is Visibility.HALF_COVER
 
-def test_map_toggled_cache_with_key(battle_map, teams, test_goblin, test_bugbear):
 
+def test_map_toggled_cache_with_key(battle_map, teams, test_goblin, test_bugbear):
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
     battle_map.set_combatant_coordinates(test_goblin, np.array([5, 5]))
@@ -1139,3 +1186,81 @@ def test_map_toggled_cache_with_key(battle_map, teams, test_goblin, test_bugbear
     battle_map.move_combatant(test_goblin, np.array([5, 5]))  # Now we move the comabatant which should force a recalculation
     threat_7 = shortbow_attack.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
     assert threat_5 == threat_7
+
+
+def test_push_combatant_away_from(battle_map, teams, test_goblin, test_bugbear, test_stone_giant, test_ogre):
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 3]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 5]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 11]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([13, 5]))
+
+    # Huge combatant
+    # Simple push to the right
+    battle_map.push_combatant_away_from(np.array([5.5, 12.5]), test_stone_giant, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_stone_giant).get()[0], np.array([7, 11]))
+    # No push
+    battle_map.push_combatant_away_from(np.array([8.5, 12.5]), test_stone_giant, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_stone_giant).get()[0], np.array([7, 11]))
+    # Simple push to the left
+    battle_map.push_combatant_away_from(np.array([9.5, 12.5]), test_stone_giant, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_stone_giant).get()[0], np.array([5, 11]))
+    # Pushing diagonally up and right with only one square space left to push
+    battle_map.push_combatant_away_from(np.array([4, 10]), test_stone_giant, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_stone_giant).get()[0], np.array([6, 12]))
+    # Pushing diagonally down and left
+    battle_map.push_combatant_away_from(np.array([8, 14]), test_stone_giant, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_stone_giant).get()[0], np.array([4, 10]))
+    # Pushing diagonally up and little bit to the right by a large distance with no enough space left to push
+    battle_map.push_combatant_away_from(np.array([4, 9]), test_stone_giant, 5)
+    assert np.array_equal(battle_map.get_combatant_position(test_stone_giant).get()[0], np.array([5, 12]))
+    # Putting another combatant in the way so that the Stone Giant cannot be pushed all the way
+    battle_map.move_combatant(test_bugbear, np.array([6, 10]))
+    battle_map.push_combatant_away_from(np.array([6.5, 14.5]), test_stone_giant, 3)
+    assert np.array_equal(battle_map.get_combatant_position(test_stone_giant).get()[0], np.array([5, 11]))
+
+    # Medium combatant
+    # Simple small push to the right
+    battle_map.push_combatant_away_from(np.array([2, 3]), test_goblin, 1)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([4, 3]))
+    battle_map.push_combatant_away_from(np.array([2, 3]), test_goblin, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([6, 3]))
+    # Simple large push to the left
+    battle_map.push_combatant_away_from(np.array([7, 3.5]), test_goblin, 3)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([3, 3]))
+    # Simple push down
+    battle_map.push_combatant_away_from(np.array([3.5, 4]), test_goblin, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([3, 1]))
+    # Simple push up
+    battle_map.push_combatant_away_from(np.array([3.5, 0]), test_goblin, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([3, 3]))
+
+    # Diagonal pushes at a different angles and lengths
+    battle_map.push_combatant_away_from(np.array([5.5, 7.5]), test_goblin, 1)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([2, 2]))
+    battle_map.move_combatant(test_goblin, np.array([3, 3]))  # Reset position
+    battle_map.push_combatant_away_from(np.array([5.5, 7.5]), test_goblin, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([2, 1]))
+    battle_map.move_combatant(test_goblin, np.array([3, 3]))  # Reset position
+    battle_map.push_combatant_away_from(np.array([7.5, 7.5]), test_goblin, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([1, 1]))
+    battle_map.move_combatant(test_goblin, np.array([3, 3]))  # Reset position
+    battle_map.push_combatant_away_from(np.array([8.5, 7.5]), test_goblin, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_goblin).get()[0], np.array([1, 1]))
+
+    # Large combatant
+    # Can't move in the direction of the wall
+    battle_map.push_combatant_away_from(np.array([12, 5]), test_ogre, 2)
+    assert np.array_equal(battle_map.get_combatant_position(test_ogre).get()[0], np.array([13, 5]))
+    # Can be pushed away from the wall
+    battle_map.push_combatant_away_from(np.array([14.5, 6]), test_ogre, 1)
+    assert np.array_equal(battle_map.get_combatant_position(test_ogre).get()[0], np.array([12, 5]))
+    # Push at a very steep angle
+    battle_map.push_combatant_away_from(np.array([14.5, 14.5]), test_ogre, 3)
+    assert np.array_equal(battle_map.get_combatant_position(test_ogre).get()[0], np.array([11, 2]))
+    battle_map.move_combatant(test_ogre, np.array([12, 5]))  # Reset position
+    battle_map.push_combatant_away_from(np.array([14.5, 14.5]), test_ogre, 4)
+    assert np.array_equal(battle_map.get_combatant_position(test_ogre).get()[0], np.array([11, 1]))

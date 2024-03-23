@@ -22,7 +22,7 @@ class AttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
@@ -49,6 +49,8 @@ class AttackFactory(DirectThreatFactory):
         self.mod_crit_range = 0
         if uses_dex:
             self.flags |= FactoryFlags.USES_DEX
+        if two_handed:
+            self.flags |= FactoryFlags.TWO_HANDED
 
     def __str__(self):
         return self.name + " AttackFactory"
@@ -57,7 +59,7 @@ class AttackFactory(DirectThreatFactory):
         return {'name': self.name, 'combatant': self.combatant, 'to_hit': self.to_hit, 'dmg_dice': self.dmg_dice,
                 'dmg_bonus': self.dmg_bonus, 'dmg_type': self.dmg_type, 'attack_range': self.range, 'action_type': self.action_type,
                 'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit, 'extra_dmg': self.extra_dmg,
-                'uses_dex': FactoryFlags.USES_DEX in self.flags}
+                'uses_dex': FactoryFlags.USES_DEX in self.flags, 'two_handed': FactoryFlags.TWO_HANDED in self.flags}
 
     def get_eligible_targets(self):
         swallower = get_swallower(self.combatant)

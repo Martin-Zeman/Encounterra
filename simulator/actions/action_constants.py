@@ -3,16 +3,18 @@ import logging
 from .grapple_attack import GrappleAttackFactory
 from .parry import ParryFactory
 from .vampiric_bite import VampiricBiteFactory
+from ..abilities.action_surge import ActionSurgeFactory
 from ..abilities.bite_and_swallow import BiteAndSwallowFactory
 from ..abilities.pre_swallow_bite import PreSwallowBiteFactory
 from ..abilities.constrict import ConstrictFactory
 from ..abilities.pounce import PounceFactory
 from ..abilities.rage import RageFactory
 from ..abilities.reckless_attack import RecklessAttackFactory
+from ..abilities.second_wind import SecondWindFactory
 from ..abilities.totem_rage import TotemRageFactory
 from ..abilities.uncanny_dodge import UncannyDodgeFactory
 from ..abilities.wildshape import WildshapeFactory
-from ..actions.action_types import Action, BonusAction, HasteAction, Reaction, MovementThreatType
+from ..actions.action_types import Action, BonusAction, HasteAction, Reaction, MovementThreatType, FreeAction
 from ..actions.dash import DashFactory
 from ..actions.disengage import DisengageFactory
 from ..actions.dodge import DodgeFactory
@@ -26,11 +28,15 @@ from ..spells.fireball import FireballFactory
 from ..spells.firebolt import FireboltFactory
 from ..spells.flaming_sphere import FlamingSphereFactory
 from ..spells.haste import HasteFactory
+from ..spells.healing_word import HealingWordFactory
 from ..spells.hold_person import HoldPersonFactory
 from ..spells.magic_missile import MagicMissileFactory
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
+from ..spells.shillelagh import ShillelaghFactory
 from ..spells.shocking_grasp import ShockingGraspFactory
 from ..spells.sleep import SleepFactory
+from ..spells.thunderwave import ThunderwaveFactory
+from ..spells.twinned_healing_word import TwinnedHealingWordFactory
 from ..spells.twinned_hold_person import TwinnedHoldPersonFactory
 from ..spells.misty_step import MistyStepFactory
 from ..spells.scorching_ray import ScorchingRayFactory
@@ -86,6 +92,7 @@ TO_FACTORY = {
     Action.RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
     Action.TWINNED_RAY_OF_ENFEEBLEMENT: TwinnedRayOfEnfeeblementFactory,
     Action.SLEEP: SleepFactory,
+    Action.THUNDERWAVE: ThunderwaveFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -109,6 +116,11 @@ TO_FACTORY = {
     BonusAction.QUICKENED_BLESS: BlessFactory,
     BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT: RayOfEnfeeblementFactory,
     BonusAction.QUICKENED_SLEEP: SleepFactory,
+    BonusAction.SECOND_WIND: SecondWindFactory,
+    BonusAction.QUICKENED_THUNDERWAVE: ThunderwaveFactory,
+    BonusAction.SHILLELAGH: ShillelaghFactory,
+    BonusAction.HEALING_WORD: HealingWordFactory,
+    BonusAction.TWINNED_HEALING_WORD: TwinnedHealingWordFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
@@ -122,7 +134,9 @@ TO_FACTORY = {
     HasteAction.HASTE_RANGED_ATTACK: RangedAttackFactory,
     HasteAction.HASTE_DISENGAGE: DisengageFactory,
     HasteAction.HASTE_HIDE: HideFactory,
-    HasteAction.HASTE_DASH: None
+    HasteAction.HASTE_DASH: None,
+
+    FreeAction.ACTION_SURGE: ActionSurgeFactory
 }
 
 TO_QUICKENED = {
@@ -143,7 +157,8 @@ TO_TWINNED = {
     Action.HASTE: Action.TWINNED_HASTE,
     Action.HOLD_PERSON: Action.TWINNED_HOLD_PERSON,
     Action.SHOCKING_GRASP: Action.TWINNED_SHOCKING_GRASP,
-    Action.RAY_OF_ENFEEBLEMENT: Action.TWINNED_RAY_OF_ENFEEBLEMENT
+    Action.RAY_OF_ENFEEBLEMENT: Action.TWINNED_RAY_OF_ENFEEBLEMENT,
+    BonusAction.HEALING_WORD: BonusAction.TWINNED_HEALING_WORD
 }
 
 TO_HASTED = {

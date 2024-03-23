@@ -11,6 +11,7 @@ from ..battle_map import Map
 
 logger = logging.getLogger("Encounterra")
 
+
 def extract_movement(combatant, distances, shortest_paths, longest_pth):
     """
     Extracts the movement part of an action plan
@@ -36,18 +37,18 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
 
 class DefaultActionPlanStrategy(ActionPlanStrategy):
 
-    def get_movement_for_next_turn(self, distances, shortest_paths):
+    def get_movement_and_threat_for_next_turn(self, distances, shortest_paths, infeasibility_multiplier=0.5):
         # logger.info(f"{self.combatant} still has movement left")  # TODO FIXME
         with self.combatant.as_if_has_action() as combatant:
             # get_aoe_and_aoo_threat_for_increment.cache_clear()
             proto_dag, transition_name_to_action = generate_proto_dag(combatant)
             dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
             if dag is None:
-                return None
-            best_sequence, transition_name_to_ms_path = find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
+                return None, 0
+            best_sequence, transition_name_to_ms_path, max_threat = find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier)
             if best_sequence is None:
-                return None
-        return extract_movement(self.combatant, distances, shortest_paths, best_sequence)
+                return None, 0
+        return extract_movement(self.combatant, distances, shortest_paths, best_sequence), max_threat
 
     def calculate_action_plan(self, distances, shortest_paths):
         """
@@ -63,9 +64,9 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         if dag is None:
             movement = None
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
-                movement = self.get_movement_for_next_turn(distances, shortest_paths)
+                movement, _ = self.get_movement_and_threat_for_next_turn(distances, shortest_paths)
             return movement
-        best_sequence, transition_name_to_ms_path = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
+        best_sequence, transition_name_to_ms_path, _ = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
         if best_sequence is None:
             return None
         # logger.info(f"{self.combatant}'s plan {longest_pth}")# TODO FIXME

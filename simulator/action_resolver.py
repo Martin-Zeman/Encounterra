@@ -6,14 +6,14 @@ from functools import reduce
 from collections import Counter
 from typing import Dict
 
-from .actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction
+from .actions.action_types import BonusAction, Action, Reaction, Passive, Movement, HasteAction, FreeAction
 from .actions.actoid import FactoryFlags
 from .actions.dodge import DodgeFactory
 from .actions.flaming_sphere_ram import FlamingSphereRamFactory
 from .battle_map import Map
 from .effects.effect import EffectType
 from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
-    roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn
+    roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll
 from .conditions import Conditions, ConditionWithDC, Condition, break_out_of_grapple, is_affected_by_any, \
     is_affected_by, get_grappled, apply_condition, apply_dc_condition, remove_condition, remove_dc_condition
 from .feasibility import check_feasibility
@@ -110,6 +110,7 @@ def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True, is_spel
             dmg = dmg // 2
             logger.info(f"{ability.shorthand_str()} deals {dmg} to {target}")
             target.receive_dmg(dmg, ability.factory.dmg_type)
+    return saved
 
 
 def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
@@ -394,7 +395,10 @@ class ActionResolver:
         if rolled + attack.factory.to_hit >= (target.ac + target.one_time_ac_bonus):  # Potentially missing this time
             target.one_time_ac_bonus = 0
             dice = parse_dmg_dice(attack.factory.dmg_dice)
-            dmg_dice_sum = roll_dice(dice)
+            if FactoryFlags.TWO_HANDED in attack.factory.flags and attacker.has_passive(Passive.GREAT_WEAPON_FIGHTING):
+                dmg_dice_sum = roll_dice_with_reroll(dice, 2)
+            else:
+                dmg_dice_sum = roll_dice(dice)
             # logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
             extra_dmg = [(multiplier * roll_dice(parse_dmg_dice(e[0])), e[1]) for e in attack.factory.extra_dmg]
             # logger.info(f"and {extra_dmg} on the extra dmg dice", extra={"team": self.teams.get_team(attacker)})
@@ -416,7 +420,8 @@ class ActionResolver:
                     if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
                         logger.info(f"With extra {on_hit_dmg[0]} damage from {oh.name}", extra={"team": self.teams.get_team(attacker)})
                         total_compound_dmg.append(on_hit_dmg)
-            target.receive_compound_dmg(total_compound_dmg)
+            actual_dmg_dealt = target.receive_compound_dmg(total_compound_dmg)
+            attacker.weapon_dmg_dealt_this_turn = actual_dmg_dealt if multiplier == 1 else actual_dmg_dealt - dmg_dice_sum  # This is used for Action Surge (crit dmg is an approximation)
             battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
 
             return ActionResult.DMG
@@ -514,7 +519,7 @@ class ActionResolver:
         battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:
-            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | HasteAction.HASTE_DISENGAGE:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | BonusAction.SHILLELAGH |HasteAction.HASTE_DISENGAGE:
                 actoid.activate()
                 return False
             case Action.RECKLESS_ATTACK:
@@ -687,6 +692,31 @@ class ActionResolver:
             case Action.SHAKE_ALLY_AWAKE:
                 logger.info(f"{actoid.target} is shaken awake by {combatant}")
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(actoid.target, EffectType.SLEEP)
+            case BonusAction.SECOND_WIND:
+                heal_hp = roll_dice([(1, 10)]) + combatant.level
+                combatant.heal(heal_hp)
+                logger.info(f"{combatant} uses Second Wind and heals for {heal_hp} damage")
+            case FreeAction.ACTION_SURGE:
+                logger.info(f"{combatant} uses Action Surge")
+                combatant.has_action = True
+            case Action.THUNDERWAVE | BonusAction.QUICKENED_THUNDERWAVE:
+                logger.info(f"{combatant} casts {actoid}")
+                affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target,
+                                                                     actoid.factory.type, actoid.coord)
+                dmg = roll_spell_dmg(actoid.factory.dmg_dice)
+                for aff in affected:
+                    saved = resolve_dmg_saving_throw(actoid, dmg, aff, True, True)
+                    if battle_map.remove_combatant_if_dead(aff) and not saved:  # could be a wildshaped druid
+                        origin = battle_map.get_combatant_position(combatant).get_center()
+                        if origin is None:
+                            continue
+                        battle_map.push_combatant_away_from(origin, aff, 2)
+                return ActionResult.DMG
+            case BonusAction.HEALING_WORD:
+                logger.info(f"{combatant} casts {actoid}")
+                heal_hp = roll_spell_dmg(actoid.factory.heal_dice) + actoid.factory.mod
+                actoid.target.heal(heal_hp)
+                logger.info(f"{combatant} is healed for {heal_hp} damage")
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

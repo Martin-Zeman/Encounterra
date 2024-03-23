@@ -154,7 +154,7 @@ def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_
     try:
         actoid1 = get_action(test_moon_druid)
         assert test_moon_druid.curr_hp == 42
-        assert str(actoid1) == "Wildshape of Moon Druid 5. Level 1 into Giant Toad"
+        assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
@@ -163,11 +163,11 @@ def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_
         test_bugbear.ac = 0  # Making sure the toad hits
         test_moon_druid.new_turn()
         actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "Toad Bite on Bugbear 1"
+        assert str(actoid2) == "Toad Bite on Bugbear (1)"
         action_resolver.resolve_action(actoid2, test_moon_druid)
         test_moon_druid.new_turn()
         actoid3 = get_action(test_moon_druid)
-        assert str(actoid3) == "Toad Bite and Swallow on Bugbear 1"
+        assert str(actoid3) == "Toad Bite and Swallow on Bugbear (1)"
         action_resolver.resolve_action(actoid3, test_moon_druid)
         assert is_affected_by(test_bugbear, Conditions.SWALLOWED)
         test_bugbear.curr_hp = 1  # Making sure digestion kills it

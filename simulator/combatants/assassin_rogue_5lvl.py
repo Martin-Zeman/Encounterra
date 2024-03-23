@@ -11,7 +11,7 @@ logger = logging.getLogger("Encounterra")
 
 class AssassinRogue5Lvl(Combatant):
 
-    name = "Assassin Rogue 5. Level"
+    name = "Assassin Rogue 5th LVL"
     cls = Class.ROGUE.ASSASSIN
     level = 5
     id = Combatant.generate_unique_id(name, cls, level)

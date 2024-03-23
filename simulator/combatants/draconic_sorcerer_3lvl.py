@@ -11,7 +11,7 @@ logger = logging.getLogger("Encounterra")
 
 class DraconicSorcerer3Lvl(Combatant):
 
-    name = "Draconic Sorcerer 3. Level"
+    name = "Draconic Sorcerer 3rd LVL"
     cls = Class.SORCERER.DRACONIC_BLOODLINE
     level = 3
     id = Combatant.generate_unique_id(name, cls, level)

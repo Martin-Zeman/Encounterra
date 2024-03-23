@@ -4,6 +4,7 @@ from .misc import Size
 
 logger = logging.getLogger("Encounterra")
 
+
 class Coords:
     """
     Represents a set of coordinates taken up by a combatant

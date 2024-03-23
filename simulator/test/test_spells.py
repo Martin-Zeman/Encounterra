@@ -8,7 +8,9 @@ from ..actions.action_types import Action
 from ..logging.custom_logger import CustomLogger
 from ..spells.haste import HasteFactory
 from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, teams, effect_tracker, battle_map
+from ..test.fixtures import test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian,\
+    teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1
+
 
 def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian):
     """
@@ -37,10 +39,36 @@ def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, t
         actoid1 = get_action(test_bugbear)
         action_resolver.resolve_action(actoid1, test_bugbear)
         actoid2 = get_action(test_bugbear)
-        assert str(actoid1) == "Morningstar on Totem Barbarian 5. Level 1" or str(actoid2) == "Morningstar on Totem Barbarian 5. Level 1"
-        assert str(actoid1) == "Hasted Morningstar on Totem Barbarian 5. Level 1" or str(actoid2) == "Hasted Morningstar on Totem Barbarian 5. Level 1"
+        assert str(actoid1) == "Morningstar on Totem Barbarian 5th LVL (1)" or str(actoid2) == "Morningstar on Totem Barbarian 5th LVL (1)"
+        assert str(actoid1) == "Hasted Morningstar on Totem Barbarian 5th LVL (1)" or str(actoid2) == "Hasted Morningstar on Totem Barbarian 5th LVL (1)"
         action_resolver.resolve_action(actoid2, test_bugbear)
         actoid3 = get_action(test_bugbear)
         assert str(actoid3) == "None"
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_thunderwave(battle_map, teams, effect_tracker, test_druid_lvl_1, test_fighter_lvl_1):
+    """
+    We assert that it's possible to cast Thunderwave from a position anywhere on a face of the cubic effect.
+    """
+    CustomLogger(logging.WARNING)
+
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_druid_lvl_1, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(test_fighter_lvl_1, Teams.Color.BLUE)  # For the log coloring...
+    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([10, 10]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([7, 10]))  # Have to set it for fireball placement
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_druid_lvl_1, test_fighter_lvl_1]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    try:
+        actoid1 = get_action(test_druid_lvl_1)
+        assert str(actoid1) == "Thunderwave at [7 8]"
+        action_resolver.resolve_action(actoid1, test_druid_lvl_1)
+        actoid2 = get_action(test_druid_lvl_1)
+        assert actoid2 is None
     except Exception as e:
         assert False, f"Raised an exception {e}"

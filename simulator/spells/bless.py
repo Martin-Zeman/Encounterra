@@ -6,6 +6,7 @@ from cachetools.keys import hashkey
 from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
+from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import get_attack_factories, ROUND_HORIZON
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..spells.spell import SpellStats
@@ -71,10 +72,11 @@ class BlessFactory(ThreatModifierFactory):
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 
-class Bless(Actoid, CombatantEffect, AttackThreatModifier):
+class Bless(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
     def __init__(self, targets, factory):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
         CombatantEffect.__init__(self, factory.combatant, targets)
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.factory = factory
 
     def __str__(self):

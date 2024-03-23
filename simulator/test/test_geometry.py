@@ -1,7 +1,7 @@
 import pytest
 
-from ..geometry import *
 from ..misc import Size
+from ..geometry import *
 from ..spells.spell import *
 import numpy as np
 from ..test.fixtures import test_stone_giant, test_ogre, test_bugbear
@@ -76,6 +76,7 @@ def test_do_squares_overlap():
     assert not do_squares_overlap(np.array([2, 2]), 2, np.array([4, 4]), 3)
     assert not do_squares_overlap(np.array([2, 2]), 1, np.array([4, 4]), 3)
 
+
 def test_angle_between_vectors():
     assert angle_between_vectors(np.array([0, 1]), np.array([1, 0])) == pytest.approx(90.0, 0.0001)
     assert angle_between_vectors(np.array([0, 1]), np.array([1, -1])) == pytest.approx(135.0, 0.0001)
@@ -84,6 +85,16 @@ def test_angle_between_vectors():
     assert angle_between_vectors(np.array([1, 0.5]), np.array([1.5, -1])) == pytest.approx(60.2551, 0.0001)
     assert angle_between_vectors(np.array([6, 4]), np.array([6, 4])) == pytest.approx(0, 0.0001)
     assert angle_between_vectors(np.array([0, 4]), np.array([4, 4])) == pytest.approx(45.0, 0.0001)
+
+
+def test_angle_between_vectors_rad():
+    assert angle_between_vectors_rad(np.array([0, 1]), np.array([1, 0])) == pytest.approx(math.radians(90.0), 0.0001)
+    assert angle_between_vectors_rad(np.array([0, 1]), np.array([1, -1])) == pytest.approx(math.radians(135.0), 0.0001)
+    assert angle_between_vectors_rad(np.array([0, 1]), np.array([0, -1])) == pytest.approx(math.radians(180.0), 0.0001)
+    assert angle_between_vectors_rad(np.array([0, 2]), np.array([-1, 2])) == pytest.approx(math.radians(26.5650), 0.0001)
+    assert angle_between_vectors_rad(np.array([1, 0.5]), np.array([1.5, -1])) == pytest.approx(math.radians(60.2551), 0.0001)
+    assert angle_between_vectors_rad(np.array([6, 4]), np.array([6, 4])) == pytest.approx(math.radians(0), 0.0001)
+    assert angle_between_vectors_rad(np.array([0, 4]), np.array([4, 4])) == pytest.approx(math.radians(45.0), 0.0001)
 
 
 def test_find_fov_vectors(test_stone_giant, test_ogre, test_bugbear):
@@ -111,7 +122,6 @@ def test_find_fov_vectors(test_stone_giant, test_ogre, test_bugbear):
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([-0.5, 3.5]) / np.linalg.norm(np.array([-0.5, 3.5])), point) for point in outlines])
     assert any([np.array_equal(np.array([2.5, 3.5]) / np.linalg.norm(np.array([2.5, 3.5])), point) for point in outlines])
-
 
 
 def test_get_bounding_box():
@@ -149,3 +159,39 @@ def test_get_bounding_box():
     bottom_left, top_right = get_bounding_box(coords1, coords2)
     assert np.array_equal(np.array([1, 11]), bottom_left)
     assert np.array_equal(np.array([10, 14]), top_right)
+
+
+def test_find_nearest_valid_coordinate_chebyshev_max_distance():
+    init_coords = np.array([5, 5])
+    target_coords = np.array([9, 9])  # Target is exactly at max_distance
+    max_distance = 4
+    expected = np.array([9, 9])
+    result = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance)
+    np.testing.assert_array_equal(result, expected)
+
+
+def test_find_nearest_valid_coordinate_chebyshev_within_max_distance_without_adjustment():
+    init_coords = np.array([5, 5])
+    target_coords = np.array([7, 6])  # Target is within max_distance without needing rounding
+    max_distance = 3
+    expected = np.array([7, 6])
+    result = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance)
+    np.testing.assert_array_equal(result, expected)
+
+
+def test_find_nearest_valid_coordinate_chebyshev_return_initial_when_target_too_far():
+    init_coords = np.array([5, 5])
+    target_coords = np.array([10, 10])  # Target is beyond max_distance
+    max_distance = 2
+    expected = np.array([7, 7])
+    result = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance)
+    np.testing.assert_array_equal(result, expected)
+
+
+def test_find_nearest_valid_coordinate_chebyshev_rounding_to_nearest_valid_coordinate():
+    init_coords = np.array([5, 5])
+    target_coords = np.array([6.7, 7.2])  # Target requires rounding
+    max_distance = 3
+    expected = np.array([7, 7])
+    result = find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance)
+    np.testing.assert_array_equal(result, expected)
