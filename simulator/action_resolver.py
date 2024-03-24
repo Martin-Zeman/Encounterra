@@ -13,7 +13,7 @@ from .actions.flaming_sphere_ram import FlamingSphereRamFactory
 from .battle_map import Map
 from .effects.effect import EffectType
 from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
-    roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll
+    roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll, avg_roll
 from .conditions import Conditions, ConditionWithDC, Condition, break_out_of_grapple, is_affected_by_any, \
     is_affected_by, get_grappled, apply_condition, apply_dc_condition, remove_condition, remove_dc_condition
 from .feasibility import check_feasibility
@@ -217,7 +217,7 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if is_affected_by(target, Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
-        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED):
+        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED, Conditions.FRIGHTENED):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -237,7 +237,7 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if is_affected_by(target, Conditions.INVISIBLE):
             return RollType.DISADVANTAGE
-        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED):
+        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED, Conditions.BLINDED, Conditions.RESTRAINED, Conditions.FRIGHTENED):
             return RollType.DISADVANTAGE
         return RollType.STRAIGHT
 
@@ -248,7 +248,7 @@ class ActionResolver:
             return RollType.DISADVANTAGE
         if target.is_dodging:
             return RollType.DISADVANTAGE
-        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED):
+        if is_affected_by_any(attacker, Conditions.PRONE, Conditions.POISONED, Conditions.FRIGHTENED):
             return RollType.DISADVANTAGE
         battle_map = Map.get()
         if is_affected_by(target, Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) > 1:
@@ -392,7 +392,14 @@ class ActionResolver:
             if target.has_reaction:
                 reaction = target.prompt_after_hit_reaction(attacker, attack, rolled + attack.factory.to_hit)
                 self.resolve_action(reaction, target)
-        if rolled + attack.factory.to_hit >= (target.ac + target.one_time_ac_bonus):  # Potentially missing this time
+        to_hit_maneuver_bonus = 0
+        if FactoryFlags.IS_PRECISION in attack.factory.flags and rolled + attack.factory.to_hit < (
+                target.ac + target.one_time_ac_bonus) <= rolled + attack.factory.to_hit + avg_roll(
+                attack.factory.to_hit_bonus_die) and attacker.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource():
+            to_hit_maneuver_bonus = roll_dice(parse_dmg_dice(attack.factory.to_hit_bonus_die))
+            use_resources(attacker, Action.PRECISION_ATTACK)
+            logger.info(f"{attacker} uses the Precision Attack Maneuver adding {to_hit_maneuver_bonus} to the roll", extra={"team": self.teams.get_team(attacker)})
+        if rolled + attack.factory.to_hit + to_hit_maneuver_bonus >= (target.ac + target.one_time_ac_bonus):  # Potentially missing or hitting this time
             target.one_time_ac_bonus = 0
             dice = parse_dmg_dice(attack.factory.dmg_dice)
             if FactoryFlags.TWO_HANDED in attack.factory.flags and attacker.has_passive(Passive.GREAT_WEAPON_FIGHTING):
@@ -626,7 +633,7 @@ class ActionResolver:
                  BonusAction.BONUS_MELEE_ATTACK | HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | \
                  BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK | Action.BITE_AND_SWALLOW | \
                  HasteAction.HASTE_BITE_AND_SWALLOW | Action.VAMPIRIC_BITE | Action.PRE_SWALLOW_BITE | \
-                 HasteAction.HASTE_PRE_SWALLOW_BITE:
+                 HasteAction.HASTE_PRE_SWALLOW_BITE | Reaction.RIPOSTE:
                 ret = self.resolve_attack(actoid, actoid.target, combatant)
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(combatant, EffectType.HIDE)
                 return ret

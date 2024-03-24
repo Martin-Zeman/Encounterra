@@ -40,3 +40,4 @@ class FactoryFlags(Flag):
     PREVENT_ENDLESS_RECURSION = auto()  # This is a very technical one which helps prevent endless recursion
     TRANSITIONS_TO_WILDSHAPE = auto()
     TWO_HANDED = auto()
+    IS_PRECISION = auto()

@@ -4,14 +4,18 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
+from .action_types import HasteAction, Action, BonusAction
 from .ranged_attack import RangedAttack, RangedAttackFactory
+from ..abilities.on_hit_saving_throw_effect import OnHitSavingThrowEffect
 from ..actions.actoid import FactoryFlags
 from ..actions.attack import AttackFactory, Attack
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from ..misc import Visibility
-from ..conditions import Conditions, is_affected_by_any, get_swallower
-from ..threat_utils import mean_dmg, calc_p_hit
-from ..utils.roll_types import RollType, ROLL_TYPE_DELTA
+from ..effects.effect import EffectType
+from ..effects.limited_duration_effect import LimitedDurationEffect
+from ..misc import Visibility, SavingThrow, get_superiority_dice
+from ..conditions import Conditions, is_affected_by_any, get_swallower, apply_condition, Condition, remove_condition
+from ..threat_utils import mean_dmg, calc_p_hit, get_saving_throw_fail_prob, calculate_threat_out_delta
+from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ThreatModifierType
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -19,9 +23,16 @@ logger = logging.getLogger("Encounterra")
 
 class MenacingRangedAttackFactory(RangedAttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=True, **kwargs):
-        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg, uses_dex)
-        self.flags |= FactoryFlags.IS_RANGED
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=True, to_hit_bonus_die=None, **kwargs):
+        superiority_dice = get_superiority_dice(combatant.level)
+        extra_dmg.append((superiority_dice, dmg_type))
+        name = "Menacing " + name
+        on_hit.append(OnHitSavingThrowEffect(SavingThrow.WIS, combatant.dc, "Frightened by Menacing Attack"))
+        if isinstance(action_type, Action):
+            action_type = Action.MENACING_RANGED_ATTACK
+        else:
+            action_type = BonusAction.BONUS_MENACING_RANGED_ATTACK
+        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg, uses_dex, to_hit_bonus_die)
 
     def get_ability_name(self):
         return "Menacing Ranged Attack"
@@ -34,67 +45,26 @@ class MenacingRangedAttackFactory(RangedAttackFactory):
         return [MenacingRangedAttack(t, self) for t in targets]
 
     def calculate_threat_to_target(self, target, **kwargs):
-        consider_dist = kwargs.get("consider_dist", False)
-        roll_type = kwargs.get("roll_type", RollType.STRAIGHT)
-
-        to_hit_total = self.to_hit
-        to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
-
-        # TODO: Should I include roll types here? There may be a use-case in the future
-        battle_map = Map.get()
-        if not consider_dist or battle_map.get_cartesian_distance_combatants(self.combatant, target) <= self.range:
-            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
-            for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
-            for oh in self.on_hit:
-                acc += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
-            return acc
-        return 0
+        return (RangedAttackFactory.calculate_threat_to_target(self, target) +
+                get_saving_throw_fail_prob(self.combatant.dc, target.saving_throws[SavingThrow.WIS]) * calculate_threat_out_delta(target, 12, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1])
 
 
-class MenacingRangedAttack(RangedAttack):
+class MenacingRangedAttack(RangedAttack, LimitedDurationEffect):
 
-    @map_position_toggled_cache
-    def calculate_threat(self, **kwargs):
-        battle_map = Map.get()
-        roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        roll_type = RollType.DISADVANTAGE if battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) > self.factory.short_range else roll_type
-        return self.factory.calculate_threat_to_target(self.target, roll_type=roll_type, **kwargs)
+    def __init__(self, target, factory):
+        RangedAttack.__init__(self, target, factory)
+        LimitedDurationEffect.__init__(self, factory.combatant, turns=1)
 
-    def clear_cache(self):
-        self.calculate_threat.cache_clear()
-        self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
+    def get_effect_type(self):
+        return EffectType.MENACING_ATTACK_FRIGHTENED
 
-    #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
-    def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        swallower = get_swallower(self.factory.combatant)
-        if swallower:
-            if swallower is self.target:
-                return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # Makes barely any sense but ok
-            return None
-        curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        # if self.factory.combatant.movement > 0 and not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                                                 distances,
-                                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                                 rng=self.factory.range, combatant=self.factory.combatant)
-            if not battle_map.effect_tracker.is_combatant_hidden_from(self.factory.combatant, self.target):
-                return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
-            else:
-                # We only consider the coords where Visibility.NONE transitions into any other kind
-                ret = list()
-                for coord in free_coords_in_range:
-                    if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE:
-                        try:
-                            if battle_map.visibility_dict_for_all_coords[tuple(shortest_paths[coord])][self.target] is Visibility.NONE:
-                                ret.append(coord)
-                        except KeyError:
-                            ret.append(coord)
-                return ret
-        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= self.factory.range and \
-                battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+    def activate(self, **kwargs):
+        logger.info(f"{self.target} is frightened")
+        apply_condition(self.target, Condition(Conditions.FRIGHTENED, self.factory.combatant))
+
+    def deactivate(self):
+        logger.info(f"{self.target} is no longer frightened")
+        remove_condition(self.target, Conditions.FRIGHTENED, self.factory.combatant)
+
+    def deactivate_for_combatant(self, combatant):
+        assert False

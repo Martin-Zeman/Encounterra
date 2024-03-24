@@ -43,6 +43,11 @@ class Action(Enum):
     SLEEP = auto()
     SHAKE_ALLY_AWAKE = auto()
     THUNDERWAVE = auto()
+    MENACING_MELEE_ATTACK = auto()
+    # PRECISION_MELEE_ATTACK = auto()
+    MENACING_RANGED_ATTACK = auto()
+    # PRECISION_RANGED_ATTACK = auto()
+    PRECISION_ATTACK = auto()
 
 
 class BonusAction(Enum):
@@ -79,6 +84,10 @@ class BonusAction(Enum):
     TWINNED_HEALING_WORD = auto()
     SHILLELAGH = auto()
     QUICKENED_THUNDERWAVE = auto()
+    BONUS_MENACING_MELEE_ATTACK = auto()
+    # BONUS_PRECISION_MELEE_ATTACK = auto()
+    BONUS_MENACING_RANGED_ATTACK = auto()
+    # BONUS_PRECISION_RANGED_ATTACK = auto()
 
 
 class Reaction(Enum):
@@ -87,6 +96,7 @@ class Reaction(Enum):
     PRE_SWALLOW_BITE_REACTION = auto()
     UNCANNY_DODGE = auto()
     PARRY = auto()
+    RIPOSTE = auto()
 
 
 class Movement(Enum):
@@ -139,9 +149,6 @@ class Passive(Enum):
     CHARM_IMMUNITY = auto()
     GREAT_WEAPON_FIGHTING = auto()
     BATTLE_MASTER_MANEUVERS = auto()
-    # RIPOSTE = auto()
-    # MENACING_ATTACK = auto()
-    # PRECISION_ATTACK = auto()
 
 
 class MetaAction(Enum):

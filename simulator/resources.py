@@ -19,6 +19,7 @@ class ResourceRefreshType(Enum):
     LONG_REST = auto()
     SHORT_REST = auto()
     ROUND = auto()
+    NEVER = auto()
 
 
 class Resource(ABC):
@@ -97,7 +98,7 @@ def use_resources(combatant, action):
         action_type = action.factory.action_type
     except AttributeError:
         # TODO revisit this
-        # This is here because during construction of FSMs we pass the action_type directly instead of the action instance
+        # This is here because during construction of FSMs and in the case of PRECISION attacks we pass the action_type directly instead of the action instance
         action_type = action
     if isinstance(action_type, Action):
         combatant.has_action = False
@@ -107,8 +108,17 @@ def use_resources(combatant, action):
                 combatant.ammo[action.factory.name] -= 1
                 try:
                     combatant.attack_fsm.trigger(str(action.factory))
-                except AttributeError as e:
+                except AttributeError:
                     print("FIXME")
+            case Action.MENACING_MELEE_ATTACK | Action.MENACING_RANGED_ATTACK:# | Action.PRECISION_MELEE_ATTACK | Action.PRECISION_RANGED_ATTACK:
+                combatant.ammo[action.factory.name] -= 1
+                try:
+                    combatant.attack_fsm.trigger(str(action.factory))
+                except AttributeError:
+                    print("FIXME")
+                combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
+            case Action.PRECISION_ATTACK:
+                combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
             case Action.GRAPPLE_ATTACK:
                 combatant.attack_fsm.trigger(str(action.factory))
             case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP | Action.SHAKE_ALLY_AWAKE:
@@ -143,6 +153,9 @@ def use_resources(combatant, action):
         match action_type:
             case BonusAction.BONUS_MELEE_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK:
                 combatant.ammo[action.factory.name] -= 1
+            case BonusAction.BONUS_MENACING_MELEE_ATTACK | BonusAction.BONUS_MENACING_RANGED_ATTACK | BonusAction.BONUS_PRECISION_MELEE_ATTACK | BonusAction.BONUS_PRECISION_RANGED_ATTACK:
+                combatant.ammo[action.factory.name] -= 1
+                combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 combatant.resources[action_type].use_resource()
             case BonusAction.MISTY_STEP:
@@ -184,6 +197,8 @@ def use_resources(combatant, action):
                 pass  # Sufficiently tracked by not having a reaction anymore
             case Reaction.SHIELD:
                 action.factory.resource.use_resource(level=1)
+            case Reaction.RIPOSTE:
+                combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
             case _:
                 logger.error("Unknown reaction type")
     elif isinstance(action_type, Movement):

@@ -12,33 +12,6 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-@staticmethod
-def get_superiority_dice(level):
-    match level:
-        case lvl if 3 <= lvl <= 9:
-            return "1d8"
-        case lvl if 10 <= lvl <= 17:
-            return "1d10"
-        case lvl if 18 <= lvl <= 20:
-            return "1d12"
-        case _:
-            logger.error("Incorrect Battlemaster level")
-            return "1d8"
-
-@staticmethod
-def get_num_superiority_dice(level):
-    match level:
-        case lvl if 3 <= lvl <= 6:
-            return 4
-        case lvl if 7 <= lvl <= 14:
-            return 5
-        case lvl if 15 <= lvl <= 20:
-            return 6
-        case _:
-            logger.error("Incorrect Battlemaster level")
-            return 4
-
-
 class BattlemasterFighter3Lvl(Combatant):
 
     name = "Battlemaster Fighter 3rd LVL"
@@ -108,6 +81,7 @@ class BattlemasterFighter3Lvl(Combatant):
             aoo_kwargs = self.aoo_factory[1].get_kwargs()
             aoo_kwargs["extra_dmg"] = get_superiority_dice(self.level)
             aoo_kwargs["name"] = "Riposte " + aoo_kwargs["name"]
+            aoo_kwargs["action_type"] = Reaction.RIPOSTE
             riposte = MeleeAttackFactory(**aoo_kwargs)
             return riposte.create(attacker)
         return None

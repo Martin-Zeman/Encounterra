@@ -137,6 +137,23 @@ def get_grappler(combatant):
     return None
 
 
+def get_source_of_frightened(combatant):
+    """
+    Get the initiator of the frightened condition affecting the combatant.
+
+    Parameters:
+    - combatant: The combatant to check.
+
+    Returns:
+    - Any: The initiator of the frightened condition, or None if not found.
+    """
+    for condition_list in (combatant.dc_conditions, combatant.conditions):
+        for cond in condition_list:
+            if Conditions.FRIGHTENED in cond.conditions:
+                return cond.initiator
+    return None
+
+
 def get_grappled(combatant):
     """
     Get the target of the grappling condition affecting the combatant.

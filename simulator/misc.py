@@ -512,3 +512,29 @@ def is_path_straight(path):
 
 def get_missing_hp(combatant):
     return combatant.max_hp + combatant.max_hp_modifier - combatant.curr_hp
+
+@staticmethod
+def get_superiority_dice(level):
+    match level:
+        case lvl if 3 <= lvl <= 9:
+            return "1d8"
+        case lvl if 10 <= lvl <= 17:
+            return "1d10"
+        case lvl if 18 <= lvl <= 20:
+            return "1d12"
+        case _:
+            logger.error("Incorrect Battlemaster level")
+            return "1d8"
+
+@staticmethod
+def get_num_superiority_dice(level):
+    match level:
+        case lvl if 3 <= lvl <= 6:
+            return 4
+        case lvl if 7 <= lvl <= 14:
+            return 5
+        case lvl if 15 <= lvl <= 20:
+            return 6
+        case _:
+            logger.error("Incorrect Battlemaster level")
+            return 4

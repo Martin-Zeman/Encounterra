@@ -15,8 +15,8 @@ logger = logging.getLogger("Encounterra")
 
 class MeleeAttackFactory(AttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False):
-        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg, uses_dex, two_handed)
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
+        super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg, uses_dex, two_handed, to_hit_bonus_die)
         self.flags |= FactoryFlags.IS_MELEE
 
     def get_ability_name(self):
@@ -48,3 +48,4 @@ class MeleeAttack(Attack):
                                                            combatant=self.factory.combatant)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+
