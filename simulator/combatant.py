@@ -12,10 +12,13 @@ from .abilities.rage import RageFactory
 from .action_resolver import check_concentration
 from .actions.action_surge_plan_strategy import ActionSurgePlanStrategy
 from .actions.actoid import FactoryFlags
+from .actions.attack import Attack
 from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from .actions.menacing_melee_attack import MenacingMeleeAttackFactory
 from .actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
 from .actions.nop import NopFactory
 from .battle_map import Map
+from .combatants.battlemaster_fighter_3lvl import get_num_superiority_dice, get_superiority_dice
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
@@ -229,6 +232,28 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Assassinate")
                 case Passive.CHARM_IMMUNITY:
                     self.display_abilities.append("Charm Immunity")
+                case Passive.BATTLE_MASTER_MANEUVERS:
+                    superiority_dice = Uses(get_num_superiority_dice(self.level), ResourceRefreshType.SHORT_REST)
+                    self.resources[Passive.BATTLE_MASTER_MANEUVERS] = superiority_dice
+                    new_action_factories = []
+                    for af in self.action_factories:
+                        if isinstance(af[1], Attack):
+                            af_kwargs = af[1].get_kwargs()
+                            af_kwargs["extra_dmg"] = get_superiority_dice(self.level)
+                            menacing_attack = MenacingMeleeAttackFactory(**af_kwargs)
+                            new_action_factories.append((af[0], menacing_attack))
+                    self.action_factories.extend(new_action_factories)
+                    new_bonus_action_factories = []
+                    for baf in self.bonus_action_factories:
+                        if isinstance(baf[1], Attack):
+                            baf_kwargs = baf[1].get_kwargs()
+                            baf_kwargs["extra_dmg"] = get_superiority_dice(self.level)
+                            menacing_attack = MenacingMeleeAttackFactory(**baf_kwargs)
+                            new_action_factories.append((baf[0], menacing_attack))
+                    self.bonus_action_factories.extend(new_bonus_action_factories)
+                    self.display_abilities.append("Riposte")
+                    self.display_abilities.append("Precision Attack")
+                    self.display_abilities.append("Menacing Attack")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -648,7 +673,10 @@ class Combatant(ProtoCombatant):
     def prompt_dmg_reaction(self, attacking_combatant, dmg, dmg_type):
         return None
 
-    def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
+    def prompt_after_hit_reaction(self, attacker, attack, attack_roll):
+        return None
+
+    def prompt_after_miss_reaction(self, attacker):
         return None
 
     def calculate_action_plan(self, distances, shortest_paths):

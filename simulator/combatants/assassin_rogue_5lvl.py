@@ -81,8 +81,7 @@ class AssassinRogue5Lvl(Combatant):
         self.attack_fsm.set_state(resources['attack_state_machine'])
         self.ammo = resources['ammo']
 
-
-    def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
+    def prompt_after_hit_reaction(self, attacker, attack, attack_roll):
         if self.has_reaction:
             return self.uncanny_dodge[1].create(attack)
         return None

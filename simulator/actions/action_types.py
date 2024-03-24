@@ -138,6 +138,10 @@ class Passive(Enum):
     MAGIC_RESISTANCE = auto()
     CHARM_IMMUNITY = auto()
     GREAT_WEAPON_FIGHTING = auto()
+    BATTLE_MASTER_MANEUVERS = auto()
+    # RIPOSTE = auto()
+    # MENACING_ATTACK = auto()
+    # PRECISION_ATTACK = auto()
 
 
 class MetaAction(Enum):

@@ -427,6 +427,9 @@ class ActionResolver:
             return ActionResult.DMG
         else:
             logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
+            if target.has_reaction and target.has_passive(Passive.BATTLE_MASTER_MANEUVERS):
+                reaction = target.prompt_after_miss_reaction(attacker)
+                self.resolve_action(reaction, target)
             return ActionResult.MISS
 
     def resolve_grapple_attack(self, attack, attacker):
@@ -481,6 +484,9 @@ class ActionResolver:
             return ActionResult.DMG
         else:
             logger.info(f"The attack misses {target}", extra={"team": self.teams.get_team(attacker)})
+            if target.has_reaction and target.has_passive(Passive.BATTLE_MASTER_MANEUVERS):
+                reaction = target.prompt_after_miss_reaction(attacker)
+                self.resolve_action(reaction, target)
             return ActionResult.MISS
 
     def request_movement(self, moving_combatant, movement):

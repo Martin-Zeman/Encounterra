@@ -16,6 +16,7 @@ from ..utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, 
 
 logger = logging.getLogger("Encounterra")
 
+
 class AttackFactory(DirectThreatFactory):
 
     class Type(Enum):
