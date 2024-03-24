@@ -9,6 +9,7 @@ from ..actions.attack import AttackFactory, Attack
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..misc import Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
+from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import mean_dmg, calc_p_hit
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA
 import logging
@@ -18,7 +19,7 @@ logger = logging.getLogger("Encounterra")
 
 class RangedAttackFactory(AttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=True, to_hit_bonus_die=None, **kwargs):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=True, to_hit_bonus_die=None, **kwargs):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg, uses_dex, False, to_hit_bonus_die)
         self.flags |= FactoryFlags.IS_RANGED
 

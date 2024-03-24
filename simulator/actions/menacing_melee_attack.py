@@ -15,6 +15,7 @@ import logging
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import SavingThrow, get_superiority_dice
+from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import calculate_threat_out_delta, get_saving_throw_fail_prob
 from ..utils.roll_types import RollType, ThreatModifierType
 
@@ -23,7 +24,7 @@ logger = logging.getLogger("Encounterra")
 
 class MenacingMeleeAttackFactory(MeleeAttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
         superiority_dice = get_superiority_dice(combatant.level)
         extra_dmg.append((superiority_dice, dmg_type))
         name = "Menacing " + name

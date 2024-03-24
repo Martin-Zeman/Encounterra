@@ -2,6 +2,7 @@ import copy
 
 from ..abilities.on_hit_saving_throw_dmg import OnHitSavingThrowDmg
 from ..actions.action_types import Action, Reaction, Passive
+from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, SavingThrow, Class
@@ -22,7 +23,7 @@ class Assassin(Combatant):
         self.shortsword = self.add_ability(Action.MELEE_ATTACK, name="Shortsword", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=3,
                                        dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True, on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
         self.light_crossbow = self.add_ability(Action.RANGED_ATTACK,  name="Light Crossbow", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=3,
-                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=20, on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
+                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER), on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
         self.add_ability(Reaction.REACTION_ATTACK, name="Shortsword", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1,
                          on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
         self.add_ability(Passive.EVASION)

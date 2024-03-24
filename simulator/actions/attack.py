@@ -6,6 +6,7 @@ from functools import cache
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..conditions import Conditions, get_swallower, is_affected_by
 from ..misc import avg_roll
+from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import mean_dmg, calc_p_hit
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
@@ -23,11 +24,10 @@ class AttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
-        self.flags |= FactoryFlags.HAS_AMMO
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -79,7 +79,8 @@ class AttackFactory(DirectThreatFactory):
 
         to_hit_total = self.to_hit
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
-        to_hit_total += avg_roll(self.to_hit_bonus_die)
+        if self.to_hit_bonus_die is not None:
+            to_hit_total += avg_roll(self.to_hit_bonus_die)
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         if not consider_dist or Map.get().get_hop_distance_combatants(self.combatant, target) <= self.range:
@@ -95,7 +96,9 @@ class AttackFactory(DirectThreatFactory):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        avg_to_hit_bonus_die_roll = avg_roll(self.to_hit_bonus_die)
+        avg_to_hit_bonus_die_roll = 0
+        if self.to_hit_bonus_die is not None:
+            avg_to_hit_bonus_die_roll = avg_roll(self.to_hit_bonus_die)
         baseline_to_hit = self.to_hit + avg_to_hit_bonus_die_roll
         baseline = mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         for extra in self.extra_dmg:

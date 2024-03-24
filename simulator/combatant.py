@@ -245,6 +245,7 @@ class Combatant(ProtoCombatant):
                             af_kwargs = af[1].get_kwargs()
                             menacing_attack = MenacingMeleeAttackFactory(**af_kwargs) if FactoryFlags.IS_MELEE in af[1].flags else MenacingRangedAttackFactory(**af_kwargs)
                             new_action_factories.append((af[0], menacing_attack))
+                            self.ammo[menacing_attack.name] = self.ammo[af[1].name]
 
                             # af_kwargs = af[1].get_kwargs()
                             # precision_attack = PrecisionMeleeAttackFactory(**af_kwargs) if FactoryFlags.IS_MELEE in af[1].flags else PrecisionRangedAttackFactory(**af_kwargs)
@@ -256,6 +257,7 @@ class Combatant(ProtoCombatant):
                             baf_kwargs = baf[1].get_kwargs()
                             menacing_attack = MenacingMeleeAttackFactory(**baf_kwargs) if FactoryFlags.IS_MELEE in baf[1].flags else MenacingRangedAttackFactory(**baf_kwargs)
                             new_bonus_action_factories.append((baf[0], menacing_attack))
+                            self.ammo[menacing_attack.name] = self.ammo[baf[1].name]
 
                             # baf_kwargs = baf[1].get_kwargs()
                             # precision_attack = PrecisionMeleeAttackFactory(**baf_kwargs) if FactoryFlags.IS_MELEE in baf[1].flags else PrecisionRangedAttackFactory(**baf_kwargs)
@@ -630,12 +632,8 @@ class Combatant(ProtoCombatant):
         self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)
         self.saving_throws_dice_mod = dict.fromkeys(self.saving_throws_dice_mod.keys(), [])
         self.saving_throws_roll_type_mod = dict.fromkeys(self.saving_throws_roll_type_mod.keys(), set())
-        for f in self.action_factories:
-            if FactoryFlags.HAS_AMMO in f[1].flags:
-                self.ammo[f[1].name] = f[1].ammo
-        for f in self.bonus_action_factories:
-            if FactoryFlags.HAS_AMMO in f[1].flags:
-                self.ammo[f[1].name] = f[1].ammo
+        for ammo in self.ammo.values():
+            ammo.reset()
         self.one_time_ac_bonus = 0  # Not really needed
 
     def deplete_resources(self, level: ResourceDepletionLevel):

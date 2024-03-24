@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 from .actions.actoid import FactoryFlags
 from .misc import roll_dice
+from .resources import Uses, ResourceRefreshType
 from .threat_interfaces import Threat
 
 
@@ -63,7 +64,7 @@ class RechargeFactory(ABC, Factory):
     def roll_for_recharge(self):
         roll = roll_dice([1, 6])
         if roll >= self.recharge_value:
-            self.combatant.ammo[self.name] = 1
+            self.combatant.ammo[self.name].add_resource(1)
 
 
 class TransformerFactory(Threat, Factory):

@@ -1,6 +1,7 @@
 import copy
 
 from ..actions.action_types import Action, Reaction, Passive
+from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, SavingThrow, Class, get_factory_of_type
@@ -20,7 +21,7 @@ class BanditCaptain(Combatant):
         super().__init__(num_or_name, hp=65, ac=15, init_bonus=3, spell_to_hit=0, speed=30, resistances=set(), dc=0)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK,  name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, uses_dex=True)
         self.dagger = self.add_ability(Action.MELEE_ATTACK,  name="Dagger", combatant=self, to_hit=5, dmg_dice="1d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, uses_dex=True)
-        self.dagger_throw = self.add_ability(Action.RANGED_ATTACK, name="Thrown Dagger", combatant=self, to_hit=4, dmg_dice="1d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=12, crit_range=1, ammo=10, uses_dex=True)
+        self.dagger_throw = self.add_ability(Action.RANGED_ATTACK, name="Thrown Dagger", combatant=self, to_hit=4, dmg_dice="1d4", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=12, crit_range=1, ammo=Uses(10, ResourceRefreshType.NEVER), uses_dex=True)
         self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Reaction.PARRY, ac=2)
         self.build_attack_fms()

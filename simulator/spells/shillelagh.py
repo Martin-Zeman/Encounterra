@@ -47,7 +47,7 @@ class ShillelaghFactory(ThreatModifierFactory):
         return "Shillelagh"
 
     def create_all(self, previous_action_in_dag=None):
-        if self.combatant.ammo[self.new_attack.name] != math.inf:
+        if self.combatant.ammo[self.new_attack.name].is_inf():
             return [Shillelagh(self)]
         return []
 
@@ -77,11 +77,11 @@ class Shillelagh(Actoid, LimitedDurationEffect, ActionEnablerEffect, DirectThrea
 
     def activate(self, **kwargs):
         logger.info(f"{self.factory.combatant} casts Shillelagh on {self.factory.original_attack.name}")
-        self.factory.combatant.ammo[self.factory.new_attack.name] = math.inf
+        self.factory.combatant.ammo[self.factory.new_attack.name].set_resource(math.inf)
 
     def deactivate(self):
         logger.info(f"Shillelagh on {self.factory.original_attack.name} fades")
-        self.factory.combatant.ammo[self.factory.new_attack.name] = 0
+        self.factory.combatant.ammo[self.factory.new_attack.name].set_resource(0)
 
     def deactivate_for_combatant(self, combatant):
         assert False
@@ -90,10 +90,10 @@ class Shillelagh(Actoid, LimitedDurationEffect, ActionEnablerEffect, DirectThrea
         return False
 
     def enable(self):
-        self.factory.combatant.ammo[self.factory.new_attack.name] = math.inf
+        self.factory.combatant.ammo[self.factory.new_attack.name].set_resource(math.inf)
 
     def disable(self):
-        self.factory.combatant.ammo[self.factory.new_attack.name] = 0
+        self.factory.combatant.ammo[self.factory.new_attack.name].set_resource(0)
 
     def calculate_threat(self, **kwargs):
         return 0

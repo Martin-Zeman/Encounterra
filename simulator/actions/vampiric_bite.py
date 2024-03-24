@@ -7,12 +7,14 @@ from ..misc import Size
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower, get_grappler
 import logging
 
+from ..resources import Uses, ResourceRefreshType
+
 logger = logging.getLogger("Encounterra")
 
 
 class VampiricBiteFactory(MeleeAttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[]):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[]):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, [])
 
     def get_ability_name(self):

@@ -1,4 +1,5 @@
 import logging
+import math
 from abc import abstractmethod, ABC
 from enum import Enum, auto
 
@@ -71,6 +72,15 @@ class Uses(Resource):
     def use_resource(self, uses=1, **kwargs):
         self.curr_uses -= uses
 
+    def add_resource(self, uses=1):
+        self.curr_uses += uses
+
+    def set_resource(self, uses):
+        self.curr_uses = uses
+
+    def is_inf(self):
+        return self.curr_uses == math.inf
+
     def reset(self):
         self.curr_uses = self.max_uses
 
@@ -105,13 +115,13 @@ def use_resources(combatant, action):
         match action_type:
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | \
                  Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
-                combatant.ammo[action.factory.name] -= 1
+                combatant.ammo[action.factory.name].use_resource()
                 try:
                     combatant.attack_fsm.trigger(str(action.factory))
                 except AttributeError:
                     print("FIXME")
             case Action.MENACING_MELEE_ATTACK | Action.MENACING_RANGED_ATTACK:# | Action.PRECISION_MELEE_ATTACK | Action.PRECISION_RANGED_ATTACK:
-                combatant.ammo[action.factory.name] -= 1
+                combatant.ammo[action.factory.name].use_resource()
                 try:
                     combatant.attack_fsm.trigger(str(action.factory))
                 except AttributeError:
@@ -152,9 +162,9 @@ def use_resources(combatant, action):
         combatant.has_bonus_action = False
         match action_type:
             case BonusAction.BONUS_MELEE_ATTACK | BonusAction.BONUS_RANGED_ATTACK | BonusAction.PAM_BONUS_ATTACK:
-                combatant.ammo[action.factory.name] -= 1
-            case BonusAction.BONUS_MENACING_MELEE_ATTACK | BonusAction.BONUS_MENACING_RANGED_ATTACK | BonusAction.BONUS_PRECISION_MELEE_ATTACK | BonusAction.BONUS_PRECISION_RANGED_ATTACK:
-                combatant.ammo[action.factory.name] -= 1
+                combatant.ammo[action.factory.name].use_resource()
+            case BonusAction.BONUS_MENACING_MELEE_ATTACK | BonusAction.BONUS_MENACING_RANGED_ATTACK:# | BonusAction.BONUS_PRECISION_MELEE_ATTACK | BonusAction.BONUS_PRECISION_RANGED_ATTACK:
+                combatant.ammo[action.factory.name].use_resource()
                 combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
             case BonusAction.RAGE | BonusAction.TOTEM_RAGE:
                 combatant.resources[action_type].use_resource()

@@ -2,6 +2,7 @@ import copy
 
 from ..abilities.on_hit_prone import OnHitProne
 from ..actions.action_types import Action, Reaction
+from ..resources import ResourceRefreshType, Uses
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, SavingThrow, Size, Class
@@ -22,7 +23,7 @@ class StoneGiant(Combatant):
         self.size = Size.HUGE
         self.club = self.add_ability(Action.MELEE_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3)
         self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice="4d10", dmg_bonus=6,
-                                            dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1, ammo=2, on_hit=[OnHitProne(SavingThrow.STR, 17)], uses_dex=False)
+                                            dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1, ammo=Uses(2, ResourceRefreshType.NEVER), on_hit=[OnHitProne(SavingThrow.STR, 17)], uses_dex=False)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice="3d8", dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 6

@@ -1,6 +1,7 @@
 import copy
 
 from ..actions.action_types import Action, Reaction, Passive
+from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, SavingThrow, Class
@@ -21,7 +22,7 @@ class AssassinRogue3Lvl(Combatant):
         self.rapier = self.add_ability(Action.MELEE_ATTACK, name="Rapier", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3,
                                        dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True)
         self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3,
-                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=20)
+                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER))
         self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1)
         self.add_ability(Passive.CUNNING_ACTION)
         self.add_ability(Passive.SNEAK_ATTACK)

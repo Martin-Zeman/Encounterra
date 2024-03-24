@@ -110,7 +110,7 @@ def check_feasibility(combatant, action):
                  HasteAction.HASTE_VAMPIRIC_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action.factory.name] > 0
+                res &= combatant.ammo[action.factory.name].has_resource()
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
@@ -128,13 +128,13 @@ def check_feasibility(combatant, action):
             case Action.RANGED_ATTACK | HasteAction.HASTE_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action.factory.name] > 0
+                res &= combatant.ammo[action.factory.name].has_resource()
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
             case Action.RECKLESS_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= combatant.ammo[action.factory.name] > 0
+                res &= combatant.ammo[action.factory.name].has_resource()
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
@@ -154,7 +154,7 @@ def check_feasibility(combatant, action):
             case Action.PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action.factory.name] > 0
+                res &= combatant.ammo[action.factory.name].has_resource()
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= (action.target is combatant.constricted_target) if combatant.constricted_target else True
@@ -162,7 +162,7 @@ def check_feasibility(combatant, action):
             case Action.BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action.factory.name] > 0
+                res &= combatant.ammo[action.factory.name].has_resource()
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
@@ -179,7 +179,7 @@ def check_feasibility(combatant, action):
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action.factory.name] > 0
+                res &= combatant.ammo[action.factory.name].has_resource()
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= not combatant.swallowed_target
@@ -189,7 +189,7 @@ def check_feasibility(combatant, action):
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action.factory.name] > 0
+                res &= combatant.ammo[action.factory.name].has_resource()
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= (action.target is combatant.constricted_target) if combatant.constricted_target else True
@@ -500,7 +500,10 @@ def check_feasibility_light(combatant, action):
                  HasteAction.HASTE_RANGED_ATTACK | Action.VAMPIRIC_BITE | HasteAction.HASTE_VAMPIRIC_BITE:# | Action.MENACING_MELEE_ATTACK | Action.MENACING_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action[1].name] > 0
+                try:
+                    res &= combatant.ammo[action[1].name].has_resource()
+                except AttributeError:
+                    print("FIXME")
                 return res
             case Action.GRAPPLE_ATTACK | HasteAction.HASTE_GRAPPLE_ATTACK:  # No ammo for this type
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
@@ -508,7 +511,7 @@ def check_feasibility_light(combatant, action):
                 return res
             case Action.RECKLESS_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
-                res &= combatant.ammo[action[1].name] > 0
+                res &= combatant.ammo[action[1].name].has_resource()
                 return res
             case Action.DASH | HasteAction.HASTE_DASH:
                 return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED)
@@ -519,12 +522,12 @@ def check_feasibility_light(combatant, action):
             case Action.PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action[1].name] > 0
+                res &= combatant.ammo[action[1].name].has_resource()
                 return res
             case Action.BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action[1].name] > 0
+                res &= combatant.ammo[action[1].name].has_resource()
                 res &= not combatant.swallowed_target
                 grappled_target = get_grappled(combatant)
                 res &= grappled_target is not None and grappled_target.size.value <= Size.MEDIUM.value
@@ -537,7 +540,7 @@ def check_feasibility_light(combatant, action):
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action[1].name] > 0
+                res &= combatant.ammo[action[1].name].has_resource()
                 res &= not combatant.swallowed_target
                 grappled_target = get_grappled(combatant)
                 res &= grappled_target is not None and grappled_target.size.value <= Size.MEDIUM.value
@@ -545,7 +548,7 @@ def check_feasibility_light(combatant, action):
             case HasteAction.HASTE_PRE_SWALLOW_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                res &= combatant.ammo[action[1].name] > 0
+                res &= combatant.ammo[action[1].name].has_resource()
                 return res
             case _:
                 logger.error(f"check_feasibility_light: Unknown action type {action_type}")

@@ -23,7 +23,7 @@ from ..spells.sleep import SleepFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
-    test_druid_lvl_1, test_fighter_lvl_1
+    test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3
 from ..utils.utils import preallocate_wildshape_forms
 
 from ..test.test_singleton import SingletonClass
@@ -935,7 +935,7 @@ def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rog
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
-
+@pytest.mark.slow
 def test_ray_of_enfeeblement(battle_map, teams, effect_tracker, test_totem_barbarian, test_night_hag):
     """
     Test that Ray of Enfeeblement really does lower strength-based damage.
@@ -1061,3 +1061,7 @@ def test_faerie_fire(battle_map, teams, effect_tracker, test_druid_lvl_1, test_f
 
     actoid1 = get_action(test_druid_lvl_1)
     assert str(actoid1) == "Faerie Fire at [10  5]"
+
+
+def test_menacing_attack_shares_ammo(battle_map, teams, effect_tracker, test_druid_lvl_1, test_battle_master_fighter_lvl_3):
+    assert False # TODO

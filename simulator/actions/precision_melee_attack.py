@@ -4,11 +4,12 @@ from .action_types import Action, BonusAction
 from .actoid import FactoryFlags
 from .melee_attack import MeleeAttackFactory
 from ..misc import get_superiority_dice
+from ..resources import Uses, ResourceRefreshType
 
 
 class PrecisionMeleeAttackFactory(MeleeAttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, **kwargs):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, **kwargs):
         superiority_dice = get_superiority_dice(combatant.level)
         name = "Precision " + name
         # if isinstance(action_type, Action):
