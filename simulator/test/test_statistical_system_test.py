@@ -6,8 +6,10 @@ import pickle
 
 from ..battle_map import Map
 from ..combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
+from ..combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
 from ..combatants.druid_1lvl import Druid1Lvl
 from ..combatants.fighter_1lvl import Fighter1Lvl
+from ..combatants.fighter_2lvl import Fighter2Lvl
 from ..logging.custom_logger import CustomLogger
 from ..misc import Statistics
 from ..session import Session
@@ -156,6 +158,61 @@ def test_matchup_2():
         assert_keywords_in_log(log_path, keywords)
         assert_victories_with_tolerance(results, Teams.Color.BLUE, 50, 15)
         assert_victories_with_tolerance(results, Teams.Color.RED, 50, 15)
+        os.remove(log_path)
+    except AssertionError:
+        raise
+    except Exception as e:
+        timestamp = int(time.time())
+        with open(os.path.join(SERIALIZE_DIR, f'battle_map_data_{timestamp}.pkl'), 'wb') as f:
+            pickle.dump(Map.serialize_data(), f)
+        with open(os.path.join(SERIALIZE_DIR, f'session_{timestamp}.pkl'), 'wb') as f:
+            pickle.dump(session.serialize_data(), f)
+        with open(os.path.join(SERIALIZE_DIR, f'exception_{timestamp}.txt'), 'w') as f:
+            f.write(f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception:\n{e}")
+        os.remove(log_path)
+
+        assert False, f"Fuzzy test with Blue team {blue_team} and Red team {red_team} raised an exception {e}"
+
+
+@pytest.mark.slow
+def test_matchup_3():
+    log_path = "/tmp/test_matchup_3_log.txt"
+    if os.path.exists(log_path):
+        os.remove(log_path)
+    CustomLogger(logging.INFO, False, log_path)
+    blue_team = [Fighter2Lvl, Fighter1Lvl]
+    red_team = [BattlemasterFighter3Lvl]
+    logger.info(f"Starting a statistical test with:")
+    logger.info(f"Blue team: {[str(c) for c in blue_team]}")
+    logger.info(f"Red team: {[str(c) for c in red_team]}")
+    keywords = [
+        "Fighter 1st LVL (1) attacks Battlemaster Fighter 3rd LVL (1) with Greatsword",
+        "Fighter 2nd LVL (1) attacks Battlemaster Fighter 3rd LVL (1) with Greatsword",
+        "Battlemaster Fighter 3rd LVL (1) attacks Fighter 2nd LVL (1) with Menacing Greatsword",
+        "Battlemaster Fighter 3rd LVL (1) attacks Fighter 1st LVL (1) with Menacing Greatsword",
+        "Battlemaster Fighter 3rd LVL (1) attacks Fighter 1st LVL (1) with Riposte Greatsword",
+        "Battlemaster Fighter 3rd LVL (1) attacks Fighter 2nd LVL (1) with Riposte Greatsword",
+        "Battlemaster Fighter 3rd LVL (1) attacks Fighter 1st LVL (1) with Menacing Handaxe at disadvantage",
+        "Battlemaster Fighter 3rd LVL (1) attacks Fighter 2nd LVL (1) with Menacing Handaxe at disadvantage",
+        "Fighter 2nd LVL (1) is frightened",
+        "Fighter 1st LVL (1) is frightened",
+    ]
+
+    Map.reset_singleton()
+    session = Session()
+
+    for combatant in blue_team:
+        session.add_combatant(combatant, Teams.Color.BLUE)
+    for combatant in red_team:
+        session.add_combatant(combatant, Teams.Color.RED)
+
+    session.set_num_simulations(50)
+    session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)
+    try:
+        results = session.simulate(parallel=False)
+        assert_keywords_in_log(log_path, keywords)
+        assert_victories_with_tolerance(results, Teams.Color.BLUE, 44, 15)
+        assert_victories_with_tolerance(results, Teams.Color.RED, 56, 15)
         os.remove(log_path)
     except AssertionError:
         raise
