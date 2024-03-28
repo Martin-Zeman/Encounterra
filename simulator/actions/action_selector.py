@@ -412,7 +412,7 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
     best_sequence = sequences[sorted_sequences[0]]
     best_out_threat = sequence_to_threat[sorted_sequences[0]]  # We're only interested in the out threat
     if len(best_sequence) == 1:
-        return None, 0  # This means the only non-movement action was a NOP and there's only movement left
+        return None, [0, 0]  # This means the only non-movement action was a NOP and there's only movement left
     return best_sequence, best_out_threat
 
 

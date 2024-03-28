@@ -16,6 +16,7 @@ from ..logging.custom_logger import CustomLogger
 from ..misc import PhaseOfTurn, SkillCheck
 from ..conditions import Conditions, Condition, ConditionWithDC, is_affected_by, apply_condition, \
     apply_dc_condition
+from ..resources import ResourceDepletionLevel
 from ..session import Session
 from ..spells.fireball import Fireball
 from ..spells.firebolt import Firebolt
@@ -582,7 +583,7 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].use_resource(5)
     apply_condition(test_draconic_sorcerer_5lvl, Condition(Conditions.PRONE, test_stone_giant))
 
-    test_stone_giant.ammo[test_stone_giant.rock[1].name] = 0
+    test_stone_giant.ammo[test_stone_giant.rock[1].name].deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)
     test_stone_giant.curr_hp = 46
     test_ogre.curr_hp = 45
     combatant7.curr_hp = 36

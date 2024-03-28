@@ -1,3 +1,5 @@
+import copy
+
 from cachetools.keys import hashkey
 
 from ..actions.action_types import HasteAction
@@ -6,6 +8,7 @@ from functools import cache
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..conditions import Conditions, get_swallower, is_affected_by
 from ..misc import avg_roll
+from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import mean_dmg, calc_p_hit
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
@@ -16,17 +19,17 @@ from ..utils.roll_types import RollType, ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, 
 
 logger = logging.getLogger("Encounterra")
 
+
 class AttackFactory(DirectThreatFactory):
 
     class Type(Enum):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=math.inf, on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
-        self.flags |= FactoryFlags.HAS_AMMO
         self.name = name
         self.combatant = combatant
         self.to_hit = to_hit
@@ -40,6 +43,7 @@ class AttackFactory(DirectThreatFactory):
         self.crit_range = crit_range
         self.ammo = ammo
         self.on_hit = on_hit
+        self.to_hit_bonus_die = to_hit_bonus_die  # This is not really applied, only used to simplify threat calculation of derived classes
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0
         self.mod_to_hit_die = '0d0'
@@ -58,8 +62,9 @@ class AttackFactory(DirectThreatFactory):
     def get_kwargs(self):
         return {'name': self.name, 'combatant': self.combatant, 'to_hit': self.to_hit, 'dmg_dice': self.dmg_dice,
                 'dmg_bonus': self.dmg_bonus, 'dmg_type': self.dmg_type, 'attack_range': self.range, 'action_type': self.action_type,
-                'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit, 'extra_dmg': self.extra_dmg,
-                'uses_dex': FactoryFlags.USES_DEX in self.flags, 'two_handed': FactoryFlags.TWO_HANDED in self.flags}
+                'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': copy.deepcopy(self.on_hit), 'extra_dmg': self.extra_dmg,
+                'uses_dex': FactoryFlags.USES_DEX in self.flags, 'two_handed': FactoryFlags.TWO_HANDED in self.flags,
+                'to_hit_bonus_die': self.to_hit_bonus_die}
 
     def get_eligible_targets(self):
         swallower = get_swallower(self.combatant)
@@ -76,6 +81,8 @@ class AttackFactory(DirectThreatFactory):
 
         to_hit_total = self.to_hit
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
+        if self.to_hit_bonus_die is not None:
+            to_hit_total += avg_roll(self.to_hit_bonus_die)
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         if not consider_dist or Map.get().get_hop_distance_combatants(self.combatant, target) <= self.range:
@@ -91,11 +98,15 @@ class AttackFactory(DirectThreatFactory):
         """
         Calculates the threat delta of the factory to a specific target given stat modifications
         """
-        baseline = mean_dmg(self.to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
+        avg_to_hit_bonus_die_roll = 0
+        if self.to_hit_bonus_die is not None:
+            avg_to_hit_bonus_die_roll = avg_roll(self.to_hit_bonus_die)
+        baseline_to_hit = self.to_hit + avg_to_hit_bonus_die_roll
+        baseline = mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
         for extra in self.extra_dmg:
-            baseline += mean_dmg(self.to_hit, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
+            baseline += mean_dmg(baseline_to_hit, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
         for oh in self.on_hit:
-            baseline += calc_p_hit(self.to_hit, target.ac) * oh.calculate_threat(self.combatant, target)
+            baseline += calc_p_hit(baseline_to_hit, target.ac) * oh.calculate_threat(self.combatant, target)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
         mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
@@ -106,7 +117,7 @@ class AttackFactory(DirectThreatFactory):
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         total_target_ac = target.ac + target_ac
-        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total = baseline_to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
         try:
             to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         except KeyError:  # Can happen for extreme differences between the AC and the to_hit

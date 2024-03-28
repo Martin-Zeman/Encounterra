@@ -11,7 +11,7 @@ from ..spells.spell import SpellStats
 from ..spells.thunderwave import ThunderwaveFactory
 from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
-    teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1
+    teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3
 import numpy as np
 
 from ..utils.roll_types import ThreatModifierType
@@ -266,6 +266,38 @@ def test_build_combatant_adjacency_mask_medium(battle_map, teams, test_draconic_
     assert np.all(adj_mask[:, 10 * battle_map.size + 14])
 
 
+def test_build_combatant_adjacency_mask_medium_frightened(battle_map, teams, test_draconic_sorcerer_5lvl, test_battle_master_fighter_lvl_3):
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 12]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([11, 1]))
+
+    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, radius=0)
+    apply_condition(test_draconic_sorcerer_5lvl, Condition(Conditions.FRIGHTENED, test_battle_master_fighter_lvl_3))
+    adj_mask = battle_map.build_combatant_adjacency_mask(test_draconic_sorcerer_5lvl)
+
+    # Get the initial hop distance between the sorcerer and the battle master
+    sorcerer_pos = np.array([5, 12])
+    battle_master_pos = np.array([11, 1])
+    initial_distance = battle_map.get_hop_distance_coords(sorcerer_pos.reshape(1, 2), battle_master_pos.reshape(1, 2))
+
+    # Iterate through the adjacency mask to check for impassable moves towards the battle master
+    N = battle_map.size
+    for x in range(N):
+        for y in range(N):
+            current_pos = np.array([x, y])
+            hop_distance_to_enemy = battle_map.get_hop_distance_coords(current_pos.reshape(1, 2),
+                                                                       battle_master_pos.reshape(1, 2))
+            index = x * N + y
+            if hop_distance_to_enemy < initial_distance:
+                # Assert that any move closer to the battle master is marked as impassable
+                assert not np.any(
+                    adj_mask[:, index]), f"Move to ({x}, {y}), closer to the battle master, should be impassable."
+            else:
+                # For moves not closer, no specific assertion about passability is made due to various combat conditions
+                pass
+
+
 def test_build_combatant_adjacency_mask_large(battle_map, teams, test_draconic_sorcerer_5lvl):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     test_draconic_sorcerer_5lvl.size = Size.LARGE
@@ -288,7 +320,6 @@ def test_build_combatant_adjacency_mask_large(battle_map, teams, test_draconic_s
     assert np.all(adj_mask[:, 1])
     assert np.all(adj_mask[:, battle_map.size])
     assert np.all(adj_mask[:, battle_map.size + 1])
-
 
 
 def test_build_combatant_adjacency_mask_huge(battle_map, teams, test_draconic_sorcerer_5lvl):

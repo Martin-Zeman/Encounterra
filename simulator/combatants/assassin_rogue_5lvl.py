@@ -1,6 +1,7 @@
 import copy
 
 from ..actions.action_types import Action, Reaction, Passive
+from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, SavingThrow, Class
@@ -21,7 +22,7 @@ class AssassinRogue5Lvl(Combatant):
         self.rapier = self.add_ability(Action.MELEE_ATTACK, name="Rapier", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4,
                                        dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True)
         self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=7, dmg_dice="1d6", dmg_bonus=4,
-                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=20)
+                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER))
         self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1)
         self.uncanny_dodge = self.add_ability(Reaction.UNCANNY_DODGE)
         self.add_ability(Passive.CUNNING_ACTION)
@@ -81,8 +82,7 @@ class AssassinRogue5Lvl(Combatant):
         self.attack_fsm.set_state(resources['attack_state_machine'])
         self.ammo = resources['ammo']
 
-
-    def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
+    def prompt_after_hit_reaction(self, attacker, attack, attack_roll):
         if self.has_reaction:
             return self.uncanny_dodge[1].create(attack)
         return None

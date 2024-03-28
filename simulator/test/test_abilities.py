@@ -23,7 +23,7 @@ from ..spells.sleep import SleepFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
-    test_druid_lvl_1, test_fighter_lvl_1
+    test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3
 from ..utils.utils import preallocate_wildshape_forms
 
 from ..test.test_singleton import SingletonClass
@@ -935,7 +935,7 @@ def test_rogue_cunning_dash(battle_map, teams, effect_tracker, test_assassin_rog
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
-
+@pytest.mark.slow
 def test_ray_of_enfeeblement(battle_map, teams, effect_tracker, test_totem_barbarian, test_night_hag):
     """
     Test that Ray of Enfeeblement really does lower strength-based damage.
@@ -1061,3 +1061,36 @@ def test_faerie_fire(battle_map, teams, effect_tracker, test_druid_lvl_1, test_f
 
     actoid1 = get_action(test_druid_lvl_1)
     assert str(actoid1) == "Faerie Fire at [10  5]"
+
+
+def test_menacing_attack_shares_ammo(battle_map, teams, effect_tracker, test_druid_lvl_1, test_battle_master_fighter_lvl_3):
+    test_druid_lvl_1.curr_hp = 100  # Making sure they survive
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_druid_lvl_1, test_battle_master_fighter_lvl_3]
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_druid_lvl_1, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([7, 5]))
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    assert id(test_battle_master_fighter_lvl_3.ammo['Handaxe']) == id(test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'])
+    assert id(test_battle_master_fighter_lvl_3.ammo['Greatsword']) == id(test_battle_master_fighter_lvl_3.ammo['Menacing Greatsword'])
+    ha = test_battle_master_fighter_lvl_3.handaxe[1].create(test_druid_lvl_1)
+
+    assert test_battle_master_fighter_lvl_3.ammo['Handaxe'].get_resource() == 2
+    assert test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'].get_resource() == 2
+    action_resolver.resolve_action(ha, test_battle_master_fighter_lvl_3)
+    assert test_battle_master_fighter_lvl_3.ammo['Handaxe'].get_resource() == 1
+    assert test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'].get_resource() == 1
+
+    # Find the Menacing Handaxe factory
+    mha_factory = None
+    for af in test_battle_master_fighter_lvl_3.action_factories:
+        if str(af[1]) == "Menacing Handaxe AttackFactory":
+            mha_factory = af[1]
+            break
+    assert mha_factory is not None
+    test_battle_master_fighter_lvl_3.new_turn()
+    mha = mha_factory.create(test_druid_lvl_1)
+    action_resolver.resolve_action(mha, test_battle_master_fighter_lvl_3)
+    assert test_battle_master_fighter_lvl_3.ammo['Handaxe'].get_resource() == 0
+    assert test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'].get_resource() == 0

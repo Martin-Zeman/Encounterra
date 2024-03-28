@@ -12,14 +12,21 @@ from .abilities.rage import RageFactory
 from .action_resolver import check_concentration
 from .actions.action_surge_plan_strategy import ActionSurgePlanStrategy
 from .actions.actoid import FactoryFlags
+from .actions.attack import Attack, AttackFactory
 from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from .actions.melee_attack import MeleeAttackFactory
+from .actions.menacing_melee_attack import MenacingMeleeAttackFactory
+from .actions.menacing_ranged_attack import MenacingRangedAttackFactory
 from .actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
 from .actions.nop import NopFactory
+from .actions.precision_melee_attack import PrecisionMeleeAttackFactory
+from .actions.precision_ranged_attack import PrecisionRangedAttackFactory
+from .actions.ranged_attack import RangedAttackFactory
 from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
-from .misc import SavingThrow, Size, SpellcastingResourceType, Class
+from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice
 from .conditions import Conditions, is_affected_by, remove_condition
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
@@ -229,6 +236,36 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Assassinate")
                 case Passive.CHARM_IMMUNITY:
                     self.display_abilities.append("Charm Immunity")
+                case Passive.BATTLE_MASTER_MANEUVERS:
+                    superiority_dice_resource = Uses(get_num_superiority_dice(self.level), ResourceRefreshType.SHORT_REST)
+                    self.resources[Passive.BATTLE_MASTER_MANEUVERS] = superiority_dice_resource
+                    new_action_factories = []
+                    for af in self.action_factories:
+                        if isinstance(af[1], AttackFactory):
+                            af_kwargs = af[1].get_kwargs()
+                            menacing_attack = MenacingMeleeAttackFactory(**af_kwargs) if FactoryFlags.IS_MELEE in af[1].flags else MenacingRangedAttackFactory(**af_kwargs)
+                            new_action_factories.append((af[0], menacing_attack))
+                            self.ammo[menacing_attack.name] = self.ammo[af[1].name]
+
+                            # af_kwargs = af[1].get_kwargs()
+                            # precision_attack = PrecisionMeleeAttackFactory(**af_kwargs) if FactoryFlags.IS_MELEE in af[1].flags else PrecisionRangedAttackFactory(**af_kwargs)
+                            # new_action_factories.append((af[0], precision_attack))
+                    self.action_factories.extend(new_action_factories)
+                    new_bonus_action_factories = []
+                    for baf in self.bonus_action_factories:
+                        if isinstance(baf[1], AttackFactory):
+                            baf_kwargs = baf[1].get_kwargs()
+                            menacing_attack = MenacingMeleeAttackFactory(**baf_kwargs) if FactoryFlags.IS_MELEE in baf[1].flags else MenacingRangedAttackFactory(**baf_kwargs)
+                            new_bonus_action_factories.append((baf[0], menacing_attack))
+                            self.ammo[menacing_attack.name] = self.ammo[baf[1].name]
+
+                            # baf_kwargs = baf[1].get_kwargs()
+                            # precision_attack = PrecisionMeleeAttackFactory(**baf_kwargs) if FactoryFlags.IS_MELEE in baf[1].flags else PrecisionRangedAttackFactory(**baf_kwargs)
+                            # new_bonus_action_factories.append((baf[0], precision_attack))
+                    self.bonus_action_factories.extend(new_bonus_action_factories)
+                    self.display_abilities.append("Riposte")
+                    self.display_abilities.append("Precision Attack")
+                    self.display_abilities.append("Menacing Attack")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -595,12 +632,8 @@ class Combatant(ProtoCombatant):
         self.saving_throws_flat_mod = dict.fromkeys(self.saving_throws_flat_mod.keys(), 0)
         self.saving_throws_dice_mod = dict.fromkeys(self.saving_throws_dice_mod.keys(), [])
         self.saving_throws_roll_type_mod = dict.fromkeys(self.saving_throws_roll_type_mod.keys(), set())
-        for f in self.action_factories:
-            if FactoryFlags.HAS_AMMO in f[1].flags:
-                self.ammo[f[1].name] = f[1].ammo
-        for f in self.bonus_action_factories:
-            if FactoryFlags.HAS_AMMO in f[1].flags:
-                self.ammo[f[1].name] = f[1].ammo
+        for ammo in self.ammo.values():
+            ammo.reset()
         self.one_time_ac_bonus = 0  # Not really needed
 
     def deplete_resources(self, level: ResourceDepletionLevel):
@@ -648,7 +681,10 @@ class Combatant(ProtoCombatant):
     def prompt_dmg_reaction(self, attacking_combatant, dmg, dmg_type):
         return None
 
-    def prompt_after_hit_reaction(self, attack, attacking_combatant, attack_roll):
+    def prompt_after_hit_reaction(self, attacker, attack, attack_roll):
+        return None
+
+    def prompt_after_miss_reaction(self, attacker):
         return None
 
     def calculate_action_plan(self, distances, shortest_paths):

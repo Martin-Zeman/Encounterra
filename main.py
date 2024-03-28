@@ -2,6 +2,7 @@ import logging
 
 from simulator.combatants.acolyte import Acolyte
 from simulator.combatants.bandit_captain import BanditCaptain
+from simulator.combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
 from simulator.combatants.berserker import Berserker
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.bugbear_chief import BugbearChief
@@ -81,10 +82,11 @@ if __name__ == '__main__':
     # session.add_combatant(EvilMage, Teams.Color.BLUE)
     # session.add_combatant(NightHag, Teams.Color.BLUE)
     session.add_combatant(Fighter1Lvl, Teams.Color.BLUE)
-    session.add_combatant(Fighter1Lvl, Teams.Color.RED)
+    session.add_combatant(Fighter2Lvl, Teams.Color.BLUE)
+    session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.RED)
     # session.add_combatant(Fighter2Lvl, Teams.Color.RED)
-    session.add_combatant(Druid1Lvl, Teams.Color.BLUE)
-    session.add_combatant(Druid1Lvl, Teams.Color.RED)
+    # session.add_combatant(Druid1Lvl, Teams.Color.BLUE)
+    # session.add_combatant(Druid1Lvl, Teams.Color.RED)
     session.set_num_simulations(1)
     start_time = time.time()
     session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)

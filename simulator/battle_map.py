@@ -15,7 +15,8 @@ from .obstacle import Obstacle
 from .proto_combatant import ProtoCombatant
 from .spells.spell import SpellStats
 from .misc import Size, Visibility
-from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler
+from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler, \
+    get_source_of_frightened
 from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors, \
     find_nearest_valid_coordinate_chebyshev, angle_between_vectors_rad
 from .misc import Side, DistanceMetric
@@ -594,6 +595,23 @@ class Map:
         # Inflate the edges of the map. Prevent larger combatants from stepping out of the map
         mv_reshaped[:, :, (N - offset):N, :].fill(0)
         mv_reshaped[:, :, :, (N - offset):N].fill(0)
+
+        frightened_source_combatant = get_source_of_frightened(combatant)
+        if frightened_source_combatant is not None:
+            # Get the position of the source of fear and the frightened combatant
+            source_coords = self.combatant_coordinate_cache[frightened_source_combatant].get()
+            # Calculate the hop distance between the frightened combatant and the source of fear
+            current_hop_distance = self.get_hop_distance_combatants(combatant, frightened_source_combatant)
+            # Iterate over each tile in the map
+            for x in range(N):
+                for y in range(N):
+                    # Calculate the hop distance from this tile to the source of fear
+                    hop_distance = self.get_hop_distance_coords(np.array([[x, y]]), source_coords)
+
+                    # If the tile is closer to the source of fear than the combatant is, block the tile
+                    if hop_distance is not None and hop_distance < current_hop_distance:
+                        # Mark all movements to this tile as impassable
+                        mv_reshaped[:, :, x, y].fill(0)
         return mask
 
     def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array, reconstructed_path):

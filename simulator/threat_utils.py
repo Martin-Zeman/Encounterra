@@ -149,8 +149,7 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
     max_threat = 0
     for pa in potential_attackers:
         for f in pa.action_factories:
-            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[
-                1].flags:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)
@@ -160,8 +159,7 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
         min_threat = 0
         max_threat = 0
         for f in pa.bonus_action_factories:
-            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[
-                1].flags:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)
@@ -171,14 +169,58 @@ def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags
         min_threat = 0
         max_threat = 0
         for f in pa.haste_action_factories:
-            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[
-                1].flags:  # Checks for any overlap in flags
+            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[1].flags:  # Checks for any overlap in flags
                 delta = f[1].calculate_threat_to_target_delta(combatant, modifiers)
                 max_threat = max(delta, max_threat)
                 min_threat = min(delta, min_threat)
         incoming_threat_max_delta_acc += max_threat
         incoming_threat_min_delta_acc += min_threat
     return incoming_threat_min_delta_acc, incoming_threat_max_delta_acc
+
+
+def calculate_threat_out_delta(combatant, threat_radius, modifiers, factory_flags):
+    """
+    Estimates the change in mean dmg to enemies within radius assuming the best delta will be picked given a dictionary of modifiers
+    @param combatant: the attacker
+    @param threat_radius: radius within which enemies are to be considered
+    @param modifiers: dictionary of modifiers
+    @param factory_flags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
+    @return: estimated change in dmg, negative for advantage, positive for disadvantage
+    """
+    potential_targets = Map.get().get_non_swallowed_enemies_within_hop_distance(combatant, threat_radius)
+    out_threat_max_delta_acc = 0
+    out_threat_min_delta_acc = 0
+    min_threat = 0
+    max_threat = 0
+    for pt in potential_targets:
+        for f in combatant.action_factories:
+            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[1].flags:  # Checks for any overlap in flags
+                delta = f[1].calculate_threat_to_target_delta(pt, modifiers)
+                max_threat = max(delta, max_threat)
+                min_threat = min(delta, min_threat)
+        out_threat_max_delta_acc += max_threat
+        out_threat_min_delta_acc += min_threat
+
+        min_threat = 0
+        max_threat = 0
+        for f in combatant.bonus_action_factories:
+            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[1].flags:  # Checks for any overlap in flags
+                delta = f[1].calculate_threat_to_target_delta(pt, modifiers)
+                max_threat = max(delta, max_threat)
+                min_threat = min(delta, min_threat)
+        out_threat_max_delta_acc += max_threat
+        out_threat_min_delta_acc += min_threat
+
+        min_threat = 0
+        max_threat = 0
+        for f in combatant.haste_action_factories:
+            if factory_flags & f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[1].flags:  # Checks for any overlap in flags
+                delta = f[1].calculate_threat_to_target_delta(pt, modifiers)
+                max_threat = max(delta, max_threat)
+                min_threat = min(delta, min_threat)
+        out_threat_max_delta_acc += max_threat
+        out_threat_min_delta_acc += min_threat
+    return out_threat_min_delta_acc, out_threat_max_delta_acc
 
 
 def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags):

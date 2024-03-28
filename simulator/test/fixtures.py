@@ -1,10 +1,12 @@
 import pytest
 
 from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from ..combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
 from ..combatants.dire_wolf import DireWolf
 from ..combatants.dragonclaw_cultist import DragonclawCultist
 from ..combatants.druid_1lvl import Druid1Lvl
 from ..combatants.fighter_1lvl import Fighter1Lvl
+from ..combatants.fighter_2lvl import Fighter2Lvl
 from ..combatants.giant_toad import GiantToad
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
 from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
@@ -100,6 +102,14 @@ def test_druid_lvl_1():
 @pytest.fixture()
 def test_fighter_lvl_1():
     return Fighter1Lvl()
+
+@pytest.fixture()
+def test_fighter_lvl_2():
+    return Fighter2Lvl()
+
+@pytest.fixture()
+def test_battle_master_fighter_lvl_3():
+    return BattlemasterFighter3Lvl()
 
 
 @pytest.fixture()

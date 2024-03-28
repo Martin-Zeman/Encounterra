@@ -34,9 +34,9 @@ class FactoryFlags(Flag):
     IS_ATTACK_MODIFIER = auto()
     IS_RECHARGE = auto()
     DEX_SAVE_APPLIES = auto()
-    HAS_AMMO = auto()
     TARGETS_COORDS = auto()
     TARGETS_SELF = auto()
     PREVENT_ENDLESS_RECURSION = auto()  # This is a very technical one which helps prevent endless recursion
     TRANSITIONS_TO_WILDSHAPE = auto()
     TWO_HANDED = auto()
+    IS_PRECISION = auto()

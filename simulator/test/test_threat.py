@@ -12,7 +12,7 @@ from ..spells.hunger_of_hadar import HungerOfHadarFactory
 from ..spells.misty_step import MistyStepFactory, MistyStep
 from ..spells.spike_growth import SpikeGrowthFactory
 from ..teams import Teams
-from ..threat_utils import accumulate_threat_along_path, get_aoe_and_aoo_threat_for_increment, calc_threat_for_path_with_misty_step, \
+from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step, \
     DZ_CONSTANT
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, teams, effect_tracker, battle_map
 

@@ -16,7 +16,7 @@ from ..misc import roll_dice, ROUND_HORIZON, avg_roll
 from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_utils import mean_dmg_dc_attack, calculate_threat_in_delta, get_saving_throw_fail_prob
+from ..threat_utils import calculate_threat_in_delta
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
