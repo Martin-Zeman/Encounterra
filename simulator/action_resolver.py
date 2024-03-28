@@ -633,7 +633,9 @@ class ActionResolver:
                  BonusAction.BONUS_MELEE_ATTACK | HasteAction.HASTE_MELEE_ATTACK | HasteAction.HASTE_RANGED_ATTACK | \
                  BonusAction.PAM_BONUS_ATTACK | Reaction.REACTION_ATTACK | Action.BITE_AND_SWALLOW | \
                  HasteAction.HASTE_BITE_AND_SWALLOW | Action.VAMPIRIC_BITE | Action.PRE_SWALLOW_BITE | \
-                 HasteAction.HASTE_PRE_SWALLOW_BITE | Reaction.RIPOSTE:
+                 HasteAction.HASTE_PRE_SWALLOW_BITE | Action.MENACING_MELEE_ATTACK | Reaction.RIPOSTE | \
+                 Action.MENACING_RANGED_ATTACK | BonusAction.BONUS_MENACING_MELEE_ATTACK | \
+                 BonusAction.BONUS_MENACING_RANGED_ATTACK:
                 ret = self.resolve_attack(actoid, actoid.target, combatant)
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(combatant, EffectType.HIDE)
                 return ret

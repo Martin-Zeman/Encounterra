@@ -1,3 +1,5 @@
+import copy
+
 from cachetools.keys import hashkey
 
 from ..actions.action_types import HasteAction
@@ -60,7 +62,7 @@ class AttackFactory(DirectThreatFactory):
     def get_kwargs(self):
         return {'name': self.name, 'combatant': self.combatant, 'to_hit': self.to_hit, 'dmg_dice': self.dmg_dice,
                 'dmg_bonus': self.dmg_bonus, 'dmg_type': self.dmg_type, 'attack_range': self.range, 'action_type': self.action_type,
-                'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': self.on_hit, 'extra_dmg': self.extra_dmg,
+                'crit_range': self.crit_range, 'ammo': self.ammo, 'on_hit': copy.deepcopy(self.on_hit), 'extra_dmg': self.extra_dmg,
                 'uses_dex': FactoryFlags.USES_DEX in self.flags, 'two_handed': FactoryFlags.TWO_HANDED in self.flags,
                 'to_hit_bonus_die': self.to_hit_bonus_die}
 

@@ -1,12 +1,13 @@
 import copy
 
-from ..abilities.action_surge import ActionSurgeFactory
 from ..actions.action_types import Action, Reaction, BonusAction, Passive, FreeAction
+from ..actions.actoid import FactoryFlags
 from ..actions.melee_attack import MeleeAttackFactory
+from ..battle_map import Map
 from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
-from ..misc import DamageType, SavingThrow, Class, get_missing_hp
+from ..misc import DamageType, SavingThrow, Class,  get_superiority_dice
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -77,9 +78,9 @@ class BattlemasterFighter3Lvl(Combatant):
         return None
 
     def prompt_after_miss_reaction(self, attacker):
-        if self.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource():
+        if self.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource() and Map.get().get_hop_distance_combatants(self, attacker) <= self.aoo_factory[1].range:
             aoo_kwargs = self.aoo_factory[1].get_kwargs()
-            aoo_kwargs["extra_dmg"] = get_superiority_dice(self.level)
+            aoo_kwargs["extra_dmg"].append((get_superiority_dice(self.level), self.aoo_factory[1].dmg_type))
             aoo_kwargs["name"] = "Riposte " + aoo_kwargs["name"]
             aoo_kwargs["action_type"] = Reaction.RIPOSTE
             riposte = MeleeAttackFactory(**aoo_kwargs)

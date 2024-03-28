@@ -114,6 +114,22 @@ def check_feasibility(combatant, action):
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
+            case Action.MENACING_MELEE_ATTACK:
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
+                res &= combatant.ammo[action.factory.name].has_resource()
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
+                res &= combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource()
+                return res
+            case Action.MENACING_RANGED_ATTACK:
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
+                res &= combatant.ammo[action.factory.name].has_resource()
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_enemies(combatant, action.target)
+                res &= combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource()
+                return res
             case Action.SHAKE_ALLY_AWAKE:
                 res &= is_affected_by(action.target, Conditions.CAN_BE_SHAKEN_AWAKE)
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= 1
@@ -399,6 +415,8 @@ def check_feasibility(combatant, action):
                 return combatant.has_reaction
             case Reaction.PRE_SWALLOW_BITE_REACTION:
                 return combatant.has_reaction and not combatant.constricted_target
+            case Reaction.RIPOSTE:
+                return combatant.has_reaction and combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource()
             case _:
                 logger.error("Unknown reaction")
         return combatant.has_reaction
@@ -497,13 +515,16 @@ def check_feasibility_light(combatant, action):
                 res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | HasteAction.HASTE_MELEE_ATTACK | \
-                 HasteAction.HASTE_RANGED_ATTACK | Action.VAMPIRIC_BITE | HasteAction.HASTE_VAMPIRIC_BITE:# | Action.MENACING_MELEE_ATTACK | Action.MENACING_RANGED_ATTACK:
+                 HasteAction.HASTE_RANGED_ATTACK | Action.VAMPIRIC_BITE | HasteAction.HASTE_VAMPIRIC_BITE:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
-                try:
-                    res &= combatant.ammo[action[1].name].has_resource()
-                except AttributeError:
-                    print("FIXME")
+                res &= combatant.ammo[action[1].name].has_resource()
+                return res
+            case Action.MENACING_MELEE_ATTACK | Action.MENACING_RANGED_ATTACK:
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
+                res &= combatant.ammo[action[1].name].has_resource()
+                res &= combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource()
                 return res
             case Action.GRAPPLE_ATTACK | HasteAction.HASTE_GRAPPLE_ATTACK:  # No ammo for this type
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
@@ -633,6 +654,8 @@ def check_feasibility_light(combatant, action):
                 return combatant.has_reaction and action[1].resource.has_resource(level=1)
             case Reaction.UNCANNY_DODGE:
                 return combatant.has_reaction
+            case Reaction.RIPOSTE:  # TODO Does it need to be here?
+                return combatant.has_reaction and combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource()
             case _:
                 logger.error("Unknown reaction")
         return combatant.has_reaction

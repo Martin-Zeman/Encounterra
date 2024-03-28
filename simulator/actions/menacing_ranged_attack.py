@@ -13,7 +13,8 @@ from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import Visibility, SavingThrow, get_superiority_dice
-from ..conditions import Conditions, is_affected_by_any, get_swallower, apply_condition, Condition, remove_condition
+from ..conditions import Conditions, is_affected_by_any, get_swallower, apply_condition, Condition, remove_condition, \
+    get_source_of_frightened
 from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import mean_dmg, calc_p_hit, get_saving_throw_fail_prob, calculate_threat_out_delta
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ThreatModifierType
@@ -66,6 +67,9 @@ class MenacingRangedAttack(RangedAttack, LimitedDurationEffect):
     def deactivate(self):
         logger.info(f"{self.target} is no longer frightened")
         remove_condition(self.target, Conditions.FRIGHTENED, self.factory.combatant)
+
+    def is_affecting(self, combatant):
+        return get_source_of_frightened(self.target) is self.factory.combatant
 
     def deactivate_for_combatant(self, combatant):
         assert False

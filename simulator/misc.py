@@ -326,7 +326,10 @@ def parse_dmg_dice(dice_string):
             m = p.match(seg)
             res.append((sign * int(m.group(1)), int(m.group(2))))
         except AttributeError:
-            sign = SIGN[seg]
+            try:
+                sign = SIGN[seg]
+            except KeyError:
+                print("FIXME")
     return res
 
 

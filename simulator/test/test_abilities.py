@@ -1064,4 +1064,33 @@ def test_faerie_fire(battle_map, teams, effect_tracker, test_druid_lvl_1, test_f
 
 
 def test_menacing_attack_shares_ammo(battle_map, teams, effect_tracker, test_druid_lvl_1, test_battle_master_fighter_lvl_3):
-    assert False # TODO
+    test_druid_lvl_1.curr_hp = 100  # Making sure they survive
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_druid_lvl_1, test_battle_master_fighter_lvl_3]
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_druid_lvl_1, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([7, 5]))
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    assert id(test_battle_master_fighter_lvl_3.ammo['Handaxe']) == id(test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'])
+    assert id(test_battle_master_fighter_lvl_3.ammo['Greatsword']) == id(test_battle_master_fighter_lvl_3.ammo['Menacing Greatsword'])
+    ha = test_battle_master_fighter_lvl_3.handaxe[1].create(test_druid_lvl_1)
+
+    assert test_battle_master_fighter_lvl_3.ammo['Handaxe'].get_resource() == 2
+    assert test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'].get_resource() == 2
+    action_resolver.resolve_action(ha, test_battle_master_fighter_lvl_3)
+    assert test_battle_master_fighter_lvl_3.ammo['Handaxe'].get_resource() == 1
+    assert test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'].get_resource() == 1
+
+    # Find the Menacing Handaxe factory
+    mha_factory = None
+    for af in test_battle_master_fighter_lvl_3.action_factories:
+        if str(af[1]) == "Menacing Handaxe AttackFactory":
+            mha_factory = af[1]
+            break
+    assert mha_factory is not None
+    test_battle_master_fighter_lvl_3.new_turn()
+    mha = mha_factory.create(test_druid_lvl_1)
+    action_resolver.resolve_action(mha, test_battle_master_fighter_lvl_3)
+    assert test_battle_master_fighter_lvl_3.ammo['Handaxe'].get_resource() == 0
+    assert test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'].get_resource() == 0
