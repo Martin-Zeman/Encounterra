@@ -8,7 +8,7 @@ import pickle
 
 from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver
-from ..actions.action_types import BonusAction, Action, Passive
+from ..actions.action_types import BonusAction, Action, Passive, FreeAction
 from ..actions.movement import MovementIncrement
 from ..battle_map import Terrain, Map
 from ..combatants.giant_toad import GiantToad
@@ -28,7 +28,8 @@ from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
-    test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner
+    test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_fighter_lvl_2, \
+    test_battle_master_fighter_lvl_3
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
@@ -1308,6 +1309,47 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
     except Exception as e:
         assert False, f"Raised an exception {e}"
     assert any([str(a).startswith("Pounce") for a in actoids])
+
+
+def test_error_case_30(battle_map, teams, effect_tracker, test_battle_master_fighter_lvl_3, test_fighter_lvl_2):
+    """
+    Battlemaster fighter keeps selecting menacing attacks even when they're not feasible
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_battle_master_fighter_lvl_3, test_fighter_lvl_2]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.RED)
+    teams.add_combatant_to_team(test_fighter_lvl_2, Teams.Color.BLUE)
+
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([14, 10]))
+    battle_map.set_combatant_coordinates(test_fighter_lvl_2, np.array([2, 10]))
+
+    test_battle_master_fighter_lvl_3.curr_hp = 17
+    test_battle_master_fighter_lvl_3.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
+    test_battle_master_fighter_lvl_3.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
+    test_battle_master_fighter_lvl_3.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
+    test_battle_master_fighter_lvl_3.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
+    test_battle_master_fighter_lvl_3.resources[FreeAction.ACTION_SURGE].use_resource()
+    test_battle_master_fighter_lvl_3.ammo["Menacing Handaxe"].use_resource()
+    test_fighter_lvl_2.ammo["Handaxe"].use_resource()
+    test_fighter_lvl_2.ammo["Handaxe"].use_resource()
+
+
+    battle_map.build_adjacency_matrix()
+
+    actoids = []
+    try:
+        actoids.append(get_action(test_battle_master_fighter_lvl_3))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_3)
+        actoids.append(get_action(test_battle_master_fighter_lvl_3))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_3)
+        actoids.append(get_action(test_battle_master_fighter_lvl_3))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_3)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+    assert not any(["Menacing Handaxe" in str(a) for a in actoids])
 
 
 def unify_combatants(session, battle_map):
