@@ -263,6 +263,8 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Riposte")
                     self.display_abilities.append("Precision Attack")
                     self.display_abilities.append("Menacing Attack")
+                case Passive.DRACONIC_RESILIENCE:
+                    self.display_abilities.append("Draconic Resilience")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)

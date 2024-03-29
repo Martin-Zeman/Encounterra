@@ -1,10 +1,13 @@
 from .combatants.acolyte import Acolyte
 from .combatants.assassin import Assassin
 from .combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
+from .combatants.assassin_rogue_4lvl import AssassinRogue4Lvl
 from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from .combatants.bandit import Bandit
 from .combatants.bandit_captain import BanditCaptain
 from .combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
+from .combatants.battlemaster_fighter_4lvl import BattlemasterFighter4Lvl
+from .combatants.battlemaster_fighter_5lvl import BattlemasterFighter5Lvl
 from .combatants.berserker import Berserker
 from .combatants.brown_bear import BrownBear
 from .combatants.bugbear import Bugbear
@@ -14,6 +17,7 @@ from .combatants.cultist import Cultist
 from .combatants.cultist_fanatic import CultistFanatic
 from .combatants.dire_wolf import DireWolf
 from .combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
+from .combatants.draconic_sorcerer_4lvl import DraconicSorcerer4Lvl
 from .combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
 from .combatants.dragonclaw_cultist import DragonclawCultist
 from .combatants.druid_1lvl import Druid1Lvl
@@ -25,6 +29,7 @@ from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
 from .combatants.moon_druid_3lvl import MoonDruid3Lvl
+from .combatants.moon_druid_4lvl import MoonDruid4Lvl
 from .combatants.moon_druid_5lvl import MoonDruid5Lvl
 from .combatants.needle_blight import NeedleBlight
 from .combatants.night_hag import NightHag
@@ -33,6 +38,7 @@ from .combatants.quetzalcoatlus import Quetzalcoatlus
 from .combatants.saber_toothed_tiger import SaberToothedTiger
 from .combatants.stone_giant import StoneGiant
 from .combatants.totem_barbarian_3lvl import TotemBarbarian3Lvl
+from .combatants.totem_barbarian_4lvl import TotemBarbarian4Lvl
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
@@ -112,6 +118,8 @@ class Session:
                 self.combatants.append(Assassin(curr_count))
             case AssassinRogue3Lvl.id:
                 self.combatants.append(AssassinRogue3Lvl(curr_count))
+            case AssassinRogue4Lvl.id:
+                self.combatants.append(AssassinRogue4Lvl(curr_count))
             case AssassinRogue5Lvl.id:
                 self.combatants.append(AssassinRogue5Lvl(curr_count))
             case Bandit.id:
@@ -120,6 +128,10 @@ class Session:
                 self.combatants.append(BanditCaptain(curr_count))
             case BattlemasterFighter3Lvl.id:
                 self.combatants.append(BattlemasterFighter3Lvl(curr_count))
+            case BattlemasterFighter4Lvl.id:
+                self.combatants.append(BattlemasterFighter4Lvl(curr_count))
+            case BattlemasterFighter5Lvl.id:
+                self.combatants.append(BattlemasterFighter5Lvl(curr_count))
             case Berserker.id:
                 self.combatants.append(Berserker(curr_count))
             case BrownBear.id:
@@ -138,6 +150,8 @@ class Session:
                 self.combatants.append(DireWolf(curr_count))
             case DraconicSorcerer3Lvl.id:
                 self.combatants.append(DraconicSorcerer3Lvl(curr_count))
+            case DraconicSorcerer4Lvl.id:
+                self.combatants.append(DraconicSorcerer4Lvl(curr_count))
             case DraconicSorcerer5Lvl.id:
                 self.combatants.append(DraconicSorcerer5Lvl(curr_count))
             case DragonclawCultist.id:
@@ -160,6 +174,8 @@ class Session:
                 self.combatants.append(Goblin(curr_count))
             case MoonDruid3Lvl.id:
                 self.combatants.append(MoonDruid3Lvl(curr_count))
+            case MoonDruid4Lvl.id:
+                self.combatants.append(MoonDruid4Lvl(curr_count))
             case MoonDruid5Lvl.id:
                 self.combatants.append(MoonDruid5Lvl(curr_count))
             case NeedleBlight.id:
@@ -176,6 +192,8 @@ class Session:
                 self.combatants.append(StoneGiant(curr_count))
             case TotemBarbarian3Lvl.id:
                 self.combatants.append(TotemBarbarian3Lvl(curr_count))
+            case TotemBarbarian4Lvl.id:
+                self.combatants.append(TotemBarbarian4Lvl(curr_count))
             case TotemBarbarian5Lvl.id:
                 self.combatants.append(TotemBarbarian5Lvl(curr_count))
             case TwigBlight.id:

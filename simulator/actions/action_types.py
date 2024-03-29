@@ -149,6 +149,7 @@ class Passive(Enum):
     CHARM_IMMUNITY = auto()
     GREAT_WEAPON_FIGHTING = auto()
     BATTLE_MASTER_MANEUVERS = auto()
+    DRACONIC_RESILIENCE = auto()
 
 
 class MetaAction(Enum):

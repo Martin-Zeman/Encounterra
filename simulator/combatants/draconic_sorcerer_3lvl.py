@@ -18,12 +18,11 @@ class DraconicSorcerer3Lvl(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=23, ac=15, init_bonus=2, speed=30, spell_to_hit=5, resistances=set(), dc=13)
-        self.staff = self.add_ability(Action.MELEE_ATTACK, name="Staff of Defence", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,
-                         dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Staff of Defence", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,
-                         dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.firebolt = self.add_ability(Action.FIREBOLT)
         self.danger_zone_attack = self.firebolt
+        self.add_ability(Passive.DRACONIC_RESILIENCE)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.SCORCHING_RAY)
@@ -39,13 +38,13 @@ class DraconicSorcerer3Lvl(Combatant):
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = 5
-        self.athletics = 1
+        self.athletics = -1
         self.acrobatics = 2
         self.passive_perception = 11
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_transition(str(self.staff[1]), '0', 'nop')
+        self.attack_fsm.add_transition(str(self.quarterstaff[1]), '0', 'nop')
 
     def prompt_aoo(self, moving_combatant):
         return None  # Saving reaction for Shield

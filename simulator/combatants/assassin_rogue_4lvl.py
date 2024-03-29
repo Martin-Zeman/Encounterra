@@ -10,35 +10,32 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class AssassinRogue5Lvl(Combatant):
+class AssassinRogue4Lvl(Combatant):
 
-    name = "Assassin Rogue 5th LVL"
+    name = "Assassin Rogue 4th LVL"
     cls = Class.ROGUE.ASSASSIN
-    level = 5
+    level = 4
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=33, ac=16, init_bonus=4, speed=30, spell_to_hit=0, resistances=set(), dc=15)
-        self.rapier = self.add_ability(Action.MELEE_ATTACK, name="Rapier", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4,
-                                       dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True)
-        self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=7, dmg_dice="1d6", dmg_bonus=4,
-                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER))
-        self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1)
-        self.uncanny_dodge = self.add_ability(Reaction.UNCANNY_DODGE)
+        super().__init__(num_or_name, hp=27, ac=16, init_bonus=4, speed=30, spell_to_hit=0, resistances=set(), dc=14)
+        self.rapier = self.add_ability(Action.MELEE_ATTACK, name="Rapier", combatant=self, to_hit=6, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True)
+        self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER))
+        self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=6, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1)
         self.add_ability(Passive.CUNNING_ACTION)
         self.add_ability(Passive.SNEAK_ATTACK)
         self.add_ability(Passive.ASSASSINATE)
         self.danger_zone_attack = self.shortbow
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = -1
-        self.saving_throws[SavingThrow.DEX] = 7
+        self.saving_throws[SavingThrow.DEX] = 6
         self.saving_throws[SavingThrow.CON] = 1
-        self.saving_throws[SavingThrow.INT] = 5
+        self.saving_throws[SavingThrow.INT] = 4
         self.saving_throws[SavingThrow.WIS] = 1
         self.saving_throws[SavingThrow.CHA] = 1
         self.athletics = -1
-        self.acrobatics = 7
-        self.stealth = 10
+        self.acrobatics = 6
+        self.stealth = 8
         self.passive_perception = 11
 
     def build_attack_fms(self):
@@ -81,8 +78,3 @@ class AssassinRogue5Lvl(Combatant):
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_state_machine'])
         self.ammo = resources['ammo']
-
-    def prompt_after_hit_reaction(self, attacker, attack, attack_roll):
-        if self.has_reaction:
-            return self.uncanny_dodge[1].create(attack)
-        return None

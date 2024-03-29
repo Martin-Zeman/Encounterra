@@ -9,31 +9,31 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class TotemBarbarian3Lvl(Combatant):
+class TotemBarbarian4Lvl(Combatant):
 
-    name = "Totem Barbarian 3rd LVL"
+    name = "Totem Barbarian 4th LVL"
     cls = Class.BARBARIAN.PATH_OF_THE_TOTEM_WARRIOR
-    level = 3
+    level = 4
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=35, ac=14, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=13)
-        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
-        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, uses_dex=False)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
+        super().__init__(num_or_name, hp=45, ac=14, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=13)
+        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=6, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
+        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, uses_dex=False)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=6, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         rage_uses = Uses(RageFactory.get_rage_uses(self.level), ResourceRefreshType.LONG_REST)
         self.resources[BonusAction.TOTEM_RAGE] = rage_uses
         self.add_ability(BonusAction.TOTEM_RAGE, resource=rage_uses)
         self.add_ability(Passive.DANGER_SENSE)
-        self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
+        self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=6, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.build_attack_fms()
-        self.saving_throws[SavingThrow.STR] = 5
+        self.saving_throws[SavingThrow.STR] = 6
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 5
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 0
         self.saving_throws[SavingThrow.CHA] = 1
-        self.athletics = 5
+        self.athletics = 6
         self.acrobatics = 1
         self.passive_perception = 10
 

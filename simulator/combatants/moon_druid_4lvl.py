@@ -10,15 +10,15 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class MoonDruid3Lvl(Combatant):
+class MoonDruid4Lvl(Combatant):
 
-    name = "Moon Druid 3rd LVL"
+    name = "Moon Druid 4th LVL"
     cls = Class.DRUID.CIRCLE_OF_MOON
-    level = 3
+    level = 4
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=27, ac=13, init_bonus=1, speed=35, spell_to_hit=5, resistances=set(), dc=13)
+        super().__init__(num_or_name, hp=35, ac=13, init_bonus=1, speed=35, spell_to_hit=6, resistances=set(), dc=14)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
@@ -34,11 +34,11 @@ class MoonDruid3Lvl(Combatant):
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 3
         self.saving_throws[SavingThrow.INT] = 4
-        self.saving_throws[SavingThrow.WIS] = 5
+        self.saving_throws[SavingThrow.WIS] = 6
         self.saving_throws[SavingThrow.CHA] = 1
         self.athletics = 1
         self.acrobatics = 1
-        self.passive_perception = 15
+        self.passive_perception = 16
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

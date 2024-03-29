@@ -1,7 +1,6 @@
 import copy
 
 from ..actions.action_types import Action, BonusAction, Reaction, Passive, MetaAction
-from ..resources import ResourceRefreshType, Uses
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, get_factory_of_type, SavingThrow, Class, SpellcastingResourceType
@@ -10,37 +9,35 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class DraconicSorcerer5Lvl(Combatant):
+class DraconicSorcerer4Lvl(Combatant):
 
-    name = "Draconic Sorcerer 5th LVL"
+    name = "Draconic Sorcerer 4th LVL"
     cls = Class.SORCERER.DRACONIC_BLOODLINE
-    level = 5
+    level = 4
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=37, ac=15, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
-        self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Passive.DRACONIC_RESILIENCE)
-        self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
-        self.add_ability(Action.FIREBALL)
+        super().__init__(num_or_name, hp=30, ac=15, init_bonus=2, speed=30, spell_to_hit=6, resistances=set(), dc=14)
+        self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.firebolt = self.add_ability(Action.FIREBOLT)
         self.danger_zone_attack = self.firebolt
-        self.add_ability(Action.HASTE)
+        self.add_ability(Passive.DRACONIC_RESILIENCE)
+        self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.SCORCHING_RAY)
         self.add_ability(Reaction.SHIELD)
-        self.add_ability(Passive.METAMAGIC)
+        self.add_ability(Passive.METAMAGIC, sorcery_points=self.level)
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.add_ability(Action.HOLD_PERSON)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2
-        self.saving_throws[SavingThrow.CON] = 5
+        self.saving_throws[SavingThrow.CON] = 4
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 1
-        self.saving_throws[SavingThrow.CHA] = 7
+        self.saving_throws[SavingThrow.CHA] = 6
         self.athletics = -1
         self.acrobatics = 2
         self.passive_perception = 11

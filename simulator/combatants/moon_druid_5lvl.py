@@ -20,7 +20,7 @@ class MoonDruid5Lvl(Combatant):
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=42, ac=15, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
+        super().__init__(num_or_name, hp=43, ac=13, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
         self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
@@ -33,10 +33,10 @@ class MoonDruid5Lvl(Combatant):
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)
         self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
         self.build_attack_fms()
-        self.saving_throws[SavingThrow.STR] = -1
+        self.saving_throws[SavingThrow.STR] = 0
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 3
-        self.saving_throws[SavingThrow.INT] = 4
+        self.saving_throws[SavingThrow.INT] = 5
         self.saving_throws[SavingThrow.WIS] = 7
         self.saving_throws[SavingThrow.CHA] = 1
         self.athletics = 2
