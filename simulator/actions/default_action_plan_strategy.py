@@ -44,10 +44,10 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
             proto_dag, transition_name_to_action = generate_proto_dag(combatant)
             dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
             if dag is None:
-                return None, 0
+                return None, [0, 0]
             best_sequence, transition_name_to_ms_path, max_threat = find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier)
             if best_sequence is None:
-                return None, 0
+                return None, [0, 0]
         return extract_movement(self.combatant, distances, shortest_paths, best_sequence), max_threat
 
     def calculate_action_plan(self, distances, shortest_paths):
