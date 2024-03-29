@@ -1,7 +1,6 @@
 import copy
 
 from ..actions.action_types import Action, Reaction, BonusAction, Passive, FreeAction
-from ..actions.actoid import FactoryFlags
 from ..actions.melee_attack import MeleeAttackFactory
 from ..battle_map import Map
 from ..resources import Uses, ResourceRefreshType
@@ -24,7 +23,7 @@ class BattlemasterFighter3Lvl(Combatant):
         super().__init__(num_or_name, hp=30, ac=16, init_bonus=0, spell_to_hit=0, speed=30, resistances=set(), dc=13)
         self.greatsword = self.add_ability(Action.MELEE_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)
         self.handaxe = self.add_ability(Action.RANGED_ATTACK, name="Handaxe", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=12, crit_range=1, uses_dex=False, ammo=Uses(2, ResourceRefreshType.NEVER))
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice="2d6", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)
         self.add_ability(BonusAction.SECOND_WIND)
         self.add_ability(FreeAction.ACTION_SURGE)
         self.add_ability(Passive.GREAT_WEAPON_FIGHTING)
@@ -80,7 +79,7 @@ class BattlemasterFighter3Lvl(Combatant):
     def prompt_after_miss_reaction(self, attacker):
         if self.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource() and Map.get().get_hop_distance_combatants(self, attacker) <= self.aoo_factory[1].range:
             aoo_kwargs = self.aoo_factory[1].get_kwargs()
-            aoo_kwargs["extra_dmg"].append((get_superiority_dice(self.level), self.aoo_factory[1].dmg_type))
+            aoo_kwargs["dmg_dice"] += "+" + get_superiority_dice(self.level)
             aoo_kwargs["name"] = "Riposte " + aoo_kwargs["name"]
             aoo_kwargs["action_type"] = Reaction.RIPOSTE
             riposte = MeleeAttackFactory(**aoo_kwargs)

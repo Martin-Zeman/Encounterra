@@ -356,8 +356,6 @@ class ActionResolver:
         :param attacker:
         :return: True if it hits, false if it misses or is not attack
         """
-        # TODO Conditions
-        assert target
         battle_map = Map.get()
         if FactoryFlags.IS_MELEE in attack.factory.flags:
             types = {self.has_advantage_melee(attack, attacker, target), self.has_disadvantage_melee(attack, attacker, target)}

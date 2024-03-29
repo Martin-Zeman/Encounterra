@@ -1,23 +1,17 @@
 import math
-from functools import cache
 
-from cachetools import cached
-from cachetools.keys import hashkey
-
-from .action_types import HasteAction, Action, BonusAction
+from .action_types import  Action, BonusAction
 from .ranged_attack import RangedAttack, RangedAttackFactory
 from ..abilities.on_hit_saving_throw_effect import OnHitSavingThrowEffect
 from ..actions.actoid import FactoryFlags
-from ..actions.attack import AttackFactory, Attack
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
-from ..misc import Visibility, SavingThrow, get_superiority_dice
-from ..conditions import Conditions, is_affected_by_any, get_swallower, apply_condition, Condition, remove_condition, \
+from ..misc import SavingThrow, get_superiority_dice
+from ..conditions import Conditions, apply_condition, Condition, remove_condition, \
     get_source_of_frightened
 from ..resources import Uses, ResourceRefreshType
-from ..threat_utils import mean_dmg, calc_p_hit, get_saving_throw_fail_prob, calculate_threat_out_delta
-from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ThreatModifierType
+from ..threat_utils import get_saving_throw_fail_prob, calculate_threat_out_delta
+from ..utils.roll_types import RollType, ThreatModifierType
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -27,7 +21,7 @@ class MenacingRangedAttackFactory(RangedAttackFactory):
 
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=True, to_hit_bonus_die=None, **kwargs):
         superiority_dice = get_superiority_dice(combatant.level)
-        extra_dmg.append((superiority_dice, dmg_type))
+        dmg_dice += "+" + superiority_dice
         name = "Menacing " + name
         on_hit.append(OnHitSavingThrowEffect(SavingThrow.WIS, combatant.dc, "Frightened by Menacing Attack"))
         if isinstance(action_type, Action):

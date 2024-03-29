@@ -24,7 +24,7 @@ class MenacingMeleeAttackFactory(MeleeAttackFactory):
 
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
         superiority_dice = get_superiority_dice(combatant.level)
-        extra_dmg.append((superiority_dice, dmg_type))
+        dmg_dice += "+" + superiority_dice
         name = "Menacing " + name
         on_hit.append(OnHitSavingThrowEffect(SavingThrow.WIS, combatant.dc, "Frightened by Menacing Attack"))
         if isinstance(action_type, Action):

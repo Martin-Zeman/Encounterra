@@ -19,9 +19,6 @@ from .actions.menacing_melee_attack import MenacingMeleeAttackFactory
 from .actions.menacing_ranged_attack import MenacingRangedAttackFactory
 from .actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
 from .actions.nop import NopFactory
-from .actions.precision_melee_attack import PrecisionMeleeAttackFactory
-from .actions.precision_ranged_attack import PrecisionRangedAttackFactory
-from .actions.ranged_attack import RangedAttackFactory
 from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
