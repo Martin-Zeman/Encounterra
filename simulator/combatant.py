@@ -12,9 +12,8 @@ from .abilities.rage import RageFactory
 from .action_resolver import check_concentration
 from .actions.action_surge_plan_strategy import ActionSurgePlanStrategy
 from .actions.actoid import FactoryFlags
-from .actions.attack import Attack, AttackFactory
+from .actions.attack import AttackFactory
 from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
-from .actions.melee_attack import MeleeAttackFactory
 from .actions.menacing_melee_attack import MenacingMeleeAttackFactory
 from .actions.menacing_ranged_attack import MenacingRangedAttackFactory
 from .actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy

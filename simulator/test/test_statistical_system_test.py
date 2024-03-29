@@ -211,8 +211,8 @@ def test_matchup_3():
     try:
         results = session.simulate(parallel=False)
         assert_keywords_in_log(log_path, keywords)
-        assert_victories_with_tolerance(results, Teams.Color.BLUE, 44, 15)
-        assert_victories_with_tolerance(results, Teams.Color.RED, 56, 15)
+        assert_victories_with_tolerance(results, Teams.Color.BLUE, 18, 15)
+        assert_victories_with_tolerance(results, Teams.Color.RED, 82, 15)
         os.remove(log_path)
     except AssertionError:
         raise

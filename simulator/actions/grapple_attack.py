@@ -114,7 +114,9 @@ class GrappleAttack(Actoid, AttackThreatModifier):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
-        return self.factory.calculate_threat_to_target(attack.target, attack=attack)
+        if hasattr(attack, 'target'):  # Could be Nop
+            return self.factory.calculate_threat_to_target(attack.target, attack=attack)
+        return 0
 
     def calculate_threat(self, **kwargs):
         return 0

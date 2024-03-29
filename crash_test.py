@@ -7,7 +7,7 @@ from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
 from simulator.test.test_error_cases import unify_combatants
 
-TIMESTAMP = "1708878782"
+TIMESTAMP = "1711705287"
 
 
 def test_crash():
