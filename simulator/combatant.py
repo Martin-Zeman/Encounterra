@@ -239,25 +239,25 @@ class Combatant(ProtoCombatant):
                     for af in self.action_factories:
                         if isinstance(af[1], AttackFactory):
                             af_kwargs = af[1].get_kwargs()
-                            menacing_attack = MenacingMeleeAttackFactory(**af_kwargs) if FactoryFlags.IS_MELEE in af[1].flags else MenacingRangedAttackFactory(**af_kwargs)
-                            new_action_factories.append((af[0], menacing_attack))
+                            if FactoryFlags.IS_MELEE in af[1].flags:
+                                menacing_attack = MenacingMeleeAttackFactory(**af_kwargs)
+                                new_action_factories.append((Action.MENACING_MELEE_ATTACK, menacing_attack))
+                            else:
+                                menacing_attack = MenacingRangedAttackFactory(**af_kwargs)
+                                new_action_factories.append((Action.MENACING_RANGED_ATTACK, menacing_attack))
                             self.ammo[menacing_attack.name] = self.ammo[af[1].name]
-
-                            # af_kwargs = af[1].get_kwargs()
-                            # precision_attack = PrecisionMeleeAttackFactory(**af_kwargs) if FactoryFlags.IS_MELEE in af[1].flags else PrecisionRangedAttackFactory(**af_kwargs)
-                            # new_action_factories.append((af[0], precision_attack))
                     self.action_factories.extend(new_action_factories)
                     new_bonus_action_factories = []
                     for baf in self.bonus_action_factories:
                         if isinstance(baf[1], AttackFactory):
                             baf_kwargs = baf[1].get_kwargs()
-                            menacing_attack = MenacingMeleeAttackFactory(**baf_kwargs) if FactoryFlags.IS_MELEE in baf[1].flags else MenacingRangedAttackFactory(**baf_kwargs)
-                            new_bonus_action_factories.append((baf[0], menacing_attack))
+                            if FactoryFlags.IS_MELEE in baf[1].flags:
+                                menacing_attack = MenacingMeleeAttackFactory(**baf_kwargs)
+                                new_bonus_action_factories.append((BonusAction.BONUS_MENACING_MELEE_ATTACK, menacing_attack))
+                            else:
+                                menacing_attack = MenacingRangedAttackFactory(**baf_kwargs)
+                                new_bonus_action_factories.append((BonusAction.BONUS_MENACING_RANGED_ATTACK, menacing_attack))
                             self.ammo[menacing_attack.name] = self.ammo[baf[1].name]
-
-                            # baf_kwargs = baf[1].get_kwargs()
-                            # precision_attack = PrecisionMeleeAttackFactory(**baf_kwargs) if FactoryFlags.IS_MELEE in baf[1].flags else PrecisionRangedAttackFactory(**baf_kwargs)
-                            # new_bonus_action_factories.append((baf[0], precision_attack))
                     self.bonus_action_factories.extend(new_bonus_action_factories)
                     self.display_abilities.append("Riposte")
                     self.display_abilities.append("Precision Attack")

@@ -1336,7 +1336,6 @@ def test_error_case_30(battle_map, teams, effect_tracker, test_battle_master_fig
     test_fighter_lvl_2.ammo["Handaxe"].use_resource()
     test_fighter_lvl_2.ammo["Handaxe"].use_resource()
 
-
     battle_map.build_adjacency_matrix()
 
     actoids = []

@@ -445,8 +445,6 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
         del movement_transition_to_coord_and_type[f"ms_({current_coords[0]}, {current_coords[1]})"]  # Removing Misty Step to current coordinate
     except KeyError:
         pass
-    except TypeError:
-        print("FIXME")
 
     def DFS(dag, current_state, current_sequence, coord):
         if current_state == 'nop':
