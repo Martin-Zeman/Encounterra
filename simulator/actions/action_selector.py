@@ -7,6 +7,7 @@ import sys
 import numpy as np
 
 from .action_dag import replace_combatant_with_wildshape
+from .actoid import ActoidFlags
 from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
 from ..actions.action_types import Movement, MovementThreatType, BonusAction, Action
 from ..actions.break_grapple import BreakGrappleFactory
@@ -506,7 +507,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                     try:  # Is it a transition which represents a (bonus) action?
                         action = transition_name_to_action[transition]
                         with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, coord) as did_transform:
-                            if t_idx > 1:
+                            if t_idx > 1 and feasibility_multiplier == 1 and ActoidFlags.LOCATION_INDEPENDENT not in action.actoid_flags:
                                 # try:
                                 eligible_coords = transition_to_eligible_coords[transition]
                                 # except KeyError: This should no longer be necessary
