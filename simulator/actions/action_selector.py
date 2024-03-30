@@ -327,10 +327,12 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
         # except AttributeError:
         #     continue  # Happens for wildshaped actions, will be dealt with separately since this is a chicken an egg problem. We need to be put to the wildshape's eligible coord first.
     transition_to_eligible_coords = {tn: coords for tn, coords in transition_to_eligible_coords.items() if coords}
+    # Add at least something for the LOCATION_INDEPENDENT so that they don't get filtered out completely
+    transition_to_eligible_coords.update({tn: [] for tn in transition_name_to_action if ActoidFlags.LOCATION_INDEPENDENT in transition_name_to_action[tn].actoid_flags})
 
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
         try:
-            if not transition_to_eligible_coords[transition_name]:
+            if not transition_to_eligible_coords[transition_name] and ActoidFlags.LOCATION_INDEPENDENT not in transition_name_to_action[transition_name].actoid_flags:
                 dag.remove_transition(transition_name, '0')
         except KeyError:
             dag.remove_transition(transition_name, '0')  # Happens where the combatant's out of movement
@@ -339,7 +341,7 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
 
     movement_transition_to_coord_and_type = dict()
     for transition_name, coords in transition_to_eligible_coords.items():
-        if transition_name.startswith("Misty Step"):
+        if transition_name.startswith("Misty Step") or not coords:  # the coords part is there because of LOCATION_INDEPENDENT
             continue
         transitions = [t[0] for t in proto_dag.events[transition_name].transitions.values() if t[0].source == "0"]  # Iterate over the original to avoid deleting from the one being iterated over
         if not transitions:
