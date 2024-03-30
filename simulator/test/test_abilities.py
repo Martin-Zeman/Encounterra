@@ -36,10 +36,10 @@ def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, tes
     CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
-    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([0, 0]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_moon_druid, test_bugbear]
