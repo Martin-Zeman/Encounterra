@@ -2,14 +2,13 @@ import numpy as np
 
 from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
-from ..effects.spheric_aoe import SphericAoe
 from ..effects.square_aoe import SquareAoe
 from ..spells.spell import SpellStats
 from ..actions.action_types import BonusAction
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import  DirectThreat
 from ..factory_interfaces import ThreatModifierFactory
-from ..misc import SavingThrow
+from ..misc import SavingThrow, Size
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 import logging
 from ..threat_utils import mean_dmg_dc_attack
@@ -108,7 +107,7 @@ class Thunderwave(Actoid, DirectThreat, SquareAoe):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return Map.get().get_free_coords_in_cartesian_range(Coords(self.coord),  # not actually combatant coords
+            return Map.get().get_free_coords_at_hop_range(Coords(self.coord, Size.HUGE),  # not actually combatant coords
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,
                                                                  rng=ThunderwaveFactory.range, combatant=self.factory.combatant)
