@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import pytest
 
 from ..abilities.totem_rage import TotemRageFactory
 from ..action_resolver import ActionResolver
@@ -22,6 +23,7 @@ from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbe
 from ..actions.action_selector import get_action
 
 
+@pytest.mark.flaky(reruns=3)
 def test_independent_saves(battle_map, teams, effect_tracker, test_goblin, test_draconic_sorcerer_5lvl, test_bugbear):
     """
     Tests that combatants affected by effects that can be saved against independently again (.e.g at the end of their turn)

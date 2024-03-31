@@ -505,6 +505,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                 feasibility_multiplier = 1
                 # if sequences[idx][0] == 'm_(0, 12)' and sequences[idx][1] == 'Bonus NOP of Battlemaster Fighter 3rd LVL (1)_1' and sequences[idx][2] == 'Menacing Greatsword on Fighter 1st LVL (1)_2':
                 #     print("FIXME")
+                # if sequences[idx][0] == 'Disengage of Assassin Rogue 5th LVL (1)_1' and sequences[idx][1] == 'di_(3, 12)' and sequences[idx][2] == 'Cunning Dash of Assassin Rogue 5th LVL (1)_2':
+                #     print("FIXME")
                 for t_idx, transition in enumerate(sequences[idx]):
                     if transition == "dummy":
                         break
