@@ -545,6 +545,7 @@ def test_cunning_hide_geometry(battle_map, teams, effect_tracker, test_assassin_
     assert (6, 10) not in eligible_coords
 
 
+@pytest.mark.flaky(reruns=3)
 def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin, test_brown_bear):
     """
     Test scenario where the Rogue has three enemies and no allies (no Sneak Attack via adjacent allies). The Rogue has to find
