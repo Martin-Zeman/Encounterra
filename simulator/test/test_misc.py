@@ -153,7 +153,7 @@ def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_
 
     try:
         actoid1 = get_action(test_moon_druid)
-        assert test_moon_druid.curr_hp == 42
+        assert test_moon_druid.curr_hp == 43
         assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid

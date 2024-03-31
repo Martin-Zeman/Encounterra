@@ -65,6 +65,7 @@ class Shillelagh(Actoid, LimitedDurationEffect, ActionEnablerEffect, DirectThrea
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def __str__(self):
         return f"Shillelagh on {self.factory.new_attack}"

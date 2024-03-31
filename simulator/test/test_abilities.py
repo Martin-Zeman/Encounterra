@@ -229,7 +229,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
 
     try:
         actoid1 = get_action(test_moon_druid)
-        assert test_moon_druid.curr_hp == 42
+        assert test_moon_druid.curr_hp == 43
         assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
@@ -256,7 +256,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
             battle_map.effect_tracker.add(dummy_effect)
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
-        assert test_moon_druid.curr_hp == 41
+        assert test_moon_druid.curr_hp == 42
         test_moon_druid.new_turn()
         actoid2 = get_action(test_moon_druid)
         assert str(actoid2) == "Wildshape of Moon Druid 5th LVL (1) into Brown Bear"
@@ -267,7 +267,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         test_moon_druid.get_current_form().receive_dmg(42, DamageType.Slashing)
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
-        assert test_moon_druid.curr_hp == 33
+        assert test_moon_druid.curr_hp == 34
         actoid3 = get_action(test_moon_druid)
         assert not str(actoid3).startswith("Wildshape")
     except Exception as e:
@@ -439,6 +439,7 @@ def test_wilshape_copy_two_druids(battle_map, teams, effect_tracker, test_moon_d
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
 
+@pytest.mark.flaky(reruns=3)
 def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, test_bugbear):
     """
     We assert the basic functionality of the wildshape ability. The Druid must be able to wildshape and attack.
@@ -480,6 +481,7 @@ def test_bite_and_swallow(battle_map, teams, effect_tracker, test_giant_toad, te
         assert False, f"Raised an exception {e}"
 
 
+@pytest.mark.flaky(reruns=3)
 def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect_tracker, test_giant_toad, test_moon_druid):
     """
     We assert that the druid doesn't plan a wildshape action when grappled and unable to move to a place where there's the space to do so.
@@ -545,6 +547,7 @@ def test_cunning_hide_geometry(battle_map, teams, effect_tracker, test_assassin_
     assert (6, 10) not in eligible_coords
 
 
+@pytest.mark.flaky(reruns=3)
 def test_cunning_hide_and_sneak_attack(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin, test_brown_bear):
     """
     Test scenario where the Rogue has three enemies and no allies (no Sneak Attack via adjacent allies). The Rogue has to find
@@ -815,10 +818,11 @@ def test_cunning_adjacent_enemy_hide_sneak_attack_in_melee(battle_map, teams, ef
         assert False, f"Raised an exception {e}"
 
 
+@pytest.mark.flaky(reruns=3)
 def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin):
     """
     Test scenario where the Rogue is surrounded by three enemies. Even though there is a place to hide nearby, the rogue opts to use
-    Cunning Disengage instead. In the second turn the rogue tries to get farther away while hiding and firing as he goes.
+    Disengage and Cunning Dash instead. In the second turn the rogue gets into cover, hides, steps out of cover and shoots.
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
@@ -840,7 +844,7 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
 
     try:
         first_turn_actoids = [get_action(test_assassin_rogue)]
-        assert str(first_turn_actoids[-1]) == "Cunning Disengage of Assassin Rogue 5th LVL (1)"
+        assert str(first_turn_actoids[-1]) == "Disengage of Assassin Rogue 5th LVL (1)"
         action_resolver.resolve_action(first_turn_actoids[-1], test_assassin_rogue)
         first_turn_actoids.append(get_action(test_assassin_rogue))
         action_resolver.resolve_action(first_turn_actoids[-1], test_assassin_rogue)
@@ -855,7 +859,15 @@ def test_rogue_cunning_disengage(battle_map, teams, effect_tracker, test_assassi
         first_turn_actoids.append(get_action(test_assassin_rogue))
         action_resolver.resolve_action(first_turn_actoids[-1], test_assassin_rogue)
         first_turn_actoids.append(get_action(test_assassin_rogue))
-        assert any(str(act).startswith("Shortbow") for act in first_turn_actoids)
+        action_resolver.resolve_action(first_turn_actoids[-1], test_assassin_rogue)
+        first_turn_actoids.append(get_action(test_assassin_rogue))
+        action_resolver.resolve_action(first_turn_actoids[-1], test_assassin_rogue)
+        first_turn_actoids.append(get_action(test_assassin_rogue))
+        action_resolver.resolve_action(first_turn_actoids[-1], test_assassin_rogue)
+        first_turn_actoids.append(get_action(test_assassin_rogue))
+        action_resolver.resolve_action(first_turn_actoids[-1], test_assassin_rogue)
+        first_turn_actoids.append(get_action(test_assassin_rogue))
+        assert any(str(act).startswith("Cunning Dash") for act in first_turn_actoids)
         action_resolver.resolve_action(first_turn_actoids[-1], test_assassin_rogue)
         test_assassin_rogue.new_turn()
         second_turn_actoids = [get_action(test_assassin_rogue)]

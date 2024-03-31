@@ -29,7 +29,7 @@ from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbe
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
     test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_fighter_lvl_2, \
-    test_battle_master_fighter_lvl_3
+    test_battle_master_fighter_lvl_3, test_fighter_lvl_1
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
@@ -1349,6 +1349,40 @@ def test_error_case_30(battle_map, teams, effect_tracker, test_battle_master_fig
     except Exception as e:
         assert False, f"Raised an exception {e}"
     assert not any(["Menacing Handaxe" in str(a) for a in actoids])
+
+
+def test_error_case_31(battle_map, teams, effect_tracker, test_battle_master_fighter_lvl_3, test_fighter_lvl_1, test_fighter_lvl_2):
+    """
+    Trying to understand why the Battlemaster wouldn't move the first turn. This lead to the implementation of the
+    LOCATION_INDEPENDENT actoid flag.
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_battle_master_fighter_lvl_3, test_fighter_lvl_2, test_fighter_lvl_1]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.RED)
+    teams.add_combatant_to_team(test_fighter_lvl_1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_fighter_lvl_2, Teams.Color.BLUE)
+
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([0, 12]))
+    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([13, 9]))
+    battle_map.set_combatant_coordinates(test_fighter_lvl_2, np.array([2, 11]))
+
+    battle_map.build_adjacency_matrix()
+
+    actoids = []
+    try:
+        actoids.append(get_action(test_battle_master_fighter_lvl_3))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_3)
+        actoids.append(get_action(test_battle_master_fighter_lvl_3))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_3)
+        actoids.append(get_action(test_battle_master_fighter_lvl_3))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_3)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+    assert str(actoids[0]).startswith('(')
+    assert str(actoids[1]) == 'Menacing Greatsword on Fighter 2nd LVL (1)'
 
 
 def unify_combatants(session, battle_map):

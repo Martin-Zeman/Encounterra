@@ -978,6 +978,42 @@ class Map:
                     adjacent_coords.add((x, y))
         return list(adjacent_coords)
 
+
+    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
+    def get_free_coords_at_hop_range(self, coords: Coords, distances=None, inflate_to_dist=Size.MEDIUM.value, rng=1,
+                                     combatant=None):
+        """
+        Returns coordinates exactly at 'rng' distance from the nearest edge of an area occupied by a combatant, considering combatant size for pathfinding.
+        :param coords: target combatant coordinates
+        :param distances: the distances to all squares (result of Dijkstra) to recognize accessibility of coordinates
+        :param inflate_to_dist: inflate for the sake of pathfinding by larger combatants
+        :param rng: exact range of what is considered 'adjacent'
+        :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
+        :return: coordinates exactly at 'rng' distance as a set of tuples (x, y)
+        """
+        assert rng > 0
+        inflated_area = self.inflate_coords(coords, inflate_to_dist)
+        perimeter_coords = set()
+
+        # Calculate bounds of the inflated area
+        min_x = min(coord[0] for coord in inflated_area) - rng
+        max_x = max(coord[0] for coord in inflated_area) + rng
+        min_y = min(coord[1] for coord in inflated_area) - rng
+        max_y = max(coord[1] for coord in inflated_area) + rng
+
+        # Generate perimeter coordinates at exactly rng distance
+        for x in range(min_x, max_x + 1):
+            for y in range(min_y, max_y + 1):
+                # Check if (x, y) is on the perimeter of the inflated area at rng distance
+                if x == min_x or x == max_x or y == min_y or y == max_y:
+                    if 0 <= x < self.size and 0 <= y < self.size:  # Check boundaries
+                        square = self.grid[x, y]
+                        accessible = (distances[x * self.size + y] < sys.maxsize) if distances is not None else True
+                        if square.is_empty_or_self(combatant) and accessible:
+                            perimeter_coords.add((x, y))
+
+        return list(perimeter_coords)
+
     @toggled_cache(key=lambda self, coords, distances=[], inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
     def get_free_coords_in_cartesian_range(self, coords: Coords, distances=(), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
         """

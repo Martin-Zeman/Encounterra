@@ -2,7 +2,7 @@ from ..battle_map import Map
 from ..effects.effect import EffectType
 from ..misc import DamageType, get_attack_factories
 from ..conditions import Conditions, is_affected_by_any
-from ..actions.actoid import Actoid, FactoryFlags
+from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..actions.action_types import BonusAction
@@ -116,6 +116,7 @@ class Rage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def __str__(self):
         return f"Rage of {self.factory.combatant}"

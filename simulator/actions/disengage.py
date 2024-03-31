@@ -4,7 +4,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import HasteAction, BonusAction
-from ..actions.actoid import Actoid, FactoryFlags
+from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
@@ -50,6 +50,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         LimitedDurationEffect.__init__(self, combatant, turns=1)
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def get_effect_type(self):
         return EffectType.DISENGAGE

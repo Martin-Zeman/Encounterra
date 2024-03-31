@@ -121,8 +121,6 @@ def check_feasibility(combatant, action):
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource()
-                if combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource() and not res:
-                    print("FIXME")
                 return res
             case Action.MENACING_RANGED_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
