@@ -1,7 +1,7 @@
 from ..battle_map import Map
 from ..misc import get_missing_hp, percentile_roll
 from ..conditions import Conditions, is_affected_by_any
-from ..actions.actoid import Actoid, FactoryFlags
+from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..actions.action_types import BonusAction
 from ..factory_interfaces import DirectThreatFactory
 import logging
@@ -66,6 +66,7 @@ class SecondWind(Actoid, DirectThreat):
     def __init__(self, factory):
         Actoid.__init__(self)
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def __str__(self):
         return f"Second Wind of {self.factory.combatant}"

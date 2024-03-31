@@ -7,6 +7,7 @@ import sys
 import numpy as np
 
 from .action_dag import replace_combatant_with_wildshape
+from .actoid import ActoidFlags
 from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
 from ..actions.action_types import Movement, MovementThreatType, BonusAction, Action
 from ..actions.break_grapple import BreakGrappleFactory
@@ -500,23 +501,26 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
             for idx in ids:
                 delta_action = None
                 threat_acc = 0
+                first_feasibility_check_done = False
+                feasibility_multiplier = 1
+                # if sequences[idx][0] == 'm_(0, 12)' and sequences[idx][1] == 'Bonus NOP of Battlemaster Fighter 3rd LVL (1)_1' and sequences[idx][2] == 'Menacing Greatsword on Fighter 1st LVL (1)_2':
+                #     print("FIXME")
                 for t_idx, transition in enumerate(sequences[idx]):
                     if transition == "dummy":
                         break
                     try:  # Is it a transition which represents a (bonus) action?
                         action = transition_name_to_action[transition]
                         with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, coord) as did_transform:
-                            if t_idx > 1:
-                                # try:
+                            if ActoidFlags.LOCATION_INDEPENDENT not in action.actoid_flags:
                                 eligible_coords = transition_to_eligible_coords[transition]
-                                # except KeyError: This should no longer be necessary
-                                #     eligible_coords = action.get_eligible_coords(distances, shortest_paths)  # Happens for wildshaped actions
                                 if not eligible_coords:
                                     continue  # e.g. when there's no place to hide
-                                remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
-                                feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
-                            else:
-                                feasibility_multiplier = 1 if distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
+                                if not first_feasibility_check_done:
+                                    feasibility_multiplier = 1 if coord in eligible_coords and distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
+                                    first_feasibility_check_done = True
+                                else:
+                                    remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
+                                    feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
                             threat_acc += action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
                             if delta_action:
                                 threat_acc += delta_action.calculate_threat_for_attack(combatant, action)

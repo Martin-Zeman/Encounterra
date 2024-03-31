@@ -1,7 +1,7 @@
 from .action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache
 from ..conditions import Conditions, is_affected_by_any
-from ..actions.actoid import Actoid
+from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
@@ -47,6 +47,7 @@ class Nop(Actoid, DirectThreat):
     def __init__(self, factory):
         Actoid.__init__(self)
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def __str__(self):
         return f"{'Bonus ' if isinstance(self.factory.action_type, BonusAction) else ''}NOP of {self.factory.combatant}"

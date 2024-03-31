@@ -37,6 +37,7 @@ class Dash(Actoid, AttackThreatModifier):
         Actoid.__init__(self, ActoidFlags.IS_DASH)
         self.name = "Dash"
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def __str__(self):
         prefix = ""
