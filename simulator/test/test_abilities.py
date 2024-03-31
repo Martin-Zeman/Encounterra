@@ -229,7 +229,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
 
     try:
         actoid1 = get_action(test_moon_druid)
-        assert test_moon_druid.curr_hp == 42
+        assert test_moon_druid.curr_hp == 43
         assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
         action_resolver.resolve_action(actoid1, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
@@ -256,7 +256,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
             battle_map.effect_tracker.add(dummy_effect)
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
-        assert test_moon_druid.curr_hp == 41
+        assert test_moon_druid.curr_hp == 42
         test_moon_druid.new_turn()
         actoid2 = get_action(test_moon_druid)
         assert str(actoid2) == "Wildshape of Moon Druid 5th LVL (1) into Brown Bear"
@@ -267,7 +267,7 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         test_moon_druid.get_current_form().receive_dmg(42, DamageType.Slashing)
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
-        assert test_moon_druid.curr_hp == 33
+        assert test_moon_druid.curr_hp == 34
         actoid3 = get_action(test_moon_druid)
         assert not str(actoid3).startswith("Wildshape")
     except Exception as e:

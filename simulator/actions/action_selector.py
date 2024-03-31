@@ -512,15 +512,19 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                         action = transition_name_to_action[transition]
                         with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, coord) as did_transform:
                             if ActoidFlags.LOCATION_INDEPENDENT not in action.actoid_flags:
-                                eligible_coords = transition_to_eligible_coords[transition]
-                                if not eligible_coords:
-                                    continue  # e.g. when there's no place to hide
-                                if not first_feasibility_check_done:
-                                    feasibility_multiplier = 1 if coord in eligible_coords and distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
+                                if t_idx == 1:  # The first location-dependent action after movement has an eligible movement predecessor guaranteed
+                                    feasibility_multiplier = 1 if distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
                                     first_feasibility_check_done = True
-                                else:
-                                    remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
-                                    feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
+                                else:  # Can only be > 1 since the movement is skipped with try-except
+                                    eligible_coords = transition_to_eligible_coords[transition]
+                                    if not eligible_coords:
+                                        continue  # e.g. when there's no place to hide
+                                    if not first_feasibility_check_done:  # The case where a location-dependent action follows a location-independent action
+                                        feasibility_multiplier = 1 if coord in eligible_coords and distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
+                                        first_feasibility_check_done = True
+                                    else:  # Two location-dependent actions in succession
+                                        remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
+                                        feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
                             threat_acc += action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
                             if delta_action:
                                 threat_acc += delta_action.calculate_threat_for_attack(combatant, action)
