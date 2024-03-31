@@ -4,7 +4,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import HasteAction, BonusAction
-from ..actions.actoid import Actoid, FactoryFlags
+from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
@@ -15,6 +15,7 @@ from ..factory_interfaces import ThreatModifierFactory
 import logging
 
 logger = logging.getLogger("Encounterra")
+
 
 class DisengageFactory(ThreatModifierFactory):
 
@@ -34,6 +35,9 @@ class DisengageFactory(ThreatModifierFactory):
         return {'combatant': self.combatant, 'action_type': self.action_type}
 
     def create_all(self, previous_action_in_dag=None):
+        if is_affected_by_any(self.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \
+                or self.combatant.movement == 0:
+            return []  # Disenaging makes no sense if you can't move
         return [Disengage(self.combatant, self)]
 
     def calculate_threat_to_target(self, target, **kwargs):
@@ -50,6 +54,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         LimitedDurationEffect.__init__(self, combatant, turns=1)
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def get_effect_type(self):
         return EffectType.DISENGAGE
@@ -89,8 +94,4 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        if is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \
-                or self.factory.combatant.movement == 0:
-            return None  # Disenaging makes no sense if you can't move
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # It's a priority action, the coord is not relevant
+        return None

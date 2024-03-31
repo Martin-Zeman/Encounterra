@@ -1,7 +1,7 @@
 from .action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache
 from ..conditions import Conditions, is_affected_by_any
-from ..actions.actoid import Actoid
+from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
@@ -47,6 +47,7 @@ class Nop(Actoid, DirectThreat):
     def __init__(self, factory):
         Actoid.__init__(self)
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def __str__(self):
         return f"{'Bonus ' if isinstance(self.factory.action_type, BonusAction) else ''}NOP of {self.factory.combatant}"
@@ -63,7 +64,4 @@ class Nop(Actoid, DirectThreat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+        return None

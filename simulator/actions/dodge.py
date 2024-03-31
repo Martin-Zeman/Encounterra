@@ -4,7 +4,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
-from ..actions.actoid import Actoid, FactoryFlags
+from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
@@ -17,6 +17,7 @@ import logging
 from ..utils.roll_types import RollType, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
+
 
 class DodgeFactory(ThreatModifierFactory):
 
@@ -53,6 +54,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         CombatantEffect.__init__(self, combatant, combatants=[combatant])
         LimitedDurationEffect.__init__(self, combatant, turns=1)
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def __str__(self):
         return f"Dodge of {self.factory.combatant}"
@@ -88,6 +90,5 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # It's a priority action so the coord is not relevant
+        return None
 

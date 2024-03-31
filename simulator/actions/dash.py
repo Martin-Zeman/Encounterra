@@ -26,6 +26,8 @@ class DashFactory(Factory):
         return "DashFactory"
 
     def create_all(self, previous_action_in_dag=None):
+        if is_affected_by_any(self.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
+            return []
         return [Dash(self)]
 
     def create(self):
@@ -37,6 +39,7 @@ class Dash(Actoid, AttackThreatModifier):
         Actoid.__init__(self, ActoidFlags.IS_DASH)
         self.name = "Dash"
         self.factory = factory
+        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
 
     def __str__(self):
         prefix = ""
@@ -70,9 +73,4 @@ class Dash(Actoid, AttackThreatModifier):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        battle_map = Map.get()
-        if is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED):
-            return None
-        # if self.factory.combatant.movement > 0:
-        return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        # return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+        return None
