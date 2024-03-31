@@ -77,16 +77,12 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         ws_movement_increments = [e.increment for e in ws_action_plan if hasattr(e, "increment")]
         sum_of_ws_increments = tuple(np.sum(ws_movement_increments, axis=0)) if ws_movement_increments else (0, 0)
         ws_destination = (current_position[0] + sum_of_ws_increments[0], current_position[1] + sum_of_ws_increments[1])
-        try:
-            if ws_destination in non_wildshape_action.get_eligible_coords(distances, shortest_paths):
-                combined_plan = []
-                combined_plan.extend(ws_action_plan[:len(ws_movement_increments)])
-                combined_plan.append(non_wildshape_action)
-                combined_plan.append(get_moon_wildshape_action(ws_action_plan))
-                return combined_plan
-        except TypeError:
-            print("FIXME")
-            non_wildshape_action.get_eligible_coords(distances, shortest_paths)
+        if ws_destination in non_wildshape_action.get_eligible_coords(distances, shortest_paths):
+            combined_plan = []
+            combined_plan.extend(ws_action_plan[:len(ws_movement_increments)])
+            combined_plan.append(non_wildshape_action)
+            combined_plan.append(get_moon_wildshape_action(ws_action_plan))
+            return combined_plan
         return regular_action_plan
 
     def calculate_action_plan(self, distances, shortest_paths):
