@@ -9,39 +9,36 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class TotemBarbarian4Lvl(Combatant):
+class Barbarian1Lvl(Combatant):
 
-    name = "Totem Barbarian 4th LVL"
-    cls = Class.BARBARIAN.PATH_OF_THE_TOTEM_WARRIOR
-    level = 4
+    name = "Barbarian 1st LVL"
+    cls = Class.BARBARIAN.BEFORE_SUBCLASS
+    level = 1
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=45, ac=14, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=13)
-        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=6, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
-        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=Uses(4, ResourceRefreshType.NEVER), uses_dex=False)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=6, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
+        super().__init__(num_or_name, hp=15, ac=14, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=13)
+        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Two-handed axe", combatant=self, to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
+        self.javelin_attack = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=Uses(4, ResourceRefreshType.NEVER), uses_dex=False)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Two-handed axe", combatant=self, to_hit=5, dmg_dice="1d12", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
         rage_uses = Uses(RageFactory.get_rage_uses(self.level), ResourceRefreshType.LONG_REST)
-        self.resources[BonusAction.TOTEM_RAGE] = rage_uses
-        self.add_ability(BonusAction.TOTEM_RAGE, resource=rage_uses)
-        self.add_ability(Passive.DANGER_SENSE)
+        self.resources[BonusAction.RAGE] = rage_uses
+        self.add_ability(BonusAction.RAGE, resource=rage_uses)
         self.add_ability(Passive.UNARMORED_DEFENSE)
-        self.axe_recklessly = self.add_ability(Action.RECKLESS_ATTACK, name="Two-handed axe recklessly", combatant=self, to_hit=6, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.build_attack_fms()
-        self.saving_throws[SavingThrow.STR] = 6
+        self.saving_throws[SavingThrow.STR] = 5
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 5
         self.saving_throws[SavingThrow.INT] = 1
         self.saving_throws[SavingThrow.WIS] = 0
         self.saving_throws[SavingThrow.CHA] = 1
-        self.athletics = 6
+        self.athletics = 5
         self.acrobatics = 1
         self.passive_perception = 10
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_transition(str(self.axe[1]), '0', 'nop')  # Melee
-        self.attack_fsm.add_transition(str(self.axe_recklessly[1]), '0', 'nop')
         self.attack_fsm.add_transition(str(self.javelin_attack[1]), '0', 'nop')
 
     def export_resources(self):
@@ -49,7 +46,7 @@ class TotemBarbarian4Lvl(Combatant):
             'movement': self.movement,
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
-            'totem_rage_uses': self.resources[BonusAction.TOTEM_RAGE].export_resource(),
+            'rage_uses': self.resources[BonusAction.RAGE].export_resource(),
             'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state
         }
@@ -59,7 +56,7 @@ class TotemBarbarian4Lvl(Combatant):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
-        self.resources[BonusAction.TOTEM_RAGE].import_resource(uses=resources['totem_rage_uses'])
+        self.resources[BonusAction.RAGE].import_resource(uses=resources['rage_uses'])
         self.attack_fsm.state = resources['attack_fsm_state']
 
     def prompt_aoo(self, moving_combatant):

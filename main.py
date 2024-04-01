@@ -2,6 +2,8 @@ import logging
 
 from simulator.combatants.acolyte import Acolyte
 from simulator.combatants.bandit_captain import BanditCaptain
+from simulator.combatants.barbarian_1lvl import Barbarian1Lvl
+from simulator.combatants.barbarian_2lvl import Barbarian2Lvl
 from simulator.combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
 from simulator.combatants.berserker import Berserker
 from simulator.combatants.bugbear import Bugbear
@@ -67,8 +69,8 @@ if __name__ == '__main__':
     # session.add_combatant(SaberToothedTiger, Teams.Color.RED)
     # session.add_combatant(SaberToothedTiger, Teams.Color.BLUE)
     # session.add_combatant(Goblin, Teams.Color.RED)
-    session.add_combatant(Goblin, Teams.Color.BLUE)
-    session.add_combatant(Goblin, Teams.Color.RED)
+    session.add_combatant(Barbarian2Lvl, Teams.Color.BLUE)
+    session.add_combatant(Barbarian1Lvl, Teams.Color.RED)
     # session.add_combatant(BrownBear, Teams.Color.BLUE)
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)

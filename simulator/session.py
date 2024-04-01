@@ -5,6 +5,8 @@ from .combatants.assassin_rogue_4lvl import AssassinRogue4Lvl
 from .combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from .combatants.bandit import Bandit
 from .combatants.bandit_captain import BanditCaptain
+from .combatants.barbarian_1lvl import Barbarian1Lvl
+from .combatants.barbarian_2lvl import Barbarian2Lvl
 from .combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
 from .combatants.battlemaster_fighter_4lvl import BattlemasterFighter4Lvl
 from .combatants.battlemaster_fighter_5lvl import BattlemasterFighter5Lvl
@@ -128,6 +130,10 @@ class Session:
                 self.combatants.append(Bandit(curr_count))
             case BanditCaptain.id:
                 self.combatants.append(BanditCaptain(curr_count))
+            case Barbarian1Lvl.id:
+                self.combatants.append(Barbarian1Lvl(curr_count))
+            case Barbarian2Lvl.id:
+                self.combatants.append(Barbarian2Lvl(curr_count))
             case BattlemasterFighter3Lvl.id:
                 self.combatants.append(BattlemasterFighter3Lvl(curr_count))
             case BattlemasterFighter4Lvl.id:
