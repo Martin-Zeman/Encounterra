@@ -30,6 +30,7 @@ from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
+from .combatants.moon_druid_2lvl import MoonDruid2Lvl
 from .combatants.moon_druid_3lvl import MoonDruid3Lvl
 from .combatants.moon_druid_4lvl import MoonDruid4Lvl
 from .combatants.moon_druid_5lvl import MoonDruid5Lvl
@@ -180,6 +181,8 @@ class Session:
                 self.combatants.append(GiantToad(curr_count))
             case Goblin.id:
                 self.combatants.append(Goblin(curr_count))
+            case MoonDruid2Lvl.id:
+                self.combatants.append(MoonDruid2Lvl(curr_count))
             case MoonDruid3Lvl.id:
                 self.combatants.append(MoonDruid3Lvl(curr_count))
             case MoonDruid4Lvl.id:

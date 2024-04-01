@@ -23,7 +23,7 @@ class Druid1Lvl(Combatant):
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=11, ac=12, init_bonus=1, speed=35, spell_to_hit=5, resistances=set(), dc=13)
         self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.shillelagh_quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Shillelagh Quarterstaff", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.BludgeoningMagical, attack_range=1, ammo=Uses(0, ResourceRefreshType.NEVER))
+        self.shillelagh_quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Shillelagh Quarterstaff", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.BludgeoningMagical, attack_range=1, ammo=Uses(0, ResourceRefreshType.NEVER), suppress=True)
         self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(Action.FAERIE_FIRE)

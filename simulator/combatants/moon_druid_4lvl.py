@@ -26,6 +26,8 @@ class MoonDruid4Lvl(Combatant):
         self.add_ability(Action.HOLD_PERSON)
         self.add_ability(Action.FAERIE_FIRE)
         self.add_ability(Action.SPIKE_GROWTH)
+        self.add_ability(Action.THUNDERWAVE)
+        self.add_ability(BonusAction.HEALING_WORD, mod=4)
         self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=3, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
         self.danger_zone_attack = self.scimitar
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)

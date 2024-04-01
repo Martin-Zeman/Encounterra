@@ -1,9 +1,8 @@
 import copy
 from functools import cache
 
-from ..abilities.wildshape import WildshapeFactory
 from ..actions.action_types import Action, Reaction, BonusAction, Passive
-from ..actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
+from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, SavingThrow, Class, SpellcastingResourceType
@@ -12,44 +11,42 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class MoonDruid5Lvl(Combatant):
+class MoonDruid2Lvl(Combatant):
 
-    name = "Moon Druid 5th LVL"
+    name = "Moon Druid 2nd LVL"
     cls = Class.DRUID.CIRCLE_OF_MOON
-    level = 5
+    level = 2
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=43, ac=13, init_bonus=1, speed=35, spell_to_hit=7, resistances=set(), dc=15)
-        self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=4, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
+        super().__init__(num_or_name, hp=19, ac=13, init_bonus=1, speed=35, spell_to_hit=5, resistances=set(), dc=13)
+        self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
+        self.shillelagh_scimitar = self.add_ability(Action.MELEE_ATTACK, name="Shillelagh Scimitar", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.SlashingMagical, attack_range=1, ammo=Uses(0, ResourceRefreshType.NEVER), suppress=True)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
-        self.add_ability(Action.FLAMING_SPHERE)
-        self.add_ability(Action.HOLD_PERSON)
         self.add_ability(Action.FAERIE_FIRE)
-        self.add_ability(Action.SPIKE_GROWTH)
         self.add_ability(Action.THUNDERWAVE)
-        self.add_ability(BonusAction.HEALING_WORD, mod=4)
-        self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=4, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
+        self.add_ability(BonusAction.HEALING_WORD, mod=3)
+        self.add_ability(BonusAction.SHILLELAGH, original_attack=self.scimitar[1], new_attack=self.shillelagh_scimitar[1])
+        self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=3, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
         self.danger_zone_attack = self.scimitar
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)
-        self.action_plan_strategy = MoonDruidActionPlanStrategy(self)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 0
         self.saving_throws[SavingThrow.DEX] = 1
         self.saving_throws[SavingThrow.CON] = 3
-        self.saving_throws[SavingThrow.INT] = 5
-        self.saving_throws[SavingThrow.WIS] = 7
+        self.saving_throws[SavingThrow.INT] = 4
+        self.saving_throws[SavingThrow.WIS] = 5
         self.saving_throws[SavingThrow.CHA] = 1
-        self.athletics = 2
+        self.athletics = 1
         self.acrobatics = 1
-        self.passive_perception = 17
+        self.passive_perception = 15
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
         self.attack_fsm.add_transition(str(self.scimitar[1]), '0', 'nop')
+        self.attack_fsm.add_transition(str(self.shillelagh_scimitar[1]), '0', 'nop')
         self.attack_fsm.add_transition(str(self.longbow[1]), '0', 'nop')
-
 
     def new_turn(self):
         super().new_turn()
