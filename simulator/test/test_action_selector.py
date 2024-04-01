@@ -28,13 +28,11 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
 
     # fsm, transition_mapping = generate_proto_dag(test_draconic_sorcerer_5lvl)
     # assert fsm.state == '0'
-    # fsm.get_graph().draw('state_diagram_faurung_pre_coords.png', prog='dot')
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     # get_aoe_and_aoo_threat_for_increment.cache_clear()
     fsm, transition_name_to_action = generate_proto_dag(test_draconic_sorcerer_5lvl)
     dag, _, _ = build_action_dag(test_draconic_sorcerer_5lvl, fsm, transition_name_to_action, distances, shortest_paths)
-    # dfs.get_graph().draw('state_diagram_faurung_with_coords',format='svg', prog='dot')
 
     # Tests the Misty Step movement + Firebolt
     assert dag.state == '0'

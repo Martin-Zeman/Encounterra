@@ -67,7 +67,6 @@ def test_generate_proto_dag(test_draconic_sorcerer_5lvl, test_goblin, test_bugbe
     battle_map.set_combatant_coordinates(test_ogre, np.array([13, 6]))
     fsm, transition_mapping = generate_proto_dag(test_draconic_sorcerer_5lvl)
     assert fsm.state == '0'
-    # fsm.get_graph().draw('state_diagram_faurung.png', prog='dot')
 
     fsm, transition_mapping = generate_proto_dag(test_goblin)
     assert fsm.state == '0'

@@ -35,6 +35,8 @@ from .combatants.needle_blight import NeedleBlight
 from .combatants.night_hag import NightHag
 from .combatants.ogre import Ogre
 from .combatants.quetzalcoatlus import Quetzalcoatlus
+from .combatants.rogue_1lvl import Rogue1Lvl
+from .combatants.rogue_2lvl import Rogue2Lvl
 from .combatants.saber_toothed_tiger import SaberToothedTiger
 from .combatants.stone_giant import StoneGiant
 from .combatants.totem_barbarian_3lvl import TotemBarbarian3Lvl
@@ -186,6 +188,10 @@ class Session:
                 self.combatants.append(Ogre(curr_count))
             case Quetzalcoatlus.id:
                 self.combatants.append(Quetzalcoatlus(curr_count))
+            case Rogue1Lvl.id:
+                self.combatants.append(Rogue1Lvl(curr_count))
+            case Rogue2Lvl.id:
+                self.combatants.append(Rogue2Lvl(curr_count))
             case SaberToothedTiger.id:
                 self.combatants.append(SaberToothedTiger(curr_count))
             case StoneGiant.id:

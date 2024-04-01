@@ -17,6 +17,8 @@ from simulator.combatants.needle_blight import NeedleBlight
 from simulator.combatants.night_hag import NightHag
 from simulator.combatants.ogre import Ogre
 from simulator.combatants.brown_bear import BrownBear
+from simulator.combatants.rogue_1lvl import Rogue1Lvl
+from simulator.combatants.rogue_2lvl import Rogue2Lvl
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.twig_blight import TwigBlight
 from simulator.logging.custom_logger import CustomLogger
@@ -65,12 +67,11 @@ if __name__ == '__main__':
     # session.add_combatant(SaberToothedTiger, Teams.Color.RED)
     # session.add_combatant(SaberToothedTiger, Teams.Color.BLUE)
     # session.add_combatant(Goblin, Teams.Color.RED)
-    # session.add_combatant(Goblin, Teams.Color.RED)
-    # session.add_combatant(Goblin, Teams.Color.RED)
+    session.add_combatant(Goblin, Teams.Color.BLUE)
+    session.add_combatant(Goblin, Teams.Color.RED)
     # session.add_combatant(BrownBear, Teams.Color.BLUE)
     # session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.RED)
-    # session.add_combatant(FaurungDt, Teams.Color.BLUE)
     # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
     # session.add_combatant(TotemBarbarian3Lvl, Teams.Color.RED)
     # session.add_combatant(StoneGiant, Teams.Color.BLUE)
@@ -82,14 +83,15 @@ if __name__ == '__main__':
     # session.add_combatant(EvilMage, Teams.Color.BLUE)
     # session.add_combatant(NightHag, Teams.Color.BLUE)
     session.add_combatant(Fighter1Lvl, Teams.Color.BLUE)
-    session.add_combatant(Fighter2Lvl, Teams.Color.BLUE)
-    session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.RED)
+    session.add_combatant(Rogue2Lvl, Teams.Color.BLUE)
+    session.add_combatant(Fighter2Lvl, Teams.Color.RED)
+    session.add_combatant(Rogue1Lvl, Teams.Color.RED)
     # session.add_combatant(Fighter2Lvl, Teams.Color.RED)
     # session.add_combatant(Druid1Lvl, Teams.Color.BLUE)
     # session.add_combatant(Druid1Lvl, Teams.Color.RED)
     session.set_num_simulations(1)
     start_time = time.time()
-    session.place_terrain_and_obstacles(Session.MapType.OBSTACLES_AND_DIFFICULT_TERRAIN.value)
+    session.place_terrain_and_obstacles(Session.MapType.DOUBLE_OBSTACLES.value)
     session.simulate(parallel=False)
     print("---Simulation took {:.1f} seconds ---".format((time.time() - start_time)))
 
