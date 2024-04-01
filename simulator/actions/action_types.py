@@ -48,6 +48,7 @@ class Action(Enum):
     MENACING_RANGED_ATTACK = auto()
     # PRECISION_RANGED_ATTACK = auto()
     PRECISION_ATTACK = auto()
+    LAY_ON_HANDS = auto()
 
 
 class BonusAction(Enum):

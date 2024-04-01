@@ -705,6 +705,9 @@ class ActionResolver:
             case Action.SHAKE_ALLY_AWAKE:
                 logger.info(f"{actoid.target} is shaken awake by {combatant}")
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(actoid.target, EffectType.SLEEP)
+            case Action.LAY_ON_HANDS:
+                logger.info(f"{combatant} uses {actoid}")
+                actoid.target.heal(actoid.hp_amount)
             case BonusAction.SECOND_WIND:
                 heal_hp = roll_dice([(1, 10)]) + combatant.level
                 combatant.heal(heal_hp)

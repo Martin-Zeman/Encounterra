@@ -103,7 +103,7 @@ class Uses(Resource):
                 pass
 
 
-def use_resources(combatant, action):
+def use_resources(combatant, action, **kwargs):
     try:
         action_type = action.factory.action_type
     except AttributeError:
@@ -116,16 +116,10 @@ def use_resources(combatant, action):
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | \
                  Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
                 combatant.ammo[action.factory.name].use_resource()
-                try:
-                    combatant.attack_fsm.trigger(str(action.factory))
-                except AttributeError:
-                    print("FIXME")
+                combatant.attack_fsm.trigger(str(action.factory))
             case Action.MENACING_MELEE_ATTACK | Action.MENACING_RANGED_ATTACK:# | Action.PRECISION_MELEE_ATTACK | Action.PRECISION_RANGED_ATTACK:
                 combatant.ammo[action.factory.name].use_resource()
-                try:
-                    combatant.attack_fsm.trigger(str(action.factory))
-                except AttributeError:
-                    print("FIXME")
+                combatant.attack_fsm.trigger(str(action.factory))
                 combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
             case Action.PRECISION_ATTACK:
                 combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
@@ -156,6 +150,8 @@ def use_resources(combatant, action):
                 combatant.resources[Action.WILDSHAPE].use_resource()
             case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE | Action.NOP:  # TODO NOP probably not needed
                 pass  # Sufficiently tracked by not having an action anymore
+            case Action.LAY_ON_HANDS:
+                combatant.resources[Action.LAY_ON_HANDS].use_resource(action.hp_amount)
             case _:
                 logger.error(f"use_resources: Unknown action type {action_type}")
     elif isinstance(action_type, BonusAction):

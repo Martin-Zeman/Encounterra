@@ -5,6 +5,7 @@ from .parry import ParryFactory
 from .vampiric_bite import VampiricBiteFactory
 from ..abilities.action_surge import ActionSurgeFactory
 from ..abilities.bite_and_swallow import BiteAndSwallowFactory
+from ..abilities.lay_on_hands import LayOnHandsFactory
 from ..abilities.pre_swallow_bite import PreSwallowBiteFactory
 from ..abilities.constrict import ConstrictFactory
 from ..abilities.pounce import PounceFactory
@@ -93,6 +94,7 @@ TO_FACTORY = {
     Action.TWINNED_RAY_OF_ENFEEBLEMENT: TwinnedRayOfEnfeeblementFactory,
     Action.SLEEP: SleepFactory,
     Action.THUNDERWAVE: ThunderwaveFactory,
+    Action.LAY_ON_HANDS: LayOnHandsFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,

@@ -7,6 +7,7 @@ import math
 from contextlib import contextmanager
 
 from .abilities.action_surge import ActionSurgeFactory
+from .abilities.lay_on_hands import LayOnHandsFactory
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .abilities.rage import RageFactory
 from .action_resolver import check_concentration
@@ -330,6 +331,11 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
+                case Action.LAY_ON_HANDS:
+                    lay_on_hands_pool = Uses(self.level * LayOnHandsFactory.HP_PER_LEVEL, ResourceRefreshType.LONG_REST)
+                    self.resources[Action.LAY_ON_HANDS] = lay_on_hands_pool
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    self.display_abilities.append("Lay on Hands")
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):

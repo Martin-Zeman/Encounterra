@@ -255,6 +255,10 @@ def check_feasibility(combatant, action):
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(),
                                                                 action.get_affected_coords()) <= action.factory.range
                 return res
+            case Action.LAY_ON_HANDS:
+                res &= combatant.resources[Action.LAY_ON_HANDS].get_resource() >= action.hp_amount
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= 1
+                res &= battle_map.teams.are_allies(combatant, action.target)
             case _:
                 logger.error(f"check_feasibility: Unknown action type {action_type}")
                 return False
@@ -558,6 +562,8 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 return res
+            case Action.LAY_ON_HANDS:
+                res &= combatant.resources[Action.LAY_ON_HANDS].has_resource()
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)

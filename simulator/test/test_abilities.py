@@ -6,6 +6,7 @@ import pstats
 import numpy as np
 import pytest
 
+from ..abilities.lay_on_hands import LayOnHandsFactory
 from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver, ActionResult
 from ..actions.action_selector import get_action
@@ -23,7 +24,7 @@ from ..spells.sleep import SleepFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
-    test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3
+    test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, test_paladin_lvl_1
 from ..utils.utils import preallocate_wildshape_forms
 
 from ..test.test_singleton import SingletonClass
@@ -1105,3 +1106,71 @@ def test_menacing_attack_shares_ammo(battle_map, teams, effect_tracker, test_dru
     action_resolver.resolve_action(mha, test_battle_master_fighter_lvl_3)
     assert test_battle_master_fighter_lvl_3.ammo['Handaxe'].get_resource() == 0
     assert test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'].get_resource() == 0
+
+
+def test_lay_on_hands(battle_map, teams, effect_tracker, test_paladin_lvl_1, test_druid_lvl_1, test_battle_master_fighter_lvl_3):
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_paladin_lvl_1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_druid_lvl_1, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_paladin_lvl_1, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([7, 5]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([14, 5]))
+
+    loh_factory = None
+    for af in test_paladin_lvl_1.action_factories:
+        if str(af[1]) == "LayOnHandsFactory":
+            loh_factory = af[1]
+            break
+    assert loh_factory is not None
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 1
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 1
+    assert all_loh[0].hp_amount == 1
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 4
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 1
+    assert all_loh[0].hp_amount == 4
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 5
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 1
+    assert all_loh[0].hp_amount == 5
+
+    # The pool size if the limit here
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 6
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 1
+    assert all_loh[0].hp_amount == 5
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 6
+    test_paladin_lvl_1.resources[Action.LAY_ON_HANDS].set_resource(10)
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 2
+    assert all_loh[0].hp_amount == 5
+    assert all_loh[1].hp_amount == 6
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 10
+    test_paladin_lvl_1.resources[Action.LAY_ON_HANDS].set_resource(10)
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 2
+    assert all_loh[0].hp_amount == 5
+    assert all_loh[1].hp_amount == 10
+
+    # Now two possible targets
+    test_battle_master_fighter_lvl_3.curr_hp = test_battle_master_fighter_lvl_3.max_hp - 3
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 10
+    test_paladin_lvl_1.resources[Action.LAY_ON_HANDS].set_resource(10)
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 3
+    assert all_loh[0].hp_amount == 3
+    assert all_loh[1].hp_amount == 5
+    assert all_loh[2].hp_amount == 10
+
+    test_paladin_lvl_1.resources[Action.LAY_ON_HANDS].set_resource(1)
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 2
+    assert all_loh[0].hp_amount == 1
+    assert all_loh[1].hp_amount == 1
