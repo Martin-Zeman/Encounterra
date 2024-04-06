@@ -269,7 +269,7 @@ class ActionResolver:
             final_modifier = reconcile_roll_types(types)
 
             if final_modifier is RollType.STRAIGHT:
-                logger.info(f"{caster} rolls for {spell}", extra={"team": self.teams.get_team(caster)})
+                # logger.info(f"{caster} rolls for {spell}", extra={"team": self.teams.get_team(caster)})
                 rolled = random.randint(1, 20)
             elif final_modifier is RollType.ADVANTAGE:
                 logger.info(f"{caster} rolls for {spell} at advantage", extra={"team": self.teams.get_team(caster)})
