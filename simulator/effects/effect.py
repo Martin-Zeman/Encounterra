@@ -27,6 +27,7 @@ class EffectType(Enum):
     SLEEP = auto()
     SHILLELAGH = auto()
     MENACING_ATTACK_FRIGHTENED = auto()
+    SHIELD_OF_FAITH = auto()
 
 
 class Effect(ABC):

@@ -138,7 +138,7 @@ def use_resources(combatant, action, **kwargs):
                 action.factory.resource.use_resource(level=2)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.resources[Passive.METAMAGIC].use_resource(2)
-            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS | Action.SLEEP | Action.THUNDERWAVE:
+            case Action.CHAOSBOLT | Action.FAERIE_FIRE | Action.MAGIC_MISSILE | Action.BLESS | Action.SLEEP | Action.THUNDERWAVE | Action.CURE_WOUNDS:
                 action.factory.resource.use_resource(level=1)
                 combatant.already_cast_leveled_spell_this_turn = True
             case Action.SCORCHING_RAY | Action.HOLD_PERSON | Action.SPIKE_GROWTH | Action.RAY_OF_ENFEEBLEMENT | Action.FLAMING_SPHERE:
@@ -187,7 +187,7 @@ def use_resources(combatant, action, **kwargs):
                 combatant.resources[Action.WILDSHAPE].use_resource()
             case BonusAction.SECOND_WIND:
                 combatant.resources[BonusAction.SECOND_WIND].use_resource()
-            case BonusAction.HEALING_WORD:
+            case BonusAction.HEALING_WORD | BonusAction.SHIELD_OF_FAITH:
                 action.factory.resource.use_resource(level=1)
                 combatant.already_cast_leveled_spell_this_turn = True
             case BonusAction.TWINNED_HEALING_WORD:

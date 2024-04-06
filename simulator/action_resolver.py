@@ -421,7 +421,7 @@ class ActionResolver:
             attack.roll_type = final_modifier
             if target:
                 for oh in attack.factory.on_hit:
-                    on_hit_dmg = oh.hit(attacker, attack, target, multiplier)
+                    on_hit_dmg = oh.hit(attacker, attack, target, multiplier, total_compound_dmg)
                     if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
                         logger.info(f"With extra {on_hit_dmg[0]} damage from {oh.name}", extra={"team": self.teams.get_team(attacker)})
                         total_compound_dmg.append(on_hit_dmg)
@@ -530,7 +530,7 @@ class ActionResolver:
         battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:
-            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | BonusAction.SHILLELAGH |HasteAction.HASTE_DISENGAGE:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | BonusAction.SHILLELAGH | HasteAction.HASTE_DISENGAGE:
                 actoid.activate()
                 return False
             case Action.RECKLESS_ATTACK:
@@ -557,7 +557,7 @@ class ActionResolver:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 return ActionResult.NOP
-            case Action.SLEEP | BonusAction.QUICKENED_SLEEP:
+            case Action.SLEEP | BonusAction.QUICKENED_SLEEP | BonusAction.SHIELD_OF_FAITH:
                 # TODO See if it can be merged into the previous one
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
@@ -728,7 +728,7 @@ class ActionResolver:
                             continue
                         battle_map.push_combatant_away_from(origin, aff, 2)
                 return ActionResult.DMG
-            case BonusAction.HEALING_WORD:
+            case BonusAction.HEALING_WORD | Action.CURE_WOUNDS:
                 logger.info(f"{combatant} casts {actoid}")
                 heal_hp = roll_spell_dmg(actoid.factory.heal_dice) + actoid.factory.mod
                 actoid.target.heal(heal_hp)
@@ -788,8 +788,9 @@ class ActionResolver:
                     combatant.has_reaction = False
                 case EffectType.RAGE | EffectType.TOTEM_RAGE | EffectType.WILDSHAPE | EffectType.DODGE | EffectType.DISENGAGE |\
                      EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
-                    EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
-                     EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION | EffectType.SLEEP:
+                     EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
+                     EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION | EffectType.SLEEP | \
+                     EffectType.SHIELD_OF_FAITH | EffectType.SHILLELAGH | EffectType.MENACING_ATTACK_FRIGHTENED:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error(f"Unknown effect {effect_type}")

@@ -8,6 +8,7 @@ from contextlib import contextmanager
 
 from .abilities.action_surge import ActionSurgeFactory
 from .abilities.lay_on_hands import LayOnHandsFactory
+from .abilities.on_hit_divine_smite import OnHitDivineSmite
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .abilities.rage import RageFactory
 from .action_resolver import check_concentration
@@ -15,6 +16,7 @@ from .actions.action_surge_plan_strategy import ActionSurgePlanStrategy
 from .actions.actoid import FactoryFlags
 from .actions.attack import AttackFactory
 from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from .actions.melee_attack import MeleeAttackFactory
 from .actions.menacing_melee_attack import MenacingMeleeAttackFactory
 from .actions.menacing_ranged_attack import MenacingRangedAttackFactory
 from .actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
@@ -205,16 +207,16 @@ class Combatant(ProtoCombatant):
                 case Passive.SNEAK_ATTACK:
                     self.already_used_sneak_attack_this_turn = False
                     for af in self.action_factories:
-                        if FactoryFlags.IS_ATTACK_LIKE in af[1].flags and (FactoryFlags.USES_DEX in af[1].flags or FactoryFlags.IS_RANGED in af[1].flags):
+                        if isinstance(af[1], AttackFactory) and (FactoryFlags.USES_DEX in af[1].flags or FactoryFlags.IS_RANGED in af[1].flags):
                             af[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), af[1].dmg_type, af[1].crit_range))
                     for baf in self.bonus_action_factories:
-                        if FactoryFlags.IS_ATTACK_LIKE in baf[1].flags and (FactoryFlags.USES_DEX in baf[1].flags or FactoryFlags.IS_RANGED in baf[1].flags):
+                        if isinstance(baf[1], AttackFactory)and (FactoryFlags.USES_DEX in baf[1].flags or FactoryFlags.IS_RANGED in baf[1].flags):
                             baf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), baf[1].dmg_type, baf[1].crit_range))
                     for haf in self.haste_action_factories:
-                        if FactoryFlags.IS_ATTACK_LIKE in haf[1].flags and (FactoryFlags.USES_DEX in haf[1].flags or FactoryFlags.IS_RANGED in haf[1].flags):
+                        if isinstance(haf[1], AttackFactory) and (FactoryFlags.USES_DEX in haf[1].flags or FactoryFlags.IS_RANGED in haf[1].flags):
                             haf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), haf[1].dmg_type, haf[1].crit_range))
                     for raf in self.reaction_factories:
-                        if FactoryFlags.IS_ATTACK_LIKE in raf[1].flags and (FactoryFlags.USES_DEX in raf[1].flags or FactoryFlags.IS_RANGED in raf[1].flags):
+                        if isinstance(raf[1], AttackFactory) and (FactoryFlags.USES_DEX in raf[1].flags or FactoryFlags.IS_RANGED in raf[1].flags):
                             raf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), raf[1].dmg_type, raf[1].crit_range))
                     self.display_abilities.append("Sneak Attack")
                 case Passive.REGENERATION:
@@ -267,6 +269,30 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Draconic Resilience")
                 case Passive.UNARMORED_DEFENSE:
                     self.display_abilities.append("Unarmored Defense")
+                case Passive.DUELING:
+                    for af in self.action_factories:
+                        if isinstance(af[1], MeleeAttackFactory) and FactoryFlags.TWO_HANDED not in af[1].flags:
+                            af[1].dmg_bonus += 2
+                    for baf in self.bonus_action_factories:
+                        if isinstance(baf[1], MeleeAttackFactory) and FactoryFlags.TWO_HANDED not in baf[1].flags:
+                            baf[1].dmg_bonus += 2
+                    self.display_abilities.append("Dueling")
+                case Passive.GREAT_WEAPON_FIGHTING:
+                    self.display_abilities.append("Great Weapon Fighting")
+                case Passive.DIVINE_SMITE:
+                    for af in self.action_factories:
+                        if isinstance(af[1], MeleeAttackFactory):
+                            af[1].on_hit.append(OnHitDivineSmite())
+                    for baf in self.bonus_action_factories:
+                        if isinstance(baf[1], MeleeAttackFactory):
+                            baf[1].on_hit.append(OnHitDivineSmite())
+                    for haf in self.haste_action_factories:
+                        if isinstance(haf[1], MeleeAttackFactory):
+                            haf[1].on_hit.append(OnHitDivineSmite())
+                    for raf in self.reaction_factories:
+                        if isinstance(raf[1], MeleeAttackFactory):
+                            raf[1].on_hit.append(OnHitDivineSmite())
+                    self.display_abilities.append("Divine Smite")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -336,6 +362,10 @@ class Combatant(ProtoCombatant):
                     self.resources[Action.LAY_ON_HANDS] = lay_on_hands_pool
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append("Lay on Hands")
+                case Action.CURE_WOUNDS:
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource, **kwargs)))
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):
@@ -404,7 +434,7 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                 case BonusAction.HEALING_WORD:
                     resource = kwargs.get("resource", self.spellslots)
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self, resource, **kwargs)))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource, **kwargs)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                 case _:
                     pass  # no resources required
