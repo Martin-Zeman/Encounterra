@@ -365,7 +365,7 @@ class Combatant(ProtoCombatant):
                 case Action.CURE_WOUNDS:
                     resource = kwargs.get("resource", self.spellslots)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource, **kwargs)))
-                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):
