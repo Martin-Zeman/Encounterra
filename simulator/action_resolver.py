@@ -173,6 +173,9 @@ class ActionResolver:
         if attacker.has_passive(Passive.ASSASSINATE) and battle_map.combat_round == 0 and attacker.curr_init > target.curr_init:
             logger.info(f"{attacker} gains advantage thanks to Assassinate")
             return RollType.ADVANTAGE
+        if battle_map.effect_tracker.is_affected_by_vow_of_enmity(attacker, target):
+            logger.info(f"{attacker} gains advantage thanks to Vow of Enmity")
+            return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
     def has_advantage_melee(self, attack, attacker, target):
@@ -200,6 +203,9 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if attacker.has_passive(Passive.ASSASSINATE) and battle_map.combat_round == 0 and attacker.curr_init > target.curr_init:
             logger.info(f"{attacker} gains advantage thanks to Assassinate")
+            return RollType.ADVANTAGE
+        if battle_map.effect_tracker.is_affected_by_vow_of_enmity(attacker, target):
+            logger.info(f"{attacker} gains advantage thanks to Vow of Enmity")
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
@@ -421,7 +427,7 @@ class ActionResolver:
             attack.roll_type = final_modifier
             if target:
                 for oh in attack.factory.on_hit:
-                    on_hit_dmg = oh.hit(attacker, attack, target, multiplier, total_compound_dmg)
+                    on_hit_dmg = oh.hit(attacker, attack, target, multiplier, reduce(lambda dmg, x: dmg + x[0], total_compound_dmg, 0))
                     if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
                         logger.info(f"With extra {on_hit_dmg[0]} damage from {oh.name}", extra={"team": self.teams.get_team(attacker)})
                         total_compound_dmg.append(on_hit_dmg)
@@ -530,7 +536,8 @@ class ActionResolver:
         battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:
-            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | BonusAction.SHILLELAGH | HasteAction.HASTE_DISENGAGE:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | \
+                 Action.DODGE | BonusAction.SHILLELAGH | HasteAction.HASTE_DISENGAGE | BonusAction.VOW_OF_ENMITY:
                 actoid.activate()
                 return False
             case Action.RECKLESS_ATTACK:
@@ -790,7 +797,8 @@ class ActionResolver:
                      EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
                      EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
                      EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION | EffectType.SLEEP | \
-                     EffectType.SHIELD_OF_FAITH | EffectType.SHILLELAGH | EffectType.MENACING_ATTACK_FRIGHTENED:
+                     EffectType.SHIELD_OF_FAITH | EffectType.SHILLELAGH | EffectType.MENACING_ATTACK_FRIGHTENED | \
+                     EffectType.VOW_OF_ENMITY:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error(f"Unknown effect {effect_type}")

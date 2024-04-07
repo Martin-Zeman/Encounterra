@@ -39,16 +39,16 @@ class OnHitDivineSmite(OnHit):
                 logger.error("Incorrect Divine Smite Level")
                 return "3d8"
 
-    def __init__(self, name="On Hit Divine Smite"):
+    def __init__(self, name="Divine Smite"):
         self.name = name
 
     def hit(self, attacker, attack, target, multiplier, dmg_so_far):
         for level in range(4, 0, -1):
             if attacker.spellslots.has_resource(level=level):
-                missing_hp = get_missing_hp(target)
+                target_hp = target.curr_hp
                 dmg_dice = OnHitDivineSmite.get_dmg_dice_undead_or_fiend(level) if (type(target).cls is Class.MONSTER.UNDEAD or type(target).cls is Class.MONSTER.FIEND) else OnHitDivineSmite.get_dmg_dice(level)
                 avg_dmg = avg_roll(dmg_dice)
-                if (missing_hp - dmg_so_far) * 0.8 >= avg_dmg:
+                if (target_hp - dmg_so_far) * 1.3 >= avg_dmg * multiplier:
                     dice = parse_dmg_dice(dmg_dice)
                     attacker.spellslots.use_resource(level=level)
                     logger.error(f"{attacker} uses Divine Smite of level {level} on {target}")
@@ -56,6 +56,13 @@ class OnHitDivineSmite(OnHit):
         return None
 
     def calculate_threat(self, attacker, target, **kwargs):
-        dmg_dice = OnHitDivineSmite.get_dmg_dice_undead_or_fiend(1) if (type(target).cls is Class.MONSTER.UNDEAD or type(target).cls is Class.MONSTER.FIEND) else OnHitDivineSmite.get_dmg_dice(1)
-        avg_dmg = avg_roll(dmg_dice)
-        return avg_dmg
+        dmg_acc = 0
+        count = 0
+        for level in range(4, 0, -1):
+            if attacker.spellslots.has_resource(level=level):
+                dmg_dice = OnHitDivineSmite.get_dmg_dice_undead_or_fiend(level) if (type(target).cls is Class.MONSTER.UNDEAD or type(target).cls is Class.MONSTER.FIEND) else OnHitDivineSmite.get_dmg_dice(level)
+                dmg_acc = avg_roll(dmg_dice)
+                count += 1
+        if count:
+            dmg_acc /= count
+        return dmg_acc

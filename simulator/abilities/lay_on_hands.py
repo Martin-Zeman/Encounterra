@@ -64,7 +64,11 @@ class LayOnHandsFactory(DirectThreatFactory):
         if type(type(target).cls) is not Class.MONSTER or (type(target).cls is not Class.MONSTER.UNDEAD and type(target).cls is not Class.MONSTER.CONSTRUCT):
             if battle_map.get_hop_distance_combatants(self.combatant, target) <= LayOnHandsFactory.range:
                 missing_hp = get_missing_hp(self.combatant)
-                return min(missing_hp, kwargs['hp_amount'])
+                healable_hp = min(missing_hp, kwargs['hp_amount'])
+                current_health_percentage = self.combatant.curr_hp / self.combatant.max_hp
+                if current_health_percentage <= 0.25:
+                    healable_hp * 1.5
+                return healable_hp
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):

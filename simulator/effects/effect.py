@@ -28,6 +28,7 @@ class EffectType(Enum):
     SHILLELAGH = auto()
     MENACING_ATTACK_FRIGHTENED = auto()
     SHIELD_OF_FAITH = auto()
+    VOW_OF_ENMITY = auto()
 
 
 class Effect(ABC):

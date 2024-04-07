@@ -20,6 +20,7 @@ from ..utils.roll_types import ThreatModifierType
 
 SAVING_THROW_BONUS_MULTIPLIER = 1.25
 
+
 class BlessFactory(ThreatModifierFactory):
     level = 1
     range = SpellStats.Range.FEET_30.value
@@ -52,7 +53,9 @@ class BlessFactory(ThreatModifierFactory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return [self.combatant]
-        return combinations(Map.get().get_non_swallowed_allies_within_radius(self.combatant, BlessFactory.range), 3)
+        allies = Map.get().get_non_swallowed_allies_within_radius(self.combatant, BlessFactory.range)
+        allies.append(self.combatant)
+        return combinations(allies, 3)
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
@@ -111,6 +114,7 @@ class Bless(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier
         return combatant in self.combatants
 
     def calculate_threat(self, **kwargs):
+        total_threat_increase = 0
         for ally in self.combatants:
             max_threat_increase = 0
             afs = get_attack_factories(ally)
@@ -119,8 +123,8 @@ class Bless(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier
                 for et in eligible_targets:
                     threat_inc = af.calculate_threat_to_target_delta(et, {ThreatModifierType.TO_HIT_DIE: '1d4'})
                     max_threat_increase = max(threat_inc, max_threat_increase)
-            return max_threat_increase * SAVING_THROW_BONUS_MULTIPLIER * ROUND_HORIZON
-        return 0
+            total_threat_increase += max_threat_increase
+        return max_threat_increase * SAVING_THROW_BONUS_MULTIPLIER * ROUND_HORIZON
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         """

@@ -14,6 +14,7 @@ from ..abilities.reckless_attack import RecklessAttackFactory
 from ..abilities.second_wind import SecondWindFactory
 from ..abilities.totem_rage import TotemRageFactory
 from ..abilities.uncanny_dodge import UncannyDodgeFactory
+from ..abilities.vow_of_enmity import VowOfEnmityFactory
 from ..abilities.wildshape import WildshapeFactory
 from ..actions.action_types import Action, BonusAction, HasteAction, Reaction, MovementThreatType, FreeAction
 from ..actions.dash import DashFactory
@@ -128,6 +129,7 @@ TO_FACTORY = {
     BonusAction.TWINNED_HEALING_WORD: TwinnedHealingWordFactory,
     BonusAction.SHIELD_OF_FAITH: ShieldOfFaithFactory,
     BonusAction.QUICKENED_CURE_WOUNDS: CureWoundsFactory,
+    BonusAction.VOW_OF_ENMITY: VowOfEnmityFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,

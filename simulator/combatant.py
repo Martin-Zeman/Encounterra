@@ -364,7 +364,7 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Lay on Hands")
                 case Action.CURE_WOUNDS:
                     resource = kwargs.get("resource", self.spellslots)
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource, **kwargs)))
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource, **kwargs)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                 case _:
                     return None
@@ -395,7 +395,7 @@ class Combatant(ProtoCombatant):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
-                case BonusAction.MISTY_STEP:
+                case BonusAction.MISTY_STEP | BonusAction.SHIELD_OF_FAITH:
                     resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
@@ -432,10 +432,16 @@ class Combatant(ProtoCombatant):
                     resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource, **kwargs)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    return self.bonus_action_factories[-1]
                 case BonusAction.HEALING_WORD:
                     resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource, **kwargs)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    return self.bonus_action_factories[-1]
+                case BonusAction.VOW_OF_ENMITY:
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, **kwargs)))
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required
         elif isinstance(action_type, Reaction):

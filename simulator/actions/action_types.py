@@ -50,6 +50,7 @@ class Action(Enum):
     PRECISION_ATTACK = auto()
     LAY_ON_HANDS = auto()
     CURE_WOUNDS = auto()
+    ABJURE_ENEMY = auto()
 
 
 class BonusAction(Enum):
@@ -92,6 +93,7 @@ class BonusAction(Enum):
     # BONUS_PRECISION_RANGED_ATTACK = auto()
     SHIELD_OF_FAITH = auto()
     QUICKENED_CURE_WOUNDS = auto()
+    VOW_OF_ENMITY = auto()
 
 
 class Reaction(Enum):
@@ -157,6 +159,7 @@ class Passive(Enum):
     DRACONIC_RESILIENCE = auto()
     UNARMORED_DEFENSE = auto()
     DIVINE_SMITE = auto()
+    CHANNEL_DIVINITY = auto()
 
 
 class MetaAction(Enum):

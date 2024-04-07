@@ -4,7 +4,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..battle_map import Map, map_toggled_cache_with_key, map_position_toggled_cache
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import get_attack_factories, ROUND_HORIZON, Visibility
@@ -18,8 +18,6 @@ from itertools import combinations
 
 from ..threat_utils import calculate_threat_in_delta
 from ..utils.roll_types import ThreatModifierType
-
-SAVING_THROW_BONUS_MULTIPLIER = 1.25
 
 
 class ShieldOfFaithFactory(ThreatModifierFactory):
@@ -59,7 +57,7 @@ class ShieldOfFaithFactory(ThreatModifierFactory):
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
-        return [ShieldOfFaithFactory(t, self) for t in targets]
+        return [ShieldOfFaith(t, self) for t in targets]
 
     def calculate_threat_to_target(self, target, **kwargs):
         incoming_threat_delta = calculate_threat_in_delta(target, 6, {ThreatModifierType.TARGET_AC: 2}, FactoryFlags.IS_ATTACK_LIKE)[1]
@@ -103,9 +101,13 @@ class ShieldOfFaith(Actoid, CombatantEffect, LimitedDurationEffect):
     def is_affecting(self, combatant):
         return combatant in self.combatants
 
+    @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        incoming_threat_delta = calculate_threat_in_delta(self.combatants[0], 6, {ThreatModifierType.TARGET_AC: 2}, FactoryFlags.IS_ATTACK_LIKE)[1]
+        incoming_threat_delta = -1 * calculate_threat_in_delta(self.combatants[0], 6, {ThreatModifierType.TARGET_AC: 2}, FactoryFlags.IS_ATTACK_LIKE)[0]
         return incoming_threat_delta
+
+    def clear_cache(self):
+        self.calculate_threat.cache_clear()
 
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))

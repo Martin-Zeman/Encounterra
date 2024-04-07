@@ -194,6 +194,8 @@ def use_resources(combatant, action, **kwargs):
                 action.factory.resource.use_resource(level=1)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.resources[Passive.METAMAGIC].use_resource(1)
+            case BonusAction.VOW_OF_ENMITY:
+                combatant.resources[Passive.CHANNEL_DIVINITY].use_resource()
             case _:
                 logger.error("Unknown bonus action type")
     elif isinstance(action_type, Reaction):

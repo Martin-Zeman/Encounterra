@@ -18,9 +18,11 @@ from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.combatants.moon_druid_3lvl import MoonDruid3Lvl
 from simulator.combatants.needle_blight import NeedleBlight
 from simulator.combatants.night_hag import NightHag
+from simulator.combatants.oath_of_vengeance_paladin_3lvl import OathOfVengeancePaladin3Lvl
 from simulator.combatants.ogre import Ogre
 from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.paladin_1lvl import Paladin1Lvl
+from simulator.combatants.paladin_2lvl import Paladin2Lvl
 from simulator.combatants.rogue_1lvl import Rogue1Lvl
 from simulator.combatants.rogue_2lvl import Rogue2Lvl
 from simulator.combatants.stone_giant import StoneGiant
@@ -72,6 +74,7 @@ if __name__ == '__main__':
     # session.add_combatant(SaberToothedTiger, Teams.Color.RED)
     # session.add_combatant(SaberToothedTiger, Teams.Color.BLUE)
     # session.add_combatant(Goblin, Teams.Color.RED)
+    # session.add_combatant(Goblin, Teams.Color.BLUE)
     # session.add_combatant(Barbarian2Lvl, Teams.Color.RED)
     # session.add_combatant(Barbarian1Lvl, Teams.Color.RED)
     # session.add_combatant(BrownBear, Teams.Color.BLUE)
@@ -87,10 +90,13 @@ if __name__ == '__main__':
     # session.add_combatant(DragonclawCultist, Teams.Color.RED)
     # session.add_combatant(EvilMage, Teams.Color.BLUE)
     # session.add_combatant(NightHag, Teams.Color.BLUE)
-    session.add_combatant(Fighter1Lvl, Teams.Color.RED)
+    # session.add_combatant(Fighter1Lvl, Teams.Color.RED)
     # session.add_combatant(Rogue2Lvl, Teams.Color.BLUE)
-    # session.add_combatant(Fighter2Lvl, Teams.Color.RED)
-    session.add_combatant(Paladin1Lvl, Teams.Color.BLUE)
+    session.add_combatant(Fighter2Lvl, Teams.Color.BLUE)
+    # session.add_combatant(Paladin1Lvl, Teams.Color.BLUE)
+    session.add_combatant(Paladin2Lvl, Teams.Color.RED)
+    session.add_combatant(OathOfVengeancePaladin3Lvl, Teams.Color.BLUE)
+    session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.RED)
     # session.add_combatant(Rogue1Lvl, Teams.Color.RED)
     # session.add_combatant(Fighter2Lvl, Teams.Color.RED)
     # session.add_combatant(Druid1Lvl, Teams.Color.BLUE)

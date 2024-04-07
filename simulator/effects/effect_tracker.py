@@ -132,10 +132,13 @@ class EffectTracker:
                 return True
         return False
 
+    def is_affected_by_vow_of_enmity(self, initiator, target):
+        for e in self.get_effects_by_initiator(initiator):
+            if e.get_effect_type() is EffectType.VOW_OF_ENMITY and e.combatants[0] is target:
+                return True
+        return False
+
     def reset(self):
         for effect in self.effects:
-            try:
-                effect.deactivate()
-            except AttributeError:
-                print("FIXME")
+            effect.deactivate()
         self.effects.clear()
