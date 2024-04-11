@@ -25,7 +25,8 @@ from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
-from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice
+from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice, DamageType, \
+    reconcile_roll_types, roll_saving_throw
 from .conditions import Conditions, is_affected_by, remove_condition
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
@@ -293,6 +294,8 @@ class Combatant(ProtoCombatant):
                         if isinstance(raf[1], MeleeAttackFactory):
                             raf[1].on_hit.append(OnHitDivineSmite())
                     self.display_abilities.append("Divine Smite")
+                case Passive.UNDEAD_FORTITUDE:
+                    self.display_abilities.append("Undead Fortitude")
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -577,15 +580,22 @@ class Combatant(ProtoCombatant):
         self.dmg_types_took_last_round.add(dmg_type)
         return dmg
 
-    def receive_dmg(self, dmg, dmg_type):
+    def receive_dmg(self, dmg, dmg_type, multiplier=1):
         """
         Inflicts damage to the combatant
         :param dmg: amount dmg to be received
         :param dmg_type: damage type
+        :param multiplier: multiplier (1 - regular hit, 2 - crit)
         :return: actual dmg received accounting for resistances, vulnerabilities and immunities
         """
         dmg = self._receive_dmg(dmg, dmg_type)
         battle_map = Map.get()
+
+        if self.curr_hp <= 0 and self.has_passive(Passive.UNDEAD_FORTITUDE) and multiplier == 1 and dmg_type is not DamageType.Radiant:
+            saved = roll_saving_throw(self.saving_throws[SavingThrow.CON], 5 + dmg, reconcile_roll_types(self.saving_throws_roll_type_mod[SavingThrow.CON]))
+            if saved:
+                self.curr_hp = 1
+                logger.info(f"Instead of dying, {self} drops to 1 HP thanks to Undead Fortitude")
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
             battle_map.effect_tracker.remove_effect_from_combatant_by_type(self.get_original_form(), EffectType.WILDSHAPE)
@@ -598,15 +608,25 @@ class Combatant(ProtoCombatant):
                     battle_map.effect_tracker.remove_effect_from_combatant(self, cond.effect)
         return dmg
 
-    def receive_compound_dmg(self, dmg):
+    def receive_compound_dmg(self, dmg, multiplier=1):
         """
         Inflicts damage to the combatant composed of different damage types
         :param dmg: lift of tuples: [(dmg, dmg_type), ...]
+        :param multiplier: multiplier (1 - regular hit, 2 - crit)
         :return: actual dmg received accounting for resistances, vulnerabilities and immunities
         """
         total_dmg = 0
+        received_radiant_dmg = False
         for d in dmg:
             total_dmg += self._receive_dmg(d[0], d[1])
+            if d[1] == DamageType.Radiant:
+                received_radiant_dmg = True
+
+        if self.curr_hp <= 0 and self.has_passive(Passive.UNDEAD_FORTITUDE) and multiplier == 1 and not received_radiant_dmg:
+            saved = roll_saving_throw(self.saving_throws[SavingThrow.CON], 5 + total_dmg, reconcile_roll_types(self.saving_throws_roll_type_mod[SavingThrow.CON]))
+            if saved:
+                self.curr_hp = 1
+                logger.info(f"Instead of dying, {self} drops to 1 HP thanks to Undead Fortitude")
         battle_map = Map.get()
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage

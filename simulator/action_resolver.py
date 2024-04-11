@@ -297,7 +297,7 @@ class ActionResolver:
                 dmg = multiplier * bolt_dmg
                 logger.info(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
                              extra={"team": self.teams.get_team(caster)})
-                curr_target.receive_dmg(dmg, dmg_type)
+                curr_target.receive_dmg(dmg, dmg_type, multiplier)
                 battle_map.remove_combatant_if_dead(curr_target)
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
@@ -347,7 +347,7 @@ class ActionResolver:
             dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
             logger.info(f"{spell.shorthand_str()} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
-            target.receive_dmg(dmg, spell.factory.dmg_type)
+            target.receive_dmg(dmg, spell.factory.dmg_type, multiplier)
             Map.get().remove_combatant_if_dead(target)
             return ActionResult.DMG
         else:
@@ -431,7 +431,7 @@ class ActionResolver:
                     if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
                         logger.info(f"With extra {on_hit_dmg[0]} damage from {oh.name}", extra={"team": self.teams.get_team(attacker)})
                         total_compound_dmg.append(on_hit_dmg)
-            actual_dmg_dealt = target.receive_compound_dmg(total_compound_dmg)
+            actual_dmg_dealt = target.receive_compound_dmg(total_compound_dmg, multiplier)
             attacker.weapon_dmg_dealt_this_turn = actual_dmg_dealt if multiplier == 1 else actual_dmg_dealt - dmg_dice_sum  # This is used for Action Surge (crit dmg is an approximation)
             battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
 

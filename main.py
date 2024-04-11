@@ -27,6 +27,7 @@ from simulator.combatants.rogue_1lvl import Rogue1Lvl
 from simulator.combatants.rogue_2lvl import Rogue2Lvl
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.twig_blight import TwigBlight
+from simulator.combatants.zombie import Zombie
 from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
 from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
@@ -94,13 +95,15 @@ if __name__ == '__main__':
     # session.add_combatant(Rogue2Lvl, Teams.Color.BLUE)
     session.add_combatant(Fighter2Lvl, Teams.Color.BLUE)
     # session.add_combatant(Paladin1Lvl, Teams.Color.BLUE)
-    session.add_combatant(Paladin2Lvl, Teams.Color.RED)
-    session.add_combatant(OathOfVengeancePaladin3Lvl, Teams.Color.BLUE)
-    session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.RED)
+    # session.add_combatant(Paladin2Lvl, Teams.Color.RED)
+    # session.add_combatant(OathOfVengeancePaladin3Lvl, Teams.Color.BLUE)
+    # session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.RED)
     # session.add_combatant(Rogue1Lvl, Teams.Color.RED)
     # session.add_combatant(Fighter2Lvl, Teams.Color.RED)
     # session.add_combatant(Druid1Lvl, Teams.Color.BLUE)
     # session.add_combatant(Druid1Lvl, Teams.Color.RED)
+    session.add_combatant(Zombie, Teams.Color.RED)
+    session.add_combatant(Zombie, Teams.Color.RED)
     session.set_num_simulations(1)
     start_time = time.time()
     session.place_terrain_and_obstacles(Session.MapType.DOUBLE_OBSTACLES.value)
