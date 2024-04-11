@@ -30,6 +30,7 @@ from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
+from .combatants.hobgoblin import Hobgoblin
 from .combatants.moon_druid_2lvl import MoonDruid2Lvl
 from .combatants.moon_druid_3lvl import MoonDruid3Lvl
 from .combatants.moon_druid_4lvl import MoonDruid4Lvl
@@ -44,6 +45,7 @@ from .combatants.quetzalcoatlus import Quetzalcoatlus
 from .combatants.rogue_1lvl import Rogue1Lvl
 from .combatants.rogue_2lvl import Rogue2Lvl
 from .combatants.saber_toothed_tiger import SaberToothedTiger
+from .combatants.skeleton import Skeleton
 from .combatants.stone_giant import StoneGiant
 from .combatants.totem_barbarian_3lvl import TotemBarbarian3Lvl
 from .combatants.totem_barbarian_4lvl import TotemBarbarian4Lvl
@@ -185,6 +187,8 @@ class Session:
                 self.combatants.append(GiantToad(curr_count))
             case Goblin.id:
                 self.combatants.append(Goblin(curr_count))
+            case Hobgoblin.id:
+                self.combatants.append(Hobgoblin(curr_count))
             case MoonDruid2Lvl.id:
                 self.combatants.append(MoonDruid2Lvl(curr_count))
             case MoonDruid3Lvl.id:
@@ -213,6 +217,8 @@ class Session:
                 self.combatants.append(Rogue2Lvl(curr_count))
             case SaberToothedTiger.id:
                 self.combatants.append(SaberToothedTiger(curr_count))
+            case Skeleton.id:
+                self.combatants.append(Skeleton(curr_count))
             case StoneGiant.id:
                 self.combatants.append(StoneGiant(curr_count))
             case TotemBarbarian3Lvl.id:

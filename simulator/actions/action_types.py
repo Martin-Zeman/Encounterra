@@ -161,6 +161,7 @@ class Passive(Enum):
     DIVINE_SMITE = auto()
     CHANNEL_DIVINITY = auto()
     UNDEAD_FORTITUDE = auto()
+    MARTIAL_ADVANTAGE = auto()
 
 
 class MetaAction(Enum):

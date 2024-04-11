@@ -296,6 +296,9 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Divine Smite")
                 case Passive.UNDEAD_FORTITUDE:
                     self.display_abilities.append("Undead Fortitude")
+                case Passive.MARTIAL_ADVANTAGE:
+                    self.display_abilities.append("Martial Advantage")
+                    self.resources[Passive.MARTIAL_ADVANTAGE] = Uses(1, ResourceRefreshType.ROUND)
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
