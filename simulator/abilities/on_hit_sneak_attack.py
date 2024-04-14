@@ -43,7 +43,7 @@ class OnHitSneakAttack(OnHit):
         self.crit_range = crit_range
         self.name = name
 
-    def hit(self, attacker, attack, target, multiplier):
+    def hit(self, attacker, attack, target, multiplier, dmg_so_far):
         battle_map = Map.get()
         if not getattr(attacker, "already_used_sneak_attack_this_turn", True) and (attack.roll_type is RollType.ADVANTAGE or battle_map.is_ally_adjacent_to_target(attacker, target)):
             logger.info("Activating Sneak Attack")

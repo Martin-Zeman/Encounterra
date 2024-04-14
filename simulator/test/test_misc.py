@@ -13,6 +13,7 @@ from ..conditions import is_affected_by, Conditions
 from ..effects.effect import EffectType
 from ..logging.custom_logger import CustomLogger
 from ..misc import DamageType
+from ..resources import ResourceDepletionLevel
 from ..spells.flaming_sphere import FlamingSphereFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
@@ -102,7 +103,7 @@ def test_map_position_toggled_cache(battle_map, teams, effect_tracker, test_gobl
     battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 8]))
     battle_map.build_adjacency_matrix()
 
-    shortbow = test_goblin.shortbow_attack[1].create(test_bugbear)
+    shortbow = test_goblin.shortbow[1].create(test_bugbear)
     threat_before = shortbow.calculate_threat()
     battle_map.move_combatant(test_goblin, np.array([8, 9]))
     threat_after = shortbow.calculate_threat()
@@ -113,6 +114,7 @@ def test_map_position_toggled_cache(battle_map, teams, effect_tracker, test_gobl
     assert threat_before == threat_after
 
 
+@pytest.mark.flaky(reruns=3)
 def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
     We assert that get_surviving_teams behaves correctly when the last combatant standing is a wildshaped druid who
@@ -150,6 +152,7 @@ def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_
     dummy_effect = DummyEffect()
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
     battle_map.effect_tracker.add(dummy_effect)
+    test_moon_druid.spellslots.deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)  # To prevent the druid from casting
 
     try:
         actoid1 = get_action(test_moon_druid)

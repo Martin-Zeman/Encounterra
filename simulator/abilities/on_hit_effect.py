@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 class OnHit(ABC):
 
     @abstractmethod
-    def hit(self, attacker, attack, target, multiplier):
+    def hit(self, attacker, attack, target, multiplier, dmg_so_far):
         pass
 
     @abstractmethod

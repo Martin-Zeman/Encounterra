@@ -255,6 +255,17 @@ def check_feasibility(combatant, action):
                 res &= battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(),
                                                                 action.get_affected_coords()) <= action.factory.range
                 return res
+            case Action.LAY_ON_HANDS:
+                res &= combatant.resources[Action.LAY_ON_HANDS].get_resource() >= action.hp_amount
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= 1
+                res &= battle_map.teams.are_allies(combatant, action.target)
+                return res
+            case Action.CURE_WOUNDS:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
+                res &= battle_map.teams.are_allies(combatant, action.target)
+                return res
             case _:
                 logger.error(f"check_feasibility: Unknown action type {action_type}")
                 return False
@@ -401,6 +412,18 @@ def check_feasibility(combatant, action):
                 res &= action.targets[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.targets[1]) <= action.factory.range
                 res &= battle_map.teams.are_allies(combatant, action.targets[0])
                 res &= battle_map.teams.are_allies(combatant, action.targets[1])
+                return res
+            case BonusAction.SHIELD_OF_FAITH:
+                res &= action.factory.resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                res &= action.combatants[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.combatants[0]) <= action.factory.range
+                res &= battle_map.teams.are_allies(combatant, action.combatants[0])
+                return res
+            case BonusAction.VOW_OF_ENMITY:
+                res &= combatant.resources[Passive.CHANNEL_DIVINITY].has_resource()
+                res &= action.combatants[0].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.combatants[0]) <= 2
+                res &= battle_map.teams.are_enemies(combatant, action.combatants[0])
                 return res
             case _:
                 logger.error("Unknown bonus action")
@@ -558,6 +581,13 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 return res
+            case Action.LAY_ON_HANDS:
+                res &= combatant.resources[Action.LAY_ON_HANDS].has_resource()
+                return res
+            case Action.CURE_WOUNDS:
+                res &= action[1].resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                return res
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
                 res &= not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RECKLESS_ATTACK)
@@ -643,6 +673,13 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 0
                 res &= (len(battle_map.teams.get_allies(combatant)) > 0)
                 return res
+            case BonusAction.SHIELD_OF_FAITH:
+                res &= action[1].resource.has_resource(level=1)
+                res &= not combatant.already_cast_leveled_spell_this_turn
+                res &= not combatant.concentration_effect
+                return res
+            case BonusAction.VOW_OF_ENMITY:
+                return res and combatant.resources[Passive.CHANNEL_DIVINITY].has_resource()
             case _:
                 logger.error("Unknown bonus action")
                 return False

@@ -44,8 +44,8 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     assert "m_(7, 3)" in transitions
     dag.trigger("ms_(2, 3)")
     transitions = dag.get_available_transitions()
-    assert "Staff of Defence on Goblin (1)_1" not in transitions  # Test that Misty Step actions are also prepended with movement
-    assert "Staff of Defence on Bugbear (1)_2" in transitions  # Test that Misty Step actions are also prepended with movement
+    assert "Quarterstaff on Goblin (1)_1" not in transitions  # Test that Misty Step actions are also prepended with movement
+    assert "Quarterstaff on Bugbear (1)_2" in transitions  # Test that Misty Step actions are also prepended with movement
     assert "Firebolt on Goblin (1)_2" in transitions
     assert "Firebolt on Bugbear (1)_2" in transitions
     assert "Twinned Firebolt on Goblin (1) and Bugbear (1)_2" in transitions
@@ -89,7 +89,7 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         dag.trigger("Quickened Fireball at [ 6 10]_1")
         transitions = dag.get_available_transitions()
         # For the second action, coordinates are not taken into account
-        assert 'Staff of Defence on Goblin (1)_2' in transitions
+        assert 'Quarterstaff on Goblin (1)_2' in transitions
         assert 'Firebolt on Goblin (1)_2' in transitions
         assert 'Dodge of Draconic Sorcerer 5th LVL (1)_2' not in transitions
         assert 'Disengage of Draconic Sorcerer 5th LVL (1)_2' not in transitions
@@ -155,10 +155,10 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
     assert 'Fireball at [ 6 10]_1' in transitions
     assert 'Firebolt on Goblin (1)_1' in transitions
     assert 'Haste on Draconic Sorcerer 5th LVL (1)_1' in transitions
-    assert 'Staff of Defence on Goblin (1)_1' in transitions
+    assert 'Quarterstaff on Goblin (1)_1' in transitions
     assert 'Dodge of Draconic Sorcerer 5th LVL (1)_1' not in transitions  # Once you do a regular move, Dodge should not be available
     assert 'Disengage of Draconic Sorcerer 5th LVL (1)_1' not in transitions  # Once you do a regular move, Disengage should not be available
-    dag.trigger("Staff of Defence on Goblin (1)_1")
+    dag.trigger("Quarterstaff on Goblin (1)_1")
     transitions = dag.get_available_transitions()
     # For the second action, coordinates are not taken into account, but Dodge is included
     assert 'Quickened Haste on Draconic Sorcerer 5th LVL (1)_2' in transitions
@@ -187,9 +187,9 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
     dag.trigger("ms_(9, 10)")
     transitions = dag.get_available_transitions()
     # Check that we have all the action (except for the Staff attack) available
-    assert "Staff of Defence on Goblin (1)_2" in transitions  # Test that Misty Step actions are also prepended with movement
+    assert "Quarterstaff on Goblin (1)_2" in transitions  # Test that Misty Step actions are also prepended with movement
     assert "Firebolt on Goblin (1)_2" in transitions
-    dag.trigger("Staff of Defence on Goblin (1)_2")
+    dag.trigger("Quarterstaff on Goblin (1)_2")
     assert len(dag.get_available_transitions()) == 0
 
 

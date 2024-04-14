@@ -13,6 +13,7 @@ from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
 from ..combatants.night_hag import NightHag
 from ..combatants.ogre import Ogre
 from ..combatants.bandit_captain import BanditCaptain
+from ..combatants.paladin_1lvl import Paladin1Lvl
 from ..combatants.twig_blight import TwigBlight
 from ..combatants.stone_giant import StoneGiant
 from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
@@ -98,6 +99,10 @@ def test_moon_druid():
 @pytest.fixture()
 def test_druid_lvl_1():
     return Druid1Lvl()
+
+@pytest.fixture()
+def test_paladin_lvl_1():
+    return Paladin1Lvl()
 
 @pytest.fixture()
 def test_fighter_lvl_1():

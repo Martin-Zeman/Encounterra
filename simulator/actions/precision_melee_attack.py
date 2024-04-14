@@ -8,7 +8,7 @@ from ..resources import Uses, ResourceRefreshType
 
 class PrecisionMeleeAttackFactory(MeleeAttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, **kwargs):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=None, extra_dmg=None, uses_dex=False, two_handed=False, **kwargs):
         superiority_dice = get_superiority_dice(combatant.level)
         name = "Precision " + name
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg, uses_dex, two_handed, superiority_dice)

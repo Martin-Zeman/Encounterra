@@ -48,6 +48,9 @@ class Action(Enum):
     MENACING_RANGED_ATTACK = auto()
     # PRECISION_RANGED_ATTACK = auto()
     PRECISION_ATTACK = auto()
+    LAY_ON_HANDS = auto()
+    CURE_WOUNDS = auto()
+    ABJURE_ENEMY = auto()
 
 
 class BonusAction(Enum):
@@ -88,6 +91,9 @@ class BonusAction(Enum):
     # BONUS_PRECISION_MELEE_ATTACK = auto()
     BONUS_MENACING_RANGED_ATTACK = auto()
     # BONUS_PRECISION_RANGED_ATTACK = auto()
+    SHIELD_OF_FAITH = auto()
+    QUICKENED_CURE_WOUNDS = auto()
+    VOW_OF_ENMITY = auto()
 
 
 class Reaction(Enum):
@@ -148,9 +154,14 @@ class Passive(Enum):
     MAGIC_RESISTANCE = auto()
     CHARM_IMMUNITY = auto()
     GREAT_WEAPON_FIGHTING = auto()
+    DUELING = auto()
     BATTLE_MASTER_MANEUVERS = auto()
     DRACONIC_RESILIENCE = auto()
     UNARMORED_DEFENSE = auto()
+    DIVINE_SMITE = auto()
+    CHANNEL_DIVINITY = auto()
+    UNDEAD_FORTITUDE = auto()
+    MARTIAL_ADVANTAGE = auto()
 
 
 class MetaAction(Enum):

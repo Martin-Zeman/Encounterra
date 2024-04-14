@@ -7,6 +7,8 @@ import math
 from contextlib import contextmanager
 
 from .abilities.action_surge import ActionSurgeFactory
+from .abilities.lay_on_hands import LayOnHandsFactory
+from .abilities.on_hit_divine_smite import OnHitDivineSmite
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .abilities.rage import RageFactory
 from .action_resolver import check_concentration
@@ -14,6 +16,7 @@ from .actions.action_surge_plan_strategy import ActionSurgePlanStrategy
 from .actions.actoid import FactoryFlags
 from .actions.attack import AttackFactory
 from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from .actions.melee_attack import MeleeAttackFactory
 from .actions.menacing_melee_attack import MenacingMeleeAttackFactory
 from .actions.menacing_ranged_attack import MenacingRangedAttackFactory
 from .actions.moon_druid_action_plan_strategy import MoonDruidActionPlanStrategy
@@ -22,7 +25,8 @@ from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
-from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice
+from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice, DamageType, \
+    reconcile_roll_types, roll_saving_throw
 from .conditions import Conditions, is_affected_by, remove_condition
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
@@ -204,16 +208,16 @@ class Combatant(ProtoCombatant):
                 case Passive.SNEAK_ATTACK:
                     self.already_used_sneak_attack_this_turn = False
                     for af in self.action_factories:
-                        if FactoryFlags.IS_ATTACK_LIKE in af[1].flags and (FactoryFlags.USES_DEX in af[1].flags or FactoryFlags.IS_RANGED in af[1].flags):
+                        if isinstance(af[1], AttackFactory) and (FactoryFlags.USES_DEX in af[1].flags or FactoryFlags.IS_RANGED in af[1].flags):
                             af[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), af[1].dmg_type, af[1].crit_range))
                     for baf in self.bonus_action_factories:
-                        if FactoryFlags.IS_ATTACK_LIKE in baf[1].flags and (FactoryFlags.USES_DEX in baf[1].flags or FactoryFlags.IS_RANGED in baf[1].flags):
+                        if isinstance(baf[1], AttackFactory)and (FactoryFlags.USES_DEX in baf[1].flags or FactoryFlags.IS_RANGED in baf[1].flags):
                             baf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), baf[1].dmg_type, baf[1].crit_range))
                     for haf in self.haste_action_factories:
-                        if FactoryFlags.IS_ATTACK_LIKE in haf[1].flags and (FactoryFlags.USES_DEX in haf[1].flags or FactoryFlags.IS_RANGED in haf[1].flags):
+                        if isinstance(haf[1], AttackFactory) and (FactoryFlags.USES_DEX in haf[1].flags or FactoryFlags.IS_RANGED in haf[1].flags):
                             haf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), haf[1].dmg_type, haf[1].crit_range))
                     for raf in self.reaction_factories:
-                        if FactoryFlags.IS_ATTACK_LIKE in raf[1].flags and (FactoryFlags.USES_DEX in raf[1].flags or FactoryFlags.IS_RANGED in raf[1].flags):
+                        if isinstance(raf[1], AttackFactory) and (FactoryFlags.USES_DEX in raf[1].flags or FactoryFlags.IS_RANGED in raf[1].flags):
                             raf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), raf[1].dmg_type, raf[1].crit_range))
                     self.display_abilities.append("Sneak Attack")
                 case Passive.REGENERATION:
@@ -266,6 +270,35 @@ class Combatant(ProtoCombatant):
                     self.display_abilities.append("Draconic Resilience")
                 case Passive.UNARMORED_DEFENSE:
                     self.display_abilities.append("Unarmored Defense")
+                case Passive.DUELING:
+                    for af in self.action_factories:
+                        if isinstance(af[1], MeleeAttackFactory) and FactoryFlags.TWO_HANDED not in af[1].flags:
+                            af[1].dmg_bonus += 2
+                    for baf in self.bonus_action_factories:
+                        if isinstance(baf[1], MeleeAttackFactory) and FactoryFlags.TWO_HANDED not in baf[1].flags:
+                            baf[1].dmg_bonus += 2
+                    self.display_abilities.append("Dueling")
+                case Passive.GREAT_WEAPON_FIGHTING:
+                    self.display_abilities.append("Great Weapon Fighting")
+                case Passive.DIVINE_SMITE:
+                    for af in self.action_factories:
+                        if isinstance(af[1], MeleeAttackFactory):
+                            af[1].on_hit.append(OnHitDivineSmite())
+                    for baf in self.bonus_action_factories:
+                        if isinstance(baf[1], MeleeAttackFactory):
+                            baf[1].on_hit.append(OnHitDivineSmite())
+                    for haf in self.haste_action_factories:
+                        if isinstance(haf[1], MeleeAttackFactory):
+                            haf[1].on_hit.append(OnHitDivineSmite())
+                    for raf in self.reaction_factories:
+                        if isinstance(raf[1], MeleeAttackFactory):
+                            raf[1].on_hit.append(OnHitDivineSmite())
+                    self.display_abilities.append("Divine Smite")
+                case Passive.UNDEAD_FORTITUDE:
+                    self.display_abilities.append("Undead Fortitude")
+                case Passive.MARTIAL_ADVANTAGE:
+                    self.display_abilities.append("Martial Advantage")
+                    self.resources[Passive.MARTIAL_ADVANTAGE] = Uses(1, ResourceRefreshType.ROUND)
                 case _:
                     pass  # no resources required
             self.passive.append(action_type)
@@ -330,6 +363,15 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](**kwargs)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
+                case Action.LAY_ON_HANDS:
+                    lay_on_hands_pool = Uses(self.level * LayOnHandsFactory.HP_PER_LEVEL, ResourceRefreshType.LONG_REST)
+                    self.resources[Action.LAY_ON_HANDS] = lay_on_hands_pool
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self)))
+                    self.display_abilities.append("Lay on Hands")
+                case Action.CURE_WOUNDS:
+                    resource = kwargs.get("resource", self.spellslots)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource, **kwargs)))
+                    self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):
@@ -359,7 +401,7 @@ class Combatant(ProtoCombatant):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
-                case BonusAction.MISTY_STEP:
+                case BonusAction.MISTY_STEP | BonusAction.SHIELD_OF_FAITH:
                     resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
@@ -396,10 +438,16 @@ class Combatant(ProtoCombatant):
                     resource = kwargs.get("resource", self.spellslots)
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource, **kwargs)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    return self.bonus_action_factories[-1]
                 case BonusAction.HEALING_WORD:
                     resource = kwargs.get("resource", self.spellslots)
-                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, self, resource, **kwargs)))
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource, **kwargs)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    return self.bonus_action_factories[-1]
+                case BonusAction.VOW_OF_ENMITY:
+                    self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, **kwargs)))
+                    self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
+                    return self.bonus_action_factories[-1]
                 case _:
                     pass  # no resources required
         elif isinstance(action_type, Reaction):
@@ -535,15 +583,22 @@ class Combatant(ProtoCombatant):
         self.dmg_types_took_last_round.add(dmg_type)
         return dmg
 
-    def receive_dmg(self, dmg, dmg_type):
+    def receive_dmg(self, dmg, dmg_type, multiplier=1):
         """
         Inflicts damage to the combatant
         :param dmg: amount dmg to be received
         :param dmg_type: damage type
+        :param multiplier: multiplier (1 - regular hit, 2 - crit)
         :return: actual dmg received accounting for resistances, vulnerabilities and immunities
         """
         dmg = self._receive_dmg(dmg, dmg_type)
         battle_map = Map.get()
+
+        if self.curr_hp <= 0 and self.has_passive(Passive.UNDEAD_FORTITUDE) and multiplier == 1 and dmg_type is not DamageType.Radiant:
+            saved = roll_saving_throw(self.saving_throws[SavingThrow.CON], 5 + dmg, reconcile_roll_types(self.saving_throws_roll_type_mod[SavingThrow.CON]))
+            if saved:
+                self.curr_hp = 1
+                logger.info(f"Instead of dying, {self} drops to 1 HP thanks to Undead Fortitude")
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage
             battle_map.effect_tracker.remove_effect_from_combatant_by_type(self.get_original_form(), EffectType.WILDSHAPE)
@@ -556,15 +611,25 @@ class Combatant(ProtoCombatant):
                     battle_map.effect_tracker.remove_effect_from_combatant(self, cond.effect)
         return dmg
 
-    def receive_compound_dmg(self, dmg):
+    def receive_compound_dmg(self, dmg, multiplier=1):
         """
         Inflicts damage to the combatant composed of different damage types
         :param dmg: lift of tuples: [(dmg, dmg_type), ...]
+        :param multiplier: multiplier (1 - regular hit, 2 - crit)
         :return: actual dmg received accounting for resistances, vulnerabilities and immunities
         """
         total_dmg = 0
+        received_radiant_dmg = False
         for d in dmg:
             total_dmg += self._receive_dmg(d[0], d[1])
+            if d[1] == DamageType.Radiant:
+                received_radiant_dmg = True
+
+        if self.curr_hp <= 0 and self.has_passive(Passive.UNDEAD_FORTITUDE) and multiplier == 1 and not received_radiant_dmg:
+            saved = roll_saving_throw(self.saving_throws[SavingThrow.CON], 5 + total_dmg, reconcile_roll_types(self.saving_throws_roll_type_mod[SavingThrow.CON]))
+            if saved:
+                self.curr_hp = 1
+                logger.info(f"Instead of dying, {self} drops to 1 HP thanks to Undead Fortitude")
         battle_map = Map.get()
         if self.curr_hp <= 0 and self.get_original_form() is not self:
             self.get_original_form().curr_hp += self.curr_hp  # carry-over damage

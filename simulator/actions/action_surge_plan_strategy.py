@@ -30,7 +30,7 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
                 return movement
             elif not self.combatant.has_action and self.combatant.resources[FreeAction.ACTION_SURGE].has_resource() and self.combatant.weapon_dmg_dealt_this_turn > 0:
                 # Using a strict infeasibility_multiplier here to avoid wasting the Action Surge
-                _, max_threat = self.get_movement_and_threat_for_next_turn(distances, shortest_paths, 0)
+                _, max_threat = self.get_movement_and_threat_for_next_turn(distances, shortest_paths, 0)  # TODO check feasibility
                 max_threat = max_threat[1]
                 if max_threat >= self.combatant.weapon_dmg_dealt_this_turn * self.ACTION_SURGE_TOLERANCE_DELTA:
                     return [ActionSurgeFactory(self.combatant).create(None)]
@@ -39,7 +39,7 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
         if best_sequence is None:  # This happens e.g. if the only non-movement actions bring 0 threat
             if not self.combatant.has_action and self.combatant.resources[FreeAction.ACTION_SURGE].has_resource() and self.combatant.weapon_dmg_dealt_this_turn > 0:
                 # Using a strict infeasibility_multiplier here to avoid wasting the Action Surge
-                _, max_threat = self.get_movement_and_threat_for_next_turn(distances, shortest_paths, 0)
+                _, max_threat = self.get_movement_and_threat_for_next_turn(distances, shortest_paths, 0) # TODO check feasibility
                 max_threat = max_threat[1]
                 if max_threat >= self.combatant.weapon_dmg_dealt_this_turn * self.ACTION_SURGE_TOLERANCE_DELTA:
                     return [ActionSurgeFactory(self.combatant).create(None)]

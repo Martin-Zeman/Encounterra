@@ -1267,28 +1267,28 @@ def test_map_toggled_cache_with_key(battle_map, teams, test_goblin, test_bugbear
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
     battle_map.set_combatant_coordinates(test_goblin, np.array([5, 5]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 5]))
-    shortbow_attack = test_goblin.shortbow_attack[1].create(test_bugbear)
-    threat_1 = shortbow_attack.calculate_threat_delta({})
-    threat_2 = shortbow_attack.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
+    shortbow = test_goblin.shortbow[1].create(test_bugbear)
+    threat_1 = shortbow.calculate_threat_delta({})
+    threat_2 = shortbow.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
     assert threat_1 != threat_2
-    shortbow_attack.factory.dmg_bonus = 10
-    shortbow_attack.clear_cache()
-    threat_3 = shortbow_attack.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
+    shortbow.factory.dmg_bonus = 10
+    shortbow.clear_cache()
+    threat_3 = shortbow.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
     assert threat_2 != threat_3  # We first establish that raising the dmg_bonus does indeed change the threat
 
-    shortbow_attack.factory.dmg_bonus = 2  # Back to original value
-    shortbow_attack.clear_cache()
-    threat_4 = shortbow_attack.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
-    shortbow_attack.factory.dmg_bonus = 10
-    threat_5 = shortbow_attack.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
+    shortbow.factory.dmg_bonus = 2  # Back to original value
+    shortbow.clear_cache()
+    threat_4 = shortbow.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
+    shortbow.factory.dmg_bonus = 10
+    threat_5 = shortbow.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
     assert threat_4 == threat_5  # Even though we raised the dmg_bonus, the value is cached
 
     battle_map.move_combatant(test_goblin, np.array([4, 5]))  # Now we move the comabatant which should force a recalculation
-    threat_6 = shortbow_attack.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
+    threat_6 = shortbow.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
     assert threat_5 != threat_6  # We test that the cache is indeed position based
 
     battle_map.move_combatant(test_goblin, np.array([5, 5]))  # Now we move the comabatant which should force a recalculation
-    threat_7 = shortbow_attack.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
+    threat_7 = shortbow.calculate_threat_delta({ThreatModifierType.TO_HIT_FLAT: 2})
     assert threat_5 == threat_7
 
 

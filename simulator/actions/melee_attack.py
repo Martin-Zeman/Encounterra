@@ -16,7 +16,7 @@ logger = logging.getLogger("Encounterra")
 
 class MeleeAttackFactory(AttackFactory):
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=None, extra_dmg=None, uses_dex=False, two_handed=False, to_hit_bonus_die=None):
         super().__init__(name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range, ammo, on_hit, extra_dmg, uses_dex, two_handed, to_hit_bonus_die)
         self.flags |= FactoryFlags.IS_MELEE
 

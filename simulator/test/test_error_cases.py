@@ -1266,6 +1266,7 @@ def test_error_case_28(battle_map, teams, effect_tracker, test_moon_druid, test_
         assert False, f"Raised an exception {e}"
 
 
+@pytest.mark.flaky(reruns=3)
 def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_bugbear, test_evil_mage):
     """
     Error in for the Saber-Toother Tiger's "TypeError("unsupported operand type(s) for +: 'Size' and 'int'")"

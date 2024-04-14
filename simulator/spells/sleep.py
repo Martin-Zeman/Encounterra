@@ -65,6 +65,8 @@ class SleepFactory(DirectThreatFactory):
         return coord[0]
 
     def create_all(self, previous_action_in_dag=None):
+        if get_swallower(self.combatant):
+            return []
         # Here there really is no need to iterate over all coords. Just find the best score
         return [Sleep(self.find_best_args(self.combatant), self)]
 
@@ -125,6 +127,8 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
         hp_acc = 0
         total_hp_affected = roll_dice([(5, 8)])
         for combatant in affected:
+            if combatant.has_passive(Passive.CHARM_IMMUNITY):
+                continue
             if hp_acc + combatant.curr_hp <= total_hp_affected:
                 put_to_sleep.append(combatant)
                 hp_acc += combatant.curr_hp

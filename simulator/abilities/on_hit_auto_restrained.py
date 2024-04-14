@@ -12,7 +12,7 @@ class OnHitAutoRestrained(OnHit):
         self.dc = dc
         self.name = name
 
-    def hit(self, attacker, attack, target, multiplier):
+    def hit(self, attacker, attack, target, multiplier, dmg_so_far):
         logger.info(f"{target} is grappled and restrained")
         cond = ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, self.skill, self.dc, attacker, PhaseOfTurn.ACTION)
         apply_dc_condition(target, cond)

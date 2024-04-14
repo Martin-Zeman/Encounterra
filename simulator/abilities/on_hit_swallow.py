@@ -16,7 +16,7 @@ class OnHitSwallow(OnHit):
     def __init__(self, name="Swallow"):
         self.name = name
 
-    def hit(self, attacker, attack, target, multiplier):
+    def hit(self, attacker, attack, target, multiplier, dmg_so_far):
         logger.info(f"{target} is swallowed")
         remove_all_conditions_of_type(target, Conditions.GRAPPLED)
         remove_condition(attacker, Conditions.GRAPPLING)

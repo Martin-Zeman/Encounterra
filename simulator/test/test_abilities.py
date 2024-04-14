@@ -6,6 +6,7 @@ import pstats
 import numpy as np
 import pytest
 
+from ..abilities.lay_on_hands import LayOnHandsFactory
 from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver, ActionResult
 from ..actions.action_selector import get_action
@@ -23,7 +24,7 @@ from ..spells.sleep import SleepFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
-    test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3
+    test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, test_paladin_lvl_1
 from ..utils.utils import preallocate_wildshape_forms
 
 from ..test.test_singleton import SingletonClass
@@ -191,7 +192,7 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
 def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
     We assert that damage can knock the druid out of the wildshape and that damage carries over to the original form.
-    We also assert that the druid wil attempt to wildshape again after being knocked out the first time. Also that the druid
+    We also assert that the druid will attempt to wildshape again after being knocked out the first time. Also that the druid
     cannot wildshape a third time. We also test that the bugbear is really swallowed.
     """
     CustomLogger(logging.WARNING)
@@ -226,27 +227,32 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     dummy_effect = DummyEffect()
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
     battle_map.effect_tracker.add(dummy_effect)
+    test_bugbear.curr_hp = 100  # Making sure it survives
 
     try:
         actoid1 = get_action(test_moon_druid)
         assert test_moon_druid.curr_hp == 43
-        assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
+        assert str(actoid1).startswith("Thunderwave")
         action_resolver.resolve_action(actoid1, test_moon_druid)
+        battle_map.move_combatant(test_bugbear, np.array([4, 4]))  # Move him back in case he got pushed away
+        actoid2 = get_action(test_moon_druid)
+        assert test_moon_druid.curr_hp == 43
+        assert str(actoid2) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
+        action_resolver.resolve_action(actoid2, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
         assert test_moon_druid.get_current_form().curr_hp == 39
 
-        test_bugbear.curr_hp = 100  # Making sure it survives
         test_bugbear.ac = 0  # Making sure the toad hits
 
         test_moon_druid.new_turn()
-        actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "Toad Bite on Bugbear (1)"
-        action_resolver.resolve_action(actoid2, test_moon_druid)
-        test_moon_druid.new_turn()
         actoid3 = get_action(test_moon_druid)
-        assert str(actoid3) == "Toad Bite and Swallow on Bugbear (1)"
+        assert str(actoid3) == "Toad Bite on Bugbear (1)"
         action_resolver.resolve_action(actoid3, test_moon_druid)
+        test_moon_druid.new_turn()
+        actoid4 = get_action(test_moon_druid)
+        assert str(actoid4) == "Toad Bite and Swallow on Bugbear (1)"
+        action_resolver.resolve_action(actoid4, test_moon_druid)
         assert is_affected_by(test_bugbear, Conditions.SWALLOWED)
         test_moon_druid.get_current_form().receive_dmg(40, DamageType.Slashing)
         assert not is_affected_by(test_bugbear, Conditions.SWALLOWED)
@@ -258,9 +264,9 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 42
         test_moon_druid.new_turn()
-        actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "Wildshape of Moon Druid 5th LVL (1) into Brown Bear"
-        action_resolver.resolve_action(actoid2, test_moon_druid)
+        actoid5 = get_action(test_moon_druid)
+        assert str(actoid5) == "Wildshape of Moon Druid 5th LVL (1) into Brown Bear"
+        action_resolver.resolve_action(actoid5, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
         assert test_moon_druid.get_current_form().curr_hp == 34
@@ -268,8 +274,8 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 34
-        actoid3 = get_action(test_moon_druid)
-        assert not str(actoid3).startswith("Wildshape")
+        actoid6 = get_action(test_moon_druid)
+        assert not str(actoid6).startswith("Wildshape")
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -311,6 +317,7 @@ def test_removed_from_battlemap_when_killed_by_carry_over_damage_in_wildshape(ba
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
     battle_map.effect_tracker.add(dummy_effect)
     test_moon_druid.curr_hp = 1
+    test_moon_druid.spellslots.deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)  # To prevent the druid from casting Thunderwave or something first
 
     try:
         actoid1 = get_action(test_moon_druid)
@@ -504,6 +511,7 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
             pass
     test_moon_druid.athletics = -20  # Make sure it can't break the grapple
     test_moon_druid.acrobatics = -20  # Make sure it can't break the grapple
+    test_moon_druid.spellslots.deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)  # To prevent the druid from casting instead
 
     try:
         actoid1 = get_action(test_giant_toad)
@@ -1105,3 +1113,71 @@ def test_menacing_attack_shares_ammo(battle_map, teams, effect_tracker, test_dru
     action_resolver.resolve_action(mha, test_battle_master_fighter_lvl_3)
     assert test_battle_master_fighter_lvl_3.ammo['Handaxe'].get_resource() == 0
     assert test_battle_master_fighter_lvl_3.ammo['Menacing Handaxe'].get_resource() == 0
+
+
+def test_lay_on_hands(battle_map, teams, effect_tracker, test_paladin_lvl_1, test_druid_lvl_1, test_battle_master_fighter_lvl_3):
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_paladin_lvl_1, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_druid_lvl_1, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_paladin_lvl_1, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([7, 5]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([14, 5]))
+
+    loh_factory = None
+    for af in test_paladin_lvl_1.action_factories:
+        if str(af[1]) == "LayOnHandsFactory":
+            loh_factory = af[1]
+            break
+    assert loh_factory is not None
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 1
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 1
+    assert all_loh[0].hp_amount == 1
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 4
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 1
+    assert all_loh[0].hp_amount == 4
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 5
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 1
+    assert all_loh[0].hp_amount == 5
+
+    # The pool size if the limit here
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 6
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 1
+    assert all_loh[0].hp_amount == 5
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 6
+    test_paladin_lvl_1.resources[Action.LAY_ON_HANDS].set_resource(10)
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 2
+    assert all_loh[0].hp_amount == 5
+    assert all_loh[1].hp_amount == 6
+
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 10
+    test_paladin_lvl_1.resources[Action.LAY_ON_HANDS].set_resource(10)
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 2
+    assert all_loh[0].hp_amount == 5
+    assert all_loh[1].hp_amount == 10
+
+    # Now two possible targets
+    test_battle_master_fighter_lvl_3.curr_hp = test_battle_master_fighter_lvl_3.max_hp - 3
+    test_druid_lvl_1.curr_hp = test_druid_lvl_1.max_hp - 10
+    test_paladin_lvl_1.resources[Action.LAY_ON_HANDS].set_resource(10)
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 3
+    assert all_loh[0].hp_amount == 3
+    assert all_loh[1].hp_amount == 5
+    assert all_loh[2].hp_amount == 10
+
+    test_paladin_lvl_1.resources[Action.LAY_ON_HANDS].set_resource(1)
+    all_loh = loh_factory.create_all()
+    assert len(all_loh) == 2
+    assert all_loh[0].hp_amount == 1
+    assert all_loh[1].hp_amount == 1

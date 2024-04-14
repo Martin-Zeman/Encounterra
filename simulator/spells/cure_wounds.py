@@ -14,20 +14,20 @@ from ..utils.roll_types import ThreatModifierType
 logger = logging.getLogger("Encounterra")
 
 
-class HealingWordFactory(DirectThreatFactory):
+class CureWoundsFactory(DirectThreatFactory):
     level = 1
-    range = SpellStats.Range.FEET_60.value
+    range = SpellStats.Range.TOUCH.value
     target = SpellStats.Target.ONE_CREATURE
     duration = SpellStats.Duration.INSTANTANEOUS
     concentration = False
     type = SpellStats.Type.OTHER
     dc = None
 
-    def __init__(self, caster, resource, mod):
+    def __init__(self, action_type, caster, resource, mod):
         super().__init__()
         self.mod = mod
-        self.action_type = BonusAction.HEALING_WORD
-        self.heal_dice = "1d4"
+        self.action_type = action_type  # CURE_WOUNDS or QUICKENED_CURE_WOUNDS
+        self.heal_dice = "1d8"
         self.combatant = caster
         self.resource = resource
 
@@ -35,17 +35,17 @@ class HealingWordFactory(DirectThreatFactory):
         """
         Important for FSM building
         """
-        return "HealingWordFactory"
+        return "CureWoundsFactory"
 
     def get_ability_name(self):
-        return "Healing Word"
+        return "Cure Wounds"
 
     def get_twinned_kwargs(self):
         return {'mod': self.mod, 'caster': self.combatant, 'resource': self.resource}
 
     def get_eligible_targets(self):
         if get_swallower(self.combatant):
-            return []
+            return [self.combatant]
         ret = [e for e in Map.get().get_non_swallowed_allies(self.combatant) if type(type(e).cls) is not Class.MONSTER or (type(e).cls is not Class.MONSTER.UNDEAD and type(e).cls is not Class.MONSTER.CONSTRUCT)]
         if type(type(self.combatant).cls) is not Class.MONSTER or (type(self.combatant).cls is not Class.MONSTER.UNDEAD and type(self.combatant).cls is not Class.MONSTER.CONSTRUCT):
             ret.append(self.combatant)
@@ -53,16 +53,16 @@ class HealingWordFactory(DirectThreatFactory):
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()
-        return [HealingWord(t, self) for t in targets]
+        return [CureWounds(t, self) for t in targets]
 
     def create(self, target):
-        return HealingWord(target, self)
+        return CureWounds(target, self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if get_swallower(target):
             return 0
-        if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= HealingWordFactory.range:
+        if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= CureWoundsFactory.range:
             missing_hp = get_missing_hp(self.combatant)
             return min(missing_hp, avg_roll(self.heal_dice) + self.mod)
         return 0
@@ -82,17 +82,17 @@ class HealingWordFactory(DirectThreatFactory):
         return avg_roll(self.heal_dice) + self.mod  # The simplification here is ok
 
 
-class HealingWord(Actoid, DirectThreat):
+class CureWounds(Actoid, DirectThreat):
     def __init__(self, target, factory):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
         self.target = target
         self.factory = factory
 
     def __str__(self):
-        return f"Healing Word on {self.target}"
+        return f"Cure Wounds on {self.target}"
 
     def shorthand_str(self):
-        return "Healing Word"
+        return "Cure Wounds"
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -108,7 +108,7 @@ class HealingWord(Actoid, DirectThreat):
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
-        if get_swallower(self.factory.combatant):
+        if get_swallower(self.factory.combatant) and self.target is not self.factory.combatant:
             return None
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
@@ -116,10 +116,9 @@ class HealingWord(Actoid, DirectThreat):
             free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=HealingWordFactory.range, combatant=self.factory.combatant)
-            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
-        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HealingWordFactory.range and \
-                battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
+                                                                 rng=CureWoundsFactory.range, combatant=self.factory.combatant)
+            return free_coords_in_range
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= CureWoundsFactory.range:
             return [curr_coord]
         return None
 

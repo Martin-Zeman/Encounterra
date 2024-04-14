@@ -30,23 +30,31 @@ from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
+from .combatants.hobgoblin import Hobgoblin
 from .combatants.moon_druid_2lvl import MoonDruid2Lvl
 from .combatants.moon_druid_3lvl import MoonDruid3Lvl
 from .combatants.moon_druid_4lvl import MoonDruid4Lvl
 from .combatants.moon_druid_5lvl import MoonDruid5Lvl
 from .combatants.needle_blight import NeedleBlight
 from .combatants.night_hag import NightHag
+from .combatants.oath_of_vengeance_paladin_3lvl import OathOfVengeancePaladin3Lvl
+from .combatants.oath_of_vengeance_paladin_4lvl import OathOfVengeancePaladin4Lvl
+from .combatants.oath_of_vengeance_paladin_5lvl import OathOfVengeancePaladin5Lvl
 from .combatants.ogre import Ogre
+from .combatants.paladin_1lvl import Paladin1Lvl
+from .combatants.paladin_2lvl import Paladin2Lvl
 from .combatants.quetzalcoatlus import Quetzalcoatlus
 from .combatants.rogue_1lvl import Rogue1Lvl
 from .combatants.rogue_2lvl import Rogue2Lvl
 from .combatants.saber_toothed_tiger import SaberToothedTiger
+from .combatants.skeleton import Skeleton
 from .combatants.stone_giant import StoneGiant
 from .combatants.totem_barbarian_3lvl import TotemBarbarian3Lvl
 from .combatants.totem_barbarian_4lvl import TotemBarbarian4Lvl
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
+from .combatants.zombie import Zombie
 from .effects.effect_tracker import EffectTracker
 from .resources import ResourceDepletionLevel
 from .utils.utils import get_combatant_classes
@@ -181,6 +189,8 @@ class Session:
                 self.combatants.append(GiantToad(curr_count))
             case Goblin.id:
                 self.combatants.append(Goblin(curr_count))
+            case Hobgoblin.id:
+                self.combatants.append(Hobgoblin(curr_count))
             case MoonDruid2Lvl.id:
                 self.combatants.append(MoonDruid2Lvl(curr_count))
             case MoonDruid3Lvl.id:
@@ -195,6 +205,16 @@ class Session:
                 self.combatants.append(NightHag(curr_count))
             case Ogre.id:
                 self.combatants.append(Ogre(curr_count))
+            case OathOfVengeancePaladin3Lvl.id:
+                self.combatants.append(OathOfVengeancePaladin3Lvl(curr_count))
+            case OathOfVengeancePaladin4Lvl.id:
+                self.combatants.append(OathOfVengeancePaladin4Lvl(curr_count))
+            case OathOfVengeancePaladin5Lvl.id:
+                self.combatants.append(OathOfVengeancePaladin5Lvl(curr_count))
+            case Paladin1Lvl.id:
+                self.combatants.append(Paladin1Lvl(curr_count))
+            case Paladin2Lvl.id:
+                self.combatants.append(Paladin2Lvl(curr_count))
             case Quetzalcoatlus.id:
                 self.combatants.append(Quetzalcoatlus(curr_count))
             case Rogue1Lvl.id:
@@ -203,6 +223,8 @@ class Session:
                 self.combatants.append(Rogue2Lvl(curr_count))
             case SaberToothedTiger.id:
                 self.combatants.append(SaberToothedTiger(curr_count))
+            case Skeleton.id:
+                self.combatants.append(Skeleton(curr_count))
             case StoneGiant.id:
                 self.combatants.append(StoneGiant(curr_count))
             case TotemBarbarian3Lvl.id:
@@ -215,6 +237,8 @@ class Session:
                 self.combatants.append(TwigBlight(curr_count))
             case VampireSpawn.id:
                 self.combatants.append(VampireSpawn(curr_count))
+            case Zombie.id:
+                self.combatants.append(Zombie(curr_count))
             case _:
                 logger.error(f"Unknown combatant type: {combatant_type}")
                 return

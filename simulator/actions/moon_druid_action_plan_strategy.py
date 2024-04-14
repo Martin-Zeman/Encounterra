@@ -99,7 +99,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
             ws_fsm, ws_transition_name_to_action = generate_wildshape_proto_dag(self.combatant)
             if ws_transition_name_to_action:  # Could be out of wildshape uses
                 ws_proto_dag, ws_movement_trans_to_coord_and_type, ws_transition_to_eligible_coords = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
-                if ws_proto_dag is not None:
+                if ws_proto_dag is not None and ws_movement_trans_to_coord_and_type and ws_transition_to_eligible_coords:
                     ws_best_sequence, ws_transition_name_to_ms_path, _ = find_best_sequence(self.combatant, ws_proto_dag, ws_transition_name_to_action, ws_transition_to_eligible_coords, ws_movement_trans_to_coord_and_type, distances, shortest_paths)
                     self.best_wildshape_plan_data = ws_transition_name_to_action, ws_movement_trans_to_coord_and_type, ws_best_sequence, ws_transition_name_to_ms_path
 

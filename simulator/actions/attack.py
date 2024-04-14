@@ -26,7 +26,7 @@ class AttackFactory(DirectThreatFactory):
         MELEE = auto()
         RANGED = auto()
 
-    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=[], extra_dmg=[], uses_dex=False, two_handed=False, to_hit_bonus_die=None):
+    def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=None, extra_dmg=None, uses_dex=False, two_handed=False, to_hit_bonus_die=None):
         super().__init__()
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.flags |= FactoryFlags.IS_HASTE_ELIGIBLE_ATTACK
@@ -36,13 +36,13 @@ class AttackFactory(DirectThreatFactory):
         self.dmg_dice = dmg_dice
         self.dmg_bonus = dmg_bonus
         self.dmg_type = dmg_type
-        self.extra_dmg = extra_dmg  # List of tuples of type (dmg_dice, dmg_type)
+        self.extra_dmg = extra_dmg if extra_dmg is not None else []  # Create a new list if `on_hit` is None to prevent sharing among different instances
         self.range = attack_range
         self.short_range = attack_range // 4
         self.action_type = action_type  # MELEE_ATTACK, RANGED_ATTACK, BONUS_MELEE_ATTACK, BONUS_RANGED_ATTACK REACTION_ATTACK, HASTE_MELEE...
         self.crit_range = crit_range
         self.ammo = ammo
-        self.on_hit = on_hit
+        self.on_hit = on_hit if on_hit is not None else []  # Create a new list if `on_hit` is None to prevent sharing among different instances
         self.to_hit_bonus_die = to_hit_bonus_die  # This is not really applied, only used to simplify threat calculation of derived classes
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0

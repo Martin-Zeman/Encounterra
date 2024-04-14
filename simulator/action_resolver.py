@@ -173,6 +173,9 @@ class ActionResolver:
         if attacker.has_passive(Passive.ASSASSINATE) and battle_map.combat_round == 0 and attacker.curr_init > target.curr_init:
             logger.info(f"{attacker} gains advantage thanks to Assassinate")
             return RollType.ADVANTAGE
+        if battle_map.effect_tracker.is_affected_by_vow_of_enmity(attacker, target):
+            logger.info(f"{attacker} gains advantage thanks to Vow of Enmity")
+            return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
     def has_advantage_melee(self, attack, attacker, target):
@@ -200,6 +203,9 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if attacker.has_passive(Passive.ASSASSINATE) and battle_map.combat_round == 0 and attacker.curr_init > target.curr_init:
             logger.info(f"{attacker} gains advantage thanks to Assassinate")
+            return RollType.ADVANTAGE
+        if battle_map.effect_tracker.is_affected_by_vow_of_enmity(attacker, target):
+            logger.info(f"{attacker} gains advantage thanks to Vow of Enmity")
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
 
@@ -269,7 +275,7 @@ class ActionResolver:
             final_modifier = reconcile_roll_types(types)
 
             if final_modifier is RollType.STRAIGHT:
-                logger.info(f"{caster} rolls for {spell}", extra={"team": self.teams.get_team(caster)})
+                # logger.info(f"{caster} rolls for {spell}", extra={"team": self.teams.get_team(caster)})
                 rolled = random.randint(1, 20)
             elif final_modifier is RollType.ADVANTAGE:
                 logger.info(f"{caster} rolls for {spell} at advantage", extra={"team": self.teams.get_team(caster)})
@@ -291,7 +297,7 @@ class ActionResolver:
                 dmg = multiplier * bolt_dmg
                 logger.info(f"Chaosbolt {'CRITS' if multiplier == 2 else 'hits'} {curr_target} for {dmg} damage",
                              extra={"team": self.teams.get_team(caster)})
-                curr_target.receive_dmg(dmg, dmg_type)
+                curr_target.receive_dmg(dmg, dmg_type, multiplier)
                 battle_map.remove_combatant_if_dead(curr_target)
                 if rolled_numbers[0] == rolled_numbers[1]:
                     for i, potential_target in enumerate(potential_targets):
@@ -341,7 +347,7 @@ class ActionResolver:
             dmg = multiplier * roll_spell_dmg(spell.factory.dmg_dice)
             logger.info(f"{spell.shorthand_str()} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
-            target.receive_dmg(dmg, spell.factory.dmg_type)
+            target.receive_dmg(dmg, spell.factory.dmg_type, multiplier)
             Map.get().remove_combatant_if_dead(target)
             return ActionResult.DMG
         else:
@@ -421,11 +427,11 @@ class ActionResolver:
             attack.roll_type = final_modifier
             if target:
                 for oh in attack.factory.on_hit:
-                    on_hit_dmg = oh.hit(attacker, attack, target, multiplier)
+                    on_hit_dmg = oh.hit(attacker, attack, target, multiplier, reduce(lambda dmg, x: dmg + x[0], total_compound_dmg, 0))
                     if on_hit_dmg:  # Only the damage that is considered as part of the attack source (i.e. not DC-based poison etc.)
                         logger.info(f"With extra {on_hit_dmg[0]} damage from {oh.name}", extra={"team": self.teams.get_team(attacker)})
                         total_compound_dmg.append(on_hit_dmg)
-            actual_dmg_dealt = target.receive_compound_dmg(total_compound_dmg)
+            actual_dmg_dealt = target.receive_compound_dmg(total_compound_dmg, multiplier)
             attacker.weapon_dmg_dealt_this_turn = actual_dmg_dealt if multiplier == 1 else actual_dmg_dealt - dmg_dice_sum  # This is used for Action Surge (crit dmg is an approximation)
             battle_map.remove_combatant_if_dead(target)  # could be a wildshaped druid, reverting to original form
 
@@ -530,7 +536,8 @@ class ActionResolver:
         battle_map = Map.get()
         assert actoid is not None
         match actoid.factory.action_type:
-            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | Action.DODGE | BonusAction.SHILLELAGH |HasteAction.HASTE_DISENGAGE:
+            case BonusAction.TOTEM_RAGE | BonusAction.RAGE | Action.DISENGAGE | BonusAction.CUNNING_DISENGAGE | \
+                 Action.DODGE | BonusAction.SHILLELAGH | HasteAction.HASTE_DISENGAGE | BonusAction.VOW_OF_ENMITY:
                 actoid.activate()
                 return False
             case Action.RECKLESS_ATTACK:
@@ -557,7 +564,7 @@ class ActionResolver:
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
                 return ActionResult.NOP
-            case Action.SLEEP | BonusAction.QUICKENED_SLEEP:
+            case Action.SLEEP | BonusAction.QUICKENED_SLEEP | BonusAction.SHIELD_OF_FAITH:
                 # TODO See if it can be merged into the previous one
                 logger.info(f"{combatant} casts {actoid}")
                 actoid.activate()
@@ -705,6 +712,9 @@ class ActionResolver:
             case Action.SHAKE_ALLY_AWAKE:
                 logger.info(f"{actoid.target} is shaken awake by {combatant}")
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(actoid.target, EffectType.SLEEP)
+            case Action.LAY_ON_HANDS:
+                logger.info(f"{combatant} uses {actoid}")
+                actoid.target.heal(actoid.hp_amount)
             case BonusAction.SECOND_WIND:
                 heal_hp = roll_dice([(1, 10)]) + combatant.level
                 combatant.heal(heal_hp)
@@ -725,7 +735,7 @@ class ActionResolver:
                             continue
                         battle_map.push_combatant_away_from(origin, aff, 2)
                 return ActionResult.DMG
-            case BonusAction.HEALING_WORD:
+            case BonusAction.HEALING_WORD | Action.CURE_WOUNDS:
                 logger.info(f"{combatant} casts {actoid}")
                 heal_hp = roll_spell_dmg(actoid.factory.heal_dice) + actoid.factory.mod
                 actoid.target.heal(heal_hp)
@@ -785,8 +795,10 @@ class ActionResolver:
                     combatant.has_reaction = False
                 case EffectType.RAGE | EffectType.TOTEM_RAGE | EffectType.WILDSHAPE | EffectType.DODGE | EffectType.DISENGAGE |\
                      EffectType.RECKLESS_ATTACK | EffectType.FLAMING_SPHERE | EffectType.SPIKE_GROWTH | EffectType.CLOUD_OF_DAGGERS |\
-                    EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
-                     EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION | EffectType.SLEEP:
+                     EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
+                     EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION | EffectType.SLEEP | \
+                     EffectType.SHIELD_OF_FAITH | EffectType.SHILLELAGH | EffectType.MENACING_ATTACK_FRIGHTENED | \
+                     EffectType.VOW_OF_ENMITY:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error(f"Unknown effect {effect_type}")
