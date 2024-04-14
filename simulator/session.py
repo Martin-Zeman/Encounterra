@@ -26,10 +26,13 @@ from .combatants.druid_1lvl import Druid1Lvl
 from .combatants.evil_mage import EvilMage
 from .combatants.fighter_1lvl import Fighter1Lvl
 from .combatants.fighter_2lvl import Fighter2Lvl
+from .combatants.fire_giant import FireGiant
+from .combatants.frost_giant import FrostGiant
 from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
+from .combatants.hill_giant import HillGiant
 from .combatants.hobgoblin import Hobgoblin
 from .combatants.moon_druid_2lvl import MoonDruid2Lvl
 from .combatants.moon_druid_3lvl import MoonDruid3Lvl
@@ -181,6 +184,10 @@ class Session:
                 self.combatants.append(Fighter1Lvl(curr_count))
             case Fighter2Lvl.id:
                 self.combatants.append(Fighter2Lvl(curr_count))
+            case FireGiant.id:
+                self.combatants.append(FireGiant(curr_count))
+            case FrostGiant.id:
+                self.combatants.append(FrostGiant(curr_count))
             case GiantConstrictorSnake.id:
                 self.combatants.append(GiantConstrictorSnake(curr_count))
             case GiantSpider.id:
@@ -189,6 +196,8 @@ class Session:
                 self.combatants.append(GiantToad(curr_count))
             case Goblin.id:
                 self.combatants.append(Goblin(curr_count))
+            case HillGiant.id:
+                self.combatants.append(HillGiant(curr_count))
             case Hobgoblin.id:
                 self.combatants.append(Hobgoblin(curr_count))
             case MoonDruid2Lvl.id:
