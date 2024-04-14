@@ -37,6 +37,9 @@ class Coords:
     def get(self):
         return self.coords
 
+    def get_tuples(self):
+        return {tuple(coord) for coord in self.coords}
+
     def set(self, coords):
         self.coords = coords
 

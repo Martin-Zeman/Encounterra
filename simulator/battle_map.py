@@ -18,7 +18,8 @@ from .misc import Size, Visibility
 from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler, \
     get_source_of_frightened
 from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors, \
-    find_nearest_valid_coordinate_chebyshev, angle_between_vectors_rad
+    find_nearest_valid_coordinate_chebyshev, angle_between_vectors_rad, linear_regression, sample_points_on_line, \
+    get_angle_from_slope
 from .misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
@@ -1297,6 +1298,79 @@ class Map:
         if best_placement is not None:
             return best_placement.get()[0], max_score, best_affected
         return None, None, None
+
+    # def find_best_placements_harmful_cone(self, caster, radius):
+    #     """
+    #     Finds the best placements of a square harmful AoE effect
+    #     :param caster: the caster
+    #     :param radius: radius of the cone
+    #     :return: list of the best origins, angle which applies to all the origins
+    #     """
+    #     enemies = self.teams.get_enemies(caster)
+    #     # Fit a regression line to the enemy positions
+    #     m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in enemies])
+    #     sample_points = sample_points_on_line(m, c, self.size)
+    #     angle = 90 - get_angle_from_slope(m)  # Conversion is needed to get the upwards oriented angle
+    #     combatant_to_coord_sets = {combatant: set(coords.get_tuples()) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}  # Small optimization, so we don't have to recreate the tuples every time
+    #     all_combatant_coords = set().union(*combatant_to_coord_sets.values())
+    #
+    #     max_score = 0
+    #     best_origins = []
+    #     last_origin = None
+    #     for point in sample_points:
+    #         origin = tuple(map(int, point))
+    #         if origin in all_combatant_coords:
+    #             continue  # Filter out origins that are taken up by combatants already
+    #         if (0, 0) <= origin < (self.size, self.size) and origin != last_origin:  # Ensure the origin is within grid bounds
+    #             last_origin = origin
+    #             score = 0
+    #             affected_coords = get_affected_by_cone(origin, angle, radius, self.size)
+    #             for combatant, coords in combatant_to_coord_sets.items():
+    #                 if len(affected_coords.intersection(coords)):
+    #                     score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
+    #             if score > max_score:
+    #                 best_origins = [origin]
+    #             elif score == max_score and score > 0:
+    #                 best_origins.append(origin)
+    #     return best_origins, angle
+
+    def find_best_placements_harmful_cone(self, caster, radius):
+        """
+        Finds the best placements of a square harmful AoE effect
+        :param caster: the caster
+        :param radius: radius of the cone
+        :return: list of the best origins, angle which applies to all the origins
+        """
+        # Fit a regression line to the enemy positions
+        m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in self.teams.get_enemies(caster)])
+        base_angle = 90 - get_angle_from_slope(m)  # Conversion to get the upwards oriented angle
+        angle_range = np.arange(base_angle - 15, base_angle + 15.1, 3.0)  # Adjust angle in increments of 2.5 degrees
+        combatant_to_coord_sets = {combatant: set(coords.get_tuples()) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}
+        all_combatant_coords = set().union(*combatant_to_coord_sets.values())
+
+        max_score = 0
+        best_origins = []
+        for angle in angle_range:
+            sample_points = sample_points_on_line(np.tan(np.radians(90 - angle)), c, self.size)  # Recalculate line points for each angle
+            last_origin = None
+            for point in sample_points:
+                origin = tuple(map(int, point))
+                if origin in all_combatant_coords:
+                    continue  # Skip origins that are already occupied by combatants
+                if (0, 0) <= origin < (self.size, self.size) and origin != last_origin:  # Ensure the origin is within grid bounds
+                    last_origin = origin
+                    score = 0
+                    affected_coords = get_affected_by_cone(origin, angle, radius, self.size)
+                    for combatant, coords in combatant_to_coord_sets.items():
+                        if len(affected_coords.intersection(coords)):
+                            score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
+                    if score > max_score:
+                        max_score = score
+                        best_origins = [(origin, angle)]
+                    elif score == max_score and score > 0:
+                        best_origins.append((origin, angle))
+
+        return best_origins
 
     def get_coords_affected_by_square_aoe(self, origin, length):
         """

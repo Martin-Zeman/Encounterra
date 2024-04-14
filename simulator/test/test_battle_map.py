@@ -1005,6 +1005,23 @@ def test_find_best_placement_harmful_square_thunderwave_out_of_spell_range(battl
     assert coords is None
 
 
+def test_find_best_placements_harmful_cone(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_ogre, test_stone_giant):
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 1]))  # doesn't matter in this case
+    battle_map.set_combatant_coordinates(test_goblin, np.array([2, 11]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 11]))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([5, 10]))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 12]))
+    best_placements = battle_map.find_best_placements_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    assert len(best_placements) == 1
+    assert best_placements[0][0] == (0, 10)
+    assert best_placements[0][1] == pytest.approx(48, 0.1)
+
+
 def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian):
     test_goblin.size = Size.LARGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)

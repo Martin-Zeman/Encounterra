@@ -65,6 +65,24 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     return coords
 
 
+def linear_regression(enemy_positions):
+    x = np.array([pos[0] for pos in enemy_positions])
+    y = np.array([pos[1] for pos in enemy_positions])
+    A = np.vstack([x, np.ones(len(x))]).T
+    m, c = np.linalg.lstsq(A, y, rcond=None)[0]
+    return m, c
+
+
+def sample_points_on_line(m, c, grid_size, num_samples=20):
+    x_vals = np.linspace(0, grid_size - 1, num_samples)
+    y_vals = m * x_vals + c
+    return np.column_stack((x_vals, y_vals))
+
+
+def get_angle_from_slope(m):
+    return math.degrees(math.atan(m))
+
+
 def do_squares_overlap(origin1: np.array, length1, origin2: np.array, length2):
     """
     Given two squares represented by their origin (bottom-left corner) and their length, return if they overlap
