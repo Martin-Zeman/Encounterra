@@ -511,6 +511,7 @@ def test_cannot_wildshape_restrained_in_confined_space(battle_map, teams, effect
             pass
     test_moon_druid.athletics = -20  # Make sure it can't break the grapple
     test_moon_druid.acrobatics = -20  # Make sure it can't break the grapple
+    test_moon_druid.spellslots.deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)  # To prevent the druid from casting instead
 
     try:
         actoid1 = get_action(test_giant_toad)

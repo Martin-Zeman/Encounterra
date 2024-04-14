@@ -38,6 +38,8 @@ from .combatants.moon_druid_5lvl import MoonDruid5Lvl
 from .combatants.needle_blight import NeedleBlight
 from .combatants.night_hag import NightHag
 from .combatants.oath_of_vengeance_paladin_3lvl import OathOfVengeancePaladin3Lvl
+from .combatants.oath_of_vengeance_paladin_4lvl import OathOfVengeancePaladin4Lvl
+from .combatants.oath_of_vengeance_paladin_5lvl import OathOfVengeancePaladin5Lvl
 from .combatants.ogre import Ogre
 from .combatants.paladin_1lvl import Paladin1Lvl
 from .combatants.paladin_2lvl import Paladin2Lvl
@@ -205,6 +207,10 @@ class Session:
                 self.combatants.append(Ogre(curr_count))
             case OathOfVengeancePaladin3Lvl.id:
                 self.combatants.append(OathOfVengeancePaladin3Lvl(curr_count))
+            case OathOfVengeancePaladin4Lvl.id:
+                self.combatants.append(OathOfVengeancePaladin4Lvl(curr_count))
+            case OathOfVengeancePaladin5Lvl.id:
+                self.combatants.append(OathOfVengeancePaladin5Lvl(curr_count))
             case Paladin1Lvl.id:
                 self.combatants.append(Paladin1Lvl(curr_count))
             case Paladin2Lvl.id:

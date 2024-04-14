@@ -11,18 +11,18 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class OathOfVengeancePaladin3Lvl(Combatant):
+class OathOfVengeancePaladin4Lvl(Combatant):
 
-    name = "Oath of Vengeance Paladin 3rd LVL"
+    name = "Oath of Vengeance Paladin 4th LVL"
     cls = Class.PALADIN.OATH_OF_VENGEANCE
-    level = 3
+    level = 4
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=28, ac=18, init_bonus=-1, spell_to_hit=4, speed=30, resistances=set(), dc=12)
-        self.battleaxe = self.add_ability(Action.MELEE_ATTACK,  name="Battleaxe", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
-        self.javelin = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=5, dmg_dice="1d6", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=Uses(4, ResourceRefreshType.NEVER), uses_dex=False)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Battleaxe", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1)
+        super().__init__(num_or_name, hp=36, ac=18, init_bonus=-1, spell_to_hit=4, speed=30, resistances=set(), dc=12)
+        self.battleaxe = self.add_ability(Action.MELEE_ATTACK,  name="Battleaxe", combatant=self, to_hit=6, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
+        self.javelin = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=Uses(4, ResourceRefreshType.NEVER), uses_dex=False)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Battleaxe", combatant=self, to_hit=6, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Action.LAY_ON_HANDS)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(Passive.DUELING)
@@ -35,13 +35,13 @@ class OathOfVengeancePaladin3Lvl(Combatant):
         self.add_ability(BonusAction.VOW_OF_ENMITY)
         # self.add_ability(Action.ABJURE_ENEMY, resource=channel_divinity_uses)
         self.build_attack_fms()
-        self.saving_throws[SavingThrow.STR] = 3
+        self.saving_throws[SavingThrow.STR] = 4
         self.saving_throws[SavingThrow.DEX] = -1
         self.saving_throws[SavingThrow.CON] = 2
         self.saving_throws[SavingThrow.INT] = 0
         self.saving_throws[SavingThrow.WIS] = 3
         self.saving_throws[SavingThrow.CHA] = 4
-        self.athletics = 5
+        self.athletics = 6
         self.acrobatics = -1
         self.passive_perception = 11
 
