@@ -102,7 +102,7 @@ def test_map_position_toggled_cache(battle_map, teams, effect_tracker, test_gobl
     battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 8]))
     battle_map.build_adjacency_matrix()
 
-    shortbow = test_goblin.shortbow_attack[1].create(test_bugbear)
+    shortbow = test_goblin.shortbow[1].create(test_bugbear)
     threat_before = shortbow.calculate_threat()
     battle_map.move_combatant(test_goblin, np.array([8, 9]))
     threat_after = shortbow.calculate_threat()

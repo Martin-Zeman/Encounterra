@@ -9,7 +9,7 @@ from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..misc import reconcile_roll_types
-from ..conditions import Conditions, is_affected_by_any, get_swallower, is_affected_by
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from functools import reduce
 from ..misc import avg_roll
 from ..resources import ResourceRefreshType, Uses
@@ -40,12 +40,12 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.dmg_dice = dmg_dice
         self.dmg_bonus = dmg_bonus
         self.dmg_type = dmg_type
-        self.extra_dmg = extra_dmg  # List of tuples of type (dmg_dice, dmg_type)
+        self.extra_dmg = extra_dmg if extra_dmg is not None else []  # Create a new list if `on_hit` is None to prevent sharing among different instances
         self.range = attack_range
         self.action_type = action_type  # ATTACK, BONUS_ATTACK, REACTION_ATTACK, HASTE_ATTACK...
         self.ammo = ammo
         self.crit_range = crit_range
-        self.on_hit = on_hit
+        self.on_hit = on_hit if on_hit is not None else []  # Create a new list if `on_hit` is None to prevent sharing among different instances
 
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0

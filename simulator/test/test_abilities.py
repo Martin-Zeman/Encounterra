@@ -192,7 +192,7 @@ def test_movement_before_wildshape_with_concentration_spell(battle_map, teams, e
 def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
     """
     We assert that damage can knock the druid out of the wildshape and that damage carries over to the original form.
-    We also assert that the druid wil attempt to wildshape again after being knocked out the first time. Also that the druid
+    We also assert that the druid will attempt to wildshape again after being knocked out the first time. Also that the druid
     cannot wildshape a third time. We also test that the bugbear is really swallowed.
     """
     CustomLogger(logging.WARNING)
@@ -227,27 +227,32 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
     dummy_effect = DummyEffect()
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
     battle_map.effect_tracker.add(dummy_effect)
+    test_bugbear.curr_hp = 100  # Making sure it survives
 
     try:
         actoid1 = get_action(test_moon_druid)
         assert test_moon_druid.curr_hp == 43
-        assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
+        assert str(actoid1).startswith("Thunderwave")
         action_resolver.resolve_action(actoid1, test_moon_druid)
+        battle_map.move_combatant(test_bugbear, np.array([4, 4]))  # Move him back in case he got pushed away
+        actoid2 = get_action(test_moon_druid)
+        assert test_moon_druid.curr_hp == 43
+        assert str(actoid2) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
+        action_resolver.resolve_action(actoid2, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
         assert test_moon_druid.get_current_form().curr_hp == 39
 
-        test_bugbear.curr_hp = 100  # Making sure it survives
         test_bugbear.ac = 0  # Making sure the toad hits
 
         test_moon_druid.new_turn()
-        actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "Toad Bite on Bugbear (1)"
-        action_resolver.resolve_action(actoid2, test_moon_druid)
-        test_moon_druid.new_turn()
         actoid3 = get_action(test_moon_druid)
-        assert str(actoid3) == "Toad Bite and Swallow on Bugbear (1)"
+        assert str(actoid3) == "Toad Bite on Bugbear (1)"
         action_resolver.resolve_action(actoid3, test_moon_druid)
+        test_moon_druid.new_turn()
+        actoid4 = get_action(test_moon_druid)
+        assert str(actoid4) == "Toad Bite and Swallow on Bugbear (1)"
+        action_resolver.resolve_action(actoid4, test_moon_druid)
         assert is_affected_by(test_bugbear, Conditions.SWALLOWED)
         test_moon_druid.get_current_form().receive_dmg(40, DamageType.Slashing)
         assert not is_affected_by(test_bugbear, Conditions.SWALLOWED)
@@ -259,9 +264,9 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 42
         test_moon_druid.new_turn()
-        actoid2 = get_action(test_moon_druid)
-        assert str(actoid2) == "Wildshape of Moon Druid 5th LVL (1) into Brown Bear"
-        action_resolver.resolve_action(actoid2, test_moon_druid)
+        actoid5 = get_action(test_moon_druid)
+        assert str(actoid5) == "Wildshape of Moon Druid 5th LVL (1) into Brown Bear"
+        action_resolver.resolve_action(actoid5, test_moon_druid)
         assert test_moon_druid.get_current_form() is not test_moon_druid
         assert test_moon_druid.current_wildshape_form is not None
         assert test_moon_druid.get_current_form().curr_hp == 34
@@ -269,8 +274,8 @@ def test_damage_knocks_out_of_wildshape(battle_map, teams, effect_tracker, test_
         assert test_moon_druid.get_current_form() is test_moon_druid
         assert test_moon_druid.current_wildshape_form is None
         assert test_moon_druid.curr_hp == 34
-        actoid3 = get_action(test_moon_druid)
-        assert not str(actoid3).startswith("Wildshape")
+        actoid6 = get_action(test_moon_druid)
+        assert not str(actoid6).startswith("Wildshape")
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -312,6 +317,7 @@ def test_removed_from_battlemap_when_killed_by_carry_over_damage_in_wildshape(ba
     test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
     battle_map.effect_tracker.add(dummy_effect)
     test_moon_druid.curr_hp = 1
+    test_moon_druid.spellslots.deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)  # To prevent the druid from casting Thunderwave or something first
 
     try:
         actoid1 = get_action(test_moon_druid)

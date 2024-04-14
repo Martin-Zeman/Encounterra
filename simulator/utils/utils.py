@@ -43,8 +43,7 @@ def get_available_wildshape_forms(level, action_type):
     elif action_type is BonusAction.MOON_WILDSHAPE:
         match level:
             case lvl if 2 <= lvl <= 5:
-                # return [DireWolf, BrownBear, GiantToad, GiantSpider]
-                return [GiantToad]
+                return [DireWolf, BrownBear, GiantToad, GiantSpider]
             case lvl if 6 <= lvl <= 8:
                 return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
             case lvl if 9 <= lvl <= 11:
