@@ -87,7 +87,7 @@ class Thunderwave(Actoid, DirectThreat, SquareAoe):
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, ThunderwaveFactory.target, ThunderwaveFactory.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_box_aoe(ThunderwaveFactory.target, self.coord)
         acc = 0
         for aff in affected:
             mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])

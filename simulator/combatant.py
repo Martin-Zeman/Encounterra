@@ -25,6 +25,7 @@ from .battle_map import Map
 from .effects.action_enabler_effect import ActionEnablerEffect
 from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
+from .factory_interfaces import RechargeFactory
 from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice, DamageType, \
     reconcile_roll_types, roll_saving_throw
 from .conditions import Conditions, is_affected_by, remove_condition
@@ -372,6 +373,10 @@ class Combatant(ProtoCombatant):
                     resource = kwargs.get("resource", self.spellslots)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource, **kwargs)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
+                case Action.CONIC_BREATH_WEAPON:
+                    self.resources[Action.CONIC_BREATH_WEAPON] = Uses(1, ResourceRefreshType.NEVER)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self, **kwargs)))
+                    self.display_abilities.append(kwargs['name'])
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):
@@ -764,3 +769,12 @@ class Combatant(ProtoCombatant):
     def break_concentration(self):
         self.get_current_form().concentration_effect = None
         self.get_original_form().concentration_effect = None
+
+
+    def roll_for_recharge(self):
+        for af in self.action_factories:
+            if isinstance(af[1], RechargeFactory):
+                af[1].roll_for_recharge()
+        for baf in self.bonus_action_factories:
+            if isinstance(baf[1], RechargeFactory):
+                baf[1].roll_for_recharge()

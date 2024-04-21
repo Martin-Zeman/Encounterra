@@ -121,7 +121,7 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
     def __init__(self, coord, factory,  **kwargs):
         Actoid.__init__(self, ActoidFlags.IS_SPELL)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
-        affected = Map.get().get_combatants_affected_by_aoe(factory.combatant, SleepFactory.target, SleepFactory.type, coord)
+        affected = Map.get().get_combatants_affected_by_sphere_aoe(factory.combatant, SleepFactory.target, SleepFactory.type, coord)
         affected.sort(key=lambda cmbt: cmbt.curr_hp)
         put_to_sleep = []
         hp_acc = 0

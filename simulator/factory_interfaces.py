@@ -1,10 +1,11 @@
+import logging
 from abc import ABC, abstractmethod
 
 from .actions.actoid import FactoryFlags
 from .misc import roll_dice
-from .resources import Uses, ResourceRefreshType
 from .threat_interfaces import Threat
 
+logger = logging.getLogger("Encounterra")
 
 class Factory:
     def __init__(self):
@@ -62,9 +63,10 @@ class RechargeFactory(ABC, Factory):
         self.flags |= FactoryFlags.IS_RECHARGE
 
     def roll_for_recharge(self):
-        roll = roll_dice([1, 6])
+        roll = roll_dice([(1, 6)])
         if roll >= self.recharge_value:
-            self.combatant.ammo[self.name].add_resource(1)
+            logger.info(f"{self.combatant}'s {self} recharges")
+            self.combatant.resources[self.action_type].reset()
 
 
 class TransformerFactory(Threat, Factory):

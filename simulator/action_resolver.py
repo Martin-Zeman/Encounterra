@@ -550,7 +550,7 @@ class ActionResolver:
                 return False
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 logger.info(f"{combatant} casts {actoid}")
-                affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
+                affected = battle_map.get_combatants_affected_by_sphere_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
                 dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                 for combatant in affected:
                     resolve_dmg_saving_throw(actoid, dmg, combatant, True, True)
@@ -724,8 +724,7 @@ class ActionResolver:
                 combatant.has_action = True
             case Action.THUNDERWAVE | BonusAction.QUICKENED_THUNDERWAVE:
                 logger.info(f"{combatant} casts {actoid}")
-                affected = battle_map.get_combatants_affected_by_aoe(combatant, actoid.factory.target,
-                                                                     actoid.factory.type, actoid.coord)
+                affected = battle_map.get_combatants_affected_by_box_aoe(actoid.factory.target, actoid.coord)
                 dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                 for aff in affected:
                     saved = resolve_dmg_saving_throw(actoid, dmg, aff, True, True)
@@ -740,6 +739,14 @@ class ActionResolver:
                 heal_hp = roll_spell_dmg(actoid.factory.heal_dice) + actoid.factory.mod
                 actoid.target.heal(heal_hp)
                 logger.info(f"{combatant} is healed for {heal_hp} damage")
+            case Action.CONIC_BREATH_WEAPON:
+                logger.info(f"{combatant} uses {actoid}")
+                affected = battle_map.get_combatants_affected_by_cone_aoe(actoid.factory.target_template, actoid.coord, actoid.angle)
+                dmg = roll_spell_dmg(actoid.factory.dmg_dice)
+                for aff in affected:
+                    resolve_dmg_saving_throw(actoid, dmg, aff, True, False)
+                    battle_map.remove_combatant_if_dead(aff)  # could be a wildshaped druid
+                return ActionResult.DMG
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

@@ -129,7 +129,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
     def calculate_threat(self, **kwargs):
         # TODO This needs more intelligence (also subtract dmg caused to allies)
         battle_map = Map.get()
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, SpikeGrowthFactory.target, SpikeGrowthFactory.type, self.coord)
+        affected = battle_map.get_combatants_affected_by_sphere_aoe(self.factory.combatant, SpikeGrowthFactory.target, SpikeGrowthFactory.type, self.coord)
         acc = 0
         for aff in affected:
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)

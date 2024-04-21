@@ -152,6 +152,8 @@ def use_resources(combatant, action, **kwargs):
                 pass  # Sufficiently tracked by not having an action anymore
             case Action.LAY_ON_HANDS:
                 combatant.resources[Action.LAY_ON_HANDS].use_resource(action.hp_amount)
+            case Action.CONIC_BREATH_WEAPON:
+                combatant.resources[Action.CONIC_BREATH_WEAPON].use_resource()
             case _:
                 logger.error(f"use_resources: Unknown action type {action_type}")
     elif isinstance(action_type, BonusAction):

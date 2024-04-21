@@ -51,6 +51,7 @@ class Action(Enum):
     LAY_ON_HANDS = auto()
     CURE_WOUNDS = auto()
     ABJURE_ENEMY = auto()
+    CONIC_BREATH_WEAPON = auto()
 
 
 class BonusAction(Enum):

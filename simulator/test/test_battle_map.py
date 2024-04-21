@@ -1005,7 +1005,7 @@ def test_find_best_placement_harmful_square_thunderwave_out_of_spell_range(battl
     assert coords is None
 
 
-def test_find_best_placements_harmful_cone(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_ogre, test_stone_giant):
+def test_find_best_placements_harmful_cone_1(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_ogre, test_stone_giant):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
@@ -1021,8 +1021,47 @@ def test_find_best_placements_harmful_cone(battle_map, teams, test_draconic_sorc
     assert best_placements[0][0] == (0, 10)
     assert best_placements[0][1] == pytest.approx(48, 0.1)
 
+    battle_map.move_combatant(test_ogre, np.array([3, 12]))  # Make the previous best orientation hit an ally
+    best_placements = battle_map.find_best_placements_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    assert len(best_placements) == 8
+    assert best_placements[0][0] == (5, 11)
+    assert best_placements[0][1] == pytest.approx(249.4, 0.1)
+    assert best_placements[1][0] == (5, 11)
+    assert best_placements[1][1] == pytest.approx(252.4, 0.1)
+    assert best_placements[2][0] == (2, 10)
+    assert best_placements[2][1] == pytest.approx(75.4, 0.1)
+    assert best_placements[3][0] == (5, 11)
+    assert best_placements[3][1] == pytest.approx(255.4, 0.1)
+    assert best_placements[4][0] == (6, 11)
+    assert best_placements[4][1] == pytest.approx(255.4, 0.1)
+    assert best_placements[5][0] == (2, 10)
+    assert best_placements[5][1] == pytest.approx(78.4, 0.1)
+    assert best_placements[6][0] == (5, 11)
+    assert best_placements[6][1] == pytest.approx(258.4, 0.1)
+    assert best_placements[7][0] == (6, 11)
+    assert best_placements[7][1] == pytest.approx(258.4, 0.1)
 
-def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian):
+
+def test_find_best_placements_harmful_cone_2(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([4, 4]))  # doesn't matter in this case
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 8]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 5]))
+
+    best_placements = battle_map.find_best_placements_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    assert len(best_placements) == 3
+    assert best_placements[0][0] == (4, 9)
+    assert best_placements[0][1] == pytest.approx(135, 0.1)
+    assert best_placements[1][0] == (9, 4)
+    assert best_placements[1][1] == pytest.approx(315, 0.1)
+    assert best_placements[2][0] == (4, 9)
+    assert best_placements[2][1] == pytest.approx(138, 0.1)
+    # Note: the opposite-pointing (9, 4) is not there because of rasterization inaccuracy
+
+
+def test_get_combatants_affected_by_sphere_aoe(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian):
     test_goblin.size = Size.LARGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
@@ -1032,14 +1071,14 @@ def test_get_combatants_affected_by_aoe_sphere(battle_map, teams, test_draconic_
     battle_map.set_combatant_coordinates(test_goblin, np.array([4, 4]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([10, 5]))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 7]))
-    combatants = battle_map.get_combatants_affected_by_aoe(test_draconic_sorcerer_5lvl, SpellStats.Target.RADIUS_20, SpellStats.Type.HARMFUL, np.array([7, 3]))
+    combatants = battle_map.get_combatants_affected_by_sphere_aoe(test_draconic_sorcerer_5lvl, SpellStats.Target.RADIUS_20, SpellStats.Type.HARMFUL, np.array([7, 3]))
     assert test_draconic_sorcerer_5lvl not in combatants
     assert test_goblin in combatants
     assert test_bugbear in combatants
     assert test_totem_barbarian not in combatants
 
 
-def test_get_combatants_affected_by_aoe_square(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre):
+def test_get_combatants_affected_by_box_aoe(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre):
     test_goblin.size = Size.LARGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
@@ -1053,7 +1092,7 @@ def test_get_combatants_affected_by_aoe_square(battle_map, teams, test_draconic_
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 4]))
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([10, 6]))
     battle_map.set_combatant_coordinates(test_ogre, np.array([5, 3]))
-    combatants = battle_map.get_combatants_affected_by_aoe(test_draconic_sorcerer_5lvl, SpellStats.Target.BOX_20, SpellStats.Type.HARMFUL, np.array([7, 3]))
+    combatants = battle_map.get_combatants_affected_by_box_aoe(SpellStats.Target.BOX_20, np.array([7, 3]))
     assert test_draconic_sorcerer_5lvl not in combatants
     assert test_goblin in combatants
     assert test_bugbear in combatants

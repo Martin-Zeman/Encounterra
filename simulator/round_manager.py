@@ -119,6 +119,7 @@ class RoundManager:
                 logger.info(f"It's {combatant}'s turn")
                 self.curr_combatant = combatant
                 logger.info(battle_map)
+                combatant.roll_for_recharge()
                 self.effect_tracker.start_of_turn_tick(combatant)
                 self.effect_tracker.start_of_turn(combatant)
                 if not combatant.is_alive():  # Start of turn effects can kill

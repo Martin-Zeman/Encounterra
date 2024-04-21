@@ -57,6 +57,7 @@ from .combatants.totem_barbarian_4lvl import TotemBarbarian4Lvl
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
+from .combatants.young_green_dragon import YoungGreenDragon
 from .combatants.zombie import Zombie
 from .effects.effect_tracker import EffectTracker
 from .resources import ResourceDepletionLevel
@@ -246,6 +247,8 @@ class Session:
                 self.combatants.append(TwigBlight(curr_count))
             case VampireSpawn.id:
                 self.combatants.append(VampireSpawn(curr_count))
+            case YoungGreenDragon.id:
+                self.combatants.append(YoungGreenDragon(curr_count))
             case Zombie.id:
                 self.combatants.append(Zombie(curr_count))
             case _:

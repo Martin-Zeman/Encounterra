@@ -266,6 +266,10 @@ def check_feasibility(combatant, action):
                 res &= action.target.is_alive() and battle_map.get_hop_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= battle_map.teams.are_allies(combatant, action.target)
                 return res
+            case Action.CONIC_BREATH_WEAPON:
+                res &= combatant.resources[Action.CONIC_BREATH_WEAPON].has_resource()
+                res &= (action.coord == battle_map.get_combatant_position(combatant))
+                return res
             case _:
                 logger.error(f"check_feasibility: Unknown action type {action_type}")
                 return False
@@ -587,6 +591,9 @@ def check_feasibility_light(combatant, action):
             case Action.CURE_WOUNDS:
                 res &= action[1].resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
+                return res
+            case Action.CONIC_BREATH_WEAPON:
+                res &= combatant.resources[Action.CONIC_BREATH_WEAPON].has_resource()
                 return res
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted

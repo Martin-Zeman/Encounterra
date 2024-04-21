@@ -1299,41 +1299,6 @@ class Map:
             return best_placement.get()[0], max_score, best_affected
         return None, None, None
 
-    # def find_best_placements_harmful_cone(self, caster, radius):
-    #     """
-    #     Finds the best placements of a square harmful AoE effect
-    #     :param caster: the caster
-    #     :param radius: radius of the cone
-    #     :return: list of the best origins, angle which applies to all the origins
-    #     """
-    #     enemies = self.teams.get_enemies(caster)
-    #     # Fit a regression line to the enemy positions
-    #     m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in enemies])
-    #     sample_points = sample_points_on_line(m, c, self.size)
-    #     angle = 90 - get_angle_from_slope(m)  # Conversion is needed to get the upwards oriented angle
-    #     combatant_to_coord_sets = {combatant: set(coords.get_tuples()) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}  # Small optimization, so we don't have to recreate the tuples every time
-    #     all_combatant_coords = set().union(*combatant_to_coord_sets.values())
-    #
-    #     max_score = 0
-    #     best_origins = []
-    #     last_origin = None
-    #     for point in sample_points:
-    #         origin = tuple(map(int, point))
-    #         if origin in all_combatant_coords:
-    #             continue  # Filter out origins that are taken up by combatants already
-    #         if (0, 0) <= origin < (self.size, self.size) and origin != last_origin:  # Ensure the origin is within grid bounds
-    #             last_origin = origin
-    #             score = 0
-    #             affected_coords = get_affected_by_cone(origin, angle, radius, self.size)
-    #             for combatant, coords in combatant_to_coord_sets.items():
-    #                 if len(affected_coords.intersection(coords)):
-    #                     score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
-    #             if score > max_score:
-    #                 best_origins = [origin]
-    #             elif score == max_score and score > 0:
-    #                 best_origins.append(origin)
-    #     return best_origins, angle
-
     def find_best_placements_harmful_cone(self, caster, radius):
         """
         Finds the best placements of a square harmful AoE effect
@@ -1357,18 +1322,19 @@ class Map:
                 origin = tuple(map(int, point))
                 if origin in all_combatant_coords:
                     continue  # Skip origins that are already occupied by combatants
-                if (0, 0) <= origin < (self.size, self.size) and origin != last_origin:  # Ensure the origin is within grid bounds
+                if 0 <= origin[0] < self.size and 0 <= origin[1] < self.size and origin != last_origin:  # Ensure the origin is within grid bounds
                     last_origin = origin
-                    score = 0
-                    affected_coords = get_affected_by_cone(origin, angle, radius, self.size)
-                    for combatant, coords in combatant_to_coord_sets.items():
-                        if len(affected_coords.intersection(coords)):
-                            score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
-                    if score > max_score:
-                        max_score = score
-                        best_origins = [(origin, angle)]
-                    elif score == max_score and score > 0:
-                        best_origins.append((origin, angle))
+                    for effective_angle in [angle, angle + 180]:  # Try both the angle and its 180-degree opposite
+                        score = 0
+                        affected_coords = get_affected_by_cone(origin, effective_angle, radius, self.size)
+                        for combatant, coords in combatant_to_coord_sets.items():
+                            if len(affected_coords.intersection(coords)):
+                                score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
+                        if score > max_score:
+                            max_score = score
+                            best_origins = [(origin, effective_angle)]
+                        elif score == max_score and score > 0:
+                            best_origins.append((origin, effective_angle))
 
         return best_origins
 
@@ -1389,46 +1355,56 @@ class Map:
             print("FIXME")
         return np.stack([c for c in coords])
 
-    def get_combatants_affected_by_aoe(self, caster, target_template, ability_type, origin, angle=0):
+    def get_combatants_affected_by_sphere_aoe(self, caster, target_template, ability_type, origin):
         """
-        Gets combatants affected by an AoE effect
+        Gets combatants affected by a spherical AoE effect
         :param caster: the caster of the AoE
-        :param target_template: RADIUS_X, CONE_Y, BOX_Z
+        :param target_template: RADIUS_X
         :param ability_type: SpellStats.Type.HARMFUL or SpellStats.Type.BUFF
         :param origin: origin of the AoE
-        :param angle: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
         :return: affected combatants
         """
         # TODO potentially check for protective abilities
         affected_combatants = []
-        match target_template:
-            case SpellStats.Target.RADIUS_10 | SpellStats.Target.RADIUS_20 | SpellStats.Target.RADIUS_30:
-                for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
-                    if ability_type is SpellStats.Type.HARMFUL:
-                        if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
-                                target_template]:
-                            affected_combatants.append(potential_target)
-                    elif ability_type is SpellStats.Type.BUFF:
-                        # generally you can opt only to target your allies with buff spells
-                        if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
-                                target_template] and self.teams.are_allies(caster, potential_target):
-                            affected_combatants.append(potential_target)
-            case SpellStats.Target.CONE_15 | SpellStats.Target.CONE_30 | SpellStats.Target.CONE_60 | SpellStats.Target.CONE_90:
-                # TODO make this work with larger combatants
-                # Cone spells and abilities are generally only harmful
-                angle_deg = angle
-                radius = SpellStats.TRANSLATE_CONE[target_template]
-                origin = self.combatant_coordinate_cache[caster]
-                affected_coords = get_affected_by_cone(origin, angle_deg, radius, self.size)
-                affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords and pt.is_alive()]
+        for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
+            if ability_type is SpellStats.Type.HARMFUL:
+                if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
+                        target_template]:
+                    affected_combatants.append(potential_target)
+            elif ability_type is SpellStats.Type.BUFF:
+                # generally you can opt only to target your allies with buff spells
+                if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), np.array([origin])) <= SpellStats.TRANSLATE_RADIUS[
+                        target_template] and self.teams.are_allies(caster, potential_target):
+                    affected_combatants.append(potential_target)
 
-            case SpellStats.Target.BOX_5 | SpellStats.Target.BOX_15 | SpellStats.Target.BOX_20:
-                affected_coords = self.get_coords_affected_by_square_aoe(origin, SpellStats.TRANSLATE_BOX[target_template])
-                for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
-                    if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:
-                        affected_combatants.append(potential_target)
-            case _:
-                logger.error("Unrecognized ability target type")
+        return affected_combatants
+
+    def get_combatants_affected_by_cone_aoe(self, target_template, origin, angle):
+        """
+        Gets combatants affected by a conical AoE effect
+        :param caster: the caster of the AoE
+        :param target_template: CONE_Y
+        :param origin: origin of the AoE
+        :param angle: yaw angle of the cone, marks the center line through the cone, north clock-wise oriented
+        :return: affected combatants
+        """
+        radius = SpellStats.TRANSLATE_CONE[target_template]
+        affected_coords = get_affected_by_cone(origin, angle, radius, self.size)
+        affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords and pt.is_alive()]
+        return affected_combatants
+
+    def get_combatants_affected_by_box_aoe(self, target_template, origin):
+        """
+        Gets combatants affected by a box AoE effect
+        :param target_template: BOX_Z
+        :param origin: origin of the AoE
+        :return: affected combatants
+        """
+        affected_combatants = []
+        affected_coords = self.get_coords_affected_by_square_aoe(origin, SpellStats.TRANSLATE_BOX[target_template])
+        for potential_target, combatant_coords in self.combatant_coordinate_cache.items():
+            if potential_target.is_alive() and self.get_cartesian_distance_coords(combatant_coords.get(), affected_coords) == 0:
+                affected_combatants.append(potential_target)
         return affected_combatants
 
     def get_enemies_within_radius_sorted_by_distance(self, combatant, radius):

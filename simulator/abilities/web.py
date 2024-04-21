@@ -15,6 +15,7 @@ import logging
 
 logger = logging.getLogger("Encounterra")
 
+
 class WebFactory(DirectThreatFactory, RechargeFactory):
 
     def __init__(self, combatant, attack, recharge):
@@ -22,6 +23,7 @@ class WebFactory(DirectThreatFactory, RechargeFactory):
         self.combatant = combatant
         self.attack = attack
         self.action_type = Action.WEB
+        self.recharge_value = recharge
         self.flags |= FactoryFlags.IS_RANGED
 
 

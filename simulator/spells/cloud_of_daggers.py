@@ -128,7 +128,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, CloudOfDaggersFactory.target, CloudOfDaggersFactory.type, self.origin)
+        affected = battle_map.get_combatants_affected_by_box_aoe(CloudOfDaggersFactory.target, self.origin)
         acc = 0
         for aff in affected:
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)

@@ -104,7 +104,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
         return CombatantEffect.is_affecting(self, combatant)
 
     def activate(self, **kwargs):
-        potentially_affected_combatants = Map.get().get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
+        potentially_affected_combatants = Map.get().get_combatants_affected_by_box_aoe(FaerieFireFactory.target, self.origin)
         failed_count = 0
         for pac in potentially_affected_combatants:
             st = self.factory.saving_throw
@@ -132,7 +132,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
-        affected = battle_map.get_combatants_affected_by_aoe(self.factory.combatant, FaerieFireFactory.target, FaerieFireFactory.type, self.origin)
+        affected = battle_map.get_combatants_affected_by_box_aoe(FaerieFireFactory.target, self.origin)
         acc = 0
         for aff in affected:
             _, threat_delta = calculate_threat_in_delta(aff, 13, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)
