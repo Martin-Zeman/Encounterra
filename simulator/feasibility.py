@@ -268,7 +268,7 @@ def check_feasibility(combatant, action):
                 return res
             case Action.CONIC_BREATH_WEAPON:
                 res &= combatant.resources[Action.CONIC_BREATH_WEAPON].has_resource()
-                res &= (action.coord == battle_map.get_combatant_position(combatant))
+                res &= (battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) == 0)
                 return res
             case _:
                 logger.error(f"check_feasibility: Unknown action type {action_type}")

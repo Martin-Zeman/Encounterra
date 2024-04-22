@@ -9,15 +9,18 @@ from ..combatants.fighter_1lvl import Fighter1Lvl
 from ..combatants.fighter_2lvl import Fighter2Lvl
 from ..combatants.giant_toad import GiantToad
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
+from ..combatants.hobgoblin import Hobgoblin
 from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
 from ..combatants.night_hag import NightHag
 from ..combatants.ogre import Ogre
 from ..combatants.bandit_captain import BanditCaptain
 from ..combatants.paladin_1lvl import Paladin1Lvl
+from ..combatants.skeleton import Skeleton
 from ..combatants.twig_blight import TwigBlight
 from ..combatants.stone_giant import StoneGiant
 from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from ..combatants.vampire_spawn import VampireSpawn
+from ..combatants.young_green_dragon import YoungGreenDragon
 from ..effects.effect_tracker import EffectTracker
 from ..combatants.bugbear import Bugbear
 from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
@@ -167,3 +170,16 @@ def test_berserker():
 @pytest.fixture()
 def test_assassin_rogue():
     return AssassinRogue5Lvl()
+
+@pytest.fixture()
+def test_young_green_dragon():
+    return YoungGreenDragon()
+
+@pytest.fixture()
+def test_skeleton():
+    return Skeleton()
+
+
+@pytest.fixture()
+def test_hobgoblin():
+    return Hobgoblin()

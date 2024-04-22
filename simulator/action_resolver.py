@@ -741,7 +741,7 @@ class ActionResolver:
                 logger.info(f"{combatant} is healed for {heal_hp} damage")
             case Action.CONIC_BREATH_WEAPON:
                 logger.info(f"{combatant} uses {actoid}")
-                affected = battle_map.get_combatants_affected_by_cone_aoe(actoid.factory.target_template, actoid.coord, actoid.angle)
+                affected = battle_map.get_combatants_affected_by_cone_aoe(combatant, actoid.factory.target_template, actoid.coord, actoid.angle)
                 dmg = roll_spell_dmg(actoid.factory.dmg_dice)
                 for aff in affected:
                     resolve_dmg_saving_throw(actoid, dmg, aff, True, False)

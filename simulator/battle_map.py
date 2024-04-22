@@ -438,6 +438,36 @@ class Map:
 
         return result_coordinates[0] if result_coordinates else None
 
+    def find_possible_combatant_positions_for_cone_aoe_placement(self, coord, combatant):
+        before_coordinate = (self.size - coord[1] - 1, coord[0])  # Convert to matrix coordinates
+        map_accessibility_matrix = np.zeros((self.size, self.size))
+        for coord in combatant.shortest_paths_cache.keys():
+            map_accessibility_matrix[self.size - coord[1] - 1, coord[0]] = 1
+        map_accessibility_matrix[before_coordinate] = 1
+        # if orig_coords is not None:
+        #     map_accessibility_matrix[self.size - orig_coords[1] - 1, orig_coords[0]] = 1
+
+        start_row = before_coordinate[0]
+        end_row = min(before_coordinate[0] + combatant.size.value, self.size - 1)
+        start_col = max(before_coordinate[1] - combatant.size.value, 0)
+        end_col = before_coordinate[1]
+
+        possible_root_coordinates = [(row, col) for row in range(start_row, end_row + 1)
+                                     for col in range(start_col, end_col + 1)]
+
+        result_coordinates = []
+        for root_coord in possible_root_coordinates:
+            if root_coord[0] - combatant.size.value < 0 or root_coord[1] + combatant.size.value >= self.size:
+                continue
+            if np.all(map_accessibility_matrix[root_coord[0] - combatant.size.value:root_coord[0] + 1, root_coord[1]:root_coord[1] + combatant.size.value + 1] > 0):
+                result_coordinates.append((root_coord[1], self.size - 1 - root_coord[0]))  # Convert back to battle_map coords
+
+        original_coordinate = (before_coordinate[1], self.size - 1 - before_coordinate[0])
+        # result_coordinates.sort(key=lambda point: euclidean(original_coordinate, point))
+
+        # return result_coordinates[0] if result_coordinates else None
+        return result_coordinates
+
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
 
@@ -1032,7 +1062,7 @@ class Map:
         # First inflate it by the size of the combatant looking for the path
         inflated = self.inflate_coords(coords, inflate_to_dist)
 
-        coords_in_range = list()
+        coords_in_range = set()
         for coord in inflated:
             # the rng can be used as a bounding box for the search
             for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
@@ -1042,8 +1072,8 @@ class Map:
                 consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances else True
                 if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
-                    coords_in_range.append((x, y))
-        return coords_in_range
+                    coords_in_range.add((x, y))
+        return list(coords_in_range)
 
     def get_all_accessible_coords(self, shortest_paths, combatant):
         """
@@ -1379,7 +1409,7 @@ class Map:
 
         return affected_combatants
 
-    def get_combatants_affected_by_cone_aoe(self, target_template, origin, angle):
+    def get_combatants_affected_by_cone_aoe(self, caster, target_template, origin, angle):
         """
         Gets combatants affected by a conical AoE effect
         :param caster: the caster of the AoE
@@ -1390,7 +1420,11 @@ class Map:
         """
         radius = SpellStats.TRANSLATE_CONE[target_template]
         affected_coords = get_affected_by_cone(origin, angle, radius, self.size)
-        affected_combatants = [pt for (pt, cc) in self.combatant_coordinate_cache.items() if (cc[0], cc[1]) in affected_coords and pt.is_alive()]
+        affected_combatants = [pt for pt, cc in self.combatant_coordinate_cache.items() if any(True for c in cc.get() if tuple(c) in affected_coords) and pt.is_alive()]
+        try:
+            affected_combatants.remove(caster)  # Needed for larger combatants
+        except ValueError:
+            pass
         return affected_combatants
 
     def get_combatants_affected_by_box_aoe(self, target_template, origin):

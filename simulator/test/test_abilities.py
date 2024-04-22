@@ -24,7 +24,8 @@ from ..spells.sleep import SleepFactory
 from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
-    test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, test_paladin_lvl_1
+    test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, test_paladin_lvl_1, \
+    test_young_green_dragon, test_skeleton, test_hobgoblin
 from ..utils.utils import preallocate_wildshape_forms
 
 from ..test.test_singleton import SingletonClass
@@ -1181,3 +1182,44 @@ def test_lay_on_hands(battle_map, teams, effect_tracker, test_paladin_lvl_1, tes
     assert len(all_loh) == 2
     assert all_loh[0].hp_amount == 1
     assert all_loh[1].hp_amount == 1
+
+
+def test_conic_breath_weapon_placement(battle_map, teams, effect_tracker, test_young_green_dragon, test_skeleton, test_bugbear, test_hobgoblin):
+    test_bugbear_2 = copy.deepcopy(test_bugbear)
+    test_hobgoblin_2 = copy.deepcopy(test_hobgoblin)
+    battle_map.place_circular_element(np.array([8, 7]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([14, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([11, 4]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([12, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    teams.add_combatant_to_team(test_young_green_dragon, Teams.Color.RED)
+    teams.add_combatant_to_team(test_skeleton, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_bugbear_2, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_hobgoblin, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_hobgoblin_2, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_young_green_dragon, np.array([10, 9]))
+    battle_map.set_combatant_coordinates(test_skeleton, np.array([12, 8]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([11, 8]))
+    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([8, 11]))
+    battle_map.set_combatant_coordinates(test_hobgoblin, np.array([1, 5]))
+    battle_map.set_combatant_coordinates(test_hobgoblin_2, np.array([6, 0]))
+    battle_map.build_adjacency_matrix()
+    distances, shortest_paths = battle_map.calc_dijkstra(test_young_green_dragon)
+    test_young_green_dragon.shortest_paths_cache = shortest_paths
+
+    breath_factory = None
+    for af in test_young_green_dragon.action_factories:
+        if str(af[1]) == "Poison BreathFactory":
+            breath_factory = af[1]
+            break
+    assert breath_factory is not None
+    all_breaths = breath_factory.create_all()
+    failing_instance_index = None
+    for idx, breath in enumerate(all_breaths):
+        if str(breath) == "Poison BreathFactory from (10, 8) at 63.4 deg":
+            failing_instance_index = idx
+            break
+    assert failing_instance_index is not None
+    battle_map.clear_caches()
+    eligible_coords = all_breaths[failing_instance_index].get_eligible_coords(distances, shortest_paths)
+    assert not eligible_coords

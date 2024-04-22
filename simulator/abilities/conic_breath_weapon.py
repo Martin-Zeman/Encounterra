@@ -1,12 +1,17 @@
+import sys
+
+import numpy as np
+
 from ..actions.action_types import Action
 from ..actions.actoid import Actoid
 from ..battle_map import Map, map_position_toggled_cache
+from ..combatant_coords import Coords
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..spells.spell import SpellStats
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
 from ..threat_utils import mean_dmg_dc_attack
-from ..misc import Visibility
+from ..misc import Visibility, Size
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -66,33 +71,23 @@ class ConicBreathWeapon(Actoid, DirectThreat):
         self.factory = factory
 
     def __str__(self):
-        return f"{self.factory} at {self.coord} at {self.angle} deg"
+        return f"{self.factory} from {self.coord} at {round(self.angle, 1)} deg"
 
     def shorthand_str(self):
-        return {self.factory}
+        return f"{self.factory.get_ability_name()}"
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if get_swallower(self.factory.combatant):
-            return None  # Webbing someone from the inside doesn't make sense
-        curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_dist=self.factory.combatant.size.value + self.factory.distance,
-                                                           rng=battle_map.size,  # approximation, could theoretically be longer
-                                                           combatant=self.factory.combatant)
-            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
-        elif battle_map.get_hop_distance_combatants(self.factory.combatant, self.target) >= self.factory.distance and \
-                battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+            return None
+        # We allow the conic effect to originate from any square the combatant takes up
+        return battle_map.find_possible_combatant_positions_for_cone_aoe_placement(self.coord, self.factory.combatant)
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
-        affected = battle_map.get_combatants_affected_by_cone_aoe(self.factory.target_template, self.coord, self.angle)
+        affected = battle_map.get_combatants_affected_by_cone_aoe(self.factory.combatant, self.factory.target_template, self.coord, self.angle)
         acc = 0
         for aff in affected:
             mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])

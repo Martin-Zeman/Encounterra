@@ -46,16 +46,14 @@ class YoungGreenDragon(Combatant):
         self.attack_fsm.add_state('3')
         self.attack_fsm.add_state('4')
         self.attack_fsm.add_state('5')
-        self.attack_fsm.add_state('6')
         self.attack_fsm.add_transition(str(self.claw[1]), '0', '1')
-        self.attack_fsm.add_transition(str(self.claw[1]), '1', '2')
-        self.attack_fsm.add_transition(str(self.bite[1]), '2', 'nop')
-        self.attack_fsm.add_transition(str(self.claw[1]), '0', '3')
-        self.attack_fsm.add_transition(str(self.bite[1]), '3', '4')
+        self.attack_fsm.add_transition(str(self.claw[1]), '1', '3')
+        self.attack_fsm.add_transition(str(self.bite[1]), '1', '4')
+        self.attack_fsm.add_transition(str(self.bite[1]), '3', 'nop')
         self.attack_fsm.add_transition(str(self.claw[1]), '4', 'nop')
-        self.attack_fsm.add_transition(str(self.bite[1]), '0', '5')
-        self.attack_fsm.add_transition(str(self.claw[1]), '5', '6')
-        self.attack_fsm.add_transition(str(self.claw[1]), '6', 'nop')
+        self.attack_fsm.add_transition(str(self.bite[1]), '0', '2')
+        self.attack_fsm.add_transition(str(self.claw[1]), '2', '5')
+        self.attack_fsm.add_transition(str(self.claw[1]), '5', 'nop')
 
     def export_resources(self):
         return {
@@ -64,7 +62,8 @@ class YoungGreenDragon(Combatant):
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
             'attack_fsm_state': self.attack_fsm.state,
-            'ammo': copy.deepcopy(self.ammo)
+            'ammo': copy.deepcopy(self.ammo),
+            'breath': self.resources[Action.CONIC_BREATH_WEAPON].export_resource(),
         }
 
     def import_resources(self, resources):
@@ -74,6 +73,7 @@ class YoungGreenDragon(Combatant):
         self.has_haste_action = resources['has_haste_action']
         self.attack_fsm.set_state(resources['attack_fsm_state'])
         self.ammo = resources['ammo']
+        self.resources[Action.CONIC_BREATH_WEAPON].import_resource(uses=resources['breath'])
 
     def prompt_aoo(self, moving_combatant):
         if self.has_reaction:
