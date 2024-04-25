@@ -48,6 +48,7 @@ from .combatants.ogre import Ogre
 from .combatants.paladin_1lvl import Paladin1Lvl
 from .combatants.paladin_2lvl import Paladin2Lvl
 from .combatants.quetzalcoatlus import Quetzalcoatlus
+from .combatants.red_dragon_wyrmling import RedDragonWyrmling
 from .combatants.rogue_1lvl import Rogue1Lvl
 from .combatants.rogue_2lvl import Rogue2Lvl
 from .combatants.saber_toothed_tiger import SaberToothedTiger
@@ -60,6 +61,7 @@ from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
 from .combatants.white_dragon_wyrmling import WhiteDragonWyrmling
 from .combatants.young_green_dragon import YoungGreenDragon
+from .combatants.young_red_dragon import YoungRedDragon
 from .combatants.young_white_dragon import YoungWhiteDragon
 from .combatants.zombie import Zombie
 from .effects.effect_tracker import EffectTracker
@@ -232,6 +234,8 @@ class Session:
                 self.combatants.append(Paladin2Lvl(curr_count))
             case Quetzalcoatlus.id:
                 self.combatants.append(Quetzalcoatlus(curr_count))
+            case RedDragonWyrmling.id:
+                self.combatants.append(RedDragonWyrmling(curr_count))
             case Rogue1Lvl.id:
                 self.combatants.append(Rogue1Lvl(curr_count))
             case Rogue2Lvl.id:
@@ -256,6 +260,8 @@ class Session:
                 self.combatants.append(WhiteDragonWyrmling(curr_count))
             case YoungGreenDragon.id:
                 self.combatants.append(YoungGreenDragon(curr_count))
+            case YoungRedDragon.id:
+                self.combatants.append(YoungRedDragon(curr_count))
             case YoungWhiteDragon.id:
                 self.combatants.append(YoungWhiteDragon(curr_count))
             case Zombie.id:
