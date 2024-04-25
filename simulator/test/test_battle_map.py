@@ -927,7 +927,7 @@ def test_find_best_placement_harmful_circular(battle_map, teams, test_draconic_s
     fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     coord, score = battle_map.find_best_placement_harmful_circular(test_draconic_sorcerer_5lvl, FireballFactory.range, 4, fireball_factory)
     assert np.array_equal(coord, np.array([[7, 3]]))
-    assert score == 28.0
+    assert score == 21.0
 
     #Now move the ally in between the targets so that only one can be hit
     battle_map.find_best_placement_harmful_circular.cache_clear()

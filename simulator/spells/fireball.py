@@ -68,7 +68,7 @@ class FireballFactory(DirectThreatFactory):
         Calculates threat to one specific target
         """
         if Map.get().get_cartesian_distance_combatants(self.combatant, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
-            return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
+            return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(FireballFactory.dmg_type)))
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -103,7 +103,7 @@ class Fireball(Actoid, DirectThreat):
         affected = battle_map.get_combatants_affected_by_sphere_aoe(self.factory.combatant, FireballFactory.target, FireballFactory.type, self.coord)
         acc = 0
         for aff in affected:
-            mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
+            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(FireballFactory.dmg_type)))
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
         return acc
 

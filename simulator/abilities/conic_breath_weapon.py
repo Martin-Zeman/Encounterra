@@ -1,17 +1,11 @@
-import sys
-
-import numpy as np
-
 from ..actions.action_types import Action
 from ..actions.actoid import Actoid
 from ..battle_map import Map, map_position_toggled_cache
-from ..combatant_coords import Coords
-from ..conditions import Conditions, is_affected_by_any, get_swallower
+from ..conditions import get_swallower
 from ..spells.spell import SpellStats
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
 from ..threat_utils import mean_dmg_dc_attack
-from ..misc import Visibility, Size
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -49,7 +43,7 @@ class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies
         """
-        return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw])
+        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type)))
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -90,7 +84,7 @@ class ConicBreathWeapon(Actoid, DirectThreat):
         affected = battle_map.get_combatants_affected_by_cone_aoe(self.factory.combatant, self.factory.target_template, self.coord, self.angle)
         acc = 0
         for aff in affected:
-            mean_dmg = mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw])
+            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(self.factory.dmg_type)))
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
         return acc
 

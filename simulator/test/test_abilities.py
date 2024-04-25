@@ -1185,6 +1185,8 @@ def test_lay_on_hands(battle_map, teams, effect_tracker, test_paladin_lvl_1, tes
 
 
 def test_conic_breath_weapon_placement(battle_map, teams, effect_tracker, test_young_green_dragon, test_skeleton, test_bugbear, test_hobgoblin):
+    """ This test is based on an error scenario encountered during testing. We assert that given the layout of obstacles
+    and enemies, there's no available coordinates for the selected breath origin."""
     test_bugbear_2 = copy.deepcopy(test_bugbear)
     test_hobgoblin_2 = copy.deepcopy(test_hobgoblin)
     battle_map.place_circular_element(np.array([8, 7]), Terrain.IMPASSABLE_TERRAIN, radius=1)

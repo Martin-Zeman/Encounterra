@@ -56,7 +56,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type)))
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """

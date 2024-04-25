@@ -73,7 +73,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type)) * ROUND_HORIZON
+        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, target.saving_throws[self.saving_throw], target.is_resistant_to(self.dmg_type))) * ROUND_HORIZON
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -133,7 +133,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
             return 0
         acc = 0
         for enemy in enemies:
-            acc += mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant_to(self.factory.dmg_type))
+            acc += min(enemy.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, enemy.saving_throws[self.factory.saving_throw], enemy.is_resistant_to(self.factory.dmg_type)))
         return acc / len(enemies) * ROUND_HORIZON
 
     def clear_cache(self):
@@ -184,11 +184,11 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
-        return mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type)))
 
     def threat_on_enter(self, target, *args, **kwargs):
         # It's not explicitly written in the rules, but it makes sense
-        return mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(self.factory.dmg_type)))
 
     def threat_on_start_of_turn(self, target, *args, **kwargs):
         return 0
