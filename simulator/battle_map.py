@@ -438,14 +438,11 @@ class Map:
 
         return result_coordinates[0] if result_coordinates else None
 
-    def find_possible_combatant_positions_for_cone_aoe_placement(self, coord, combatant):
+    def find_possible_combatant_positions_for_cone_aoe_placement(self, coord, combatant, shortest_paths):
         before_coordinate = (self.size - coord[1] - 1, coord[0])  # Convert to matrix coordinates
         map_accessibility_matrix = np.zeros((self.size, self.size))
-        for coord in combatant.shortest_paths_cache.keys():
+        for coord in shortest_paths.keys():
             map_accessibility_matrix[self.size - coord[1] - 1, coord[0]] = 1
-        map_accessibility_matrix[before_coordinate] = 1
-        # if orig_coords is not None:
-        #     map_accessibility_matrix[self.size - orig_coords[1] - 1, orig_coords[0]] = 1
 
         start_row = before_coordinate[0]
         end_row = min(before_coordinate[0] + combatant.size.value, self.size - 1)
@@ -1337,7 +1334,7 @@ class Map:
         :return: list of the best origins, angle which applies to all the origins
         """
         # Fit a regression line to the enemy positions
-        m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in self.teams.get_enemies(caster)])
+        m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in self.get_enemies(caster)])
         base_angle = 90 - get_angle_from_slope(m)  # Conversion to get the upwards oriented angle
         angle_range = np.arange(base_angle - 15, base_angle + 15.1, 3.0)  # Adjust angle in increments of 2.5 degrees
         combatant_to_coord_sets = {combatant: set(coords.get_tuples()) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}

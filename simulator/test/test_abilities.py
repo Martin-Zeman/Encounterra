@@ -25,7 +25,7 @@ from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
     test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, test_paladin_lvl_1, \
-    test_young_green_dragon, test_skeleton, test_hobgoblin
+    test_young_green_dragon, test_skeleton, test_hobgoblin, test_green_dragon_wyrmling
 from ..utils.utils import preallocate_wildshape_forms
 
 from ..test.test_singleton import SingletonClass
@@ -1224,4 +1224,25 @@ def test_conic_breath_weapon_placement(battle_map, teams, effect_tracker, test_y
     assert failing_instance_index is not None
     battle_map.clear_caches()
     eligible_coords = all_breaths[failing_instance_index].get_eligible_coords(distances, shortest_paths)
+    assert not eligible_coords
+
+
+def test_conic_breath_weapon_placement_into_an_obstacle(battle_map, teams, effect_tracker, test_green_dragon_wyrmling, test_skeleton):
+    battle_map.place_circular_element(np.array([8, 7]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    teams.add_combatant_to_team(test_green_dragon_wyrmling, Teams.Color.RED)
+    teams.add_combatant_to_team(test_skeleton, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_green_dragon_wyrmling, np.array([10, 9]))
+    battle_map.set_combatant_coordinates(test_skeleton, np.array([12, 8]))
+    battle_map.build_adjacency_matrix()
+    distances, shortest_paths = battle_map.calc_dijkstra(test_green_dragon_wyrmling)
+
+    breath_factory = None
+    for af in test_green_dragon_wyrmling.action_factories:
+        if str(af[1]) == "Poison BreathFactory":
+            breath_factory = af[1]
+            break
+    assert breath_factory is not None
+    breath = breath_factory.create((8, 7))
+    battle_map.clear_caches()
+    eligible_coords = breath.get_eligible_coords(distances, shortest_paths)
     assert not eligible_coords

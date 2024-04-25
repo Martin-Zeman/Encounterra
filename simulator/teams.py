@@ -70,10 +70,7 @@ class Teams:
         return team_members
 
     def get_enemies(self, combatant):
-        try:
-            self_team = self.reverse_team_book[combatant]
-        except KeyError:
-            print("FIXME")
+        self_team = self.reverse_team_book[combatant]
         other_team = self.Color.RED if self_team is self.Color.BLUE else self.Color.BLUE
         try:
             return self.team_book[other_team]

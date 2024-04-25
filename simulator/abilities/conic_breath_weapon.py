@@ -65,7 +65,7 @@ class ConicBreathWeapon(Actoid, DirectThreat):
         self.factory = factory
 
     def __str__(self):
-        return f"{self.factory} from {self.coord} at {round(self.angle, 1)} deg"
+        return f"{self.factory.get_ability_name()} from {self.coord} at {round(self.angle, 1)} deg"
 
     def shorthand_str(self):
         return f"{self.factory.get_ability_name()}"
@@ -76,7 +76,7 @@ class ConicBreathWeapon(Actoid, DirectThreat):
         if get_swallower(self.factory.combatant):
             return None
         # We allow the conic effect to originate from any square the combatant takes up
-        return battle_map.find_possible_combatant_positions_for_cone_aoe_placement(self.coord, self.factory.combatant)
+        return battle_map.find_possible_combatant_positions_for_cone_aoe_placement(self.coord, self.factory.combatant, shortest_paths)
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

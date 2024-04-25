@@ -13,31 +13,31 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class YoungGreenDragon(Combatant):
+class YoungWhiteDragon(Combatant):
 
-    name = "Young Green Dragon"
+    name = "Young White Dragon"
     cls = Class.MONSTER.DRAGON
     level = 5
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=136, ac=18, init_bonus=1, spell_to_hit=0, speed=80, immunities={DamageType.Poison}, resistances=set(), dc=0)
+        super().__init__(num_or_name, hp=133, ac=17, init_bonus=0, spell_to_hit=0, speed=80, immunities={DamageType.Cold}, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.claw = self.add_ability(Action.MELEE_ATTACK,  name="Claw", combatant=self, to_hit=7, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=7, dmg_dice="2d10", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1, extra_dmg=[('2d6', DamageType.Poison)])
-        self.add_ability(Action.CONIC_BREATH_WEAPON, recharge=5, dmg_dice='12d6', dmg_type=DamageType.Poison, saving_throw=SavingThrow.CON, dc=14, target_template=SpellStats.Target.CONE_30,  name="Poison Breath")
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=7, dmg_dice="2d10", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1, extra_dmg=[('2d6', DamageType.Poison)])
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=7, dmg_dice="2d10", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1, extra_dmg=[('1d8', DamageType.Cold)])
+        self.add_ability(Action.CONIC_BREATH_WEAPON, recharge=5, dmg_dice='10d8', dmg_type=DamageType.Cold, saving_throw=SavingThrow.CON, dc=15, target_template=SpellStats.Target.CONE_30,  name="Cold Breath")
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=7, dmg_dice="2d10", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1, extra_dmg=[('1d8', DamageType.Cold)])
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4
-        self.saving_throws[SavingThrow.DEX] = 4
-        self.saving_throws[SavingThrow.CON] = 6
-        self.saving_throws[SavingThrow.INT] = 3
-        self.saving_throws[SavingThrow.WIS] = 4
-        self.saving_throws[SavingThrow.CHA] = 5
+        self.saving_throws[SavingThrow.DEX] = 3
+        self.saving_throws[SavingThrow.CON] = 7
+        self.saving_throws[SavingThrow.INT] = -2
+        self.saving_throws[SavingThrow.WIS] = 3
+        self.saving_throws[SavingThrow.CHA] = 4
         self.athletics = 4
-        self.acrobatics = 1
-        self.stealth = 4
-        self.passive_perception = 17
+        self.acrobatics = 0
+        self.stealth = 3
+        self.passive_perception = 16
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

@@ -32,6 +32,7 @@ from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
 from .combatants.goblin import Goblin
+from .combatants.green_dragon_wyrmling import GreenDragonWyrmling
 from .combatants.hill_giant import HillGiant
 from .combatants.hobgoblin import Hobgoblin
 from .combatants.moon_druid_2lvl import MoonDruid2Lvl
@@ -57,7 +58,9 @@ from .combatants.totem_barbarian_4lvl import TotemBarbarian4Lvl
 from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
+from .combatants.white_dragon_wyrmling import WhiteDragonWyrmling
 from .combatants.young_green_dragon import YoungGreenDragon
+from .combatants.young_white_dragon import YoungWhiteDragon
 from .combatants.zombie import Zombie
 from .effects.effect_tracker import EffectTracker
 from .resources import ResourceDepletionLevel
@@ -197,6 +200,8 @@ class Session:
                 self.combatants.append(GiantToad(curr_count))
             case Goblin.id:
                 self.combatants.append(Goblin(curr_count))
+            case GreenDragonWyrmling.id:
+                self.combatants.append(GreenDragonWyrmling(curr_count))
             case HillGiant.id:
                 self.combatants.append(HillGiant(curr_count))
             case Hobgoblin.id:
@@ -247,8 +252,12 @@ class Session:
                 self.combatants.append(TwigBlight(curr_count))
             case VampireSpawn.id:
                 self.combatants.append(VampireSpawn(curr_count))
+            case WhiteDragonWyrmling.id:
+                self.combatants.append(WhiteDragonWyrmling(curr_count))
             case YoungGreenDragon.id:
                 self.combatants.append(YoungGreenDragon(curr_count))
+            case YoungWhiteDragon.id:
+                self.combatants.append(YoungWhiteDragon(curr_count))
             case Zombie.id:
                 self.combatants.append(Zombie(curr_count))
             case _:

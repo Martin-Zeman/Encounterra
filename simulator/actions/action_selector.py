@@ -207,10 +207,7 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
         try:
             actions.append(transition_name_to_action[transition])
         except KeyError:
-            try:
-                coord, movement_type = movement_trans_to_coord_and_type[transition]
-            except KeyError:
-                print("FIXME")
+            coord, movement_type = movement_trans_to_coord_and_type[transition]
             match movement_type:
                 case MovementThreatType.STANDARD | MovementThreatType.DODGED:
                     path = battle_map.get_path_to_coord(combatant,  np.array(coord), distances, shortest_paths, True)

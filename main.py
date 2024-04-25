@@ -16,6 +16,7 @@ from simulator.combatants.evil_mage import EvilMage
 from simulator.combatants.fighter_2lvl import Fighter2Lvl
 from simulator.combatants.fire_giant import FireGiant
 from simulator.combatants.frost_giant import FrostGiant
+from simulator.combatants.green_dragon_wyrmling import GreenDragonWyrmling
 from simulator.combatants.hill_giant import HillGiant
 from simulator.combatants.hobgoblin import Hobgoblin
 from simulator.combatants.moon_druid_2lvl import MoonDruid2Lvl
@@ -34,7 +35,9 @@ from simulator.combatants.rogue_2lvl import Rogue2Lvl
 from simulator.combatants.skeleton import Skeleton
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.twig_blight import TwigBlight
+from simulator.combatants.white_dragon_wyrmling import WhiteDragonWyrmling
 from simulator.combatants.young_green_dragon import YoungGreenDragon
+from simulator.combatants.young_white_dragon import YoungWhiteDragon
 from simulator.combatants.zombie import Zombie
 from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
@@ -122,7 +125,10 @@ if __name__ == '__main__':
     # session.add_combatant(HillGiant, Teams.Color.BLUE)
     # session.add_combatant(FireGiant, Teams.Color.RED)
     # session.add_combatant(FrostGiant, Teams.Color.BLUE)
-    session.add_combatant(YoungGreenDragon, Teams.Color.BLUE)
+    # session.add_combatant(YoungGreenDragon, Teams.Color.BLUE)
+    # session.add_combatant(YoungWhiteDragon, Teams.Color.BLUE)
+    session.add_combatant(GreenDragonWyrmling, Teams.Color.BLUE)
+    session.add_combatant(WhiteDragonWyrmling, Teams.Color.BLUE)
     session.set_num_simulations(1)
     start_time = time.time()
     session.place_terrain_and_obstacles(Session.MapType.DOUBLE_OBSTACLES.value)
