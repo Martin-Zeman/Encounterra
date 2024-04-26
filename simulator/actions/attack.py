@@ -86,9 +86,9 @@ class AttackFactory(DirectThreatFactory):
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         if not consider_dist or Map.get().get_hop_distance_combatants(self.combatant, target) <= self.range:
-            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
+            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, target, self.dmg_type, self.crit_range)
             for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
+                acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, target, extra[1], self.crit_range)
             for oh in self.on_hit:
                 acc += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
             return acc
@@ -102,9 +102,9 @@ class AttackFactory(DirectThreatFactory):
         if self.to_hit_bonus_die is not None:
             avg_to_hit_bonus_die_roll = avg_roll(self.to_hit_bonus_die)
         baseline_to_hit = self.to_hit + avg_to_hit_bonus_die_roll
-        baseline = mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac, self.crit_range, target.is_resistant_to(self.dmg_type))
+        baseline = mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac, target, self.dmg_type, self.crit_range)
         for extra in self.extra_dmg:
-            baseline += mean_dmg(baseline_to_hit, extra[0], 0, target.ac, self.crit_range, target.is_resistant_to(extra[1]))
+            baseline += mean_dmg(baseline_to_hit, extra[0], 0, target.ac, target, extra[1], self.crit_range)
         for oh in self.on_hit:
             baseline += calc_p_hit(baseline_to_hit, target.ac) * oh.calculate_threat(self.combatant, target)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
@@ -126,9 +126,9 @@ class AttackFactory(DirectThreatFactory):
         total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
         total_crit = 20 if auto_crit else total_crit
         try:
-            modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, total_crit, target.is_resistant_to(self.dmg_type))
+            modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, target, self.dmg_type, total_crit)
             for extra in self.extra_dmg:
-                modified += mean_dmg(to_hit_total, extra[0], 0, total_target_ac, total_crit, target.is_resistant_to(extra[1]))
+                modified += mean_dmg(to_hit_total, extra[0], 0, total_target_ac, target, extra[1], total_crit)
             for oh in self.on_hit:
                 modified += calc_p_hit(to_hit_total, total_target_ac) * oh.calculate_threat(self.combatant, target)
         except:

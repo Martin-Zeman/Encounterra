@@ -70,7 +70,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         Calculates threat to one specific target
         """
         # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-        mean_dmg = min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, False, target.saving_throws[self.saving_throw], target.is_resistant_to(DamageType.Acid)))
+        mean_dmg = min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, False, self.saving_throw, target, DamageType.Acid))
         return avg_roll(self.dmg_dice) + 0.5 * mean_dmg
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -144,7 +144,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         for aff in affected:
             acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, aff.saving_throws[self.factory.saving_throw], aff.is_resistant_to(DamageType.Acid)))
+            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, self.factory.saving_throw, aff, DamageType.Acid))
             acc += 0.5 * mean_dmg
             acc *= (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3)
         return acc
@@ -157,7 +157,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
-        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, target.saving_throws[self.factory.saving_throw], target.is_resistant_to(DamageType.Acid)))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, self.factory.saving_throw, target, DamageType.Acid))
 
     def threat_on_enter(self, target, *args, **kwargs):
         return 0

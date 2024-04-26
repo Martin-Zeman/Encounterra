@@ -1402,3 +1402,72 @@ def unify_combatants(session, battle_map):
                     if grid_square.combatant.name == combatant.name:
                         grid_square.combatant = combatant
                         break
+
+
+# ----------------------------------
+# Young Red Dragon (1) is alive with 140 hp
+# Moon Druid 5th LVL (1) wildshaped into Giant Toad is alive with 39 hp
+# Draconic Sorcerer 5th LVL (1) is alive with 37 hp
+# Battlemaster Fighter 5th LVL (1) is alive with 46 hp
+# Totem Barbarian 5th LVL (1) is alive with 61 hp
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	XX	00	00	00	00	00	00	00	00	00	D1	00
+# 00	00	XX	00	00	00	00	00	00	Ma	Ma	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	Ma	Ma	T1	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	Y1	Y1	00	00
+# 00	00	00	00	00	00	00	00	00	00	B1	Y1	Y1	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	XX	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	XX	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+#
+# Round 3:
+# It's Young Red Dragon (1)'s turn
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	XX	00	00	00	00	00	00	00	00	00	D1	00
+# 00	00	XX	00	00	00	00	00	00	Ma	Ma	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	Ma	Ma	T1	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	Y1	Y1	00	00
+# 00	00	00	00	00	00	00	00	00	00	B1	Y1	Y1	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	XX	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	XX	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+# 00	00	00	00	00	00	00	00	00	00	00	00	00	00	00
+#
+# Young Red Dragon (1)'s dodge fades
+# Totem Barbarian 5th LVL (1) taken an AoO Two-handed axe on Young Red Dragon (1) against Young Red Dragon (1)
+# Totem Barbarian 5th LVL (1) attacks Young Red Dragon (1) with Two-handed axe
+# The attack misses Young Red Dragon (1)
+# Moon Druid 5th LVL (1) wildshaped into Giant Toad took an AoO Toad Bite on Young Red Dragon (1) against Young Red Dragon (1)
+# Moon Druid 5th LVL (1) wildshaped into Giant Toad attacks Young Red Dragon (1) with Bite
+# The attack misses Young Red Dragon (1)
+# Young Red Dragon (1) moved to [11  7]
+# Young Red Dragon (1) moved to [10  6]
+# Young Red Dragon (1) moved to [9 6]
+# Young Red Dragon (1) moved to [8 6]
+# Battlemaster Fighter 5th LVL (1) taken an AoO Greatsword on Young Red Dragon (1) against Young Red Dragon (1)
+# Battlemaster Fighter 5th LVL (1) attacks Young Red Dragon (1) with Greatsword
+# The attack hits Young Red Dragon (1) for 12 damage
+# Young Red Dragon (1) moved to [7 6]
+# Young Red Dragon (1) moved to [7 7]
+# Young Red Dragon (1) moved to [6 6]
+# Young Red Dragon (1) moved to [6 5]
+# Young Red Dragon (1) moved to [7 6]
+# Young Red Dragon (1) moved to [7 7]
+# Young Red Dragon (1) moved to [6 6]
+# Young Red Dragon (1) moved to [6 5]
+# Young Red Dragon (1) moved to [7 6]
+# Young Red Dragon (1) moved to [7 7]
+# Young Red Dragon (1) moved to [6 6]
+# Young Red Dragon (1) moved to [6 5]
+# Action Fire Breath from (7, 7) at 53.5 deg by Young Red Dragon (1) is not feasible. Taking the Dodge action!

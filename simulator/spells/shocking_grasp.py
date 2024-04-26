@@ -72,7 +72,7 @@ class ShockingGraspFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ShockingGraspFactory.range:
-            return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ShockingGraspFactory.dmg_type))
+            return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, target, ShockingGraspFactory.dmg_type, 1)
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -91,8 +91,7 @@ class ShockingGraspFactory(DirectThreatFactory):
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
-        ret = mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, total_crit, target.is_resistant_to(ShockingGraspFactory.dmg_type)) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(
-                    ShockingGraspFactory.dmg_type))
+        ret = mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, target, ShockingGraspFactory.dmg_type, total_crit) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, target, ShockingGraspFactory.dmg_type, 1)
         return ret
 
     def calculate_max_threat(self):

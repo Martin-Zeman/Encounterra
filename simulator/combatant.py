@@ -570,6 +570,7 @@ class Combatant(ProtoCombatant):
         :return: actual dmg received accounting for resistances, vulnerabilities and immunities
         """
         if dmg_type in self.immunities:
+            logger.info(f"{self.name} is immune to {dmg_type} and reduces the damage to 0")
             return 0
         elif dmg_type in self.resistances:
             dmg = math.floor(dmg / 2)

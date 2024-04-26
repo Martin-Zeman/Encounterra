@@ -69,7 +69,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ScorchingRayFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
-            return 3 * mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, ROLL_TYPE_CRIT_DELTA[roll_type], target.is_resistant_to(ScorchingRayFactory.dmg_type))
+            return 3 * mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, target, ScorchingRayFactory.dmg_type, ROLL_TYPE_CRIT_DELTA[roll_type])
         else:
             return 0
 
@@ -86,8 +86,8 @@ class ScorchingRayFactory(DirectThreatFactory):
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
         # We assume the maximum threat in case where all three rays are aimed at the target
-        return 3*(mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, total_crit, target.is_resistant_to(ScorchingRayFactory.dmg_type)) - \
-            mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, 1, target.is_resistant_to(ScorchingRayFactory.dmg_type)))
+        return 3*(mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, target, ScorchingRayFactory.dmg_type, total_crit) - \
+            mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, target, ScorchingRayFactory.dmg_type, 1))
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -138,11 +138,11 @@ class ScorchingRay(Actoid, DirectThreat):
         roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         crit_multiplier = ROLL_TYPE_CRIT_DELTA[roll_type]
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
-        dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, crit_multiplier, self.targets[0].is_resistant_to(ScorchingRayFactory.dmg_type))
+        dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, self.targets[0], ScorchingRayFactory.dmg_type, crit_multiplier)
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
-        dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, crit_multiplier, self.targets[1].is_resistant_to(ScorchingRayFactory.dmg_type))
+        dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, self.targets[1], ScorchingRayFactory.dmg_type, crit_multiplier)
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[2].ac - self.factory.to_hit, 20))]
-        dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, crit_multiplier, self.targets[2].is_resistant_to(ScorchingRayFactory.dmg_type))
+        dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, self.targets[2], ScorchingRayFactory.dmg_type, crit_multiplier)
         return dmg_acc
 
     def clear_cache(self):

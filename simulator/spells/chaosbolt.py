@@ -89,9 +89,9 @@ class ChaosboltFactory(DirectThreatFactory):
             P_SAME = 4 / 43  # 8/86 = 4 / 43
             p_acc = P_SAME
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
-            acc = mean_dmg(to_hit_total, dmg_dice, 0, target.ac)
+            acc = mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target, DamageType.Random)
             for pt in other_potential_targets:
-                acc += mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
+                acc += mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, pt, DamageType.Random, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
                 p_acc *= P_SAME
         return acc
 
@@ -108,7 +108,7 @@ class ChaosboltFactory(DirectThreatFactory):
             total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
             dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
-            return mean_dmg(to_hit_total, dmg_dice, 0, target.ac, total_crit) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac)
+            return mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target, DamageType.Random, total_crit) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac, target, DamageType.Random)
         else:
             return 0
 
@@ -144,10 +144,10 @@ class Chaosbolt(Actoid, DirectThreat):
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME
         dmg_dice = "+".join([self.factory.dmg_dice, self.factory.additional_dmg_dice])
-        acc = mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac)
+        acc = mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac, self.target, DamageType.Random)
         for pt in potential_targets:
             to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(pt.ac - self.factory.to_hit, 20))]
-            acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
+            acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, pt, DamageType.Random, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
             p_acc *= P_SAME
         return acc
 

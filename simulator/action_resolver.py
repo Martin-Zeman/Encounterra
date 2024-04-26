@@ -666,7 +666,7 @@ class ActionResolver:
                 grapple = actoid.factory.grapple_condition
                 broken_out = roll_ability_check(max(combatant.athletics, combatant.acrobatics), grapple.dc, RollType.STRAIGHT)
                 if broken_out:# and getattr(grapple.initiator, "constricted_target", None):  # TODO this is a simplification
-                    logger.info(f"{combatant} is has broken out of grapple")
+                    logger.info(f"{combatant} has broken out of grapple")
                     # grapple.initiator.constricted_target = None
                     remove_condition(grapple.initiator, Conditions.GRAPPLING)
                     break_out_of_grapple(combatant)

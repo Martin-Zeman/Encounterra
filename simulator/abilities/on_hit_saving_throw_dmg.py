@@ -25,4 +25,4 @@ class OnHitSavingThrowDmg(OnHit):
 
     def calculate_threat(self, attacker, target, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, self.half_on_success, target.saving_throws[self.st], target.is_resistant_to(self.dmg_type)))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, self.half_on_success, self.st, target, self.dmg_type))

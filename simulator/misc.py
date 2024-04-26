@@ -244,6 +244,7 @@ class DamageType(Enum):
     BludgeoningMagical = 13
     SlashingMagical = 14
     PiercingMagical = 15
+    Random = 16  # Pseudotype (used for Chaosbolt)
 
     def __str__(self):
         return self.name
