@@ -563,6 +563,8 @@ def get_action(combatant):
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
     combatant.shortest_paths_cache = shortest_paths
     if combatant.action_plan:
+        if str(combatant) == "Young Red Dragon (1)":
+            print(f"FIXME action_plan: {[str(ap) for ap in combatant.action_plan]}")
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
             return combatant.action_plan.pop(0)
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)

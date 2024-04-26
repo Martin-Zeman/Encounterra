@@ -1326,12 +1326,12 @@ class Map:
             return best_placement.get()[0], max_score, best_affected
         return None, None, None
 
-    def find_best_placements_harmful_cone(self, caster, radius):
+    def find_best_placement_harmful_cone(self, caster, radius):
         """
-        Finds the best placements of a square harmful AoE effect
+        Finds the best placement of a square harmful AoE effect
         :param caster: the caster
         :param radius: radius of the cone
-        :return: list of the best origins, angle which applies to all the origins
+        :return: the closest of the best placements
         """
         # Fit a regression line to the enemy positions
         m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in self.get_enemies(caster)])
@@ -1363,7 +1363,9 @@ class Map:
                         elif score == max_score and score > 0:
                             best_origins.append((origin, effective_angle))
 
-        return best_origins
+        caster_position = self.get_combatant_position(caster).get()
+        best_origins.sort(key=lambda dist: self.get_hop_distance_coords(np.array(c), caster_position))
+        return best_origins[0]
 
     def get_coords_affected_by_square_aoe(self, origin, length):
         """

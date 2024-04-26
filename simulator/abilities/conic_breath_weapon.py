@@ -1,11 +1,12 @@
 from ..actions.action_types import Action
 from ..actions.actoid import Actoid
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map
 from ..conditions import get_swallower
 from ..spells.spell import SpellStats
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
 from ..threat_utils import mean_dmg_dc_attack
+from functools import cache
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -35,8 +36,9 @@ class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
         return ConicBreathWeapon(coord, 0, self)  # TODO: This is kind of useless but probably not used at all
 
     def create_all(self, previous_action_in_dag=None):
-        best_placements = Map.get().find_best_placements_harmful_cone(self.combatant, SpellStats.TRANSLATE_CONE[self.target_template])
-        return [ConicBreathWeapon(bp[0], bp[1], self) for bp in best_placements]
+        best_placement = Map.get().find_best_placement_harmful_cone(self.combatant, SpellStats.TRANSLATE_CONE[self.target_template])
+        # print(f"FIXME best_placements: {best_placements}")
+        return [ConicBreathWeapon(best_placement[0], best_placement[1], self)]
 
     def calculate_threat_to_target(self, target, **kwargs):
         """
@@ -78,7 +80,7 @@ class ConicBreathWeapon(Actoid, DirectThreat):
         # We allow the conic effect to originate from any square the combatant takes up
         return battle_map.find_possible_combatant_positions_for_cone_aoe_placement(self.coord, self.factory.combatant, shortest_paths)
 
-    @map_position_toggled_cache
+    @cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
         affected = battle_map.get_combatants_affected_by_cone_aoe(self.factory.combatant, self.factory.target_template, self.coord, self.angle)

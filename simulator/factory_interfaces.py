@@ -66,7 +66,7 @@ class RechargeFactory(ABC, Factory):
         roll = roll_dice([(1, 6)])
         resource = self.combatant.resources[self.action_type]
         if not resource.has_resource() and roll >= self.recharge_value:
-            logger.info(f"{self.combatant}'s {self} recharges")
+            logger.info(f"{self.combatant}'s {self.get_ability_name()} recharges")
             self.combatant.resources[self.action_type].reset()
 
 
