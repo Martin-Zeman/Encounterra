@@ -595,7 +595,7 @@ class ActionResolver:
                 if result[1] is ActionResult.DMG:
                     actoid.targets[1].has_reaction = False
                 return ActionResult.DMG if any([True if r is ActionResult.DMG else False for r in result]) else ActionResult.MISS
-            case Action.RAY_OF_ENFEEBLEMENT | BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT:
+            case Action.RAY_OF_ENFEEBLEMENT | BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT | Action.RAY_OF_FROST | BonusAction.QUICKENED_RAY_OF_FROST:
                 logger.info(f"{combatant} casts {actoid}")
                 result = self.resolve_ranged_spell_attack(combatant, actoid, actoid.target)
                 if result is ActionResult.DMG:
@@ -805,7 +805,7 @@ class ActionResolver:
                      EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
                      EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION | EffectType.SLEEP | \
                      EffectType.SHIELD_OF_FAITH | EffectType.SHILLELAGH | EffectType.MENACING_ATTACK_FRIGHTENED | \
-                     EffectType.VOW_OF_ENMITY:
+                     EffectType.VOW_OF_ENMITY | EffectType.RAY_OF_FROST:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error(f"Unknown effect {effect_type}")

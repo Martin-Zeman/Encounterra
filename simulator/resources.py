@@ -125,7 +125,7 @@ def use_resources(combatant, action, **kwargs):
                 combatant.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
             case Action.GRAPPLE_ATTACK:
                 combatant.attack_fsm.trigger(str(action.factory))
-            case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP | Action.SHAKE_ALLY_AWAKE:
+            case Action.DODGE | Action.DASH | Action.DISENGAGE | Action.FIREBOLT | Action.SHOCKING_GRASP | Action.SHAKE_ALLY_AWAKE | Action.RAY_OF_FROST:
                 pass  # sufficiently tracked by not having an action anymore
             case Action.FIREBALL | Action.HASTE | Action.HUNGER_OF_HADAR:
                 action.factory.resource.use_resource(level=3)
@@ -181,7 +181,7 @@ def use_resources(combatant, action, **kwargs):
                 action.factory.resource.use_resource(level=3)
                 combatant.already_cast_leveled_spell_this_turn = True
                 combatant.resources[Passive.METAMAGIC].use_resource(2)
-            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
+            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP | BonusAction.QUICKENED_RAY_OF_FROST:
                 combatant.resources[Passive.METAMAGIC].use_resource(2)
             case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.SHILLELAGH | BonusAction.NOP:  # TODO NOP probably not needed
                 pass  # Sufficiently tracked by not having a bonus action anymore

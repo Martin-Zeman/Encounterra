@@ -85,7 +85,7 @@ def check_feasibility(combatant, action):
                 res &= action.combatants[1].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.combatants[1]) <= action.factory.range
                 res &= action.combatants[2].is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.combatants[2]) <= action.factory.range
                 return res
-            case Action.FIREBOLT | Action.SHOCKING_GRASP:
+            case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.RAY_OF_FROST:
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 return res
@@ -386,7 +386,7 @@ def check_feasibility(combatant, action):
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 res &= battle_map.are_valid_coords(action.origin)
                 return res
-            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
+            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP | BonusAction.QUICKENED_RAY_OF_FROST:
                 res &= action.target.is_alive() and battle_map.get_cartesian_distance_combatants(combatant, action.target) <= action.factory.range
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 res &= battle_map.teams.are_enemies(combatant, action.target)
@@ -530,7 +530,7 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 res &= not combatant.concentration_effect
                 return res
-            case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.DODGE | Action.POUNCE | Action.CONSTRICT | Action.SHAKE_ALLY_AWAKE | Action.NOP:
+            case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.DODGE | Action.POUNCE | Action.CONSTRICT | Action.SHAKE_ALLY_AWAKE | Action.RAY_OF_FROST | Action.NOP:
                 return res
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 return res and combatant.resources[Passive.METAMAGIC].get_resource() > 0
@@ -659,7 +659,7 @@ def check_feasibility_light(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 return res
-            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP:
+            case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP | BonusAction.QUICKENED_RAY_OF_FROST:
                 return res and combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
             case BonusAction.CUNNING_DISENGAGE:

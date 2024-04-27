@@ -36,6 +36,7 @@ from ..spells.healing_word import HealingWordFactory
 from ..spells.hold_person import HoldPersonFactory
 from ..spells.magic_missile import MagicMissileFactory
 from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
+from ..spells.ray_of_frost import RayOfFrostFactory
 from ..spells.shield_of_faith import ShieldOfFaithFactory
 from ..spells.shillelagh import ShillelaghFactory
 from ..spells.shocking_grasp import ShockingGraspFactory
@@ -101,6 +102,7 @@ TO_FACTORY = {
     Action.LAY_ON_HANDS: LayOnHandsFactory,
     Action.CURE_WOUNDS: CureWoundsFactory,
     Action.CONIC_BREATH_WEAPON: ConicBreathWeaponFactory,
+    Action.RAY_OF_FROST: RayOfFrostFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -132,6 +134,7 @@ TO_FACTORY = {
     BonusAction.SHIELD_OF_FAITH: ShieldOfFaithFactory,
     BonusAction.QUICKENED_CURE_WOUNDS: CureWoundsFactory,
     BonusAction.VOW_OF_ENMITY: VowOfEnmityFactory,
+    BonusAction.QUICKENED_RAY_OF_FROST: RayOfFrostFactory,
 
     Reaction.SHIELD: ShieldFactory,
     Reaction.REACTION_ATTACK: MeleeAttackFactory,
@@ -161,7 +164,8 @@ TO_QUICKENED = {
     Action.MAGIC_MISSILE: BonusAction.QUICKENED_MAGIC_MISSILE,
     Action.BLESS: BonusAction.QUICKENED_BLESS,
     Action.RAY_OF_ENFEEBLEMENT: BonusAction.QUICKENED_RAY_OF_ENFEEBLEMENT,
-    Action.CURE_WOUNDS: BonusAction.QUICKENED_CURE_WOUNDS
+    Action.CURE_WOUNDS: BonusAction.QUICKENED_CURE_WOUNDS,
+    Action.RAY_OF_FROST: BonusAction.QUICKENED_RAY_OF_FROST
 }
 
 TO_TWINNED = {

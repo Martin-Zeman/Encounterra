@@ -21,6 +21,7 @@ class DraconicSorcerer4Lvl(Combatant):
         self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.firebolt = self.add_ability(Action.FIREBOLT)
+        self.add_ability(Action.RAY_OF_FROST)
         self.danger_zone_attack = self.firebolt
         self.add_ability(Passive.DRACONIC_RESILIENCE)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)

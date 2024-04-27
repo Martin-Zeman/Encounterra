@@ -26,6 +26,7 @@ class DraconicSorcerer5Lvl(Combatant):
         self.add_ability(Action.FIREBALL)
         self.firebolt = self.add_ability(Action.FIREBOLT)
         self.danger_zone_attack = self.firebolt
+        self.add_ability(Action.RAY_OF_FROST)
         self.add_ability(Action.HASTE)
         self.add_ability(BonusAction.MISTY_STEP)
         self.add_ability(Action.SCORCHING_RAY)

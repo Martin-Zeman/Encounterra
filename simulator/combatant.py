@@ -333,7 +333,7 @@ class Combatant(ProtoCombatant):
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.dc, action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
                     return self.action_factories[-1]
-                case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.CHAOSBOLT | Action.SCORCHING_RAY:
+                case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.CHAOSBOLT | Action.SCORCHING_RAY | Action.RAY_OF_FROST:
                     resource = kwargs.get("resource", self.spellslots)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self.spell_to_hit, action_type, self, resource)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())

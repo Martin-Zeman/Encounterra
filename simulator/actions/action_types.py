@@ -52,6 +52,7 @@ class Action(Enum):
     CURE_WOUNDS = auto()
     ABJURE_ENEMY = auto()
     CONIC_BREATH_WEAPON = auto()
+    RAY_OF_FROST = auto()
 
 
 class BonusAction(Enum):
@@ -77,6 +78,7 @@ class BonusAction(Enum):
     QUICKENED_BLESS = auto()
     QUICKENED_FLAMING_SPHERE = auto()
     QUICKENED_HOLD_PERSON = auto()
+    QUICKENED_RAY_OF_FROST = auto()
     FLAMING_SPHERE_RAM = auto()
     MOON_WILDSHAPE = auto()
     QUICKENED_SHOCKING_GRASP = auto()

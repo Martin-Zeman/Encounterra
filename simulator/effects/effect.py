@@ -24,6 +24,7 @@ class EffectType(Enum):
     REGENERATION = auto()
     BLESS = auto()
     RAY_OF_ENFEEBLEMENT = auto()
+    RAY_OF_FROST = auto()
     SLEEP = auto()
     SHILLELAGH = auto()
     MENACING_ATTACK_FRIGHTENED = auto()
