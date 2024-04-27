@@ -1218,7 +1218,7 @@ def test_conic_breath_weapon_placement(battle_map, teams, effect_tracker, test_y
     all_breaths = breath_factory.create_all()
     failing_instance_index = None
     for idx, breath in enumerate(all_breaths):
-        if str(breath) == "Poison BreathFactory from (10, 8) at 63.4 deg":
+        if str(breath) == "Poison Breath from (9, 8) at 60.4 deg":
             failing_instance_index = idx
             break
     assert failing_instance_index is not None
