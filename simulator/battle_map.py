@@ -438,32 +438,24 @@ class Map:
 
         return result_coordinates[0] if result_coordinates else None
 
-    def find_possible_combatant_positions_for_cone_aoe_placement(self, coord, combatant, shortest_paths):
-        before_coordinate = (self.size - coord[1] - 1, coord[0])  # Convert to matrix coordinates
+    def find_possible_combatant_positions_for_cone_aoe_placement(self, placement_coord, combatant, shortest_paths):
+        combatant_coord = self.get_combatant_position(combatant).get()[0]
+        combatant_matrix_coord = (self.size - combatant_coord[1] - 1, combatant_coord[0])
+        placement_matrix_coord = (self.size - placement_coord[1] - 1, placement_coord[0])  # Convert to matrix coordinates
         map_accessibility_matrix = np.zeros((self.size, self.size))
         for coord in shortest_paths.keys():
             map_accessibility_matrix[self.size - coord[1] - 1, coord[0]] = 1
+        map_accessibility_matrix[combatant_matrix_coord] = 1
 
-        start_row = before_coordinate[0]
-        end_row = min(before_coordinate[0] + combatant.size.value, self.size - 1)
-        start_col = max(before_coordinate[1] - combatant.size.value, 0)
-        end_col = before_coordinate[1]
+        start_row = placement_matrix_coord[0]
+        end_row = min(placement_matrix_coord[0] + combatant.size.value, self.size - 1)
+        start_col = max(placement_matrix_coord[1] - combatant.size.value, 0)
+        end_col = placement_matrix_coord[1]
 
         possible_root_coordinates = [(row, col) for row in range(start_row, end_row + 1)
                                      for col in range(start_col, end_col + 1)]
-
-        result_coordinates = []
-        for root_coord in possible_root_coordinates:
-            if root_coord[0] - combatant.size.value < 0 or root_coord[1] + combatant.size.value >= self.size:
-                continue
-            if np.all(map_accessibility_matrix[root_coord[0] - combatant.size.value:root_coord[0] + 1, root_coord[1]:root_coord[1] + combatant.size.value + 1] > 0):
-                result_coordinates.append((root_coord[1], self.size - 1 - root_coord[0]))  # Convert back to battle_map coords
-
-        original_coordinate = (before_coordinate[1], self.size - 1 - before_coordinate[0])
-        # result_coordinates.sort(key=lambda point: euclidean(original_coordinate, point))
-
-        # return result_coordinates[0] if result_coordinates else None
-        return result_coordinates
+        # Unlike in the wildshape case the combatant does not expand its size -> simpler implementation
+        return [(rc[1], self.size - 1 - rc[0]) for rc in possible_root_coordinates if map_accessibility_matrix[rc[0], rc[1]] > 0]
 
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
@@ -1341,7 +1333,7 @@ class Map:
         all_combatant_coords = set().union(*combatant_to_coord_sets.values())
 
         max_score = 0
-        best_origins = []
+        best_poses = []  # pose = origin + yaw
         for angle in angle_range:
             sample_points = sample_points_on_line(np.tan(np.radians(90 - angle)), c, self.size)  # Recalculate line points for each angle
             last_origin = None
@@ -1356,16 +1348,18 @@ class Map:
                         affected_coords = get_affected_by_cone(origin, effective_angle, radius, self.size)
                         for combatant, coords in combatant_to_coord_sets.items():
                             if len(affected_coords.intersection(coords)):
+                                if combatant is caster:
+                                    continue  # This is important, otherwise the final breath destination will degrade in its rating once reached
                                 score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
                         if score > max_score:
                             max_score = score
-                            best_origins = [(origin, effective_angle)]
+                            best_poses = [(origin, effective_angle)]
                         elif score == max_score and score > 0:
-                            best_origins.append((origin, effective_angle))
+                            best_poses.append((origin, effective_angle))
 
         caster_position = self.get_combatant_position(caster).get()
-        best_origins.sort(key=lambda dist: self.get_hop_distance_coords(np.array(c), caster_position))
-        return best_origins[0]
+        best_poses.sort(key=lambda coord: self.get_hop_distance_coords(np.array([coord[0]]), caster_position))
+        return best_poses[0]
 
     def get_coords_affected_by_square_aoe(self, origin, length):
         """

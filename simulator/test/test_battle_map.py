@@ -1016,30 +1016,14 @@ def test_find_best_placements_harmful_cone_1(battle_map, teams, test_draconic_so
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 11]))
     battle_map.set_combatant_coordinates(test_ogre, np.array([5, 10]))
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 12]))
-    best_placements = battle_map.find_best_placements_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
-    assert len(best_placements) == 1
-    assert best_placements[0][0] == (0, 10)
-    assert best_placements[0][1] == pytest.approx(48, 0.1)
+    best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    assert best_placement[0] == (0, 10)
+    assert best_placement[1] == pytest.approx(48, 0.1)
 
     battle_map.move_combatant(test_ogre, np.array([3, 12]))  # Make the previous best orientation hit an ally
-    best_placements = battle_map.find_best_placements_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
-    assert len(best_placements) == 8
-    assert best_placements[0][0] == (5, 11)
-    assert best_placements[0][1] == pytest.approx(249.4, 0.1)
-    assert best_placements[1][0] == (5, 11)
-    assert best_placements[1][1] == pytest.approx(252.4, 0.1)
-    assert best_placements[2][0] == (2, 10)
-    assert best_placements[2][1] == pytest.approx(75.4, 0.1)
-    assert best_placements[3][0] == (5, 11)
-    assert best_placements[3][1] == pytest.approx(255.4, 0.1)
-    assert best_placements[4][0] == (6, 11)
-    assert best_placements[4][1] == pytest.approx(255.4, 0.1)
-    assert best_placements[5][0] == (2, 10)
-    assert best_placements[5][1] == pytest.approx(78.4, 0.1)
-    assert best_placements[6][0] == (5, 11)
-    assert best_placements[6][1] == pytest.approx(258.4, 0.1)
-    assert best_placements[7][0] == (6, 11)
-    assert best_placements[7][1] == pytest.approx(258.4, 0.1)
+    best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    assert best_placement[0] == (2, 10)
+    assert best_placement[1] == pytest.approx(75.4, 0.1) or best_placement[1] == pytest.approx(78.4, 0.1)
 
 
 def test_find_best_placements_harmful_cone_2(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
@@ -1050,14 +1034,10 @@ def test_find_best_placements_harmful_cone_2(battle_map, teams, test_draconic_so
     battle_map.set_combatant_coordinates(test_goblin, np.array([5, 8]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 5]))
 
-    best_placements = battle_map.find_best_placements_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
-    assert len(best_placements) == 3
-    assert best_placements[0][0] == (4, 9)
-    assert best_placements[0][1] == pytest.approx(135, 0.1)
-    assert best_placements[1][0] == (9, 4)
-    assert best_placements[1][1] == pytest.approx(315, 0.1)
-    assert best_placements[2][0] == (4, 9)
-    assert best_placements[2][1] == pytest.approx(138, 0.1)
+    best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    assert best_placement
+    assert best_placement[0] == (4, 9) or best_placement[0] == (9, 4)
+    assert best_placement[1] == pytest.approx(135, 0.1) or best_placement[1] == pytest.approx(315, 0.1) or best_placement[1] == pytest.approx(138, 0.1)
     # Note: the opposite-pointing (9, 4) is not there because of rasterization inaccuracy
 
 

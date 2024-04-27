@@ -37,7 +37,6 @@ class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
 
     def create_all(self, previous_action_in_dag=None):
         best_placement = Map.get().find_best_placement_harmful_cone(self.combatant, SpellStats.TRANSLATE_CONE[self.target_template])
-        # print(f"FIXME best_placements: {best_placements}")
         return [ConicBreathWeapon(best_placement[0], best_placement[1], self)]
 
     def calculate_threat_to_target(self, target, **kwargs):

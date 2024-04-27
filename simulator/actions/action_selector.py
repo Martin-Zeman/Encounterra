@@ -176,7 +176,10 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_fac
             before_path.append(np.array([int(x), int(y)]))
         before_path = convert_path_to_increments(before_path)
         actions.extend(list(MovementGenerator(combatant, before_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
-    x, y = REGEX_MS_MOVEMENT_PATTERN.search(ms_path[ms_idx]).groups()
+    try:
+        x, y = REGEX_MS_MOVEMENT_PATTERN.search(ms_path[ms_idx]).groups()
+    except TypeError:
+        print("FIXME")  # the ms_idx was None as some point
     actions.append(ms_factory.create(np.array([int(x), int(y)])))
     if after_ms_idx is not None:
         after_path = [actions[-1].coord]  # use the Misty Step target coord as the initial one
@@ -563,8 +566,6 @@ def get_action(combatant):
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
     combatant.shortest_paths_cache = shortest_paths
     if combatant.action_plan:
-        if str(combatant) == "Young Red Dragon (1)":
-            print(f"FIXME action_plan: {[str(ap) for ap in combatant.action_plan]}")
         if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
             return combatant.action_plan.pop(0)
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)
