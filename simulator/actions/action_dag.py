@@ -13,7 +13,6 @@ from ..utils.state_machine_template import StateMachineTemplate
 logger = logging.getLogger("Encounterra")
 
 
-
 def actions_to_set(actions):
     return frozenset(str(f) for f in actions)
 

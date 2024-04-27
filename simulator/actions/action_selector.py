@@ -437,6 +437,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     battle_map = Map.get()
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     sequences = []
+    sequence_set = set()  # This is an optimization measure, it's a set of sets which helps us eliminate equivalent sequences
     transition_name_to_ms_path = dict()
     sequence_to_threat = dict()  # Overall threat score of a sequence: sequence idx -> [movement threat, action threat]
     # sequence_idx_to_transition_step_threat = dict()
@@ -449,11 +450,22 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
 
     def DFS(dag, current_state, current_sequence, coord):
         if current_state == 'nop':
-            sequences.append(copy.deepcopy(current_sequence))
-            try:
-                coord_to_sequence_ids[coord].append(len(sequences) - 1)
-            except KeyError:
-                coord_to_sequence_ids[coord] = [len(sequences) - 1]
+            current_sequence_set = frozenset((tx[:-2] if tx[-2] == "_" else tx for tx in current_sequence))  # Removes the trailing level designator
+            contains_threat_modifier = False
+            for tx in current_sequence:
+                try:
+                    if isinstance(transition_name_to_action[tx], AttackThreatModifier):
+                        contains_threat_modifier = True
+                        break
+                except KeyError:
+                    pass
+            if contains_threat_modifier or current_sequence_set not in sequence_set:
+                sequences.append(copy.deepcopy(current_sequence))
+                sequence_set.add(current_sequence_set)
+                try:
+                    coord_to_sequence_ids[coord].append(len(sequences) - 1)
+                except KeyError:
+                    coord_to_sequence_ids[coord] = [len(sequences) - 1]
             return
         for transition, next_state in dag.forward_transitions[current_state]:
             current_sequence.append(transition)
