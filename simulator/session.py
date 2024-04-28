@@ -60,6 +60,7 @@ from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
 from .combatants.white_dragon_wyrmling import WhiteDragonWyrmling
+from .combatants.young_blue_dragon import YoungBlueDragon
 from .combatants.young_green_dragon import YoungGreenDragon
 from .combatants.young_red_dragon import YoungRedDragon
 from .combatants.young_white_dragon import YoungWhiteDragon
@@ -258,6 +259,8 @@ class Session:
                 self.combatants.append(VampireSpawn(curr_count))
             case WhiteDragonWyrmling.id:
                 self.combatants.append(WhiteDragonWyrmling(curr_count))
+            case YoungBlueDragon.id:
+                self.combatants.append(YoungBlueDragon(curr_count))
             case YoungGreenDragon.id:
                 self.combatants.append(YoungGreenDragon(curr_count))
             case YoungRedDragon.id:

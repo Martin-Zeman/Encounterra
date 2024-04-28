@@ -377,6 +377,10 @@ class Combatant(ProtoCombatant):
                     self.resources[Action.CONIC_BREATH_WEAPON] = Uses(1, ResourceRefreshType.NEVER)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self, **kwargs)))
                     self.display_abilities.append(kwargs['name'])
+                case Action.LINE_BREATH_WEAPON:
+                    self.resources[Action.LINE_BREATH_WEAPON] = Uses(1, ResourceRefreshType.NEVER)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](self, **kwargs)))
+                    self.display_abilities.append(kwargs['name'])
                 case _:
                     return None
         elif isinstance(action_type, BonusAction):

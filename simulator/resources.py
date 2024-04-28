@@ -154,6 +154,8 @@ def use_resources(combatant, action, **kwargs):
                 combatant.resources[Action.LAY_ON_HANDS].use_resource(action.hp_amount)
             case Action.CONIC_BREATH_WEAPON:
                 combatant.resources[Action.CONIC_BREATH_WEAPON].use_resource()
+            case Action.LINE_BREATH_WEAPON:
+                combatant.resources[Action.LINE_BREATH_WEAPON].use_resource()
             case _:
                 logger.error(f"use_resources: Unknown action type {action_type}")
     elif isinstance(action_type, BonusAction):

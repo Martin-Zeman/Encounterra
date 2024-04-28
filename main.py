@@ -36,6 +36,7 @@ from simulator.combatants.skeleton import Skeleton
 from simulator.combatants.stone_giant import StoneGiant
 from simulator.combatants.twig_blight import TwigBlight
 from simulator.combatants.white_dragon_wyrmling import WhiteDragonWyrmling
+from simulator.combatants.young_blue_dragon import YoungBlueDragon
 from simulator.combatants.young_green_dragon import YoungGreenDragon
 from simulator.combatants.young_red_dragon import YoungRedDragon
 from simulator.combatants.young_white_dragon import YoungWhiteDragon
@@ -128,7 +129,8 @@ if __name__ == '__main__':
     # session.add_combatant(FrostGiant, Teams.Color.BLUE)
     # session.add_combatant(YoungGreenDragon, Teams.Color.BLUE)
     # session.add_combatant(YoungWhiteDragon, Teams.Color.BLUE)
-    session.add_combatant(YoungRedDragon, Teams.Color.RED)
+    # session.add_combatant(YoungRedDragon, Teams.Color.RED)
+    session.add_combatant(YoungBlueDragon, Teams.Color.RED)
     # session.add_combatant(GreenDragonWyrmling, Teams.Color.BLUE)
     # session.add_combatant(WhiteDragonWyrmling, Teams.Color.BLUE)
     session.set_num_simulations(1)

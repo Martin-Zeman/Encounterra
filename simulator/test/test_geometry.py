@@ -46,6 +46,84 @@ def test_cone_30_feet():
     assert coords == expected_coords
 
 
+def test_line_vertical():
+    origin = np.array([3, 3])
+    angle_deg = 0
+    length = 5
+    width = 1
+    grid_size = 15
+    expected_coords = {(3, 3), (3, 4), (3, 5), (3, 6), (3, 7), (3, 8)}
+    actual_coords = get_affected_by_line(origin, angle_deg, length, width, grid_size)
+    assert actual_coords == expected_coords
+
+
+def test_line_horizontal():
+    origin = np.array([3, 3])
+    angle_deg = 90
+    length = 5
+    width = 1
+    grid_size = 15
+    expected_coords = {(3, 3), (4, 3), (5, 3), (6, 3), (7, 3), (8, 3)}
+    actual_coords = get_affected_by_line(origin, angle_deg, length, width, grid_size)
+    assert actual_coords == expected_coords
+
+
+def test_line_diagonal():
+    origin = np.array([2, 2])
+    angle_deg = 45
+    length = 4
+    width = 2
+    grid_size = 15
+    expected_coords = {(4, 4), (3, 4), (4, 3), (5, 4), (2, 3), (4, 5), (3, 3), (2, 2), (3, 2)}
+    actual_coords = get_affected_by_line(origin, angle_deg, length, width, grid_size)
+    assert actual_coords == expected_coords
+
+
+def test_line_angle_greater_than_180():
+    origin = np.array([3, 3])
+    angle_deg = 270
+    length = 5
+    width = 1
+    grid_size = 15
+    expected_coords = {(2, 3), (0, 3), (1, 3), (3, 3)}
+    actual_coords = get_affected_by_line(origin, angle_deg, length, width, grid_size)
+    assert actual_coords == expected_coords
+
+
+def test_line_origin_edge():
+    origin = np.array([0, 0])
+    angle_deg = 180
+    length = 5
+    width = 1
+    grid_size = 15
+    expected_coords = {(0, 0)}
+    actual_coords = get_affected_by_line(origin, angle_deg, length, width, grid_size)
+    assert actual_coords == expected_coords
+
+
+def test_line_origin_opposite_edge():
+    origin = np.array([12, 7])
+    angle_deg = 90
+    length = 5
+    width = 1
+    grid_size = 15
+    expected_coords = {(12, 7), (13, 7), (14, 7)}
+    actual_coords = get_affected_by_line(origin, angle_deg, length, width, grid_size)
+    assert actual_coords == expected_coords
+
+
+def test_line_width_3():
+    origin = np.array([3, 3])
+    angle_deg = 45
+    length = 5
+    width = 3
+    grid_size = 15
+    expected_coords = {(3, 4), (4, 3), (5, 4), (4, 6), (5, 7), (6, 5), (4, 5), (3, 3), (5, 6), (5, 3), (2, 4), (6, 4), (6, 7), (7, 6), (3, 5), (4, 4), (5, 5), (6, 6), (7, 5)}
+    actual_coords = get_affected_by_line(origin, angle_deg, length, width, grid_size)
+    assert actual_coords == expected_coords
+
+
+
 def test_do_squares_overlap():
     # A up and to the left of B
     assert do_squares_overlap(np.array([2, 5]), 3, np.array([4, 4]), 3)

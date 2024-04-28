@@ -65,6 +65,40 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     return coords
 
 
+def get_affected_by_line(origin, angle_deg, length, width, grid_size):
+    """
+    Gets coordinates of grid squares affected by a line effect originating at the center of a square at origin coordinates.
+    :param origin: center of the line
+    :param angle_deg: angle of the line, marks the direction of the line, north clock-wise oriented
+    :param length: length of the line
+    :param width: width of the line
+    :param grid_size: size of the grid
+    :return: affected coordinates
+    """
+    origin_center = get_square_center(origin)
+    half_width = width / 2
+
+    angle_rad = math.radians(angle_deg)
+    direction_vector = np.array([math.sin(angle_rad), math.cos(angle_rad)])
+
+    perpendicular_vector = np.array([-direction_vector[1], direction_vector[0]])
+
+    coords = set()
+    for x in range(grid_size):
+        for y in range(grid_size):
+            curr_coord_center = get_square_center(np.array([x, y]))
+            vector_to_coord = curr_coord_center - origin_center
+            distance_along_line = np.dot(vector_to_coord, direction_vector)
+
+            if 0 <= distance_along_line <= length:
+                distance_perpendicular = abs(np.dot(vector_to_coord, perpendicular_vector))
+
+                if distance_perpendicular <= half_width:
+                    coords.add((x, y))
+    # coords.remove(origin)
+    return coords
+
+
 def linear_regression(enemy_positions):
     x = np.array([pos[0] for pos in enemy_positions])
     y = np.array([pos[1] for pos in enemy_positions])

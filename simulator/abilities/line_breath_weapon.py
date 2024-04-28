@@ -2,7 +2,6 @@ from ..actions.action_types import Action
 from ..actions.actoid import Actoid
 from ..battle_map import Map
 from ..conditions import get_swallower
-from ..spells.spell import SpellStats
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
 from ..threat_utils import mean_dmg_dc_attack
@@ -12,18 +11,19 @@ import logging
 logger = logging.getLogger("Encounterra")
 
 
-class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
+class LineBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
 
-    def __init__(self, combatant, recharge, dmg_dice, dmg_type, saving_throw, dc, target_template, name):
+    def __init__(self, combatant, recharge, dmg_dice, dmg_type, saving_throw, dc, length, width, name):
         DirectThreatFactory.__init__(self)
         self.combatant = combatant
-        self.action_type = Action.CONIC_BREATH_WEAPON
+        self.action_type = Action.LINE_BREATH_WEAPON
         self.recharge_value = recharge
         self.dmg_dice = dmg_dice
         self.dmg_type = dmg_type
         self.saving_throw = saving_throw
         self.dc = dc
-        self.target_template = target_template
+        self.length = length
+        self.width = width
         self.name = name
 
     def __str__(self):
@@ -33,11 +33,11 @@ class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
         return self.name
 
     def create(self, coord):
-        return ConicBreathWeapon(coord, 0, self)  # TODO: This is kind of useless but probably not used at all
+        return LineBreathWeapon(coord, 0, self)  # TODO: This is kind of useless but probably not used at all
 
     def create_all(self, previous_action_in_dag=None):
-        best_placement = Map.get().find_best_placement_harmful_cone(self.combatant, SpellStats.TRANSLATE_CONE[self.target_template])
-        return [ConicBreathWeapon(best_placement[0], best_placement[1], self)]
+        best_placement = Map.get().find_best_placement_harmful_line(self.combatant, self.length, self.width)
+        return [LineBreathWeapon(best_placement[0], best_placement[1], self)]
 
     def calculate_threat_to_target(self, target, **kwargs):
         """
@@ -57,7 +57,7 @@ class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
         return max([p.calculate_threat() for p in all_placements])
 
 
-class ConicBreathWeapon(Actoid, DirectThreat):
+class LineBreathWeapon(Actoid, DirectThreat):
 
     def __init__(self, coord, angle, factory):
         Actoid.__init__(self)
@@ -76,13 +76,13 @@ class ConicBreathWeapon(Actoid, DirectThreat):
         battle_map = Map.get()
         if get_swallower(self.factory.combatant):
             return None
-        # We allow the conic effect to originate from any square the combatant takes up
+        # We allow the line effect to originate from any square the combatant takes up
         return battle_map.find_possible_combatant_positions_for_cone_or_line_aoe_placement(self.coord, self.factory.combatant, shortest_paths)
 
     @cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
-        affected = battle_map.get_combatants_affected_by_cone_aoe(self.factory.combatant, self.factory.target_template, self.coord, self.angle)
+        affected = battle_map.get_combatants_affected_by_line_aoe(self.factory.combatant, self.coord, self.angle, self.factory.length, self.factory.width)
         acc = 0
         for aff in affected:
             mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, self.factory.saving_throw, aff, self.factory.dmg_type))

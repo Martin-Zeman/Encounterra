@@ -747,6 +747,14 @@ class ActionResolver:
                     resolve_dmg_saving_throw(actoid, dmg, aff, True, False)
                     battle_map.remove_combatant_if_dead(aff)  # could be a wildshaped druid
                 return ActionResult.DMG
+            case Action.LINE_BREATH_WEAPON:
+                logger.info(f"{combatant} uses {actoid}")
+                affected = battle_map.get_combatants_affected_by_line_aoe(combatant, actoid.coord, actoid.angle, actoid.factory.length, actoid.factory.width)
+                dmg = roll_spell_dmg(actoid.factory.dmg_dice)
+                for aff in affected:
+                    resolve_dmg_saving_throw(actoid, dmg, aff, True, False)
+                    battle_map.remove_combatant_if_dead(aff)  # could be a wildshaped druid
+                return ActionResult.DMG
             case _:
                 logger.error(f"Unknown actoid type! {actoid.factory.action_type}")
 

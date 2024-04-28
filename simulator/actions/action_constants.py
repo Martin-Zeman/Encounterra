@@ -7,6 +7,7 @@ from ..abilities.action_surge import ActionSurgeFactory
 from ..abilities.bite_and_swallow import BiteAndSwallowFactory
 from ..abilities.conic_breath_weapon import ConicBreathWeaponFactory
 from ..abilities.lay_on_hands import LayOnHandsFactory
+from ..abilities.line_breath_weapon import LineBreathWeaponFactory
 from ..abilities.pre_swallow_bite import PreSwallowBiteFactory
 from ..abilities.constrict import ConstrictFactory
 from ..abilities.pounce import PounceFactory
@@ -102,6 +103,7 @@ TO_FACTORY = {
     Action.LAY_ON_HANDS: LayOnHandsFactory,
     Action.CURE_WOUNDS: CureWoundsFactory,
     Action.CONIC_BREATH_WEAPON: ConicBreathWeaponFactory,
+    Action.LINE_BREATH_WEAPON: LineBreathWeaponFactory,
     Action.RAY_OF_FROST: RayOfFrostFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,

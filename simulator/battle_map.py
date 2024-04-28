@@ -19,11 +19,12 @@ from .conditions import Conditions, is_affected_by_any, get_swallower, remove_co
     get_source_of_frightened
 from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors, \
     find_nearest_valid_coordinate_chebyshev, angle_between_vectors_rad, linear_regression, sample_points_on_line, \
-    get_angle_from_slope
+    get_angle_from_slope, get_affected_by_line
 from .misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial import distance_matrix
 from scipy.spatial.distance import euclidean
+from scipy.stats import median_abs_deviation
 import heapq
 from enum import Enum
 
@@ -438,7 +439,7 @@ class Map:
 
         return result_coordinates[0] if result_coordinates else None
 
-    def find_possible_combatant_positions_for_cone_aoe_placement(self, placement_coord, combatant, shortest_paths):
+    def find_possible_combatant_positions_for_cone_or_line_aoe_placement(self, placement_coord, combatant, shortest_paths):
         combatant_coord = self.get_combatant_position(combatant).get()[0]
         combatant_matrix_coord = (self.size - combatant_coord[1] - 1, combatant_coord[0])
         placement_matrix_coord = (self.size - placement_coord[1] - 1, placement_coord[0])  # Convert to matrix coordinates
@@ -1320,7 +1321,7 @@ class Map:
 
     def find_best_placement_harmful_cone(self, caster, radius):
         """
-        Finds the best placement of a square harmful AoE effect
+        Finds the best placement of a conic harmful AoE effect
         :param caster: the caster
         :param radius: radius of the cone
         :return: the closest of the best placements
@@ -1346,6 +1347,66 @@ class Map:
                     for effective_angle in [angle, angle + 180]:  # Try both the angle and its 180-degree opposite
                         score = 0
                         affected_coords = get_affected_by_cone(origin, effective_angle, radius, self.size)
+                        for combatant, coords in combatant_to_coord_sets.items():
+                            if len(affected_coords.intersection(coords)):
+                                if combatant is caster:
+                                    continue  # This is important, otherwise the final breath destination will degrade in its rating once reached
+                                score += 1 if self.teams.are_enemies(caster, combatant) and combatant.is_alive() else -4
+                        if score > max_score:
+                            max_score = score
+                            best_poses = [(origin, effective_angle)]
+                        elif score == max_score and score > 0:
+                            best_poses.append((origin, effective_angle))
+
+        caster_position = self.get_combatant_position(caster).get()
+        best_poses.sort(key=lambda coord: self.get_hop_distance_coords(np.array([coord[0]]), caster_position))
+        return best_poses[0]
+
+    def find_best_placement_harmful_line(self, caster, length, width):
+        """
+        Finds the best placement of a line harmful AoE effect
+        :param caster: the caster
+        :param length: length of the line
+        :param width: width of the line
+        :return: the closest of the best placements
+        """
+        # # Get enemy positions
+        # enemy_positions = [self.combatant_coordinate_cache[e].get_center() for e in self.get_enemies(caster)]
+        #
+        # # Detect outliers using median absolute deviation
+        # median_x = np.median([pos[0] for pos in enemy_positions])
+        # median_y = np.median([pos[1] for pos in enemy_positions])
+        # mad_x = median_abs_deviation([pos[0] for pos in enemy_positions])
+        # mad_y = median_abs_deviation([pos[1] for pos in enemy_positions])
+        #
+        # # Filter out outliers
+        # filtered_positions = []
+        # for pos in enemy_positions:
+        #     if abs(pos[0] - median_x) < 3 * mad_x and abs(pos[1] - median_y) < 3 * mad_y:
+        #         filtered_positions.append(pos)
+
+        # Fit a regression line to the enemy positions
+        # m, c = linear_regression(filtered_positions)
+        m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in self.get_enemies(caster)])
+        base_angle = 90 - get_angle_from_slope(m)  # Conversion to get the upwards oriented angle
+        angle_range = np.arange(base_angle - 15, base_angle + 15.1, 3.0)  # Adjust angle in increments of 2.5 degrees
+        combatant_to_coord_sets = {combatant: set(coords.get_tuples()) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}
+        all_combatant_coords = set().union(*combatant_to_coord_sets.values())
+
+        max_score = 0
+        best_poses = []  # pose = origin + yaw
+        for angle in angle_range:
+            sample_points = sample_points_on_line(np.tan(np.radians(90 - angle)), c, self.size)  # Recalculate line points for each angle
+            last_origin = None
+            for point in sample_points:
+                origin = tuple(map(int, point))
+                if origin in all_combatant_coords:
+                    continue  # Skip origins that are already occupied by combatants
+                if 0 <= origin[0] < self.size and 0 <= origin[1] < self.size and origin != last_origin:  # Ensure the origin is within grid bounds
+                    last_origin = origin
+                    for effective_angle in [angle, angle + 180]:  # Try both the angle and its 180-degree opposite
+                        score = 0
+                        affected_coords = get_affected_by_line(origin, effective_angle, length, width, self.size)
                         for combatant, coords in combatant_to_coord_sets.items():
                             if len(affected_coords.intersection(coords)):
                                 if combatant is caster:
@@ -1413,6 +1474,24 @@ class Map:
         """
         radius = SpellStats.TRANSLATE_CONE[target_template]
         affected_coords = get_affected_by_cone(origin, angle, radius, self.size)
+        affected_combatants = [pt for pt, cc in self.combatant_coordinate_cache.items() if any(True for c in cc.get() if tuple(c) in affected_coords) and pt.is_alive()]
+        try:
+            affected_combatants.remove(caster)  # Needed for larger combatants
+        except ValueError:
+            pass
+        return affected_combatants
+
+    def get_combatants_affected_by_line_aoe(self, caster, origin, angle, length, width):
+        """
+        Gets combatants affected by a line AoE effect
+        :param caster: the caster of the AoE
+        :param origin: origin of the AoE
+        :param angle: yaw angle of the line, north clock-wise oriented
+        :param length: length of the line
+        :param width: width of the line
+        :return: affected combatants
+        """
+        affected_coords = get_affected_by_line(origin, angle, length, width, self.size)
         affected_combatants = [pt for pt, cc in self.combatant_coordinate_cache.items() if any(True for c in cc.get() if tuple(c) in affected_coords) and pt.is_alive()]
         try:
             affected_combatants.remove(caster)  # Needed for larger combatants
