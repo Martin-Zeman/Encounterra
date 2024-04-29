@@ -11,6 +11,8 @@ from .combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
 from .combatants.battlemaster_fighter_4lvl import BattlemasterFighter4Lvl
 from .combatants.battlemaster_fighter_5lvl import BattlemasterFighter5Lvl
 from .combatants.berserker import Berserker
+from .combatants.black_dragon_wyrmling import BlackDragonWyrmling
+from .combatants.blue_dragon_wymling import BlueDragonWyrmling
 from .combatants.brown_bear import BrownBear
 from .combatants.bugbear import Bugbear
 from .combatants.bugbear_chief import BugbearChief
@@ -28,6 +30,7 @@ from .combatants.fighter_1lvl import Fighter1Lvl
 from .combatants.fighter_2lvl import Fighter2Lvl
 from .combatants.fire_giant import FireGiant
 from .combatants.frost_giant import FrostGiant
+from .combatants.ghoul import Ghoul
 from .combatants.giant_constrictor_snake import GiantConstrictorSnake
 from .combatants.giant_spider import GiantSpider
 from .combatants.giant_toad import GiantToad
@@ -45,6 +48,7 @@ from .combatants.oath_of_vengeance_paladin_3lvl import OathOfVengeancePaladin3Lv
 from .combatants.oath_of_vengeance_paladin_4lvl import OathOfVengeancePaladin4Lvl
 from .combatants.oath_of_vengeance_paladin_5lvl import OathOfVengeancePaladin5Lvl
 from .combatants.ogre import Ogre
+from .combatants.owlbear import Owlbear
 from .combatants.paladin_1lvl import Paladin1Lvl
 from .combatants.paladin_2lvl import Paladin2Lvl
 from .combatants.quetzalcoatlus import Quetzalcoatlus
@@ -60,6 +64,7 @@ from .combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from .combatants.twig_blight import TwigBlight
 from .combatants.vampire_spawn import VampireSpawn
 from .combatants.white_dragon_wyrmling import WhiteDragonWyrmling
+from .combatants.young_black_dragon import YoungBlackDragon
 from .combatants.young_blue_dragon import YoungBlueDragon
 from .combatants.young_green_dragon import YoungGreenDragon
 from .combatants.young_red_dragon import YoungRedDragon
@@ -161,6 +166,10 @@ class Session:
                 self.combatants.append(BattlemasterFighter5Lvl(curr_count))
             case Berserker.id:
                 self.combatants.append(Berserker(curr_count))
+            case BlackDragonWyrmling.id:
+                self.combatants.append(BlackDragonWyrmling(curr_count))
+            case BlueDragonWyrmling.id:
+                self.combatants.append(BlueDragonWyrmling(curr_count))
             case BrownBear.id:
                 self.combatants.append(BrownBear(curr_count))
             case Bugbear.id:
@@ -195,6 +204,8 @@ class Session:
                 self.combatants.append(FireGiant(curr_count))
             case FrostGiant.id:
                 self.combatants.append(FrostGiant(curr_count))
+            case Ghoul.id:
+                self.combatants.append(Ghoul(curr_count))
             case GiantConstrictorSnake.id:
                 self.combatants.append(GiantConstrictorSnake(curr_count))
             case GiantSpider.id:
@@ -223,6 +234,8 @@ class Session:
                 self.combatants.append(NightHag(curr_count))
             case Ogre.id:
                 self.combatants.append(Ogre(curr_count))
+            case Owlbear.id:
+                self.combatants.append(Owlbear(curr_count))
             case OathOfVengeancePaladin3Lvl.id:
                 self.combatants.append(OathOfVengeancePaladin3Lvl(curr_count))
             case OathOfVengeancePaladin4Lvl.id:
@@ -259,6 +272,8 @@ class Session:
                 self.combatants.append(VampireSpawn(curr_count))
             case WhiteDragonWyrmling.id:
                 self.combatants.append(WhiteDragonWyrmling(curr_count))
+            case YoungBlackDragon.id:
+                self.combatants.append(YoungBlackDragon(curr_count))
             case YoungBlueDragon.id:
                 self.combatants.append(YoungBlueDragon(curr_count))
             case YoungGreenDragon.id:

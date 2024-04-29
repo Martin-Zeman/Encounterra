@@ -307,7 +307,7 @@ class Combatant(ProtoCombatant):
         elif isinstance(action_type, Action):
             match action_type:
                 case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE \
-                     | Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
+                     | Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE | Action.PARALYZING_MELEE_ATTACK | HasteAction.HASTE_PARALYZING_MELEE_ATTACK:
                     factory = TO_FACTORY[action_type]
                     try:
                         suppress = kwargs.pop("suppress")

@@ -6,7 +6,7 @@ from ..spells.spell import SpellStats
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
 from ..threat_utils import mean_dmg_dc_attack
-from functools import cache
+from functools import cache, reduce
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -53,8 +53,9 @@ class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
         return 0  # No need
 
     def calculate_max_threat(self):
-        all_placements = self.create_all()
-        return max([p.calculate_threat() for p in all_placements])
+        battle_map = Map.get()
+        enemies = [e for e in battle_map.get_enemies(self.combatant)]
+        return reduce(lambda dmg, e: dmg + self.calculate_threat_to_target(e), enemies, 0)
 
 
 class ConicBreathWeapon(Actoid, DirectThreat):

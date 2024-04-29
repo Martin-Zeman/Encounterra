@@ -28,6 +28,7 @@ class EffectType(Enum):
     SLEEP = auto()
     SHILLELAGH = auto()
     MENACING_ATTACK_FRIGHTENED = auto()
+    PARALYZING_ATTACK_PARALYZED = auto()
     SHIELD_OF_FAITH = auto()
     VOW_OF_ENMITY = auto()
 

@@ -114,7 +114,7 @@ def use_resources(combatant, action, **kwargs):
         combatant.has_action = False
         match action_type:
             case Action.MELEE_ATTACK | Action.RANGED_ATTACK | Action.RECKLESS_ATTACK | Action.PRE_SWALLOW_BITE | \
-                 Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE:
+                 Action.BITE_AND_SWALLOW | Action.VAMPIRIC_BITE | Action.PARALYZING_MELEE_ATTACK | HasteAction.HASTE_PARALYZING_MELEE_ATTACK:
                 combatant.ammo[action.factory.name].use_resource()
                 combatant.attack_fsm.trigger(str(action.factory))
             case Action.MENACING_MELEE_ATTACK | Action.MENACING_RANGED_ATTACK:# | Action.PRECISION_MELEE_ATTACK | Action.PRECISION_RANGED_ATTACK:

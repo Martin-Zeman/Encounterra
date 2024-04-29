@@ -1,6 +1,7 @@
 import logging
 
 from .grapple_attack import GrappleAttackFactory
+from .paralyzing_attack import ParalyzingAttackFactory
 from .parry import ParryFactory
 from .vampiric_bite import VampiricBiteFactory
 from ..abilities.action_surge import ActionSurgeFactory
@@ -105,6 +106,7 @@ TO_FACTORY = {
     Action.CONIC_BREATH_WEAPON: ConicBreathWeaponFactory,
     Action.LINE_BREATH_WEAPON: LineBreathWeaponFactory,
     Action.RAY_OF_FROST: RayOfFrostFactory,
+    Action.PARALYZING_MELEE_ATTACK: ParalyzingAttackFactory,
 
     BonusAction.BONUS_MELEE_ATTACK: MeleeAttackFactory,
     BonusAction.BONUS_RANGED_ATTACK: RangedAttackFactory,
@@ -189,6 +191,7 @@ TO_HASTED = {
     Action.PRE_SWALLOW_BITE: HasteAction.HASTE_PRE_SWALLOW_BITE,
     Action.GRAPPLE_ATTACK: HasteAction.HASTE_GRAPPLE_ATTACK,
     Action.GRAPPLE: HasteAction.HASTE_GRAPPLE,
-    Action.VAMPIRIC_BITE: HasteAction.HASTE_VAMPIRIC_BITE
+    Action.VAMPIRIC_BITE: HasteAction.HASTE_VAMPIRIC_BITE,
+    Action.PARALYZING_MELEE_ATTACK: HasteAction.HASTE_PARALYZING_MELEE_ATTACK
 }
 

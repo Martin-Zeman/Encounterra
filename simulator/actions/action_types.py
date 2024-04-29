@@ -44,6 +44,7 @@ class Action(Enum):
     SHAKE_ALLY_AWAKE = auto()
     THUNDERWAVE = auto()
     MENACING_MELEE_ATTACK = auto()
+    PARALYZING_MELEE_ATTACK = auto()
     # PRECISION_MELEE_ATTACK = auto()
     MENACING_RANGED_ATTACK = auto()
     # PRECISION_RANGED_ATTACK = auto()
@@ -135,6 +136,7 @@ class HasteAction(Enum):
     HASTE_GRAPPLE_ATTACK = auto()
     HASTE_GRAPPLE = auto()
     HASTE_VAMPIRIC_BITE = auto()
+    HASTE_PARALYZING_MELEE_ATTACK = auto()
 
 
 class Passive(Enum):

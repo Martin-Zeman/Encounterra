@@ -154,6 +154,23 @@ def get_source_of_frightened(combatant):
     return None
 
 
+def get_source_of_paralyzed(combatant):
+    """
+    Get the initiator of the paralyzed condition affecting the combatant.
+
+    Parameters:
+    - combatant: The combatant to check.
+
+    Returns:
+    - Any: The initiator of the paralyzed condition, or None if not found.
+    """
+    for condition_list in (combatant.dc_conditions, combatant.conditions):
+        for cond in condition_list:
+            if Conditions.PARALYZED in cond.conditions:
+                return cond.initiator
+    return None
+
+
 def get_grappled(combatant):
     """
     Get the target of the grappling condition affecting the combatant.

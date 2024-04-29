@@ -640,7 +640,7 @@ class ActionResolver:
                  HasteAction.HASTE_BITE_AND_SWALLOW | Action.VAMPIRIC_BITE | Action.PRE_SWALLOW_BITE | \
                  HasteAction.HASTE_PRE_SWALLOW_BITE | Action.MENACING_MELEE_ATTACK | Reaction.RIPOSTE | \
                  Action.MENACING_RANGED_ATTACK | BonusAction.BONUS_MENACING_MELEE_ATTACK | \
-                 BonusAction.BONUS_MENACING_RANGED_ATTACK:
+                 BonusAction.BONUS_MENACING_RANGED_ATTACK | Action.PARALYZING_MELEE_ATTACK | HasteAction.HASTE_PARALYZING_MELEE_ATTACK:
                 ret = self.resolve_attack(actoid, actoid.target, combatant)
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(combatant, EffectType.HIDE)
                 return ret
@@ -813,7 +813,7 @@ class ActionResolver:
                      EffectType.HUNGER_OF_HADAR | EffectType.FAERIE_FIRE | EffectType.HOLD_PERSON | \
                      EffectType.DIGESTION | EffectType.BLESS | EffectType.REGENERATION | EffectType.SLEEP | \
                      EffectType.SHIELD_OF_FAITH | EffectType.SHILLELAGH | EffectType.MENACING_ATTACK_FRIGHTENED | \
-                     EffectType.VOW_OF_ENMITY | EffectType.RAY_OF_FROST:
+                     EffectType.VOW_OF_ENMITY | EffectType.RAY_OF_FROST | EffectType.PARALYZING_ATTACK_PARALYZED:
                     pass  # TODO track if the barbarian attacked or received dmg
                 case _:
                     logger.error(f"Unknown effect {effect_type}")
