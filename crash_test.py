@@ -5,9 +5,26 @@ from simulator.actions.action_selector import get_action
 from simulator.battle_map import Map
 from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
-from simulator.test.test_error_cases import unify_combatants
 
 TIMESTAMP = "1712060998"
+
+
+def unify_combatants(session, battle_map):
+    map_combatants_keys = list(battle_map.combatant_coordinate_cache.keys())
+
+    for combatant in session.combatants:
+        for map_combatant_key in map_combatants_keys:
+            if combatant.name == map_combatant_key.name:
+                battle_map.combatant_coordinate_cache[combatant] = battle_map.combatant_coordinate_cache.pop(map_combatant_key)
+                break
+    # Unify combatants in the grid
+    for row in battle_map.grid:
+        for grid_square in row:
+            if grid_square.combatant:
+                for combatant in session.combatants:
+                    if grid_square.combatant.name == combatant.name:
+                        grid_square.combatant = combatant
+                        break
 
 
 def test_crash():

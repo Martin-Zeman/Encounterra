@@ -29,7 +29,7 @@ from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbe
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
     test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_fighter_lvl_2, \
-    test_battle_master_fighter_lvl_3, test_fighter_lvl_1
+    test_battle_master_fighter_lvl_3, test_fighter_lvl_1, test_ghoul, test_skeleton, test_hobgoblin
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
@@ -1386,22 +1386,49 @@ def test_error_case_31(battle_map, teams, effect_tracker, test_battle_master_fig
     assert str(actoids[1]) == 'Menacing Greatsword on Fighter 2nd LVL (1)'
 
 
-def unify_combatants(session, battle_map):
-    map_combatants_keys = list(battle_map.combatant_coordinate_cache.keys())
+def test_error_case_32(battle_map, teams, effect_tracker, test_ghoul, test_skeleton, test_goblin, test_hobgoblin):
+    """
+    This is trying to reproduce a very serious error which seems to have been introduced together with the NOP action.
+    The NOP action if it precedes a regular action will have all accessible coordinates as eligible. The NOP itself will
+    be subsequently filtered out and the following action will end up with an incompatible coordinate. So far, the
+    feasibility multiplier was masking this issue by making sure those unfeasible choices were not begin selected.
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_ghoul, test_skeleton, test_goblin, test_hobgoblin]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
-    for combatant in session.combatants:
-        for map_combatant_key in map_combatants_keys:
-            if combatant.name == map_combatant_key.name:
-                battle_map.combatant_coordinate_cache[combatant] = battle_map.combatant_coordinate_cache.pop(map_combatant_key)
-                break
-    # Unify combatants in the grid
-    for row in battle_map.grid:
-        for grid_square in row:
-            if grid_square.combatant:
-                for combatant in session.combatants:
-                    if grid_square.combatant.name == combatant.name:
-                        grid_square.combatant = combatant
-                        break
+    teams.add_combatant_to_team(test_ghoul, Teams.Color.RED)
+    teams.add_combatant_to_team(test_skeleton, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_hobgoblin, Teams.Color.BLUE)
+
+    # I'm trying to create a space where there's no danger zone
+    battle_map.set_combatant_coordinates(test_ghoul, np.array([0, 14]))
+    battle_map.set_combatant_coordinates(test_skeleton, np.array([4, 14]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 11]))
+    battle_map.set_combatant_coordinates(test_hobgoblin, np.array([2, 12]))
+
+    battle_map.build_adjacency_matrix()
+
+    actoids = []
+    try:
+        actoids.append(get_action(test_ghoul))
+        action_resolver.resolve_action(actoids[-1], test_ghoul)
+        actoids.append(get_action(test_ghoul))
+        action_resolver.resolve_action(actoids[-1], test_ghoul)
+        actoids.append(get_action(test_ghoul))
+        action_resolver.resolve_action(actoids[-1], test_ghoul)
+        actoids.append(get_action(test_ghoul))
+        action_resolver.resolve_action(actoids[-1], test_ghoul)
+        actoids.append(get_action(test_ghoul))
+        action_resolver.resolve_action(actoids[-1], test_ghoul)
+        actoids.append(get_action(test_ghoul))
+        action_resolver.resolve_action(actoids[-1], test_ghoul)
+        actoids.append(get_action(test_ghoul))
+        action_resolver.resolve_action(actoids[-1], test_ghoul)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
 
 
 # ----------------------------------
