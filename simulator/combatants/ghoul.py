@@ -19,13 +19,16 @@ class Ghoul(Combatant):
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=22, ac=12, init_bonus=2, spell_to_hit=0, speed=30, immunities={DamageType.Poison}, dc=0)
-        # self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=2, dmg_dice="2d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        super().__init__(num_or_name, hp=22, ac=12, init_bonus=2, spell_to_hit=0, speed=30, immunities={DamageType.Poison}, dc=10)
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=2, dmg_dice="2d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.claws = self.add_ability(Action.PARALYZING_MELEE_ATTACK,  name="Claws", combatant=self, to_hit=4, dmg_dice="2d4", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.reaction_factories.append(copy.copy(self.claws))
+        reaction_claws = copy.copy(self.claws[1])
+        reaction_claws.action_type = Reaction.REACTION_PARALYZING_MELEE_ATTACK
+        self.reaction_factories.append((Reaction.REACTION_PARALYZING_MELEE_ATTACK, reaction_claws))
         self.aoo_factory = self.reaction_factories[-1]
         self.danger_zone_attack = self.reaction_factories[-1]
         self.melee_reaction_range = self.aoo_factory[1].range
+        self.add_ability(Passive.CHARM_IMMUNITY)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 1
         self.saving_throws[SavingThrow.DEX] = 2

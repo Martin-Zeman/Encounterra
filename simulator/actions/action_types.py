@@ -108,6 +108,7 @@ class Reaction(Enum):
     UNCANNY_DODGE = auto()
     PARRY = auto()
     RIPOSTE = auto()
+    REACTION_PARALYZING_MELEE_ATTACK = auto()
 
 
 class Movement(Enum):

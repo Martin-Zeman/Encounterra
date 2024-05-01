@@ -87,6 +87,7 @@ class TotemRage(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModi
         self.rage_bonus = RageFactory.get_rage_bonus(combatant.level)
         self.factory = factory
         self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
+        self.actoid_flags |= ActoidFlags.IS_PRIORITY
 
     def __str__(self):
         return f"Totem Rage of {self.factory.combatant}"

@@ -66,7 +66,14 @@ class BlessFactory(ThreatModifierFactory):
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies
         """
-        return 0
+        max_threat_increase = 0
+        afs = get_attack_factories(target)
+        for af in afs:
+            eligible_targets = af.get_eligible_targets()
+            for et in eligible_targets:
+                threat_inc = af.calculate_threat_to_target_delta(et, {ThreatModifierType.TO_HIT_DIE: '1d4'})
+                max_threat_increase = max(threat_inc, max_threat_increase)
+        return max_threat_increase * SAVING_THROW_BONUS_MULTIPLIER * ROUND_HORIZON
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
@@ -124,7 +131,7 @@ class Bless(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier
                     threat_inc = af.calculate_threat_to_target_delta(et, {ThreatModifierType.TO_HIT_DIE: '1d4'})
                     max_threat_increase = max(threat_inc, max_threat_increase)
             total_threat_increase += max_threat_increase
-        return max_threat_increase * SAVING_THROW_BONUS_MULTIPLIER * ROUND_HORIZON
+        return total_threat_increase * SAVING_THROW_BONUS_MULTIPLIER * ROUND_HORIZON
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         """

@@ -7,6 +7,7 @@ from ..combatants.dragonclaw_cultist import DragonclawCultist
 from ..combatants.druid_1lvl import Druid1Lvl
 from ..combatants.fighter_1lvl import Fighter1Lvl
 from ..combatants.fighter_2lvl import Fighter2Lvl
+from ..combatants.ghoul import Ghoul
 from ..combatants.giant_toad import GiantToad
 from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
 from ..combatants.green_dragon_wyrmling import GreenDragonWyrmling
@@ -188,3 +189,7 @@ def test_skeleton():
 @pytest.fixture()
 def test_hobgoblin():
     return Hobgoblin()
+
+@pytest.fixture()
+def test_ghoul():
+    return Ghoul()

@@ -13,6 +13,7 @@ class ActoidFlags(Flag):
     IS_BREAK_GRAPPLE = auto()
     IS_ACTION_ENABLER = auto()
     LOCATION_INDEPENDENT = auto()
+    IS_PRIORITY = auto()
 
 
 class Actoid:
