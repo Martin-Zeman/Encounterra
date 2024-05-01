@@ -1246,3 +1246,27 @@ def test_conic_breath_weapon_placement_into_an_obstacle(battle_map, teams, effec
     battle_map.clear_caches()
     eligible_coords = breath.get_eligible_coords(distances, shortest_paths)
     assert not eligible_coords
+
+
+def test_second_wind(battle_map, teams, effect_tracker, test_fighter_lvl_1, test_skeleton, test_goblin):
+    battle_map.set_effect_tracker(effect_tracker)
+    teams.add_combatant_to_team(test_fighter_lvl_1, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(test_skeleton, Teams.Color.RED)  # For the log coloring...
+    teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
+    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([3, 3]))
+    battle_map.set_combatant_coordinates(test_skeleton, np.array([5, 3]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([2, 3]))
+    battle_map.build_adjacency_matrix()
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_fighter_lvl_1, test_skeleton, test_goblin]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+    test_fighter_lvl_1.curr_hp = 3  # Make sure enough HP are missing
+    try:
+        actoids = [get_action(test_fighter_lvl_1)]
+        action_resolver.resolve_action(actoids[-1], test_fighter_lvl_1)
+        actoids.append(get_action(test_fighter_lvl_1))
+        action_resolver.resolve_action(actoids[1], test_fighter_lvl_1)
+        assert any(str(act).startswith("Greatsword") for act in actoids)
+        assert any(str(act).startswith("Second Wind") for act in actoids)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
