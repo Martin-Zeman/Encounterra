@@ -38,6 +38,7 @@ from .combatants.goblin import Goblin
 from .combatants.green_dragon_wyrmling import GreenDragonWyrmling
 from .combatants.hill_giant import HillGiant
 from .combatants.hobgoblin import Hobgoblin
+from .combatants.manticore import Manticore
 from .combatants.moon_druid_2lvl import MoonDruid2Lvl
 from .combatants.moon_druid_3lvl import MoonDruid3Lvl
 from .combatants.moon_druid_4lvl import MoonDruid4Lvl
@@ -220,6 +221,8 @@ class Session:
                 self.combatants.append(HillGiant(curr_count))
             case Hobgoblin.id:
                 self.combatants.append(Hobgoblin(curr_count))
+            case Manticore.id:
+                self.combatants.append(Manticore(curr_count))
             case MoonDruid2Lvl.id:
                 self.combatants.append(MoonDruid2Lvl(curr_count))
             case MoonDruid3Lvl.id:
