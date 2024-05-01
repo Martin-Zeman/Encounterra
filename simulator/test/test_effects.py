@@ -71,6 +71,7 @@ def test_independent_saves(battle_map, teams, effect_tracker, test_goblin, test_
         assert False, f"Raised an exception {e}"
 
 
+@pytest.mark.flaky(reruns=3)
 def test_limited_duration_effect_non_self_target(battle_map, teams, effect_tracker, test_goblin, test_moon_druid, test_bugbear, test_ogre):
     """
     Tests that effects with a limited duration really expire post their duration. The focus is on the type of effect

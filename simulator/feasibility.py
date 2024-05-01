@@ -442,7 +442,7 @@ def check_feasibility(combatant, action):
         match action_type:
             case Reaction.SHIELD:
                 return combatant.has_reaction and action.factory.resource.has_resource(level=1)
-            case Reaction.REACTION_ATTACK | Reaction.UNCANNY_DODGE | Reaction.PARRY:
+            case Reaction.REACTION_ATTACK | Reaction.UNCANNY_DODGE | Reaction.PARRY | Reaction.REACTION_PARALYZING_MELEE_ATTACK:
                 return combatant.has_reaction
             case Reaction.PRE_SWALLOW_BITE_REACTION:
                 return combatant.has_reaction and not combatant.constricted_target

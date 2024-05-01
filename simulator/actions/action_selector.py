@@ -41,7 +41,7 @@ def get_post_transitions_of_priority_transitions(dag, transition_name_to_action,
             if dag.trigger(transition):
                 # We filter out priority transitions even from all the post transitions
                 try:
-                    post_transitions = [ft for ft in dag.forward_transitions[dag.state] if transition_name_to_action[ft[0]].factory.action_type not in prio_action_dict.keys()]
+                    post_transitions = [ft for ft in dag.forward_transitions[dag.state] if ActoidFlags.IS_PRIORITY not in transition_name_to_action[ft[0]].actoid_flags]
                 except KeyError:
                     pass  # For the case when the target state is nop
                 dag.reset()
@@ -78,7 +78,7 @@ def get_post_transitions_of_all_priority_transitions(proto_dag, transition_name_
 def get_post_misty_step_transitions(dag, transition_name_to_action):
     dag.trigger("Misty Step to 0, 0_1")  # It's the only MS we created
     try:
-        ms_post_transitions = [pt for pt in dag.forward_transitions[dag.state] if transition_name_to_action[pt[0]].factory.action_type not in PRIORITY_ACTIONS.keys()]
+        ms_post_transitions = [pt for pt in dag.forward_transitions[dag.state] if ActoidFlags.IS_PRIORITY not in transition_name_to_action[pt[0]].actoid_flags]
     except KeyError:
         ms_post_transitions = []
     dag.reset()
@@ -361,7 +361,7 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
 
 
 # def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, sequence_idx_to_transition_step_threat, distances):
-def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, transition_name_to_action):
+def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, sequence_idx_to_transition_step_threat, transition_name_to_action):
     """
     Filters, minimizes, and sorts action sequences to find the one with maximum threat while maintaining minimum distance.
 
@@ -379,7 +379,9 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
     :param sorted_sequences: Indices of sequences sorted by threat in descending order.
     :param sequence_to_threat: A dictionary mapping sequence index to its threat value.
     :param distances: A pre-computed dictionary of distances to all coordinates.
-
+    :param sequence_idx_to_transition_step_threat: A dictionary of dictionaries.  Maps for each sequence index to a dict
+    of individual transition indices -> threat contributions.
+    :param transition_name_to_action: dict mapping action names -> actions
     :return: A tuple of the action sequence with maximum threat and more distant coordinate requirement after
     minimization and the maximum threat.
     """
@@ -397,17 +399,16 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
             min_dist = dist
     sorted_sequences = [idx for idx in sorted_sequences if get_dist_to_action_sequence_coord(sequences[idx], distances) == min_dist]
 
-    # Filter out the NOP transitions
+    # Filter out transitions which contribute nothing
     for idx in sorted_sequences:
-        filtered_sequence = []
-        for tr in sequences[idx]:
+        new_sequence = []
+        for t_idx, elem in enumerate(sequences[idx]):
             try:
-                action_type = transition_name_to_action[tr].factory.action_type
-                if action_type not in [Action.NOP, BonusAction.NOP]:
-                    filtered_sequence.append(tr)
+                if sequence_idx_to_transition_step_threat[idx][t_idx] > 0 or ActoidFlags.IS_PRIORITY in transition_name_to_action[sequences[idx][t_idx]].actoid_flags:
+                    new_sequence.append(elem)
             except KeyError:
-                filtered_sequence.append(tr)
-        sequences[idx] = filtered_sequence
+                new_sequence.append(elem)
+        sequences[idx] = new_sequence
 
     sorted_sequences.sort(key=lambda idx: len(sequences[idx]))
     best_sequence = sequences[sorted_sequences[0]]
@@ -440,7 +441,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     sequence_set = set()  # This is an optimization measure, it's a set of sets which helps us eliminate equivalent sequences
     transition_name_to_ms_path = dict()
     sequence_to_threat = dict()  # Overall threat score of a sequence: sequence idx -> [movement threat, action threat]
-    # sequence_idx_to_transition_step_threat = dict()
+    sequence_idx_to_transition_step_threat = dict()
     coord_to_sequence_ids = dict()  # Maps coord (and movement type) to all sequences which end in that coord
     current_coords = battle_map.get_combatant_position(combatant).get()[0]
     try:
@@ -515,6 +516,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                 threat_acc = 0
                 first_feasibility_check_done = False
                 feasibility_multiplier = 1
+                delta_action_t_idx = 0
                 for t_idx, transition in enumerate(sequences[idx]):
                     if transition == "dummy":
                         break
@@ -535,19 +537,23 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                                     else:  # Two location-dependent actions in succession
                                         remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
                                         feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
-                            threat_acc += action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
+                            threat = action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
+                            threat_acc += threat
                             if delta_action:
-                                threat_acc += delta_action.calculate_threat_for_attack(combatant, action)
+                                delta_threat = delta_action.calculate_threat_for_attack(combatant, action)
+                                threat_acc += delta_threat
+                                sequence_idx_to_transition_step_threat[idx][delta_action_t_idx] += delta_threat
                             if isinstance(action, AttackThreatModifier):
                                 delta_action = action
+                                delta_action_t_idx = t_idx
                             for existing_delta_effect in battle_map.effect_tracker.get_affecting_combatant(combatant):
                                 if isinstance(existing_delta_effect, AttackThreatModifier):
                                     threat_acc += existing_delta_effect.calculate_threat_for_attack(combatant, action)
-                            # TODO Replace this with NOP
-                            # try:
-                            #     sequence_idx_to_transition_step_threat[idx].append(threat_acc)
-                            # except KeyError:
-                            #     sequence_idx_to_transition_step_threat[idx] = [threat_acc]
+                            # This gives us a detailed view of what exactly each transition contributes for the sake of subsequent filtering
+                            try:
+                                sequence_idx_to_transition_step_threat[idx][t_idx] = threat
+                            except KeyError:
+                                sequence_idx_to_transition_step_threat[idx] = {t_idx: threat}
                     except KeyError:  # or different kind which represents some type of movement
                         pass  # Skipping
                 sequence_to_threat[idx] = [sequence_to_threat[idx][-1], threat_acc * feasibility_multiplier]  # Overwrite the movement threat tuple with the final movement and transition total
@@ -555,7 +561,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
 
     sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
     # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True) This has significance to NOP, 'sequence_to_threat[x][1] > 0' precludes NOP being selected. I should check Fighter vs Fighter again
-    nearest_and_minimized_sequence, max_threat = get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, transition_name_to_action)
+    nearest_and_minimized_sequence, max_threat = get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, sequence_idx_to_transition_step_threat, transition_name_to_action)
     return nearest_and_minimized_sequence, transition_name_to_ms_path, max_threat
 
 

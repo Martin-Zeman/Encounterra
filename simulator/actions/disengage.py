@@ -16,6 +16,7 @@ import logging
 
 logger = logging.getLogger("Encounterra")
 
+
 class DisengageFactory(ThreatModifierFactory):
 
     def __init__(self, action_type, combatant):
@@ -51,6 +52,7 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         LimitedDurationEffect.__init__(self, combatant, turns=1)
         self.factory = factory
         self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
+        self.actoid_flags |= ActoidFlags.IS_PRIORITY
 
     def get_effect_type(self):
         return EffectType.DISENGAGE

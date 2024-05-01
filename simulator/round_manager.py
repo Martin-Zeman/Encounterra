@@ -160,7 +160,7 @@ class RoundManager:
             combatant = combatant.get_current_form()
             status = f"alive with {combatant.curr_hp} hp" if combatant.is_alive() else "dead"
             logger.info(f"{combatant} is {status}", extra={"team": self.teams.get_team(combatant)})
-        logger.info(Map.get())
+        # logger.info(Map.get())
 
     def print_results(self):
         logger.info("--------------RESULT--------------")

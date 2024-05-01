@@ -51,11 +51,11 @@ class ParalyzingAttackFactory(MeleeAttackFactory):
         # This is an approximation, we're only looking at the best action overall, not the action + bonus_action combo
         max_action_threat = 0
         for f in target.action_factories:
-            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
+            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in f[1].flags:
                 max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
-        for f in target.bonus_action_factories:
-            if FactoryFlags.IS_DIRECT_THREAT in f[1].flags:
-                max_action_threat = max(max_action_threat, f[1].calculate_max_threat())
+        for bf in target.bonus_action_factories:
+            if FactoryFlags.IS_DIRECT_THREAT in bf[1].flags and FactoryFlags.PREVENT_ENDLESS_RECURSION not in bf[1].flags:
+                max_action_threat = max(max_action_threat, bf[1].calculate_max_threat())
         prevented_threat_out_acc += max_action_threat
 
         mods = {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE, ThreatModifierType.AUTO_CRIT: True}
@@ -96,10 +96,6 @@ class ParalyzingAttack(MeleeAttack, LimitedDurationEffect, EndOfTurnEffect):
         logger.info(f"{self.target} is no longer paralyzed")
         remove_condition(self.target, Conditions.PARALYZED, self.factory.combatant)
 
-    def deactivate_for_combatant(self, combatant):
-        if combatant is self.target:
-            remove_condition(self.target, Conditions.PARALYZED, self.factory.combatant)
-
     def combatant_saved_at_end_of_turn(self, combatant):
         saved = roll_saving_throw(combatant.saving_throws[self.factory.saving_throw], self.factory.combatant.dc, combatant.saving_throws_roll_type_mod[self.st])
         if saved:
@@ -109,7 +105,8 @@ class ParalyzingAttack(MeleeAttack, LimitedDurationEffect, EndOfTurnEffect):
         return True
 
     def is_affecting(self, combatant):
-        return get_source_of_paralyzed(self.target) is self.factory.combatant
+        return self.target is combatant
 
     def deactivate_for_combatant(self, combatant):
-        assert False
+        self.deactivate()
+        return False

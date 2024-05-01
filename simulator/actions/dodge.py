@@ -54,6 +54,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         LimitedDurationEffect.__init__(self, combatant, turns=1)
         self.factory = factory
         self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
+        self.actoid_flags |= ActoidFlags.IS_PRIORITY
 
     def __str__(self):
         return f"Dodge of {self.factory.combatant}"

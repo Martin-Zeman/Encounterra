@@ -205,7 +205,7 @@ def use_resources(combatant, action, **kwargs):
     elif isinstance(action_type, Reaction):
         combatant.has_reaction = False
         match action_type:
-            case Reaction.REACTION_ATTACK | Reaction.PRE_SWALLOW_BITE_REACTION | Reaction.UNCANNY_DODGE | Reaction.PARRY:
+            case Reaction.REACTION_ATTACK | Reaction.PRE_SWALLOW_BITE_REACTION | Reaction.UNCANNY_DODGE | Reaction.PARRY | Reaction.REACTION_PARALYZING_MELEE_ATTACK:
                 pass  # Sufficiently tracked by not having a reaction anymore
             case Reaction.SHIELD:
                 action.factory.resource.use_resource(level=1)

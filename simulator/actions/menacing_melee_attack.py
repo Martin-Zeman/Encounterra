@@ -7,6 +7,7 @@ from .action_types import Action, BonusAction
 from .melee_attack import MeleeAttackFactory, MeleeAttack
 from ..abilities.on_hit_saving_throw_effect import OnHitSavingThrowEffect
 from ..actions.actoid import FactoryFlags
+from ..battle_map import Map
 from ..conditions import Conditions, apply_condition, Condition, remove_condition, get_source_of_frightened
 import logging
 
@@ -59,6 +60,7 @@ class MenacingMeleeAttack(MeleeAttack, LimitedDurationEffect):
 
     def activate(self, **kwargs):
         logger.info(f"{self.target} is frightened")
+        Map.get().effect_tracker.add(self)
         apply_condition(self.target, Condition(Conditions.FRIGHTENED, self.factory.combatant))
 
     def deactivate(self):
@@ -66,7 +68,8 @@ class MenacingMeleeAttack(MeleeAttack, LimitedDurationEffect):
         remove_condition(self.target, Conditions.FRIGHTENED, self.factory.combatant)
 
     def is_affecting(self, combatant):
-        return get_source_of_frightened(self.target) is self.factory.combatant
+        return self.target is combatant
 
     def deactivate_for_combatant(self, combatant):
-        assert False
+        self.deactivate()
+        return False

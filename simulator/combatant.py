@@ -52,10 +52,10 @@ class Combatant(ProtoCombatant):
             self.name = type(self).name + f" ({num_or_name})"
         else:
             self.name = num_or_name  # Wildshape case
-        self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self)), (Action.NOP, NopFactory(Action.NOP, self))]
+        self.action_factories = [(Action.DODGE, DodgeFactory(self)), (Action.DISENGAGE, DisengageFactory(Action.DISENGAGE, self))]
         self.dodge_factory = self.action_factories[0]
         self.disengage_factory = self.action_factories[1]
-        self.bonus_action_factories = [(BonusAction.NOP, NopFactory(BonusAction.NOP, self))]
+        self.bonus_action_factories = []
         self.reaction_factories = []
         self.free_action_factories = []
         self.danger_zone_attack = None
