@@ -9,7 +9,7 @@ from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import SavingThrow, get_superiority_dice
 from ..conditions import Conditions, apply_condition, Condition, remove_condition, \
-    get_source_of_frightened
+    get_source_of_frightened, is_affected_by_any
 from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import get_saving_throw_fail_prob, calculate_threat_out_delta
 from ..utils.roll_types import RollType, ThreatModifierType
@@ -42,8 +42,11 @@ class MenacingRangedAttackFactory(RangedAttackFactory):
         return [MenacingRangedAttack(t, self) for t in targets]
 
     def calculate_threat_to_target(self, target, **kwargs):
-        return (RangedAttackFactory.calculate_threat_to_target(self, target) +
-                get_saving_throw_fail_prob(self.combatant.dc, target.saving_throws[SavingThrow.WIS]) * calculate_threat_out_delta(target, 12, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1])
+        total_threat = RangedAttackFactory.calculate_threat_to_target(self, target)
+        if is_affected_by_any(target, Conditions.FRIGHTENED):
+            return total_threat - 1  # We want to discourage the Fighter from wasting resources
+        total_threat += get_saving_throw_fail_prob(self.combatant.dc, target.saving_throws[SavingThrow.WIS]) * calculate_threat_out_delta(target, 12, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1]
+        return total_threat
 
 
 class MenacingRangedAttack(RangedAttack, LimitedDurationEffect):
