@@ -159,7 +159,7 @@ def check_feasibility(combatant, action):
                 return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED)
             case Action.DISENGAGE | HasteAction.HASTE_DISENGAGE:
                 return res and not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED) and not combatant.has_disengaged
-            case Action.DODGE | Action.POUNCE | Action.NOP:
+            case Action.DODGE | Action.POUNCE:
                 return res
             case Action.BREAK_GRAPPLE:
                 return res and is_affected_by_any(combatant, Conditions.GRAPPLED)
@@ -396,7 +396,7 @@ def check_feasibility(combatant, action):
                 res &= battle_map.teams.are_enemies(combatant, action.target)
                 return res
                 # TODO check sorcery points, checks if the spell even has casting time of an action, check if leveled spell has already been cast
-            case BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.NOP | BonusAction.SHILLELAGH:
+            case BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.SHILLELAGH:
                 return res
             case BonusAction.CUNNING_DISENGAGE:
                 return res and not combatant.has_disengaged
@@ -534,7 +534,7 @@ def check_feasibility_light(combatant, action):
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 res &= not combatant.concentration_effect
                 return res
-            case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.DODGE | Action.POUNCE | Action.CONSTRICT | Action.SHAKE_ALLY_AWAKE | Action.RAY_OF_FROST | Action.NOP:
+            case Action.FIREBOLT | Action.SHOCKING_GRASP | Action.DODGE | Action.POUNCE | Action.CONSTRICT | Action.SHAKE_ALLY_AWAKE | Action.RAY_OF_FROST:
                 return res
             case Action.TWINNED_FIREBOLT | Action.TWINNED_SHOCKING_GRASP:
                 return res and combatant.resources[Passive.METAMAGIC].get_resource() > 0
@@ -624,7 +624,7 @@ def check_feasibility_light(combatant, action):
         #     return False
         res = combatant.has_bonus_action
         match action_type:
-            case BonusAction.PAM_BONUS_ATTACK | BonusAction.NOP:  # TODO Remove this
+            case BonusAction.PAM_BONUS_ATTACK:  # TODO Remove this
                 return res
             case BonusAction.RAGE:
                 return res and combatant.resources[BonusAction.RAGE].has_resource() and not battle_map.effect_tracker.is_affecting_combatant(combatant, EffectType.RAGE)

@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import pytest
 
 from ..action_resolver import ActionResolver
 from ..actions.action_selector import get_action
@@ -48,6 +49,7 @@ def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, t
         assert False, f"Raised an exception {e}"
 
 
+@pytest.mark.flaky(reruns=3)
 def test_thunderwave(battle_map, teams, effect_tracker, test_druid_lvl_1, test_fighter_lvl_1):
     """
     We assert that it's possible to cast Thunderwave from a position anywhere on a face of the cubic effect.

@@ -1392,6 +1392,8 @@ def test_error_case_32(battle_map, teams, effect_tracker, test_ghoul, test_skele
     The NOP action if it precedes a regular action will have all accessible coordinates as eligible. The NOP itself will
     be subsequently filtered out and the following action will end up with an incompatible coordinate. So far, the
     feasibility multiplier was masking this issue by making sure those unfeasible choices were not begin selected.
+
+    As a result, the NOP action has been removed again
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
@@ -1419,14 +1421,8 @@ def test_error_case_32(battle_map, teams, effect_tracker, test_ghoul, test_skele
         action_resolver.resolve_action(actoids[-1], test_ghoul)
         actoids.append(get_action(test_ghoul))
         action_resolver.resolve_action(actoids[-1], test_ghoul)
-        actoids.append(get_action(test_ghoul))
-        action_resolver.resolve_action(actoids[-1], test_ghoul)
-        actoids.append(get_action(test_ghoul))
-        action_resolver.resolve_action(actoids[-1], test_ghoul)
-        actoids.append(get_action(test_ghoul))
-        action_resolver.resolve_action(actoids[-1], test_ghoul)
-        actoids.append(get_action(test_ghoul))
-        action_resolver.resolve_action(actoids[-1], test_ghoul)
+        assert any(str(act).startswith("Claws on") for act in actoids)
+        assert any(str(act).startswith("(") for act in actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

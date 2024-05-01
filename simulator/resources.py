@@ -148,7 +148,7 @@ def use_resources(combatant, action, **kwargs):
                 combatant.resources[Passive.METAMAGIC].use_resource()
             case Action.WILDSHAPE:
                 combatant.resources[Action.WILDSHAPE].use_resource()
-            case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE | Action.NOP:  # TODO NOP probably not needed
+            case Action.POUNCE | Action.CONSTRICT | Action.BREAK_GRAPPLE:
                 pass  # Sufficiently tracked by not having an action anymore
             case Action.LAY_ON_HANDS:
                 combatant.resources[Action.LAY_ON_HANDS].use_resource(action.hp_amount)
@@ -185,7 +185,7 @@ def use_resources(combatant, action, **kwargs):
                 combatant.resources[Passive.METAMAGIC].use_resource(2)
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP | BonusAction.QUICKENED_RAY_OF_FROST:
                 combatant.resources[Passive.METAMAGIC].use_resource(2)
-            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.SHILLELAGH | BonusAction.NOP:  # TODO NOP probably not needed
+            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.SHILLELAGH:
                 pass  # Sufficiently tracked by not having a bonus action anymore
             case BonusAction.MOON_WILDSHAPE:
                 combatant.resources[Action.WILDSHAPE].use_resource()
