@@ -105,7 +105,7 @@ def generate_proto_dag(combatant):
     visited = set()
     transition_name_to_action = dict()
 
-    def dfs(subject, previous_state_name, af_to_a, depth, action_taken=None):
+    def dfs(subject, previous_state_name, af_to_a, depth, action_taken=None, previous_fas=None):
         """
         Recursively builds the action Finite State Machine (FSM) for a given combatant using depth-first search.
 
@@ -118,6 +118,7 @@ def generate_proto_dag(combatant):
         :param af_to_a: A dictionary mapping action factories to their corresponding actions.
         :param depth: The current depth in the action decision tree.
         :param action_taken: The action taken to reach the current state, if any.
+        :param previous_fas: Prevents endless recursion in case of 3 consecutive attacks of the same type
         :return: None. The function works by side-effect, modifying the FSM directly.
 
         Note: This function assumes that it's called within the context of `generate_proto_dag`
@@ -130,7 +131,10 @@ def generate_proto_dag(combatant):
             af_to_a = {faf: faf[1].create_all() for faf in fafs}
             fas = tuple(a for faf in fafs for a in af_to_a[faf])
         # A state is fully defined by all the possible (bonus) actions the combatant may take in it
-        state_footprint = actions_to_set(fas)
+        if fas != previous_fas:
+            state_footprint = actions_to_set(fas)
+        else:
+            state_footprint = actions_to_set(fas + (str(depth),))  # Protection against three consecutive attacks
         action_taken_name = f"{action_taken}_{depth}"
         if action_taken:
             transition_name_to_action[action_taken_name] = action_taken
@@ -154,12 +158,12 @@ def generate_proto_dag(combatant):
                         with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
                             fafs = get_all_feasible_action_factories(form, depth)
                             af_to_a_used = {faf: faf[1].create_all(action_taken) for faf in fafs}
-                            dfs(form, curr_state_name, af_to_a_used, depth + 1, fa)
+                            dfs(form, curr_state_name, af_to_a_used, depth + 1, fa, fas)
                     elif ActoidFlags.IS_ACTION_ENABLER in fa.actoid_flags:  # This should be more lightweight than inheritance
                         af_to_a_used = {faf: faf[1].create_all(fa) for faf in fafs}
-                        dfs(subject, curr_state_name, af_to_a_used, depth + 1, fa)
+                        dfs(subject, curr_state_name, af_to_a_used, depth + 1, fa, fas)
                     else:
-                        dfs(subject, curr_state_name, af_to_a, depth + 1, fa)
+                        dfs(subject, curr_state_name, af_to_a, depth + 1, fa, fas)
                 subject.import_resources(exported_resources)
         else:
             # State already exists, just hook up the transition
