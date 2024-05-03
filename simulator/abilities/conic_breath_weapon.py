@@ -14,10 +14,10 @@ logger = logging.getLogger("Encounterra")
 
 class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
 
-    def __init__(self, combatant, recharge, dmg_dice, dmg_type, saving_throw, dc, target_template, name):
+    def __init__(self, action_type, combatant, recharge, dmg_dice, dmg_type, saving_throw, dc, target_template, name):
         DirectThreatFactory.__init__(self)
         self.combatant = combatant
-        self.action_type = Action.CONIC_BREATH_WEAPON
+        self.action_type = action_type
         self.recharge_value = recharge
         self.dmg_dice = dmg_dice
         self.dmg_type = dmg_type

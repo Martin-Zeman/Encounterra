@@ -12,6 +12,8 @@ from simulator.combatants.black_dragon_wyrmling import BlackDragonWyrmling
 from simulator.combatants.blue_dragon_wymling import BlueDragonWyrmling
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.bugbear_chief import BugbearChief
+from simulator.combatants.bullywug import Bullywug
+from simulator.combatants.chimera import Chimera
 from simulator.combatants.cultist_fanatic import CultistFanatic
 from simulator.combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
 from simulator.combatants.draconic_sorcerer_4lvl import DraconicSorcerer4Lvl
@@ -24,6 +26,7 @@ from simulator.combatants.ghoul import Ghoul
 from simulator.combatants.green_dragon_wyrmling import GreenDragonWyrmling
 from simulator.combatants.hill_giant import HillGiant
 from simulator.combatants.hobgoblin import Hobgoblin
+from simulator.combatants.kobold import Kobold
 from simulator.combatants.manticore import Manticore
 from simulator.combatants.moon_druid_2lvl import MoonDruid2Lvl
 from simulator.combatants.moon_druid_4lvl import MoonDruid4Lvl
@@ -129,8 +132,9 @@ if __name__ == '__main__':
     # session.add_combatant(OathOfVengeancePaladin3Lvl, Teams.Color.BLUE)
     # session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.RED)
     # session.add_combatant(BattlemasterFighter4Lvl, Teams.Color.RED)
-    session.add_combatant(OathOfVengeancePaladin3Lvl, Teams.Color.BLUE)
-    session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.BLUE)
+    session.add_combatant(Chimera, Teams.Color.BLUE)
+    # session.add_combatant(OathOfVengeancePaladin3Lvl, Teams.Color.BLUE)
+    session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.RED)
     # session.add_combatant(BattlemasterFighter5Lvl, Teams.Color.BLUE)
     # session.add_combatant(Rogue1Lvl, Teams.Color.RED)
     # session.add_combatant(Rogue2Lvl, Teams.Color.RED)
@@ -168,7 +172,13 @@ if __name__ == '__main__':
     # session.add_combatant(Ghoul, Teams.Color.BLUE)
     # session.add_combatant(Ghoul, Teams.Color.RED)
     # session.add_combatant(Ghoul, Teams.Color.BLUE)
-    session.add_combatant(Manticore, Teams.Color.RED)
+    # session.add_combatant(Manticore, Teams.Color.RED)
+    session.add_combatant(Kobold, Teams.Color.RED)
+    session.add_combatant(Kobold, Teams.Color.RED)
+    session.add_combatant(Kobold, Teams.Color.RED)
+    session.add_combatant(Bullywug, Teams.Color.RED)
+    session.add_combatant(Bullywug, Teams.Color.RED)
+    session.add_combatant(Bullywug, Teams.Color.RED)
     session.set_num_simulations(1)
     start_time = time.time()
     session.place_terrain_and_obstacles(Session.MapType.OBSTACLES.value)

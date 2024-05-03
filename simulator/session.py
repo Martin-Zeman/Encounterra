@@ -16,6 +16,8 @@ from .combatants.blue_dragon_wymling import BlueDragonWyrmling
 from .combatants.brown_bear import BrownBear
 from .combatants.bugbear import Bugbear
 from .combatants.bugbear_chief import BugbearChief
+from .combatants.bullywug import Bullywug
+from .combatants.chimera import Chimera
 from .combatants.commoner import Commoner
 from .combatants.cultist import Cultist
 from .combatants.cultist_fanatic import CultistFanatic
@@ -38,6 +40,7 @@ from .combatants.goblin import Goblin
 from .combatants.green_dragon_wyrmling import GreenDragonWyrmling
 from .combatants.hill_giant import HillGiant
 from .combatants.hobgoblin import Hobgoblin
+from .combatants.kobold import Kobold
 from .combatants.manticore import Manticore
 from .combatants.moon_druid_2lvl import MoonDruid2Lvl
 from .combatants.moon_druid_3lvl import MoonDruid3Lvl
@@ -177,6 +180,10 @@ class Session:
                 self.combatants.append(Bugbear(curr_count))
             case BugbearChief.id:
                 self.combatants.append(BugbearChief(curr_count))
+            case Bullywug.id:
+                self.combatants.append(Bullywug(curr_count))
+            case Chimera.id:
+                self.combatants.append(Chimera(curr_count))
             case Commoner.id:
                 self.combatants.append(Commoner(curr_count))
             case Cultist.id:
@@ -221,6 +228,8 @@ class Session:
                 self.combatants.append(HillGiant(curr_count))
             case Hobgoblin.id:
                 self.combatants.append(Hobgoblin(curr_count))
+            case Kobold.id:
+                self.combatants.append(Kobold(curr_count))
             case Manticore.id:
                 self.combatants.append(Manticore(curr_count))
             case MoonDruid2Lvl.id:

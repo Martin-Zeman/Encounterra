@@ -53,6 +53,7 @@ class Action(Enum):
     CURE_WOUNDS = auto()
     ABJURE_ENEMY = auto()
     CONIC_BREATH_WEAPON = auto()
+    CONIC_BREATH_WEAPON_ATTACK = auto()
     LINE_BREATH_WEAPON = auto()
     RAY_OF_FROST = auto()
 

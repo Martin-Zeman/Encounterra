@@ -154,6 +154,9 @@ def use_resources(combatant, action, **kwargs):
                 combatant.resources[Action.LAY_ON_HANDS].use_resource(action.hp_amount)
             case Action.CONIC_BREATH_WEAPON:
                 combatant.resources[Action.CONIC_BREATH_WEAPON].use_resource()
+            case Action.CONIC_BREATH_WEAPON_ATTACK:
+                combatant.attack_fsm.trigger(str(action.factory))
+                combatant.resources[Action.CONIC_BREATH_WEAPON_ATTACK].use_resource()
             case Action.LINE_BREATH_WEAPON:
                 combatant.resources[Action.LINE_BREATH_WEAPON].use_resource()
             case _:

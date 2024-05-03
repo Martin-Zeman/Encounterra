@@ -372,10 +372,11 @@ class Combatant(ProtoCombatant):
                     resource = kwargs.get("resource", self.spellslots)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, resource, **kwargs)))
                     self.display_abilities.append(self.action_factories[-1][1].get_ability_name())
-                case Action.CONIC_BREATH_WEAPON:
-                    self.resources[Action.CONIC_BREATH_WEAPON] = Uses(1, ResourceRefreshType.NEVER)
-                    self.action_factories.append((action_type, TO_FACTORY[action_type](self, **kwargs)))
+                case Action.CONIC_BREATH_WEAPON | Action.CONIC_BREATH_WEAPON_ATTACK:
+                    self.resources[action_type] = Uses(1, ResourceRefreshType.NEVER)
+                    self.action_factories.append((action_type, TO_FACTORY[action_type](action_type, self, **kwargs)))
                     self.display_abilities.append(kwargs['name'])
+                    return self.action_factories[-1]
                 case Action.LINE_BREATH_WEAPON:
                     self.resources[Action.LINE_BREATH_WEAPON] = Uses(1, ResourceRefreshType.NEVER)
                     self.action_factories.append((action_type, TO_FACTORY[action_type](self, **kwargs)))

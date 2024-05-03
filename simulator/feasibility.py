@@ -270,6 +270,11 @@ def check_feasibility(combatant, action):
                 res &= combatant.resources[Action.CONIC_BREATH_WEAPON].has_resource()
                 res &= (battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) == 0)
                 return res
+            case Action.CONIC_BREATH_WEAPON_ATTACK:
+                res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()
+                res &= combatant.resources[Action.CONIC_BREATH_WEAPON_ATTACK].has_resource()
+                res &= (battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) == 0)
+                return res
             case Action.LINE_BREATH_WEAPON:
                 res &= combatant.resources[Action.LINE_BREATH_WEAPON].has_resource()
                 res &= (battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) == 0)
@@ -599,6 +604,10 @@ def check_feasibility_light(combatant, action):
                 return res
             case Action.CONIC_BREATH_WEAPON:
                 res &= combatant.resources[Action.CONIC_BREATH_WEAPON].has_resource()
+                return res
+            case Action.CONIC_BREATH_WEAPON_ATTACK:
+                res |= not combatant.attack_fsm.is_0() and str(action[1]) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
+                res &= combatant.resources[Action.CONIC_BREATH_WEAPON_ATTACK].has_resource()
                 return res
             case Action.LINE_BREATH_WEAPON:
                 res &= combatant.resources[Action.LINE_BREATH_WEAPON].has_resource()

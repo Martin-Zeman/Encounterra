@@ -104,6 +104,7 @@ TO_FACTORY = {
     Action.LAY_ON_HANDS: LayOnHandsFactory,
     Action.CURE_WOUNDS: CureWoundsFactory,
     Action.CONIC_BREATH_WEAPON: ConicBreathWeaponFactory,
+    Action.CONIC_BREATH_WEAPON_ATTACK: ConicBreathWeaponFactory,
     Action.LINE_BREATH_WEAPON: LineBreathWeaponFactory,
     Action.RAY_OF_FROST: RayOfFrostFactory,
     Action.PARALYZING_MELEE_ATTACK: ParalyzingAttackFactory,
