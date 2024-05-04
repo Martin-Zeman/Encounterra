@@ -589,5 +589,7 @@ def get_action(combatant):
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)
     if not combatant.action_plan:
         return None  # Either no action possible or all actions already used
+    if str(combatant) == "Assassin Rogue 3rd LVL (1)":
+        logger.info(f"Action plan: {[str(act) for act in combatant.action_plan]}")
     # print("---get_action_plan took %s seconds ---" % (time.time() - start_time))
     return combatant.action_plan.pop(0)

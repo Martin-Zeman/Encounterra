@@ -23,6 +23,7 @@ class OnHitMartialAdvantage(OnHit):
             dice = parse_dmg_dice(self.dmg_dice)
             attacker.resources[Passive.MARTIAL_ADVANTAGE].use_resource()
             return [roll_dice(dice) * multiplier, self.dmg_type]
+        return None
 
     def calculate_threat(self, attacker, target, **kwargs):
         battle_map = Map.get()

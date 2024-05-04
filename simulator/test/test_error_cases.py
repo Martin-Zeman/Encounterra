@@ -29,7 +29,8 @@ from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbe
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
     test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_fighter_lvl_2, \
-    test_battle_master_fighter_lvl_3, test_fighter_lvl_1, test_ghoul, test_skeleton, test_hobgoblin
+    test_battle_master_fighter_lvl_3, test_fighter_lvl_1, test_ghoul, test_skeleton, test_hobgoblin, test_orc, \
+    test_assassin_rogue_3lvl
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
@@ -1423,6 +1424,105 @@ def test_error_case_32(battle_map, teams, effect_tracker, test_ghoul, test_skele
         action_resolver.resolve_action(actoids[-1], test_ghoul)
         assert any(str(act).startswith("Claws on") for act in actoids)
         assert any(str(act).startswith("(") for act in actoids)
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_error_case_33(battle_map, teams, effect_tracker, test_battle_master_fighter_lvl_3, test_assassin_rogue_3lvl, test_orc):
+    """
+    This test case is based on an error encountered during testing. The rogue was able to activate sneak attack despite
+    shooting at disadvantage. Then the rogue took AoOs despite still having cunning disengage available.
+    # The rogue uses sneak attack despite rolling with disadvantage and doesn't use disengage
+    # Orc (4) is alive with 6 hp
+    # Assassin Rogue 3rd LVL (1) is alive with 6 hp
+    # Battlemaster Fighter 3rd LVL (1) is alive with 9 hp
+    # Orc (3) is alive with 4 hp
+    # Orc (2) is alive with 3 hp
+    # Orc (1) is dead
+    # It's Assassin Rogue 3rd LVL (1)'s turn
+    # 00 00	00	00	00	00	00	00	00	00	00	XX	XX	XX	00
+    # 00 00	00	00	00	00	00	00	00	00	00	XX	XX	XX	00
+    # 00 00	00	00	00	00	00	00	00	00	00	00	00	00	00
+    # 00 00	00	00	00	00	00	00	00	00	00	00	00	00	00
+    # XX XX	XX	00	00	00	00	00	00	00	00	00	00	00	00
+    # XX XX	XX	00	00	00	00	00	00	00	00	00	00	00	00
+    # XX XX	XX	00	00	00	00	00	00	00	00	00	00	00	00
+    # 00 00	00	00	00	00	00	00	00	00	00	00	00	00	00
+    # 00 00	00	00	00	00	00	00	00	00	00	00	00	00	00
+    # 00 00	00	00	00	00	00	00	O2	00	00	00	00	00	00
+    # 00 00	00	00	00	00	00	B1	00	00	00	00	00	00	00
+    # 00 00	00	00	00	00	00	00	00	00	00	00	00	00	00
+    # O3 O4	00	00	00	00	00	00	00	00	00	00	00	00	00
+    # A1 00	00	00	00	00	00	00	00	00	00	00	00	00	00
+    # 00 00	00	00	00	00	00	00	00	00	00	00	00	00	00
+    #
+    # Assassin Rogue 3rd LVL (1) attacks Orc (2) with Shortbow at disadvantage
+    # The attack hits Orc (2) for 9 damage
+    # Activating Sneak Attack
+    # With extra 5 damage from Sneak Attack
+    # Orc (2) died
+    # Assassin Rogue 3rd LVL (1) moved to [1 1]
+    # Orc (3) took an AoO Greataxe on Assassin Rogue 3rd LVL (1) against Assassin Rogue 3rd LVL (1)
+    # Orc (3) attacks Assassin Rogue 3rd LVL (1) with Greataxe
+    # The attack misses Assassin Rogue 3rd LVL (1)
+    # Assassin Rogue 3rd LVL (1) moved to [2 2]
+    # Orc (4) took an AoO Greataxe on Assassin Rogue 3rd LVL (1) against Assassin Rogue 3rd LVL (1)
+    # Orc (4) attacks Assassin Rogue 3rd LVL (1) with Greataxe
+    # The attack hits Assassin Rogue 3rd LVL (1) for 14 damage
+    # Assassin Rogue 3rd LVL (1) died
+    """
+    CustomLogger(logging.WARNING)
+    # Renaming them to match the grid
+    test_orc.name = "Orc (3)"
+    test_orc2 = copy.deepcopy(test_orc)
+    test_orc2.name = "Orc (4)"
+    test_orc3 = copy.deepcopy(test_orc)
+    test_orc3.name = "Orc (2)"
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_battle_master_fighter_lvl_3, test_assassin_rogue_3lvl, test_orc, test_orc2, test_orc3]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_assassin_rogue_3lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_orc, Teams.Color.RED)
+    teams.add_combatant_to_team(test_orc2, Teams.Color.RED)
+    teams.add_combatant_to_team(test_orc3, Teams.Color.RED)
+
+    battle_map.place_circular_element(np.array([1, 9]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([12, 14]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+
+    # I'm trying to create a space where there's no danger zone
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([0, 1]))
+    battle_map.set_combatant_coordinates(test_assassin_rogue_3lvl, np.array([7, 4]))
+    battle_map.set_combatant_coordinates(test_orc, np.array([0, 2]))
+    battle_map.set_combatant_coordinates(test_orc2, np.array([1, 2]))
+    battle_map.set_combatant_coordinates(test_orc3, np.array([8, 5]))
+
+    test_orc.curr_hp = 4
+    test_orc2.curr_hp = 6
+    test_orc3.curr_hp = 3
+    test_battle_master_fighter_lvl_3.curr_hp = 9
+    for combatant in combatants:
+        combatant.curr_init = 0  # To prevent assassinate from crashing
+    # Can't seem to replicate the behavior from the error but the rogue probably wanted to get as far away as possible
+    # using cunning dash instead of using cunning disengage. This may uncover it better than the actual scenario
+    test_assassin_rogue_3lvl.has_action = False
+
+    battle_map.build_adjacency_matrix()
+
+    actoids = []
+    try:
+        actoids.append(get_action(test_assassin_rogue_3lvl))
+        action_resolver.resolve_action(actoids[-1], test_assassin_rogue_3lvl)
+        actoids.append(get_action(test_assassin_rogue_3lvl))
+        action_resolver.resolve_action(actoids[-1], test_assassin_rogue_3lvl)
+        actoids.append(get_action(test_assassin_rogue_3lvl))
+        action_resolver.resolve_action(actoids[-1], test_assassin_rogue_3lvl)
+        actoids.append(get_action(test_assassin_rogue_3lvl))
+        action_resolver.resolve_action(actoids[-1], test_assassin_rogue_3lvl)
+        actoids.append(get_action(test_assassin_rogue_3lvl))
+        action_resolver.resolve_action(actoids[-1], test_assassin_rogue_3lvl)
+        assert str(actoids[0]).startswith("Cunning Disengage")
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

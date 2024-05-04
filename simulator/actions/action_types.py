@@ -100,6 +100,7 @@ class BonusAction(Enum):
     SHIELD_OF_FAITH = auto()
     QUICKENED_CURE_WOUNDS = auto()
     VOW_OF_ENMITY = auto()
+    AGGRESSIVE = auto()
 
 
 class Reaction(Enum):

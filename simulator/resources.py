@@ -188,7 +188,7 @@ def use_resources(combatant, action, **kwargs):
                 combatant.resources[Passive.METAMAGIC].use_resource(2)
             case BonusAction.QUICKENED_FIREBOLT | BonusAction.QUICKENED_SHOCKING_GRASP | BonusAction.QUICKENED_RAY_OF_FROST:
                 combatant.resources[Passive.METAMAGIC].use_resource(2)
-            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.SHILLELAGH:
+            case BonusAction.CUNNING_DISENGAGE | BonusAction.FLAMING_SPHERE_RAM | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.SHILLELAGH | BonusAction.AGGRESSIVE:
                 pass  # Sufficiently tracked by not having a bonus action anymore
             case BonusAction.MOON_WILDSHAPE:
                 combatant.resources[Action.WILDSHAPE].use_resource()

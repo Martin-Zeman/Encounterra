@@ -44,16 +44,21 @@ class OnHitSneakAttack(OnHit):
         self.name = name
 
     def hit(self, attacker, attack, target, multiplier, dmg_so_far):
+        if attack.roll_type is RollType.DISADVANTAGE:
+            return None
         battle_map = Map.get()
         if not getattr(attacker, "already_used_sneak_attack_this_turn", True) and (attack.roll_type is RollType.ADVANTAGE or battle_map.is_ally_adjacent_to_target(attacker, target)):
             logger.info("Activating Sneak Attack")
             dice = parse_dmg_dice(self.dmg_dice)
             attacker.already_used_sneak_attack_this_turn = True
             return [roll_dice(dice) * multiplier, self.dmg_type]
+        return None
 
     def calculate_threat(self, attacker, target, **kwargs):
-        battle_map = Map.get()
         roll_type = kwargs.get("roll_type", RollType.STRAIGHT)
+        if roll_type is RollType.DISADVANTAGE:
+            return 0
+        battle_map = Map.get()
         if not getattr(attacker, "already_used_sneak_attack_this_turn", True) and (roll_type is RollType.ADVANTAGE or battle_map.is_ally_adjacent_to_target(attacker, target)):
             avg_dmg_roll = avg_roll(self.dmg_dice)
             return avg_dmg_roll + 0.05 * self.crit_range * avg_dmg_roll

@@ -52,6 +52,7 @@ from .combatants.oath_of_vengeance_paladin_3lvl import OathOfVengeancePaladin3Lv
 from .combatants.oath_of_vengeance_paladin_4lvl import OathOfVengeancePaladin4Lvl
 from .combatants.oath_of_vengeance_paladin_5lvl import OathOfVengeancePaladin5Lvl
 from .combatants.ogre import Ogre
+from .combatants.orc import Orc
 from .combatants.owlbear import Owlbear
 from .combatants.paladin_1lvl import Paladin1Lvl
 from .combatants.paladin_2lvl import Paladin2Lvl
@@ -246,6 +247,8 @@ class Session:
                 self.combatants.append(NightHag(curr_count))
             case Ogre.id:
                 self.combatants.append(Ogre(curr_count))
+            case Orc.id:
+                self.combatants.append(Orc(curr_count))
             case Owlbear.id:
                 self.combatants.append(Owlbear(curr_count))
             case OathOfVengeancePaladin3Lvl.id:

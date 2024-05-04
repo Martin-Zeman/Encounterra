@@ -65,6 +65,7 @@ PRIORITY_BONUS_ACTIONS = {
     BonusAction.CUNNING_DISENGAGE: ("cdi_", MovementThreatType.DISENGAGED),
     BonusAction.TOTEM_RAGE: ("m_", MovementThreatType.STANDARD),
     BonusAction.RAGE: ("m_", MovementThreatType.STANDARD),
+    BonusAction.AGGRESSIVE: ("m_", MovementThreatType.STANDARD),
 }
 
 TO_FACTORY = {
@@ -118,6 +119,7 @@ TO_FACTORY = {
     BonusAction.CUNNING_DISENGAGE: DisengageFactory,
     BonusAction.CUNNING_HIDE: HideFactory,
     BonusAction.CUNNING_DASH: DashFactory,
+    BonusAction.AGGRESSIVE: DashFactory,
     BonusAction.QUICKENED_FIREBALL: FireballFactory,
     BonusAction.QUICKENED_FIREBOLT: FireboltFactory,
     BonusAction.QUICKENED_CHAOSBOLT: ChaosboltFactory,

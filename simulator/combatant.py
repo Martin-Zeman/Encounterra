@@ -415,7 +415,7 @@ class Combatant(ProtoCombatant):
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](self, resource)))
                     self.display_abilities.append(self.bonus_action_factories[-1][1].get_ability_name())
                     return self.bonus_action_factories[-1]
-                case BonusAction.CUNNING_DISENGAGE | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH:
+                case BonusAction.CUNNING_DISENGAGE | BonusAction.CUNNING_HIDE | BonusAction.CUNNING_DASH | BonusAction.AGGRESSIVE:
                     self.bonus_action_factories.append((action_type, TO_FACTORY[action_type](action_type, self)))  # TODO
                     return self.bonus_action_factories[-1]
                 case BonusAction.QUICKENED_FIREBALL | BonusAction.QUICKENED_THUNDERWAVE:

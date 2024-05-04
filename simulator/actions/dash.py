@@ -13,11 +13,12 @@ from ..factory_interfaces import Factory
 
 logger = logging.getLogger("Encounterra")
 
+
 class DashFactory(Factory):
     def __init__(self, action_type, combatant):
         super().__init__()
         self.combatant = combatant
-        self.action_type = action_type  # DASH, CUNNING_DASH
+        self.action_type = action_type  # DASH, CUNNING_DASH, AGGRESSIVE
 
     def __str__(self):
         """
@@ -28,7 +29,7 @@ class DashFactory(Factory):
     def create_all(self, previous_action_in_dag=None):
         return [Dash(self)]
 
-    def create(self):
+    def create(self, target):
         return Dash(self)
 
 
@@ -38,26 +39,35 @@ class Dash(Actoid, AttackThreatModifier):
         self.name = "Dash"
         self.factory = factory
         self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
+        if self.factory.action_type is BonusAction.AGGRESSIVE:
+            self.actoid_flags |= ActoidFlags.IS_PRIORITY
 
     def __str__(self):
-        prefix = ""
         if self.factory.action_type is BonusAction.CUNNING_DASH:
-            prefix = "Cunning "
+            return f"Cunning Dash {self.factory.combatant}"
         elif self.factory.action_type is HasteAction.HASTE_DASH:
-            prefix = "Hasted "
-        return prefix + f"Dash of {self.factory.combatant}"
+            return f"Hasted Dash of {self.factory.combatant}"
+        elif self.factory.action_type is BonusAction.AGGRESSIVE:
+            return f"Aggressive movement of {self.factory.combatant}"
+        return f"Dash of {self.factory.combatant}"
 
     def shorthand_str(self):
-        prefix = ""
         if self.factory.action_type is BonusAction.CUNNING_DASH:
-            prefix = "Cunning "
+            return "Cunning Dash"
         elif self.factory.action_type is HasteAction.HASTE_DASH:
-            prefix = "Hasted "
-        return prefix + f"Dash"
+            return "Hasted Dash"
+        elif self.factory.action_type is BonusAction.AGGRESSIVE:
+            return "Aggressive movement"
+        return "Dash"
 
     @map_toggled_cache_with_key(key=lambda self, **kwargs: hashkey(kwargs["movement_threat"], self.factory.combatant.movement, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat(self, **kwargs):
         movement_threat = kwargs["movement_threat"]
+        if self.factory.action_type is BonusAction.AGGRESSIVE:
+            if len(movement_threat) - 1 > self.factory.combatant.movement:
+                # We always want this to be used if the destination can't be reached, the moving towards an enemy part is always assumed
+                return 1
+            return -1
         baseline = -1 * movement_threat[min(int(self.factory.combatant.movement), len(movement_threat) - 1)]
         modified = -1 * movement_threat[min(int(self.factory.combatant.movement + self.factory.combatant.speed), len(movement_threat) - 1)]
         return max(0, baseline - modified)  # We're only interested in this if used defensively, we don't want it to play a role if used offensively

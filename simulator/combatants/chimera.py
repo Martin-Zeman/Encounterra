@@ -20,7 +20,7 @@ class Chimera(Combatant):
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=114, ac=14, init_bonus=20, spell_to_hit=0, speed=60, resistances=set(), dc=0)
+        super().__init__(num_or_name, hp=114, ac=14, init_bonus=0, spell_to_hit=0, speed=60, resistances=set(), dc=0)
         self.size = Size.LARGE
         self.horns = self.add_ability(Action.MELEE_ATTACK,  name="Horns", combatant=self, to_hit=7, dmg_dice="1d12", dmg_bonus=4, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
         self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=7, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)

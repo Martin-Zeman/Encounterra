@@ -1,6 +1,7 @@
 import pytest
 
 from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from ..combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
 from ..combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
 from ..combatants.dire_wolf import DireWolf
 from ..combatants.dragonclaw_cultist import DragonclawCultist
@@ -16,6 +17,7 @@ from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
 from ..combatants.night_hag import NightHag
 from ..combatants.ogre import Ogre
 from ..combatants.bandit_captain import BanditCaptain
+from ..combatants.orc import Orc
 from ..combatants.paladin_1lvl import Paladin1Lvl
 from ..combatants.skeleton import Skeleton
 from ..combatants.twig_blight import TwigBlight
@@ -36,13 +38,16 @@ from ..combatants.commoner import Commoner
 from ..teams import Teams
 from ..battle_map import Map
 
+
 @pytest.fixture()
 def teams():
     return Teams()
 
+
 @pytest.fixture()
 def effect_tracker():
     return EffectTracker()
+
 
 @pytest.fixture()
 def battle_map(teams):
@@ -71,21 +76,26 @@ def test_goblin():
 def test_bugbear():
     return Bugbear()
 
+
 @pytest.fixture()
 def test_evil_mage():
     return EvilMage()
+
 
 @pytest.fixture()
 def test_totem_barbarian():
     return TotemBarbarian5Lvl()
 
+
 @pytest.fixture()
 def test_night_hag():
     return NightHag()
 
+
 @pytest.fixture()
 def test_commoner():
     return Commoner()
+
 
 @pytest.fixture()
 def test_stone_giant():
@@ -101,21 +111,26 @@ def test_ogre():
 def test_moon_druid():
     return MoonDruid5Lvl()
 
+
 @pytest.fixture()
 def test_druid_lvl_1():
     return Druid1Lvl()
+
 
 @pytest.fixture()
 def test_paladin_lvl_1():
     return Paladin1Lvl()
 
+
 @pytest.fixture()
 def test_fighter_lvl_1():
     return Fighter1Lvl()
 
+
 @pytest.fixture()
 def test_fighter_lvl_2():
     return Fighter2Lvl()
+
 
 @pytest.fixture()
 def test_battle_master_fighter_lvl_3():
@@ -146,6 +161,7 @@ def test_twig_blight():
 def test_bandit_captain():
     return BanditCaptain()
 
+
 @pytest.fixture()
 def test_sabertoother_tiger():
     return SaberToothedTiger()
@@ -165,21 +181,31 @@ def test_brown_bear():
 def test_dire_wolf():
     return DireWolf()
 
+
 @pytest.fixture()
 def test_berserker():
     return Berserker()
+
 
 @pytest.fixture()
 def test_assassin_rogue():
     return AssassinRogue5Lvl()
 
+
+@pytest.fixture()
+def test_assassin_rogue_3lvl():
+    return AssassinRogue3Lvl()
+
+
 @pytest.fixture()
 def test_young_green_dragon():
     return YoungGreenDragon()
 
+
 @pytest.fixture()
 def test_green_dragon_wyrmling():
     return GreenDragonWyrmling()
+
 
 @pytest.fixture()
 def test_skeleton():
@@ -190,6 +216,11 @@ def test_skeleton():
 def test_hobgoblin():
     return Hobgoblin()
 
+
 @pytest.fixture()
 def test_ghoul():
     return Ghoul()
+
+@pytest.fixture()
+def test_orc():
+    return Orc()
