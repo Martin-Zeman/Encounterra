@@ -295,16 +295,35 @@ class Map:
             cls._instance.cache_enabled = data['cache_enabled']
             cls._instance.combat_round = data['combat_round']
 
+    # def __str__(self):
+    #     string_repr = ""
+    #     for y in range(self.size - 1, -1, -1):
+    #         row_text = ""
+    #         for x in range(self.size):
+    #             square = self.grid[x, y]
+    #             combatant = square.combatant
+    #             if combatant and not combatant.is_swallowed[1]:
+    #                 # row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + str(combatant)[-1] + "\x1b[0m\t"
+    #                 row_text += str(combatant)[0] + str(combatant)[-2] + "\t"  # -2 takes the number between the parenthesis
+    #             elif square.terrain is Terrain.DIFFICULT_TERRAIN:
+    #                 row_text += "**\t"
+    #             elif square.terrain is Terrain.IMPASSABLE_TERRAIN:
+    #                 row_text += "XX\t"
+    #             else:
+    #                 row_text += "..\t"
+    #         string_repr += row_text + "\n"
+    #     return string_repr
+
     def __str__(self):
         string_repr = ""
         for y in range(self.size - 1, -1, -1):
-            row_text = ""
+            row_text = f"{y:2d}\t"  # Include Y-axis legend
             for x in range(self.size):
                 square = self.grid[x, y]
                 combatant = square.combatant
                 if combatant and not combatant.is_swallowed[1]:
-                    # row_text += self.teams.get_team_color_code(combatant) + str(combatant)[0] + str(combatant)[-1] + "\x1b[0m\t"
-                    row_text += str(combatant)[0] + str(combatant)[-2] + "\t"  # -2 takes the number between the parenthesis
+                    row_text += str(combatant)[0] + str(combatant)[
+                        -2] + "\t"  # -2 takes the number between the parenthesis
                 elif square.terrain is Terrain.DIFFICULT_TERRAIN:
                     row_text += "**\t"
                 elif square.terrain is Terrain.IMPASSABLE_TERRAIN:
@@ -312,6 +331,13 @@ class Map:
                 else:
                     row_text += "..\t"
             string_repr += row_text + "\n"
+
+        # Generate X-axis legend
+        x_legend = "\t" + "\t".join(str(i) for i in range(self.size))
+
+        # Concatenate X-axis legend to the bottom of the map
+        string_repr += x_legend + "\n"
+
         return string_repr
 
     @contextmanager

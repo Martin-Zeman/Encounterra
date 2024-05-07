@@ -36,29 +36,18 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 class CustomLogger:
 
     def __init__(self, level, stream=True, file_path=None):
+        logging.root.handlers = []  # remove the root logger
         logger = logging.getLogger("Encounterra")
         logger.setLevel(level)
+        logger.propagate = False  # Prevent log messages from propagating to ancestor loggers
 
         if stream:
             stdout_handler = logging.StreamHandler(stream=sys.stdout)
             stdout_handler.setFormatter(LogFormatter())
             stdout_handler.setLevel(level)
             logger.addHandler(stdout_handler)
-        else:
-            self._remove_stdout_handlers()
 
         if file_path:
             file_handler = logging.FileHandler(file_path)
             file_handler.setLevel(level)
             logger.addHandler(file_handler)
-
-    def _remove_stdout_handlers(self):
-        """Remove all stdout handlers from the logger."""
-        logger = logging.getLogger("Encounterra")
-
-        handlers_to_remove = [handler for handler in logger.handlers
-                              if isinstance(handler, logging.StreamHandler)
-                              and handler.stream == sys.stdout]
-
-        for handler in handlers_to_remove:
-            logger.removeHandler(handler)
