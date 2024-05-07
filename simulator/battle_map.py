@@ -310,7 +310,7 @@ class Map:
                 elif square.terrain is Terrain.IMPASSABLE_TERRAIN:
                     row_text += "XX\t"
                 else:
-                    row_text += "00\t"
+                    row_text += "..\t"
             string_repr += row_text + "\n"
         return string_repr
 
