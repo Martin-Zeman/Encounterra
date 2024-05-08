@@ -644,7 +644,7 @@ class Map:
         mv_reshaped[:, :, :, (N - offset):N].fill(0)
 
         frightened_source_combatant = get_source_of_frightened(combatant)
-        if frightened_source_combatant is not None:
+        if frightened_source_combatant is not None and frightened_source_combatant.is_alive():  # TODO remove the effect when the combatant dies
             # Get the position of the source of fear and the frightened combatant
             source_coords = self.combatant_coordinate_cache[frightened_source_combatant].get()
             # Calculate the hop distance between the frightened combatant and the source of fear

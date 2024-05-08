@@ -16,6 +16,7 @@ from ..utils.roll_types import ROLL_TYPE_CRIT_DELTA, ROLL_TYPE_DELTA, ThreatModi
 
 logger = logging.getLogger("Encounterra")
 
+
 class ShockingGraspFactory(DirectThreatFactory):
     level = 0
     range = SpellStats.Range.TOUCH.value
@@ -33,6 +34,7 @@ class ShockingGraspFactory(DirectThreatFactory):
         self.to_hit = to_hit
         self.action_type = action_type  # SHOCKING_GRASP, QUICKENED_SHOCKING_GRASP
         self.dmg_dice = '1d8'
+        self.dmg_bonus = 0
         self.combatant = caster
         self.resource = resource
         self.crit_range = crit_range
