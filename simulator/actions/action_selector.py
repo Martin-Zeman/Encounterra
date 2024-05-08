@@ -9,14 +9,15 @@ import numpy as np
 from .action_dag import replace_combatant_with_wildshape
 from .actoid import ActoidFlags
 from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
-from ..actions.action_types import Movement, MovementThreatType, BonusAction, Action
+from ..actions.action_types import Movement, MovementThreatType, BonusAction
 from ..actions.break_grapple import BreakGrappleFactory
 from ..actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
 from ..battle_map import convert_path_to_increments, Map
 from ..misc import get_factory_of_type
 from ..conditions import Conditions, needs_to_break_out_of_grapple, is_affected_by
 from ..threat_interfaces import AttackThreatModifier
-from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
+from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step, \
+    get_aoe_and_aoo_threat_for_increment
 
 logger = logging.getLogger("Encounterra")
 
@@ -480,6 +481,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     DFS(dag, '0', [], None)
 
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     # Movement transitions
     for coord_and_movement_type, ids in coord_to_sequence_ids.items():
         if coord_and_movement_type is None:

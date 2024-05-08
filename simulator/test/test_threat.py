@@ -13,7 +13,7 @@ from ..spells.misty_step import MistyStepFactory, MistyStep
 from ..spells.spike_growth import SpikeGrowthFactory
 from ..teams import Teams
 from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step, \
-    DZ_CONSTANT
+    DZ_CONSTANT, get_aoe_and_aoo_threat_for_increment
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, teams, effect_tracker, battle_map
 
 
@@ -33,6 +33,7 @@ def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
@@ -55,6 +56,7 @@ def test_get_path_to_combatant_medium_to_medium_one_partial_spike_growth(battle_
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
@@ -101,6 +103,7 @@ def test_get_path_to_combatant_large_to_medium_avoided_aoe(battle_map, teams, te
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
@@ -125,6 +128,7 @@ def test_get_path_to_combatant_medium_to_medium_two_overlapping_aoe(battle_map, 
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
@@ -151,6 +155,7 @@ def test_get_path_to_combatant_large_to_medium_two_overlapping_aoe(battle_map, t
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
@@ -174,6 +179,7 @@ def test_get_path_to_combatant_large_to_medium_starting_inside_aoe(battle_map, t
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
@@ -195,12 +201,14 @@ def test_get_path_to_combatant_medium_to_medium_pass_by_one_aoo(battle_map, team
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     battle_map.clear_caches()
     assert threat[-1] == pytest.approx(-5.95 - 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01)  # includes danger zone
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT, 0.01)  # includes danger zone
 
@@ -223,11 +231,13 @@ def test_get_path_to_combatant_medium_to_medium_pass_by_two_aoo(battle_map, team
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(2 * -5.95 - 2 * 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.001)  # includes danger zone
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-2.925 * DZ_CONSTANT - 2 * 5.95 * DZ_CONSTANT, 0.001)  # includes danger zone
 
@@ -252,11 +262,13 @@ def test_get_path_to_combatant_large_to_medium_pass_by_two_aoo(battle_map, teams
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(2 * -5.95 - 2 * 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01)  # includes danger zone
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-2.925 * DZ_CONSTANT - 2 * 5.95 * DZ_CONSTANT, 0.01)  # includes danger zone
 
@@ -274,11 +286,13 @@ def test_get_path_to_coord_medium_stepping_away_from_medium_aoo(battle_map, team
     path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([3, 5]))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(-2.925 - 2.925 * DZ_CONSTANT, 0.001)
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-2.925 * DZ_CONSTANT, 0.001)
 
@@ -299,11 +313,13 @@ def test_get_path_to_coord_large_stepping_away_from_huge_aoo(battle_map, teams, 
     path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([1, 5]))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(-2.925 - 2.925 * DZ_CONSTANT, 0.001)
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-2.925 * DZ_CONSTANT, 0.001)
 
@@ -324,11 +340,13 @@ def test_get_path_to_cord_large_stepping_away_from_two_medium_aoo(battle_map, te
     path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([3, 5]))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(-2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT, 0.001)  # includes danger zone
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT, 0.001)  # includes danger zone
 
@@ -352,11 +370,13 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_arrive_by_th
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_totem_barbarian)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(-2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001)  # includes danger zone
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001)  # includes danger zone
 
@@ -386,11 +406,13 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_totem_barbarian)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)
     assert threat[-1] == pytest.approx(-2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT - 20.0 - 7.149 * DZ_CONSTANT, 0.001)  # the -20 is composed of -10 for entering and -10 for staying plus danger zone
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords, disengaged=True)
     assert threat[-1] == pytest.approx(-20.0 - 2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001)  # the -20 is composed of -10 for entering and -10 for staying plus danger zone
 
@@ -408,6 +430,7 @@ def test_get_path_to_combatant_medium_getting_out_of_danger_zone(battle_map, tea
     path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([6, 1]))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
+    get_aoe_and_aoo_threat_for_increment.cache_clear()
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
     threat = accumulate_threat_along_path(path, test_draconic_sorcerer_5lvl, effect_to_coords)

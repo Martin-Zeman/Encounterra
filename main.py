@@ -75,7 +75,7 @@ from simulator.teams import Teams
 import time
 
 if __name__ == '__main__':
-    CustomLogger(logging.INFO)
+    # CustomLogger(logging.INFO)
     session = Session()
     # session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
     # session.add_combatant(MoonDruid4Lvl, Teams.Color.RED)

@@ -348,9 +348,8 @@ def get_threat_for_staying_at_coord(coords, combatant):
     return threat_acc
 
 
-# @cached(cache={}, key=lambda curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
-def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged=False,
-                                         dodged=False):
+@cached(cache={}, key=lambda curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
+def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     A helper caching function which accumulates threats from AoE and AoO along a path.
     Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
@@ -388,9 +387,7 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant,
     return threat_acc
 
 
-@cached(cache={},
-        key=lambda path, combatant, effect_to_coords, disengaged=False, dodged=False: hashkey(tuple(path), disengaged,
-                                                                                              dodged))
+@cached(cache={}, key=lambda path, combatant, effect_to_coords, disengaged=False, dodged=False: hashkey(tuple(path), disengaged, dodged))
 def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
