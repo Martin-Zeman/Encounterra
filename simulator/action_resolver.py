@@ -156,10 +156,9 @@ class ActionResolver:
         self.effect_tracker = effect_tracker
 
     def has_advantage_ranged(self, attack, attacker, target):
-        battle_map = Map.get()
         if attack.roll_type is RollType.ADVANTAGE:
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
+        if self.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
         if is_affected_by_any(target, Conditions.RESTRAINED, Conditions.STUNNED, Conditions.PARALYZED, Conditions.BLINDED, Conditions.PETRIFIED):
@@ -168,12 +167,12 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if is_affected_by(attacker, Conditions.INVISIBLE):
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_combatant_hidden_from(attacker, target):
+        if self.effect_tracker.is_combatant_hidden_from(attacker, target):
             return RollType.ADVANTAGE
-        if attacker.has_passive(Passive.ASSASSINATE) and battle_map.combat_round == 0 and attacker.curr_init > target.curr_init:
+        if attacker.has_passive(Passive.ASSASSINATE) and Map.get().combat_round == 0 and attacker.curr_init > target.curr_init:
             logger.info(f"{attacker} gains advantage thanks to Assassinate")
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_affected_by_vow_of_enmity(attacker, target):
+        if self.effect_tracker.is_affected_by_vow_of_enmity(attacker, target):
             logger.info(f"{attacker} gains advantage thanks to Vow of Enmity")
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
@@ -184,9 +183,9 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if attacker.has_pack_tactics and battle_map.is_ally_adjacent_to_target(attacker, target):
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_affecting_combatant(attacker, EffectType.RECKLESS_ATTACK):
+        if self.effect_tracker.is_affecting_combatant(attacker, EffectType.RECKLESS_ATTACK):
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
+        if self.effect_tracker.is_affecting_combatant(target, EffectType.RECKLESS_ATTACK):
             logger.info(f"{attacker} gains advantage since {target} attacked recklessly")
             return RollType.ADVANTAGE
         if is_affected_by(target, Conditions.PRONE) and battle_map.get_hop_distance_combatants(attacker, target) == 1:
@@ -199,12 +198,12 @@ class ActionResolver:
             return RollType.ADVANTAGE
         if target.wears_metal and (attack.factory.action_type is Action.SHOCKING_GRASP or attack.factory.action_type is BonusAction.QUICKENED_SHOCKING_GRASP or attack.factory.action_type is Action.TWINNED_SHOCKING_GRASP):
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_combatant_hidden_from(attacker, target):
+        if self.effect_tracker.is_combatant_hidden_from(attacker, target):
             return RollType.ADVANTAGE
         if attacker.has_passive(Passive.ASSASSINATE) and battle_map.combat_round == 0 and attacker.curr_init > target.curr_init:
             logger.info(f"{attacker} gains advantage thanks to Assassinate")
             return RollType.ADVANTAGE
-        if battle_map.effect_tracker.is_affected_by_vow_of_enmity(attacker, target):
+        if self.effect_tracker.is_affected_by_vow_of_enmity(attacker, target):
             logger.info(f"{attacker} gains advantage thanks to Vow of Enmity")
             return RollType.ADVANTAGE
         return RollType.STRAIGHT
@@ -418,7 +417,7 @@ class ActionResolver:
                 logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
                 attacker.already_used_fanatic_advantage = True
                 base_dmg += roll_dice([(2, 6)])
-            if battle_map.effect_tracker.is_affecting_combatant(attacker, EffectType.RAY_OF_ENFEEBLEMENT) and FactoryFlags.USES_DEX not in attack.factory.flags:
+            if self.effect_tracker.is_affecting_combatant(attacker, EffectType.RAY_OF_ENFEEBLEMENT) and FactoryFlags.USES_DEX not in attack.factory.flags:
                 logger.info(f"Damage by {attacker} is halved by Ray of Enfeeblement", extra={"team": self.teams.get_team(attacker)})
                 base_dmg = base_dmg // 2
             logger.info(
@@ -643,7 +642,7 @@ class ActionResolver:
                  BonusAction.BONUS_MENACING_RANGED_ATTACK | Action.PARALYZING_MELEE_ATTACK | \
                  HasteAction.HASTE_PARALYZING_MELEE_ATTACK | Reaction.REACTION_PARALYZING_MELEE_ATTACK:
                 ret = self.resolve_attack(actoid, actoid.target, combatant)
-                battle_map.effect_tracker.remove_effect_from_combatant_by_type(combatant, EffectType.HIDE)
+                self.effect_tracker.remove_effect_from_combatant_by_type(combatant, EffectType.HIDE)
                 return ret
             case Movement.STANDARD | Movement.DISENGAGED:
                 if not self.request_movement(combatant, actoid):
@@ -712,7 +711,7 @@ class ActionResolver:
             #     return result
             case Action.SHAKE_ALLY_AWAKE:
                 logger.info(f"{actoid.target} is shaken awake by {combatant}")
-                battle_map.effect_tracker.remove_effect_from_combatant_by_type(actoid.target, EffectType.SLEEP)
+                self.effect_tracker.remove_effect_from_combatant_by_type(actoid.target, EffectType.SLEEP)
             case Action.LAY_ON_HANDS:
                 logger.info(f"{combatant} uses {actoid}")
                 actoid.target.heal(actoid.hp_amount)

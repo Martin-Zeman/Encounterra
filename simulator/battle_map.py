@@ -1239,8 +1239,7 @@ class Map:
         :param combatant: The combatant to be checked and potentially removed.
         :return: True if the combatant's original form is alive, False otherwise
         """
-        original_form = combatant.get_original_form()
-        target_to_remove = original_form if original_form is not combatant else combatant
+        target_to_remove = combatant.get_original_form()
 
         if not target_to_remove.is_alive():
             grappler = get_grappler(target_to_remove)

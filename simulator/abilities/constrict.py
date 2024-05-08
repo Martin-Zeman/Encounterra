@@ -45,7 +45,10 @@ class ConstrictFactory(DirectThreatFactory):
 
     def create_all(self, previous_action_in_dag=None):
         if self.combatant.constricted_target is not None:
-            return [Constrict(self.combatant.constricted_target, self)]
+            if self.combatant.constricted_target.is_alive():
+                return [Constrict(self.combatant.constricted_target, self)]
+            elif not self.combatant.constricted_target.is_alive():
+                self.combatant.constricted_target = None  # TODO consider doing this somewhere else
         targets = self.get_eligible_targets()
         return [Constrict(t, self) for t in targets]
 
@@ -89,13 +92,14 @@ class Constrict(Actoid, DirectThreat):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
+        target = self.target.get_current_form()  # Takes care of possible wildshape
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
+            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(target),
                                                            distances,
                                                            inflate_to_dist=self.factory.combatant.size.value,
                                                            rng=1,
                                                            combatant=self.factory.combatant)
-        elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.attack_factory.range):
+        elif battle_map.are_in_hop_range(self.factory.combatant, target, self.factory.attack_factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
 

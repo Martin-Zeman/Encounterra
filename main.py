@@ -23,6 +23,7 @@ from simulator.combatants.fighter_2lvl import Fighter2Lvl
 from simulator.combatants.fire_giant import FireGiant
 from simulator.combatants.frost_giant import FrostGiant
 from simulator.combatants.ghoul import Ghoul
+from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
 from simulator.combatants.green_dragon_wyrmling import GreenDragonWyrmling
 from simulator.combatants.hill_giant import HillGiant
 from simulator.combatants.hobgoblin import Hobgoblin
@@ -75,11 +76,11 @@ from simulator.teams import Teams
 import time
 
 if __name__ == '__main__':
-    # CustomLogger(logging.INFO)
+    CustomLogger(logging.INFO)
     session = Session()
     # session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
     # session.add_combatant(MoonDruid4Lvl, Teams.Color.RED)
-    # session.add_combatant(MoonDruid3Lvl, Teams.Color.BLUE)
+    session.add_combatant(MoonDruid3Lvl, Teams.Color.BLUE)
     # session.add_combatant(MoonDruid2Lvl, Teams.Color.BLUE)
     # session.add_combatant(Acolyte, Teams.Color.BLUE)
     # session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
@@ -134,7 +135,7 @@ if __name__ == '__main__':
     # session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.RED)
     # session.add_combatant(BattlemasterFighter4Lvl, Teams.Color.RED)
     # session.add_combatant(Chimera, Teams.Color.BLUE)
-    # session.add_combatant(OathOfVengeancePaladin3Lvl, Teams.Color.BLUE)
+    session.add_combatant(OathOfVengeancePaladin3Lvl, Teams.Color.BLUE)
     session.add_combatant(BattlemasterFighter3Lvl, Teams.Color.BLUE)
     # session.add_combatant(BattlemasterFighter5Lvl, Teams.Color.BLUE)
     # session.add_combatant(Rogue1Lvl, Teams.Color.RED)
@@ -163,30 +164,19 @@ if __name__ == '__main__':
     # session.add_combatant(BlackDragonWyrmling, Teams.Color.BLUE)
     # session.add_combatant(BlueDragonWyrmling, Teams.Color.BLUE)
     # session.add_combatant(Owlbear, Teams.Color.RED)
-    # session.add_combatant(Ghoul, Teams.Color.BLUE)
-    # session.add_combatant(Ghoul, Teams.Color.RED)
-    # session.add_combatant(Ghoul, Teams.Color.BLUE)
-    # session.add_combatant(Ghoul, Teams.Color.RED)
     # session.add_combatant(Owlbear, Teams.Color.RED)
-    # session.add_combatant(Ghoul, Teams.Color.BLUE)
-    # session.add_combatant(Ghoul, Teams.Color.RED)
-    # session.add_combatant(Ghoul, Teams.Color.BLUE)
-    # session.add_combatant(Ghoul, Teams.Color.RED)
     # session.add_combatant(Ghoul, Teams.Color.BLUE)
     # session.add_combatant(Manticore, Teams.Color.RED)
     # session.add_combatant(Kobold, Teams.Color.RED)
-    # session.add_combatant(Kobold, Teams.Color.RED)
-    # session.add_combatant(Kobold, Teams.Color.RED)
     # session.add_combatant(Bullywug, Teams.Color.RED)
-    # session.add_combatant(Bullywug, Teams.Color.RED)
-    # session.add_combatant(Bullywug, Teams.Color.RED)
-    session.add_combatant(Orc, Teams.Color.RED)
-    session.add_combatant(Orc, Teams.Color.RED)
-    session.add_combatant(Orc, Teams.Color.RED)
-    session.add_combatant(Orc, Teams.Color.RED)
+    # session.add_combatant(Orc, Teams.Color.RED)
+    session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
+    session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
+    session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
     session.set_num_simulations(1)
     start_time = time.time()
-    session.place_terrain_and_obstacles(Session.MapType.OBSTACLES.value)
+    # session.place_terrain_and_obstacles(Session.MapType.OBSTACLES.value)
+    session.place_terrain_and_obstacles(Session.MapType.BLANK.value)
     session.simulate(parallel=False)
     print("---Simulation took {:.1f} seconds ---".format((time.time() - start_time)))
 
