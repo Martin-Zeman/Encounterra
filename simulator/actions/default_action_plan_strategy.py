@@ -2,9 +2,10 @@ import logging
 
 import numpy as np
 
-from ..actions.action_dag import generate_proto_dag
+from ..actions.action_dag import generate_proto_tree
 from ..actions.action_plan_strategy import ActionPlanStrategy
-from ..actions.action_selector import find_best_sequence, build_action_dag, translate_sequence_to_actions, REGEX_MOVEMENT_PATTERN
+from ..actions.action_selector import find_best_sequence, translate_sequence_to_actions, \
+    REGEX_MOVEMENT_PATTERN, build_action_tree
 from ..actions.action_types import Movement
 from ..actions.movement import MovementGenerator
 from ..battle_map import Map
@@ -39,7 +40,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
 
     def get_movement_and_threat_for_next_turn(self, distances, shortest_paths, infeasibility_multiplier=0.5):
         with self.combatant.as_if_has_action() as combatant:
-            proto_dag, transition_name_to_action = generate_proto_dag(combatant)
+            proto_dag, transition_name_to_action = generate_proto_tree(combatant)
             dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
             if dag is None:
                 return None, [0, 0]
@@ -55,8 +56,8 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of the following types: np.array, action, bonus action
         """
-        proto_dag, transition_name_to_action = generate_proto_dag(self.combatant)
-        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
+        proto_tree, transition_name_to_action = generate_proto_tree(self.combatant)
+        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_tree(self.combatant, proto_tree, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             movement = None
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action

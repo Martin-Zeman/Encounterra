@@ -3,8 +3,8 @@ import logging
 from .action_types import FreeAction
 from .default_action_plan_strategy import DefaultActionPlanStrategy
 from ..abilities.action_surge import ActionSurgeFactory
-from ..actions.action_dag import generate_proto_dag
-from ..actions.action_selector import find_best_sequence, build_action_dag, translate_sequence_to_actions
+from ..actions.action_dag import generate_proto_tree
+from ..actions.action_selector import find_best_sequence, translate_sequence_to_actions, build_action_tree
 
 logger = logging.getLogger("Encounterra")
 
@@ -20,8 +20,8 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of the following types: np.array, action, bonus action
         """
-        proto_dag, transition_name_to_action = generate_proto_dag(self.combatant)
-        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
+        proto_tree, transition_name_to_action = generate_proto_tree(self.combatant)
+        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_tree(self.combatant, proto_tree, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             movement = None
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action

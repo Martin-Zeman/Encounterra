@@ -50,7 +50,7 @@ def get_post_transitions_of_priority_transitions(dag, transition_name_to_action,
     return post_priority_transitions
 
 
-def get_post_transitions_of_all_priority_transitions(proto_dag, transition_name_to_action):
+def get_post_transitions_of_all_priority_transitions(proto_tree, transition_name_to_action):
     """
     Retrieves eligible follow-up actions for all priority actions present in the action finite state machine (FSM).
 
@@ -58,21 +58,21 @@ def get_post_transitions_of_all_priority_transitions(proto_dag, transition_name_
     It operates on the provided action finite state machine (proto_dag) and uses the mapping of action names to actions (transition_name_to_action).
     The output of this function is utilized by the `build_priority_transitions` function.
 
-    :param proto_dag: The action finite state machine (FSM) on which the operation is performed.
+    :param proto_tree: The action finite state machine (FSM) on which the operation is performed.
     :param transition_name_to_action: A dictionary mapping action names to their corresponding actions.
 
     :return: A tuple of two dictionaries:
         1. A dictionary containing priority action names as keys and lists of eligible follow-up transitions as values.
         2. A dictionary containing priority bonus action names as keys and lists of eligible follow-up transitions as values.
     """
-    post_priority_action_transitions = get_post_transitions_of_priority_transitions(proto_dag, transition_name_to_action, PRIORITY_ACTIONS)
-    post_priority_bonus_action_transitions = get_post_transitions_of_priority_transitions(proto_dag, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
+    post_priority_action_transitions = get_post_transitions_of_priority_transitions(proto_tree, transition_name_to_action, PRIORITY_ACTIONS)
+    post_priority_bonus_action_transitions = get_post_transitions_of_priority_transitions(proto_tree, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
     for priority_transition in post_priority_action_transitions.keys():
-        for origin_state in proto_dag.states.keys():
-            proto_dag.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+        for origin_state in proto_tree.states.keys():
+            proto_tree.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
     for priority_transition in post_priority_bonus_action_transitions.keys():
-        for origin_state in proto_dag.states.keys():
-            proto_dag.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+        for origin_state in proto_tree.states.keys():
+            proto_tree.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
     return post_priority_action_transitions, post_priority_bonus_action_transitions
 
 
@@ -270,7 +270,7 @@ def create_movement_states(dag, transition_to_eligible_coords):
     return eligible_transitions_to_state, coord_to_eligible_transitions
 
 
-def build_action_dag(combatant, proto_dag, transition_name_to_action, distances, shortest_paths):
+def build_action_tree(combatant, proto_tree, transition_name_to_action, distances, shortest_paths):
     """
     Builds action DAG for a combatant given the combatant's proto_dag. It determines eligible coords for each
     action. Then the coords are pre-pended into the proto_dag to form the final DAG. However, Misty Step, Dodge and
@@ -278,7 +278,7 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
     to all post-Misty-Step states. Dodge and Disengage always make sense to be taken before any movement, therefore
     in their case coords are also pre-pended to their follow-up actions.
     :param combatant: the combatant for whom the DAG is modeled
-    :param proto_dag: DAG (finite state machine) representing all possible actions for combatant. Doesn't model movement.
+    :param proto_tree: DAG (finite state machine) representing all possible actions for combatant. Doesn't model movement.
     :param transition_name_to_action: dict mapping action names -> actions
     :param distances: the distances to all squares (result of Dijkstra)
     :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
@@ -292,15 +292,15 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
     for action in transition_name_to_action.values():
         action.clear_cache()
 
-    post_priority_action_transitions, post_priority_bonus_action_transitions = get_post_transitions_of_all_priority_transitions(proto_dag, transition_name_to_action)
+    post_priority_action_transitions, post_priority_bonus_action_transitions = get_post_transitions_of_all_priority_transitions(proto_tree, transition_name_to_action)
 
     ms_transition_to_eligible_coords = None
     post_misty_step_transitions = None
-    transition_names = proto_dag.get_all_transitions()
+    transition_names = proto_tree.get_all_transitions()
     if 'Misty Step to 0, 0_1' in transition_names:
-        post_misty_step_transitions = get_post_misty_step_transitions(proto_dag, transition_name_to_action)
+        post_misty_step_transitions = get_post_misty_step_transitions(proto_tree, transition_name_to_action)
 
-    dag = copy.deepcopy(proto_dag)
+    tree = copy.deepcopy(proto_tree)
 
     a_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_action_transitions.values() for tn in pre}
     a_pt_transition_to_eligible_coords = {tn: coords for tn, coords in a_pt_transition_to_eligible_coords.items() if coords}
@@ -332,17 +332,17 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
     for transition_name in transition_names:  # Filter out actions which don't have any eligible coords
         try:
             if not transition_to_eligible_coords[transition_name]:
-                dag.remove_transition(transition_name, '0')
+                tree.remove_transition(transition_name, '0')
         except KeyError:
-            dag.remove_transition(transition_name, '0')  # Happens where the combatant's out of movement
+            tree.remove_transition(transition_name, '0')  # Happens where the combatant's out of movement
 
-    eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(dag, transition_to_eligible_coords)
+    eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(tree, transition_to_eligible_coords)
 
     movement_transition_to_coord_and_type = dict()
     for transition_name, coords in transition_to_eligible_coords.items():
         if transition_name.startswith("Misty Step"):
             continue
-        transitions = [t[0] for t in proto_dag.events[transition_name].transitions.values() if t[0].source == "0"]  # Iterate over the original to avoid deleting from the one being iterated over
+        transitions = [t[0] for t in proto_tree.events[transition_name].transitions.values() if t[0].source == "0"]  # Iterate over the original to avoid deleting from the one being iterated over
         if not transitions:
             continue  # Happens for all actions of source != 0
         transition = transitions[0]
@@ -350,15 +350,15 @@ def build_action_dag(combatant, proto_dag, transition_name_to_action, distances,
             movement_state_name = eligible_transitions_to_state[coord_to_eligible_transitions[coord]]
             movement_transition_name = "m_" + str(coord)
             movement_transition_to_coord_and_type[movement_transition_name] = (coord, MovementThreatType.STANDARD)
-            dag.add_transition(movement_transition_name, "0", movement_state_name)
-            dag.add_transition(transition_name, movement_state_name, transition.dest)
-        dag.remove_transition(transition_name, "0")  # Remove the original
+            tree.add_transition(movement_transition_name, "0", movement_state_name)
+            tree.add_transition(transition_name, movement_state_name, transition.dest)
+        tree.remove_transition(transition_name, "0")  # Remove the original
 
     if post_misty_step_transitions:
-        build_misty_step_transitions(dag, post_misty_step_transitions, ms_transition_to_eligible_coords, movement_transition_to_coord_and_type)
-    build_priority_transitions(dag, post_priority_action_transitions, a_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_ACTIONS)
-    build_priority_transitions(dag, post_priority_bonus_action_transitions, ba_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
-    return dag, movement_transition_to_coord_and_type, transition_to_eligible_coords
+        build_misty_step_transitions(tree, post_misty_step_transitions, ms_transition_to_eligible_coords, movement_transition_to_coord_and_type)
+    build_priority_transitions(tree, post_priority_action_transitions, a_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_ACTIONS)
+    build_priority_transitions(tree, post_priority_bonus_action_transitions, ba_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
+    return tree, movement_transition_to_coord_and_type, transition_to_eligible_coords
 
 
 # def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, sequence_idx_to_transition_step_threat, distances):
@@ -450,61 +450,61 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     except KeyError:
         pass
 
-    def DFS(dag, current_state, current_sequence, coord):
-        if current_state == 'nop':
-            current_sequence_set = frozenset((tx[:-2] if tx[-2] == "_" else tx for tx in current_sequence))  # Removes the trailing level designator
-            contains_threat_modifier = False
-            for tx in current_sequence:
-                try:
-                    if isinstance(transition_name_to_action[tx], AttackThreatModifier):
-                        contains_threat_modifier = True
-                        break
-                except KeyError:
-                    pass
-            if contains_threat_modifier or current_sequence_set not in sequence_set:
-                sequences.append(copy.deepcopy(current_sequence))
-                sequence_set.add(current_sequence_set)
-                try:
-                    coord_to_sequence_ids[coord].append(len(sequences) - 1)
-                except KeyError:
-                    coord_to_sequence_ids[coord] = [len(sequences) - 1]
-            return
-        for transition, next_state in dag.forward_transitions[current_state]:
-            current_sequence.append(transition)
-            try:
-                coord = movement_transition_to_coord_and_type[transition]
-            except KeyError:
-                pass  # Skipping transitions that aren't movement
-            DFS(dag, next_state, current_sequence, coord)
-            current_sequence.pop()
-
-    DFS(dag, '0', [], None)
+    # def DFS(dag, current_state, current_sequence, coord):
+    #     if current_state == 'nop':
+    #         current_sequence_set = frozenset((tx[:-2] if tx[-2] == "_" else tx for tx in current_sequence))  # Removes the trailing level designator
+    #         contains_threat_modifier = False
+    #         for tx in current_sequence:
+    #             try:
+    #                 if isinstance(transition_name_to_action[tx], AttackThreatModifier):
+    #                     contains_threat_modifier = True
+    #                     break
+    #             except KeyError:
+    #                 pass
+    #         if contains_threat_modifier or current_sequence_set not in sequence_set:
+    #             sequences.append(copy.deepcopy(current_sequence))
+    #             sequence_set.add(current_sequence_set)
+    #             try:
+    #                 coord_to_sequence_ids[coord].append(len(sequences) - 1)
+    #             except KeyError:
+    #                 coord_to_sequence_ids[coord] = [len(sequences) - 1]
+    #         return
+    #     for transition, next_state in dag.forward_transitions[current_state]:
+    #         current_sequence.append(transition)
+    #         try:
+    #             coord = movement_transition_to_coord_and_type[transition]
+    #         except KeyError:
+    #             pass  # Skipping transitions that aren't movement
+    #         DFS(dag, next_state, current_sequence, coord)
+    #         current_sequence.pop()
+    #
+    # DFS(dag, '0', [], None)
 
     accumulate_threat_along_path.cache_clear()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
     # Movement transitions
-    for coord_and_movement_type, ids in coord_to_sequence_ids.items():
-        if coord_and_movement_type is None:
-            continue
-        coord, movement_type = coord_and_movement_type
-        path = battle_map.get_path_to_coord(combatant, coord, distances, shortest_paths, True)
-        if path is None:  # Note that an empty path is still a valid one
-            continue
-        match movement_type:
-            case MovementThreatType.STANDARD:
-                movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
-            case MovementThreatType.DISENGAGED:
-                movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=True)
-            case MovementThreatType.DODGED:
-                movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
-            case MovementThreatType.MISTY_STEPPED:
-                movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)  # TODO align this with accumulate_threat_along_path
-                transition_name_to_ms_path["ms_" + str(coord)] = misty_step_path
-            case _:
-                logger.error(f"Unknown movement type {movement_type}")
-                movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
-        for idx in ids:
-            sequence_to_threat[idx] = movement_threat  # We initialize it with the movement threat
+    # for coord_and_movement_type, ids in coord_to_sequence_ids.items():
+    #     if coord_and_movement_type is None:
+    #         continue
+    #     coord, movement_type = coord_and_movement_type
+    #     path = battle_map.get_path_to_coord(combatant, coord, distances, shortest_paths, True)
+    #     if path is None:  # Note that an empty path is still a valid one
+    #         continue
+    #     match movement_type:
+    #         case MovementThreatType.STANDARD:
+    #             movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
+    #         case MovementThreatType.DISENGAGED:
+    #             movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=True)
+    #         case MovementThreatType.DODGED:
+    #             movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
+    #         case MovementThreatType.MISTY_STEPPED:
+    #             movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)  # TODO align this with accumulate_threat_along_path
+    #             transition_name_to_ms_path["ms_" + str(coord)] = misty_step_path
+    #         case _:
+    #             logger.error(f"Unknown movement type {movement_type}")
+    #             movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
+    #     for idx in ids:
+    #         sequence_to_threat[idx] = movement_threat  # We initialize it with the movement threat
 
     # (Bonus) action transitions
     for coord_and_movement_type, ids in coord_to_sequence_ids.items():
