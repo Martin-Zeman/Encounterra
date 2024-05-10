@@ -6,6 +6,8 @@ import sys
 
 import numpy as np
 
+from mcts.base.base import BaseState
+from mcts.searcher.mcts import MCTS
 from .action_dag import replace_combatant_with_wildshape
 from .actoid import ActoidFlags
 from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
@@ -450,121 +452,108 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     except KeyError:
         pass
 
-    # def DFS(dag, current_state, current_sequence, coord):
-    #     if current_state == 'nop':
-    #         current_sequence_set = frozenset((tx[:-2] if tx[-2] == "_" else tx for tx in current_sequence))  # Removes the trailing level designator
-    #         contains_threat_modifier = False
-    #         for tx in current_sequence:
-    #             try:
-    #                 if isinstance(transition_name_to_action[tx], AttackThreatModifier):
-    #                     contains_threat_modifier = True
-    #                     break
-    #             except KeyError:
-    #                 pass
-    #         if contains_threat_modifier or current_sequence_set not in sequence_set:
-    #             sequences.append(copy.deepcopy(current_sequence))
-    #             sequence_set.add(current_sequence_set)
-    #             try:
-    #                 coord_to_sequence_ids[coord].append(len(sequences) - 1)
-    #             except KeyError:
-    #                 coord_to_sequence_ids[coord] = [len(sequences) - 1]
-    #         return
-    #     for transition, next_state in dag.forward_transitions[current_state]:
-    #         current_sequence.append(transition)
-    #         try:
-    #             coord = movement_transition_to_coord_and_type[transition]
-    #         except KeyError:
-    #             pass  # Skipping transitions that aren't movement
-    #         DFS(dag, next_state, current_sequence, coord)
-    #         current_sequence.pop()
-    #
-    # DFS(dag, '0', [], None)
+    existing_attack_delta_effects = [eadf for eadf in battle_map.effect_tracker.get_affecting_combatant(combatant) if isinstance(eadf, AttackThreatModifier)]
 
-    accumulate_threat_along_path.cache_clear()
-    get_aoe_and_aoo_threat_for_increment.cache_clear()
-    # Movement transitions
-    # for coord_and_movement_type, ids in coord_to_sequence_ids.items():
-    #     if coord_and_movement_type is None:
-    #         continue
-    #     coord, movement_type = coord_and_movement_type
-    #     path = battle_map.get_path_to_coord(combatant, coord, distances, shortest_paths, True)
-    #     if path is None:  # Note that an empty path is still a valid one
-    #         continue
-    #     match movement_type:
-    #         case MovementThreatType.STANDARD:
-    #             movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
-    #         case MovementThreatType.DISENGAGED:
-    #             movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=True)
-    #         case MovementThreatType.DODGED:
-    #             movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
-    #         case MovementThreatType.MISTY_STEPPED:
-    #             movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)  # TODO align this with accumulate_threat_along_path
-    #             transition_name_to_ms_path["ms_" + str(coord)] = misty_step_path
-    #         case _:
-    #             logger.error(f"Unknown movement type {movement_type}")
-    #             movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
-    #     for idx in ids:
-    #         sequence_to_threat[idx] = movement_threat  # We initialize it with the movement threat
+    class MCTState(BaseState):
 
-    # (Bonus) action transitions
-    for coord_and_movement_type, ids in coord_to_sequence_ids.items():
-        if coord_and_movement_type is None:
-            continue
-        coord, _ = coord_and_movement_type
-        battle_map.clear_caches()
-        with battle_map.as_if_combatant_position(combatant, np.array(coord)):
-            for idx in ids:
-                delta_action = None
-                threat_acc = 0
-                first_feasibility_check_done = False
-                feasibility_multiplier = 1
-                delta_action_t_idx = 0
-                for t_idx, transition in enumerate(sequences[idx]):
-                    if transition == "dummy":
-                        break
+        def __init__(self, coord, movement_type, state_name, delta_action, first_feasibility_check_done=False, cumulative_threat=0, movement_threat=None):
+            BaseState.__init__(self)
+            self.coord = coord
+            self.movement_type = movement_type
+            self.state_name = state_name
+            self.delta_action = delta_action
+            self.first_feasibility_check_done = first_feasibility_check_done
+            self.cumulative_threat = cumulative_threat
+            self.movement_threat = movement_threat
+
+        def get_possible_actions(self) -> [any]:
+            return [tx for tx, _ in dag.forward_transitions[self.state_name]]
+
+        def take_action(self, mcts_action: any) -> 'BaseState':
+            for tx, target_state in dag.forward_transitions[self.state_name]:
+                if tx == mcts_action:
+                    new_state = copy.copy(self)
+                    try:
+                        new_state.coord, new_state.movement_type = movement_transition_to_coord_and_type[tx]
+                        path = battle_map.get_path_to_coord(combatant, new_state.coord, distances, shortest_paths, True)
+                        if path is not None:  # Note that an empty path is still a valid one
+                            match new_state.movement_type:
+                                case MovementThreatType.STANDARD:
+                                    movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
+                                case MovementThreatType.DISENGAGED:
+                                    movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=True)
+                                case MovementThreatType.DODGED:
+                                    movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords, dodged=True)
+                                case MovementThreatType.MISTY_STEPPED:
+                                    movement_threat, misty_step_path = calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords)  # TODO align this with accumulate_threat_along_path
+                                    transition_name_to_ms_path["ms_" + str(new_state.coord)] = misty_step_path
+                                case _:
+                                    logger.error(f"Unknown movement type {new_state.movement_type}")
+                                    movement_threat = accumulate_threat_along_path(path, combatant, effect_to_coords)
+                            new_state.cumulative_threat += movement_threat[-1]
+                            new_state.movement_threat = movement_threat
+                    except KeyError:
+                        pass
+                    # if tx == "dummy":
+                    #     break
                     try:  # Is it a transition which represents a (bonus) action?
-                        action = transition_name_to_action[transition]
-                        with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, coord) as did_transform:
+                        action = transition_name_to_action[tx]
+                        with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, self.coord) as did_transform:
                             if ActoidFlags.LOCATION_INDEPENDENT not in action.actoid_flags:
-                                if t_idx == 1:  # The first location-dependent action after movement has an eligible movement predecessor guaranteed
-                                    feasibility_multiplier = 1 if distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
-                                    first_feasibility_check_done = True
+                                if not self.first_feasibility_check_done:  # The first location-dependent action after movement has an eligible movement predecessor guaranteed
+                                    try:
+                                        feasibility_multiplier = 1 if distances[self.coord[0] * battle_map.size + self.coord[1]] <= combatant.movement else infeasibility_multiplier
+                                    except TypeError:
+                                        print("FIXME")
+                                    new_state.first_feasibility_check_done = True
                                 else:  # Can only be > 1 since the movement is skipped with try-except
-                                    eligible_coords = transition_to_eligible_coords[transition]
+                                    eligible_coords = transition_to_eligible_coords[tx]
                                     if not eligible_coords:
                                         continue  # e.g. when there's no place to hide
-                                    if not first_feasibility_check_done:  # The case where a location-dependent action follows a location-independent action
-                                        feasibility_multiplier = 1 if coord in eligible_coords and distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
-                                        first_feasibility_check_done = True
+                                    if not self.first_feasibility_check_done:  # The case where a location-dependent action follows a location-independent action
+                                        feasibility_multiplier = 1 if self.coord in eligible_coords and distances[self.coord[0] * battle_map.size + self.coord[1]] <= combatant.movement else infeasibility_multiplier
+                                        new_state.first_feasibility_check_done = True
                                     else:  # Two location-dependent actions in succession
-                                        remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
-                                        feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
-                            threat = action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
-                            threat_acc += threat
-                            if delta_action:
-                                delta_threat = delta_action.calculate_threat_for_attack(combatant, action)
-                                threat_acc += delta_threat
-                                sequence_idx_to_transition_step_threat[idx][delta_action_t_idx] += delta_threat
+                                        remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([self.coord]))  # This is a simplification, but good enough
+                                        feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[self.coord[0] * battle_map.size + self.coord[1]] else infeasibility_multiplier
+                            threat = action.calculate_threat(consider_dist=(not did_transform), movement_threat=self.movement_threat)
+                            if self.delta_action:
+                                delta_threat = self.delta_action.calculate_threat_for_attack(combatant, action)
+                                threat += delta_threat
+                                # sequence_idx_to_transition_step_threat[idx][delta_action_t_idx] += delta_threat
                             if isinstance(action, AttackThreatModifier):
-                                delta_action = action
-                                delta_action_t_idx = t_idx
-                            for existing_delta_effect in battle_map.effect_tracker.get_affecting_combatant(combatant):
-                                if isinstance(existing_delta_effect, AttackThreatModifier):
-                                    threat_acc += existing_delta_effect.calculate_threat_for_attack(combatant, action)
-                            # This gives us a detailed view of what exactly each transition contributes for the sake of subsequent filtering
-                            try:
-                                sequence_idx_to_transition_step_threat[idx][t_idx] = threat
-                            except KeyError:
-                                sequence_idx_to_transition_step_threat[idx] = {t_idx: threat}
+                                new_state.delta_action = action
+                                # delta_action_t_idx = t_idx
+                            for existing_delta_effect in existing_attack_delta_effects:
+                                threat += existing_delta_effect.calculate_threat_for_attack(combatant, action)
+                            new_state.cumulative_threat += threat * feasibility_multiplier  # Overwrite the movement threat tuple with the final movement and transition total
+                            new_state.cumulative_threat += 0.01 if np.array_equal(np.array(self.coord), current_coords) else 0  # Small bias towards current position prevents oscillations
                     except KeyError:  # or different kind which represents some type of movement
                         pass  # Skipping
-                sequence_to_threat[idx] = [sequence_to_threat[idx][-1], threat_acc * feasibility_multiplier]  # Overwrite the movement threat tuple with the final movement and transition total
-                sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords) else 0  # Small bias towards current position prevents oscillations
 
-    sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
-    # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True) This has significance to NOP, 'sequence_to_threat[x][1] > 0' precludes NOP being selected. I should check Fighter vs Fighter again
-    nearest_and_minimized_sequence, max_threat = get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, sequence_idx_to_transition_step_threat, transition_name_to_action)
-    return nearest_and_minimized_sequence, transition_name_to_ms_path, max_threat
+                    new_state.state_name = target_state
+                    return new_state
+            # assert False
+            return self  # TODO is this ok?
+
+        def is_terminal(self) -> bool:
+            try:
+                dag.forward_transitions[self.state_name]
+                return False
+            except KeyError:
+                return True
+            # return not [tx for tx, _ in dag.forward_transitions[self.state_name]]
+
+        def get_reward(self) -> float:
+            return self.cumulative_threat
+
+        def get_current_player(self) -> int:
+            return 1
+
+    current_state = MCTState(None, None, '0', None)
+    searcher = MCTS(time_limit=1000)
+    best_action = searcher.search(initial_state=current_state)
+    return best_action, None, None
 
 
 def get_action(combatant):
