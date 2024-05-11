@@ -17,6 +17,7 @@ class Zombie(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=22, ac=8, init_bonus=-2, spell_to_hit=0, speed=20, immunities={DamageType.Poison}, dc=0)
+        # super().__init__(num_or_name, hp=22, ac=8, init_bonus=60, spell_to_hit=0, speed=20, immunities={DamageType.Poison}, dc=0)
         self.slam = self.add_ability(Action.MELEE_ATTACK,  name="Slam", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Slam", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
         self.add_ability(Passive.UNDEAD_FORTITUDE)

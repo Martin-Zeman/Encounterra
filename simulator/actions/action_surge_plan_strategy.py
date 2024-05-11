@@ -4,7 +4,7 @@ from .action_types import FreeAction
 from .default_action_plan_strategy import DefaultActionPlanStrategy
 from ..abilities.action_surge import ActionSurgeFactory
 from ..actions.action_dag import generate_proto_tree
-from ..actions.action_selector import find_best_action, build_action_tree, translate_action_to_plan
+from ..actions.action_selector import find_best_sequence, build_action_tree, get_best_movement_and_action
 
 logger = logging.getLogger("Encounterra")
 
@@ -26,7 +26,7 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
             movement = None
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
                 movement, _ = self.get_movement_and_threat_for_next_turn(distances, shortest_paths)
-            if movement is not None:
+            if movement:
                 return movement
             elif not self.combatant.has_action and self.combatant.resources[FreeAction.ACTION_SURGE].has_resource() and self.combatant.weapon_dmg_dealt_this_turn > 0:
                 # Using a strict infeasibility_multiplier here to avoid wasting the Action Surge
@@ -35,7 +35,7 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
                 if max_threat >= self.combatant.weapon_dmg_dealt_this_turn * self.ACTION_SURGE_TOLERANCE_DELTA:
                     return [ActionSurgeFactory(self.combatant).create(None)]
             return None
-        best_sequence, transition_name_to_ms_path, _ = find_best_action(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
+        best_sequence, transition_name_to_ms_path, _ = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
         if best_sequence is None:  # This happens e.g. if the only non-movement actions bring 0 threat
             if not self.combatant.has_action and self.combatant.resources[FreeAction.ACTION_SURGE].has_resource() and self.combatant.weapon_dmg_dealt_this_turn > 0:
                 # Using a strict infeasibility_multiplier here to avoid wasting the Action Surge
@@ -44,4 +44,4 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
                 if max_threat >= self.combatant.weapon_dmg_dealt_this_turn * self.ACTION_SURGE_TOLERANCE_DELTA:
                     return [ActionSurgeFactory(self.combatant).create(None)]
             return None
-        return translate_action_to_plan(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)
+        return get_best_movement_and_action(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)

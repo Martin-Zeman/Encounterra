@@ -150,7 +150,7 @@ if __name__ == '__main__':
     # session.add_combatant(Hobgoblin, Teams.Color.RED)
     # session.add_combatant(Hobgoblin, Teams.Color.RED)
     # session.add_combatant(OathOfVengeancePaladin4Lvl, Teams.Color.RED)
-    # session.add_combatant(OathOfVengeancePaladin5Lvl, Teams.Color.RED)
+    session.add_combatant(OathOfVengeancePaladin5Lvl, Teams.Color.RED)
     # session.add_combatant(HillGiant, Teams.Color.BLUE)
     # session.add_combatant(FireGiant, Teams.Color.RED)
     # session.add_combatant(FrostGiant, Teams.Color.BLUE)

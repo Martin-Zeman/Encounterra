@@ -4,7 +4,7 @@ import numpy as np
 
 from ..actions.action_dag import generate_proto_tree
 from ..actions.action_plan_strategy import ActionPlanStrategy
-from ..actions.action_selector import find_best_action, REGEX_MOVEMENT_PATTERN, build_action_tree, translate_action_to_plan
+from ..actions.action_selector import find_best_sequence, REGEX_MOVEMENT_PATTERN, build_action_tree, get_best_movement_and_action
 from ..actions.action_types import Movement
 from ..actions.movement import MovementGenerator
 from ..battle_map import Map
@@ -44,19 +44,21 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
             proto_tree, transition_name_to_action = generate_proto_tree(combatant)
             tree, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_tree(combatant, proto_tree, transition_name_to_action, distances, shortest_paths)
             if tree is None:
-                return None, None
+                return actions, None
 
-            coord = battle_map.get_combatant_position(combatant).get()[0]
-            best_action, transition_name_to_ms_path, _ = find_best_action(combatant, tree, coord, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier)
-            if best_action is None or best_action == "dummy":
-                return None, None
-            match = REGEX_MOVEMENT_PATTERN.search(best_action)
-            if match:
-                _, x, y = match.groups()
-                path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
-                movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
-                actions.extend(list(movement_generator))  # Unpack the movement generator
-        return (actions, None) if actions else (None, None)
+            best_sequence, transition_name_to_ms_path, _ = find_best_sequence(combatant, tree, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier)
+            if not best_sequence:
+                return actions, None
+            for action in best_sequence:
+                if action == "dummy":
+                    continue
+                match = REGEX_MOVEMENT_PATTERN.search(action)
+                if match:
+                    _, x, y = match.groups()
+                    path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
+                    movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
+                    actions.extend(list(movement_generator)[:self.combatant.movement])  # Unpack the movement generator
+        return actions, None
 
     def calculate_action_plan(self, distances, shortest_paths):
         """
@@ -73,4 +75,4 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
                 movement, _ = self.get_movement_and_threat_for_next_turn(distances, shortest_paths)
             return movement
         # return translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)
-        return translate_action_to_plan(self.combatant, tree, distances, shortest_paths, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type)
+        return get_best_movement_and_action(self.combatant, tree, distances, shortest_paths, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type)
