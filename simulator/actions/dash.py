@@ -64,9 +64,12 @@ class Dash(Actoid, AttackThreatModifier):
     def calculate_threat(self, **kwargs):
         movement_threat = kwargs["movement_threat"]
         if self.factory.action_type is BonusAction.AGGRESSIVE:
-            if len(movement_threat) - 1 > self.factory.combatant.movement:
-                # We always want this to be used if the destination can't be reached, the moving towards an enemy part is always assumed
-                return 1
+            try:
+                if len(movement_threat) - 1 > self.factory.combatant.movement:
+                    # We always want this to be used if the destination can't be reached, the moving towards an enemy part is always assumed
+                    return 1
+            except TypeError:
+                print("FIXME")
             return -1
         baseline = -1 * movement_threat[min(int(self.factory.combatant.movement), len(movement_threat) - 1)]
         modified = -1 * movement_threat[min(int(self.factory.combatant.movement + self.factory.combatant.speed), len(movement_threat) - 1)]

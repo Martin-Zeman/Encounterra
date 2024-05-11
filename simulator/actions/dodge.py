@@ -66,6 +66,7 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         return f"Dodge"
 
     def activate(self, **kwargs):
+        logger.info(f"{self.combatants[0]} takes the Dodge action")
         Map.get().effect_tracker.add(self)
         self.combatants[0].is_dodging = True
         self.combatants[0].saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.ADVANTAGE)

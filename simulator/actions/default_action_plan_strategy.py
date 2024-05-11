@@ -4,8 +4,7 @@ import numpy as np
 
 from ..actions.action_dag import generate_proto_tree
 from ..actions.action_plan_strategy import ActionPlanStrategy
-from ..actions.action_selector import find_best_sequence, translate_sequence_to_actions, \
-    REGEX_MOVEMENT_PATTERN, build_action_tree
+from ..actions.action_selector import find_best_action, REGEX_MOVEMENT_PATTERN, build_action_tree, translate_action_to_plan
 from ..actions.action_types import Movement
 from ..actions.movement import MovementGenerator
 from ..battle_map import Map
@@ -39,15 +38,25 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
 class DefaultActionPlanStrategy(ActionPlanStrategy):
 
     def get_movement_and_threat_for_next_turn(self, distances, shortest_paths, infeasibility_multiplier=0.5):
+        battle_map = Map.get()
+        actions = []
         with self.combatant.as_if_has_action() as combatant:
             proto_tree, transition_name_to_action = generate_proto_tree(combatant)
             tree, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_tree(combatant, proto_tree, transition_name_to_action, distances, shortest_paths)
             if tree is None:
-                return None, [0, 0]
-            best_sequence, transition_name_to_ms_path, max_threat = find_best_sequence(combatant, tree, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier)
-            if best_sequence is None:
-                return None, [0, 0]
-        return extract_movement(self.combatant, distances, shortest_paths, best_sequence), max_threat
+                return None, None
+
+            coord = battle_map.get_combatant_position(combatant).get()[0]
+            best_action, transition_name_to_ms_path, _ = find_best_action(combatant, tree, coord, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier)
+            if best_action is None or best_action == "dummy":
+                return None, None
+            match = REGEX_MOVEMENT_PATTERN.search(best_action)
+            if match:
+                _, x, y = match.groups()
+                path = battle_map.get_path_to_coord(combatant, np.array([int(x), int(y)]), distances, shortest_paths, True)
+                movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
+                actions.extend(list(movement_generator))  # Unpack the movement generator
+        return (actions, None) if actions else (None, None)
 
     def calculate_action_plan(self, distances, shortest_paths):
         """
@@ -63,7 +72,5 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
                 movement, _ = self.get_movement_and_threat_for_next_turn(distances, shortest_paths)
             return movement
-        best_sequence, transition_name_to_ms_path, _ = find_best_sequence(self.combatant, tree, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
-        if best_sequence is None:
-            return None
-        return translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)
+        # return translate_sequence_to_actions(self.combatant, distances, shortest_paths, transition_name_to_action, movement_trans_to_coord_and_type, best_sequence, transition_name_to_ms_path)
+        return translate_action_to_plan(self.combatant, tree, distances, shortest_paths, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type)
