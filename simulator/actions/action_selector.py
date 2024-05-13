@@ -265,7 +265,6 @@ def create_movement_states(dag, transition_to_eligible_coords):
     Movement states that share eligible transitions can be merged. Create new states for them.
     :param dag: the dag which the states are to be added
     :param transition_to_eligible_coords:
-    :param transition_name_to_action: used to filter out priority actions
     :return: dict mapping eligible transitions -> newly created state, dict mapping coord -> eligible transitions
     """
     coord_to_eligible_transitions = dict()
@@ -277,7 +276,7 @@ def create_movement_states(dag, transition_to_eligible_coords):
                 coord_to_eligible_transitions[coord] = {transition_name}
     coord_to_eligible_transitions = {c: frozenset(a) for c, a in coord_to_eligible_transitions.items()}
     eligible_transitions_to_state = {a: dag.get_next_state_name() for a in coord_to_eligible_transitions.values()}
-    for state_name in eligible_transitions_to_state.values():
+    for transition, state_name in eligible_transitions_to_state.items():
         dag.add_state(state_name)
     return eligible_transitions_to_state, coord_to_eligible_transitions
 
@@ -326,6 +325,7 @@ def build_action_tree(combatant, proto_tree, transition_name_to_action, distance
         return None, None, None
 
     transition_to_eligible_coords = dict()
+    transition_to_eligible_coord_states = dict()
     for tn in transition_names:
         # try:
         action = transition_name_to_action[tn]
@@ -554,7 +554,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
             return self.cumulative_threat
 
     current_state = MCTState(current_coord, None, dag.state, None)
-    searcher = MCTS(time_limit=1000 if len(dag.states) > 100 else 300)
+    searcher = MCTS(movement_transition_to_coord_and_type, transition_to_eligible_coords, time_limit=1000 if len(dag.states) > 100 else 300,)
     best_sequence = searcher.search(initial_state=current_state)
     logger.info(f"{combatant}'s num DAG states: {len(dag.states)}")
     logger.info(f"{combatant}'s best sequence: {best_sequence}")

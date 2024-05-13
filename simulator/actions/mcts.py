@@ -79,12 +79,12 @@ def random_policy(state: BaseState) -> float:
 
 
 class TreeNode:
-    def __init__(self, state, parent):
+    def __init__(self, state, parents):
         self.state = state
         self.state.node = self
         self.is_terminal = state.is_terminal()
         self.is_fully_expanded = self.is_terminal
-        self.parent = parent
+        self.parents = parents
         self.numVisits = 0
         self.totalReward = 0
         self.children = {}
@@ -99,6 +99,8 @@ class TreeNode:
 
 class MCTS:
     def __init__(self,
+                 movement_transition_to_coord_and_type,
+                 transition_to_eligible_coords,
                  time_limit: int = None,
                  timeLimit=None,
                  iteration_limit: int = None,
@@ -107,6 +109,9 @@ class MCTS:
                  explorationConstant=math.sqrt(2),
                  rollout_policy=None,
                  rolloutPolicy=random_policy):
+        self.movement_transition_to_coord_and_type = movement_transition_to_coord_and_type
+        self.state_name_to_state = dict()
+        self.transition_to_eligible_coords = transition_to_eligible_coords
         # backwards compatibility
         time_limit = timeLimit if time_limit is None else time_limit
         iteration_limit = iterationLimit if iteration_limit is None else iteration_limit
@@ -131,14 +136,22 @@ class MCTS:
         self.exploration_constant = exploration_constant
         self.rollout_policy = rollout_policy
 
-    def search(self, initialState: BaseState = None, initial_state: BaseState = None, needDetails: bool = False):
+    def search(self, initialState: BaseState = None, initial_state: BaseState = None):
         initial_state = initialState if initial_state is None else initial_state
-        self.root = TreeNode(initial_state, None)
+        self.root = TreeNode(initial_state, [])
+
+        root_actions = self.root.state.get_possible_actions()
+        for root_action in root_actions:
+            depth_one_state = self.root.state.take_action(root_action)
+            depth_one_node = TreeNode(depth_one_state, [self.root])
+            self.root.children[root_action] = depth_one_node
+            if root_action in self.movement_transition_to_coord_and_type.keys():
+                self.state_name_to_state[depth_one_state.state_name] = depth_one_state
+            reward = self.rollout_policy(depth_one_node.state)
+            self.backpropogate(depth_one_node, reward)
+        self.root.is_fully_expanded = True
 
         if self.limit_type == 'time':
-
-            while not self.root.is_fully_expanded:
-                self.execute_round()
             time_limit = time.time() + self.timeLimit / 1000
             while time.time() < time_limit:
                 self.execute_round()
@@ -170,19 +183,36 @@ class MCTS:
         actions = node.state.get_possible_actions()
         for action in actions:
             if action not in node.children:
-                newNode = TreeNode(node.state.take_action(action), node)
-                node.children[action] = newNode
+                new_node = TreeNode(node.state.take_action(action), [node])
+                if node in self.root.children:
+                    for coord_state_names in self.transition_to_eligible_coords[action]:
+                        for coord_state_name in coord_state_names:
+                            new_node.parents.append(self.state_name_to_state[coord_state_name].node)
+                node.children[action] = new_node
                 if len(actions) == len(node.children):
                     node.is_fully_expanded = True
-                return newNode
+                return new_node
 
         raise Exception("Should never reach here")
 
     def backpropogate(self, node: TreeNode, reward: float):
-        while node is not None:
-            node.numVisits += 1
-            node.totalReward += reward
-            node = node.parent
+        if reward != -math.inf:
+            while True:
+                node.numVisits += 1
+                node.totalReward += reward
+                if len(node.parents) > 1:
+                    for parent in node.parents[1:]:
+                        parent.totalReward += reward
+                if not node.parents:
+                    break
+                node = node.parents[0]
+        else:
+            while node.parents:
+                node.numVisits += 1
+                node.totalReward += reward
+                if not node.parents:
+                    break
+                node = node.parents[0]
 
     def get_best_child(self, node: TreeNode, explorationValue: float, exploration_value: float = None) -> TreeNode:
         exploration_value = explorationValue if exploration_value is None else exploration_value
