@@ -50,7 +50,7 @@ def get_post_transitions_of_priority_transitions(dag, transition_name_to_action,
     return post_priority_transitions
 
 
-def get_post_transitions_of_all_priority_transitions(proto_tree, transition_name_to_action):
+def get_post_transitions_of_all_priority_transitions(proto_dag, transition_name_to_action):
     """
     Retrieves eligible follow-up actions for all priority actions present in the action finite state machine (FSM).
 
@@ -58,21 +58,21 @@ def get_post_transitions_of_all_priority_transitions(proto_tree, transition_name
     It operates on the provided action finite state machine (proto_dag) and uses the mapping of action names to actions (transition_name_to_action).
     The output of this function is utilized by the `build_priority_transitions` function.
 
-    :param proto_tree: The action finite state machine (FSM) on which the operation is performed.
+    :param proto_dag: The action finite state machine (FSM) on which the operation is performed.
     :param transition_name_to_action: A dictionary mapping action names to their corresponding actions.
 
     :return: A tuple of two dictionaries:
         1. A dictionary containing priority action names as keys and lists of eligible follow-up transitions as values.
         2. A dictionary containing priority bonus action names as keys and lists of eligible follow-up transitions as values.
     """
-    post_priority_action_transitions = get_post_transitions_of_priority_transitions(proto_tree, transition_name_to_action, PRIORITY_ACTIONS)
-    post_priority_bonus_action_transitions = get_post_transitions_of_priority_transitions(proto_tree, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
+    post_priority_action_transitions = get_post_transitions_of_priority_transitions(proto_dag, transition_name_to_action, PRIORITY_ACTIONS)
+    post_priority_bonus_action_transitions = get_post_transitions_of_priority_transitions(proto_dag, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
     for priority_transition in post_priority_action_transitions.keys():
-        for origin_state in proto_tree.states.keys():
-            proto_tree.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+        for origin_state in proto_dag.states.keys():
+            proto_dag.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
     for priority_transition in post_priority_bonus_action_transitions.keys():
-        for origin_state in proto_tree.states.keys():
-            proto_tree.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
+        for origin_state in proto_dag.states.keys():
+            proto_dag.remove_transition(priority_transition, origin_state)  # Get rid of the originals, don't want to have them pre-pended with coords
     return post_priority_action_transitions, post_priority_bonus_action_transitions
 
 
@@ -196,21 +196,22 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_fac
         actions.extend(list(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
 
 
-def get_best_movement_and_action(combatant, tree, distances, shortest_paths, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type):
+def get_best_movement_and_action(combatant, dag, distances, shortest_paths, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, stop_after_first=True):
     """
     Uses find_best_action to get the next movement and action
     :param combatant: the combatant
-    :param tree: the action tree
+    :param dag: the action tree
     :param distances: potentially already pre-computed distances to all coords
     :param shortest_paths: potentially already pre-computed shortest paths to all coords
     :param transition_name_to_action: dictionary mapping of non-movement types to actions
     :param transition_to_eligible_coords: dictionary mapping of transition to eligible coordinates for that transition
     :param movement_trans_to_coord_and_type: mapping from movement transition -> coord, MovementThreatType
+    :param stop_after_first: Should the sequence be cut after the first non-movement action?
     :return: list of the following types: np.array, action, bonus action
     """
     actions = []
     battle_map = Map.get()
-    best_sequence, transition_name_to_ms_path, _ = find_best_sequence(combatant, tree, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
+    best_sequence, transition_name_to_ms_path, _ = find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
     if not best_sequence:  # TODO Can it return this?
         return None
     for transition in best_sequence:
@@ -219,6 +220,8 @@ def get_best_movement_and_action(combatant, tree, distances, shortest_paths, tra
         try:
             action = transition_name_to_action[transition]
             actions.append(action)
+            if stop_after_first:
+                break  # One non-movement action is enough, we need to recalculate anyway
         except KeyError:
             try:
                 coord, movement_type = movement_trans_to_coord_and_type[transition]
@@ -281,7 +284,7 @@ def create_movement_states(dag, transition_to_eligible_coords):
     return eligible_transitions_to_state, coord_to_eligible_transitions
 
 
-def build_action_tree(combatant, proto_tree, transition_name_to_action, distances, shortest_paths):
+def build_action_dag(combatant, proto_dag, transition_name_to_action, distances, shortest_paths):
     """
     Builds action DAG for a combatant given the combatant's proto_dag. It determines eligible coords for each
     action. Then the coords are pre-pended into the proto_dag to form the final DAG. However, Misty Step, Dodge and
@@ -289,7 +292,7 @@ def build_action_tree(combatant, proto_tree, transition_name_to_action, distance
     to all post-Misty-Step states. Dodge and Disengage always make sense to be taken before any movement, therefore
     in their case coords are also pre-pended to their follow-up actions.
     :param combatant: the combatant for whom the DAG is modeled
-    :param proto_tree: DAG (finite state machine) representing all possible actions for combatant. Doesn't model movement.
+    :param proto_dag: DAG (finite state machine) representing all possible actions for combatant. Doesn't model movement.
     :param transition_name_to_action: dict mapping action names -> actions
     :param distances: the distances to all squares (result of Dijkstra)
     :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
@@ -303,13 +306,13 @@ def build_action_tree(combatant, proto_tree, transition_name_to_action, distance
     for action in transition_name_to_action.values():
         action.clear_cache()
 
-    post_priority_action_transitions, post_priority_bonus_action_transitions = get_post_transitions_of_all_priority_transitions(proto_tree, transition_name_to_action)
+    post_priority_action_transitions, post_priority_bonus_action_transitions = get_post_transitions_of_all_priority_transitions(proto_dag, transition_name_to_action)
 
     ms_transition_to_eligible_coords = None
-    post_misty_step_transitions = get_post_misty_step_transitions(proto_tree, transition_name_to_action)
-    transition_names = proto_tree.get_all_transitions()
+    post_misty_step_transitions = get_post_misty_step_transitions(proto_dag, transition_name_to_action)
+    transition_names = proto_dag.get_all_transitions()
 
-    tree = copy.deepcopy(proto_tree)
+    dag = copy.deepcopy(proto_dag)
 
     # Get eligible coordinates for post-priority actions
     a_pt_transition_to_eligible_coords = {tn[0]: transition_name_to_action[tn[0]].get_eligible_coords(distances, shortest_paths) for pre in post_priority_action_transitions.values() for tn in pre}
@@ -325,7 +328,6 @@ def build_action_tree(combatant, proto_tree, transition_name_to_action, distance
         return None, None, None
 
     transition_to_eligible_coords = dict()
-    transition_to_eligible_coord_states = dict()
     for tn in transition_names:
         # try:
         action = transition_name_to_action[tn]
@@ -342,16 +344,16 @@ def build_action_tree(combatant, proto_tree, transition_name_to_action, distance
     for tn in transition_names:  # Filter out actions which don't have any eligible coords
         try:
             if not transition_to_eligible_coords[tn]:
-                tree.remove_transition(tn, '0')
+                dag.remove_transition(tn, '0')
         except KeyError:
-            tree.remove_transition(tn, '0')  # Happens where the combatant's out of movement
+            dag.remove_transition(tn, '0')  # Happens where the combatant's out of movement
 
-    eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(tree, transition_to_eligible_coords)
+    eligible_transitions_to_state, coord_to_eligible_transitions = create_movement_states(dag, transition_to_eligible_coords)
     movement_transition_to_coord_and_type = dict()
     for transition_name, coords in transition_to_eligible_coords.items():
         if transition_name.startswith("Misty Step"):
             continue
-        transitions = [t[0] for t in proto_tree.events[transition_name].transitions.values() if t[0].source == "0"]  # Iterate over the original to avoid deleting from the one being iterated over
+        transitions = [t[0] for t in proto_dag.events[transition_name].transitions.values() if t[0].source == "0"]  # Iterate over the original to avoid deleting from the one being iterated over
         if not transitions:
             continue  # Happens for all actions of source != 0
         transition = transitions[0]
@@ -359,14 +361,14 @@ def build_action_tree(combatant, proto_tree, transition_name_to_action, distance
             movement_state_name = eligible_transitions_to_state[coord_to_eligible_transitions[coord]]
             movement_transition_name = "m_" + str(coord)
             movement_transition_to_coord_and_type[movement_transition_name] = (coord, MovementThreatType.STANDARD)
-            tree.add_transition(movement_transition_name, "0", movement_state_name)
-            tree.add_transition(transition_name, movement_state_name, transition.dest)
-        tree.remove_transition(transition_name, "0")  # Remove the original
+            dag.add_transition(movement_transition_name, "0", movement_state_name)
+            dag.add_transition(transition_name, movement_state_name, transition.dest)
+        dag.remove_transition(transition_name, "0")  # Remove the original
 
-    build_misty_step_transitions(tree, post_misty_step_transitions, ms_transition_to_eligible_coords, movement_transition_to_coord_and_type)
-    build_priority_transitions(tree, post_priority_action_transitions, a_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_ACTIONS)
-    build_priority_transitions(tree, post_priority_bonus_action_transitions, ba_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
-    return tree, movement_transition_to_coord_and_type, transition_to_eligible_coords
+    build_misty_step_transitions(dag, post_misty_step_transitions, ms_transition_to_eligible_coords, movement_transition_to_coord_and_type)
+    build_priority_transitions(dag, post_priority_action_transitions, a_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_ACTIONS)
+    build_priority_transitions(dag, post_priority_bonus_action_transitions, ba_pt_transition_to_eligible_coords, movement_transition_to_coord_and_type, transition_name_to_action, PRIORITY_BONUS_ACTIONS)
+    return dag, movement_transition_to_coord_and_type, transition_to_eligible_coords
 
 
 # def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, sequence_idx_to_transition_step_threat, distances):
@@ -554,11 +556,11 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
             return self.cumulative_threat
 
     current_state = MCTState(current_coord, None, dag.state, None)
-    searcher = MCTS(movement_transition_to_coord_and_type, transition_to_eligible_coords, time_limit=1000 if len(dag.states) > 100 else 300,)
-    best_sequence = searcher.search(initial_state=current_state)
-    logger.info(f"{combatant}'s num DAG states: {len(dag.states)}")
+    searcher = MCTS(movement_transition_to_coord_and_type, transition_to_eligible_coords, time_limit=1000 if len(dag.states) > 100 else 300)
+    best_sequence, max_threat = searcher.search(initial_state=current_state)
+    # logger.info(f"{combatant}'s num DAG states: {len(dag.states)}")
     logger.info(f"{combatant}'s best sequence: {best_sequence}")
-    return best_sequence, transition_name_to_ms_path, None
+    return best_sequence, transition_name_to_ms_path, max_threat
 
 
 def get_action(combatant):

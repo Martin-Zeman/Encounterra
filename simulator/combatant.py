@@ -77,6 +77,7 @@ class Combatant(ProtoCombatant):
         self.has_bonus_action = True
         self.has_reaction = True
         self.has_haste_action = False
+        self.is_planning_for_next_turn = False
         self.resources = dict()
         self.speed = speed // 5
         self.movement = speed // 5
@@ -670,6 +671,7 @@ class Combatant(ProtoCombatant):
         self.has_action = True
         self.has_bonus_action = True
         self.has_reaction = True
+        self.is_planning_for_next_turn = False
         self.movement = self.speed
         # if self.is_dodging:
         #     self.saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.STRAIGHT)
@@ -689,6 +691,7 @@ class Combatant(ProtoCombatant):
         self.has_action = True
         self.has_bonus_action = True
         self.has_reaction = True
+        self.is_planning_for_next_turn = False
         self.curr_hp = self.max_hp
         self.movement = self.speed
         self.is_dodging = False

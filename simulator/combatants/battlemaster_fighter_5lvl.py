@@ -20,7 +20,8 @@ class BattlemasterFighter5Lvl(Combatant):
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=46, ac=17, init_bonus=0, spell_to_hit=0, speed=30, resistances=set(), dc=15)
+        # super().__init__(num_or_name, hp=46, ac=17, init_bonus=0, spell_to_hit=0, speed=30, resistances=set(), dc=15)
+        super().__init__(num_or_name, hp=46, ac=17, init_bonus=50, spell_to_hit=0, speed=30, resistances=set(), dc=15)
         self.greatsword = self.add_ability(Action.MELEE_ATTACK,  name="Greatsword", combatant=self, to_hit=7, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)
         self.handaxe = self.add_ability(Action.RANGED_ATTACK, name="Handaxe", combatant=self, to_hit=7, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=12, crit_range=1, uses_dex=False, ammo=Uses(2, ResourceRefreshType.NEVER))
         self.add_ability(Reaction.REACTION_ATTACK,  name="Greatsword", combatant=self, to_hit=7, dmg_dice="2d6", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)

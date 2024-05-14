@@ -232,6 +232,7 @@ class MCTS:
         exploration_value = explorationValue if exploration_value is None else exploration_value
         best_sequence = []
         current_node = node
+        best_reward = -math.inf
 
         while current_node.children.values():
             best_nodes_at_level = []
@@ -251,4 +252,5 @@ class MCTS:
             action = (action for action, node in current_node.children.items() if node is best_node).__next__()
             best_sequence.append(action)
             current_node = best_node
-        return best_sequence
+            best_reward = best_node.totalReward
+        return best_sequence, best_reward
