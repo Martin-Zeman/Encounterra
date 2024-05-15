@@ -3,6 +3,8 @@ import pytest
 from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from ..combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
 from ..combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
+from ..combatants.battlemaster_fighter_5lvl import BattlemasterFighter5Lvl
+from ..combatants.bullywug import Bullywug
 from ..combatants.dire_wolf import DireWolf
 from ..combatants.dragonclaw_cultist import DragonclawCultist
 from ..combatants.druid_1lvl import Druid1Lvl
@@ -15,9 +17,11 @@ from ..combatants.green_dragon_wyrmling import GreenDragonWyrmling
 from ..combatants.hobgoblin import Hobgoblin
 from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
 from ..combatants.night_hag import NightHag
+from ..combatants.oath_of_vengeance_paladin_5lvl import OathOfVengeancePaladin5Lvl
 from ..combatants.ogre import Ogre
 from ..combatants.bandit_captain import BanditCaptain
 from ..combatants.orc import Orc
+from ..combatants.owlbear import Owlbear
 from ..combatants.paladin_1lvl import Paladin1Lvl
 from ..combatants.skeleton import Skeleton
 from ..combatants.twig_blight import TwigBlight
@@ -25,6 +29,7 @@ from ..combatants.stone_giant import StoneGiant
 from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
 from ..combatants.vampire_spawn import VampireSpawn
 from ..combatants.young_green_dragon import YoungGreenDragon
+from ..combatants.zombie import Zombie
 from ..effects.effect_tracker import EffectTracker
 from ..combatants.bugbear import Bugbear
 from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
@@ -123,6 +128,11 @@ def test_paladin_lvl_1():
 
 
 @pytest.fixture()
+def test_oath_of_vengeance_paladin_lvl_5():
+    return OathOfVengeancePaladin5Lvl()
+
+
+@pytest.fixture()
 def test_fighter_lvl_1():
     return Fighter1Lvl()
 
@@ -135,6 +145,11 @@ def test_fighter_lvl_2():
 @pytest.fixture()
 def test_battle_master_fighter_lvl_3():
     return BattlemasterFighter3Lvl()
+
+
+@pytest.fixture()
+def test_battle_master_fighter_lvl_5():
+    return BattlemasterFighter5Lvl()
 
 
 @pytest.fixture()
@@ -178,6 +193,11 @@ def test_brown_bear():
 
 
 @pytest.fixture()
+def test_owlbear():
+    return Owlbear()
+
+
+@pytest.fixture()
 def test_dire_wolf():
     return DireWolf()
 
@@ -213,6 +233,11 @@ def test_skeleton():
 
 
 @pytest.fixture()
+def test_zombie():
+    return Zombie()
+
+
+@pytest.fixture()
 def test_hobgoblin():
     return Hobgoblin()
 
@@ -224,3 +249,8 @@ def test_ghoul():
 @pytest.fixture()
 def test_orc():
     return Orc()
+
+
+@pytest.fixture()
+def test_bullywug():
+    return Bullywug()

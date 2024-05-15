@@ -26,7 +26,7 @@ from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
 from .factory_interfaces import RechargeFactory
 from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice, DamageType, \
-    reconcile_roll_types, roll_saving_throw
+    reconcile_roll_types, roll_saving_throw, DamageAversion
 from .conditions import Conditions, is_affected_by, remove_condition
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
@@ -129,6 +129,7 @@ class Combatant(ProtoCombatant):
         self.current_wildshape_form = None
         self.original_form = self
         self.weapon_dmg_dealt_this_turn = 0
+        self.damage_aversion = DamageAversion.BACK_LINER
 
     @staticmethod
     def generate_unique_id(name, cls, level):

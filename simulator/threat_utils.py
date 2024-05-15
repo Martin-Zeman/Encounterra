@@ -401,15 +401,14 @@ def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=F
     """
     threat_acc = 0
     curr_coords = Map.get().get_combatant_position(combatant)
-    threat_along_path = [-get_threat_for_staying_at_coord(curr_coords.get(), combatant)]
+    threat_along_path = [-get_threat_for_staying_at_coord(curr_coords.get(), combatant) * combatant.damage_aversion]
     curr_coords_data = copy.copy(curr_coords.get())  # TODO shallow copy should be enough here
     for increment in path:
-        t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged,
-                                                 dodged)
+        t = get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged)
         assert t <= 0
         threat_acc += t
         curr_coords_data += increment
-        threat_along_path.append(threat_acc - get_threat_for_staying_at_coord(curr_coords_data, combatant))
+        threat_along_path.append((threat_acc - get_threat_for_staying_at_coord(curr_coords_data, combatant)) * combatant.damage_aversion)
     return tuple(threat_along_path)
 
 

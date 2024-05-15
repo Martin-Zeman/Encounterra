@@ -507,6 +507,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                     try:  # Is it a transition which represents a (bonus) action?
                         action = transition_name_to_action[mcts_action]
                         battle_map.clear_caches()
+                        if str(action) == "Menacing Greatsword on Moon Druid 5th LVL (1)":
+                            print("FIXME")
                         with battle_map.as_if_combatant_position(combatant, np.array(self.coord)):
                             with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, self.coord) as did_transform:
                                 feasibility_multiplier = 1
@@ -556,7 +558,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
             return self.cumulative_threat
 
     current_state = MCTState(current_coord, None, dag.state, None)
-    searcher = MCTS(movement_transition_to_coord_and_type, transition_to_eligible_coords, time_limit=1000 if len(dag.states) > 100 else 300)
+    searcher = MCTS(movement_transition_to_coord_and_type, transition_to_eligible_coords, time_limit=10000)
     best_sequence, max_threat = searcher.search(initial_state=current_state)
     # logger.info(f"{combatant}'s num DAG states: {len(dag.states)}")
     logger.info(f"{combatant}'s best sequence: {best_sequence}")

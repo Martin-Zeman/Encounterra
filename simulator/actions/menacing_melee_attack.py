@@ -8,8 +8,7 @@ from .melee_attack import MeleeAttackFactory, MeleeAttack
 from ..abilities.on_hit_saving_throw_effect import OnHitSavingThrowEffect
 from ..actions.actoid import FactoryFlags
 from ..battle_map import Map
-from ..conditions import Conditions, apply_condition, Condition, remove_condition, get_source_of_frightened, \
-    is_affected_by_any
+from ..conditions import Conditions, apply_condition, Condition, remove_condition, is_affected_by_any
 import logging
 
 from ..effects.effect import EffectType
@@ -48,7 +47,7 @@ class MenacingMeleeAttackFactory(MeleeAttackFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         total_threat = MeleeAttackFactory.calculate_threat_to_target(self, target)
         if is_affected_by_any(target, Conditions.FRIGHTENED):
-            return total_threat - 1  # We want to discourage the Fighter from wasting resources
+            return -1  # We want to discourage the Fighter from wasting resources
         total_threat += get_saving_throw_fail_prob(self.combatant.dc, target.saving_throws[SavingThrow.WIS]) * calculate_threat_out_delta(target, 12, {ThreatModifierType.ROLL_TYPE: RollType.DISADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1]
         return total_threat
 

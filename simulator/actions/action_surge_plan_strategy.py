@@ -27,6 +27,7 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
                 self.combatant.is_planning_for_next_turn = True
                 movement = None
                 if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
+                    logger.info("Exploring movement for next turn")
                     movement, _ = self.get_movement_and_threat_for_next_turn(distances, shortest_paths)
                 if movement:
                     return movement

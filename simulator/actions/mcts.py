@@ -64,9 +64,6 @@ class BaseState(ABC):
         raise NotImplementedError()
 
 
-NORMALIZATION_CONSTANT = 100
-
-
 def random_policy(state: BaseState) -> float:
     while not state.is_terminal():
         try:
@@ -74,7 +71,7 @@ def random_policy(state: BaseState) -> float:
         except IndexError:
             raise Exception("Non-terminal state has no possible actions: " + str(state))
         state = state.take_action(action)
-    reward = state.get_reward() + NORMALIZATION_CONSTANT  # This is to make sure that all sequences have positive rewards
+    reward = state.get_reward()
     return reward if state.is_offensive else -math.inf
 
 
@@ -106,12 +103,13 @@ class MCTS:
                  iteration_limit: int = None,
                  iterationLimit=None,
                  exploration_constant: float = None,
-                 explorationConstant=math.sqrt(2),
+                 explorationConstant=2,#math.sqrt(2),
                  rollout_policy=None,
                  rolloutPolicy=random_policy):
         self.movement_transition_to_coord_and_type = movement_transition_to_coord_and_type
-        self.state_name_to_state = dict()
+        self.state_coord_to_state = dict()
         self.transition_to_eligible_coords = transition_to_eligible_coords
+        self.normalizing_offset = 0
         # backwards compatibility
         time_limit = timeLimit if time_limit is None else time_limit
         iteration_limit = iterationLimit if iteration_limit is None else iteration_limit
@@ -141,23 +139,33 @@ class MCTS:
         self.root = TreeNode(initial_state, [])
 
         root_actions = self.root.state.get_possible_actions()
-        for root_action in root_actions:
-            depth_one_state = self.root.state.take_action(root_action)
-            depth_one_node = TreeNode(depth_one_state, [self.root])
+        depth_one_states = len(root_actions)*[None]
+        lowest_depth_one_reward = math.inf
+        for idx, root_action in enumerate(root_actions):
+            new_state = self.root.state.take_action(root_action)
+            depth_one_states[idx] = new_state
+            if new_state.cumulative_threat < lowest_depth_one_reward:
+                lowest_depth_one_reward = new_state.cumulative_threat
+        if lowest_depth_one_reward < math.inf:
+            self.normalizing_offset = -lowest_depth_one_reward
+        for idx, root_action in enumerate(root_actions):
+            depth_one_node = TreeNode(depth_one_states[idx], [self.root])
             self.root.children[root_action] = depth_one_node
             if root_action in self.movement_transition_to_coord_and_type.keys():
-                self.state_name_to_state[depth_one_state.state_name] = depth_one_state
-            reward = self.rollout_policy(depth_one_node.state)
+                self.state_coord_to_state[depth_one_states[idx].coord] = depth_one_states[idx]
+            reward = self.rollout_policy(depth_one_node.state) + self.normalizing_offset
             self.backpropogate(depth_one_node, reward)
         self.root.is_fully_expanded = True
 
-        if self.limit_type == 'time':
-            time_limit = time.time() + self.timeLimit / 1000
-            while time.time() < time_limit:
-                self.execute_round()
-        else:
-            for i in range(self.search_limit):
-                self.execute_round()
+        for i in range(1000):
+            self.execute_round()
+        # if self.limit_type == 'time':
+        #     time_limit = time.time() + self.timeLimit / 1000
+        #     while time.time() < time_limit:
+        #         self.execute_round()
+        # else:
+        #     for i in range(self.search_limit):
+        #         self.execute_round()
 
         return self.get_best_sequence(self.root, 0)
 
@@ -166,7 +174,7 @@ class MCTS:
             execute a selection-expansion-simulation-backpropagation round
         """
         node = self.select_node(self.root)
-        reward = self.rollout_policy(node.state)
+        reward = self.rollout_policy(node.state) + self.normalizing_offset
         self.backpropogate(node, reward)
 
     def select_node(self, node: TreeNode) -> TreeNode:
@@ -184,10 +192,12 @@ class MCTS:
         for action in actions:
             if action not in node.children:
                 new_node = TreeNode(node.state.take_action(action), [node])
-                if node in self.root.children:
-                    for coord_state_names in self.transition_to_eligible_coords[action]:
-                        for coord_state_name in coord_state_names:
-                            new_node.parents.append(self.state_name_to_state[coord_state_name].node)
+                if node in self.root.children.values():
+                    for state_coord in self.transition_to_eligible_coords[action]:
+                        try:
+                            new_node.parents.append(self.state_coord_to_state[state_coord].node)
+                        except KeyError:
+                            pass  # For priority actions...
                 node.children[action] = new_node
                 if len(actions) == len(node.children):
                     node.is_fully_expanded = True
@@ -203,6 +213,7 @@ class MCTS:
                 if len(node.parents) > 1:
                     for parent in node.parents[1:]:
                         parent.totalReward += reward
+                        parent.numVisits += 1
                 if not node.parents:
                     break
                 node = node.parents[0]
@@ -219,7 +230,11 @@ class MCTS:
         best_value = float("-inf")
         best_nodes = []
         for child in node.children.values():
-            node_value = child.totalReward / child.numVisits + exploration_value * math.sqrt(math.log(node.numVisits) / child.numVisits)
+            try:
+                # node_value = child.totalReward / child.numVisits + exploration_value * math.sqrt(math.log(node.numVisits) / child.numVisits)
+                node_value = child.totalReward + exploration_value * math.sqrt(math.log(node.numVisits) / child.numVisits)
+            except ValueError:
+                print("FIXME")
             if node_value > best_value:
                 best_value = node_value
                 best_nodes = [child]
@@ -238,7 +253,8 @@ class MCTS:
             best_nodes_at_level = []
             best_value = float("-inf")
             for child in current_node.children.values():
-                node_value = child.totalReward / child.numVisits + exploration_value * math.sqrt(math.log(current_node.numVisits) / child.numVisits)
+                # node_value = child.totalReward / child.numVisits + exploration_value * math.sqrt(math.log(current_node.numVisits) / child.numVisits)
+                node_value = child.totalReward + exploration_value * math.sqrt(math.log(current_node.numVisits) / child.numVisits)
                 if node_value > best_value:
                     best_value = node_value
                     best_nodes_at_level = [child]

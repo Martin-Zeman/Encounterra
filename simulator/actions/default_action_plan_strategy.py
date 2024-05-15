@@ -37,7 +37,7 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
 
 class DefaultActionPlanStrategy(ActionPlanStrategy):
 
-    def get_movement_and_threat_for_next_turn(self, distances, shortest_paths, infeasibility_multiplier=0.5):
+    def get_movement_and_threat_for_next_turn(self, distances, shortest_paths, infeasibility_multiplier=0.3):
         battle_map = Map.get()
         actions = []
         with self.combatant.as_if_has_action() as combatant:
@@ -74,6 +74,7 @@ class DefaultActionPlanStrategy(ActionPlanStrategy):
                 self.combatant.is_planning_for_next_turn = True
                 movement = None
                 if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
+                    logger.info("Exploring movement for next turn")
                     movement, _ = self.get_movement_and_threat_for_next_turn(distances, shortest_paths)
                 return movement
             return None

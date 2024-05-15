@@ -6,7 +6,7 @@ from ..battle_map import Map
 from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
-from ..misc import DamageType, SavingThrow, Class,  get_superiority_dice
+from ..misc import DamageType, SavingThrow, Class, get_superiority_dice, DamageAversion
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -39,6 +39,7 @@ class BattlemasterFighter5Lvl(Combatant):
         self.athletics = 7
         self.acrobatics = 0
         self.passive_perception = 13
+        self.damage_aversion = DamageAversion.FRONT_LINER
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()

@@ -30,7 +30,8 @@ from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbe
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
     test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_fighter_lvl_2, \
     test_battle_master_fighter_lvl_3, test_fighter_lvl_1, test_ghoul, test_skeleton, test_hobgoblin, test_orc, \
-    test_assassin_rogue_3lvl
+    test_assassin_rogue_3lvl, test_battle_master_fighter_lvl_5, test_zombie, test_owlbear, test_bullywug, \
+    test_oath_of_vengeance_paladin_lvl_5
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
@@ -1523,6 +1524,90 @@ def test_error_case_33(battle_map, teams, effect_tracker, test_battle_master_fig
         actoids.append(get_action(test_assassin_rogue_3lvl))
         action_resolver.resolve_action(actoids[-1], test_assassin_rogue_3lvl)
         assert str(actoids[0]).startswith("Cunning Disengage")
+    except Exception as e:
+        assert False, f"Raised an exception {e}"
+
+
+def test_mcts_battlemaster_01(battle_map, teams, effect_tracker, test_battle_master_fighter_lvl_5, test_assassin_rogue,
+                              test_orc, test_bullywug, test_hobgoblin, test_oath_of_vengeance_paladin_lvl_5,
+                              test_owlbear, test_moon_druid, test_draconic_sorcerer_5lvl, test_zombie, test_ghoul):
+    """
+        Setting initial position [10  7] for Moon Druid 5th LVL (1)
+        Setting initial position [2 2] for Draconic Sorcerer 5th LVL (1)
+        Setting initial position [10  2] for Assassin Rogue 5th LVL (1)
+        Setting initial position [ 4 13] for Battlemaster Fighter 5th LVL (1)
+        Setting initial position [ 1 12] for Zombie (1)
+        Setting initial position [14 12] for Hobgoblin (1)
+        Setting initial position [10 12] for Oath of Vengeance Paladin 5th LVL (1)
+        Setting initial position [13  3] for Owlbear (1)
+        Setting initial position [5 5] for Ghoul (1)
+        Setting initial position [13  9] for Bullywug (1)
+        Setting initial position [2 6] for Orc (1)
+        14	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+        13	..	..	..	..	B1	..	..	..	..	..	..	..	..	..	..
+        12	..	Z1	..	..	H1	..	..	..	..	..	O1	..	..	..	..
+        11	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+        10	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+         9	..	..	..	..	..	..	..	..	..	..	..	..	..	B1	..
+         8	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+         7	..	..	..	..	..	..	..	..	..	..	M1	..	..	..	..
+         6	..	..	O1	..	..	..	..	..	..	..	..	..	..	..	..
+         5	..	..	..	..	..	G1	..	..	..	..	..	..	..	..	..
+         4	..	..	..	..	..	..	..	..	..	..	..	..	..	O1	O1
+         3	..	..	..	..	..	..	..	..	..	..	..	..	..	O1	O1
+         2	..	..	D1	..	..	..	..	..	..	..	A1	..	..	..	..
+         1	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+         0	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+            0	1	2	3	4	5	6	7	8	9	10	11	12	13	14
+    """
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    combatants = [test_battle_master_fighter_lvl_5, test_assassin_rogue, test_orc, test_bullywug, test_hobgoblin, test_oath_of_vengeance_paladin_lvl_5, test_owlbear, test_moon_druid, test_draconic_sorcerer_5lvl, test_zombie, test_ghoul]
+    action_resolver = ActionResolver(combatants, teams, effect_tracker)
+
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_5, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_zombie, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_orc, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_ghoul, Teams.Color.BLUE)
+
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    teams.add_combatant_to_team(test_hobgoblin, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bullywug, Teams.Color.RED)
+    teams.add_combatant_to_team(test_owlbear, Teams.Color.RED)
+    teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.RED)
+    teams.add_combatant_to_team(test_oath_of_vengeance_paladin_lvl_5, Teams.Color.RED)
+
+    # I'm trying to create a space where there's no danger zone
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_5, np.array([4, 13]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 2]))
+    battle_map.set_combatant_coordinates(test_zombie, np.array([1, 12]))
+    battle_map.set_combatant_coordinates(test_orc, np.array([2, 6]))
+    battle_map.set_combatant_coordinates(test_ghoul, np.array([5, 5]))
+
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 7]))
+    battle_map.set_combatant_coordinates(test_hobgoblin, np.array([4, 12]))
+    battle_map.set_combatant_coordinates(test_bullywug, np.array([13, 9]))
+    battle_map.set_combatant_coordinates(test_owlbear, np.array([13, 3]))
+    battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([10, 2]))
+    battle_map.set_combatant_coordinates(test_oath_of_vengeance_paladin_lvl_5, np.array([10, 12]))
+    for combatant in combatants:
+        combatant.curr_init = 0  # To prevent assassinate from crashing
+
+    battle_map.build_adjacency_matrix()
+
+    actoids = []
+    try:
+        actoids.append(get_action(test_battle_master_fighter_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
+        actoids.append(get_action(test_battle_master_fighter_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
+        actoids.append(get_action(test_battle_master_fighter_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
+        actoids.append(get_action(test_battle_master_fighter_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
+        actoids.append(get_action(test_battle_master_fighter_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

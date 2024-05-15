@@ -13,6 +13,7 @@ logger = logging.getLogger("Encounterra")
 
 class SecondWindFactory(DirectThreatFactory):
 
+    SECOND_WIND_CREATE_PERCENTILE = 50
     SECOND_WIND_TRIGGER_PERCENTILE = 70
 
     def __init__(self, combatant):
@@ -35,7 +36,12 @@ class SecondWindFactory(DirectThreatFactory):
         pass  # No need due to the TARGETS_SELF flag
 
     def create_all(self, previous_action_in_dag=None):
-        return [SecondWind(self)]
+        missing_hp = get_missing_hp(self.combatant)
+        healing = percentile_roll((1, 10), self.SECOND_WIND_TRIGGER_PERCENTILE) + self.combatant.level
+        if missing_hp >= healing:
+            return [SecondWind(self)]
+        return []
+
 
     def create(self, target):
         # Doesn't make much sense here

@@ -539,3 +539,9 @@ def get_num_superiority_dice(level):
         case _:
             logger.error("Incorrect Battlemaster level")
             return 4
+
+
+class DamageAversion:
+    FRONT_LINER = 0.2
+    MID_LINER = 0.6
+    BACK_LINER = 1.0
