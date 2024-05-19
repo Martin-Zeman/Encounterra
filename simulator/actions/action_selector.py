@@ -560,7 +560,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
             return self.cumulative_threat
 
     current_state = MCTState(current_coord, None, dag.state, None)
-    searcher = MCTS(movement_transition_to_coord_and_type, transition_to_eligible_coords, time_limit=10000)
+    searcher = MCTS(time_limit=10000)
     best_sequence, max_threat = searcher.search(initial_state=current_state)
     # logger.info(f"{combatant}'s num DAG states: {len(dag.states)}")
     logger.info(f"{combatant}'s best sequence: {best_sequence}")

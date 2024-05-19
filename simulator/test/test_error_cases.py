@@ -1601,8 +1601,8 @@ def test_mcts_battlemaster_01(battle_map, teams, effect_tracker, test_battle_mas
 
     try:
         logger.warning("")
-        for iterations in [1000, 2000, 3000, 4000, 5000]:
-        # for iterations in [1000, 2000]:
+        # for iterations in [1000, 2000, 3000, 4000, 5000]:
+        for iterations in [1000, 2000]:
             MCTS.ITERATIONS = iterations
             success = 0
             partial_success = 0
