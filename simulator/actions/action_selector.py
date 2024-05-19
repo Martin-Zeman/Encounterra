@@ -470,6 +470,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
             self.movement_threat = movement_threat
             self.node = None
             self.is_offensive = False
+            self.current_path = []
+            self.maximum_path = []
 
         def get_possible_actions(self) -> [any]:
             return [tx for tx, _ in dag.forward_transitions[self.state_name]]
@@ -507,8 +509,8 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                     try:  # Is it a transition which represents a (bonus) action?
                         action = transition_name_to_action[mcts_action]
                         battle_map.clear_caches()
-                        if str(action) == "Menacing Greatsword on Moon Druid 5th LVL (1)":
-                            print("FIXME")
+                        # if str(action) == "Menacing Greatsword on Moon Druid 5th LVL (1)":
+                        #     print("FIXME")
                         with battle_map.as_if_combatant_position(combatant, np.array(self.coord)):
                             with battle_map.replace_combatant_if_action_by_wildshaped(action, combatant, self.coord) as did_transform:
                                 feasibility_multiplier = 1

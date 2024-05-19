@@ -9,6 +9,7 @@ import pickle
 from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver
 from ..actions.action_types import BonusAction, Action, Passive, FreeAction
+from ..actions.mcts import MCTS
 from ..actions.movement import MovementIncrement
 from ..battle_map import Terrain, Map
 from ..combatants.giant_toad import GiantToad
@@ -35,6 +36,8 @@ from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbe
 from ..actions.action_selector import get_action
 from ..utils.utils import preallocate_wildshape_forms
 import cProfile
+
+logger = logging.getLogger("Encounterra")
 
 
 def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear):
@@ -1572,7 +1575,7 @@ def test_mcts_battlemaster_01(battle_map, teams, effect_tracker, test_battle_mas
     teams.add_combatant_to_team(test_ghoul, Teams.Color.BLUE)
 
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
-    teams.add_combatant_to_team(test_hobgoblin, Teams.Color.RED)
+    # teams.add_combatant_to_team(test_hobgoblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bullywug, Teams.Color.RED)
     teams.add_combatant_to_team(test_owlbear, Teams.Color.RED)
     teams.add_combatant_to_team(test_assassin_rogue, Teams.Color.RED)
@@ -1586,7 +1589,7 @@ def test_mcts_battlemaster_01(battle_map, teams, effect_tracker, test_battle_mas
     battle_map.set_combatant_coordinates(test_ghoul, np.array([5, 5]))
 
     battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 7]))
-    battle_map.set_combatant_coordinates(test_hobgoblin, np.array([4, 12]))
+    # battle_map.set_combatant_coordinates(test_hobgoblin, np.array([4, 12]))
     battle_map.set_combatant_coordinates(test_bullywug, np.array([13, 9]))
     battle_map.set_combatant_coordinates(test_owlbear, np.array([13, 3]))
     battle_map.set_combatant_coordinates(test_assassin_rogue, np.array([10, 2]))
@@ -1596,18 +1599,22 @@ def test_mcts_battlemaster_01(battle_map, teams, effect_tracker, test_battle_mas
 
     battle_map.build_adjacency_matrix()
 
-    actoids = []
     try:
-        actoids.append(get_action(test_battle_master_fighter_lvl_5))
-        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
-        actoids.append(get_action(test_battle_master_fighter_lvl_5))
-        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
-        actoids.append(get_action(test_battle_master_fighter_lvl_5))
-        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
-        actoids.append(get_action(test_battle_master_fighter_lvl_5))
-        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
-        actoids.append(get_action(test_battle_master_fighter_lvl_5))
-        action_resolver.resolve_action(actoids[-1], test_battle_master_fighter_lvl_5)
+        logger.warning("")
+        for iterations in [1000, 2000, 3000, 4000, 5000]:
+        # for iterations in [1000, 2000]:
+            MCTS.ITERATIONS = iterations
+            success = 0
+            partial_success = 0
+            for _ in range(50):
+                actoids = [get_action(test_battle_master_fighter_lvl_5)]
+                actoids.extend(test_battle_master_fighter_lvl_5.action_plan)
+                if [a for a in actoids if str(a).startswith('Menacing Greatsword')]:
+                    success += 1
+                elif [a for a in actoids if str(a).startswith('Greatsword')]:
+                    partial_success += 1
+                test_battle_master_fighter_lvl_5.action_plan.clear()
+            logger.warning(f"Iterations: {iterations}\tSuccess: {success*2}%\t Partial Success: {partial_success*2}%")
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
