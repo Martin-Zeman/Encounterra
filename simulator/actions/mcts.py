@@ -97,7 +97,8 @@ class TreeNode:
 
 class MCTS:
     ITERATIONS = 1000
-    def __init__(self, time_limit: int = None, iteration_limit: int = None, rollout_policy=random_policy):
+    def __init__(self, movement_transition_to_coord_and_type, time_limit: int = None, iteration_limit: int = None, rollout_policy=random_policy):
+        self.movement_transition_to_coord_and_type = movement_transition_to_coord_and_type
         self.root = None
         if time_limit is not None:
             if iteration_limit is not None:
@@ -117,17 +118,27 @@ class MCTS:
 
     def search(self, initial_state: BaseState = None):
         self.root = TreeNode(initial_state, None)
-        root_actions = self.root.state.get_possible_actions()
-        for root_action in root_actions:
-            new_state = self.root.state.take_action(root_action)
-            self.root.children[root_action] = TreeNode(new_state, self.root)
+        movement_nodes = []
+
+        # The goal is to distribute the sampling evenly across all the movement states
+        def dfs(current_node):
+            actions = current_node.state.get_possible_actions()
+            for action in actions:
+                new_state = self.root.state.take_action(action)
+                new_node = TreeNode(new_state, current_node)
+                current_node.children[action] = new_node
+                if action in self.movement_transition_to_coord_and_type.keys():
+                    movement_nodes.append(current_node)
+                else:
+                    dfs(new_node)
+
+        dfs(self.root)
 
         iterations = 0
         while iterations < MCTS.ITERATIONS:
-            for root_action in root_actions:
-                depth_one_node = self.root.children[root_action]
-                reward = self.rollout_policy(depth_one_node.state)
-                self.backpropagate(depth_one_node, reward)
+            for movement_node in movement_nodes:
+                reward = self.rollout_policy(movement_node.state)
+                self.backpropagate(movement_node, reward)
                 iterations += 1
                 if iterations == MCTS.ITERATIONS:
                     break
@@ -179,11 +190,10 @@ class MCTS:
 
     def get_best_sequence(self, node: TreeNode):
         best_sequence = []
-        current_node = node
 
         best_nodes_at_level_one = []
         best_value = -math.inf
-        for child in current_node.children.values():
+        for child in node.children.values():
             node_value = child.reward
             if node_value > best_value:
                 best_value = node_value
@@ -195,7 +205,7 @@ class MCTS:
             best_node = random.choice(best_nodes_at_level_one)
         else:
             best_node = best_nodes_at_level_one[0]
-        action = (action for action, node in current_node.children.items() if node is best_node).__next__()
+        action = (action for action, node in node.children.items() if node is best_node).__next__()
         best_sequence.append(action)
         best_reward = best_node.reward
         best_sequence.extend(best_node.state.maximum_path)

@@ -1869,8 +1869,7 @@ def test_assassin_rogue_01(iterations_param, battle_map, teams, effect_tracker, 
 
 
 @pytest.mark.mcts
-# @pytest.mark.parametrize("iterations_param", [1000, 2000, 3000, 4000])
-@pytest.mark.parametrize("iterations_param", [3000])
+@pytest.mark.parametrize("iterations_param", [1000, 2000, 3000, 4000])
 def test_assassin_rogue_02(iterations_param, battle_map, teams, effect_tracker, test_assassin_rogue, test_bugbear, test_ogre, test_goblin, test_brown_bear):
     """
     14	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
