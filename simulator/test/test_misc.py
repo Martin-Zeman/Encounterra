@@ -19,6 +19,7 @@ from ..teams import Teams
 from ..test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
 from ..utils.utils import preallocate_wildshape_forms
 
+
 def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid, test_draconic_sorcerer_5lvl):
     """
     Tests the basic concentration mechanic functionality
