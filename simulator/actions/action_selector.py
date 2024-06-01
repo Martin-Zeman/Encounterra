@@ -181,7 +181,7 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_fac
             x, y = REGEX_MS_MOVEMENT_PATTERN.search(ms_path[i]).groups()
             before_path.append(np.array([int(x), int(y)]))
         before_path = convert_path_to_increments(before_path)
-        actions.extend(list(MovementGenerator(combatant, before_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
+        actions.extend(MovementGenerator(combatant, before_path, Movement.STANDARD).get_generator())  # Unpack the movement generator
     try:
         x, y = REGEX_MS_MOVEMENT_PATTERN.search(ms_path[ms_idx]).groups()
     except TypeError:
@@ -193,7 +193,7 @@ def decode_ms_path_to_actions(combatant, initial_coord, ms_path, actions, ms_fac
             x, y = REGEX_MS_MOVEMENT_PATTERN.search(ms_path[i]).groups()
             after_path.append(np.array([int(x), int(y)]))
         after_path = convert_path_to_increments(after_path)
-        actions.extend(list(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator()))  # Unpack the movement generator
+        actions.extend(MovementGenerator(combatant, after_path, Movement.STANDARD).get_generator())  # Unpack the movement generator
 
 
 def get_best_movement_and_action(combatant, dag, distances, shortest_paths, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, stop_after_first=True):
@@ -212,6 +212,7 @@ def get_best_movement_and_action(combatant, dag, distances, shortest_paths, tran
     actions = []
     battle_map = Map.get()
     best_sequence, transition_name_to_ms_path, _ = find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
+    combatant.best_sequence = best_sequence
     if not best_sequence:  # TODO Can it return this?
         return None
     for transition in best_sequence:
@@ -223,25 +224,14 @@ def get_best_movement_and_action(combatant, dag, distances, shortest_paths, tran
             if stop_after_first:
                 break  # One non-movement action is enough, we need to recalculate anyway
         except KeyError:
-            try:
-                coord, movement_type = movement_trans_to_coord_and_type[transition]
-            except KeyError:
-                print("FIXME")
-            match movement_type:
-                case MovementThreatType.STANDARD | MovementThreatType.DODGED:
-                    path = battle_map.get_path_to_coord(combatant,  np.array(coord), distances, shortest_paths, True)
-                    movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
-                    actions.extend(list(movement_generator))  # Unpack the movement generator
-                case MovementThreatType.DISENGAGED:
-                    path = battle_map.get_path_to_coord(combatant, np.array(coord), distances, shortest_paths, False)
-                    movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGED).get_generator()
-                    actions.extend(list(movement_generator))  # Unpack the movement generator
-                case MovementThreatType.MISTY_STEPPED:
-                    ms_factory = get_factory_of_type(combatant.bonus_action_factories, BonusAction.MISTY_STEP)
-                    decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
-                    # TODO also unpack actions
-                case _:
-                    logger.error(f"Unknown movement type {movement_type}")
+            coord, movement_type = movement_trans_to_coord_and_type[transition]
+            path = battle_map.get_path_to_coord(combatant, np.array(coord), distances, shortest_paths, movement_type != MovementThreatType.DISENGAGED)
+            movement_generator = MovementGenerator(combatant, path, movement_type).get_generator()
+            actions.extend(movement_generator)
+
+            if movement_type == MovementThreatType.MISTY_STEPPED:
+                ms_factory = get_factory_of_type(combatant.bonus_action_factories, BonusAction.MISTY_STEP)
+                decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
     return actions
 
 
@@ -563,7 +553,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     searcher = MCTS(time_limit=10000)
     best_sequence, max_threat = searcher.search(initial_state=current_state)
     # logger.info(f"{combatant}'s num DAG states: {len(dag.states)}")
-    logger.info(f"{combatant}'s best sequence: {best_sequence}")
+    logger.info(f"{combatant}'s best sequence: {best_sequence} with threat: {max_threat}")
     return best_sequence, transition_name_to_ms_path, max_threat
 
 

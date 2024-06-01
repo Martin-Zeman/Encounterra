@@ -15,7 +15,7 @@ from .action_resolver import check_concentration
 from .actions.action_surge_plan_strategy import ActionSurgePlanStrategy
 from .actions.actoid import FactoryFlags
 from .actions.attack import AttackFactory
-from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
+from .actions.default_mcts_action_plan_strategy import DefaultMCTSActionPlanStrategy
 from .actions.melee_attack import MeleeAttackFactory
 from .actions.menacing_melee_attack import MenacingMeleeAttackFactory
 from .actions.menacing_ranged_attack import MenacingRangedAttackFactory
@@ -59,7 +59,7 @@ class Combatant(ProtoCombatant):
         self.free_action_factories = []
         self.danger_zone_attack = None
         self.haste_action_factories = []
-        self.action_plan_strategy = DefaultActionPlanStrategy(self)
+        self.action_plan_strategy = DefaultMCTSActionPlanStrategy(self)
         self.passive = []
         self.max_hp = hp
         self.curr_hp = hp
@@ -130,6 +130,7 @@ class Combatant(ProtoCombatant):
         self.original_form = self
         self.weapon_dmg_dealt_this_turn = 0
         self.damage_aversion = DamageAversion.BACK_LINER
+        self.best_sequence = None  # This is a cache used for testing purposes
 
     @staticmethod
     def generate_unique_id(name, cls, level):

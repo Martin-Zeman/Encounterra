@@ -12,30 +12,7 @@ from ..battle_map import Map
 logger = logging.getLogger("Encounterra")
 
 
-def extract_movement(combatant, distances, shortest_paths, longest_pth):
-    """
-    Extracts the movement part of an action plan
-    :param combatant: the combatant for whom the actions are translated
-    :param distances: potentially already pre-computed distances to all coords
-    :param shortest_paths: potentially already pre-computed shortest paths to all coords
-    :param longest_pth: list of best actions as strings
-    :return: list of movement increments or None
-    """
-    actions = []
-    for action in longest_pth:
-        if action == "dummy":
-            continue
-        match = REGEX_MOVEMENT_PATTERN.search(action)
-        if match:
-            _, x, y = match.groups()
-            path = Map.get().get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
-            movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
-            actions.extend(list(movement_generator))  # Unpack the movement generator
-            break
-    return actions if actions else None
-
-
-class DefaultActionPlanStrategy(ActionPlanStrategy):
+class DefaultMCTSActionPlanStrategy(ActionPlanStrategy):
 
     def get_movement_and_threat_for_next_turn(self, distances, shortest_paths, infeasibility_multiplier=0.3):
         battle_map = Map.get()

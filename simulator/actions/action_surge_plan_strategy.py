@@ -1,15 +1,15 @@
 import logging
 
 from .action_types import FreeAction
-from .default_action_plan_strategy import DefaultActionPlanStrategy
+from .default_mcts_action_plan_strategy import DefaultMCTSActionPlanStrategy
 from ..abilities.action_surge import ActionSurgeFactory
 from ..actions.action_dag import generate_proto_dag
-from ..actions.action_selector import find_best_sequence, build_action_dag, get_best_movement_and_action
+from ..actions.action_selector import build_action_dag, get_best_movement_and_action
 
 logger = logging.getLogger("Encounterra")
 
 
-class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
+class ActionSurgePlanStrategy(DefaultMCTSActionPlanStrategy):
 
     ACTION_SURGE_TOLERANCE_DELTA = 0.3
 

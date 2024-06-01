@@ -46,9 +46,13 @@ class BattlemasterFighter5Lvl(Combatant):
         self.attack_fsm.add_state('1')  # attacked with melee
         self.attack_fsm.add_state('2')  # attacked with ranged
         self.attack_fsm.add_transition(str(self.greatsword[1]), '0', '1')
+        self.attack_fsm.add_transition(f"Menacing {str(self.greatsword[1])}", '0', '1')
         self.attack_fsm.add_transition(str(self.greatsword[1]), '1', 'nop')
+        self.attack_fsm.add_transition(f"Menacing {str(self.greatsword[1])}", '1', 'nop')
         self.attack_fsm.add_transition(str(self.handaxe[1]), '0', '2')
+        self.attack_fsm.add_transition(f"Menacing {str(self.handaxe[1])}", '0', '2')
         self.attack_fsm.add_transition(str(self.handaxe[1]), '2', 'nop')
+        self.attack_fsm.add_transition(f"Menacing {str(self.handaxe[1])}", '2', 'nop')
 
     def export_resources(self):
         return {
