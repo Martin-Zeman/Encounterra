@@ -12,10 +12,10 @@ from .abilities.on_hit_divine_smite import OnHitDivineSmite
 from .abilities.on_hit_sneak_attack import OnHitSneakAttack
 from .abilities.rage import RageFactory
 from .action_resolver import check_concentration
-from .actions.action_surge_plan_strategy import ActionSurgePlanStrategy
+from .actions.action_surge_action_plan_strategy import ActionSurgeActionPlanStrategy
 from .actions.actoid import FactoryFlags
 from .actions.attack import AttackFactory
-from .actions.default_mcts_action_plan_strategy import DefaultMCTSActionPlanStrategy
+from .actions.default_action_plan_strategy import DefaultActionPlanStrategy
 from .actions.melee_attack import MeleeAttackFactory
 from .actions.menacing_melee_attack import MenacingMeleeAttackFactory
 from .actions.menacing_ranged_attack import MenacingRangedAttackFactory
@@ -59,7 +59,7 @@ class Combatant(ProtoCombatant):
         self.free_action_factories = []
         self.danger_zone_attack = None
         self.haste_action_factories = []
-        self.action_plan_strategy = DefaultMCTSActionPlanStrategy(self)
+        self.action_plan_strategy = DefaultActionPlanStrategy(self)
         self.passive = []
         self.max_hp = hp
         self.curr_hp = hp
@@ -546,7 +546,7 @@ class Combatant(ProtoCombatant):
                     self.resources[FreeAction.ACTION_SURGE] = action_surge_uses
                     self.free_action_factories.append((action_type, TO_FACTORY[action_type](self)))
                     self.display_abilities.append(self.free_action_factories[-1][1].get_ability_name())
-                    self.action_plan_strategy = ActionSurgePlanStrategy(self)
+                    self.action_plan_strategy = ActionSurgeActionPlanStrategy(self)
                     return self.free_action_factories[-1]
                 case _:
                     logger.error("Unknown free action")

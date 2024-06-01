@@ -2,9 +2,10 @@ import logging
 
 import numpy as np
 
+from .mcts_action_selector import get_best_mcts_movement_and_action
 from ..actions.action_dag import generate_proto_dag
 from ..actions.action_plan_strategy import ActionPlanStrategy
-from ..actions.action_selector import find_best_sequence, REGEX_MOVEMENT_PATTERN, build_action_dag, get_best_movement_and_action
+from ..actions.action_selector import find_best_sequence, REGEX_MOVEMENT_PATTERN, build_action_dag
 from ..actions.action_types import Movement
 from ..actions.movement import MovementGenerator
 from ..battle_map import Map
@@ -55,4 +56,4 @@ class DefaultMCTSActionPlanStrategy(ActionPlanStrategy):
                     movement, _ = self.get_movement_and_threat_for_next_turn(distances, shortest_paths)
                 return movement
             return None
-        return get_best_movement_and_action(self.combatant, dag, distances, shortest_paths, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type)
+        return get_best_mcts_movement_and_action(self.combatant, dag, distances, shortest_paths, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type)
