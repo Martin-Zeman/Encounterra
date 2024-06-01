@@ -78,14 +78,15 @@ def get_post_transitions_of_all_priority_transitions(proto_dag, transition_name_
 def get_post_misty_step_transitions(dag, transition_name_to_action):
     # transition_names = dag.get_all_transitions()
     transition_names = dag.get_available_transitions()  # TODO I think this should suffice
-    if 'Misty Step to 0, 0' in transition_names:
-        dag.trigger("Misty Step to 0, 0")  # It's the only MS we created
+    ms_transition = 'Misty Step to 0, 0_1'
+    if ms_transition in transition_names:
+        dag.trigger(ms_transition)  # It's the only MS we created
         try:
             ms_post_transitions = [pt for pt in dag.forward_transitions[dag.state] if ActoidFlags.IS_PRIORITY not in transition_name_to_action[pt[0]].actoid_flags]
         except KeyError:
             ms_post_transitions = []
         dag.reset()
-        dag.remove_transition("Misty Step to 0, 0", "0")
+        dag.remove_transition(ms_transition, "0")
         return ms_post_transitions
     return None
 
