@@ -1,6 +1,7 @@
 import copy
 
 from ..actions.action_types import Action, BonusAction, Reaction, Passive, MetaAction
+from ..actions.default_mcts_action_plan_strategy import DefaultMCTSActionPlanStrategy
 from ..resources import ResourceRefreshType, Uses
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
@@ -35,6 +36,7 @@ class DraconicSorcerer5Lvl(Combatant):
         self.add_ability(MetaAction.QUICKENED_SPELL)
         self.add_ability(MetaAction.TWINNED_SPELL)
         self.add_ability(Action.HOLD_PERSON)
+        self.action_plan_strategy = DefaultMCTSActionPlanStrategy(self, iterations=1000)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = -1
         self.saving_throws[SavingThrow.DEX] = 2

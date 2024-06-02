@@ -128,6 +128,13 @@ class MovementThreatType(Enum):
     MISTY_STEPPED = auto()
 
 
+MOVEMENT_THREAT_TO_MOVEMENT = {
+    MovementThreatType.STANDARD: Movement.STANDARD,
+    MovementThreatType.DODGED: Movement.STANDARD,
+    MovementThreatType.DISENGAGED: Movement.DISENGAGED
+}
+
+
 class HasteAction(Enum):
     HASTE_MELEE_ATTACK = auto()
     HASTE_RANGED_ATTACK = auto()

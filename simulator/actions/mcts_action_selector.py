@@ -3,13 +3,13 @@ import logging
 
 import numpy as np
 
-from simulator.actions.action_selector import decode_ms_path_to_actions
-from simulator.actions.action_types import MovementThreatType, BonusAction
-from simulator.actions.movement import MovementGenerator
-from simulator.battle_map import Map
-from simulator.misc import get_factory_of_type
+from .action_selector import decode_ms_path_to_actions
+from .action_types import MovementThreatType, BonusAction, MOVEMENT_THREAT_TO_MOVEMENT
+from .movement import MovementGenerator
+from ..battle_map import Map
 from .actoid import ActoidFlags
 from .mcts import BaseState, MCTS
+from ..misc import get_factory_of_type
 from ..threat_interfaces import AttackThreatModifier
 from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step
 
@@ -45,12 +45,12 @@ def get_best_mcts_movement_and_action(combatant, dag, distances, shortest_paths,
             if stop_after_first:
                 break  # One non-movement action is enough, we need to recalculate anyway
         except KeyError:
-            coord, movement_type = movement_trans_to_coord_and_type[transition]
-            path = battle_map.get_path_to_coord(combatant, np.array(coord), distances, shortest_paths, movement_type != MovementThreatType.DISENGAGED)
-            movement_generator = MovementGenerator(combatant, path, movement_type).get_generator()
+            coord, movement_threat_type = movement_trans_to_coord_and_type[transition]
+            path = battle_map.get_path_to_coord(combatant, np.array(coord), distances, shortest_paths, movement_threat_type != MovementThreatType.DISENGAGED)
+            movement_generator = MovementGenerator(combatant, path, MOVEMENT_THREAT_TO_MOVEMENT[movement_threat_type]).get_generator()
             actions.extend(movement_generator)
 
-            if movement_type == MovementThreatType.MISTY_STEPPED:
+            if movement_threat_type == MovementThreatType.MISTY_STEPPED:
                 ms_factory = get_factory_of_type(combatant.bonus_action_factories, BonusAction.MISTY_STEP)
                 decode_ms_path_to_actions(combatant, battle_map.get_combatant_position(combatant).get()[0], transition_name_to_ms_path[transition], actions, ms_factory)
     return actions
@@ -183,7 +183,7 @@ def find_best_mcts_sequence(combatant, dag, transition_name_to_action, transitio
             return self.cumulative_threat
 
     current_state = MCTState(current_coord, None, dag.state, None)
-    searcher = MCTS(time_limit=10000)
+    searcher = MCTS(time_limit=combatant.action_plan_strategy.time_limit, iteration_limit=combatant.action_plan_strategy.iterations)
     best_sequence, max_threat = searcher.search(initial_state=current_state)
     # logger.info(f"{combatant}'s num DAG states: {len(dag.states)}")
     # logger.info(f"{combatant}'s best sequence: {best_sequence} with threat: {max_threat}")

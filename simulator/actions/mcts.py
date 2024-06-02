@@ -96,14 +96,14 @@ class TreeNode:
 
 
 class MCTS:
-    ITERATIONS = 1000
-    def __init__(self, time_limit: int = None, iteration_limit: int = None, rollout_policy=random_policy):
+
+    def __init__(self, time_limit: int = None, iteration_limit: int = None):
         self.root = None
         if time_limit is not None:
             if iteration_limit is not None:
                 raise ValueError("Cannot have both a time limit and an iteration limit")
             # time taken for each MCTS search in milliseconds
-            self.timeLimit = time_limit
+            self.time_limit = time_limit
             self.limit_type = 'time'
         else:
             if iteration_limit is None:
@@ -113,7 +113,7 @@ class MCTS:
                 raise ValueError("Iteration limit must be greater than one")
             self.search_limit = iteration_limit
             self.limit_type = 'iterations'
-        self.rollout_policy = rollout_policy
+        self.rollout_policy = random_policy
 
     def search(self, initial_state: BaseState = None):
         self.root = TreeNode(initial_state, None)
@@ -123,13 +123,13 @@ class MCTS:
             self.root.children[root_action] = TreeNode(new_state, self.root)
 
         iterations = 0
-        while iterations < MCTS.ITERATIONS:
+        while iterations < self.search_limit:
             for root_action in root_actions:
                 depth_one_node = self.root.children[root_action]
                 reward = self.rollout_policy(depth_one_node.state)
                 self.backpropagate(depth_one_node, reward)
                 iterations += 1
-                if iterations == MCTS.ITERATIONS:
+                if iterations == self.search_limit:
                     break
 
         # for i in range(MCTS.ITERATIONS):

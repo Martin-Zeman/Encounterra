@@ -199,7 +199,7 @@ def test_draconic_sorcerer_01(iterations_param, battle_map, teams, effect_tracke
 
     try:
         logger.error("")
-        MCTS.ITERATIONS = iterations_param
+        test_draconic_sorcerer_5lvl.action_plan_strategy.iterations = iterations_param
         success = 0
         total_time = 0
         for idx in range(SAMPLE_SIZE):
@@ -214,7 +214,7 @@ def test_draconic_sorcerer_01(iterations_param, battle_map, teams, effect_tracke
             total_time += duration
 
             best_sequence = test_draconic_sorcerer_5lvl.best_sequence
-            if [a for a in best_sequence if 'Fireball' in a]:
+            if [a for a in best_sequence if 'Fireball' in a] and [a for a in best_sequence if 'Quickened' in a]:
                 success += 1
             test_draconic_sorcerer_5lvl.action_plan.clear()
         average_time = total_time / SAMPLE_SIZE

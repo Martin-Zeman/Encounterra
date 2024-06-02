@@ -4,17 +4,14 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_toggled_cache_with_key, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
-from ..misc import get_attack_factories, ROUND_HORIZON, Visibility
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..spells.spell import SpellStats
-from ..effects.effect import Effect, EffectType
+from ..effects.effect import EffectType
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import ThreatModifierFactory
-from itertools import combinations
 
 from ..threat_utils import calculate_threat_in_delta
 from ..utils.roll_types import ThreatModifierType

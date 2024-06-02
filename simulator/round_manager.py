@@ -1,3 +1,5 @@
+import time
+
 from .action_resolver import *
 from .actions.action_selector import get_action
 from .misc import Statistics
@@ -137,7 +139,10 @@ class RoundManager:
                     done = True
                     break  # The last remaining enemy could have died, we want to break before getting the next action
                 while True:
+                    start_time = time.time()
                     action = get_action(combatant)
+                    end_time = time.time()
+                    logger.error(f"get_action took: {(end_time - start_time):.2f} seconds")
                     if action is None:
                         break
                     resolution = self.action_resolver.resolve_action(action, combatant)

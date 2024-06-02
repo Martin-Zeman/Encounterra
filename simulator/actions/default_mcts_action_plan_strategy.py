@@ -15,6 +15,11 @@ logger = logging.getLogger("Encounterra")
 
 class DefaultMCTSActionPlanStrategy(ActionPlanStrategy):
 
+    def __init__(self, combatant, iterations=None, time_limit=None):
+        super().__init__(combatant)
+        self.iterations = iterations
+        self.time_limit = time_limit
+
     def get_movement_and_threat_for_next_turn(self, distances, shortest_paths, infeasibility_multiplier=0.3):
         battle_map = Map.get()
         actions = []
