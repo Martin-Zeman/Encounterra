@@ -2,6 +2,7 @@ import copy
 
 from ..abilities.rage import RageFactory
 from ..actions.action_types import Action, Reaction, BonusAction, Passive
+from ..actions.default_mcts_action_plan_strategy import DefaultMCTSActionPlanStrategy
 from ..resources import Uses, ResourceRefreshType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
@@ -19,7 +20,8 @@ class OathOfVengeancePaladin5Lvl(Combatant):
     id = Combatant.generate_unique_id(name, cls, level)
 
     def __init__(self, num_or_name=1):
-        super().__init__(num_or_name, hp=44, ac=18, init_bonus=-1, spell_to_hit=5, speed=30, resistances=set(), dc=13)
+        super().__init__(num_or_name, hp=44, ac=18, init_bonus=50, spell_to_hit=5, speed=30, resistances=set(), dc=13)
+        # super().__init__(num_or_name, hp=44, ac=18, init_bonus=-1, spell_to_hit=5, speed=30, resistances=set(), dc=13)
         self.battleaxe = self.add_ability(Action.MELEE_ATTACK,  name="Battleaxe", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.javelin = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=7, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=Uses(4, ResourceRefreshType.NEVER), uses_dex=False)
         self.add_ability(Reaction.REACTION_ATTACK,  name="Battleaxe", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
@@ -36,6 +38,7 @@ class OathOfVengeancePaladin5Lvl(Combatant):
         self.resources[Passive.CHANNEL_DIVINITY] = channel_divinity_uses
         self.add_ability(BonusAction.VOW_OF_ENMITY)
         # self.add_ability(Action.ABJURE_ENEMY, resource=channel_divinity_uses)
+        self.action_plan_strategy = DefaultMCTSActionPlanStrategy(self, iterations=8000)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4
         self.saving_throws[SavingThrow.DEX] = -1
@@ -65,7 +68,7 @@ class OathOfVengeancePaladin5Lvl(Combatant):
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
-            'lay_on_hands_pool': self.resources[Action.LAY_ON_HANDS].export_resource(),
+            # 'lay_on_hands_pool': self.resources[Action.LAY_ON_HANDS].export_resource(),
             'attack_fsm_state': self.attack_fsm.state,
             'ammo': copy.deepcopy(self.ammo)
         }
@@ -78,7 +81,7 @@ class OathOfVengeancePaladin5Lvl(Combatant):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
-        self.resources[Action.LAY_ON_HANDS].import_resource(uses=resources['lay_on_hands_pool'])
+        # self.resources[Action.LAY_ON_HANDS].import_resource(uses=resources['lay_on_hands_pool'])
         self.attack_fsm.state = resources['attack_fsm_state']
         self.ammo = resources['ammo']
 

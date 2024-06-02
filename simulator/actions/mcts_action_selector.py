@@ -186,5 +186,5 @@ def find_best_mcts_sequence(combatant, dag, transition_name_to_action, transitio
     searcher = MCTS(time_limit=combatant.action_plan_strategy.time_limit, iteration_limit=combatant.action_plan_strategy.iterations)
     best_sequence, max_threat = searcher.search(initial_state=current_state)
     # logger.info(f"{combatant}'s num DAG states: {len(dag.states)}")
-    # logger.info(f"{combatant}'s best sequence: {best_sequence} with threat: {max_threat}")
+    logger.info(f"{combatant}'s best sequence: {best_sequence} with threat: {max_threat}")
     return best_sequence, transition_name_to_ms_path, max_threat

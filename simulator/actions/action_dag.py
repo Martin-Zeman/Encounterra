@@ -178,77 +178,77 @@ def generate_proto_dag(combatant):
     return fsm, transition_name_to_action
 
 
-# def generate_mcts_proto_dag(combatant):
-#     """
-#     Builds a combatant-specific FSM which expresses all possible (bonus) action combinations they may take on their turn.
-#     It assumes the combatant's attack FSM is manually constructed already and is used as an input for the overall FSM.
-#     Misty Step gets a special treatment. We don't create states nor transitions for the Misty Step actions. We just note down which state
-#     the initial Misty Step would bring us into and pass it onto build_action_dag.
-#     :param combatant: for whom the FSM is to be constructed
-#     :return: fsm, the mapping between FSM transition names to the actual action factory objects
-#     """
-#     fsm = StateMachineTemplate()
-#     transition_name_to_action = dict()
-#
-#     def dfs(subject, parent_state_name, af_to_a, depth, action_taken=None):
-#         """
-#         Recursively builds the action Finite State Machine (FSM) for a given combatant using depth-first search.
-#
-#         This function traverses through all feasible action combinations, considering both actions and bonus actions,
-#         at each depth level. It creates states in the FSM for each unique combination of actions, connects states with transitions,
-#         and handles special cases like Action Enablers and wildshape actions.
-#
-#         :param subject: The combatant for whom the FSM is being built.
-#         :param parent_state_name: The name of the parent state in the FSM.
-#         :param af_to_a: A dictionary mapping action factories to their corresponding actions.
-#         :param depth: The current depth in the action decision tree.
-#         :param action_taken: The action taken to reach the current state, if any.
-#         :return: None. The function works by side-effect, modifying the FSM directly.
-#
-#         Note: This function assumes that it's called within the context of `generate_proto_dag`
-#         where the FSM and other necessary structures are initialized.
-#         """
-#         fafs = get_all_feasible_action_factories(subject, depth)
-#         try:
-#             fas = tuple(a for faf in fafs for a in af_to_a[faf])
-#         except KeyError:  # This can happen when the attack_fsm doesn't have all attacks types available from state 0
-#             af_to_a = {faf: faf[1].create_all() for faf in fafs}
-#             fas = tuple(a for faf in fafs for a in af_to_a[faf])
-#
-#         state_name = fsm.get_next_state_name()
-#
-#         action_taken_str = str(action_taken)
-#         if action_taken:
-#             transition_name_to_action[action_taken_str] = action_taken
-#
-#         fsm.add_new_state(state_name)
-#         if action_taken:
-#             fsm.add_transition(action_taken_str, parent_state_name, state_name)  # TODO: consider hash instead of str?
-#
-#         for fa in fas:
-#             exported_resources = subject.export_resources()
-#             use_resources(subject, fa)
-#             with subject.as_if_used_action_enabler(fa) as action_enabler_used:  # This covers Action Enablers in general
-#                 if action_enabler_used:
-#                     with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
-#                         fafs = get_all_feasible_action_factories(form, depth)
-#                         af_to_a_used = {faf: faf[1].create_all(action_taken) for faf in fafs}
-#                         dfs(form, state_name, af_to_a_used, depth + 1, fa)
-#                 elif ActoidFlags.IS_ACTION_ENABLER in fa.actoid_flags:  # This should be more lightweight than inheritance
-#                     af_to_a_used = {faf: faf[1].create_all(fa) for faf in fafs}
-#                     dfs(subject, state_name, af_to_a_used, depth + 1, fa)
-#                 else:
-#                     dfs(subject, state_name, af_to_a, depth + 1, fa)
-#
-#             subject.import_resources(exported_resources)
-#
-#     # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
-#     fafs = get_all_feasible_action_factories(combatant, 0)
-#     af_to_a = {faf: faf[1].create_all() for faf in fafs}
-#
-#     dfs(combatant, '0', af_to_a, 0)
-#
-#     return fsm, transition_name_to_action
+def generate_mcts_proto_dag(combatant):
+    """
+    Builds a combatant-specific FSM which expresses all possible (bonus) action combinations they may take on their turn.
+    It assumes the combatant's attack FSM is manually constructed already and is used as an input for the overall FSM.
+    Misty Step gets a special treatment. We don't create states nor transitions for the Misty Step actions. We just note down which state
+    the initial Misty Step would bring us into and pass it onto build_action_dag.
+    :param combatant: for whom the FSM is to be constructed
+    :return: fsm, the mapping between FSM transition names to the actual action factory objects
+    """
+    fsm = StateMachineTemplate()
+    transition_name_to_action = dict()
+
+    def dfs(subject, parent_state_name, af_to_a, depth, action_taken=None):
+        """
+        Recursively builds the action Finite State Machine (FSM) for a given combatant using depth-first search.
+
+        This function traverses through all feasible action combinations, considering both actions and bonus actions,
+        at each depth level. It creates states in the FSM for each unique combination of actions, connects states with transitions,
+        and handles special cases like Action Enablers and wildshape actions.
+
+        :param subject: The combatant for whom the FSM is being built.
+        :param parent_state_name: The name of the parent state in the FSM.
+        :param af_to_a: A dictionary mapping action factories to their corresponding actions.
+        :param depth: The current depth in the action decision tree.
+        :param action_taken: The action taken to reach the current state, if any.
+        :return: None. The function works by side-effect, modifying the FSM directly.
+
+        Note: This function assumes that it's called within the context of `generate_proto_dag`
+        where the FSM and other necessary structures are initialized.
+        """
+        fafs = get_all_feasible_action_factories(subject, depth)
+        try:
+            fas = tuple(a for faf in fafs for a in af_to_a[faf])
+        except KeyError:  # This can happen when the attack_fsm doesn't have all attacks types available from state 0
+            af_to_a = {faf: faf[1].create_all() for faf in fafs}
+            fas = tuple(a for faf in fafs for a in af_to_a[faf])
+
+        state_name = fsm.get_next_state_name()
+
+        action_taken_str = str(action_taken)
+        if action_taken:
+            transition_name_to_action[action_taken_str] = action_taken
+
+        fsm.add_new_state(state_name)
+        if action_taken:
+            fsm.add_transition(action_taken_str, parent_state_name, state_name)  # TODO: consider hash instead of str?
+
+        for fa in fas:
+            exported_resources = subject.export_resources()
+            use_resources(subject, fa)
+            with subject.as_if_used_action_enabler(fa) as action_enabler_used:  # This covers Action Enablers in general
+                if action_enabler_used:
+                    with replace_combatant_if_action_is_wildshape(fa, subject) as form:  # This covers wildshape being the current action
+                        fafs = get_all_feasible_action_factories(form, depth)
+                        af_to_a_used = {faf: faf[1].create_all(action_taken) for faf in fafs}
+                        dfs(form, state_name, af_to_a_used, depth + 1, fa)
+                elif ActoidFlags.IS_ACTION_ENABLER in fa.actoid_flags:  # This should be more lightweight than inheritance
+                    af_to_a_used = {faf: faf[1].create_all(fa) for faf in fafs}
+                    dfs(subject, state_name, af_to_a_used, depth + 1, fa)
+                else:
+                    dfs(subject, state_name, af_to_a, depth + 1, fa)
+
+            subject.import_resources(exported_resources)
+
+    # Optimization: the output of create_all doesn't change, only which factories are feasible changes => we can pre-compute them
+    fafs = get_all_feasible_action_factories(combatant, 0)
+    af_to_a = {faf: faf[1].create_all() for faf in fafs}
+
+    dfs(combatant, '0', af_to_a, 0)
+
+    return fsm, transition_name_to_action
 
 
 def generate_wildshape_proto_dag(combatant):

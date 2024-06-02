@@ -545,14 +545,14 @@ def get_action(combatant):
     distances, shortest_paths = battle_map.calc_dijkstra(combatant)  # Has to be recalculated every time (due to forced movement etc.)
     combatant.shortest_paths_cache = shortest_paths
     if combatant.action_plan:
-        # if isinstance(combatant.action_plan[0], MovementIncrement):
-        #     if combatant.movement:  # If the combatant has no more movement, plan a new action
-        #         return combatant.action_plan.pop(0)
-        # else:
-        #     return combatant.action_plan.pop(0)
-
-        if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
+        if isinstance(combatant.action_plan[0], MovementIncrement):
+            if combatant.movement:  # If the combatant has no more movement, plan a new action
+                return combatant.action_plan.pop(0)
+        else:
             return combatant.action_plan.pop(0)
+
+        # if isinstance(combatant.action_plan[0], MovementIncrement) and combatant.movement:
+        #     return combatant.action_plan.pop(0)
     combatant.action_plan = combatant.calculate_action_plan(distances, shortest_paths)
     if not combatant.action_plan:
         return None  # Either no action possible or all actions already used

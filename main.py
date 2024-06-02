@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # session.add_combatant(MoonDruid3Lvl, Teams.Color.BLUE)
     # session.add_combatant(MoonDruid2Lvl, Teams.Color.BLUE)
     # session.add_combatant(Acolyte, Teams.Color.BLUE)
-    session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
+    # session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
     # session.add_combatant(DraconicSorcerer4Lvl, Teams.Color.RED)
     # session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.RED)
     # session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.BLUE)

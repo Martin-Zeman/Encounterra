@@ -3,7 +3,7 @@ import logging
 import numpy as np
 
 from .mcts_action_selector import get_best_mcts_movement_and_action
-from ..actions.action_dag import generate_proto_dag
+from ..actions.action_dag import generate_mcts_proto_dag
 from ..actions.action_plan_strategy import ActionPlanStrategy
 from ..actions.action_selector import find_best_sequence, REGEX_MOVEMENT_PATTERN, build_action_dag
 from ..actions.action_types import Movement
@@ -24,7 +24,7 @@ class DefaultMCTSActionPlanStrategy(ActionPlanStrategy):
         battle_map = Map.get()
         actions = []
         with self.combatant.as_if_has_action() as combatant:
-            proto_dag, transition_name_to_action = generate_proto_dag(combatant)
+            proto_dag, transition_name_to_action = generate_mcts_proto_dag(combatant)
             dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
             if dag is None:
                 return actions, None
@@ -50,7 +50,7 @@ class DefaultMCTSActionPlanStrategy(ActionPlanStrategy):
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of the following types: np.array, action, bonus action
         """
-        proto_dag, transition_name_to_action = generate_proto_dag(self.combatant)
+        proto_dag, transition_name_to_action = generate_mcts_proto_dag(self.combatant)
         dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             if not self.combatant.is_planning_for_next_turn:
