@@ -1,6 +1,7 @@
 import pickle
 import time
 import traceback
+import re
 from datetime import datetime
 
 from simulator.logging.custom_logger import CustomLogger
@@ -20,6 +21,41 @@ s3 = boto3.client('s3')
 results_bucket_name = "encounterra-simulation-results"
 crash_bucket_name = "encounterra-simulation-crashes"
 local_log_file_path = "/tmp/log.txt"
+
+
+def simplify_movements(log_lines):
+    simplified_logs = []
+    previous_entity = None
+    previous_line = None
+
+    # Adjusted pattern to match the movement lines, including the optional space
+    move_pattern = re.compile(r"^(.*?moved to \[\s?\d+\s+\d+\])$")
+
+    for line in log_lines:
+        move_match = move_pattern.match(line)
+
+        if move_match:
+            # Extract the entity part before " moved to"
+            current_entity = move_match.group(1).split(" moved to")[0]
+
+            if current_entity == previous_entity:
+                previous_line = line  # Update the previous line to the current one
+            else:
+                if previous_line:
+                    simplified_logs.append(previous_line)  # Append the previous movement line
+                previous_entity = current_entity
+                previous_line = line
+        else:
+            if previous_line:
+                simplified_logs.append(previous_line)  # Append the last movement line
+                previous_entity = None
+                previous_line = None
+            simplified_logs.append(line)
+
+    if previous_line:
+        simplified_logs.append(previous_line)  # Append the last movement line if any
+
+    return simplified_logs
 
 
 def handler(event, context):
@@ -70,6 +106,12 @@ def handler(event, context):
     session.set_num_simulations(1)
     try:
         result = session.simulate(parallel=False)
+
+        with open(local_log_file_path, 'r') as file:
+            log_lines = file.readlines()
+        simplified_logs = simplify_movements(log_lines)
+        with open(local_log_file_path, 'w') as file:
+            file.writelines(simplified_logs)
 
         blue_victory = result[Teams.Color.BLUE][Statistics.VICTORIES]
 
