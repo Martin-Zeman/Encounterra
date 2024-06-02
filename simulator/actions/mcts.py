@@ -7,6 +7,8 @@ import time
 
 from abc import ABC, abstractmethod
 
+import numpy as np
+
 
 class BaseState(ABC):
     """
@@ -65,19 +67,6 @@ class BaseState(ABC):
         raise NotImplementedError()
 
 
-def random_policy(state: BaseState) -> float:
-    state.current_path.clear()
-    while not state.is_terminal():
-        try:
-            action = random.choice(state.get_possible_actions())
-            state.current_path.append(action)
-        except IndexError:
-            raise Exception("Non-terminal state has no possible actions: " + str(state))
-        state = state.take_action(action)
-    reward = state.get_reward()
-    return reward if state.is_offensive else -math.inf
-
-
 class TreeNode:
     def __init__(self, state, parent):
         self.state = state
@@ -97,7 +86,8 @@ class TreeNode:
 
 class MCTS:
 
-    def __init__(self, time_limit: int = None, iteration_limit: int = None):
+    def __init__(self, transition_to_eligible_coords, time_limit: int = None, iteration_limit: int = None):
+        self.transition_to_eligible_coords = transition_to_eligible_coords
         self.root = None
         if time_limit is not None:
             if iteration_limit is not None:
@@ -113,7 +103,33 @@ class MCTS:
                 raise ValueError("Iteration limit must be greater than one")
             self.search_limit = iteration_limit
             self.limit_type = 'iterations'
-        self.rollout_policy = random_policy
+        self.rollout_policy = self.random_policy
+
+    def random_policy(self, state: BaseState) -> float:
+        state.current_path.clear()
+        while not state.is_terminal():
+            try:
+                actions = state.get_possible_actions()
+                # Calculate weights inversely proportional to the number of eligible coordinates
+                weights = []
+                for action in actions:
+                    num_eligible_coords = len(self.transition_to_eligible_coords.get(action, []))
+                    weight = 1 / (num_eligible_coords + 1e-6)  # Add a small value to avoid division by zero
+                    weights.append(weight)
+
+                # Normalize the weights to get probabilities
+                total_weight = sum(weights)
+                probabilities = [w / total_weight for w in weights]
+
+                # Select an action based on the calculated probabilities
+                action = np.random.choice(actions, p=probabilities)
+
+                state.current_path.append(action)
+            except IndexError:
+                raise Exception("Non-terminal state has no possible actions: " + str(state))
+            state = state.take_action(action)
+        reward = state.get_reward()
+        return reward if state.is_offensive else -math.inf
 
     def search(self, initial_state: BaseState = None):
         self.root = TreeNode(initial_state, None)

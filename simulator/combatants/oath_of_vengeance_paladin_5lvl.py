@@ -38,7 +38,7 @@ class OathOfVengeancePaladin5Lvl(Combatant):
         self.resources[Passive.CHANNEL_DIVINITY] = channel_divinity_uses
         self.add_ability(BonusAction.VOW_OF_ENMITY)
         # self.add_ability(Action.ABJURE_ENEMY, resource=channel_divinity_uses)
-        self.action_plan_strategy = DefaultMCTSActionPlanStrategy(self, iterations=8000)
+        self.action_plan_strategy = DefaultMCTSActionPlanStrategy(self, iterations=2000)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4
         self.saving_throws[SavingThrow.DEX] = -1
@@ -68,7 +68,7 @@ class OathOfVengeancePaladin5Lvl(Combatant):
             'has_action': self.has_action,
             'has_bonus_action': self.has_bonus_action,
             'has_haste_action': self.has_haste_action,
-            # 'lay_on_hands_pool': self.resources[Action.LAY_ON_HANDS].export_resource(),
+            'lay_on_hands_pool': self.resources[Action.LAY_ON_HANDS].export_resource(),
             'attack_fsm_state': self.attack_fsm.state,
             'ammo': copy.deepcopy(self.ammo)
         }
@@ -81,7 +81,7 @@ class OathOfVengeancePaladin5Lvl(Combatant):
         self.has_action = resources['has_action']
         self.has_bonus_action = resources['has_bonus_action']
         self.has_haste_action = resources['has_haste_action']
-        # self.resources[Action.LAY_ON_HANDS].import_resource(uses=resources['lay_on_hands_pool'])
+        self.resources[Action.LAY_ON_HANDS].import_resource(uses=resources['lay_on_hands_pool'])
         self.attack_fsm.state = resources['attack_fsm_state']
         self.ammo = resources['ammo']
 
