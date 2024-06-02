@@ -1,4 +1,4 @@
-FROM public.ecr.aws/lambda/python:3.11
+FROM public.ecr.aws/lambda/python:3.11-arm64
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY aggregate_results.py .
 COPY pyproject.toml .
