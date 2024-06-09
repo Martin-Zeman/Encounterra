@@ -4,6 +4,6 @@
 /simulator/**/__pycache__
 /simulator/test
 !core_entrypoint.py
-!batch_entrypoint.py
+!ecs_core_entrypoint.py
 !pyproject.toml
 !poetry.lock

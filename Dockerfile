@@ -1,7 +1,7 @@
 FROM public.ecr.aws/lambda/python:3.11-arm64
 WORKDIR ${LAMBDA_TASK_ROOT}
 COPY . .
-RUN rm batch_entrypoint.py
+RUN rm ecs_core_entrypoint.py
 
 # Upgraded from 1.5.1 due to https://github.com/python-poetry/poetry/issues/7611
 ARG POETRY_VERSION=1.6.1
