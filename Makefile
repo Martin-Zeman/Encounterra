@@ -8,7 +8,7 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 GIT_BRANCH_SANITIZED := $(subst /,-,${GIT_BRANCH})
 
 DOCKER_CONTAINER = encounterra-core
-DOCKER_ECS_CONTAINER = encounterra-ecs-core
+DOCKER_ECS_CONTAINER = encounterra-core-ecs
 DOCKER_SANDBOX_REMOTE = ${ACCOUNT_NR}.dkr.ecr.eu-west-1.amazonaws.com
 
 docker.build:
@@ -95,7 +95,7 @@ docker.push:
 
 docker.push_ecs:
 	@echo ""
-	@echo "... pushing ECS COre container..."
+	@echo "... pushing ECS Core container..."
 	@echo ""
 	@if [ ! -z "${GIT_STATUS}" ]; then \
         echo "Workspace is dirty, cannot push!"; \

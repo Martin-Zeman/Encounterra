@@ -1,8 +1,8 @@
-import argparse
 import pickle
 import time
 import traceback
 import re
+import json
 from datetime import datetime
 
 from simulator.logging.custom_logger import CustomLogger
@@ -59,34 +59,45 @@ def simplify_movements(log_lines):
     return simplified_logs
 
 
+def upload_simulation_results_to_s3(job_id, index, result):
+    simulation_results = {
+        'blue_victory': result[Teams.Color.BLUE][Statistics.VICTORIES],
+        'red_victory': result[Teams.Color.RED][Statistics.VICTORIES],
+        'blue_at_least_one_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_ONE_DIED],
+        'red_at_least_one_died': result[Teams.Color.RED][Statistics.AT_LEAST_ONE_DIED],
+        'blue_at_least_two_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_TWO_DIED],
+        'red_at_least_two_died': result[Teams.Color.RED][Statistics.AT_LEAST_TWO_DIED],
+        'blue_at_least_three_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_THREE_DIED],
+        'red_at_least_three_died': result[Teams.Color.RED][Statistics.AT_LEAST_THREE_DIED],
+    }
+
+    json_data = json.dumps(simulation_results, indent=4)
+
+    json_file_key = f"{job_id}/{index}/simulation_results.json"
+
+    s3.put_object(
+        Bucket=results_bucket_name,
+        Key=json_file_key,
+        Body=json_data.encode('utf-8'),
+        ContentType='application/json'
+    )
+
+
 if os.path.exists(local_log_file_path):
     os.remove(local_log_file_path)
 CustomLogger(logging.INFO, False, local_log_file_path)
 logger = logging.getLogger("Encounterra")
 Map.reset_singleton()
 
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument('--blue', nargs='+', type=str)
-parser.add_argument('--red', nargs='+', type=str)
-parser.add_argument('--combatant-placement', type=int)
-parser.add_argument('--blue-depletion-level', type=int)
-parser.add_argument('--red-depletion-level', type=int)
-parser.add_argument('--iteration', type=int)
-parser.add_argument('--map-type', type=str)
-parser.add_argument('--job-id', type=str)
-parser.add_argument('--index', type=str)
-args = parser.parse_args()
-
-blue_team = args.blue
-red_team = args.red
-combatant_placement = args.combatant_placement
-blue_depletion_level = args.blue_depletion_level
-red_depletion_level = args.red_depletion_level
-map_type = args.map_type
-job_id = args.job_id
-index = args.index
+# Fetching input data from environment variables
+blue_team = os.getenv('BLUE_TEAM', '').split(',')  # Assuming blue team IDs are comma-separated in env var
+red_team = os.getenv('RED_TEAM', '').split(',')    # Assuming red team IDs are comma-separated in env var
+combatant_placement = int(os.getenv('COMBATANT_PLACEMENT', '0'))  # Assuming combatant placement as integer
+blue_depletion_level = int(os.getenv('BLUE_DEPLETION_LEVEL', '0'))  # Assuming depletion level as integer
+red_depletion_level = int(os.getenv('RED_DEPLETION_LEVEL', '0'))    # Assuming depletion level as integer
+map_type = os.getenv('MAP_TYPE', '')
+job_id = os.getenv('JOB_ID', '')
+index = os.getenv('INDEX', '')
 
 date_suffix = datetime.now().strftime("%Y%m%d-%H%M")
 job_id_with_suffix = f"{job_id}_{date_suffix}"
@@ -131,17 +142,9 @@ try:
 
     s3_object_key = subdirectory + f'{"blue" if blue_victory == 1 else "red"}_victory_log.txt'
     s3.upload_file(local_log_file_path, results_bucket_name, s3_object_key)
-    # logger.info(f"{job_id}:{index} SUCCESS")
-    # return {
-    #     'blue_victory': result[Teams.Color.BLUE][Statistics.VICTORIES],
-    #     'red_victory': result[Teams.Color.RED][Statistics.VICTORIES],
-    #     'blue_at_least_one_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_ONE_DIED],
-    #     'red_at_least_one_died': result[Teams.Color.RED][Statistics.AT_LEAST_ONE_DIED],
-    #     'blue_at_least_two_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_TWO_DIED],
-    #     'red_at_least_two_died': result[Teams.Color.RED][Statistics.AT_LEAST_TWO_DIED],
-    #     'blue_at_least_three_died': result[Teams.Color.BLUE][Statistics.AT_LEAST_THREE_DIED],
-    #     'red_at_least_three_died': result[Teams.Color.RED][Statistics.AT_LEAST_THREE_DIED],
-    # }
+
+    # Temporarily upload simulation results to S3 for aggregation
+    upload_simulation_results_to_s3(job_id, index, result)
 except Exception as e:
     error_message = traceback.format_exc()
     logger.error(f"{job_id}:{index} FAILURE: {error_message}")

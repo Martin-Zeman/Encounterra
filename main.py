@@ -73,6 +73,8 @@ from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
 from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.fighter_1lvl import Fighter1Lvl
 from simulator.teams import Teams
+from simulator.combatants.bandit import Bandit
+from simulator.combatants.bandit_captain import BanditCaptain
 import time
 
 if __name__ == '__main__':
@@ -83,7 +85,7 @@ if __name__ == '__main__':
     # session.add_combatant(MoonDruid3Lvl, Teams.Color.BLUE)
     # session.add_combatant(MoonDruid2Lvl, Teams.Color.BLUE)
     # session.add_combatant(Acolyte, Teams.Color.BLUE)
-    session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
+    # session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
     # session.add_combatant(DraconicSorcerer4Lvl, Teams.Color.RED)
     # session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.RED)
     # session.add_combatant(DraconicSorcerer3Lvl, Teams.Color.BLUE)
@@ -106,13 +108,15 @@ if __name__ == '__main__':
     # session.add_combatant(NeedleBlight, Teams.Color.RED)
     # session.add_combatant(SaberToothedTiger, Teams.Color.RED)
     # session.add_combatant(SaberToothedTiger, Teams.Color.BLUE)
-    # session.add_combatant(Goblin, Teams.Color.RED)
+    session.add_combatant(Goblin, Teams.Color.RED)
     # session.add_combatant(Goblin, Teams.Color.BLUE)
+    session.add_combatant(Bandit, Teams.Color.BLUE)
     # session.add_combatant(Barbarian2Lvl, Teams.Color.RED)
     # session.add_combatant(Barbarian1Lvl, Teams.Color.RED)
     # session.add_combatant(BrownBear, Teams.Color.BLUE)
-    # session.add_combatant(Bugbear, Teams.Color.RED)
+    session.add_combatant(Bugbear, Teams.Color.RED)
     # session.add_combatant(Bugbear, Teams.Color.BLUE)
+    session.add_combatant(BanditCaptain, Teams.Color.BLUE)
     # session.add_combatant(TotemBarbarian5Lvl, Teams.Color.BLUE)
     # session.add_combatant(TotemBarbarian4Lvl, Teams.Color.RED)
     # session.add_combatant(TotemBarbarian3Lvl, Teams.Color.RED)
@@ -145,8 +149,8 @@ if __name__ == '__main__':
     # session.add_combatant(Druid1Lvl, Teams.Color.BLUE)
     # session.add_combatant(Druid1Lvl, Teams.Color.RED)
     # session.add_combatant(Zombie, Teams.Color.RED)
-    session.add_combatant(Zombie, Teams.Color.BLUE)
-    session.add_combatant(Hobgoblin, Teams.Color.RED)
+    # session.add_combatant(Zombie, Teams.Color.BLUE)
+    # session.add_combatant(Hobgoblin, Teams.Color.RED)
     # session.add_combatant(Hobgoblin, Teams.Color.RED)
     # session.add_combatant(Hobgoblin, Teams.Color.RED)
     # session.add_combatant(OathOfVengeancePaladin4Lvl, Teams.Color.RED)
@@ -163,13 +167,13 @@ if __name__ == '__main__':
     # session.add_combatant(WhiteDragonWyrmling, Teams.Color.BLUE)
     # session.add_combatant(BlackDragonWyrmling, Teams.Color.BLUE)
     # session.add_combatant(BlueDragonWyrmling, Teams.Color.BLUE)
-    session.add_combatant(Owlbear, Teams.Color.RED)
     # session.add_combatant(Owlbear, Teams.Color.RED)
-    session.add_combatant(Ghoul, Teams.Color.BLUE)
+    # session.add_combatant(Owlbear, Teams.Color.RED)
+    # session.add_combatant(Ghoul, Teams.Color.BLUE)
     # session.add_combatant(Manticore, Teams.Color.RED)
-    session.add_combatant(Kobold, Teams.Color.RED)
-    session.add_combatant(Bullywug, Teams.Color.RED)
-    session.add_combatant(Orc, Teams.Color.BLUE)
+    # session.add_combatant(Kobold, Teams.Color.RED)
+    # session.add_combatant(Bullywug, Teams.Color.RED)
+    # session.add_combatant(Orc, Teams.Color.BLUE)
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
