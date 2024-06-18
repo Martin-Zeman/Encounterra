@@ -1,9 +1,14 @@
 import copy
+import logging
+import time
 
 import pytest
+
+from ..action_resolver import ActionResolver
 from ..actions.action_types import Passive, Action
 from ..battle_map import Terrain, Coords
 from ..combatants.goblin import Goblin
+from ..logging.custom_logger import CustomLogger
 from ..misc import DistanceMetric, Size, Side, Visibility
 from ..conditions import Conditions, Condition, apply_condition, remove_condition
 from ..spells.fireball import FireballFactory
@@ -11,7 +16,8 @@ from ..spells.spell import SpellStats
 from ..spells.thunderwave import ThunderwaveFactory
 from ..teams import Teams
 from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
-    teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3
+    teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, \
+    test_sabertoother_tiger, test_evil_mage
 import numpy as np
 
 from ..utils.roll_types import ThreatModifierType
@@ -1404,3 +1410,78 @@ def test_push_combatant_away_from(battle_map, teams, test_goblin, test_bugbear, 
     battle_map.move_combatant(test_ogre, np.array([12, 5]))  # Reset position
     battle_map.push_combatant_away_from(np.array([14.5, 14.5]), test_ogre, 4)
     assert np.array_equal(battle_map.get_combatant_position(test_ogre).get()[0], np.array([11, 1]))
+
+
+def test_dijkstra_numba(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_bugbear,
+                           test_evil_mage):
+    CustomLogger(logging.WARNING)
+    battle_map.set_effect_tracker(effect_tracker)
+    test_sabertoother_tiger_2 = copy.deepcopy(test_sabertoother_tiger)
+    test_sabertoother_tiger_2.name = "Saber-Toothed Tiger 2"
+
+    battle_map.place_circular_element(np.array([9, 12]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([9, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([8, 6]), Terrain.DIFFICULT_TERRAIN, radius=0)
+
+    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_sabertoother_tiger_2, Teams.Color.RED)
+    teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_evil_mage, Teams.Color.RED)
+
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 11]))
+    battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([5, 10]))
+    battle_map.set_combatant_coordinates(test_sabertoother_tiger_2, np.array([3, 12]))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([0, 10]))
+    battle_map.set_combatant_coordinates(test_evil_mage, np.array([0, 12]))
+    battle_map.build_adjacency_matrix()
+    regular_start = time.time()
+    distances_1, shortest_paths_1 = battle_map.calc_dijkstra(test_bugbear)
+    regular_end = time.time()
+    regular_duration = regular_end - regular_start
+    print(f"\nRegular duration: {regular_duration}")
+
+    numba_first_start = time.time()
+    distances_2, shortest_paths_2 = battle_map.calc_dijkstra_numba(test_bugbear)
+    numba_first_end = time.time()
+    numba_first_duration = numba_first_end - numba_first_start
+    print(f"numba first duration: {numba_first_duration}")
+
+    numba_second_start = time.time()
+    distances_3, shortest_paths_3 = battle_map.calc_dijkstra_numba(test_bugbear)
+    numba_second_end = time.time()
+    numba_second_duration = numba_second_end - numba_second_start
+    print(f"numba second duration: {numba_second_duration}")
+    print(f"Speed-up: {regular_duration/numba_second_duration}")
+
+    assert np.array_equal(np.array(distances_1), distances_2)
+    assert np.array_equal(distances_2, distances_3)
+    # assert shortest_paths_1 == shortest_paths_2
+    # assert shortest_paths_2 == shortest_paths_3
+
+# def test_adjacency_matrix_numba(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_bugbear,
+#                            test_evil_mage):
+#         CustomLogger(logging.WARNING)
+#         battle_map.set_effect_tracker(effect_tracker)
+#         test_sabertoother_tiger_2 = copy.deepcopy(test_sabertoother_tiger)
+#         test_sabertoother_tiger_2.name = "Saber-Toothed Tiger 2"
+#
+#         battle_map.place_circular_element(np.array([9, 12]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+#         battle_map.place_circular_element(np.array([9, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+#         battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
+#         battle_map.place_circular_element(np.array([8, 6]), Terrain.DIFFICULT_TERRAIN, radius=0)
+#
+#         teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+#         teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
+#         teams.add_combatant_to_team(test_sabertoother_tiger_2, Teams.Color.RED)
+#         teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
+#         teams.add_combatant_to_team(test_evil_mage, Teams.Color.RED)
+#
+#         battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 11]))
+#         battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([5, 10]))
+#         battle_map.set_combatant_coordinates(test_sabertoother_tiger_2, np.array([3, 12]))
+#         battle_map.set_combatant_coordinates(test_bugbear, np.array([0, 10]))
+#         battle_map.set_combatant_coordinates(test_evil_mage, np.array([0, 12]))
+#
+#         battle_map.build_adjacency_matrix()

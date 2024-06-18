@@ -25,6 +25,8 @@ from contextlib import contextmanager
 from scipy.spatial import distance_matrix
 from scipy.spatial.distance import euclidean
 from scipy.stats import median_abs_deviation
+from numba import njit, types
+from numba.typed import List
 import heapq
 from enum import Enum
 
@@ -230,6 +232,46 @@ def toggled_cache(key):
         return call_func
 
     return _toggled_cache
+
+
+@njit
+def dijkstra_numba(src, size, adj_matrix, mask):
+    N = size
+    Nsq = size ** 2
+    maxsize = sys.maxsize
+
+    dist = np.full(Nsq, maxsize, dtype=np.int64)
+    src_idx = src[0] * N + src[1]
+    dist[src_idx] = 0
+
+    open_set = np.zeros(Nsq, dtype=np.bool_)
+    adj = (adj_matrix * mask).astype(np.int64)
+
+    pq = [(0, src_idx)]
+
+    shortest_paths = np.full((N, N, 2), -1, dtype=np.int64)
+
+    while len(pq) > 0:
+        current_dist, x = heapq.heappop(pq)
+        if open_set[x]:
+            continue
+        open_set[x] = True
+
+        x_row = x // N
+        x_col = x % N
+
+        for y in range(Nsq):
+            if adj[x, y] > 0 and not open_set[y]:
+                y_row = y // N
+                y_col = y % N
+                new_dist = dist[x] + adj[x, y]
+
+                if dist[y] > new_dist:
+                    dist[y] = new_dist
+                    shortest_paths[y_row, y_col] = np.array([x_row, x_col], dtype=np.int64)
+                    heapq.heappush(pq, (new_dist, y))
+
+    return dist, shortest_paths
 
 
 class Map:
@@ -1147,6 +1189,17 @@ class Map:
         my_location = self.get_combatant_position(combatant)
         mask = self.build_combatant_adjacency_mask(combatant)
         distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
+        return distances, shortest_paths
+
+    def calc_dijkstra_numba(self, combatant):
+        """
+        Calculates the Dijkstra algorithm for a given combatant. Currently used only for testing
+        :param combatant: combatant who wants to move
+        :return: :return: list of distances to all vertices, list of predecessors for every vertex and the threat adjacency matrix
+        """
+        my_location = self.get_combatant_position(combatant).get()[0]
+        mask = self.build_combatant_adjacency_mask(combatant)
+        distances, shortest_paths = dijkstra_numba(my_location, self.size, self.base_adjacency_matrix, mask)
         return distances, shortest_paths
 
     def get_path_to_combatant(self, combatant, target, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
