@@ -128,6 +128,7 @@ class Combatant(ProtoCombatant):
         self.current_wildshape_form = None
         self.original_form = self
         self.weapon_dmg_dealt_this_turn = 0
+        self.id = hash(self.name)
 
     @staticmethod
     def generate_unique_id(name, cls, level):

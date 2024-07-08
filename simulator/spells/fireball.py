@@ -4,7 +4,8 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
+    _get_free_coords_in_cartesian_range, _get_cartesian_distance_coords
 from ..combatant_coords import Coords
 from ..spells.spell import SpellStats
 from ..misc import SavingThrow, DamageType
@@ -120,11 +121,13 @@ class Fireball(Actoid, DirectThreat):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_cartesian_range(Coords(self.coord),  # not actually combatant coords
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=FireballFactory.range,
-                                                                 combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= FireballFactory.range:
+            return _get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                Coords(self.coord).get(),  # not actually combatant coords
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=FireballFactory.range,
+                combatant_id=self.factory.combatant.id)
+        elif _get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= FireballFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

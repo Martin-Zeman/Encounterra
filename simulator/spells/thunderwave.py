@@ -111,7 +111,7 @@ class Thunderwave(Actoid, DirectThreat, SquareAoe):
                                                                  distances,
                                                                  inflate_to_dist=self.factory.combatant.size.value,
                                                                  rng=ThunderwaveFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= ThunderwaveFactory.range:
+        elif _get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= ThunderwaveFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
 

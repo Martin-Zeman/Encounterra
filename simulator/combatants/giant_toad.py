@@ -5,7 +5,7 @@ import numpy as np
 from ..abilities.on_hit_auto_restrained import OnHitAutoRestrained
 from ..abilities.on_hit_swallow import OnHitSwallow
 from ..actions.action_types import Action, Reaction
-from ..battle_map import Map
+from ..battle_map import Map, _get_free_coords_in_cartesian_range
 from ..effects.effect import EffectType
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
@@ -63,9 +63,11 @@ class GiantToad(Combatant):
             if self.swallowed_target.is_alive():
                 battle_map = Map.get()
                 battle_map.effect_tracker.remove_effect_from_combatant_by_type(self.swallowed_target, EffectType.DIGESTION)
-                free_coords = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self),
-                                                              inflate_to_dist=self.swallowed_target.size.value,
-                                                              rng=1, combatant=self.swallowed_target)
+                free_coords = _get_free_coords_in_cartesian_range(
+                    battle_map.grid,
+                    battle_map.get_combatant_position(self).get(),
+                    inflate_to_dist=self.swallowed_target.size.value,
+                    rng=1, combatant_id=self.swallowed_target.id)
                 if not free_coords:
                     logger.error("No space around the dead Giant Toad to spit out the swallowed combatant")
                     return

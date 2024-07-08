@@ -1,6 +1,6 @@
 from abc import abstractmethod
 
-from ..battle_map import Map
+from ..battle_map import Map, _get_hop_distance_coords
 from ..effects.effect import Effect
 
 class AoeEffect(Effect):
@@ -32,4 +32,4 @@ class AoeEffect(Effect):
     def is_affecting(self, combatant):
         battle_map = Map.get()
         coords = self.get_affected_coords()
-        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
+        return _get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0

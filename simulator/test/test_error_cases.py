@@ -10,7 +10,7 @@ from ..abilities.wildshape import WildshapeFactory
 from ..action_resolver import ActionResolver
 from ..actions.action_types import BonusAction, Action, Passive, FreeAction
 from ..actions.movement import MovementIncrement
-from ..battle_map import Terrain, Map
+from ..battle_map import Terrain, Map, _get_cartesian_distance_coords
 from ..combatants.giant_toad import GiantToad
 from ..logging.custom_logger import CustomLogger
 from ..misc import PhaseOfTurn, SkillCheck
@@ -74,7 +74,7 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
         new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
     fireball = action_plan[0] if isinstance(action_plan[0], Fireball) else action_plan[1]
     # Staying still is actually preferable here
-    assert battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    assert _get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     assert isinstance(action_plan[0], Fireball) or isinstance(action_plan[0], Firebolt)
     assert isinstance(action_plan[1], Fireball) or isinstance(action_plan[1], Firebolt)
 
@@ -105,9 +105,9 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     try:
         fireball = next(a for a in action_plan if isinstance(a, Fireball))
-        assert battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-        assert battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(test_bugbear).get(), np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-        assert battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(test_bugbear_2).get(), np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert _get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert _get_cartesian_distance_coords(battle_map.get_combatant_position(test_bugbear).get(), np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert _get_cartesian_distance_coords(battle_map.get_combatant_position(test_bugbear_2).get(), np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     except StopIteration:
         assert False, "No Fireball planned"
     try:

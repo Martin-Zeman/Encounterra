@@ -48,7 +48,7 @@ class MistyStepFactory(Factory):
         return [(0, 0)]
         # battle_map = Map.get()
         # # # TODO Add visibility
-        # return battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatant),
+        # return _get_free_coords_in_cartesian_range(battle_map.grid, battle_map.get_combatant_position(self.combatant).get(),
         #                                                          distances,
         #                                                          inflate_to_dist=self.combatant.size.value,
         #                                                          rng=MistyStepFactory.range)

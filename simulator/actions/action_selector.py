@@ -12,7 +12,7 @@ from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
 from ..actions.action_types import Movement, MovementThreatType, BonusAction
 from ..actions.break_grapple import BreakGrappleFactory
 from ..actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
-from ..battle_map import convert_path_to_increments, Map
+from ..battle_map import convert_path_to_increments, Map, _get_hop_distance_coords
 from ..misc import get_factory_of_type
 from ..conditions import Conditions, needs_to_break_out_of_grapple, is_affected_by
 from ..threat_interfaces import AttackThreatModifier
@@ -537,7 +537,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                                         feasibility_multiplier = 1 if coord in eligible_coords and distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
                                         first_feasibility_check_done = True
                                     else:  # Two location-dependent actions in succession
-                                        remaining_dist = battle_map.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
+                                        remaining_dist = _get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
                                         feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
                             threat = action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
                             threat_acc += threat

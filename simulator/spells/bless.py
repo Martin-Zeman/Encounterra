@@ -4,7 +4,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..battle_map import Map, map_toggled_cache_with_key, _get_free_coords_in_cartesian_range
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import get_attack_factories, ROUND_HORIZON
@@ -147,21 +147,27 @@ class Bless(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_first = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
-                                                                            distances,
-                                                                            inflate_to_dist=self.factory.combatant.size.value,
-                                                                            rng=BlessFactory.range,
-                                                                            combatant=self.factory.combatant))
-            coords_for_second = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[1]),
-                                                                              distances,
-                                                                              inflate_to_dist=self.factory.combatant.size.value,
-                                                                              rng=BlessFactory.range,
-                                                                              combatant=self.factory.combatant))
-            coords_for_third = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[2]),
-                                                                              distances,
-                                                                              inflate_to_dist=self.factory.combatant.size.value,
-                                                                              rng=BlessFactory.range,
-                                                                              combatant=self.factory.combatant))
+            coords_for_first = set(_get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.combatants[0]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=BlessFactory.range,
+                combatant_id=self.factory.combatant.id))
+            coords_for_second = set(_get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.combatants[1]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=BlessFactory.range,
+                combatant_id=self.factory.combatant.id))
+            coords_for_third = set(_get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.combatants[2]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=BlessFactory.range,
+                combatant_id=self.factory.combatant.id))
             return list(coords_for_third.intersection(coords_for_first.intersection(coords_for_second)))  # Strangely no visibility required
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[0]) <= BlessFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[1]) <= BlessFactory.range \

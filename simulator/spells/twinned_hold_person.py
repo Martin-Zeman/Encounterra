@@ -6,7 +6,8 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import Passive
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
+    _get_free_coords_in_cartesian_range
 from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
@@ -203,15 +204,19 @@ class TwinnedHoldPerson(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=TwinnedHoldPersonFactory.range, combatant=self.factory.combatant)
+            coords_for_first = _get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.combatants[0]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=TwinnedHoldPersonFactory.range, combatant_id=self.factory.combatant.id)
 
-            coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[1]),
-                                                                  distances,
-                                                                  inflate_to_dist=self.factory.combatant.size.value,
-                                                                  rng=TwinnedHoldPersonFactory.range)
+            coords_for_second = _get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.combatants[1]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=TwinnedHoldPersonFactory.range, combatant_id=self.factory.combatant.id)
             free_coords_in_range = set(coords_for_first).intersection(set(coords_for_second))
 
             return [coord for coord in free_coords_in_range if

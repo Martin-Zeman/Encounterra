@@ -4,7 +4,8 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_toggled_cache_with_key, map_position_toggled_cache
+from ..battle_map import Map, map_toggled_cache_with_key, map_position_toggled_cache, \
+    _get_free_coords_in_cartesian_range
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import get_attack_factories, ROUND_HORIZON, Visibility
@@ -117,10 +118,12 @@ class ShieldOfFaith(Actoid, CombatantEffect, LimitedDurationEffect):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.combatants[0]),
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=ShieldOfFaithFactory.range, combatant=self.factory.combatant)
+            free_coords_in_range = _get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.combatants[0]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=ShieldOfFaithFactory.range, combatant_id=self.factory.combatant.id)
             return free_coords_in_range
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[0]) <= ShieldOfFaithFactory.range:
             return [curr_coord]

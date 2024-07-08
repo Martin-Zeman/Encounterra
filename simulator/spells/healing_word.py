@@ -1,7 +1,8 @@
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
+    _get_free_coords_in_cartesian_range
 from ..spells.spell import SpellStats
 from ..misc import avg_roll, Visibility, Class, get_missing_hp
 from ..conditions import Conditions, is_affected_by_any, get_swallower
@@ -113,10 +114,12 @@ class HealingWord(Actoid, DirectThreat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=HealingWordFactory.range, combatant=self.factory.combatant)
+            free_coords_in_range = _get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=HealingWordFactory.range, combatant_id=self.factory.combatant.id)
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HealingWordFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:

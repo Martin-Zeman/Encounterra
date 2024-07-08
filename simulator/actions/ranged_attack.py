@@ -6,7 +6,8 @@ from cachetools.keys import hashkey
 
 from ..actions.actoid import FactoryFlags
 from ..actions.attack import AttackFactory, Attack
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
+    _get_free_coords_in_cartesian_range
 from ..misc import Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..resources import Uses, ResourceRefreshType
@@ -77,10 +78,12 @@ class RangedAttack(Attack):
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         # if self.factory.combatant.movement > 0 and not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                                                 distances,
-                                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                                 rng=self.factory.range, combatant=self.factory.combatant)
+            free_coords_in_range = _get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=self.factory.range, combatant_id=self.factory.combatant.name)
             if not battle_map.effect_tracker.is_combatant_hidden_from(self.factory.combatant, self.target):
                 return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
             else:

@@ -4,7 +4,8 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, _get_hop_distance_coords, \
+    _get_free_coords_in_cartesian_range, _get_cartesian_distance_coords
 from ..combatant_coords import Coords
 from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.effect import EffectType
@@ -113,7 +114,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def is_affecting(self, combatant):
         coords = self.get_affected_coords()
         battle_map = Map.get()
-        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
+        return _get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
     def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
@@ -159,10 +160,12 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         if get_swallower(self.factory.combatant):
             return None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=CloudOfDaggersFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= CloudOfDaggersFactory.range:
+            return _get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                Coords(self.origin).get(),  # not actually combatant coords
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=CloudOfDaggersFactory.range, combatant_id=self.factory.combatant.id)
+        elif _get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= CloudOfDaggersFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

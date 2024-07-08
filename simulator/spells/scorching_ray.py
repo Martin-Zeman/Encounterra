@@ -2,7 +2,8 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
+    _get_free_coords_in_cartesian_range
 from ..spells.spell import SpellStats
 from ..misc import DamageType, avg_roll, Visibility
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
@@ -164,21 +165,27 @@ class ScorchingRay(Actoid, DirectThreat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_first = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
-                                                                            distances,
-                                                                            inflate_to_dist=self.factory.combatant.size.value,
-                                                                            rng=ScorchingRayFactory.range,
-                                                                            combatant=self.factory.combatant))
-            coords_for_second = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
-                                                                              distances,
-                                                                              inflate_to_dist=self.factory.combatant.size.value,
-                                                                              rng=ScorchingRayFactory.range,
-                                                                              combatant=self.factory.combatant))
-            coords_for_third = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[2]),
-                                                                              distances,
-                                                                              inflate_to_dist=self.factory.combatant.size.value,
-                                                                              rng=ScorchingRayFactory.range,
-                                                                              combatant=self.factory.combatant))
+            coords_for_first = set(_get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.targets[0]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=ScorchingRayFactory.range,
+                combatant_id=self.factory.combatant.id))
+            coords_for_second = set(_get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.targets[1]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=ScorchingRayFactory.range,
+                combatant_id=self.factory.combatant.id))
+            coords_for_third = set(_get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.targets[2]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=ScorchingRayFactory.range,
+                combatant_id=self.factory.combatant.id))
             free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
 
             return [coord for coord in free_coords_in_range if

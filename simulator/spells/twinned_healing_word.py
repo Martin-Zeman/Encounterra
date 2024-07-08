@@ -3,7 +3,8 @@ from itertools import combinations
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
+    _get_free_coords_in_cartesian_range
 from ..spells.spell import SpellStats
 from ..misc import avg_roll, Visibility, Class, get_missing_hp
 from ..conditions import Conditions, is_affected_by_any, get_swallower
@@ -120,16 +121,20 @@ class TwinnedHealingWord(Actoid, DirectThreat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_fist = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
-                                                                            distances,
-                                                                            inflate_to_dist=self.factory.combatant.size.value,
-                                                                            rng=TwinnedHealingWordFactory.range,
-                                                                            combatant=self.factory.combatant))
-            coords_for_second = set(battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
-                                                                              distances,
-                                                                              inflate_to_dist=self.factory.combatant.size.value,
-                                                                              rng=TwinnedHealingWordFactory.range,
-                                                                              combatant=self.factory.combatant))
+            coords_for_fist = set(_get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.targets[0]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=TwinnedHealingWordFactory.range,
+                combatant_id=self.factory.combatant.id))
+            coords_for_second = set(_get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.targets[1]).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=TwinnedHealingWordFactory.range,
+                combatant_id=self.factory.combatant.id))
             free_coords_in_range = coords_for_fist.intersection(coords_for_second)
 
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE

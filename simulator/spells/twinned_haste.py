@@ -4,7 +4,8 @@ from itertools import combinations
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
+    _get_free_coords_in_cartesian_range
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..effects.effect import EffectType
@@ -161,18 +162,21 @@ class TwinnedHaste(Actoid, LimitedDurationEffect, Threat):
             if self.targets[0] is self.factory.combatant:
                 coords_for_first = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
             else:
-                coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
-                                                                                 distances,
-                                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                                 rng=TwinnedHasteFactory.range)
-
+                coords_for_first = _get_free_coords_in_cartesian_range(
+                    battle_map.grid,
+                    battle_map.get_combatant_position(self.targets[0]).get(),
+                    distances,
+                    inflate_to_dist=self.factory.combatant.size.value,
+                    rng=TwinnedHasteFactory.range)
             if self.targets[1] is self.factory.combatant:
                 coords_for_second = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
             else:
-                coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
-                                                                                  distances,
-                                                                                  inflate_to_dist=self.factory.combatant.size.value,
-                                                                                  rng=TwinnedHasteFactory.range)
+                coords_for_second = _get_free_coords_in_cartesian_range(
+                    battle_map.grid,
+                    battle_map.get_combatant_position(self.targets[1]).get(),
+                    distances,
+                    inflate_to_dist=self.factory.combatant.size.value,
+                    rng=TwinnedHasteFactory.range)
             free_coords_in_range = set(coords_for_first).intersection(set(coords_for_second))
 
             return [coord for coord in free_coords_in_range if

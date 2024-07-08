@@ -5,7 +5,8 @@ from cachetools.keys import hashkey
 
 from ..action_resolver import resolve_dmg_saving_throw
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, _get_free_coords_in_cartesian_range, \
+    _get_cartesian_distance_coords
 from ..combatant_coords import Coords
 from ..effects.aoe_spheric_effect import AoeSphericEffect
 from ..effects.effect import EffectType
@@ -122,7 +123,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
     # def is_affecting(self, combatant):
     #     battle_map = Map.get()
     #     coords = self.get_affected_coords()
-    #     return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
+    #     return _get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
     def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
@@ -175,10 +176,12 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=HungerOfHadarFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= HungerOfHadarFactory.range:
+            return _get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                Coords(self.origin).get(),  # not actually combatant coords
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=HungerOfHadarFactory.range, combatant_id=self.factory.combatant.id)
+        elif _get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= HungerOfHadarFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
