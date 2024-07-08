@@ -36,35 +36,6 @@ logger = logging.getLogger("Encounterra")
 SQRT_OF_TWO = 1.41421
 
 
-# def old_reconstruct_from_shortest_path(shortest_path, source, target):
-#     """
-#     Works backwards using the shortest paths produced by Dijkstra to obtain a sequence of coordinates from source to
-#     target.
-#     :param shortest_path: shortest path dict (output of Dijkstra)
-#     :param source: source coordinates
-#     :param target: target coordinates
-#     :return: path from source to target as a sequence of coordinates
-#     """
-#     current_position = target
-#     # The square of the enemy itself is inaccessible, have to take the closest free adjacent one
-#     path = {'tuples': [], 'numpy': []}
-#     while not np.array_equal(current_position, source):
-#         path['numpy'].append(current_position)
-#         path['tuples'].append(tuple(current_position))
-#         # have to convert to tuple cause numpy array is non-hashable
-#         try:
-#             current_position = shortest_path[tuple(current_position)]
-#         except KeyError as e:
-#             # logger.error(e)  # TODO remove this once fixed
-#             return None
-#     else:
-#         path['numpy'].append(source)
-#         path['tuples'].append(tuple(source))
-#     path['numpy'].reverse()
-#     path['tuples'].reverse()
-#     return path
-
-
 def reconstruct_from_shortest_path(shortest_path, source, target):
     """
     Works backwards using the shortest paths produced by Dijkstra to obtain a sequence of coordinates from source to
@@ -310,6 +281,52 @@ def dijkstra_numba(src, size, adj_matrix, mask):
 
     return dist, shortest_paths
 
+
+# @njit
+# def get_free_coords_in_cartesian_range(grid, size, coords: Coords, distances=np.array([]), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
+#     """
+#     Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
+#     by a combatant of 'inflate_to_dist' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
+#     bounding box to narrow down the search.
+#     :param coords: target combatant or destination coordinates
+#     :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
+#     :param inflate_to_dist: inflate for the sake of pathfinding BY larger combatants (as opposed to TO larger combatants)
+#     :param rng: maximum range
+#     :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
+#     :return: free adjacent coordinates as a set of tuples (x, y)
+#     """
+#     assert rng > 0
+#     # First inflate it by the size of the combatant looking for the path
+#     inflated = self.inflate_coords(coords, inflate_to_dist)
+#
+#     coords_in_range = set()
+#     for coord in inflated:
+#         # the rng can be used as a bounding box for the search
+#         for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
+#             if x < 0 or x >= self.size or y < 0 or y >= self.size or self.get_cartesian_distance_coords(coords.get(), np.array([[x, y]])) > rng:
+#                 continue
+#             square = self.grid[x, y]
+#             consider_accessibility = (distances[x * self.size + y] < sys.maxsize) if distances.size > 0 else True
+#             if square.is_empty_or_self(combatant) and consider_accessibility:# and (x, y) not in inflated:
+#                 # have to use tuples since np.array is unhashable
+#                 coords_in_range.add((x, y))
+#     return list(coords_in_range)
+
+# @njit
+# def _get_cartesian_distance_combatants(coords1, coords2):
+#     """
+#     Universal cartesian distance function. Accepts both characters or coordinates
+#     :param combatant1:
+#     :param comabtant2:
+#     :return: cartesian distance between two combatants, None if one of the combatants is dead
+#     """
+#     coords1 = self.combatant_coordinate_cache[combatant1].get()
+#     coords2 = self.combatant_coordinate_cache[combatant2].get()
+#     try:
+#         res = np.amin(distance_matrix(coords1, coords2))
+#     except TypeError:
+#         res = None
+#     return res
 
 class Map:
     _instance = None
@@ -1030,7 +1047,7 @@ class Map:
             res = None  # TODO This case it not really handled anywhere
         return res
 
-    @cached(cache={}, key=lambda self, combatant1, combatant2: hashkey(combatant1.name, combatant2.name))
+    # @cached(cache={}, key=lambda self, combatant1, combatant2: hashkey(combatant1.name, combatant2.name))
     def get_cartesian_distance_combatants(self, combatant1: ProtoCombatant, combatant2: ProtoCombatant):
         """
         Universal cartesian distance function. Accepts both characters or coordinates
@@ -1144,7 +1161,7 @@ class Map:
 
         return list(perimeter_coords)
 
-    @toggled_cache(key=lambda self, coords, distances=np.array([]), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
+    # @toggled_cache(key=lambda self, coords, distances=np.array([]), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
     def get_free_coords_in_cartesian_range(self, coords: Coords, distances=np.array([]), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
