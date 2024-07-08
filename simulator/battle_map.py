@@ -36,32 +36,62 @@ logger = logging.getLogger("Encounterra")
 SQRT_OF_TWO = 1.41421
 
 
+# def old_reconstruct_from_shortest_path(shortest_path, source, target):
+#     """
+#     Works backwards using the shortest paths produced by Dijkstra to obtain a sequence of coordinates from source to
+#     target.
+#     :param shortest_path: shortest path dict (output of Dijkstra)
+#     :param source: source coordinates
+#     :param target: target coordinates
+#     :return: path from source to target as a sequence of coordinates
+#     """
+#     current_position = target
+#     # The square of the enemy itself is inaccessible, have to take the closest free adjacent one
+#     path = {'tuples': [], 'numpy': []}
+#     while not np.array_equal(current_position, source):
+#         path['numpy'].append(current_position)
+#         path['tuples'].append(tuple(current_position))
+#         # have to convert to tuple cause numpy array is non-hashable
+#         try:
+#             current_position = shortest_path[tuple(current_position)]
+#         except KeyError as e:
+#             # logger.error(e)  # TODO remove this once fixed
+#             return None
+#     else:
+#         path['numpy'].append(source)
+#         path['tuples'].append(tuple(source))
+#     path['numpy'].reverse()
+#     path['tuples'].reverse()
+#     return path
+
+
 def reconstruct_from_shortest_path(shortest_path, source, target):
     """
     Works backwards using the shortest paths produced by Dijkstra to obtain a sequence of coordinates from source to
     target.
-    :param shortest_path: shortest path dict (output of Dijkstra)
-    :param source: source coordinates
-    :param target: target coordinates
+    :param shortest_path: shortest path ndarray of shape (15, 15, 2)
+    :param source: source coordinates (numpy array)
+    :param target: target coordinates (numpy array)
     :return: path from source to target as a sequence of coordinates
     """
-    current_position = target
+    current_position = np.array(target)
     # The square of the enemy itself is inaccessible, have to take the closest free adjacent one
     path = {'tuples': [], 'numpy': []}
+
     while not np.array_equal(current_position, source):
-        path['numpy'].append(current_position)
+        path['numpy'].append(current_position.copy())
         path['tuples'].append(tuple(current_position))
         # have to convert to tuple cause numpy array is non-hashable
-        try:
-            current_position = shortest_path[tuple(current_position)]
-        except KeyError as e:
-            # logger.error(e)  # TODO remove this once fixed
+        current_position = shortest_path[current_position[0], current_position[1]]
+        if np.array_equal(current_position, [-1, -1]):
             return None
-    else:
-        path['numpy'].append(source)
-        path['tuples'].append(tuple(source))
+
+    path['numpy'].append(np.array(source))
+    path['tuples'].append(tuple(source))
+
     path['numpy'].reverse()
     path['tuples'].reverse()
+
     return path
 
 
@@ -257,19 +287,26 @@ def dijkstra_numba(src, size, adj_matrix, mask):
             continue
         open_set[x] = True
 
-        x_row = x // N
-        x_col = x % N
+        from_x = x // N
+        from_y = x % N
 
         for y in range(Nsq):
             if adj[x, y] > 0 and not open_set[y]:
-                y_row = y // N
-                y_col = y % N
+                to_x = y // N
+                to_y = y % N
                 new_dist = dist[x] + adj[x, y]
 
                 if dist[y] > new_dist:
                     dist[y] = new_dist
-                    shortest_paths[y_row, y_col] = np.array([x_row, x_col], dtype=np.int64)
+                    shortest_paths[to_x, to_y] = np.array([from_x, from_y], dtype=np.int64)
                     heapq.heappush(pq, (new_dist, y))
+                elif dist[y] == new_dist:
+                    # Check for the least zig-zaggy path
+                    current_path_diff = np.sum(np.abs(shortest_paths[to_x, to_y] - np.array([to_x, to_y], dtype=np.int64)))
+                    new_path_diff = np.sum(np.abs(np.array([to_x, to_y], dtype=np.int64) - np.array([from_x, from_y], dtype=np.int64)))
+                    if current_path_diff > new_path_diff:
+                        shortest_paths[to_x, to_y] = np.array([from_x, from_y], dtype=np.int64)
+                        heapq.heappush(pq, (new_dist, y))
 
     return dist, shortest_paths
 
@@ -392,16 +429,18 @@ class Map:
         """
         if coords is not None:
             original_coords = self.get_combatant_position(combatant).get()[0]
+            original_coords_tuple = tuple(original_coords)
             original_logger_level = logger.level
+            original_cache = combatant.shortest_paths_cache[original_coords_tuple].copy()
             try:
                 logger.setLevel(logging.WARNING)
-                combatant.shortest_paths_cache[(original_coords[0], original_coords[1])] = original_coords  # For wildshape searching purposes
+                combatant.shortest_paths_cache[original_coords_tuple] = original_coords  # For wildshape searching purposes
                 # self.cache_enabled = False
                 self.move_combatant(combatant, coords)
                 yield original_coords
             finally:
                 self.move_combatant(combatant, original_coords)
-                del combatant.shortest_paths_cache[(original_coords[0], original_coords[1])]
+                combatant.shortest_paths_cache[original_coords_tuple] = original_cache
                 # self.cache_enabled = True
                 logger.setLevel(original_logger_level)
         else:
@@ -481,7 +520,7 @@ class Map:
         before_wildshape_coordinate = self.get_combatant_position(combatant).get()[0]
         before_wildshape_coordinate = (self.size - before_wildshape_coordinate[1] - 1, before_wildshape_coordinate[0])  # Convert to matrix coordinates
         map_accessibility_matrix = np.zeros((self.size, self.size))
-        for coord in combatant.shortest_paths_cache.keys():
+        for coord in np.argwhere(combatant.shortest_paths_cache[..., 0] != -1):
             map_accessibility_matrix[self.size - coord[1] - 1, coord[0]] = 1
         map_accessibility_matrix[before_wildshape_coordinate] = 1
         if orig_coords is not None:
@@ -512,8 +551,10 @@ class Map:
         combatant_matrix_coord = (self.size - combatant_coord[1] - 1, combatant_coord[0])
         placement_matrix_coord = (self.size - placement_coord[1] - 1, placement_coord[0])  # Convert to matrix coordinates
         map_accessibility_matrix = np.zeros((self.size, self.size))
-        for coord in shortest_paths.keys():
-            map_accessibility_matrix[self.size - coord[1] - 1, coord[0]] = 1
+        for x in range(shortest_paths.shape[0]):
+            for y in range(shortest_paths.shape[1]):
+                if not np.array_equal(shortest_paths[x, y], [-1, -1]):  # [-1, -1] indicates an unreachable cell
+                    map_accessibility_matrix[self.size - y - 1, x] = 1
         map_accessibility_matrix[combatant_matrix_coord] = 1
 
         start_row = placement_matrix_coord[0]
@@ -1103,8 +1144,8 @@ class Map:
 
         return list(perimeter_coords)
 
-    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
-    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=(), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
+    @toggled_cache(key=lambda self, coords, distances=np.array([]), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
+    def get_free_coords_in_cartesian_range(self, coords: Coords, distances=np.array([]), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
         """
         Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
         by a combatant of 'inflate_to_dist' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
@@ -1127,22 +1168,31 @@ class Map:
                 if x < 0 or x >= self.size or y < 0 or y >= self.size or self.get_cartesian_distance_coords(coords.get(), np.array([[x, y]])) > rng:
                     continue
                 square = self.grid[x, y]
-                consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances else True
-                if square.is_empty_or_self(combatant) and consider_accesibility:# and (x, y) not in inflated:
+                consider_accessibility = (distances[x * self.size + y] < sys.maxsize) if distances.size > 0 else True
+                if square.is_empty_or_self(combatant) and consider_accessibility:# and (x, y) not in inflated:
                     # have to use tuples since np.array is unhashable
                     coords_in_range.add((x, y))
         return list(coords_in_range)
 
     def get_all_accessible_coords(self, shortest_paths, combatant):
         """
-        Returns all free and square coordinates accessible by a combatant given the shortest paths dict (output of Dijkstra)
-        :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
+        Returns all free and square coordinates accessible by a combatant given the shortest paths ndarray (output of Dijkstra)
+        :param shortest_paths: the shortest paths to all squares (result of Dijkstra as a numpy ndarray of shape (15, 15, 2))
         :param combatant: the subject combatant
         :return: free and accessible coordinates as a set of tuples (x, y)
         """
-        ret = list(shortest_paths.keys())
-        ret.append(tuple(self.get_combatant_position(combatant).get()[0]))
-        return ret
+        accessible_coords = []
+        for x in range(shortest_paths.shape[0]):
+            for y in range(shortest_paths.shape[1]):
+                if not np.array_equal(shortest_paths[x, y], [-1, -1]):  # Assuming [-1, -1] indicates an unreachable cell
+                    accessible_coords.append((x, y))
+
+        combatant_position = tuple(self.get_combatant_position(combatant).get()[0])
+        if combatant_position not in accessible_coords:
+            accessible_coords.append(combatant_position)
+
+        return accessible_coords
+
 
     def get_adjacent_coords(self, coords: Coords):
         """
@@ -1180,18 +1230,18 @@ class Map:
         adjacent_coords.sort(key=lambda coord: self.get_cartesian_distance_coords(coord, my_location.get()))
         return adjacent_coords[0][0]
 
-    def calc_dijkstra(self, combatant):
-        """
-        Calculates the Dijkstra algorithm for a given combatant. Currently used only for testing
-        :param combatant: combatant who wants to move
-        :return: :return: list of distances to all vertices, list of predecessors for every vertex and the threat adjacency matrix
-        """
-        my_location = self.get_combatant_position(combatant)
-        mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
-        return distances, shortest_paths
+    # def calc_dijkstra(self, combatant):
+    #     """
+    #     Calculates the Dijkstra algorithm for a given combatant.
+    #     :param combatant: combatant who wants to move
+    #     :return: :return: list of distances to all vertices, list of predecessors for every vertex and the threat adjacency matrix
+    #     """
+    #     my_location = self.get_combatant_position(combatant)
+    #     mask = self.build_combatant_adjacency_mask(combatant)
+    #     distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
+    #     return distances, shortest_paths
 
-    def calc_dijkstra_numba(self, combatant):
+    def calc_dijkstra(self, combatant):
         """
         Calculates the Dijkstra algorithm for a given combatant. Currently used only for testing
         :param combatant: combatant who wants to move
@@ -1202,13 +1252,13 @@ class Map:
         distances, shortest_paths = dijkstra_numba(my_location, self.size, self.base_adjacency_matrix, mask)
         return distances, shortest_paths
 
-    def get_path_to_combatant(self, combatant, target, distances=None, shortest_paths=None, rng=1, consider_aoo=False):
+    def get_path_to_combatant(self, combatant, target, distances=np.array([]), shortest_paths=np.array([]), rng=1, consider_aoo=False):
         """
         Calculates a path to a target combatant
         :param combatant:Combatant who wants to move
         :param target:
-        :param distances: potentially already pre-computed distances to all coords
-        :param shortest_paths: potentially already pre-computed shortest paths to all coords
+        :param distances: potentially already pre-computed distances to all coords (now as a ndarray of shape (225,))
+        :param shortest_paths: potentially already pre-computed shortest paths to all coords (now as a ndarray of shape (15, 15, 2))
         :param rng: the range of what is considered adjacent
         :return: list of np.array increments to the target combatant
         """
@@ -1216,9 +1266,9 @@ class Map:
         logger.debug(f"Origin {my_location.get()[0]}")
         enemy_location = self.get_combatant_position(target)
         logger.debug(f"Destination {enemy_location.get()[0]}")
-        if not distances or not shortest_paths:
+        if distances.size == 0 or shortest_paths.size == 0:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
+            distances, shortest_paths = dijkstra_numba(my_location.get()[0], self.size, self.base_adjacency_matrix, mask)
         enemy_adjacent_location = self.get_nearest_free_adjacent_coords(combatant, my_location, enemy_location, distances, rng)
         if enemy_adjacent_location is None:
             return None
@@ -1229,21 +1279,22 @@ class Map:
             self.printDijkstra(distances, my_location.get(), enemy_location.get(), reconstructed_path['tuples'])
         return convert_path_to_increments(reconstructed_path['numpy'])
 
-    def get_path_to_coord(self, combatant, target_coord, distances=None, shortest_paths=None, consider_aoo=False):
+    def get_path_to_coord(self, combatant, target_coord, distances=np.array([]), shortest_paths=np.array([]), consider_aoo=False):
         """
         Calculates a path to destination coordinates
-        :param combatant:Combatant who wants to move
-        :param target_coord:
-        :param distances: potentially already pre-computed distances to all coords
-        :param shortest_paths: potentially already pre-computed shortest paths to all coords
+        :param combatant: Combatant who wants to move
+        :param target_coord: Target coordinates
+        :param distances: potentially already pre-computed distances to all coords (now as a ndarray of shape (225,))
+        :param shortest_paths: potentially already pre-computed shortest paths to all coords (now as a ndarray of shape (15, 15, 2))
+        :param consider_aoo: Whether to consider attacks of opportunity
         :return: list of np.array increments to the target destination
         """
         my_location = self.get_combatant_position(combatant)
         logger.debug(f"Origin {my_location.get()[0]}")
         logger.debug(f"Destination {target_coord}")
-        if not distances or not shortest_paths:
+        if distances.size == 0 or shortest_paths.size == 0:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
+            distances, shortest_paths = dijkstra_numba(my_location.get()[0], self.size, self.base_adjacency_matrix, mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get()[0], target_coord)
         if reconstructed_path is None:
             return None
@@ -1689,11 +1740,17 @@ class Map:
         """
         Calculates and caches the visibility dict for all coords accessible to a combatant.
         :param combatant:
-        :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
+        :param shortest_paths: the shortest paths to all squares (result of Dijkstra as a numpy ndarray of shape (15, 15, 2))
         :return: None
         """
         current_position = self.get_combatant_position(combatant).get()[0]
-        self.visibility_dict_for_all_coords = {coord: self.get_visibility_dict(combatant, np.array(coord)) for coord in shortest_paths.keys()}
+        self.visibility_dict_for_all_coords = {}
+        for x in range(shortest_paths.shape[0]):
+            for y in range(shortest_paths.shape[1]):
+                if not np.array_equal(shortest_paths[x, y], [-1, -1]):  # Assuming [-1, -1] indicates an unreachable cell
+                    coord = (x, y)
+                    self.visibility_dict_for_all_coords[coord] = self.get_visibility_dict(combatant, np.array(coord))
+
         self.visibility_dict_for_all_coords[tuple(current_position)] = self.get_visibility_dict(combatant, current_position)
 
     def get_non_swallowed_adjacent_enemies(self, combatant):

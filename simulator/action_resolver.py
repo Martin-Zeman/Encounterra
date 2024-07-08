@@ -1,6 +1,7 @@
 import logging
 import math
 import random
+import numpy as np
 from enum import Enum, auto
 from functools import reduce
 from collections import Counter
@@ -10,7 +11,7 @@ from .actions.action_types import BonusAction, Action, Reaction, Passive, Moveme
 from .actions.actoid import FactoryFlags
 from .actions.dodge import DodgeFactory
 from .actions.flaming_sphere_ram import FlamingSphereRamFactory
-from .battle_map import Map
+from .battle_map import Map, dijkstra_numba
 from .effects.effect import EffectType
 from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, roll_spell_dmg, parse_dmg_dice, \
     roll_dice, roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll, avg_roll
@@ -676,7 +677,8 @@ class ActionResolver:
                 self.resolve_grapple_attack(actoid, combatant)
             case BonusAction.FLAMING_SPHERE_RAM:
                 adj = battle_map.build_flaming_sphere_adjacency_matrix()
-                _, shortest_paths = battle_map.dijkstra(actoid.factory.action_enabler_effect.origin, adj)
+                mask = np.ones((battle_map.size ** 2, battle_map.size ** 2), dtype=int)
+                _, shortest_paths = dijkstra_numba(actoid.factory.action_enabler_effect.origin, battle_map.size, adj, mask)
                 path = battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
                 if path and len(path) <= FlamingSphereRamFactory.RANGE + 1:
                     dmg = roll_spell_dmg(actoid.factory.dmg_dice)

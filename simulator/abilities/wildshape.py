@@ -224,8 +224,11 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             map_accessibility_matrix = np.zeros((battle_map.size, battle_map.size))
-            for coord in shortest_paths.keys():
-                map_accessibility_matrix[coord] = 1
+            # Populate the map_accessibility_matrix using shortest_paths
+            for x in range(shortest_paths.shape[0]):
+                for y in range(shortest_paths.shape[1]):
+                    if not np.array_equal(shortest_paths[x, y], [-1, -1]):  # [-1, -1] indicates an unreachable cell
+                        map_accessibility_matrix[x, y] = 1
             original_coordinate = battle_map.get_combatant_position(self.factory.combatant).get()[0]
             map_accessibility_matrix[original_coordinate[0], original_coordinate[1]] = 1
             map_accessibility_matrix = np.transpose(map_accessibility_matrix)
