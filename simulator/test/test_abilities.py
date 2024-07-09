@@ -700,6 +700,10 @@ def test_cunning_adjacent_enemy_hide_sneak_attack(battle_map, teams, effect_trac
         action_resolver.resolve_action(second_turn_actoids[-1], test_assassin_rogue)
         second_turn_actoids.append(get_action(test_assassin_rogue))
         action_resolver.resolve_action(second_turn_actoids[-1], test_assassin_rogue)
+        second_turn_actoids.append(get_action(test_assassin_rogue))
+        action_resolver.resolve_action(second_turn_actoids[-1], test_assassin_rogue)
+        second_turn_actoids.append(get_action(test_assassin_rogue))
+        action_resolver.resolve_action(second_turn_actoids[-1], test_assassin_rogue)
         assert any(str(act) == "Cunning Hide of Assassin Rogue 5th LVL (1) from Ogre (1)" for act in second_turn_actoids)
         assert any(str(act) == "Shortbow on Ogre (1)" for act in second_turn_actoids)
     except Exception as e:

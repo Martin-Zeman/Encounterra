@@ -7,7 +7,7 @@ from cachetools.keys import hashkey
 from ..actions.action_types import BonusAction
 from ..actions.flaming_sphere_ram import FlamingSphereRamFactory
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, _get_cartesian_distance_coords, \
-    _get_free_coords_in_cartesian_range
+    _get_free_coords_in_cartesian_range, _get_free_coords_in_hop_range
 from ..combatant_coords import Coords
 from ..effects.action_enabler_effect import ActionEnablerEffect
 from ..effects.aoe_square_effect import AoeSquareEffect
@@ -60,7 +60,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         coords = set()
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV
-            coords_around_enemy = list(battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1))
+            coords_around_enemy = _get_free_coords_in_hop_range(battle_map.grid, battle_map.get_combatant_position(enemy).get(), rng=1)
             coords_around_enemy.sort(key=lambda coord: _get_cartesian_distance_coords(np.array([coord]), battle_map.get_combatant_position(self.combatant).get()), reverse=True)
             coords.add(coords_around_enemy[0])
 

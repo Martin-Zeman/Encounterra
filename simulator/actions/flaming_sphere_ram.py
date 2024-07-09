@@ -4,7 +4,8 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, _get_cartesian_distance_coords
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, _get_cartesian_distance_coords, \
+    _get_free_coords_in_hop_range
 from ..misc import DamageType, SavingThrow
 from ..conditions import Conditions, is_affected_by
 from ..actions.actoid import Actoid, FactoryFlags
@@ -44,7 +45,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         result = []
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV
-            coords_around_enemy = list(battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1))
+            coords_around_enemy = _get_free_coords_in_hop_range(battle_map.grid, battle_map.get_combatant_position(enemy).get(), rng=1)
             coords_around_enemy.sort(key=lambda coord: _get_cartesian_distance_coords(np.array([coord]), battle_map.get_combatant_position(self.combatant).get()), reverse=True)
             result.append(FlamingSphereRam(enemy, coords_around_enemy[0], self))
         return result

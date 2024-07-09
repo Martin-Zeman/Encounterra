@@ -20,7 +20,7 @@ class Teams:
     def __init__(self):
         self.team_book = {}  # maps team_color -> [list of combatants]
         self.reverse_team_book = {}  # maps combatant -> team_color
-        self.id_to_combatant = {}  # maps combatant id -> combatant
+        self.id_to_combatant = {-1: None}  # maps combatant id -> combatant
         self.team_color_codes = {}
 
     def add_combatant_to_team(self, combatant, team_color):

@@ -307,7 +307,7 @@ def _inflate_coords(coords: np.array, inflate_to_dist):
 def _is_empty_or_self(grid: np.ndarray, x: int, y: int, combatant_id: int):
     """Check if the grid square is empty or occupied by the given combatant."""
     square = grid[x, y]
-    return ((square['occupancy'] == Occupancy.FREE.value) or (square['combatant'] == combatant_id)) and (square['terrain'] != Terrain.IMPASSABLE_TERRAIN.value)
+    return ((square['occupancy'] == Occupancy.FREE.value) or (combatant_id != -1 and square['combatant'] == combatant_id)) and (square['terrain'] != Terrain.IMPASSABLE_TERRAIN.value)
 
 
 @njit
@@ -328,7 +328,7 @@ def _get_free_coords_in_cartesian_range(
     :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
     :param inflate_to_dist: inflate for the sake of pathfinding BY larger combatants (as opposed to TO larger combatants)
     :param rng: maximum range
-    :param combatant_name: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
+    :param combatant_id: optional unique combatant id which is to be considered 'self' for the sake of is_empty_or_self
     :return: free adjacent coordinates as a set of tuples (x, y)
     """
     assert rng > 0
@@ -348,12 +348,105 @@ def _get_free_coords_in_cartesian_range(
                 coords_in_range.add((x, y))
     return list(coords_in_range)
 
+@njit
+def _get_free_coords_in_hop_range(
+        grid: np.ndarray,
+        coords: np.ndarray,
+        distances: np.ndarray = np.array([], dtype=np.float64),
+        inflate_to_dist: int = Size.MEDIUM.value,
+        rng: int = 1,
+        combatant_id: int = -1
+):
+    """
+    Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
+    by a combatant of 'inflate_to_dist' size.
+    :param grid: the map numpy array grid
+    :param coords: target combatant coordinates
+    :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
+    :param inflate_to_dist: inflate for the sake of pathfinding BY larger combatants
+    :param rng: maximum range of what is considered 'adjacent'
+    :param combatant_id: optional unique combatant id which is to be considered 'self' for the sake of is_empty_or_self
+    :return: free adjacent coordinates as a set of tuples (x, y)
+    """
+    assert rng > 0
+    size = grid.shape[0]
+    inflated = _inflate_coords(coords, inflate_to_dist)
+
+    adjacent_coords = set()
+    for coord in inflated:
+        for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
+            if x < 0 or x >= size or y < 0 or y >= size:
+                continue
+            consider_accesibility = (distances[x * size + y] < sys.maxsize) if distances.size > 0 else True
+            if _is_empty_or_self(grid, x, y, combatant_id) and consider_accesibility:# and (x, y) not in inflated:
+                # have to use tuples since np.array is unhashable
+                adjacent_coords.add((x, y))
+    return list(adjacent_coords)
+
+
+@njit
+def _get_free_coords_at_hop_range(
+        grid: np.ndarray,
+        coords: np.ndarray,
+        distances: np.ndarray = np.array([], dtype=np.float64),
+        inflate_to_dist: int = Size.MEDIUM.value,
+        rng: int = 1,
+        combatant_id: int = -1
+):
+    """
+    Returns coordinates exactly at 'rng' distance from the nearest edge of an area occupied by a combatant, considering combatant size for pathfinding.
+    :param grid: the map numpy array grid
+    :param coords: target combatant coordinates
+    :param distances: the distances to all squares (result of Dijkstra) to recognize accessibility of coordinates
+    :param inflate_to_dist: inflate for the sake of pathfinding by larger combatants
+    :param rng: exact range of what is considered 'adjacent'
+    :param combatant_id: optional unique combatant id which is to be considered 'self' for the sake of is_empty_or_self
+    :return: coordinates exactly at 'rng' distance as a set of tuples (x, y)
+    """
+    assert rng > 0
+    size = grid.shape[0]
+    inflated = _inflate_coords(coords, inflate_to_dist)
+    perimeter_coords = set()
+
+    # Calculate bounds of the inflated area without using generator expressions
+    min_x = size
+    max_x = 0
+    min_y = size
+    max_y = 0
+
+    for coord in inflated:
+        if coord[0] < min_x:
+            min_x = coord[0]
+        if coord[0] > max_x:
+            max_x = coord[0]
+        if coord[1] < min_y:
+            min_y = coord[1]
+        if coord[1] > max_y:
+            max_y = coord[1]
+
+    min_x -= rng
+    max_x += rng
+    min_y -= rng
+    max_y += rng
+
+    # Generate perimeter coordinates at exactly rng distance
+    for x in range(min_x, max_x + 1):
+        for y in range(min_y, max_y + 1):
+            # Check if (x, y) is on the perimeter of the inflated area at rng distance
+            if x == min_x or x == max_x or y == min_y or y == max_y:
+                if 0 <= x < size and 0 <= y < size:  # Check boundaries
+                    accessible = (distances[x * size + y] < sys.maxsize) if distances.size > 0 else True
+                    if _is_empty_or_self(grid, x, y, combatant_id) and accessible:
+                        perimeter_coords.add((x, y))
+
+    return list(perimeter_coords)
+
 
 class Map:
     _instance = None
 
     grid_dtype = np.dtype([
-        ('combatant', np.int32),  # Use integers to represent combatants, -1 for no combatant
+        ('combatant', np.int64),  # Use integers to represent combatants, -1 for no combatant
         ('terrain', np.int32),  # Use integers to represent terrain types
         ('occupancy', np.int32)  # Use integers to represent occupancy status
     ])
@@ -761,7 +854,7 @@ class Map:
                     continue
                 rng = e.melee_reaction_range
                 coords = self.get_combatant_position(e)
-                adj_coords = self.get_free_coords_in_hop_range(coords, inflate_to_dist=combatant.size.value, rng=rng)
+                adj_coords = _get_free_coords_in_hop_range(self.grid, coords.get(), inflate_to_dist=combatant.size.value, rng=rng)
                 for ac in adj_coords:
                     # it should be ok to apply this to coords that are part of the set or inaccessible
                     mv_reshaped[ac[0], ac[1], :, :] *= 2
@@ -956,10 +1049,12 @@ class Map:
         old_coords = self.combatant_coordinate_cache[combatant].get()
         for old_coord in old_coords:
             self.grid[old_coord[0], old_coord[1]]["combatant"] = -1
+            self.grid[old_coord[0], old_coord[1]]["occupancy"] = Occupancy.FREE.value
         new_coords = old_coords + increment
         assert self.size > np.amax(new_coords) and np.amin(new_coords) > -1, f"Invalid coord {new_coords}"
         for new_coord in new_coords:
             self.grid[new_coord[0], new_coord[1]]["combatant"] = combatant.id
+            self.grid[new_coord[0], new_coord[1]]["occupancy"] = Occupancy.OCCUPIED_BY_COMBATANT.value
         self.combatant_coordinate_cache[combatant].set(new_coords)
         logger.info(f"{combatant} moved to {new_coords[0]}", extra={"team": self.teams.get_team(combatant)})
 
@@ -974,11 +1069,13 @@ class Map:
         old_coords = self.get_combatant_position(combatant).get()
         for old_coord in old_coords:
             self.grid[old_coord[0], old_coord[1]]["combatant"] = -1
+            self.grid[old_coord[0], old_coord[1]]["occupancy"] = Occupancy.FREE.value
         new_coords = Coords(new_coords, combatant.size)
         new_coords_data = new_coords.get()
         assert self.size > np.amax(new_coords_data) and np.amin(new_coords_data) > -1, f"Invalid coord {new_coords_data}"
         for new_coord in new_coords_data:
             self.grid[new_coord[0], new_coord[1]]["combatant"] = combatant.id
+            self.grid[new_coord[0], new_coord[1]]["occupancy"] = Occupancy.OCCUPIED_BY_COMBATANT.value
         self.combatant_coordinate_cache[combatant] = new_coords
         if log:
             logger.info(f"{combatant} moved to {new_coords_data[0]}", extra={"team": self.teams.get_team(combatant)})
@@ -991,12 +1088,11 @@ class Map:
         for x, y in zip(x_coords, y_coords):
             if self.grid[x, y]['terrain'] == Terrain.IMPASSABLE_TERRAIN.value:
                 raise ValueError(f"Cannot place combatant at ({x}, {y}): Impassable terrain.")
-            if self.grid[x, y]['occupancy'] == Occupancy.OCCUPIED_BY_COMBATANT.value:
+            if self.grid[x, y]['occupancy'] == Occupancy.OCCUPIED_BY_COMBATANT.value and self.grid[x, y]['combatant'] != combatant.id:
                 raise ValueError(f"Cannot place combatant at ({x}, {y}): Already occupied by another combatant.")
+            self.grid[x, y]['combatant'] = combatant.id
+            self.grid[x, y]['occupancy'] = Occupancy.OCCUPIED_BY_COMBATANT.value
 
-        # Set combatant information in the grid
-        self.grid[x_coords, y_coords]['combatant'] = combatant.id
-        self.grid[x_coords, y_coords]['occupancy'] = Occupancy.OCCUPIED_BY_COMBATANT.value
         self.combatant_coordinate_cache[combatant] = coords
 
     def get_nearest(self, combatant, side=Side.ENEMY, dist_type=DistanceMetric.HOP):
@@ -1108,96 +1204,6 @@ class Map:
                 inflated.add((max(0, x), max(0, y)))
         return inflated
 
-    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
-    def get_free_coords_in_hop_range(self, coords: Coords, distances=None, inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
-        """
-        Returns free squares coordinates adjacent (up to the range distance) to a given coordinate that can be occupied
-        by a combatant of 'inflate_to_dist' size.
-        :param coords: target combatant coordinates
-        :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
-        :param inflate_to_dist: inflate for the sake of pathfinding BY larger combatants
-        :param rng: maximum range of what is considered 'adjacent'
-        :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
-        :return: free adjacent coordinates as a set of tuples (x, y)
-        """
-        assert rng > 0
-        inflated = self.inflate_coords(coords, inflate_to_dist)
-
-        adjacent_coords = set()
-        for coord in inflated:
-            for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
-                if x < 0 or x >= self.size or y < 0 or y >= self.size:
-                    continue
-                consider_accesibility = (distances[x * self.size + y] < sys.maxsize) if distances is not None else True
-                if _is_empty_or_self(self.grid, x, y, combatant.id) and consider_accesibility:# and (x, y) not in inflated:
-                    # have to use tuples since np.array is unhashable
-                    adjacent_coords.add((x, y))
-        return list(adjacent_coords)
-
-
-    @toggled_cache(key=lambda self, coords, distances=[], inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
-    def get_free_coords_at_hop_range(self, coords: Coords, distances=None, inflate_to_dist=Size.MEDIUM.value, rng=1,
-                                     combatant=None):
-        """
-        Returns coordinates exactly at 'rng' distance from the nearest edge of an area occupied by a combatant, considering combatant size for pathfinding.
-        :param coords: target combatant coordinates
-        :param distances: the distances to all squares (result of Dijkstra) to recognize accessibility of coordinates
-        :param inflate_to_dist: inflate for the sake of pathfinding by larger combatants
-        :param rng: exact range of what is considered 'adjacent'
-        :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
-        :return: coordinates exactly at 'rng' distance as a set of tuples (x, y)
-        """
-        assert rng > 0
-        inflated_area = self.inflate_coords(coords, inflate_to_dist)
-        perimeter_coords = set()
-
-        # Calculate bounds of the inflated area
-        min_x = min(coord[0] for coord in inflated_area) - rng
-        max_x = max(coord[0] for coord in inflated_area) + rng
-        min_y = min(coord[1] for coord in inflated_area) - rng
-        max_y = max(coord[1] for coord in inflated_area) + rng
-
-        # Generate perimeter coordinates at exactly rng distance
-        for x in range(min_x, max_x + 1):
-            for y in range(min_y, max_y + 1):
-                # Check if (x, y) is on the perimeter of the inflated area at rng distance
-                if x == min_x or x == max_x or y == min_y or y == max_y:
-                    if 0 <= x < self.size and 0 <= y < self.size:  # Check boundaries
-                        accessible = (distances[x * self.size + y] < sys.maxsize) if distances is not None else True
-                        if _is_empty_or_self(self.grid, x, y, combatant.id) and accessible:
-                            perimeter_coords.add((x, y))
-
-        return list(perimeter_coords)
-
-    # @toggled_cache(key=lambda self, coords, distances=np.array([]), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None: hashkey(coords, tuple(distances), inflate_to_dist, rng, combatant))
-    # def get_free_coords_in_cartesian_range(self, coords: Coords, distances=np.array([]), inflate_to_dist=Size.MEDIUM.value, rng=1, combatant=None):
-    #     """
-    #     Returns free square coordinates that are at the most rng away from the coords as measured by cartesian distance that can be occupied
-    #     by a combatant of 'inflate_to_dist' size. It's pretty much the same as get_free_coords_in_hop_range but it uses the rng as a
-    #     bounding box to narrow down the search.
-    #     :param coords: target combatant or destination coordinates
-    #     :param distances: the distances to all squares (result of Dijkstra) to be able to recognize accessibility of coordinates
-    #     :param inflate_to_dist: inflate for the sake of pathfinding BY larger combatants (as opposed to TO larger combatants)
-    #     :param rng: maximum range
-    #     :param combatant: optional combatant which is to be considered 'self' for the sake of is_empty_or_self
-    #     :return: free adjacent coordinates as a set of tuples (x, y)
-    #     """
-    #     assert rng > 0
-    #     # First inflate it by the size of the combatant looking for the path
-    #     inflated = self.inflate_coords(coords, inflate_to_dist)
-    #
-    #     coords_in_range = set()
-    #     for coord in inflated:
-    #         # the rng can be used as a bounding box for the search
-    #         for x, y in [(coord[0] + i, coord[1] + j) for i in range(-rng, rng + 1) for j in range(-rng, rng + 1)]:
-    #             if x < 0 or x >= self.size or y < 0 or y >= self.size or _get_cartesian_distance_coords(coords.get(), np.array([[x, y]])) > rng:
-    #                 continue
-    #             consider_accessibility = (distances[x * self.size + y] < sys.maxsize) if distances.size > 0 else True
-    #             if _is_empty_or_self(self.grid, x, y, combatant.id) and consider_accessibility:# and (x, y) not in inflated:
-    #                 # have to use tuples since np.array is unhashable
-    #                 coords_in_range.add((x, y))
-    #     return list(coords_in_range)
-
     def get_all_accessible_coords(self, shortest_paths, combatant):
         """
         Returns all free and square coordinates accessible by a combatant given the shortest paths ndarray (output of Dijkstra)
@@ -1244,8 +1250,8 @@ class Map:
         :param rng: the range of what is considered adjacent
         :return:
         """
-        adjacent_coords = self.get_free_coords_in_hop_range(target_location, distances, my_location.size.value, rng,
-                                                            combatant=combatant)
+        adjacent_coords = _get_free_coords_in_hop_range(self.grid, target_location.get(), distances, my_location.size.value, rng,
+                                                            combatant_id=combatant.id)
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]
@@ -1356,6 +1362,7 @@ class Map:
             return  # already removed
         for coord in old_coords:
             self.grid[coord[0], coord[1]]["combatant"] = -1
+            self.grid[coord[0], coord[1]]["occupancy"] = Occupancy.FREE.value
         del self.combatant_coordinate_cache[combatant]
 
     def remove_combatant_if_dead(self, combatant):
@@ -1383,10 +1390,11 @@ class Map:
         :param combatant_initial_positions: the initial positions as a dict
         """
         logger.debug("Resetting the battle map")
-        for row in self.grid:
-            for square in row:
-                logger.debug("Resetting square")
-                square.remove_combatant()
+        # size = self.grid.shape[0]
+        # for x in range(size):
+        #     for y in range(size):
+        self.grid['combatant'] = -1
+        self.grid['occupancy'] = Occupancy.FREE.value
         for combatant, coord in combatant_initial_positions.items():
             self.set_combatant_coordinates(combatant, copy.deepcopy(coord))
 
@@ -1819,13 +1827,6 @@ class Map:
         return False
 
     def clear_caches(self):
-        # self.get_hop_distance_coords.cache_clear()
-        # self.get_hop_distance_combatants.cache_clear()
-        # self.get_cartesian_distance_combatants.cache_clear()
-        # self.get_cartesian_distance_coords.cache_clear()
-
-        # self.get_free_coords_in_cartesian_range.cache_clear()
-        self.get_free_coords_in_hop_range.cache_clear()
         self.find_best_placement_harmful_circular.cache_clear()
 
     def push_combatant_away_from(self, origin, target_combatant, distance):

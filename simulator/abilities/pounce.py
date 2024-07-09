@@ -2,7 +2,8 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, reconstruct_from_shortest_path
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, reconstruct_from_shortest_path, \
+    _get_free_coords_in_hop_range
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..misc import is_path_straight
 from ..threat_interfaces import DirectThreat
@@ -96,11 +97,13 @@ class Pounce(Actoid, DirectThreat):
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            all_coords = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_dist=self.factory.combatant.size.value,
-                                                           rng=battle_map.size,  # approximation, could theoretically be longer
-                                                           combatant=self.factory.combatant)
+            all_coords = _get_free_coords_in_hop_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=battle_map.size,  # approximation, could theoretically be longer
+                combatant_id=self.factory.combatant.id)
             eligible_coords = []
             for coord in all_coords:
                 if self.is_straight_line_path(battle_map.get_combatant_position(self.factory.combatant), coord, distances, shortest_paths):

@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, _get_cartesian_distance_coords, _get_free_coords_at_hop_range
 from ..combatant_coords import Coords
 from ..effects.square_aoe import SquareAoe
 from ..spells.spell import SpellStats
@@ -107,10 +107,12 @@ class Thunderwave(Actoid, DirectThreat, SquareAoe):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return Map.get().get_free_coords_at_hop_range(Coords(self.coord, Size.HUGE),  # not actually combatant coords
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=ThunderwaveFactory.range, combatant=self.factory.combatant)
+            return _get_free_coords_at_hop_range(
+                battle_map.grid,
+                Coords(self.coord, Size.HUGE).get(),  # not actually combatant coords
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=ThunderwaveFactory.range, combatant_id=self.factory.combatant.id)
         elif _get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= ThunderwaveFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

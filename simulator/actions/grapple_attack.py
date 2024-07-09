@@ -1,6 +1,6 @@
 from .action_types import HasteAction
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
-from ..battle_map import Map
+from ..battle_map import Map, _get_free_coords_in_hop_range
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower, get_grappler
 import logging
 
@@ -105,11 +105,13 @@ class GrappleAttack(Actoid, AttackThreatModifier):
         if swallower:
             return None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_dist=self.factory.combatant.size.value,
-                                                           rng=self.factory.range,
-                                                           combatant=self.factory.combatant)
+            return _get_free_coords_in_hop_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                inflate_to_dist=self.factory.combatant.size.value,
+                rng=self.factory.range,
+                combatant_id=self.factory.combatant.id)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
 
