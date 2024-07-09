@@ -78,10 +78,10 @@ class GrappleAttackFactory(DirectThreatFactory):
         return self.follow_up_attack.calculate_threat_to_target_delta(target, modifiers, *args, **kwargs)
 
 
-class GrappleAttack(Actoid, AttackThreatModifier):
+class GrappleAttack(AttackThreatModifier):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_ACTION_ENABLER)
+        AttackThreatModifier.__init__(self, ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_ACTION_ENABLER)
         self.target = target
         self.factory = factory
         self.roll_type = RollType.STRAIGHT

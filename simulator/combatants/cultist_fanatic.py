@@ -38,7 +38,7 @@ class CultistFanatic(Combatant):
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_state('1')
+        self.attack_fsm.add_new_state('1')
         self.attack_fsm.add_transition(str(self.dagger[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.dagger[1]), '1', 'nop')
 

@@ -41,11 +41,11 @@ class YoungRedDragon(Combatant):
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_state('1')
-        self.attack_fsm.add_state('2')
-        self.attack_fsm.add_state('3')
-        self.attack_fsm.add_state('4')
-        self.attack_fsm.add_state('5')
+        self.attack_fsm.add_new_state('1')
+        self.attack_fsm.add_new_state('2')
+        self.attack_fsm.add_new_state('3')
+        self.attack_fsm.add_new_state('4')
+        self.attack_fsm.add_new_state('5')
         self.attack_fsm.add_transition(str(self.claw[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.claw[1]), '1', '3')
         self.attack_fsm.add_transition(str(self.bite[1]), '1', '4')

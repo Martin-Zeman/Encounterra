@@ -52,10 +52,10 @@ class HideFactory(ThreatModifierFactory):
         return 0  # Keep at 0 since we only want to hide in order to attack, the threat will be added as an attack modifier
 
 
-class Hide(Actoid, CombatantEffect, AttackThreatModifier):
+class Hide(AttackThreatModifier, CombatantEffect):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, ActoidFlags.IS_HIDE)
+        AttackThreatModifier.__init__(self, ActoidFlags.IS_HIDE)
         CombatantEffect.__init__(self, factory.combatant, combatants=[factory.combatant])
         self.target = target
         self.factory = factory

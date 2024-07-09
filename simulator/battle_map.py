@@ -1258,17 +1258,6 @@ class Map:
         adjacent_coords.sort(key=lambda coord: _get_cartesian_distance_coords(coord, my_location.get()))
         return adjacent_coords[0][0]
 
-    # def calc_dijkstra(self, combatant):
-    #     """
-    #     Calculates the Dijkstra algorithm for a given combatant.
-    #     :param combatant: combatant who wants to move
-    #     :return: :return: list of distances to all vertices, list of predecessors for every vertex and the threat adjacency matrix
-    #     """
-    #     my_location = self.get_combatant_position(combatant)
-    #     mask = self.build_combatant_adjacency_mask(combatant)
-    #     distances, shortest_paths = self.dijkstra(my_location.get()[0], mask=mask)
-    #     return distances, shortest_paths
-
     def calc_dijkstra(self, combatant):
         """
         Calculates the Dijkstra algorithm for a given combatant. Currently used only for testing

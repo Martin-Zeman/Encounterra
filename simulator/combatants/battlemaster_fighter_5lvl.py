@@ -41,8 +41,8 @@ class BattlemasterFighter5Lvl(Combatant):
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_state('1')  # attacked with melee
-        self.attack_fsm.add_state('2')  # attacked with ranged
+        self.attack_fsm.add_new_state('1')  # attacked with melee
+        self.attack_fsm.add_new_state('2')  # attacked with ranged
         self.attack_fsm.add_transition(str(self.greatsword[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.greatsword[1]), '1', 'nop')
         self.attack_fsm.add_transition(str(self.handaxe[1]), '0', '2')

@@ -33,12 +33,11 @@ class DashFactory(Factory):
         return Dash(self)
 
 
-class Dash(Actoid, AttackThreatModifier):
+class Dash(AttackThreatModifier):
     def __init__(self, factory):
-        Actoid.__init__(self, ActoidFlags.IS_DASH)
+        AttackThreatModifier.__init__(self, ActoidFlags.IS_DASH | ActoidFlags.LOCATION_INDEPENDENT)
         self.name = "Dash"
         self.factory = factory
-        self.actoid_flags |= ActoidFlags.LOCATION_INDEPENDENT
         if self.factory.action_type is BonusAction.AGGRESSIVE:
             self.actoid_flags |= ActoidFlags.IS_PRIORITY
 

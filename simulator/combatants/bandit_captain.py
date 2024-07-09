@@ -37,9 +37,9 @@ class BanditCaptain(Combatant):
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_state('1')
-        self.attack_fsm.add_state('2')
-        self.attack_fsm.add_state('3')
+        self.attack_fsm.add_new_state('1')
+        self.attack_fsm.add_new_state('2')
+        self.attack_fsm.add_new_state('3')
         self.attack_fsm.add_transition(str(self.scimitar[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.scimitar[1]), '1', '2')
         self.attack_fsm.add_transition(str(self.dagger[1]), '2', 'nop')

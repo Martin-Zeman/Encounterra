@@ -82,9 +82,9 @@ class BlessFactory(ThreatModifierFactory):
         return max([self.calculate_threat_to_target(t) for t in targets])
 
 
-class Bless(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
+class Bless(AttackThreatModifier, CombatantEffect, LimitedDurationEffect):
     def __init__(self, targets, factory):
-        Actoid.__init__(self, ActoidFlags.IS_SPELL)
+        AttackThreatModifier.__init__(self, ActoidFlags.IS_SPELL)
         CombatantEffect.__init__(self, factory.combatant, targets)
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.factory = factory

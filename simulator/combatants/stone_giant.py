@@ -38,7 +38,7 @@ class StoneGiant(Combatant):
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_state('1')
+        self.attack_fsm.add_new_state('1')
         self.attack_fsm.add_transition(str(self.club[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.club[1]), '1', 'nop')
         self.attack_fsm.add_transition(str(self.rock[1]), '0', 'nop')

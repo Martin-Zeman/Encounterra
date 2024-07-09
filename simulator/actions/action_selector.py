@@ -5,6 +5,7 @@ import math
 import sys
 
 import numpy as np
+from numba import njit
 
 from .action_dag import replace_combatant_with_wildshape
 from .actoid import ActoidFlags
@@ -130,7 +131,7 @@ def build_priority_transitions(dag, post_priority_transitions, transition_to_eli
         action_type = transition.split()[0]
         new_prio_state = action_type + "d"  # e.g. Dodge of FooBar -> Dodged
         prefix = prio_action_dict[transition_name_to_action[transition].factory.action_type][0]
-        dag.add_state(new_prio_state)
+        dag.add_new_state(new_prio_state)
         newly_added_states.append(new_prio_state)
         dag.add_transition(transition, "0", new_prio_state)
         for post_transition in post_transitions:
@@ -266,7 +267,7 @@ def create_movement_states(dag, transition_to_eligible_coords):
     coord_to_eligible_transitions = {c: frozenset(a) for c, a in coord_to_eligible_transitions.items()}
     eligible_transitions_to_state = {a: dag.get_next_state_name() for a in coord_to_eligible_transitions.values()}
     for state_name in eligible_transitions_to_state.values():
-        dag.add_state(state_name)
+        dag.add_new_state(state_name)
     return eligible_transitions_to_state, coord_to_eligible_transitions
 
 
@@ -419,6 +420,69 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
     return best_sequence, best_out_threat
 
 
+@njit
+def _dfs(dag_forward: np.ndarray, current_state: int, max_sequence_length: int):
+    sequences = []
+    empty_sequence = np.zeros(max_sequence_length, dtype=np.int32)
+    sequence_length = 0
+    stack = [(current_state, sequence_length, empty_sequence.copy())]
+
+    while stack:
+        state, sequence_length, current_sequence = stack.pop()
+
+        if state == 1:  # 'nop' state
+            sequences.append(current_sequence[:sequence_length].copy())
+            continue
+
+        for i in range(dag_forward.shape[1]):
+            transition, next_state = dag_forward[state, i]
+            if transition == -1:
+                break
+            if sequence_length < max_sequence_length:
+                new_sequence = current_sequence.copy()
+                new_sequence[sequence_length] = transition
+                stack.append((next_state, sequence_length + 1, new_sequence))
+
+    return sequences
+
+
+def prune_sequences(sequences, transition_name_to_action, index_to_transition, transition_to_simplified):
+    sequence_sets = set()
+    pruned_sequences = []
+    for sequence in sequences:
+        current_sequence_set = frozenset((transition_to_simplified[tx_idx] for tx_idx in sequence))  # Removes the trailing level designator
+        if current_sequence_set not in sequence_sets:
+            pruned_sequences.append(sequence)
+            sequence_sets.add(current_sequence_set)
+        else:
+            for tx in sequence:
+                try:
+                    if ActoidFlags.IS_ATTACK_MODIFIER in transition_name_to_action[index_to_transition[tx]].actoid_flags:
+                        pruned_sequences.append(sequence)
+                        break
+                except KeyError:
+                    pass
+    return pruned_sequences
+
+
+def create_coord_to_sequence_mapping(sequences, movement_transition_to_coord_and_type):
+    coord_to_sequence_ids = dict()  # Maps coord (and movement type) to all sequences which end in that coord
+    for idx, sequence in enumerate(sequences):
+        coord = None
+        for tx in sequence:
+            try:
+                coord = movement_transition_to_coord_and_type[tx]
+                break
+            except KeyError:
+                pass  # Skipping transitions that aren't movement
+        if coord is not None:
+            try:
+                coord_to_sequence_ids[coord].append(idx)
+            except KeyError:
+                coord_to_sequence_ids[coord] = [idx]
+    return coord_to_sequence_ids
+
+
 def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_transition_to_coord_and_type, distances, shortest_paths, infeasibility_multiplier=0.5):
     """
     Finds the path through the DAG which represents the movement and actions with the highest calculated threat.
@@ -438,47 +502,24 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
     """
     battle_map = Map.get()
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
-    sequences = []
-    sequence_set = set()  # This is an optimization measure, it's a set of sets which helps us eliminate equivalent sequences
     transition_name_to_ms_path = dict()
     sequence_to_threat = dict()  # Overall threat score of a sequence: sequence idx -> [movement threat, action threat]
     sequence_idx_to_transition_step_threat = dict()
-    coord_to_sequence_ids = dict()  # Maps coord (and movement type) to all sequences which end in that coord
     current_coords = battle_map.get_combatant_position(combatant).get()[0]
     try:
         del movement_transition_to_coord_and_type[f"ms_({current_coords[0]}, {current_coords[1]})"]  # Removing Misty Step to current coordinate
     except KeyError:
         pass
 
-    def DFS(dag, current_state, current_sequence, coord):
-        if current_state == 'nop':
-            current_sequence_set = frozenset((tx[:-2] if tx[-2] == "_" else tx for tx in current_sequence))  # Removes the trailing level designator
-            contains_threat_modifier = False
-            for tx in current_sequence:
-                try:
-                    if isinstance(transition_name_to_action[tx], AttackThreatModifier):
-                        contains_threat_modifier = True
-                        break
-                except KeyError:
-                    pass
-            if contains_threat_modifier or current_sequence_set not in sequence_set:
-                sequences.append(copy.deepcopy(current_sequence))
-                sequence_set.add(current_sequence_set)
-                try:
-                    coord_to_sequence_ids[coord].append(len(sequences) - 1)
-                except KeyError:
-                    coord_to_sequence_ids[coord] = [len(sequences) - 1]
-            return
-        for transition, next_state in dag.forward_transitions[current_state]:
-            current_sequence.append(transition)
-            try:
-                coord = movement_transition_to_coord_and_type[transition]
-            except KeyError:
-                pass  # Skipping transitions that aren't movement
-            DFS(dag, next_state, current_sequence, coord)
-            current_sequence.pop()
-
-    DFS(dag, '0', [], None)
+    dag_forward, num_states, index_to_state, index_to_transition, transition_to_simplified = dag.get_numba_compatible_data()
+    max_sequence_length = num_states * 2  # This is a rough estimate
+    all_sequences = _dfs(dag_forward, 0, max_sequence_length)
+    pruned_sequences = prune_sequences(all_sequences, transition_name_to_action, index_to_transition, transition_to_simplified)
+    sequences = []
+    for arr in pruned_sequences:
+        sequence = [index_to_transition.get(item, f"Unknown_{item}") for item in arr]
+        sequences.append(sequence)
+    coord_to_sequence_ids = create_coord_to_sequence_mapping(sequences, movement_transition_to_coord_and_type)
 
     accumulate_threat_along_path.cache_clear()
     get_aoe_and_aoo_threat_for_increment.cache_clear()

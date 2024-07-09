@@ -74,10 +74,10 @@ class VowOfEnmityFactory(ThreatModifierFactory):
         return out_threat_max_delta_acc * ROUND_HORIZON
 
 
-class VowOfEnmity(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
+class VowOfEnmity(AttackThreatModifier, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self)
+        AttackThreatModifier.__init__(self)
         CombatantEffect.__init__(self, factory.combatant, combatants=[target])
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.factory = factory
