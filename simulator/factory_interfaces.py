@@ -63,7 +63,7 @@ class RechargeFactory(ABC, Factory):
         self.flags |= FactoryFlags.IS_RECHARGE
 
     def roll_for_recharge(self):
-        roll = roll_dice([(1, 6)])
+        roll = roll_dice((1, 6))
         resource = self.combatant.resources[self.action_type]
         if not resource.has_resource() and roll >= self.recharge_value:
             logger.info(f"{self.combatant}'s {self.get_ability_name()} recharges")

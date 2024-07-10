@@ -32,7 +32,7 @@ class MagicMissileFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # MAGIC_MISSILE, QUICKENED_MAGIC_MISSILE
-        self.dmg_dice = '1d4'
+        self.dmg_dice = [(1, 4)]
         self.dmg_bonus = 1
         self.combatant = caster
         self.resource = resource

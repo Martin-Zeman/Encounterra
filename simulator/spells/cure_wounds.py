@@ -1,10 +1,9 @@
 from cachetools.keys import hashkey
 
-from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
     _get_free_coords_in_cartesian_range
 from ..spells.spell import SpellStats
-from ..misc import avg_roll, Visibility, Class, get_missing_hp
+from ..misc import avg_roll, Class, get_missing_hp
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat
@@ -28,7 +27,7 @@ class CureWoundsFactory(DirectThreatFactory):
         super().__init__()
         self.mod = mod
         self.action_type = action_type  # CURE_WOUNDS or QUICKENED_CURE_WOUNDS
-        self.heal_dice = "1d8"
+        self.heal_dice = (1, 8)
         self.combatant = caster
         self.resource = resource
 

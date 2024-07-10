@@ -20,12 +20,12 @@ class Assassin(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=78, ac=15, init_bonus=3, speed=30, spell_to_hit=0, resistances={DamageType.Poison}, dc=15)
-        self.shortsword = self.add_ability(Action.MELEE_ATTACK, name="Shortsword", combatant=self, to_hit=6, dmg_dice="1d6", dmg_bonus=3,
-                                       dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True, on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
-        self.light_crossbow = self.add_ability(Action.RANGED_ATTACK,  name="Light Crossbow", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=3,
-                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER), on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
-        self.add_ability(Reaction.REACTION_ATTACK, name="Shortsword", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1,
-                         on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, "7d6", DamageType.Poison, True, "Poison")])
+        self.shortsword = self.add_ability(Action.MELEE_ATTACK, name="Shortsword", combatant=self, to_hit=6, dmg_dice=[(1, 6)], dmg_bonus=3,
+                                       dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True, on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, [(7, 6)], DamageType.Poison, True, "Poison")])
+        self.light_crossbow = self.add_ability(Action.RANGED_ATTACK,  name="Light Crossbow", combatant=self, to_hit=7, dmg_dice=[(1, 8)], dmg_bonus=3,
+                                         dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER), on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, (7, 6), DamageType.Poison, True, "Poison")])
+        self.add_ability(Reaction.REACTION_ATTACK, name="Shortsword", combatant=self, to_hit=7, dmg_dice=[(1, 8)], dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1,
+                         on_hit=[OnHitSavingThrowDmg(SavingThrow.CON, 15, [(7, 6)], DamageType.Poison, True, "Poison")])
         self.add_ability(Passive.EVASION)
         self.add_ability(Passive.SNEAK_ATTACK)
         self.add_ability(Passive.ASSASSINATE)

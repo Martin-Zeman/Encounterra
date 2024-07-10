@@ -32,7 +32,7 @@ class ThunderwaveFactory(ThreatModifierFactory):
         self.combatant = caster
         self.saving_throw = SavingThrow.CON
         self.resource = resource
-        self.dmg_dice = "2d8"
+        self.dmg_dice = [(2, 8)]
 
     def __str__(self):
         """
@@ -62,7 +62,10 @@ class ThunderwaveFactory(ThreatModifierFactory):
 
     def calculate_threat_to_target(self, target, **kwargs):
         if Map.get().get_cartesian_distance_combatants(self.combatant, target) <= ThunderwaveFactory.range + SpellStats.TRANSLATE_BOX[ThunderwaveFactory.target]:
-            return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, self.saving_throw, target, ThunderwaveFactory.dmg_type))
+            return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+                                                          target.saving_throws[self.saving_throw],
+                                                          target.is_immune_to(ThunderwaveFactory.dmg_type),
+                                                          target.is_resistant_to(ThunderwaveFactory.dmg_type)))
         return 0
 
     def calculate_max_threat(self):
@@ -90,7 +93,10 @@ class Thunderwave(Actoid, DirectThreat, SquareAoe):
         affected = battle_map.get_combatants_affected_by_box_aoe(ThunderwaveFactory.target, self.coord)
         acc = 0
         for aff in affected:
-            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, self.factory.saving_throw, aff, ThunderwaveFactory.dmg_type))
+            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+                                                           aff.saving_throws[self.factory.saving_throw],
+                                                           aff.is_immune_to(ThunderwaveFactory.dmg_type),
+                                                           aff.is_resistant_to(ThunderwaveFactory.dmg_type)))
             acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
         return acc
 

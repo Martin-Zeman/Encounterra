@@ -4,10 +4,8 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, _get_cartesian_distance_coords, \
-    _get_free_coords_in_hop_range
+from ..battle_map import Map, map_position_toggled_cache, _get_cartesian_distance_coords, _get_free_coords_in_hop_range
 from ..misc import DamageType, SavingThrow
-from ..conditions import Conditions, is_affected_by
 from ..actions.actoid import Actoid, FactoryFlags
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
@@ -25,7 +23,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         super().__init__()
         self.flags |= FactoryFlags.TRANSITIONS_TO_WILDSHAPE
         self.action_type = BonusAction.FLAMING_SPHERE_RAM
-        self.dmg_dice = "2d6"
+        self.dmg_dice = [(2, 6)]
         self.combatant = caster
         self.dc = dc
         self.action_enabler_effect = action_enabler_effect
@@ -57,7 +55,10 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, self.saving_throw, target, self.dmg_type))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+                                                      target.saving_throws[self.saving_throw],
+                                                      target.is_immune_to(self.dmg_type),
+                                                      target.is_resistant_to(self.dmg_type)))
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """

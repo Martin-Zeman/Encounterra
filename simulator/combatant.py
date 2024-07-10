@@ -210,16 +210,16 @@ class Combatant(ProtoCombatant):
                     self.already_used_sneak_attack_this_turn = False
                     for af in self.action_factories:
                         if isinstance(af[1], AttackFactory) and (FactoryFlags.USES_DEX in af[1].flags or FactoryFlags.IS_RANGED in af[1].flags):
-                            af[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), af[1].dmg_type, af[1].crit_range))
+                            af[1].on_hit.append(OnHitSneakAttack([OnHitSneakAttack.get_dmg_dice(self.level)], af[1].dmg_type, af[1].crit_range))
                     for baf in self.bonus_action_factories:
                         if isinstance(baf[1], AttackFactory)and (FactoryFlags.USES_DEX in baf[1].flags or FactoryFlags.IS_RANGED in baf[1].flags):
-                            baf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), baf[1].dmg_type, baf[1].crit_range))
+                            baf[1].on_hit.append(OnHitSneakAttack([OnHitSneakAttack.get_dmg_dice(self.level)], baf[1].dmg_type, baf[1].crit_range))
                     for haf in self.haste_action_factories:
                         if isinstance(haf[1], AttackFactory) and (FactoryFlags.USES_DEX in haf[1].flags or FactoryFlags.IS_RANGED in haf[1].flags):
-                            haf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), haf[1].dmg_type, haf[1].crit_range))
+                            haf[1].on_hit.append(OnHitSneakAttack([OnHitSneakAttack.get_dmg_dice(self.level)], haf[1].dmg_type, haf[1].crit_range))
                     for raf in self.reaction_factories:
                         if isinstance(raf[1], AttackFactory) and (FactoryFlags.USES_DEX in raf[1].flags or FactoryFlags.IS_RANGED in raf[1].flags):
-                            raf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), raf[1].dmg_type, raf[1].crit_range))
+                            raf[1].on_hit.append(OnHitSneakAttack([OnHitSneakAttack.get_dmg_dice(self.level)], raf[1].dmg_type, raf[1].crit_range))
                     self.display_abilities.append("Sneak Attack")
                 case Passive.REGENERATION:
                     try:

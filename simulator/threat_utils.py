@@ -5,14 +5,14 @@ from functools import cache, reduce
 import numpy as np
 from cachetools import cached
 from cachetools.keys import hashkey
+from numba import njit
 from scipy.stats import randint
 from toposort import toposort_flatten
 
 from .actions.actoid import FactoryFlags
 from .battle_map import Map, _get_hop_distance_coords
 from .utils.state_machine_template import StateMachineTemplate
-from .misc import parse_dmg_dice, reconstruct_path_through_dag
-from .conditions import Conditions, is_affected_by
+from .misc import reconstruct_path_through_dag, avg_roll_multi
 from .spells.misty_step import MistyStepFactory
 from .utils.roll_types import RollType
 
@@ -20,55 +20,48 @@ DZ_CONSTANT = 0.33
 MAX_HP_MODIFIER_MULTIPLIER = 1.25
 
 
-@cache
-def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, target, dmg_type, crit_range=1):
+@njit
+def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, is_immune=False, is_resistant=False, crit_range=1):
     """
-    Calculates mean dmg of an attack-like ability
-    @param to_hit: to hit bonus
-    @param dmg_dice: damage dice in a string form
-    @param dmg_bonus: bonus to damage
-    @param ac: target's AC
-    @param target: the receiver of the damage
-    @param dmg_type: type of the damage received
-    @param crit_range: 1 - default for nat 20, 2 for [19, 20], 3 for [18..20], etc.
-    @return: mean damage not accounting for critical failures
+    Calculates mean damage of an attack-like ability.
     """
-    if target.is_immune_to(dmg_type):
-        return 0
-    rv = randint(1, 21, to_hit)
-    p_hit = 1.0 - rv.cdf(ac - 1)
-    dice = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
+    if is_immune:
+        return 0.0
+
+    rv = np.arange(1, 21) + to_hit
+    p_hit = 1.0 - (np.sum(rv < ac) / 20.0)
+
+    avg_dmg_die_roll = avg_roll_multi(dmg_dice)
     res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
-    return res if not target.is_resistant_to(dmg_type) else (res / 2)
+    if is_resistant:
+        res /= 2.0
+
+    return res
 
 
-@cache
+@njit
 def calc_p_hit(to_hit, ac):
     """
     Calculates the probability of hitting
     @param to_hit: to hit bonus
-    @param dmg_dice: damage dice in a string form
-    @param dmg_bonus: bonus to damage
     @param ac: target's AC
-    @param crit_range: 1 - default for nat 20, 2 for [19, 20], 3 for [18..20], etc.
-    @param is_resistant: True if the target is resistant to the dmg type
-    @return: mean damage not accounting for critical failures
+    @return: probability of hitting
     """
-    rv = randint(1, 21, to_hit)
-    return 1.0 - rv.cdf(ac - 1)
+    min_roll = ac - to_hit
+    min_roll = max(1, min(20, min_roll))
+    p_hit = (21 - min_roll) / 20.0
+    return p_hit
 
 
-@cache
+@njit
 def mean_dmg_auto_hit(dmg_dice, is_resistant=False):
     """
     Calculates mean dmg of an attack-like ability
-    @param dmg_dice: damage dice in a string form
+    @param dmg_dice: damage dice as a list of tuples
     @param is_resistant: True if the target is resistant to the dmg type
     @return: mean damage
     """
-    dice = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
+    avg_dmg_die_roll = avg_roll_multi(dmg_dice)
     return avg_dmg_die_roll if not is_resistant else (avg_dmg_die_roll / 2)
 
 
@@ -86,12 +79,20 @@ def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increm
     @param dmg_type:
     @return: mean damage increment not accounting for critical failures
     """
-    return mean_dmg(to_hit + to_hit_increment, dmg_dice, dmg_bonus, ac, target, dmg_type, crit_range) - mean_dmg(to_hit,
-                                                                                                             dmg_dice,
-                                                                                                             dmg_bonus,
-                                                                                                             ac,
-                                                                                                             target, dmg_type,
-                                                                                                             crit_range)
+    return (mean_dmg(to_hit + to_hit_increment,
+                     dmg_dice,
+                     dmg_bonus,
+                     ac,
+                     target.is_immune_to(dmg_type),
+                     target.is_resistant_to(dmg_type),
+                     crit_range) -
+            mean_dmg(to_hit,
+                     dmg_dice,
+                     dmg_bonus,
+                     ac,
+                     target.is_immune_to(dmg_type),
+                     target.is_resistant_to(dmg_type),
+                     crit_range))
 
 
 @cache
@@ -107,7 +108,18 @@ def dmg_increment_for_dmg_flat(to_hit, dmg_dice, dmg_bonus, ac, dmg_increment, t
     @param dmg_type:
     @return: mean damage increment not accounting for critical failures
     """
-    return mean_dmg(to_hit, dmg_dice, dmg_bonus + dmg_increment, ac, target, dmg_type) - mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, target, dmg_type)
+    return (mean_dmg(to_hit,
+                    dmg_dice,
+                    dmg_bonus + dmg_increment,
+                    ac,
+                    target.is_immune_to(dmg_type),
+                    target.is_resistant_to(dmg_type)) -
+            mean_dmg(to_hit,
+                     dmg_dice,
+                     dmg_bonus,
+                     ac,
+                     target.is_immune_to(dmg_type),
+                     target.is_resistant_to(dmg_type)))
 
 
 @cache
@@ -124,25 +136,20 @@ def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus, target,
     @param crit_range:
     @return: mean damage decrement not accounting for critical failures (positive value)
     """
-    return mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, target, dmg_type, crit_range) - mean_dmg(to_hit, dmg_dice, dmg_bonus,
-                                                                                          ac + ac_bonus, target, dmg_type, crit_range)
-
-
-@cache
-def mean_dmg_bonus_increment_for_to_hit_bonus_dice(to_hit, dmg_dice, dmg_bonus, ac, bonus_dice_size, target, dmg_type):
-    """
-    Calculates the increase in mean dmg for an attack-like ability using a to-hit bonus die
-    @param to_hit: to hit bonus
-    @param dmg_dice: damage dice in a string form
-    @param dmg_bonus: bonus to damage
-    @param ac: target's AC
-    @param bonus_dice_size:
-    @param target:
-    @param dmg_type:
-    @return: mean damage increment not accounting for critical failures
-    """
-    return mean_dmg(to_hit + (1.0 + bonus_dice_size) / 2.0, dmg_dice, dmg_bonus, ac, target, dmg_type) - mean_dmg(to_hit, dmg_dice,
-                                                                                                dmg_bonus, ac, target, dmg_type)
+    return (mean_dmg(to_hit,
+                    dmg_dice,
+                    dmg_bonus,
+                    ac,
+                    target.is_immune_to(dmg_type),
+                    target.is_resistant_to(dmg_type),
+                    crit_range) -
+            mean_dmg(to_hit,
+                     dmg_dice,
+                     dmg_bonus,
+                     ac + ac_bonus,
+                     target.is_immune_to(dmg_type),
+                     target.is_resistant_to(dmg_type),
+                     crit_range))
 
 
 def calculate_threat_in_delta(combatant, threat_radius, modifiers, factory_flags):
@@ -281,28 +288,31 @@ def get_saving_throw_fail_prob(dc, st_bonus):
     return rv.cdf(dc - 1)
 
 
-@cache
-def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_type, target, dmg_type):
+@njit
+def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_immune=False, is_resistant=False):
     """
     Calculates mean damage of a DC-based ability
     @param dc: DC
-    @param dmg_dice: dmg dice in string form
+    @param dmg_dice: dmg dice as a list of tuples
     @param half_on_success: True if half damage is received on a successful saving throw, False if zero
-    @param st_type: The saving throw ability which applies
-    @param target: target of the DC attack
-    @param dmg_type: damage type of the attack
-    @return:
+    @param st_bonus: The relevant saving throw bonus for the check
+    @param is_immune: is target immune to the dmg type
+    @param is_resistant: is target resistant to the dmg type
+    @return: Mean damage
     """
-    if target.is_immune_to(dmg_type):
+    if is_immune:
         return 0
-    dice = parse_dmg_dice(dmg_dice)
-    avg_dmg_die_roll = reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
-    rv = randint(1, 21, target.saving_throws[st_type])
-    p_fail = rv.cdf(dc - 1)
-    fail_dmg = avg_dmg_die_roll * p_fail
-    final_avg_dmg = fail_dmg + avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else fail_dmg
-    return final_avg_dmg if not target.is_resistant_to(dmg_type) else final_avg_dmg / 2
 
+    avg_dmg_die_roll = avg_roll_multi(dmg_dice)
+
+    # Calculate probability of failing the saving throw
+    p_fail = min(max((dc - st_bonus - 1) / 20, 0), 1)
+
+    fail_dmg = avg_dmg_die_roll * p_fail
+    success_dmg = avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else 0
+    final_avg_dmg = fail_dmg + success_dmg
+
+    return final_avg_dmg if not is_resistant else final_avg_dmg / 2
 
 def get_danger_zone_threat(coords, combatant, delta=0):
     """
@@ -348,8 +358,10 @@ def get_threat_for_staying_at_coord(coords, combatant):
     return threat_acc
 
 
-@cached(cache={}, key=lambda curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged: hashkey((tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
-def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged=False, dodged=False):
+@cached(cache={}, key=lambda curr_coords_data, increment, combatant, effect_to_coords, disengaged, dodged: hashkey(
+    (tuple(curr_coords_data[0]), tuple(increment), disengaged, dodged)))
+def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant, effect_to_coords, disengaged=False,
+                                         dodged=False):
     """
     A helper caching function which accumulates threats from AoE and AoO along a path.
     Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
@@ -387,7 +399,9 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant,
     return threat_acc
 
 
-@cached(cache={}, key=lambda path, combatant, effect_to_coords, disengaged=False, dodged=False: hashkey(tuple(path), disengaged, dodged))
+@cached(cache={},
+        key=lambda path, combatant, effect_to_coords, disengaged=False, dodged=False: hashkey(tuple(path), disengaged,
+                                                                                              dodged))
 def accumulate_threat_along_path(path, combatant, effect_to_coords, disengaged=False, dodged=False):
     """
     Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
@@ -457,7 +471,7 @@ def calc_threat_for_path_with_misty_step(path, combatant, effect_to_coords):
             previous_state = new_state_name
             previous_ms_state = new_ms_state_name
         ms_dag = StateMachineTemplate()
-        ms_dag.states = states
+        ms_dag.states = states  # This is technically incorrect since the states have their own type
         ms_dag.initial = initial_state_name
         ms_dag.dependencies = dict()
         for t in transitions:

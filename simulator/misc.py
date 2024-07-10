@@ -3,6 +3,10 @@ import random
 import re
 from functools import reduce, cache
 from itertools import product
+
+import numpy as np
+from numba import njit
+
 from .actions.actoid import FactoryFlags
 import logging
 from .utils.roll_types import RollType
@@ -311,31 +315,43 @@ def reconcile_roll_types(types):
     return ret
 
 
-@cache
-def parse_dmg_dice(dice_string):
-    """
+# @cache
+# def parse_dmg_dice(dice_string):
+#     """
+#
+#     @param dice_string:
+#     @return: list of tuples representing (#num dice, dice size)
+#     """
+#     segments = re.split(r'([+-])', dice_string)
+#     res = []
+#     p = re.compile('(\d+)d(\d+)')
+#     sign = 1
+#     for seg in segments:
+#         try:
+#             m = p.match(seg)
+#             res.append((sign * int(m.group(1)), int(m.group(2))))
+#         except AttributeError:
+#             sign = SIGN[seg]
+#     return res
+#
+#
+# @cache
+# def avg_roll(dice_string):
+#     dice = parse_dmg_dice(dice_string)
+#     return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
 
-    @param dice_string:
-    @return: list of tuples representing (#num dice, dice size)
-    """
-    segments = re.split(r'([+-])', dice_string)
-    res = []
-    p = re.compile('(\d+)d(\d+)')
-    sign = 1
-    for seg in segments:
-        try:
-            m = p.match(seg)
-            res.append((sign * int(m.group(1)), int(m.group(2))))
-        except AttributeError:
-            sign = SIGN[seg]
-    return res
+
+@njit
+def avg_roll(dice: tuple):
+    return dice[0] * ((1.0 + dice[1]) / 2.0)
 
 
-@cache
-def avg_roll(dice_string):
-    dice = parse_dmg_dice(dice_string)
-    return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
-
+@njit
+def avg_roll_multi(dice: list):
+    acc = 0.0
+    for d in dice:
+        acc += d[0] * ((1.0 + d[1]) / 2.0)
+    return acc
 
 @cache
 def generate_outcomes(dice):
@@ -358,40 +374,63 @@ def percentile_roll(dice, percentile):
     return find_percentile_value(all_outcomes, percentile)
 
 
+@njit
 def roll_dice(dice):
     """
     Basic function for rolling dice
-    @param dice: list of tuples of (# of dice (1..inf), dice sizes (4, 6, 8, 10, 12))
-    @return:
+    @param dice: a dice tuple (number of dice, number of sides)
+    @return: sum of dice rolls
     """
-    dice_sum = 0
-    for d in dice:
-        for _ in range(d[0]):
-            dice_sum += random.randint(1, d[1])
-    return dice_sum
+    num_dice, num_sides = dice
+    return np.random.randint(1, num_sides + 1, num_dice).sum()
 
 
-def roll_dice_with_reroll(dice, reroll_max_value):
+@njit
+def roll_dice_multi(dice_list):
     """
-    Function for rolling dice which re-rolls results less than a given value. The re-rolled value must be used.
-    @param dice: list of tuples of (# of dice (1..inf), dice sizes (4, 6, 8, 10, 12))
+    Function for rolling multiple sets of dice
+    @param dice_list: list of dice tuples, each tuple is (number of dice, number of sides)
+    @return: sum of all dice rolls
+    """
+    total_sum = 0
+    for dice in dice_list:
+        total_sum += roll_dice(dice)
+    return total_sum
+
+
+@njit
+def roll_dice_with_reroll_and_log(dice, reroll_max_value):
+    """
+    Function for rolling dice which re-rolls results less than or equal to a given value. The re-rolled value must be used.
+    @param dice: tuple of (# of dice (1..inf), dice size (4, 6, 8, 10, 12))
     @param reroll_max_value: the maximum die value to be rerolled
-    @return:
+    @return: tuple of (sum of dice rolls after rerolls, list of tuples of (original roll, reroll) for logging)
     """
+    num_dice, dice_size = dice
     dice_sum = 0
-    for d in dice:
-        for _ in range(d[0]):
-            rolled = random.randint(1, d[1])
-            if rolled <= reroll_max_value:
-                rerolled = random.randint(1, d[1])
-                logger.info(f"Re-rolling {rolled} as {rerolled}")
-                rolled = rerolled
-            dice_sum += rolled
-    return dice_sum
+    reroll_log = []
+
+    for _ in range(num_dice):
+        rolled = np.random.randint(1, dice_size + 1)
+        if rolled <= reroll_max_value:
+            rerolled = np.random.randint(1, dice_size + 1)
+            reroll_log.append((rolled, rerolled))
+            rolled = rerolled
+        dice_sum += rolled
+
+    return dice_sum, reroll_log
+
+
+# Use the function and handle logging outside the Numba-compiled function
+def roll_dice_with_reroll(dice, reroll_max_value):
+    result, reroll_log = roll_dice_with_reroll_and_log(dice, reroll_max_value)
+    for original, reroll in reroll_log:
+        logger.info(f"Re-rolling {original} as {reroll}")
+    return result
 
 
 def roll_saving_throw(bonus, dc, roll_type):
-    d20 = [(1, 20)]
+    d20 = (1, 20)
     if roll_type is RollType.STRAIGHT:
         roll = roll_dice(d20)
     elif roll_type is RollType.ADVANTAGE:
@@ -405,7 +444,7 @@ def roll_saving_throw(bonus, dc, roll_type):
 
 
 def roll_ability_check(bonus, dc, roll_type):
-    d20 = [(1, 20)]
+    d20 = (1, 20)
     if roll_type is RollType.STRAIGHT:
         return roll_dice(d20) + bonus >= dc
     elif roll_type is RollType.ADVANTAGE:
@@ -422,11 +461,6 @@ def roll_dice_chaos_bolt(dice):
         dice_sum += rolled
         numbers_rolled.append(rolled)
     return dice_sum, numbers_rolled
-
-
-def roll_spell_dmg(dmg_dice):
-    dice = parse_dmg_dice(dmg_dice)
-    return roll_dice(dice)
 
 
 def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
@@ -518,14 +552,14 @@ def get_missing_hp(combatant):
 def get_superiority_dice(level):
     match level:
         case lvl if 3 <= lvl <= 9:
-            return "1d8"
+            return (1, 8)
         case lvl if 10 <= lvl <= 17:
-            return "1d10"
+            return (1, 10)
         case lvl if 18 <= lvl <= 20:
-            return "1d12"
+            return (1, 12)
         case _:
             logger.error("Incorrect Battlemaster level")
-            return "1d8"
+            return (1, 8)
 
 @staticmethod
 def get_num_superiority_dice(level):

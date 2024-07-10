@@ -84,7 +84,8 @@ class HasteFactory(ThreatModifierFactory):
             potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:
                 continue
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, pt, attack.dmg_type, attack.crit_range), potential_targets, 0)
+            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, pt.is_immune_to(attack.dmg_type),
+                            pt.is_resistant_to(attack.dmg_type), attack.crit_range), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_attack_dmg = max(dmg_acc, max_attack_dmg)
         attack_dmg_decrement_acc = 0

@@ -36,7 +36,7 @@ class SleepFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = None
 
-    mean_sleep_hp = avg_roll('5d8')
+    mean_sleep_hp = avg_roll((5, 8))
     max_sleep_hp = 40
 
     def __init__(self, action_type, caster, resource):
@@ -126,7 +126,7 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
         affected.sort(key=lambda cmbt: cmbt.curr_hp)
         put_to_sleep = []
         hp_acc = 0
-        total_hp_affected = roll_dice([(5, 8)])
+        total_hp_affected = roll_dice((5, 8))
         for combatant in affected:
             if combatant.has_passive(Passive.CHARM_IMMUNITY):
                 continue

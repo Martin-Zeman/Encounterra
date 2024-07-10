@@ -14,7 +14,7 @@ from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, roll_spell_dmg, ROUND_HORIZON, SavingThrow
+from ..misc import DamageType, ROUND_HORIZON, SavingThrow, roll_dice
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import AoEThreat, Threat
@@ -38,7 +38,7 @@ class FlamingSphereFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # FLAMING_SPHERE, QUICKENED_FLAMING_SPHERE
-        self.dmg_dice = "2d6"
+        self.dmg_dice = [(2, 6)]
         self.dc = dc
         self.combatant = caster
         self.saving_throw = SavingThrow.DEX
@@ -74,7 +74,10 @@ class FlamingSphereFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, self.saving_throw, target, self.dmg_type)) * ROUND_HORIZON
+        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+                                                      target.saving_throws[self.saving_throw],
+                                                      target.is_immune_to(self.dmg_type),
+                                                      target.is_resistant_to(self.dmg_type))) * ROUND_HORIZON
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -134,7 +137,10 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
             return 0
         acc = 0
         for enemy in enemies:
-            acc += min(enemy.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, self.factory.saving_throw, enemy, self.factory.dmg_type))
+            acc += min(enemy.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+                                                         enemy.saving_throws[self.factory.saving_throw],
+                                                         enemy.is_immune_to(self.factory.dmg_type),
+                                                         enemy.is_resistant_to(self.factory.dmg_type)))
         return acc / len(enemies) * ROUND_HORIZON
 
     def clear_cache(self):
@@ -162,14 +168,14 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         pass
 
     def on_end_of_turn(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        dmg = roll_dice(self.factory.dmg_dice)
         logger.info(f"{combatant} is burned by Flaming Sphere for {dmg} damage")
         combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
     def on_enter(self, combatant):
         # It's not explicitly written in the rules, but it makes sense
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        dmg = roll_dice(self.factory.dmg_dice)
         logger.info(f"{combatant} is burned by Flaming Sphere for {dmg} damage")
         combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
@@ -187,11 +193,18 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
-        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, self.factory.saving_throw, target, self.factory.dmg_type))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice,
+                                                      True,
+                                                      target.saving_throws[self.factory.saving_throw],
+                                                      target.is_immune_to(self.factory.dmg_type),
+                                                      target.is_resistant_to(self.factory.dmg_type)))
 
     def threat_on_enter(self, target, *args, **kwargs):
         # It's not explicitly written in the rules, but it makes sense
-        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, self.factory.saving_throw, target, self.factory.dmg_type))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+                                                      target.saving_throws[self.factory.saving_throw],
+                                                      target.is_immune_to(self.factory.dmg_type),
+                                                      target.is_resistant_to(self.factory.dmg_type)))
 
     def threat_on_start_of_turn(self, target, *args, **kwargs):
         return 0

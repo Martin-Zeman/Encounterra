@@ -5,15 +5,14 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import Passive
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache, _get_free_coords_in_cartesian_range
 from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import RollType, avg_roll, Visibility, SavingThrow, reconcile_roll_types, \
     roll_saving_throw, get_strength_based_attack_factories, ROUND_HORIZON
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import calc_p_hit
@@ -41,7 +40,7 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
         self.to_hit = caster.spell_to_hit
         self.dc = caster.dc
         self.action_type = action_type  # RAY_OF_ENFEEBLEMENT, TWINNED_RAY_OF_ENFEEBLEMENT, QUICKENED_RAY_OF_ENFEEBLEMENT
-        self.dmg_dice = "0d0"
+        self.dmg_dice = [(0, 0)]
         self.combatant = caster
         self.resource = resource
         self.saving_throw = SavingThrow.CON
@@ -93,7 +92,7 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
         against fireball or bane on attack rolls etc.
         """
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
-        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
+        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, (0, 0))
         target_ac = modifiers.get(ThreatModifierType.TARGET_AC, 0)
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 

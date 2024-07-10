@@ -11,7 +11,7 @@ from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, avg_roll, roll_spell_dmg
+from ..misc import DamageType, avg_roll_multi, roll_dice
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat, AoEThreat
@@ -31,7 +31,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
-        self.dmg_dice = "4d4"
+        self.dmg_dice = [(4, 4)]
         self.combatant = caster
         self.resource = resource
 
@@ -63,7 +63,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return avg_roll(self.dmg_dice)
+        return avg_roll_multi(self.dmg_dice)
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -93,7 +93,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers"
 
     def on_start_of_turn(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        dmg = roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
@@ -101,7 +101,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         pass
 
     def on_enter(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        dmg = roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
@@ -132,7 +132,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         affected = battle_map.get_combatants_affected_by_box_aoe(CloudOfDaggersFactory.target, self.origin)
         acc = 0
         for aff in affected:
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll_multi(self.factory.dmg_dice)
         return acc
 
     def clear_cache(self):
@@ -146,10 +146,10 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return 0
 
     def threat_on_enter(self, target, *args, **kwargs):
-        return avg_roll(self.factory.dmg_dice)
+        return avg_roll_multi(self.factory.dmg_dice)
 
     def threat_on_start_of_turn(self, target, *args, **kwargs):
-        return avg_roll(self.factory.dmg_dice)
+        return avg_roll_multi(self.factory.dmg_dice)
 
     def threat_on_move_within(self, target, *args, **kwargs):
         return 0

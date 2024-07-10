@@ -6,7 +6,7 @@ from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with
 from ..spells.firebolt import FireboltFactory
 from ..spells.spell import SpellStats
 from ..misc import DamageType, avg_roll, Visibility
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..threat_utils import mean_dmg
@@ -34,7 +34,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
-        self.dmg_dice = FireboltFactory.get_dmg_dice(caster.level)
+        self.dmg_dice = [FireboltFactory.get_dmg_dice(caster.level)]
         self.combatant = caster
         self.resource = resource
 
@@ -66,7 +66,9 @@ class TwinnedFireboltFactory(DirectThreatFactory):
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             # Cannot target the same combatant twice
-            return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, target, TwinnedFireboltFactory.dmg_type, ROLL_TYPE_CRIT_DELTA[roll_type])
+            return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
+                            target.is_immune_to(TwinnedFireboltFactory.dmg_type),
+                            target.is_resistant_to(TwinnedFireboltFactory.dmg_type), ROLL_TYPE_CRIT_DELTA[roll_type])
         else:
             return 0
 
@@ -77,14 +79,19 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         against fireball or bane on attack rolls etc.
         """
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
-        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
+        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, (0, 0))
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
-        return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, target, TwinnedFireboltFactory.dmg_type, total_crit) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, target, TwinnedFireboltFactory.dmg_type, 1)
+        return (mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
+                        target.is_immune_to(TwinnedFireboltFactory.dmg_type),
+                        target.is_resistant_to(TwinnedFireboltFactory.dmg_type), total_crit) -
+                mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+                         target.is_immune_to(TwinnedFireboltFactory.dmg_type),
+                         target.is_resistant_to(TwinnedFireboltFactory.dmg_type), 1))
 
     def calculate_max_threat(self):
         swallower = get_swallower(self.combatant)
@@ -114,10 +121,16 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def calculate_threat(self, **kwargs):
         roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
-        dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, self.targets[0], TwinnedFireboltFactory.dmg_type, ROLL_TYPE_CRIT_DELTA[roll_type])
+        dmg_acc = mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac,
+                           self.targets[0].is_immune_to(TwinnedFireboltFactory.dmg_type),
+                           self.targets[0].is_resistant_to(TwinnedFireboltFactory.dmg_type),
+                           ROLL_TYPE_CRIT_DELTA[roll_type])
         if self.targets[1] is not None:
             to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
-            dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, self.targets[1], TwinnedFireboltFactory.dmg_type, ROLL_TYPE_CRIT_DELTA[roll_type])
+            dmg_acc += mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac,
+                                self.targets[1].is_immune_to(TwinnedFireboltFactory.dmg_type),
+                                self.targets[1].is_resistant_to(TwinnedFireboltFactory.dmg_type),
+                                ROLL_TYPE_CRIT_DELTA[roll_type])
         return dmg_acc
 
     def clear_cache(self):

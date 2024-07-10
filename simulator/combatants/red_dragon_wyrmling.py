@@ -19,9 +19,9 @@ class RedDragonWyrmling(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=74, ac=17, init_bonus=0, spell_to_hit=0, speed=60, immunities={DamageType.Fire}, resistances=set(), dc=0)
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="1d10", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[('1d6', DamageType.Fire)])
-        self.add_ability(Action.CONIC_BREATH_WEAPON, recharge=5, dmg_dice='7d6', dmg_type=DamageType.Fire, saving_throw=SavingThrow.DEX, dc=13, target_template=SpellStats.Target.CONE_15,  name="Fire Breath")
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice="1d10", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[('1d6', DamageType.Fire)])
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice=[(1, 10)], dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 6), DamageType.Fire)])
+        self.add_ability(Action.CONIC_BREATH_WEAPON, recharge=5, dmg_dice=[(7, 6)], dmg_type=DamageType.Fire, saving_throw=SavingThrow.DEX, dc=13, target_template=SpellStats.Target.CONE_15,  name="Fire Breath")
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice=[(1, 10)], dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 6), DamageType.Fire)])
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4
         self.saving_throws[SavingThrow.DEX] = 2

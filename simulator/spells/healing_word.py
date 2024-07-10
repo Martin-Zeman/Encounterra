@@ -28,7 +28,7 @@ class HealingWordFactory(DirectThreatFactory):
         super().__init__()
         self.mod = mod
         self.action_type = BonusAction.HEALING_WORD
-        self.heal_dice = "1d4"
+        self.heal_dice = (1, 4)
         self.combatant = caster
         self.resource = resource
 

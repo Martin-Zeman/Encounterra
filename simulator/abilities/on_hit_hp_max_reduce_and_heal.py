@@ -1,5 +1,5 @@
 from ..abilities.on_hit_effect import OnHit
-from ..misc import parse_dmg_dice, roll_dice, avg_roll
+from ..misc import avg_roll_multi, roll_dice_multi
 import logging
 
 from ..threat_utils import MAX_HP_MODIFIER_MULTIPLIER
@@ -15,8 +15,7 @@ class OnHitHpMaxReduceAndHeal(OnHit):
         self.name = name
 
     def hit(self, attacker, attack, target, multiplier, dmg_so_far):
-        dice = parse_dmg_dice(self.dmg_dice)
-        dmg = roll_dice(dice)
+        dmg = roll_dice_multi(self.dmg_dice)
         dmg *= multiplier
         target.max_hp_modifier -= dmg
         attacker.heal(dmg)
@@ -24,5 +23,5 @@ class OnHitHpMaxReduceAndHeal(OnHit):
         return [dmg, self.dmg_type]
 
     def calculate_threat(self, attacker, target, **kwargs):
-        avg_dmg_roll = avg_roll(self.dmg_dice)
+        avg_dmg_roll = avg_roll_multi(self.dmg_dice)
         return (avg_dmg_roll + 0.05 * self.crit_range * avg_dmg_roll) * 2 * MAX_HP_MODIFIER_MULTIPLIER

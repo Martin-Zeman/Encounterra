@@ -12,7 +12,7 @@ from ..effects.aoe_spheric_effect import AoeSphericEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import SavingThrow, DamageType, avg_roll, roll_spell_dmg
+from ..misc import SavingThrow, DamageType, avg_roll_multi, roll_dice
 from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -36,7 +36,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         self.dc = dc
         self.action_type = action_type  # HUNGER_OF_HADAR, QUICKENED_HUNGER_OF_HADAR
         self.saving_throw = SavingThrow.DEX
-        self.dmg_dice = "2d6"
+        self.dmg_dice = [(2, 6)]
         self.combatant = caster
         self.resource = resource
         self.dmg_type = DamageType.Cold
@@ -71,8 +71,11 @@ class HungerOfHadarFactory(DirectThreatFactory):
         Calculates threat to one specific target
         """
         # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-        mean_dmg = min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, False, self.saving_throw, target, DamageType.Acid))
-        return avg_roll(self.dmg_dice) + 0.5 * mean_dmg
+        mean_dmg = min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, False,
+                                                          target.saving_throws[self.saving_throw],
+                                                          target.is_immune_to(DamageType.Acid),
+                                                          target.is_resistant_to(DamageType.Acid)))
+        return avg_roll_multi(self.dmg_dice) + 0.5 * mean_dmg
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -100,13 +103,13 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
     def on_start_of_turn(self, combatant):
         apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        dmg = roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.factory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
     def on_end_of_turn(self, combatant):
         apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        dmg = roll_dice(self.factory.dmg_dice)
         self.factory.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant, False, True)
         self.factory.dmg_type = DamageType.Cold
@@ -143,9 +146,12 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         affected = battle_map.get_combatants_affected_by_sphere_aoe(self.factory.combatant, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.origin)
         acc = 0
         for aff in affected:
-            acc += avg_roll(self.factory.dmg_dice)  # the initial cold dmg
+            acc += avg_roll_multi(self.factory.dmg_dice)  # the initial cold dmg
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, self.factory.saving_throw, aff, DamageType.Acid))
+            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False,
+                                                           aff.saving_throws[self.factory.saving_throw],
+                                                           aff.is_immune_to(DamageType.Acid),
+                                                           aff.is_resistant_to(DamageType.Acid)))
             acc += 0.5 * mean_dmg
             acc *= (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3)
         return acc
@@ -158,14 +164,17 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
-        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False, self.factory.saving_throw, target, DamageType.Acid))
+        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False,
+                                                      target.saving_throws[self.factory.saving_throw],
+                                                      target.is_immune_to(DamageType.Acid),
+                                                      target.is_resistant_to(DamageType.Acid)))
 
     def threat_on_enter(self, target, *args, **kwargs):
         return 0
 
     def threat_on_start_of_turn(self, target, *args, **kwargs):
-        threat = avg_roll(self.factory.dmg_dice)
-        return threat if not target.is_resistant_to(self.dmg_type) else threat / 2
+        threat = avg_roll_multi(self.factory.dmg_dice)
+        return threat if not target.is_resistant_to(self.factory.dmg_type) else threat / 2
 
     def threat_on_move_within(self, target, *args, **kwargs):
         return 0

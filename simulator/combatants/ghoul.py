@@ -20,8 +20,8 @@ class Ghoul(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=22, ac=12, init_bonus=2, spell_to_hit=0, speed=30, immunities={DamageType.Poison}, dc=10)
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=2, dmg_dice="2d6", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
-        self.claws = self.add_ability(Action.PARALYZING_MELEE_ATTACK,  name="Claws", combatant=self, to_hit=4, dmg_dice="2d4", dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=2, dmg_dice=[(2, 6)], dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.claws = self.add_ability(Action.PARALYZING_MELEE_ATTACK,  name="Claws", combatant=self, to_hit=4, dmg_dice=[(2, 4)], dmg_bonus=2, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         reaction_claws = copy.copy(self.claws[1])
         reaction_claws.action_type = Reaction.REACTION_PARALYZING_MELEE_ATTACK
         self.reaction_factories.append((Reaction.REACTION_PARALYZING_MELEE_ATTACK, reaction_claws))

@@ -31,4 +31,4 @@ class OnHitSwallow(OnHit):
 
     def calculate_threat(self, attacker, target, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
-        return mean_dmg_auto_hit('3d6', target.is_resistant_to(DamageType.Acid)) * ROUND_HORIZON
+        return mean_dmg_auto_hit([(3, 6)], target.is_resistant_to(DamageType.Acid)) * ROUND_HORIZON

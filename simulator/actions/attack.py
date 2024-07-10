@@ -46,10 +46,10 @@ class AttackFactory(DirectThreatFactory):
         self.to_hit_bonus_die = to_hit_bonus_die  # This is not really applied, only used to simplify threat calculation of derived classes
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0
-        self.mod_to_hit_die = '0d0'
+        self.mod_to_hit_die = (0, 0)
         self.mod_to_hit_flat = 0
         self.mod_dmg_flat = 0
-        self.mod_dmg_die = '0d0'
+        self.mod_dmg_die = [(0, 0)]
         self.mod_crit_range = 0
         if uses_dex:
             self.flags |= FactoryFlags.USES_DEX
@@ -86,9 +86,12 @@ class AttackFactory(DirectThreatFactory):
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         if not consider_dist or Map.get().get_hop_distance_combatants(self.combatant, target) <= self.range:
-            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, target, self.dmg_type, self.crit_range)
+            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac,
+                           target.is_immune_to(self.dmg_type), target.is_resistant_to(self.dmg_type), self.crit_range)
             for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, target, extra[1], self.crit_range)
+                acc += mean_dmg(to_hit_total, [extra[0]], 0, target.ac,
+                                target.is_immune_to(extra[1]), target.is_resistant_to(extra[1]),
+                                self.crit_range)
             for oh in self.on_hit:
                 acc += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
             return acc
@@ -102,15 +105,18 @@ class AttackFactory(DirectThreatFactory):
         if self.to_hit_bonus_die is not None:
             avg_to_hit_bonus_die_roll = avg_roll(self.to_hit_bonus_die)
         baseline_to_hit = self.to_hit + avg_to_hit_bonus_die_roll
-        baseline = mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac, target, self.dmg_type, self.crit_range)
+        baseline = mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac,
+                            target.is_immune_to(self.dmg_type), target.is_resistant_to(self.dmg_type), self.crit_range)
         for extra in self.extra_dmg:
-            baseline += mean_dmg(baseline_to_hit, extra[0], 0, target.ac, target, extra[1], self.crit_range)
+            baseline += mean_dmg(baseline_to_hit, [extra[0]], 0, target.ac,
+                                 target.is_immune_to(extra[1]), target.is_resistant_to(extra[1]),
+                                 self.crit_range)
         for oh in self.on_hit:
             baseline += calc_p_hit(baseline_to_hit, target.ac) * oh.calculate_threat(self.combatant, target)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
-        mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
+        mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, [(0, 0)])
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
-        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
+        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, (0, 0))
         mod_crit_range = modifiers.get(ThreatModifierType.CRIT_RANGE, 0)
         auto_crit = modifiers.get(ThreatModifierType.AUTO_CRIT, False)
         target_ac = modifiers.get(ThreatModifierType.TARGET_AC, 0)
@@ -126,9 +132,12 @@ class AttackFactory(DirectThreatFactory):
         total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
         total_crit = 20 if auto_crit else total_crit
         try:
-            modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, mod_dmg_die]) if mod_dmg_die else self.dmg_dice, self.dmg_bonus + mod_dmg_flat, total_target_ac, target, self.dmg_type, total_crit)
+            modified = mean_dmg(to_hit_total, self.dmg_dice + mod_dmg_die, self.dmg_bonus + mod_dmg_flat,
+                                total_target_ac, target.is_immune_to(self.dmg_type),
+                                target.is_resistant_to(self.dmg_type), total_crit)
             for extra in self.extra_dmg:
-                modified += mean_dmg(to_hit_total, extra[0], 0, total_target_ac, target, extra[1], total_crit)
+                modified += mean_dmg(to_hit_total, [extra[0]], 0, total_target_ac,
+                                     target.is_immune_to(extra[1]), target.is_resistant_to(extra[1]), total_crit)
             for oh in self.on_hit:
                 modified += calc_p_hit(to_hit_total, total_target_ac) * oh.calculate_threat(self.combatant, target)
         except:

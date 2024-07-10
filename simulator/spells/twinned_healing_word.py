@@ -31,7 +31,7 @@ class TwinnedHealingWordFactory(DirectThreatFactory):
         self.to_hit = to_hit
         self.mod = mod
         self.action_type = BonusAction.HEALING_WORD
-        self.heal_dice = "1d4"
+        self.heal_dice = (1, 4)
         self.combatant = caster
         self.resource = resource
 
