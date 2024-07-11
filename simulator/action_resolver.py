@@ -11,7 +11,7 @@ from .actions.action_types import BonusAction, Action, Reaction, Passive, Moveme
 from .actions.actoid import FactoryFlags
 from .actions.dodge import DodgeFactory
 from .actions.flaming_sphere_ram import FlamingSphereRamFactory
-from .battle_map import Map, dijkstra_numba
+from .battle_map import Map, _dijkstra
 from .effects.effect import EffectType
 from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, roll_dice, \
     roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll, avg_roll, roll_dice_multi
@@ -408,7 +408,8 @@ class ActionResolver:
             dice = attack.factory.dmg_dice
             if FactoryFlags.TWO_HANDED in attack.factory.flags and attacker.has_passive(Passive.GREAT_WEAPON_FIGHTING):
                 dmg_dice_sum = roll_dice_with_reroll(dice[0], 2)
-                dmg_dice_sum += roll_dice_multi(dice[1:])  # Only the weapon dice can be rerolled
+                if len(dice) > 1:  # Shouldn't be necessary but njit gives me trouble otherwise
+                    dmg_dice_sum += roll_dice_multi(dice[1:])  # Only the weapon dice can be rerolled
             else:
                 dmg_dice_sum = roll_dice_multi(dice)
             # logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
@@ -679,7 +680,7 @@ class ActionResolver:
             case BonusAction.FLAMING_SPHERE_RAM:
                 adj = battle_map.build_flaming_sphere_adjacency_matrix()
                 mask = np.ones((battle_map.size ** 2, battle_map.size ** 2), dtype=int)
-                _, shortest_paths = dijkstra_numba(actoid.factory.action_enabler_effect.origin, battle_map.size, adj, mask)
+                _, shortest_paths = _dijkstra(actoid.factory.action_enabler_effect.origin, battle_map.size, adj, mask)
                 path = battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
                 if path and len(path) <= FlamingSphereRamFactory.RANGE + 1:
                     dmg = roll_dice_multi(actoid.factory.dmg_dice)

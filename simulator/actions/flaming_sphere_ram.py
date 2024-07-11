@@ -23,7 +23,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         super().__init__()
         self.flags |= FactoryFlags.TRANSITIONS_TO_WILDSHAPE
         self.action_type = BonusAction.FLAMING_SPHERE_RAM
-        self.dmg_dice = [(2, 6)]
+        self.dmg_dice = ((2, 6),)
         self.combatant = caster
         self.dc = dc
         self.action_enabler_effect = action_enabler_effect

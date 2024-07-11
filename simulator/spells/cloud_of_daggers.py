@@ -31,7 +31,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
-        self.dmg_dice = [(4, 4)]
+        self.dmg_dice = ((4, 4),)
         self.combatant = caster
         self.resource = resource
 

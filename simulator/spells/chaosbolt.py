@@ -39,8 +39,8 @@ class ChaosboltFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # CHAOSBOLT, QUICKENED_CHAOSBOLT
-        self.dmg_dice = [(2, 8)]
-        self.additional_dmg_dice = [(1, 6)]
+        self.dmg_dice = ((2, 8),)
+        self.additional_dmg_dice = ((1, 6),)
         self.combatant = caster
         self.resource = resource
 

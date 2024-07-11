@@ -34,7 +34,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # SCORCHING_RAY, QUICKENED_SCORCHING_RAY
-        self.dmg_dice = [(2, 6)]
+        self.dmg_dice = ((2, 6),)
         self.combatant = caster
         self.resource = resource
 

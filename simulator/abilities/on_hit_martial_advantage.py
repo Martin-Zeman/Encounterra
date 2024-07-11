@@ -10,7 +10,7 @@ logger = logging.getLogger("Encounterra")
 class OnHitMartialAdvantage(OnHit):
 
     def __init__(self, dmg_type, name="Martial Advantage"):
-        self.dmg_dice = [(2, 6)]
+        self.dmg_dice = ((2, 6),)
         self.dmg_type = dmg_type
         self.name = name
 

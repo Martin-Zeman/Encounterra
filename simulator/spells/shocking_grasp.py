@@ -34,7 +34,7 @@ class ShockingGraspFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_MELEE
         self.to_hit = to_hit
         self.action_type = action_type  # SHOCKING_GRASP, QUICKENED_SHOCKING_GRASP
-        self.dmg_dice = [(1, 8)]
+        self.dmg_dice = ((1, 8),)
         self.dmg_bonus = 0
         self.combatant = caster
         self.resource = resource

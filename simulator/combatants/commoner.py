@@ -18,8 +18,8 @@ class Commoner(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=4, ac=10, init_bonus=0, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.club = self.add_ability(Action.MELEE_ATTACK,  name="Club", combatant=self, to_hit=2, dmg_dice=[(1, 4)], dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Club", combatant=self, to_hit=2, dmg_dice=[(1, 4)], dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
+        self.club = self.add_ability(Action.MELEE_ATTACK,  name="Club", combatant=self, to_hit=2, dmg_dice=((1, 4),), dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Club", combatant=self, to_hit=2, dmg_dice=((1, 4),), dmg_bonus=0, dmg_type=DamageType.Bludgeoning, attack_range=1, crit_range=1)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 0
         self.saving_throws[SavingThrow.DEX] = 0

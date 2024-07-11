@@ -20,7 +20,7 @@ DZ_CONSTANT = 0.33
 MAX_HP_MODIFIER_MULTIPLIER = 1.25
 
 
-@njit
+@cache  # Seems to be faster than njit
 def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, is_immune=False, is_resistant=False, crit_range=1):
     """
     Calculates mean damage of an attack-like ability.
@@ -288,7 +288,8 @@ def get_saving_throw_fail_prob(dc, st_bonus):
     return rv.cdf(dc - 1)
 
 
-@njit
+# @njit
+@cache  # Seems to be about the same as njit
 def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_immune=False, is_resistant=False):
     """
     Calculates mean damage of a DC-based ability

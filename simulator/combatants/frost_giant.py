@@ -20,10 +20,10 @@ class FrostGiant(Combatant):
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=138, ac=15, init_bonus=-1, spell_to_hit=0, speed=40, immunities={DamageType.Cold}, resistances=set(), dc=0)
         self.size = Size.HUGE
-        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Greataxe", combatant=self, to_hit=9, dmg_dice=[(3, 12)], dmg_bonus=6, dmg_type=DamageType.Slashing, attack_range=3)
-        self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice=[(4, 10)], dmg_bonus=6,
+        self.axe = self.add_ability(Action.MELEE_ATTACK,  name="Greataxe", combatant=self, to_hit=9, dmg_dice=((3, 12),), dmg_bonus=6, dmg_type=DamageType.Slashing, attack_range=3)
+        self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice=((4, 10),), dmg_bonus=6,
                                             dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1, ammo=Uses(2, ResourceRefreshType.NEVER), uses_dex=False)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Greataxe", combatant=self, to_hit=9, dmg_dice=[(3, 12)], dmg_bonus=6, dmg_type=DamageType.Slashing, attack_range=3)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Greataxe", combatant=self, to_hit=9, dmg_dice=((3, 12),), dmg_bonus=6, dmg_type=DamageType.Slashing, attack_range=3)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 6
         self.saving_throws[SavingThrow.DEX] = -1

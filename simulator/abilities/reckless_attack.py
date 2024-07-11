@@ -52,7 +52,7 @@ class RecklessAttackFactory(DirectThreatFactory):
         self.mod_to_hit_die = (0, 0)
         self.mod_to_hit_flat = 0
         self.mod_dmg_flat = 0
-        self.mod_dmg_die = [(0, 0)]
+        self.mod_dmg_die = ((0, 0),)
         self.mod_crit_range = 0
 
 
@@ -128,7 +128,7 @@ class RecklessAttackFactory(DirectThreatFactory):
                 target.is_resistant_to(self.dmg_type), self.crit_range * ROLL_TYPE_CRIT_DELTA[RollType.ADVANTAGE])
         mod_range = modifiers.get(ThreatModifierType.RANGE, 0)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
-        # mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, [(0, 0)])
+        # mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, ((0, 0),))
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
         mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, (0, 0))
         mod_crit_range = modifiers.get(ThreatModifierType.CRIT_RANGE, 0)

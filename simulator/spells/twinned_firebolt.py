@@ -34,7 +34,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
-        self.dmg_dice = [FireboltFactory.get_dmg_dice(caster.level)]
+        self.dmg_dice = (FireboltFactory.get_dmg_dice(caster.level), )
         self.combatant = caster
         self.resource = resource
 

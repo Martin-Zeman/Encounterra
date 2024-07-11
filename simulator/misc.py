@@ -347,7 +347,7 @@ def avg_roll(dice: tuple):
 
 
 @njit
-def avg_roll_multi(dice: list):
+def avg_roll_multi(dice: tuple):
     acc = 0.0
     for d in dice:
         acc += d[0] * ((1.0 + d[1]) / 2.0)

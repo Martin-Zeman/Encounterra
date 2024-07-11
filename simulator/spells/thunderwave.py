@@ -32,7 +32,7 @@ class ThunderwaveFactory(ThreatModifierFactory):
         self.combatant = caster
         self.saving_throw = SavingThrow.CON
         self.resource = resource
-        self.dmg_dice = [(2, 8)]
+        self.dmg_dice = ((2, 8),)
 
     def __str__(self):
         """

@@ -18,11 +18,11 @@ class VampireSpawn(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=82, ac=15, init_bonus=3, spell_to_hit=0, speed=30, resistances={DamageType.Slashing, DamageType.Piercing, DamageType.Bludgeoning}, dc=0)
-        self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=6, dmg_dice=[(2, 4)], dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.bite = self.add_ability(Action.VAMPIRIC_BITE,  name="Bite", combatant=self, to_hit=6, dmg_dice=[(1, 6)], dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,
+        self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=6, dmg_dice=((2, 4),), dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.bite = self.add_ability(Action.VAMPIRIC_BITE,  name="Bite", combatant=self, to_hit=6, dmg_dice=((1, 6),), dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1,
                                      on_hit=[OnHitHpMaxReduceAndHeal((2, 6), DamageType.Necrotic, 1, "Blood Drain")])
         self.grapple = self.add_ability(Action.GRAPPLE_ATTACK, name="Claws", combatant=self, to_hit=6, attack_range=1, dc=13, follow_up_attack=self.bite[1])
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=6, dmg_dice=[(2, 4)], dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=6, dmg_dice=((2, 4),), dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.add_ability(Passive.REGENERATION, hp=10, suppression_dmg_type=DamageType.Radiant)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 3

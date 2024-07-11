@@ -38,7 +38,7 @@ class FlamingSphereFactory(DirectThreatFactory):
     def __init__(self, dc, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # FLAMING_SPHERE, QUICKENED_FLAMING_SPHERE
-        self.dmg_dice = [(2, 6)]
+        self.dmg_dice = ((2, 6),)
         self.dc = dc
         self.combatant = caster
         self.saving_throw = SavingThrow.DEX

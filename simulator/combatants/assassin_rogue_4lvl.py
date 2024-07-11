@@ -19,9 +19,9 @@ class AssassinRogue4Lvl(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=27, ac=16, init_bonus=4, speed=30, spell_to_hit=0, resistances=set(), dc=14)
-        self.rapier = self.add_ability(Action.MELEE_ATTACK, name="Rapier", combatant=self, to_hit=6, dmg_dice=[(1, 8)], dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True)
-        self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=6, dmg_dice=[(1, 6)], dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER))
-        self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=6, dmg_dice=[(1, 8)], dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1)
+        self.rapier = self.add_ability(Action.MELEE_ATTACK, name="Rapier", combatant=self, to_hit=6, dmg_dice=((1, 8),), dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1, uses_dex=True)
+        self.shortbow = self.add_ability(Action.RANGED_ATTACK,  name="Shortbow", combatant=self, to_hit=6, dmg_dice=((1, 6),), dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=64, crit_range=1, ammo=Uses(20, ResourceRefreshType.NEVER))
+        self.add_ability(Reaction.REACTION_ATTACK, name="Rapier", combatant=self, to_hit=6, dmg_dice=((1, 8),), dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=1)
         self.add_ability(Passive.CUNNING_ACTION)
         self.add_ability(Passive.SNEAK_ATTACK)
         self.add_ability(Passive.ASSASSINATE)

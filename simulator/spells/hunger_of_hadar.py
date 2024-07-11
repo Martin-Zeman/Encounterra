@@ -36,7 +36,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
         self.dc = dc
         self.action_type = action_type  # HUNGER_OF_HADAR, QUICKENED_HUNGER_OF_HADAR
         self.saving_throw = SavingThrow.DEX
-        self.dmg_dice = [(2, 6)]
+        self.dmg_dice = ((2, 6),)
         self.combatant = caster
         self.resource = resource
         self.dmg_type = DamageType.Cold

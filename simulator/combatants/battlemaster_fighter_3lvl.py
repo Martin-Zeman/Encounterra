@@ -21,9 +21,9 @@ class BattlemasterFighter3Lvl(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=30, ac=16, init_bonus=0, spell_to_hit=0, speed=30, resistances=set(), dc=13)
-        self.greatsword = self.add_ability(Action.MELEE_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice=[(2, 6)], dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)
-        self.handaxe = self.add_ability(Action.RANGED_ATTACK, name="Handaxe", combatant=self, to_hit=5, dmg_dice=[(1, 6)], dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=12, crit_range=1, uses_dex=False, ammo=Uses(2, ResourceRefreshType.NEVER))
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice=[(2, 6)], dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)
+        self.greatsword = self.add_ability(Action.MELEE_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice=((2, 6),), dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)
+        self.handaxe = self.add_ability(Action.RANGED_ATTACK, name="Handaxe", combatant=self, to_hit=5, dmg_dice=((1, 6),), dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=12, crit_range=1, uses_dex=False, ammo=Uses(2, ResourceRefreshType.NEVER))
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatsword", combatant=self, to_hit=5, dmg_dice=((2, 6),), dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, two_handed=True)
         self.add_ability(BonusAction.SECOND_WIND)
         self.add_ability(FreeAction.ACTION_SURGE)
         self.add_ability(Passive.GREAT_WEAPON_FIGHTING)

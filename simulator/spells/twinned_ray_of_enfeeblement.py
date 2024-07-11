@@ -40,7 +40,7 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
         self.to_hit = caster.spell_to_hit
         self.dc = caster.dc
         self.action_type = action_type  # RAY_OF_ENFEEBLEMENT, TWINNED_RAY_OF_ENFEEBLEMENT, QUICKENED_RAY_OF_ENFEEBLEMENT
-        self.dmg_dice = [(0, 0)]
+        self.dmg_dice = ((0, 0),)
         self.combatant = caster
         self.resource = resource
         self.saving_throw = SavingThrow.CON

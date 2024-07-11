@@ -32,8 +32,8 @@ class FireballFactory(DirectThreatFactory):
         self.dc = dc
         self.action_type = action_type  # FIREBALL, QUICKENED_FIREBALL
         self.saving_throw = SavingThrow.DEX
-        self.dmg_dice = [(8, 6)]
-        self.additional_upcast_dmg = [(1, 6)]
+        self.dmg_dice = ((8, 6),)
+        self.additional_upcast_dmg = ((1, 6),)
         self.combatant = caster
         self.has_spell_sculpting = has_spell_sculpting
         self.resource = resource
