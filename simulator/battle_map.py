@@ -193,7 +193,7 @@ def toggled_cache(key):
 
 
 @njit
-def dijkstra_numba(src, size, adj_matrix, mask):
+def _dijkstra(src, size, adj_matrix, mask):
     N = size
     Nsq = size ** 2
     maxsize = sys.maxsize
@@ -442,6 +442,53 @@ def _get_free_coords_at_hop_range(
     return list(perimeter_coords)
 
 
+@njit
+def _build_combatant_adjacency_mask(N, combatant_coords, others_coords, combatant_size, impassable_array, aoos, frightened_source_coords):
+    """
+    Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
+    Allies are considered difficult terrain (potentially on top of already difficult terrain).
+    Optionally, moves that incur AoO are also modelled as difficult terrain to avoid it if possible.
+    For combatants larger than MEDIUM obstacles are also inflated accordingly
+    :param combatant: for whom the mask is to be constructed
+    :param consider_aoo: True if should AoOs should be modelled as difficult terrain
+    :return: adjacency matrix mask
+    """
+    offset = 0
+    if combatant_size > Size.MEDIUM.value:
+        offset = combatant_size
+
+    mask = np.ones((N ** 2, N ** 2), dtype=np.int32)
+    mv_reshaped = mask.reshape(N, N, N, N)  # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
+    for coord in others_coords:
+        # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
+        mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
+    for coord in impassable_array:
+        # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
+        mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
+
+    # account for AoO
+    for ac in aoos:
+        # it should be ok to apply this to coords that are part of the set or inaccessible
+        mv_reshaped[ac[0], ac[1], :, :] *= 2
+
+    # Inflate the edges of the map. Prevent larger combatants from stepping out of the map
+    mv_reshaped[:, :, (N - offset):N, :].fill(0)
+    mv_reshaped[:, :, :, (N - offset):N].fill(0)
+
+    if frightened_source_coords.shape[0] > 0:  # TODO remove the effect when the combatant dies
+        current_hop_distance = _get_hop_distance_coords(combatant_coords, frightened_source_coords)
+        # Iterate over each tile in the map
+        for x in range(N):
+            for y in range(N):
+                # Calculate the hop distance from this tile to the source of fear
+                hop_distance = _get_hop_distance_coords(np.array([[x, y]]), frightened_source_coords)
+                # If the tile is closer to the source of fear than the combatant is, block the tile
+                if hop_distance is not None and hop_distance < current_hop_distance:
+                    # Mark all movements to this tile as impassable
+                    mv_reshaped[:, :, x, y].fill(0)
+    return mask
+
+
 class Map:
     _instance = None
 
@@ -683,6 +730,7 @@ class Map:
 
         return result_coordinates[0] if result_coordinates else None
 
+    # njit candidate
     def find_possible_combatant_positions_for_cone_or_line_aoe_placement(self, placement_coord, combatant, shortest_paths):
         combatant_coord = self.get_combatant_position(combatant).get()[0]
         combatant_matrix_coord = (self.size - combatant_coord[1] - 1, combatant_coord[0])
@@ -707,6 +755,7 @@ class Map:
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
 
+    # njit candidate
     def place_circular_element(self, coord, terrain_type, radius=0):
         """
         Places a terrain element of a 'circular' type onto the map
@@ -817,69 +866,39 @@ class Map:
         return adj_reshaped
 
     def build_combatant_adjacency_mask(self, combatant, consider_aoo=False):
-        """
-        Builds a combatant-specific mask for the adjacency matrix. It models enemies as being impassable by 0.
-        Allies are considered difficult terrain (potentially on top of already difficult terrain).
-        Optionally, moves that incur AoO are also modelled as difficult terrain to avoid it if possible.
-        For combatants larger than MEDIUM obstacles are also inflated accordingly
-        :param combatant: for whom the mask is to be constructed
-        :param consider_aoo: True if should AoOs should be modelled as difficult terrain
-        :return: adjacency matrix mask
-        """
-        N = self.size
-        # TODO consider preallocating this for all combatants and only resetting it to ones
-
-        offset = 0
-        if combatant.size.value > Size.MEDIUM.value:
-            offset = combatant.size.value
-
-        mask = np.ones((self.size ** 2, self.size ** 2), dtype=int)
-        mv_reshaped = mask.view().reshape(N, N, N, N)  # Reshape to NxNxNxN where first two coords are 'from' and second are 'to'
+        allies_coords = []
+        enemies_coords = []
         for curr_combatant, coords in self.combatant_coordinate_cache.items():
             if curr_combatant is not combatant and curr_combatant.is_alive():
-                for coord in coords.get():
-                    # TODO try to do this more efficiently
-                    # TODO even allies are now impassable, try and figure out of a way to improve this
-                    # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
-                    mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
-        for coord in self.impassable_set:
-            # Inflate in the opposite direction (root coord is bottom left so this inflated from the top right to bottom left)
-            mv_reshaped[:, :, max(0, (coord[0] - offset)):(coord[0] + 1), max(0, (coord[1] - offset)):(coord[1] + 1)].fill(0)
+                if self.teams.are_allies(curr_combatant, combatant):
+                    allies_coords.extend(coords.get())
+                else:
+                    enemies_coords.extend(coords.get())
 
-        # account for AoO
+        impassable_array = np.array(list(self.impassable_set), dtype=np.int32).reshape(-1, 2)
+        combatant_coords = np.array(self.combatant_coordinate_cache[combatant].get(), dtype=np.int32).reshape(-1, 2)
+
+        aoos = []
         if consider_aoo:
             enemies = self.get_enemies(combatant)
             for e in enemies:
-                if not e.has_reaction:
-                    continue
-                rng = e.melee_reaction_range
-                coords = self.get_combatant_position(e)
-                adj_coords = _get_free_coords_in_hop_range(self.grid, coords.get(), inflate_to_dist=combatant.size.value, rng=rng)
-                for ac in adj_coords:
-                    # it should be ok to apply this to coords that are part of the set or inaccessible
-                    mv_reshaped[ac[0], ac[1], :, :] *= 2
+                if e.has_reaction:
+                    rng = e.melee_reaction_range
+                    e_coords = np.array(self.combatant_coordinate_cache[e].get(), dtype=np.int32).reshape(-1, 2)
+                    aoos.extend(_get_free_coords_in_hop_range(self.grid, e_coords, inflate_to_dist=combatant.size.value, rng=rng))
 
-        # Inflate the edges of the map. Prevent larger combatants from stepping out of the map
-        mv_reshaped[:, :, (N - offset):N, :].fill(0)
-        mv_reshaped[:, :, :, (N - offset):N].fill(0)
+        # Convert AoO list to a numpy array
+        aoos_array = np.array(aoos, dtype=np.int32).reshape(-1, 2)
 
+        frightened_source_coords = np.empty((0, 2), dtype=np.int32)  # Default to an empty array if there's no source of fear
         frightened_source_combatant = get_source_of_frightened(combatant)
-        if frightened_source_combatant is not None and frightened_source_combatant.is_alive():  # TODO remove the effect when the combatant dies
-            # Get the position of the source of fear and the frightened combatant
-            source_coords = self.combatant_coordinate_cache[frightened_source_combatant].get()
-            # Calculate the hop distance between the frightened combatant and the source of fear
-            current_hop_distance = self.get_hop_distance_combatants(combatant, frightened_source_combatant)
-            # Iterate over each tile in the map
-            for x in range(N):
-                for y in range(N):
-                    # Calculate the hop distance from this tile to the source of fear
-                    hop_distance = _get_hop_distance_coords(np.array([[x, y]]), source_coords)
+        if frightened_source_combatant is not None and frightened_source_combatant.is_alive():
+            frightened_source_coords = np.array(self.combatant_coordinate_cache[frightened_source_combatant].get(), dtype=np.int32).reshape(-1, 2)
 
-                    # If the tile is closer to the source of fear than the combatant is, block the tile
-                    if hop_distance is not None and hop_distance < current_hop_distance:
-                        # Mark all movements to this tile as impassable
-                        mv_reshaped[:, :, x, y].fill(0)
-        return mask
+        # Ensure allies_coords and enemies_coords are numpy arrays
+        others_coords = np.array(allies_coords + enemies_coords, dtype=np.int32).reshape(-1, 2)
+
+        return _build_combatant_adjacency_mask(self.size, combatant_coords, others_coords, combatant.size.value, impassable_array, aoos_array, frightened_source_coords)
 
     def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array, reconstructed_path):
         """
@@ -929,54 +948,6 @@ class Map:
                 min = dist[u]
                 min_index = u
         return min_index
-
-    def dijkstra(self, src, adj_matrix=None, mask=None):
-        """
-        Implementation of the Dijkstra algorithm with a preference for the least zig-zaggy path
-        :param src: source coordinate
-        :param adj_matrix: adjacency matrix, if None the base_adjacency_matrix will be used
-        :param mask: combatant-specific mask for the adjacency matrix
-        :return: list of distances to all vertices, list of predecessors for every vertex
-        """
-        # start_time = time.time()
-        src = np.array(src)
-        N = self.size
-        Nsq = self.size ** 2
-        dist = [sys.maxsize] * Nsq
-        src_idx = src[0] * self.size + src[1]
-        dist[src_idx] = 0
-        open_set = [False] * Nsq
-        adj_matrix = self.base_adjacency_matrix if adj_matrix is None else adj_matrix
-        mask = np.ones((self.size ** 2, self.size ** 2), dtype=int) if mask is None else mask
-        adj = np.multiply(adj_matrix, mask)
-        shortest_paths = {}
-
-        pq = [(0, src_idx)]
-        while pq:
-            _, x = heapq.heappop(pq)
-            if open_set[x]:
-                continue
-            open_set[x] = True
-            for y in range(Nsq):
-                if adj[x][y] > 0 and not open_set[y]:
-                    coord_to = (y // N, y % N)
-                    coord_to_np = np.array([coord_to[0], coord_to[1]])
-                    coord_from = np.array([x // N, x % N])
-                    new_dist = dist[x] + adj[x][y]
-                    if dist[y] > new_dist:
-                        dist[y] = dist[x] + adj[x][y]
-                        shortest_paths[coord_to] = coord_from
-                        heapq.heappush(pq, (new_dist, y))
-                    elif dist[y] >= new_dist and np.sum(np.abs(shortest_paths[coord_to] - coord_to_np)) > np.sum(
-                            np.abs(coord_to_np - coord_from)):
-                        # TODO this should also work with ==, try that
-                        # prefer the path with the least coordinate diff, i.e. the less zig-zaggy path
-                        shortest_paths[coord_to] = coord_from
-                        heapq.heappush(pq, (new_dist, y))
-        # end_time = time.time()
-        # execution_time = end_time - start_time
-        # print("Execution time:", execution_time)
-        return dist, shortest_paths
 
     def get_pam_eligible_combatants(self, combatant, increment):
         eligible_combatants = []
@@ -1266,7 +1237,7 @@ class Map:
         """
         my_location = self.get_combatant_position(combatant).get()[0]
         mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_paths = dijkstra_numba(my_location, self.size, self.base_adjacency_matrix, mask)
+        distances, shortest_paths = _dijkstra(my_location, self.size, self.base_adjacency_matrix, mask)
         return distances, shortest_paths
 
     def get_path_to_combatant(self, combatant, target, distances=np.array([]), shortest_paths=np.array([]), rng=1, consider_aoo=False):
@@ -1285,7 +1256,7 @@ class Map:
         logger.debug(f"Destination {enemy_location.get()[0]}")
         if distances.size == 0 or shortest_paths.size == 0:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            distances, shortest_paths = dijkstra_numba(my_location.get()[0], self.size, self.base_adjacency_matrix, mask)
+            distances, shortest_paths = _dijkstra(my_location.get()[0], self.size, self.base_adjacency_matrix, mask)
         enemy_adjacent_location = self.get_nearest_free_adjacent_coords(combatant, my_location, enemy_location, distances, rng)
         if enemy_adjacent_location is None:
             return None
@@ -1311,7 +1282,7 @@ class Map:
         logger.debug(f"Destination {target_coord}")
         if distances.size == 0 or shortest_paths.size == 0:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            distances, shortest_paths = dijkstra_numba(my_location.get()[0], self.size, self.base_adjacency_matrix, mask)
+            distances, shortest_paths = _dijkstra(my_location.get()[0], self.size, self.base_adjacency_matrix, mask)
         reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get()[0], target_coord)
         if reconstructed_path is None:
             return None
