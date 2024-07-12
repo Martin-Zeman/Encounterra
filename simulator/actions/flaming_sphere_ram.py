@@ -103,5 +103,5 @@ class FlamingSphereRam(Actoid, DirectThreat):
         #     return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
 
-    def move_effect(self, coord):
+    def move_effect(self, coord: np.array):
         self.factory.action_enabler_effect.origin = coord

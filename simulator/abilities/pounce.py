@@ -2,9 +2,9 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, reconstruct_from_shortest_path, \
-    _get_free_coords_in_hop_range
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
+    _get_free_coords_in_hop_range, _reconstruct_from_shortest_path
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..misc import is_path_straight
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
@@ -87,8 +87,7 @@ class Pounce(Actoid, DirectThreat):
     def is_straight_line_path(self, start_coord, end_coord, distances, shortest_paths):
         # Calculate the distance using Dijkstra's algorithm results
         distance = distances[end_coord[0] * Map.get().size + end_coord[1]]
-        path = reconstruct_from_shortest_path(shortest_paths, start_coord, end_coord)
-
+        path = _reconstruct_from_shortest_path(shortest_paths, start_coord, end_coord)
         # Check if the path is straight and at least 4 squares long
         return distance >= self.factory.distance and is_path_straight(path)
 
@@ -106,6 +105,7 @@ class Pounce(Actoid, DirectThreat):
                 combatant_id=self.factory.combatant.id)
             eligible_coords = []
             for coord in all_coords:
+                # TODO data types are are probably incorrect, need numpy arrays
                 if self.is_straight_line_path(battle_map.get_combatant_position(self.factory.combatant), coord, distances, shortest_paths):
                     eligible_coords.append(coord)
             return eligible_coords

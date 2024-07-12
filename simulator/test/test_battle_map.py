@@ -658,22 +658,22 @@ def test_get_nearest_free_adjacent_coord(battle_map, teams, test_draconic_sorcer
     distances, _ = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     target_coords = battle_map.get_combatant_position(test_goblin)
-    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size.value, target_coords, distances)
     assert np.array_equal(nearest, np.array([4, 7]), equal_nan=False)
 
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([3, 9]))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size.value, target_coords, distances)
     assert np.array_equal(nearest, np.array([4, 9]), equal_nan=False)
 
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([8, 6]))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size.value, target_coords, distances)
     assert np.array_equal(nearest, np.array([7, 6]), equal_nan=False)
 
     battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([7, 11]))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size.value, target_coords, distances)
     assert np.array_equal(nearest, np.array([7, 9]), equal_nan=False)
 
 
@@ -693,7 +693,7 @@ def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, test_drac
     distances, _ = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     target_coords = battle_map.get_combatant_position(test_bugbear)
-    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords, target_coords, distances)
+    nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size.value, target_coords, distances)
     assert not np.array_equal(nearest, np.array([7, 10]), equal_nan=False)
 
 

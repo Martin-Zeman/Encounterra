@@ -1,5 +1,8 @@
+import time
+
 import pytest
 
+from ..geometry import _get_bounding_box
 from ..misc import Size
 from ..geometry import *
 from ..spells.spell import *
@@ -206,35 +209,35 @@ def test_get_bounding_box():
     # Test case 1: Two combatants with same size
     coord1 = Coords(np.array([1, 1]), Size.MEDIUM)
     coord2 = Coords(np.array([3, 3]), Size.MEDIUM)
-    bottom_left, top_right = get_bounding_box(coord1, coord2)
+    bottom_left, top_right = _get_bounding_box(coord1.get(), coord2.get())
     assert np.array_equal(bottom_left, np.array([1, 1]))
     assert np.array_equal(top_right, np.array([3, 3]))
 
     # Test case 2: Two combatants with different sizes
     coord1 = Coords(np.array([0, 0]), Size.SMALL)
     coord2 = Coords(np.array([4, 4]), Size.LARGE)
-    bottom_left, top_right = get_bounding_box(coord1, coord2)
+    bottom_left, top_right = _get_bounding_box(coord1.get(), coord2.get())
     assert np.array_equal(bottom_left, np.array([0, 0]))
     assert np.array_equal(top_right, np.array([5, 5]))
 
     # Test case 3: Two combatants with overlapping positions
     coord1 = Coords(np.array([2, 2]), Size.HUGE)
     coord2 = Coords(np.array([3, 3]), Size.GARGANTUAN)
-    bottom_left, top_right = get_bounding_box(coord1, coord2)
+    bottom_left, top_right = _get_bounding_box(coord1.get(), coord2.get())
     assert np.array_equal(bottom_left, np.array([2, 2]))
     assert np.array_equal(top_right, np.array([6, 6]))
 
     # Test case 4: Two combatants with same position
     coord1 = Coords(np.array([0, 0]), Size.TINY)
     coord2 = Coords(np.array([0, 0]), Size.TINY)
-    bottom_left, top_right = get_bounding_box(coord1, coord2)
+    bottom_left, top_right = _get_bounding_box(coord1.get(), coord2.get())
     assert np.array_equal(bottom_left, np.array([0, 0]))
     assert np.array_equal(top_right, np.array([0, 0]))
 
     # Test case 5: HUGE and LARGE
     coords1 = Coords(np.array([1, 11]), Size.HUGE)
     coords2 = Coords(np.array([9, 13]), Size.LARGE)
-    bottom_left, top_right = get_bounding_box(coords1, coords2)
+    bottom_left, top_right = _get_bounding_box(coords1.get(), coords2.get())
     assert np.array_equal(np.array([1, 11]), bottom_left)
     assert np.array_equal(np.array([10, 14]), top_right)
 

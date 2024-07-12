@@ -531,14 +531,14 @@ FULL_VISIBILITY_ERROR_THRESHOLD = 0.45
 
 
 def is_path_straight(path):
-    if not path or len(path) < 2:
+    if path is None or len(path) < 2:
         return False
 
     # Compare the direction of each step in the path
     direction = None
     for i in range(len(path) - 1):
-        current_direction = (path[i + 1][0] - path[i][0], path[i + 1][1] - path[i][1])
-        if direction and current_direction != direction:
+        current_direction = path[i + 1] - path[i]  # This will be a numpy array operation
+        if direction is not None and not np.array_equal(current_direction, direction):
             return False
         direction = current_direction
 
@@ -547,6 +547,7 @@ def is_path_straight(path):
 
 def get_missing_hp(combatant):
     return combatant.max_hp + combatant.max_hp_modifier - combatant.curr_hp
+
 
 @staticmethod
 def get_superiority_dice(level):
@@ -560,6 +561,7 @@ def get_superiority_dice(level):
         case _:
             logger.error("Incorrect Battlemaster level")
             return (1, 8)
+
 
 @staticmethod
 def get_num_superiority_dice(level):

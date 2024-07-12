@@ -528,7 +528,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
         if coord_and_movement_type is None:
             continue
         coord, movement_type = coord_and_movement_type
-        path = battle_map.get_path_to_coord(combatant, coord, distances, shortest_paths, True)
+        path = battle_map.get_path_to_coord(combatant, np.array(coord, dtype=np.int32), distances, shortest_paths, True)
         if path is None:  # Note that an empty path is still a valid one
             continue
         match movement_type:

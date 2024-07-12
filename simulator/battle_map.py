@@ -17,7 +17,7 @@ from .spells.spell import SpellStats
 from .misc import Size, Visibility
 from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler, \
     get_source_of_frightened
-from .geometry import get_affected_by_cone, get_bounding_box, find_fov_vectors, angle_between_vectors, \
+from .geometry import get_affected_by_cone, _get_bounding_box, find_fov_vectors, angle_between_vectors, \
     find_nearest_valid_coordinate_chebyshev, angle_between_vectors_rad, linear_regression, sample_points_on_line, \
     get_angle_from_slope, get_affected_by_line
 from .misc import Side, DistanceMetric
@@ -36,36 +36,36 @@ logger = logging.getLogger("Encounterra")
 SQRT_OF_TWO = 1.41421
 
 
-def reconstruct_from_shortest_path(shortest_path, source, target):
+@njit
+def _reconstruct_from_shortest_path(shortest_path, source, target):
     """
     Works backwards using the shortest paths produced by Dijkstra to obtain a sequence of coordinates from source to
     target.
-    :param shortest_path: shortest path ndarray of shape (15, 15, 2)
-    :param source: source coordinates (numpy array)
-    :param target: target coordinates (numpy array)
-    :return: path from source to target as a sequence of coordinates
+    :param shortest_path: shortest path ndarray of shape (15, 15, 2), dtype=np.int64
+    :param source: source coordinates (numpy array of dtype=np.int32)
+    :param target: target coordinates (numpy array of dtype=np.int32)
+    :return: path from source to target as a sequence of coordinates (numpy array of dtype=np.int64)
     """
-    current_position = np.array(target)
-    # The square of the enemy itself is inaccessible, have to take the closest free adjacent one
-    path = {'tuples': [], 'numpy': []}
+    max_path_length = shortest_path.shape[0] * shortest_path.shape[1]
+    path = np.empty((max_path_length, 2), dtype=np.int64)
+    path_length = 0
 
-    while not np.array_equal(current_position, source):
-        path['numpy'].append(current_position.copy())
-        path['tuples'].append(tuple(current_position))
-        # have to convert to tuple cause numpy array is non-hashable
-        current_position = shortest_path[current_position[0], current_position[1]]
-        if np.array_equal(current_position, [-1, -1]):
+    source = source.astype(np.int64)
+    current = target.astype(np.int64).copy()
+
+    while not np.array_equal(current, source):
+        path[path_length] = current
+        path_length += 1
+        current = shortest_path[current[0], current[1]]
+        if np.array_equal(current, np.array([-1, -1], dtype=np.int64)):
             return None
 
-    path['numpy'].append(np.array(source))
-    path['tuples'].append(tuple(source))
-
-    path['numpy'].reverse()
-    path['tuples'].reverse()
-
-    return path
+    path[path_length] = source
+    path_length += 1
+    return path[:path_length][::-1]
 
 
+# njit candidate
 def convert_path_to_increments(path):
     """
     Converts a sequence of coordinates to a sequence of coordinate increments
@@ -193,7 +193,7 @@ def toggled_cache(key):
 
 
 @njit
-def dijkstra_numba(src, size, adj_matrix, mask):
+def _dijkstra(src, size, adj_matrix, mask):
     N = size
     Nsq = size ** 2
     maxsize = sys.maxsize
@@ -881,7 +881,7 @@ class Map:
                         mv_reshaped[:, :, x, y].fill(0)
         return mask
 
-    def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array, reconstructed_path):
+    def printDijkstra(self, distances, my_coords: np.array, enemy_coords: np.array):
         """
         Prints the distances to all locations on the map from my_location and highlights the reconstructed path to enemy_location.
         It prints it as standard cartesian coordinate system.
@@ -893,7 +893,6 @@ class Map:
         :param distances: list of distances to all coords (flattened)
         :param my_coords: coordinates of the source
         :param enemy_coords: coordinates of the destination
-        :param reconstructed_path: list of coordinates from my_location to enemy_location
         :return: void
         """
         for y in range(self.size - 1, -1, -1):
@@ -906,8 +905,6 @@ class Map:
                     row += "\x1b[38;5;39m%s\x1b[0m\t" % dist
                 elif any((enemy_coords[:] == coord).all(1)):  # basically equivalent to 'is coord in rows of enemy_coords'
                     row += "\x1b[38;5;196m%s\x1b[0m\t" % dist
-                elif (x, y) in reconstructed_path:
-                    row += "\u001b[36m%s\x1b[0m\t" % dist
                 else:
                     row += "%s\t" % dist if (x, y) not in self.difficult_set else "\x1b[38;5;226m%s\x1b[0m\t" % dist
             logger.debug(row)
@@ -1223,6 +1220,7 @@ class Map:
 
         return accessible_coords
 
+    # njit candidate
     def get_adjacent_coords(self, coords: Coords):
         """
         Returns accessible squares adjacent to a given coordinate
@@ -1240,22 +1238,23 @@ class Map:
                     adjacent_coords.add((x, y))
         return adjacent_coords
 
-    def get_nearest_free_adjacent_coords(self, combatant, my_location: Coords, target_location: Coords, distances, rng=1):
+    def get_nearest_free_adjacent_coords(self, combatant, my_location: np.array, combatant_size: int, target_location: Coords, distances, rng=1):
         """
         Get nearest free adjacent coordinates accounting for the combatant's size. Potentially increasing what is considered adjacent to rng.
         :param combatant:
         :param my_location: combatant's location
+        :param combatant_size: the size of the combatant
         :param target_location: the target location
         :param distances: distances for all coords in the grid
         :param rng: the range of what is considered adjacent
         :return:
         """
-        adjacent_coords = _get_free_coords_in_hop_range(self.grid, target_location.get(), distances, my_location.size.value, rng,
+        adjacent_coords = _get_free_coords_in_hop_range(self.grid, target_location.get(), distances, combatant_size, rng,
                                                             combatant_id=combatant.id)
         if not adjacent_coords:
             return None
         adjacent_coords = [np.array([x]) for x in adjacent_coords]
-        adjacent_coords.sort(key=lambda coord: _get_cartesian_distance_coords(coord, my_location.get()))
+        adjacent_coords.sort(key=lambda coord: _get_cartesian_distance_coords(coord, my_location))
         return adjacent_coords[0][0]
 
     def calc_dijkstra(self, combatant):
@@ -1266,7 +1265,7 @@ class Map:
         """
         my_location = self.get_combatant_position(combatant).get()[0]
         mask = self.build_combatant_adjacency_mask(combatant)
-        distances, shortest_paths = dijkstra_numba(my_location, self.size, self.base_adjacency_matrix, mask)
+        distances, shortest_paths = _dijkstra(my_location, self.size, self.base_adjacency_matrix, mask)
         return distances, shortest_paths
 
     def get_path_to_combatant(self, combatant, target, distances=np.array([]), shortest_paths=np.array([]), rng=1, consider_aoo=False):
@@ -1280,21 +1279,23 @@ class Map:
         :return: list of np.array increments to the target combatant
         """
         my_location = self.get_combatant_position(combatant)
-        logger.debug(f"Origin {my_location.get()[0]}")
+        combatant_size = my_location.size.value
+        my_location = my_location.get()
+        logger.debug(f"Origin {my_location[0]}")
         enemy_location = self.get_combatant_position(target)
         logger.debug(f"Destination {enemy_location.get()[0]}")
         if distances.size == 0 or shortest_paths.size == 0:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            distances, shortest_paths = dijkstra_numba(my_location.get()[0], self.size, self.base_adjacency_matrix, mask)
-        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(combatant, my_location, enemy_location, distances, rng)
+            distances, shortest_paths = _dijkstra(my_location[0], self.size, self.base_adjacency_matrix, mask)
+        enemy_adjacent_location = self.get_nearest_free_adjacent_coords(combatant, my_location, combatant_size, enemy_location, distances, rng)
         if enemy_adjacent_location is None:
             return None
-        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get()[0], enemy_adjacent_location)
-        if reconstructed_path is None:
+        path = _reconstruct_from_shortest_path(shortest_paths, my_location[0], enemy_adjacent_location)
+        if path is None:
             return None
         if logger.root.level <= logging.INFO:
-            self.printDijkstra(distances, my_location.get(), enemy_location.get(), reconstructed_path['tuples'])
-        return convert_path_to_increments(reconstructed_path['numpy'])
+            self.printDijkstra(distances, my_location, enemy_location.get())
+        return convert_path_to_increments(path)
 
     def get_path_to_coord(self, combatant, target_coord, distances=np.array([]), shortest_paths=np.array([]), consider_aoo=False):
         """
@@ -1306,18 +1307,18 @@ class Map:
         :param consider_aoo: Whether to consider attacks of opportunity
         :return: list of np.array increments to the target destination
         """
-        my_location = self.get_combatant_position(combatant)
-        logger.debug(f"Origin {my_location.get()[0]}")
+        my_location = self.get_combatant_position(combatant).get()
+        logger.debug(f"Origin {my_location[0]}")
         logger.debug(f"Destination {target_coord}")
         if distances.size == 0 or shortest_paths.size == 0:
             mask = self.build_combatant_adjacency_mask(combatant, consider_aoo)
-            distances, shortest_paths = dijkstra_numba(my_location.get()[0], self.size, self.base_adjacency_matrix, mask)
-        reconstructed_path = reconstruct_from_shortest_path(shortest_paths, my_location.get()[0], target_coord)
-        if reconstructed_path is None:
+            distances, shortest_paths = _dijkstra(my_location[0], self.size, self.base_adjacency_matrix, mask)
+        path = _reconstruct_from_shortest_path(shortest_paths, my_location[0], target_coord)
+        if path is None:
             return None
         if logger.root.level <= logging.INFO:
-            self.printDijkstra(distances, my_location.get(), np.array([target_coord]), reconstructed_path['tuples'])
-        return convert_path_to_increments(reconstructed_path['numpy'])
+            self.printDijkstra(distances, my_location, np.array([target_coord]))
+        return convert_path_to_increments(path)
 
     def get_effect_path_to_coord(self, current_coord, target_coord, shortest_paths):
         """
@@ -1327,7 +1328,7 @@ class Map:
         :param shortest_paths: potentially already pre-computed shortest paths to all coords
         :return: list of np.array increments to the target destination
         """
-        return reconstruct_from_shortest_path(shortest_paths, current_coord, target_coord)
+        return _reconstruct_from_shortest_path(shortest_paths, current_coord, target_coord)
 
     def get_combatant_position(self, combatant):
         try:
@@ -1668,6 +1669,7 @@ class Map:
         distances.sort()
         return enemies, distances
 
+    # prime njit candidate
     def get_visibility(self, observer: Coords, target: Coords):
         """
         The visibility is calculated terms of how much of the field of view of the target is blocked by obstacles. I find the leftmost and
@@ -1688,7 +1690,7 @@ class Map:
         :param target:
         :return: the degree of Visibility between the two coordinates
         """
-        bottom_left, top_right = get_bounding_box(observer, target)
+        bottom_left, top_right = _get_bounding_box(observer.get(), target.get())
         objects = []
         for obstacle in self.obstacles:
             obstacle_tr = (obstacle.coord[0] + obstacle.radius, obstacle.coord[1] + obstacle.radius)

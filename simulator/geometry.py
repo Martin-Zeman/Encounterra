@@ -1,6 +1,7 @@
 import math
 
 import numpy as np
+from numba import njit
 from scipy.spatial.distance import euclidean
 
 from .combatant_coords import Coords
@@ -175,16 +176,45 @@ def find_fov_vectors(observer: Coords, target: Coords | Obstacle):
     return vectors[1][0] / np.linalg.norm(vectors[1][0]), vectors[0][0] / np.linalg.norm(vectors[0][0])
 
 
-def get_bounding_box(combatant1: Coords, combatant2: Coords):
+@njit
+def _get_bounding_box(combatant1: np.ndarray, combatant2: np.ndarray):
     """
     Calculates a bounding box which encloses both combatants
-    :param combatant1:
-    :param combatant2:
+    :param combatant1: np.ndarray with shape (N, 2)
+    :param combatant2: np.ndarray with shape (M, 2)
     :return: bottom left corner, top right corner
     """
-    combined = np.concatenate((combatant1.get(), combatant2.get()), axis=0)
-    bottom_left = np.min(combined, axis=0)
-    top_right = np.max(combined, axis=0)
+    # Initialize min and max values with the first point of combatant1
+    min_x = combatant1[0, 0]
+    min_y = combatant1[0, 1]
+    max_x = combatant1[0, 0]
+    max_y = combatant1[0, 1]
+
+    # Compute min and max for combatant1
+    for i in range(combatant1.shape[0]):
+        if combatant1[i, 0] < min_x:
+            min_x = combatant1[i, 0]
+        if combatant1[i, 1] < min_y:
+            min_y = combatant1[i, 1]
+        if combatant1[i, 0] > max_x:
+            max_x = combatant1[i, 0]
+        if combatant1[i, 1] > max_y:
+            max_y = combatant1[i, 1]
+
+    # Compute min and max for combatant2
+    for i in range(combatant2.shape[0]):
+        if combatant2[i, 0] < min_x:
+            min_x = combatant2[i, 0]
+        if combatant2[i, 1] < min_y:
+            min_y = combatant2[i, 1]
+        if combatant2[i, 0] > max_x:
+            max_x = combatant2[i, 0]
+        if combatant2[i, 1] > max_y:
+            max_y = combatant2[i, 1]
+
+    bottom_left = np.array([min_x, min_y])
+    top_right = np.array([max_x, max_y])
+
     return bottom_left, top_right
 
 

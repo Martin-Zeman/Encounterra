@@ -682,12 +682,12 @@ class ActionResolver:
                 mask = np.ones((battle_map.size ** 2, battle_map.size ** 2), dtype=int)
                 _, shortest_paths = _dijkstra(actoid.factory.action_enabler_effect.origin, battle_map.size, adj, mask)
                 path = battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
-                if path and len(path) <= FlamingSphereRamFactory.RANGE + 1:
+                if path is not None and len(path) <= FlamingSphereRamFactory.RANGE + 1:
                     dmg = roll_dice_multi(actoid.factory.dmg_dice)
                     logger.info(f"{ actoid.target} is rammed by Flaming Sphere")
                     resolve_dmg_saving_throw(actoid, dmg, actoid.target, True, True)
                     battle_map.remove_combatant_if_dead(actoid.target)   # TODO revisit if this is really needed
-                path = path['tuples'][:FlamingSphereRamFactory.RANGE + 1]
+                path = path[:FlamingSphereRamFactory.RANGE + 1]
                 actoid.move_effect(path[-1])  # TODO consider putting this into effect tracker
                 return ActionResult.DMG
             case Action.MAGIC_MISSILE | BonusAction.QUICKENED_MAGIC_MISSILE:
