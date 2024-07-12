@@ -64,11 +64,11 @@ class FaerieFireFactory(ThreatModifierFactory):
         # Here there really is no need to iterate over all coords. Just find the best score
         coord = self.find_best_args(self.combatant)
         if coord is not None:
-            return [FaerieFire(coord, self)]
+            return [FaerieFire(np.array(coord, dtype=np.int32), self)]
         return []
 
     def create(self, coord):
-        return FaerieFire(coord, self)
+        return FaerieFire(np.array(coord, dtype=np.int32), self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         """

@@ -65,10 +65,10 @@ class FlamingSphereFactory(DirectThreatFactory):
             coords.add(coords_around_enemy[0])
 
         # Here there really is no need to iterate over all coords. Just find the best score
-        return [FlamingSphere(coord, self) for coord in coords]
+        return [FlamingSphere(np.array(coord, dtype=np.int32), self) for coord in coords]
 
     def create(self, coord):
-        return FlamingSphere(coord, self)
+        return FlamingSphere(np.array(coord, dtype=np.int32), self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         """

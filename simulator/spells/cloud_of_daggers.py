@@ -53,7 +53,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         # Here there really is no need to iterate over all coords. Just find the best score
         coord = self.find_best_args(self.combatant)
         if coord is not None:
-            return [CloudOfDaggers(coord, self)]
+            return [CloudOfDaggers(np.array(coord, dtype=np.int32), self)]
         return []
 
     def create(self, coord):

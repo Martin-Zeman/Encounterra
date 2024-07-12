@@ -299,7 +299,7 @@ def check_feasibility(combatant, action):
                 res &= action.factory.resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
-                res &= battle_map.are_valid_coords(action.coord) and battle_map.are_empty_or_self(Coords(action.coord, combatant.size), combatant)
+                res &= battle_map.are_valid_coords(action.coord) and battle_map.are_empty_or_self(Coords(action.coord, combatant.size.value), combatant)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
                 res &= action.factory.resource.has_resource(level=1)
@@ -461,7 +461,7 @@ def check_feasibility(combatant, action):
             return False
         match action_type:
             case Movement.STANDARD | Movement.DISENGAGED:
-                target_position = battle_map.get_combatant_position(combatant) + action.increment
+                target_position = battle_map.get_combatant_position(combatant) + np.array(action.increment, dtype=np.int64)
                 movement_needed = 1 if not battle_map.is_difficult_terrain_at(target_position) else 2
                 res = combatant.movement >= movement_needed and battle_map.are_valid_coords(target_position.get()) and battle_map.are_empty_or_self(target_position, combatant)
                 res &= not is_affected_by_any(combatant, Conditions.GRAPPLED, Conditions.RESTRAINED)

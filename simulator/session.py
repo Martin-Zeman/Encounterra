@@ -330,7 +330,7 @@ class Session:
         while True:
             # TODO place some kind of a timeout here
             random_coord = np.array([random.randint(*bounds1), random.randint(*bounds2)])
-            random_coords = Coords(random_coord, combatant.size)
+            random_coords = Coords(random_coord, combatant.size.value)
             if self.battle_map.are_empty(random_coords):
                 logger.warning(f"Setting initial position {random_coords.get()[0]} for {combatant}")
                 self.battle_map.set_combatant_coordinates(combatant, random_coord)

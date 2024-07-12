@@ -1,7 +1,6 @@
 import copy
 
 from transitions import State, Machine
-import numba as nb
 import numpy as np
 
 

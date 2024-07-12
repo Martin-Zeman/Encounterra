@@ -54,11 +54,11 @@ class ThunderwaveFactory(ThreatModifierFactory):
         # Here there really is no need to iterate over all coords. Just find the best score
         coord = self.find_best_args(self.combatant)
         if coord is not None:
-            return [Thunderwave(coord, self)]
+            return [Thunderwave(np.array(coord, dtype=np.int32), self)]
         return []
 
     def create(self, coord):
-        return Thunderwave(coord, self)
+        return Thunderwave(np.array(coord, dtype=np.int32), self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         if Map.get().get_cartesian_distance_combatants(self.combatant, target) <= ThunderwaveFactory.range + SpellStats.TRANSLATE_BOX[ThunderwaveFactory.target]:
@@ -115,7 +115,7 @@ class Thunderwave(Actoid, DirectThreat, SquareAoe):
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return _get_free_coords_at_hop_range(
                 battle_map.grid,
-                Coords(self.coord, Size.HUGE).get(),  # not actually combatant coords
+                Coords(self.coord, Size.HUGE.value).get(),  # not actually combatant coords
                 distances,
                 inflate_to_dist=self.factory.combatant.size.value,
                 rng=ThunderwaveFactory.range, combatant_id=self.factory.combatant.id)

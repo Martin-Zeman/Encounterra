@@ -1,9 +1,9 @@
+import numpy as np
 from numba import int32, int64
 from numba.experimental import jitclass
 
-# Define the spec for the Numba class
 spec = [
-    ('coord', int64[:]),  # coord is a tuple of two integers
+    ('coord', int64[:]),            # coord is a tuple of two integers
     ('radius', int32)               # radius is an integer
 ]
 
@@ -30,4 +30,7 @@ class Obstacle:
                 (self.coord[0] + self.radius + 1, self.coord[1] + self.radius + 1)]
 
     def get_center(self):
-        return self.coord[0] + 0.5, self.coord[1] + 0.5
+        """
+        Returns the center of the obstacle as a NumPy array of float coordinates
+        """
+        return np.array([self.coord[0] + 0.5, self.coord[1] + 0.5], dtype=np.float64)

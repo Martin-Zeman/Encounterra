@@ -3,6 +3,7 @@ from abc import abstractmethod
 from ..battle_map import Map, _get_hop_distance_coords
 from ..effects.effect import Effect
 
+
 class AoeEffect(Effect):
 
     @abstractmethod

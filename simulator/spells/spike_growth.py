@@ -54,10 +54,10 @@ class SpikeGrowthFactory(DirectThreatFactory):
 
     def create_all(self, previous_action_in_dag=None):
         # Here there really is no need to iterate over all coords. Just find the best score
-        return [SpikeGrowth(self.find_best_args(self.combatant), self)]
+        return [SpikeGrowth(np.array(self.find_best_args(self.combatant), dtype=np.int32), self)]
 
     def create(self, coord):
-        return SpikeGrowth(coord, self)
+        return SpikeGrowth(np.array(coord, dtype=np.int32), self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         """

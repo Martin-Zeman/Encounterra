@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from ..geometry import _get_bounding_box
+from ..geometry import _get_bounding_box, _angle_between_vectors, _find_fov_vectors
 from ..misc import Size
 from ..geometry import *
 from ..spells.spell import *
@@ -159,13 +159,13 @@ def test_do_squares_overlap():
 
 
 def test_angle_between_vectors():
-    assert angle_between_vectors(np.array([0, 1]), np.array([1, 0])) == pytest.approx(90.0, 0.0001)
-    assert angle_between_vectors(np.array([0, 1]), np.array([1, -1])) == pytest.approx(135.0, 0.0001)
-    assert angle_between_vectors(np.array([0, 1]), np.array([0, -1])) == pytest.approx(180.0, 0.0001)
-    assert angle_between_vectors(np.array([0, 2]), np.array([-1, 2])) == pytest.approx(26.5650, 0.0001)
-    assert angle_between_vectors(np.array([1, 0.5]), np.array([1.5, -1])) == pytest.approx(60.2551, 0.0001)
-    assert angle_between_vectors(np.array([6, 4]), np.array([6, 4])) == pytest.approx(0, 0.0001)
-    assert angle_between_vectors(np.array([0, 4]), np.array([4, 4])) == pytest.approx(45.0, 0.0001)
+    assert _angle_between_vectors(np.array([0, 1]), np.array([1, 0])) == pytest.approx(90.0, 0.0001)
+    assert _angle_between_vectors(np.array([0, 1]), np.array([1, -1])) == pytest.approx(135.0, 0.0001)
+    assert _angle_between_vectors(np.array([0, 1]), np.array([0, -1])) == pytest.approx(180.0, 0.0001)
+    assert _angle_between_vectors(np.array([0, 2]), np.array([-1, 2])) == pytest.approx(26.5650, 0.0001)
+    assert _angle_between_vectors(np.array([1, 0.5]), np.array([1.5, -1])) == pytest.approx(60.2551, 0.0001)
+    assert _angle_between_vectors(np.array([6, 4]), np.array([6, 4])) == pytest.approx(0, 0.0001)
+    assert _angle_between_vectors(np.array([0, 4]), np.array([4, 4])) == pytest.approx(45.0, 0.0001)
 
 
 def test_angle_between_vectors_rad():
@@ -180,26 +180,26 @@ def test_angle_between_vectors_rad():
 
 def test_find_fov_vectors(test_stone_giant, test_ogre, test_bugbear):
     # Directly side by side
-    outlines = find_fov_vectors(Coords(np.array([3, 7]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
+    outlines = _find_fov_vectors(Coords(np.array([3, 7]), test_bugbear.size.value), Coords(np.array([6, 6]), test_stone_giant.size.value))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([2.5, 1.5]) / np.linalg.norm(np.array([2.5, 1.5])), point) for point in outlines])
     assert any([np.array_equal(np.array([2.5, -1.5]) / np.linalg.norm(np.array([2.5, -1.5])), point) for point in outlines])
     # Same but observer and target swapped
-    outlines = find_fov_vectors(Coords(np.array([6, 6]), test_stone_giant.size), Coords(np.array([3, 7]), test_bugbear.size))
+    outlines = _find_fov_vectors(Coords(np.array([6, 6]), test_stone_giant.size.value), Coords(np.array([3, 7]), test_bugbear.size.value))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([-3.5, 0.5]) / np.linalg.norm(np.array([-3.5, 0.5])), point) for point in outlines])
     assert any([np.array_equal(np.array([-3.5, -0.5]) / np.linalg.norm(np.array([-3.5, 0.5])), point) for point in outlines])
     # At a slight angle
-    outlines = find_fov_vectors(Coords(np.array([0, 0]), test_stone_giant.size), Coords(np.array([5, 2]), test_ogre.size))
+    outlines = _find_fov_vectors(Coords(np.array([0, 0]), test_stone_giant.size.value), Coords(np.array([5, 2]), test_ogre.size.value))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([3.5, 2.5]) / np.linalg.norm(np.array([3.5, 2.5])), point) for point in outlines])
     assert any([np.array_equal(np.array([5.5, 0.5]) / np.linalg.norm(np.array([5.5, 0.5])), point) for point in outlines])
     # Testing the breaking point between the selection of (6, 9) and (6, 6)
-    outlines = find_fov_vectors(Coords(np.array([5, 2]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
+    outlines = _find_fov_vectors(Coords(np.array([5, 2]), test_bugbear.size.value), Coords(np.array([6, 6]), test_stone_giant.size.value))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([3.5, 3.5]) / np.linalg.norm(np.array([3.5, 3.5])), point) for point in outlines])
     assert any([np.array_equal(np.array([0.5, 6.5]) / np.linalg.norm(np.array([0.5, 6.5])), point) for point in outlines])
-    outlines = find_fov_vectors(Coords(np.array([6, 2]), test_bugbear.size), Coords(np.array([6, 6]), test_stone_giant.size))
+    outlines = _find_fov_vectors(Coords(np.array([6, 2]), test_bugbear.size.value), Coords(np.array([6, 6]), test_stone_giant.size.value))
     assert len(outlines) == 2
     assert any([np.array_equal(np.array([-0.5, 3.5]) / np.linalg.norm(np.array([-0.5, 3.5])), point) for point in outlines])
     assert any([np.array_equal(np.array([2.5, 3.5]) / np.linalg.norm(np.array([2.5, 3.5])), point) for point in outlines])
@@ -207,36 +207,36 @@ def test_find_fov_vectors(test_stone_giant, test_ogre, test_bugbear):
 
 def test_get_bounding_box():
     # Test case 1: Two combatants with same size
-    coord1 = Coords(np.array([1, 1]), Size.MEDIUM)
-    coord2 = Coords(np.array([3, 3]), Size.MEDIUM)
+    coord1 = Coords(np.array([1, 1]), Size.MEDIUM.value)
+    coord2 = Coords(np.array([3, 3]), Size.MEDIUM.value)
     bottom_left, top_right = _get_bounding_box(coord1.get(), coord2.get())
     assert np.array_equal(bottom_left, np.array([1, 1]))
     assert np.array_equal(top_right, np.array([3, 3]))
 
     # Test case 2: Two combatants with different sizes
-    coord1 = Coords(np.array([0, 0]), Size.SMALL)
-    coord2 = Coords(np.array([4, 4]), Size.LARGE)
+    coord1 = Coords(np.array([0, 0]), Size.SMALL.value)
+    coord2 = Coords(np.array([4, 4]), Size.LARGE.value)
     bottom_left, top_right = _get_bounding_box(coord1.get(), coord2.get())
     assert np.array_equal(bottom_left, np.array([0, 0]))
     assert np.array_equal(top_right, np.array([5, 5]))
 
     # Test case 3: Two combatants with overlapping positions
-    coord1 = Coords(np.array([2, 2]), Size.HUGE)
-    coord2 = Coords(np.array([3, 3]), Size.GARGANTUAN)
+    coord1 = Coords(np.array([2, 2]), Size.HUGE.value)
+    coord2 = Coords(np.array([3, 3]), Size.GARGANTUAN.value)
     bottom_left, top_right = _get_bounding_box(coord1.get(), coord2.get())
     assert np.array_equal(bottom_left, np.array([2, 2]))
     assert np.array_equal(top_right, np.array([6, 6]))
 
     # Test case 4: Two combatants with same position
-    coord1 = Coords(np.array([0, 0]), Size.TINY)
-    coord2 = Coords(np.array([0, 0]), Size.TINY)
+    coord1 = Coords(np.array([0, 0]), Size.TINY.value)
+    coord2 = Coords(np.array([0, 0]), Size.TINY.value)
     bottom_left, top_right = _get_bounding_box(coord1.get(), coord2.get())
     assert np.array_equal(bottom_left, np.array([0, 0]))
     assert np.array_equal(top_right, np.array([0, 0]))
 
     # Test case 5: HUGE and LARGE
-    coords1 = Coords(np.array([1, 11]), Size.HUGE)
-    coords2 = Coords(np.array([9, 13]), Size.LARGE)
+    coords1 = Coords(np.array([1, 11]), Size.HUGE.value)
+    coords2 = Coords(np.array([9, 13]), Size.LARGE.value)
     bottom_left, top_right = _get_bounding_box(coords1.get(), coords2.get())
     assert np.array_equal(np.array([1, 11]), bottom_left)
     assert np.array_equal(np.array([10, 14]), top_right)
