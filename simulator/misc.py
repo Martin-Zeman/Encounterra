@@ -341,12 +341,12 @@ def reconcile_roll_types(types):
 #     return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
 
 
-@njit
+@njit(cache=True)
 def avg_roll(dice: tuple):
     return dice[0] * ((1.0 + dice[1]) / 2.0)
 
 
-@njit
+@njit(cache=True)
 def avg_roll_multi(dice: tuple):
     acc = 0.0
     for d in dice:
@@ -374,7 +374,7 @@ def percentile_roll(dice, percentile):
     return find_percentile_value(all_outcomes, percentile)
 
 
-@njit
+@njit(cache=True)
 def roll_dice(dice):
     """
     Basic function for rolling dice
@@ -385,7 +385,7 @@ def roll_dice(dice):
     return np.random.randint(1, num_sides + 1, num_dice).sum()
 
 
-@njit
+@njit(cache=True)
 def roll_dice_multi(dice_list):
     """
     Function for rolling multiple sets of dice
@@ -398,7 +398,7 @@ def roll_dice_multi(dice_list):
     return total_sum
 
 
-@njit
+@njit(cache=True)
 def roll_dice_with_reroll_and_log(dice, reroll_max_value):
     """
     Function for rolling dice which re-rolls results less than or equal to a given value. The re-rolled value must be used.

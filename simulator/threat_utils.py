@@ -39,7 +39,7 @@ def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, is_immune=False, is_resistant=Fals
     return res
 
 
-@njit
+@njit(cache=True)
 def calc_p_hit(to_hit, ac):
     """
     Calculates the probability of hitting
@@ -53,7 +53,7 @@ def calc_p_hit(to_hit, ac):
     return p_hit
 
 
-@njit
+@njit(cache=True)
 def mean_dmg_auto_hit(dmg_dice, is_resistant=False):
     """
     Calculates mean dmg of an attack-like ability

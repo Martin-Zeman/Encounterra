@@ -36,7 +36,7 @@ logger = logging.getLogger("Encounterra")
 SQRT_OF_TWO = 1.41421
 
 
-@njit
+@njit(cache=True)
 def _reconstruct_from_shortest_path(shortest_path, source, target):
     """
     Works backwards using the shortest paths produced by Dijkstra to obtain a sequence of coordinates from source to
@@ -192,7 +192,7 @@ def toggled_cache(key):
     return _toggled_cache
 
 
-@njit
+@njit(cache=True)
 def _dijkstra(src, size, adj_matrix, mask):
     N = size
     Nsq = size ** 2
@@ -239,7 +239,7 @@ def _dijkstra(src, size, adj_matrix, mask):
     return dist, shortest_paths
 
 
-@njit
+@njit(cache=True)
 def _distance_matrix(coords1, coords2):
     """
     Computes the pairwise Euclidean distances between two sets of coordinates.
@@ -258,7 +258,7 @@ def _distance_matrix(coords1, coords2):
     return distances
 
 
-@njit
+@njit(cache=True)
 def _get_cartesian_distance_coords(coords1: np.array, coords2: np.array):
     """
     Calculates the cartesian distance between two coordinates
@@ -269,7 +269,7 @@ def _get_cartesian_distance_coords(coords1: np.array, coords2: np.array):
     return np.amin(_distance_matrix(coords1, coords2))
 
 
-@njit
+@njit(cache=True)
 def _get_hop_distance_coords(coords1: np.array, coords2: np.array):
     """
     Calculates hop distance between coords
@@ -284,7 +284,7 @@ def _get_hop_distance_coords(coords1: np.array, coords2: np.array):
     return np.max(np.abs(sub1_closest_coord - sub2_closest_coord))
 
 
-@njit
+@njit(cache=True)
 def _inflate_coords(coords: np.array, inflate_to_dist):
     """
     A helper function which inflates the given numpy array coordinates to a given size (they may already by inflated but may need further inflation
@@ -303,14 +303,14 @@ def _inflate_coords(coords: np.array, inflate_to_dist):
             inflated.add((max(0, x), max(0, y)))
     return inflated
 
-@njit
+@njit(cache=True)
 def _is_empty_or_self(grid: np.ndarray, x: int, y: int, combatant_id: int):
     """Check if the grid square is empty or occupied by the given combatant."""
     square = grid[x, y]
     return ((square['occupancy'] == Occupancy.FREE.value) or (combatant_id != -1 and square['combatant'] == combatant_id)) and (square['terrain'] != Terrain.IMPASSABLE_TERRAIN.value)
 
 
-@njit
+@njit(cache=True)
 def _get_free_coords_in_cartesian_range(
         grid: np.ndarray,
         coords: np.ndarray,
@@ -348,7 +348,7 @@ def _get_free_coords_in_cartesian_range(
                 coords_in_range.add((x, y))
     return list(coords_in_range)
 
-@njit
+@njit(cache=True)
 def _get_free_coords_in_hop_range(
         grid: np.ndarray,
         coords: np.ndarray,
@@ -384,7 +384,7 @@ def _get_free_coords_in_hop_range(
     return list(adjacent_coords)
 
 
-@njit
+@njit(cache=True)
 def _get_free_coords_at_hop_range(
         grid: np.ndarray,
         coords: np.ndarray,

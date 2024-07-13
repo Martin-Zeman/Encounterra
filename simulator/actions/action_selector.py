@@ -420,7 +420,7 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
     return best_sequence, best_out_threat
 
 
-@njit
+@njit(cache=True)
 def _dfs(dag_forward: np.ndarray, current_state: int, max_sequence_length: int):
     sequences = []
     empty_sequence = np.zeros(max_sequence_length, dtype=np.int32)

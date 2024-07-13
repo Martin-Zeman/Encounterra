@@ -146,7 +146,7 @@ def do_squares_overlap(origin1: np.array, length1, origin2: np.array, length2):
 #     return angle_deg if (angle_deg - 180 < 0) else 360 - angle_deg
 
 
-@njit
+@njit(cache=True)
 def _angle_between_vectors(vector_1, vector_2):
     """
     Calculates the angle (in degrees) between two vectors
@@ -197,7 +197,7 @@ def angle_between_vectors_rad(vector_1: np.array, vector_2: np.array):
 #     return vectors[1][0] / np.linalg.norm(vectors[1][0]), vectors[0][0] / np.linalg.norm(vectors[0][0])
 
 
-@njit
+@njit(cache=True)
 def _find_fov_vectors(observer, target):
     observer_center = observer.get_center()
     target_center = target.get_center()
@@ -228,7 +228,7 @@ def _find_fov_vectors(observer, target):
     return norm_vectors
 
 
-@njit
+@njit(cache=True)
 def _get_bounding_box(combatant1: np.ndarray, combatant2: np.ndarray):
     """
     Calculates a bounding box which encloses both combatants
