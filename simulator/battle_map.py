@@ -1710,10 +1710,7 @@ class Map:
             objects.append(obstacle)
         objects.append(target)
 
-        try:
-            vec_to_object = [(vec, o) for o in objects for vec in _find_fov_vectors(observer, o)]
-        except:
-            print("FIXME")
+        vec_to_object = [(vec, o) for o in objects for vec in _find_fov_vectors(observer, o)]
         central_vector = target.get_center() - observer.get_center()
         vec_to_object.sort(key=lambda x: _angle_between_vectors(central_vector, x[0]) * np.sign(np.cross(x[0], central_vector)), reverse=True)
 
