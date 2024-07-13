@@ -10,7 +10,7 @@ from cachetools.keys import hashkey
 
 import logging
 from .actions.action_types import Passive
-from .combatant_coords import Coords
+from .combatant_coords import Coords, get_tuples
 from .obstacle import Obstacle
 from .proto_combatant import ProtoCombatant
 from .spells.spell import SpellStats
@@ -442,84 +442,6 @@ def _get_free_coords_at_hop_range(
     return list(perimeter_coords)
 
 
-@njit
-def _get_visibility(obstacles, observer: Coords, target: Coords):
-    """
-    The visibility is calculated terms of how much of the field of view of the target is blocked by obstacles. I find the leftmost and
-    the rightmost vertex of coord2. I then stretch a bounding box between the observer coordinates and the farthest point of the
-    observer. Inside this bounding box I find all obstacles (plus maybe other combatants) and store them as objects. I then find the
-    leftmost and rightmost vertices for all obstacles. Each pair of vertices together with the observer's mid point define a pair of
-    vectors. Then I go obstacle vector pair by vector pair and classify their field of view angles. I need to identify six different
-    cases:
-    A) The obstacle is too far to the right, the target is fully visible
-    B) The right side of the target is partially hidden behind the obstacle
-    C) The obstacle is somewhere in the center of the target but parts of the target can still be seen on left and right
-    D) The left side of the target is partially hidden behind the obstacle
-    E) The obstacle is too far to the left, the target is fully visible
-    F) The target is fully blocked by the obstacle
-    From this I calculate the overall visible percentage.
-
-    :param obstacles:
-    :param observer:
-    :param target:
-    :return: the degree of Visibility between the two coordinates
-    """
-    bottom_left, top_right = _get_bounding_box(observer.get(), target.get())
-    objects = []
-    for obstacle in obstacles:
-        obstacle_tr = (obstacle.coord[0] + obstacle.radius, obstacle.coord[1] + obstacle.radius)
-        obstacle_bl = (obstacle.coord[0] - obstacle.radius, obstacle.coord[1] - obstacle.radius)
-        if obstacle_tr[0] < bottom_left[0] or obstacle_bl[0] > top_right[0] or obstacle_bl[1] > top_right[1] or \
-                obstacle_tr[1] < bottom_left[1]:
-            continue
-        objects.append(obstacle)
-    objects.append(target)
-
-    vec_to_object = [(vec, o) for o in objects for vec in _find_fov_vectors(observer, o)]
-    central_vector = target.get_center() - observer.get_center()
-    vec_to_object.sort(
-        key=lambda x: _angle_between_vectors(central_vector, x[0]) * np.sign(np.cross(x[0], central_vector)),
-        reverse=True)
-
-    entered_target_fov = False
-    opened = set()
-    start_of_hidden_fov = None
-    hidden_fov = 0
-    for vo in vec_to_object:
-        if vo[1] is not target:
-            if vo[1] not in opened:
-                if not opened:
-                    start_of_hidden_fov = vo[0]
-                opened.add(vo[1])
-            else:
-                opened.remove(vo[1])
-                if not opened and entered_target_fov:
-                    hidden_fov += _angle_between_vectors(start_of_hidden_fov, vo[0])
-                    # start_of_hidden_fov = None
-        elif entered_target_fov:
-            if opened:
-                hidden_fov += _angle_between_vectors(start_of_hidden_fov, vo[0])
-            break
-        else:
-            entered_target_fov = True
-            start_of_hidden_fov = vo[
-                0]  # Override the potential start of hidden FoV, we don't care about area outside the target FoV
-
-    target_vectors = _find_fov_vectors(observer, target)
-    target_fov = _angle_between_vectors(target_vectors[0], target_vectors[1])
-    visible_fov = target_fov - hidden_fov
-    visible_percentage = int(visible_fov / (target_fov * 0.01))
-
-    match visible_percentage:
-        case pct if 50 < pct:
-            return Visibility.FULL.value
-        case pct if 25 < pct <= 50:
-            return Visibility.HALF_COVER.value
-        case pct if 0 < pct <= 25:
-            return Visibility.THREE_QUARTERS_COVER.value
-        case _:
-            return Visibility.NONE.value
-
 
 class Map:
     _instance = None
@@ -786,49 +708,58 @@ class Map:
     def set_effect_tracker(self, effect_tracker):
         self.effect_tracker = effect_tracker
 
+
     def place_circular_element(self, coord, terrain_type, radius=0):
         """
         Places a terrain element of a 'circular' type onto the map
         :param coord: origin coordinate of the terrain element
         :param terrain_type: difficult terrain or impassable terrain
         :param radius: radius of the element
-        :return:
+        :return: True if placement was successful, False otherwise
         """
         N = self.size
+
+        def is_overlapping(coord, radius):
+            for x_offset in range(-radius, radius + 1):
+                for y_offset in range(-radius, radius + 1):
+                    x = coord[0] + x_offset
+                    y = coord[1] + y_offset
+                    if 0 <= x < N and 0 <= y < N:
+                        if self.grid[x][y]["terrain"] != Terrain.NORMAL_TERRAIN.value:
+                            return True
+            return False
+
         if radius == 0:
             x = max(0, min(coord[0], N - 1))
             y = max(0, min(coord[1], N - 1))
+            if is_overlapping((x, y), radius):
+                return False
+
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                 self.grid[x][y]["terrain"] = Terrain.IMPASSABLE_TERRAIN.value
-                self.impassable_set.add((coord[0], coord[1]))
+                self.impassable_set.add((x, y))
                 self.obstacles.append(Obstacle(coord))
             elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                 self.grid[x][y]["terrain"] = Terrain.DIFFICULT_TERRAIN.value
-                self.difficult_set.add((coord[0], coord[1]))
+                self.difficult_set.add((x, y))
         elif radius > 0:
+            if is_overlapping(coord, radius):
+                return False
+
             if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                 self.obstacles.append(Obstacle(coord, radius))
             for x_offset in range(-radius, radius + 1):
                 for y_offset in range(-radius, radius + 1):
                     x = max(0, min(coord[0] + x_offset, N - 1))
                     y = max(0, min(coord[1] + y_offset, N - 1))
-                    try:
+                    if 0 <= x < N and 0 <= y < N:
                         if terrain_type == Terrain.IMPASSABLE_TERRAIN:
                             self.grid[x][y]["terrain"] = Terrain.IMPASSABLE_TERRAIN.value
                             self.impassable_set.add((x, y))
-                            try:
-                                self.difficult_set.remove((x, y))
-                            except KeyError:
-                                pass
                         elif terrain_type == Terrain.DIFFICULT_TERRAIN:
                             self.grid[x][y]["terrain"] = Terrain.DIFFICULT_TERRAIN.value
                             self.difficult_set.add((x, y))
-                            try:
-                                self.impassable_set.remove((x, y))
-                            except KeyError:
-                                pass
-                    except IndexError:
-                        pass  # out of grid
+        return True
 
     def build_adjacency_matrix(self):
         # start_time = time.time()
@@ -1558,7 +1489,7 @@ class Map:
         m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in self.get_enemies(caster)])
         base_angle = 90 - get_angle_from_slope(m)  # Conversion to get the upwards oriented angle
         angle_range = np.arange(base_angle - 15, base_angle + 15.1, 3.0)  # Adjust angle in increments of 2.5 degrees
-        combatant_to_coord_sets = {combatant: set(coords.get_tuples()) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}
+        combatant_to_coord_sets = {combatant: set(get_tuples(coords)) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}
         all_combatant_coords = set().union(*combatant_to_coord_sets.values())
 
         max_score = 0
@@ -1618,7 +1549,7 @@ class Map:
         m, c = linear_regression([self.combatant_coordinate_cache[e].get_center() for e in self.get_enemies(caster)])
         base_angle = 90 - get_angle_from_slope(m)  # Conversion to get the upwards oriented angle
         angle_range = np.arange(base_angle - 15, base_angle + 15.1, 3.0)  # Adjust angle in increments of 2.5 degrees
-        combatant_to_coord_sets = {combatant: set(coords.get_tuples()) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}
+        combatant_to_coord_sets = {combatant: set(get_tuples(coords)) for combatant, coords in self.combatant_coordinate_cache.items() if combatant is not caster}
         all_combatant_coords = set().union(*combatant_to_coord_sets.values())
 
         max_score = 0
@@ -1748,90 +1679,92 @@ class Map:
         distances.sort()
         return enemies, distances
 
-    # prime njit candidate
-    # def get_visibility(self, obstacles, observer: Coords, target: Coords):
-    #     """
-    #     The visibility is calculated terms of how much of the field of view of the target is blocked by obstacles. I find the leftmost and
-    #     the rightmost vertex of coord2. I then stretch a bounding box between the observer coordinates and the farthest point of the
-    #     observer. Inside this bounding box I find all obstacles (plus maybe other combatants) and store them as objects. I then find the
-    #     leftmost and rightmost vertices for all obstacles. Each pair of vertices together with the observer's mid point define a pair of
-    #     vectors. Then I go obstacle vector pair by vector pair and classify their field of view angles. I need to identify six different
-    #     cases:
-    #     A) The obstacle is too far to the right, the target is fully visible
-    #     B) The right side of the target is partially hidden behind the obstacle
-    #     C) The obstacle is somewhere in the center of the target but parts of the target can still be seen on left and right
-    #     D) The left side of the target is partially hidden behind the obstacle
-    #     E) The obstacle is too far to the left, the target is fully visible
-    #     F) The target is fully blocked by the obstacle
-    #     From this I calculate the overall visible percentage.
-    #
-    #     :param obstacles:
-    #     :param observer:
-    #     :param target:
-    #     :return: the degree of Visibility between the two coordinates
-    #     """
-    #     bottom_left, top_right = _get_bounding_box(observer.get(), target.get())
-    #     objects = []
-    #     for obstacle in obstacles:
-    #         obstacle_tr = (obstacle.coord[0] + obstacle.radius, obstacle.coord[1] + obstacle.radius)
-    #         obstacle_bl = (obstacle.coord[0] - obstacle.radius, obstacle.coord[1] - obstacle.radius)
-    #         if obstacle_tr[0] < bottom_left[0] or obstacle_bl[0] > top_right[0] or obstacle_bl[1] > top_right[1] or obstacle_tr[1] < bottom_left[1]:
-    #             continue
-    #         objects.append(obstacle)
-    #     objects.append(target)
-    #
-    #     vec_to_object = [(vec, o) for o in objects for vec in _find_fov_vectors(observer, o)]
-    #     central_vector = target.get_center() - observer.get_center()
-    #     vec_to_object.sort(key=lambda x: _angle_between_vectors(central_vector, x[0]) * np.sign(np.cross(x[0], central_vector)), reverse=True)
-    #
-    #     entered_target_fov = False
-    #     opened = set()
-    #     start_of_hidden_fov = None
-    #     hidden_fov = 0
-    #     for vo in vec_to_object:
-    #         if vo[1] is not target:
-    #             if vo[1] not in opened:
-    #                 if not opened:
-    #                     start_of_hidden_fov = vo[0]
-    #                 opened.add(vo[1])
-    #             else:
-    #                 opened.remove(vo[1])
-    #                 if not opened and entered_target_fov:
-    #                     hidden_fov += _angle_between_vectors(start_of_hidden_fov, vo[0])
-    #                     # start_of_hidden_fov = None
-    #         elif entered_target_fov:
-    #             if opened:
-    #                 hidden_fov += _angle_between_vectors(start_of_hidden_fov, vo[0])
-    #             break
-    #         else:
-    #             entered_target_fov = True
-    #             start_of_hidden_fov = vo[0]  # Override the potential start of hidden FoV, we don't care about area outside the target FoV
-    #
-    #     target_vectors = _find_fov_vectors(observer, target)
-    #     target_fov = _angle_between_vectors(target_vectors[0], target_vectors[1])
-    #     visible_fov = target_fov - hidden_fov
-    #     visible_percentage = int(visible_fov / (target_fov * 0.01))
-    #
-    #     match visible_percentage:
-    #         case pct if 50 < pct:
-    #             return Visibility.FULL.value
-    #         case pct if 25 < pct <= 50:
-    #             return Visibility.HALF_COVER.value
-    #         case pct if 0 < pct <= 25:
-    #             return Visibility.THREE_QUARTERS_COVER.value
-    #         case _:
-    #             return Visibility.NONE.value
-
-    def get_visibility_dict(self, combatant, coords: np.array):
+    # njit candidate
+    def get_visibility(self, observer: Coords, target: Coords):
         """
-        Calculates the visibility for all enemies of a given combatant given a theoretical root coord to which the combatant is to be moved.
+        The visibility is calculated terms of how much of the field of view of the target is blocked by obstacles. I find the leftmost and
+        the rightmost vertex of coord2. I then stretch a bounding box between the observer coordinates and the farthest point of the
+        observer. Inside this bounding box I find all obstacles (plus maybe other combatants) and store them as objects. I then find the
+        leftmost and rightmost vertices for all obstacles. Each pair of vertices together with the observer's mid point define a pair of
+        vectors. Then I go obstacle vector pair by vector pair and classify their field of view angles. I need to identify six different
+        cases:
+        A) The obstacle is too far to the right, the target is fully visible
+        B) The right side of the target is partially hidden behind the obstacle
+        C) The obstacle is somewhere in the center of the target but parts of the target can still be seen on left and right
+        D) The left side of the target is partially hidden behind the obstacle
+        E) The obstacle is too far to the left, the target is fully visible
+        F) The target is fully blocked by the obstacle
+        From this I calculate the overall visible percentage.
+
+        :param observer:
+        :param target:
+        :return: the degree of Visibility between the two coordinates
+        """
+        bottom_left, top_right = _get_bounding_box(observer.get(), target.get())
+        objects = []
+        for obstacle in self.obstacles:
+            obstacle_tr = (obstacle.coord[0] + obstacle.radius, obstacle.coord[1] + obstacle.radius)
+            obstacle_bl = (obstacle.coord[0] - obstacle.radius, obstacle.coord[1] - obstacle.radius)
+            if obstacle_tr[0] < bottom_left[0] or obstacle_bl[0] > top_right[0] or obstacle_bl[1] > top_right[1] or obstacle_tr[1] < bottom_left[1]:
+                continue
+            objects.append(obstacle)
+        objects.append(target)
+
+        try:
+            vec_to_object = [(vec, o) for o in objects for vec in _find_fov_vectors(observer, o)]
+        except:
+            print("FIXME")
+        central_vector = target.get_center() - observer.get_center()
+        vec_to_object.sort(key=lambda x: _angle_between_vectors(central_vector, x[0]) * np.sign(np.cross(x[0], central_vector)), reverse=True)
+
+        entered_target_fov = False
+        opened = set()
+        start_of_hidden_fov = None
+        hidden_fov = 0
+        for vo in vec_to_object:
+            if vo[1] is not target:
+                if vo[1] not in opened:
+                    if not opened:
+                        start_of_hidden_fov = vo[0]
+                    opened.add(vo[1])
+                else:
+                    opened.remove(vo[1])
+                    if not opened and entered_target_fov:
+                        hidden_fov += _angle_between_vectors(start_of_hidden_fov, vo[0])
+                        # start_of_hidden_fov = None
+            elif entered_target_fov:
+                if opened:
+                    hidden_fov += _angle_between_vectors(start_of_hidden_fov, vo[0])
+                break
+            else:
+                entered_target_fov = True
+                start_of_hidden_fov = vo[0]  # Override the potential start of hidden FoV, we don't care about area outside the target FoV
+
+        target_vectors = _find_fov_vectors(observer, target)
+        target_fov = _angle_between_vectors(target_vectors[0], target_vectors[1])
+        visible_fov = target_fov - hidden_fov
+        visible_percentage = int(visible_fov / (target_fov * 0.01))
+
+        match visible_percentage:
+            case pct if 50 < pct:
+                return Visibility.FULL
+            case pct if 25 < pct <= 50:
+                return Visibility.HALF_COVER
+            case pct if 0 < pct <= 25:
+                return Visibility.THREE_QUARTERS_COVER
+            case _:
+                return Visibility.NONE
+
+    def get_visibility_dict(self, combatant, theoretical_root_coord: np.array):
+        """
+        Given a combatant, calculates the visibility to all other combatants of given a theoretical root coord to which the combatant is to be moved.
         :param combatant:
-        :param coords: theoretical root coordinate for combatant
+        :param theoretical_root_coord: theoretical root coordinate for combatant
         :return: dict mapping enemy -> Visibility
         """
         if not get_swallower(combatant):
-            combatant_coords = Coords(coords, combatant.size.value)
-            ret = {e: Visibility(_get_visibility(self.obstacles, combatant_coords, self.get_combatant_position(e))) for e in self.get_combatants(combatant)}
+            theoretical_root_coord = Coords(theoretical_root_coord, combatant.size.value)
+            ret = {e: self.get_visibility(theoretical_root_coord, self.get_combatant_position(e)) for e in self.get_combatants(combatant)}
         else:
             ret = {e: Visibility.NONE for e in self.get_combatants(combatant)}
         ret[combatant] = Visibility.FULL
@@ -1844,15 +1777,16 @@ class Map:
         :param shortest_paths: the shortest paths to all squares (result of Dijkstra as a numpy ndarray of shape (15, 15, 2))
         :return: None
         """
-        current_position = self.get_combatant_position(combatant).get()[0]
+        current_position = self.get_combatant_position(combatant)
         self.visibility_dict_for_all_coords = {}
         for x in range(shortest_paths.shape[0]):
             for y in range(shortest_paths.shape[1]):
                 if not np.array_equal(shortest_paths[x, y], [-1, -1]):  # Assuming [-1, -1] indicates an unreachable cell
-                    coord = (x, y)
-                    self.visibility_dict_for_all_coords[coord] = _get_visibility(self.obstacles, combatant, np.array(coord))
+                    theoretical_root_coord = (x, y)
+                    self.visibility_dict_for_all_coords[theoretical_root_coord] = self.get_visibility_dict(combatant, np.array(theoretical_root_coord))
 
-        self.visibility_dict_for_all_coords[tuple(current_position)] = self.get_visibility_dict(combatant, current_position)
+        self.visibility_dict_for_all_coords[tuple(current_position.get()[0])] = self.get_visibility_dict(combatant, current_position.get()[0])
+
 
     def get_non_swallowed_adjacent_enemies(self, combatant):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) == 1]

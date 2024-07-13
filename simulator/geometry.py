@@ -1,10 +1,8 @@
 import math
 
 import numpy as np
-from numba import njit, jit
+from numba import njit
 from numba.np.arraymath import cross2d
-from numba.typed import List
-import numba as nb
 from scipy.spatial.distance import euclidean
 
 from .combatant_coords import Coords
@@ -133,34 +131,20 @@ def do_squares_overlap(origin1: np.array, length1, origin2: np.array, length2):
     return (origin1[0] < (origin2[0] + length2) and (origin1[0] + length1) > origin2[0]) and (origin1[1] < (origin2[1] + length2) and (origin1[1] + length1) > origin2[1])
 
 
-def angle_between_vectors(vector_1: np.array, vector_2: np.array):
-    """
-    Calculates the angle (in degrees) between two points and a given center point
-    :param vector_1: The first vector
-    :param vector_2: The second vector
-    :return: The convex angle (in degrees) formed by the two vectors.
-    """
-    dot_prod = np.dot(vector_1, vector_2)
-    mag_1 = np.dot(vector_1, vector_1)**0.5
-    mag_2 = np.dot(vector_2, vector_2)**0.5
-    angle_rad = math.acos(max(-1.0, min(dot_prod / mag_2 / mag_1, 1.0)))
-    angle_deg = math.degrees(angle_rad) % 360
-    return angle_deg if (angle_deg - 180 < 0) else 360 - angle_deg
-
-# @jit(nb.float64(nb.float64[:], nb.float64[:]), nopython=True)
-# def _angle_between_vectors(vector_1, vector_2):
+# def angle_between_vectors(vector_1: np.array, vector_2: np.array):
 #     """
-#     Calculates the angle (in degrees) between two vectors.
+#     Calculates the angle (in degrees) between two points and a given center point
 #     :param vector_1: The first vector
 #     :param vector_2: The second vector
 #     :return: The convex angle (in degrees) formed by the two vectors.
 #     """
 #     dot_prod = np.dot(vector_1, vector_2)
-#     mag_1 = np.linalg.norm(vector_1)
-#     mag_2 = np.linalg.norm(vector_2)
-#     angle_rad = np.arccos(max(-1.0, min(dot_prod / (mag_2 * mag_1), 1.0)))
+#     mag_1 = np.dot(vector_1, vector_1)**0.5
+#     mag_2 = np.dot(vector_2, vector_2)**0.5
+#     angle_rad = math.acos(max(-1.0, min(dot_prod / mag_2 / mag_1, 1.0)))
 #     angle_deg = math.degrees(angle_rad) % 360
 #     return angle_deg if (angle_deg - 180 < 0) else 360 - angle_deg
+
 
 @njit
 def _angle_between_vectors(vector_1, vector_2):
@@ -170,6 +154,10 @@ def _angle_between_vectors(vector_1, vector_2):
     :param vector_2: The second vector
     :return: The convex angle (in degrees) formed by the two vectors.
     """
+    # Ensure the vectors are floats
+    vector_1 = vector_1.astype(np.float64)
+    vector_2 = vector_2.astype(np.float64)
+
     dot_prod = np.dot(vector_1, vector_2)
     mag_1 = np.sqrt(np.dot(vector_1, vector_1))
     mag_2 = np.sqrt(np.dot(vector_2, vector_2))
@@ -208,38 +196,6 @@ def angle_between_vectors_rad(vector_1: np.array, vector_2: np.array):
 #         return vectors[0][0] / np.linalg.norm(vectors[0][0]), vectors[1][0] / np.linalg.norm(vectors[1][0])
 #     return vectors[1][0] / np.linalg.norm(vectors[1][0]), vectors[0][0] / np.linalg.norm(vectors[0][0])
 
-# @jit(nb.float64[:, :](Coords.class_type.instance_type, Obstacle.class_type.instance_type))
-# def find_fov_vectors(observer, target):
-#     """
-#     Calculates the field of view vector from right and leftmost points of a target from the perspective of the observer
-#     :param observer: observer coordinates (Coords jitclass instance)
-#     :param target: target coordinates (Coords or Obstacle jitclass instance)
-#     :return: normalized vectors to the left and right most points from the observer's perspective ordered in counter-clockwise manner
-#     (using the convex angle they define)
-#     """
-#     observer_center = observer.get_center()
-#     target_center = target.get_center()
-#
-#     # Create a list to hold the vectors and angles
-#     vectors = List()
-#
-#     # Iterate over the corners of the target
-#     for c in target.get_corners():
-#         vec = np.array(c, dtype=np.float64) - observer_center
-#         angle = _angle_between_vectors(target_center - observer_center, vec)
-#         vectors.append((vec, angle))
-#
-#     # Sort vectors by angle in descending order
-#     vectors.sort(key=lambda x: x[1], reverse=True)
-#
-#     assert len(vectors) > 1
-#
-#     # Check the convex angle order and normalize vectors
-#     if np.cross(vectors[0][0], vectors[1][0]) > 0:
-#         return np.array([vectors[0][0] / np.linalg.norm(vectors[0][0]), vectors[1][0] / np.linalg.norm(vectors[1][0])])
-#     else:
-#         return np.array([vectors[1][0] / np.linalg.norm(vectors[1][0]), vectors[0][0] / np.linalg.norm(vectors[0][0])])
-
 
 @njit
 def _find_fov_vectors(observer, target):
@@ -252,7 +208,8 @@ def _find_fov_vectors(observer, target):
     angles = np.empty(n_corners, dtype=np.float64)
 
     for i in range(n_corners):
-        vec = target_corners[i] - observer_center
+        corner = np.array([float(target_corners[i][0]), float(target_corners[i][1])])
+        vec = corner - observer_center
         angle = _angle_between_vectors(target_center - observer_center, vec)
         vectors[i] = vec
         angles[i] = angle
@@ -270,24 +227,6 @@ def _find_fov_vectors(observer, target):
 
     return norm_vectors
 
-
-# @njit
-# def _find_fov_vectors(observer, target):
-#     """
-#     Calculates the field of view vector from right and leftmost points of a target from the perspective of the observer
-#     :param observer: observer coordinates
-#     :param target: target coordinates
-#     :return: normalized vectors to the left and right most points from the observer's perspective ordered in counter-clockwise manner
-#     (using the convex angle they define)
-#     """
-#     observer_center = observer.get_center()
-#     target_center = target.get_center()
-#     vectors = [(c - observer_center, _angle_between_vectors(target_center - observer_center, c - observer_center)) for c in target.get_corners()]
-#     vectors.sort(key=lambda x: x[1], reverse=True)
-#     assert len(vectors) > 1
-#     if np.cross(vectors[0][0], vectors[1][0]) > 0:
-#         return np.array([vectors[0][0] / np.linalg.norm(vectors[0][0]), vectors[1][0] / np.linalg.norm(vectors[1][0])])
-#     return np.array([vectors[1][0] / np.linalg.norm(vectors[1][0]), vectors[0][0] / np.linalg.norm(vectors[0][0])])
 
 @njit
 def _get_bounding_box(combatant1: np.ndarray, combatant2: np.ndarray):
