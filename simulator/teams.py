@@ -40,6 +40,8 @@ class Teams:
         del self.reverse_team_book[combatant_old]
         self.team_book[self.reverse_team_book[combatant_new]].remove(combatant_old)
         self.team_book[self.reverse_team_book[combatant_new]].append(combatant_new)
+        del self.id_to_combatant[combatant_old.id]
+        self.id_to_combatant[combatant_new.id] = combatant_new
 
     def get_team_color_code(self, combatant):
         return str(self.reverse_team_book[combatant])

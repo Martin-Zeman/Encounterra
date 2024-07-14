@@ -3,7 +3,7 @@ import numpy as np
 
 from ..actions.action_types import Action, BonusAction
 from ..actions.actoid import Actoid, FactoryFlags
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..battle_map import Map
 from ..effects.action_enabler_effect import ActionEnablerEffect
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType

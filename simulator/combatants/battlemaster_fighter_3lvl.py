@@ -79,7 +79,7 @@ class BattlemasterFighter3Lvl(Combatant):
     def prompt_after_miss_reaction(self, attacker):
         if self.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource() and Map.get().get_hop_distance_combatants(self, attacker) <= self.aoo_factory[1].range:
             aoo_kwargs = self.aoo_factory[1].get_kwargs()
-            aoo_kwargs["dmg_dice"] += "+" + get_superiority_dice(self.level)
+            aoo_kwargs["dmg_dice"] = aoo_kwargs["dmg_dice"] + (get_superiority_dice(self.level),)
             aoo_kwargs["name"] = "Riposte " + aoo_kwargs["name"]
             aoo_kwargs["action_type"] = Reaction.RIPOSTE
             riposte = MeleeAttackFactory(**aoo_kwargs)

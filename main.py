@@ -76,7 +76,7 @@ from simulator.teams import Teams
 import time
 
 if __name__ == '__main__':
-    CustomLogger(logging.ERROR, False, '/tmp/log.txt')
+    CustomLogger(logging.INFO, False, '/tmp/log.txt')
     session = Session()
     session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
     # session.add_combatant(MoonDruid4Lvl, Teams.Color.RED)
@@ -173,7 +173,7 @@ if __name__ == '__main__':
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
-    session.set_num_simulations(20)
+    session.set_num_simulations(10)
     start_time = time.time()
     # session.place_terrain_and_obstacles(Session.MapType.OBSTACLES.value)
     session.place_terrain_and_obstacles(Session.MapType.BLANK.value)
