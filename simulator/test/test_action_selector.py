@@ -3,14 +3,14 @@ import logging
 import pstats
 import numpy as np
 
-from ..action_resolver import ActionResolver
-from ..actions.action_dag import generate_proto_dag
-from ..logging.custom_logger import CustomLogger
-from ..spells.fireball import Fireball
-from ..spells.twinned_firebolt import TwinnedFirebolt
-from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, teams, effect_tracker, battle_map
-from ..actions.action_selector import build_action_dag, get_action
+from simulator.action_resolver import ActionResolver
+from simulator.actions.action_dag import generate_proto_dag
+from simulator.logging.custom_logger import CustomLogger
+from simulator.spells.fireball import Fireball
+from simulator.spells.twinned_firebolt import TwinnedFirebolt
+from simulator.teams import Teams
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, teams, effect_tracker, battle_map
+from simulator.actions.action_selector import build_action_dag, get_action
 import types
 import cProfile
 

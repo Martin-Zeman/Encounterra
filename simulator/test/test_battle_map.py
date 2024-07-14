@@ -4,23 +4,23 @@ import time
 
 import pytest
 
-from ..actions.action_types import Passive, Action
-from ..battle_map import Terrain, Coords, _get_hop_distance_coords, _get_cartesian_distance_coords, \
+from simulator.actions.action_types import Passive, Action
+from simulator.battle_map import Terrain, Coords, _get_hop_distance_coords, _get_cartesian_distance_coords, \
     _get_free_coords_in_cartesian_range, _get_free_coords_in_hop_range, _get_free_coords_at_hop_range
-from ..combatants.goblin import Goblin
-from ..logging.custom_logger import CustomLogger
-from ..misc import DistanceMetric, Size, Side, Visibility
-from ..conditions import Conditions, Condition, apply_condition, remove_condition
-from ..spells.fireball import FireballFactory
-from ..spells.spell import SpellStats
-from ..spells.thunderwave import ThunderwaveFactory
-from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
+from simulator.combatants.goblin import Goblin
+from simulator.logging.custom_logger import CustomLogger
+from simulator.misc import DistanceMetric, Size, Side, Visibility
+from simulator.conditions import Conditions, Condition, apply_condition, remove_condition
+from simulator.spells.fireball import FireballFactory
+from simulator.spells.spell import SpellStats
+from simulator.spells.thunderwave import ThunderwaveFactory
+from simulator.teams import Teams
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
     teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, \
     test_sabertoother_tiger, test_evil_mage
 import numpy as np
 
-from ..utils.roll_types import ThreatModifierType
+from simulator.utils.roll_types import ThreatModifierType
 
 
 def test_as_if_combatant_position(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):

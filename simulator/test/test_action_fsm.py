@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
-from ..actions.action_dag import generate_proto_dag
-from ..utils.state_machine_template import StateMachineTemplate
-from ..combatant_coords import Coords
-from ..teams import Teams
-from ..test.fixtures import *
+from simulator.actions.action_dag import generate_proto_dag
+from simulator.utils.state_machine_template import StateMachineTemplate
+from simulator.combatant_coords import Coords
+from simulator.teams import Teams
+from simulator.test.fixtures import *
 # from transitions.extensions import GraphMachine
 
 def test_state_machine_template():

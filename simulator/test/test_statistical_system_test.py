@@ -4,19 +4,19 @@ import os
 import pytest
 import pickle
 
-from ..battle_map import Map
-from ..combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
-from ..combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
-from ..combatants.druid_1lvl import Druid1Lvl
-from ..combatants.fighter_1lvl import Fighter1Lvl
-from ..combatants.fighter_2lvl import Fighter2Lvl
-from ..logging.custom_logger import CustomLogger
-from ..misc import Statistics
-from ..session import Session
-from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from ..combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
-from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
-from ..teams import Teams
+from simulator.battle_map import Map
+from simulator.combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
+from simulator.combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
+from simulator.combatants.druid_1lvl import Druid1Lvl
+from simulator.combatants.fighter_1lvl import Fighter1Lvl
+from simulator.combatants.fighter_2lvl import Fighter2Lvl
+from simulator.logging.custom_logger import CustomLogger
+from simulator.misc import Statistics
+from simulator.session import Session
+from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from simulator.combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
+from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
+from simulator.teams import Teams
 import logging
 
 logger = logging.getLogger("Encounterra")

@@ -6,29 +6,28 @@ import pstats
 import numpy as np
 import pytest
 
-from ..abilities.lay_on_hands import LayOnHandsFactory
-from ..abilities.wildshape import WildshapeFactory
-from ..action_resolver import ActionResolver, ActionResult
-from ..actions.action_selector import get_action
-from ..actions.action_types import BonusAction, Action
-from ..actions.hide import HideFactory
-from ..battle_map import Terrain
-from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
-from ..effects.effect import EffectType
-from ..logging.custom_logger import CustomLogger
-from ..misc import DamageType, SavingThrow
-from ..conditions import Conditions, is_affected_by
-from ..resources import ResourceDepletionLevel
-from ..spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
-from ..spells.sleep import SleepFactory
-from ..teams import Teams
-from ..test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
+from simulator.abilities.lay_on_hands import LayOnHandsFactory
+from simulator.abilities.wildshape import WildshapeFactory
+from simulator.action_resolver import ActionResolver, ActionResult
+from simulator.actions.action_selector import get_action
+from simulator.actions.action_types import BonusAction, Action
+from simulator.actions.hide import HideFactory
+from simulator.battle_map import Terrain
+from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
+from simulator.effects.effect import EffectType
+from simulator.logging.custom_logger import CustomLogger
+from simulator.misc import DamageType, SavingThrow
+from simulator.conditions import Conditions, is_affected_by
+from simulator.resources import ResourceDepletionLevel
+from simulator.spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
+from simulator.spells.sleep import SleepFactory
+from simulator.teams import Teams
+from simulator.test.fixtures import test_moon_druid, test_bugbear, test_giant_toad, teams, effect_tracker, battle_map, test_assassin_rogue,\
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
     test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, test_paladin_lvl_1, \
     test_young_green_dragon, test_skeleton, test_hobgoblin, test_green_dragon_wyrmling
-from ..utils.utils import preallocate_wildshape_forms
-
-from ..test.test_singleton import SingletonClass
+from simulator.utils.utils import preallocate_wildshape_forms
+from simulator.test.test_singleton import SingletonClass
 
 
 def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):

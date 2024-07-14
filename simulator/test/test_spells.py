@@ -3,13 +3,13 @@ import logging
 import numpy as np
 import pytest
 
-from ..action_resolver import ActionResolver
-from ..actions.action_selector import get_action
-from ..actions.action_types import Action
-from ..logging.custom_logger import CustomLogger
-from ..spells.haste import HasteFactory
-from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian,\
+from simulator.action_resolver import ActionResolver
+from simulator.actions.action_selector import get_action
+from simulator.actions.action_types import Action
+from simulator.logging.custom_logger import CustomLogger
+from simulator.spells.haste import HasteFactory
+from simulator.teams import Teams
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian,\
     teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1
 
 

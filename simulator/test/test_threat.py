@@ -2,19 +2,19 @@ import copy
 
 import numpy as np
 import pytest
-from ..actions.action_types import Action
-from ..actions.action_selector import decode_ms_path_to_actions
-from ..actions.movement import MovementIncrement
-from ..misc import Size
-from ..spells.cloud_of_daggers import CloudOfDaggersFactory
-from ..spells.firebolt import FireboltFactory
-from ..spells.hunger_of_hadar import HungerOfHadarFactory
-from ..spells.misty_step import MistyStepFactory, MistyStep
-from ..spells.spike_growth import SpikeGrowthFactory
-from ..teams import Teams
-from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step, \
+from simulator.actions.action_types import Action
+from simulator.actions.action_selector import decode_ms_path_to_actions
+from simulator.actions.movement import MovementIncrement
+from simulator.misc import Size
+from simulator.spells.cloud_of_daggers import CloudOfDaggersFactory
+from simulator.spells.firebolt import FireboltFactory
+from simulator.spells.hunger_of_hadar import HungerOfHadarFactory
+from simulator.spells.misty_step import MistyStepFactory, MistyStep
+from simulator.spells.spike_growth import SpikeGrowthFactory
+from simulator.teams import Teams
+from simulator.threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step, \
     DZ_CONSTANT, get_aoe_and_aoo_threat_for_increment
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, teams, effect_tracker, battle_map
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, teams, effect_tracker, battle_map
 
 
 def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, effect_tracker):

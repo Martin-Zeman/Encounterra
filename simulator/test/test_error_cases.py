@@ -6,33 +6,33 @@ import numpy as np
 import pytest
 import pickle
 
-from ..abilities.wildshape import WildshapeFactory
-from ..action_resolver import ActionResolver
-from ..actions.action_types import BonusAction, Action, Passive, FreeAction
-from ..actions.movement import MovementIncrement
-from ..battle_map import Terrain, Map, _get_cartesian_distance_coords
-from ..combatants.giant_toad import GiantToad
-from ..logging.custom_logger import CustomLogger
-from ..misc import PhaseOfTurn, SkillCheck
-from ..conditions import Conditions, Condition, ConditionWithDC, is_affected_by, apply_condition, \
+from simulator.abilities.wildshape import WildshapeFactory
+from simulator.action_resolver import ActionResolver
+from simulator.actions.action_types import BonusAction, Action, Passive, FreeAction
+from simulator.actions.movement import MovementIncrement
+from simulator.battle_map import Terrain, Map, _get_cartesian_distance_coords
+from simulator.combatants.giant_toad import GiantToad
+from simulator.logging.custom_logger import CustomLogger
+from simulator.misc import PhaseOfTurn, SkillCheck
+from simulator.conditions import Conditions, Condition, ConditionWithDC, is_affected_by, apply_condition, \
     apply_dc_condition
-from ..resources import ResourceDepletionLevel
-from ..session import Session
-from ..spells.fireball import Fireball
-from ..spells.firebolt import Firebolt
-from ..spells.flaming_sphere import FlamingSphereFactory
-from ..spells.haste import HasteFactory
-from ..spells.spell import SpellStats
-from ..spells.twinned_firebolt import TwinnedFirebolt
-from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
+from simulator.resources import ResourceDepletionLevel
+from simulator.session import Session
+from simulator.spells.fireball import Fireball
+from simulator.spells.firebolt import Firebolt
+from simulator.spells.flaming_sphere import FlamingSphereFactory
+from simulator.spells.haste import HasteFactory
+from simulator.spells.spell import SpellStats
+from simulator.spells.twinned_firebolt import TwinnedFirebolt
+from simulator.teams import Teams
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
     test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
     test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_fighter_lvl_2, \
     test_battle_master_fighter_lvl_3, test_fighter_lvl_1, test_ghoul, test_skeleton, test_hobgoblin, test_orc, \
     test_assassin_rogue_3lvl
-from ..actions.action_selector import get_action
-from ..utils.utils import preallocate_wildshape_forms
+from simulator.actions.action_selector import get_action
+from simulator.utils.utils import preallocate_wildshape_forms
 import cProfile
 
 

@@ -2,16 +2,16 @@ import logging
 
 import numpy as np
 
-from ..actions.action_types import Action, BonusAction, Passive
-from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
-from ..logging.custom_logger import CustomLogger
-from ..resources import use_resources, ResourceDepletionLevel
-from ..session import Session
-from ..spells.fireball import FireballFactory
-from ..spells.firebolt import FireboltFactory
-from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_moon_druid, teams, effect_tracker, battle_map
+from simulator.actions.action_types import Action, BonusAction, Passive
+from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
+from simulator.logging.custom_logger import CustomLogger
+from simulator.resources import use_resources, ResourceDepletionLevel
+from simulator.session import Session
+from simulator.spells.fireball import FireballFactory
+from simulator.spells.firebolt import FireboltFactory
+from simulator.teams import Teams
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_moon_druid, teams, effect_tracker, battle_map
 
 
 def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):

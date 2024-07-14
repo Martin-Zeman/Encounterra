@@ -2,12 +2,12 @@ import time
 
 import pytest
 
-from ..geometry import _get_bounding_box, _angle_between_vectors, _find_fov_vectors
-from ..misc import Size
-from ..geometry import *
-from ..spells.spell import *
+from simulator.geometry import _get_bounding_box, _angle_between_vectors, _find_fov_vectors
+from simulator.misc import Size
+from simulator.geometry import *
+from simulator.spells.spell import *
 import numpy as np
-from ..test.fixtures import test_stone_giant, test_ogre, test_bugbear
+from simulator.test.fixtures import test_stone_giant, test_ogre, test_bugbear
 
 
 def test_cone_15_feet():
