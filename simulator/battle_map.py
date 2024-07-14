@@ -1521,6 +1521,7 @@ class Map:
         best_poses.sort(key=lambda coord: _get_hop_distance_coords(np.array([coord[0]]), caster_position))
         return best_poses[0]
 
+
     def find_best_placement_harmful_line(self, caster, length, width):
         """
         Finds the best placement of a line harmful AoE effect

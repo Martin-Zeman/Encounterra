@@ -173,7 +173,7 @@ if __name__ == '__main__':
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
     # session.add_combatant(GiantConstrictorSnake, Teams.Color.RED)
-    session.set_num_simulations(10)
+    session.set_num_simulations(1)
     start_time = time.time()
     # session.place_terrain_and_obstacles(Session.MapType.OBSTACLES.value)
     session.place_terrain_and_obstacles(Session.MapType.BLANK.value)

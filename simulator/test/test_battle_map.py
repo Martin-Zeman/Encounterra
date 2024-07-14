@@ -17,7 +17,7 @@ from simulator.spells.thunderwave import ThunderwaveFactory
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
     teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, \
-    test_sabertoother_tiger, test_evil_mage
+    test_sabertoother_tiger, test_evil_mage, test_battle_master_fighter_lvl_5, test_giant_toad, test_green_dragon_wyrmling
 import numpy as np
 
 from simulator.utils.roll_types import ThreatModifierType
@@ -1045,6 +1045,67 @@ def test_find_best_placements_harmful_cone_2(battle_map, teams, test_draconic_so
     assert best_placement[0] == (4, 9) or best_placement[0] == (9, 4)
     assert best_placement[1] == pytest.approx(135, 0.1) or best_placement[1] == pytest.approx(315, 0.1) or best_placement[1] == pytest.approx(138, 0.1)
     # Note: the opposite-pointing (9, 4) is not there because of rasterization inaccuracy
+
+
+def test_find_best_placements_harmful_cone_3(battle_map, teams, test_draconic_sorcerer_5lvl, test_totem_barbarian,
+                                             test_battle_master_fighter_lvl_5, test_giant_toad,
+                                             test_green_dragon_wyrmling):
+    '''
+    It's Green Dragon Wyrmling (1)'s turn
+14	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+13	..	..	..	..	..	..	..	T1	..	..	..	..	..	..	..
+12	..	..	..	..	..	Ma	Ma	B1	..	..	..	..	..	..	..
+11	..	..	..	..	..	Ma	Ma	..	..	..	..	..	..	..	..
+10	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+ 9	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+ 8	..	..	..	..	..	..	..	..	D1	..	..	..	..	..	..
+ 7	..	..	..	..	..	..	..	..	G1	..	..	..	..	..	..
+ 6	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+ 5	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+ 4	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+ 3	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+ 2	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+ 1	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+ 0	..	..	..	..	..	..	..	..	..	..	..	..	..	..	..
+    0	1	2	3	4	5	6	7	8	9	10	11	12	13	14
+
+Green Dragon Wyrmling (1)'s Poison Breath recharges
+
+  File "/home/thisord/repos/Encounterra/simulator/battle_map.py", line 1522, in find_best_placement_harmful_cone
+    return best_poses[0]
+           ~~~~~~~~~~^^^
+IndexError: list index out of range
+
+    Alive are TotemBarbarian5Lvl, Moon Druid 5th LVL (1) wildshaped into Giant Toad, Draconic Sorcerer 5th LVL (1), Battlemaster Fighter 5th LVL (1)
+
+    session.add_combatant(MoonDruid5Lvl, Teams.Color.BLUE)
+    session.add_combatant(DraconicSorcerer5Lvl, Teams.Color.BLUE)
+    session.add_combatant(AssassinRogue5Lvl, Teams.Color.RED)
+    session.add_combatant(TotemBarbarian5Lvl, Teams.Color.RED)
+    session.add_combatant(BattlemasterFighter5Lvl, Teams.Color.BLUE)
+    session.add_combatant(Zombie, Teams.Color.BLUE)
+    session.add_combatant(Hobgoblin, Teams.Color.RED)
+    session.add_combatant(GreenDragonWyrmling, Teams.Color.BLUE)
+    session.add_combatant(WhiteDragonWyrmling, Teams.Color.RED)
+    session.add_combatant(Owlbear, Teams.Color.RED)
+    session.add_combatant(Ghoul, Teams.Color.BLUE)
+    session.add_combatant(Kobold, Teams.Color.RED)
+    session.add_combatant(Bullywug, Teams.Color.RED)
+    session.add_combatant(Orc, Teams.Color.BLUE)
+    '''
+    teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
+    teams.add_combatant_to_team(test_battle_master_fighter_lvl_5, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_green_dragon_wyrmling, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([7, 13]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_5, np.array([7, 12]))
+    battle_map.set_combatant_coordinates(test_green_dragon_wyrmling, np.array([8, 7]))
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([5, 11]))
+
+    best_placement = battle_map.find_best_placement_harmful_cone(test_green_dragon_wyrmling, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_15])
+    assert best_placement
 
 
 def test_get_combatants_affected_by_sphere_aoe(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian):

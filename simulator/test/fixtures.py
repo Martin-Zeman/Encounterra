@@ -3,6 +3,7 @@ import pytest
 from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
 from simulator.combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
 from simulator.combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
+from simulator.combatants.battlemaster_fighter_5lvl import BattlemasterFighter5Lvl
 from simulator.combatants.dire_wolf import DireWolf
 from simulator.combatants.dragonclaw_cultist import DragonclawCultist
 from simulator.combatants.druid_1lvl import Druid1Lvl
@@ -135,6 +136,11 @@ def test_fighter_lvl_2():
 @pytest.fixture()
 def test_battle_master_fighter_lvl_3():
     return BattlemasterFighter3Lvl()
+
+
+@pytest.fixture()
+def test_battle_master_fighter_lvl_5():
+    return BattlemasterFighter5Lvl()
 
 
 @pytest.fixture()
