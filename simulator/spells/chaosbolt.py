@@ -9,7 +9,7 @@ from ..misc import DamageType, Visibility
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 import logging
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from ..threat_utils import mean_dmg
+from ..threat_utils import _mean_dmg
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from ..misc import percent_of_curr_hp
@@ -94,10 +94,10 @@ class ChaosboltFactory(DirectThreatFactory):
             P_SAME = 4 / 43  # 8/86 = 4 / 43
             p_acc = P_SAME
             dmg_dice = self.dmg_dice.extend(self.additional_dmg_dice)
-            acc = mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+            acc = _mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
                            target.is_resistant_to(DamageType.Random), DamageType.Random)
             for pt in other_potential_targets:
-                acc += mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, target.is_immune_to(DamageType.Random),
+                acc += _mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, target.is_immune_to(DamageType.Random),
                                 target.is_resistant_to(DamageType.Random), ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
                 p_acc *= P_SAME
         return acc
@@ -115,9 +115,9 @@ class ChaosboltFactory(DirectThreatFactory):
             total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
             dmg_dice = self.dmg_dice + self.additional_dmg_dice
-            return (mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+            return (_mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
                              target.is_resistant_to(DamageType.Random), total_crit) -
-                    mean_dmg(self.to_hit, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+                    _mean_dmg(self.to_hit, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
                              target.is_resistant_to(DamageType.Random)))
         else:
             return 0
@@ -158,12 +158,12 @@ class Chaosbolt(Actoid, DirectThreat):
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME
         dmg_dice = self.factory.dmg_dice + self.factory.additional_dmg_dice
-        acc = mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac, self.target.is_immune_to(DamageType.Random),
+        acc = _mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac, self.target.is_immune_to(DamageType.Random),
                        self.target.is_resistant_to(DamageType.Random))
         for pt in potential_targets:
             to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
                 max(0, min(pt.ac - self.factory.to_hit, 20))]
-            acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, pt.is_immune_to(DamageType.Random),
+            acc += _mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, pt.is_immune_to(DamageType.Random),
                             pt.is_resistant_to(DamageType.Random),
                             ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
             p_acc *= P_SAME

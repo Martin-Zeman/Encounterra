@@ -14,14 +14,14 @@ from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, ROUND_HORIZON, SavingThrow, roll_dice
+from ..misc import DamageType, ROUND_HORIZON, SavingThrow, _roll_dice
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import AoEThreat, Threat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
 
-from ..threat_utils import mean_dmg_dc_attack
+from ..threat_utils import _mean_dmg_dc_attack
 
 logger = logging.getLogger("Encounterra")
 
@@ -74,7 +74,7 @@ class FlamingSphereFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+        return min(target.curr_hp, _mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
                                                       target.saving_throws[self.saving_throw],
                                                       target.is_immune_to(self.dmg_type),
                                                       target.is_resistant_to(self.dmg_type))) * ROUND_HORIZON
@@ -137,7 +137,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
             return 0
         acc = 0
         for enemy in enemies:
-            acc += min(enemy.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+            acc += min(enemy.curr_hp, _mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
                                                          enemy.saving_throws[self.factory.saving_throw],
                                                          enemy.is_immune_to(self.factory.dmg_type),
                                                          enemy.is_resistant_to(self.factory.dmg_type)))
@@ -168,14 +168,14 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         pass
 
     def on_end_of_turn(self, combatant):
-        dmg = roll_dice(self.factory.dmg_dice)
+        dmg = _roll_dice(self.factory.dmg_dice)
         logger.info(f"{combatant} is burned by Flaming Sphere for {dmg} damage")
         combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
     def on_enter(self, combatant):
         # It's not explicitly written in the rules, but it makes sense
-        dmg = roll_dice(self.factory.dmg_dice)
+        dmg = _roll_dice(self.factory.dmg_dice)
         logger.info(f"{combatant} is burned by Flaming Sphere for {dmg} damage")
         combatant.receive_dmg(dmg, FlamingSphereFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
@@ -193,7 +193,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
-        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice,
+        return min(target.curr_hp, _mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice,
                                                       True,
                                                       target.saving_throws[self.factory.saving_throw],
                                                       target.is_immune_to(self.factory.dmg_type),
@@ -201,7 +201,7 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def threat_on_enter(self, target, *args, **kwargs):
         # It's not explicitly written in the rules, but it makes sense
-        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+        return min(target.curr_hp, _mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
                                                       target.saving_throws[self.factory.saving_throw],
                                                       target.is_immune_to(self.factory.dmg_type),
                                                       target.is_resistant_to(self.factory.dmg_type)))

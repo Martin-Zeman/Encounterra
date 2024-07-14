@@ -5,7 +5,7 @@ from ..conditions import get_swallower
 from ..spells.spell import SpellStats
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
-from ..threat_utils import mean_dmg_dc_attack
+from ..threat_utils import _mean_dmg_dc_attack
 from functools import cache, reduce
 import logging
 
@@ -44,7 +44,7 @@ class ConicBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies
         """
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+        return min(target.curr_hp, _mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
                                                       target.saving_throws[self.saving_throw],
                                                       target.is_immune_to(self.dmg_type),
                                                       target.is_resistant_to(self.dmg_type)))
@@ -89,11 +89,11 @@ class ConicBreathWeapon(Actoid, DirectThreat):
         affected = battle_map.get_combatants_affected_by_cone_aoe(self.factory.combatant, self.factory.target_template, self.coord, self.angle)
         acc = 0
         for aff in affected:
-            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+            _mean_dmg = min(aff.curr_hp, _mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
                                                            aff.saving_throws[self.factory.saving_throw],
                                                            aff.is_immune_to(self.factory.dmg_type),
                                                            aff.is_resistant_to(self.factory.dmg_type)))
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * _mean_dmg
         return acc
 
     def clear_cache(self):

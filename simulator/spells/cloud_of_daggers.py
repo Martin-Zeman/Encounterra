@@ -11,7 +11,7 @@ from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, avg_roll_multi, roll_dice
+from ..misc import DamageType, avg_roll_multi, _roll_dice
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat, AoEThreat
@@ -93,7 +93,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers"
 
     def on_start_of_turn(self, combatant):
-        dmg = roll_dice(self.factory.dmg_dice)
+        dmg = _roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
@@ -101,7 +101,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         pass
 
     def on_enter(self, combatant):
-        dmg = roll_dice(self.factory.dmg_dice)
+        dmg = _roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 

@@ -11,7 +11,7 @@ from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with
 from ..misc import Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..resources import Uses, ResourceRefreshType
-from ..threat_utils import mean_dmg, calc_p_hit
+from ..threat_utils import _mean_dmg, calc_p_hit
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA
 import logging
 
@@ -44,10 +44,10 @@ class RangedAttackFactory(AttackFactory):
         # TODO: Should I include roll types here? There may be a use-case in the future
         battle_map = Map.get()
         if not consider_dist or battle_map.get_cartesian_distance_combatants(self.combatant, target) <= self.range:
-            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, target.is_immune_to(self.dmg_type),
+            acc = _mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, target.is_immune_to(self.dmg_type),
                            target.is_resistant_to(self.dmg_type), self.crit_range)
             for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, (extra[0],), 0, target.ac,
+                acc += _mean_dmg(to_hit_total, (extra[0],), 0, target.ac,
                                 target.is_immune_to(extra[1]), target.is_resistant_to(extra[1]), self.crit_range)
             for oh in self.on_hit:
                 acc += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)

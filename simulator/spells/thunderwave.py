@@ -11,7 +11,7 @@ from ..factory_interfaces import ThreatModifierFactory
 from ..misc import SavingThrow, Size, DamageType
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 import logging
-from ..threat_utils import mean_dmg_dc_attack
+from ..threat_utils import _mean_dmg_dc_attack
 
 logger = logging.getLogger("Encounterra")
 

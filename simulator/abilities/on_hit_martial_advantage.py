@@ -1,7 +1,7 @@
 from ..abilities.on_hit_effect import OnHit
 from ..actions.action_types import Passive
 from ..battle_map import Map
-from ..misc import avg_roll_multi, roll_dice_multi
+from ..misc import avg_roll_multi, _roll_dice_multi
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -19,7 +19,7 @@ class OnHitMartialAdvantage(OnHit):
         if attacker.resources[Passive.MARTIAL_ADVANTAGE].has_resource() and battle_map.is_ally_adjacent_to_target(attacker, target):
             logger.info("Activating Martial Advantage")
             attacker.resources[Passive.MARTIAL_ADVANTAGE].use_resource()
-            return [roll_dice_multi(self.dmg_dice) * multiplier, self.dmg_type]
+            return [_roll_dice_multi(self.dmg_dice) * multiplier, self.dmg_type]
         return None
 
     def calculate_threat(self, attacker, target, **kwargs):

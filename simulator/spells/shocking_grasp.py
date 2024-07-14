@@ -9,7 +9,7 @@ from ..misc import DamageType, RollType, avg_roll
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
-from ..threat_utils import mean_dmg
+from ..threat_utils import _mean_dmg
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
@@ -72,7 +72,7 @@ class ShockingGraspFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ShockingGraspFactory.range:
-            return mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+            return _mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
                             target.is_immune_to(ShockingGraspFactory.dmg_type),
                             target.is_resistant_to(ShockingGraspFactory.dmg_type), 1)
         return 0
@@ -93,10 +93,10 @@ class ShockingGraspFactory(DirectThreatFactory):
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
-        ret = (mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac,
+        ret = (_mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac,
                         target.is_immune_to(ShockingGraspFactory.dmg_type),
                         target.is_resistant_to(ShockingGraspFactory.dmg_type), total_crit) -
-               mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+               _mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
                         target.is_immune_to(ShockingGraspFactory.dmg_type),
                         target.is_resistant_to(ShockingGraspFactory.dmg_type), 1))
         return ret

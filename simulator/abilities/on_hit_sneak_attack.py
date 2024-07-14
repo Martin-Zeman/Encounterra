@@ -1,6 +1,6 @@
 from ..abilities.on_hit_effect import OnHit
 from ..battle_map import Map
-from ..misc import avg_roll_multi, roll_dice_multi
+from ..misc import avg_roll_multi, _roll_dice_multi
 import logging
 
 from ..utils.roll_types import RollType
@@ -50,7 +50,7 @@ class OnHitSneakAttack(OnHit):
         if not getattr(attacker, "already_used_sneak_attack_this_turn", True) and (attack.roll_type is RollType.ADVANTAGE or battle_map.is_ally_adjacent_to_target(attacker, target)):
             logger.info("Activating Sneak Attack")
             attacker.already_used_sneak_attack_this_turn = True
-            return [roll_dice_multi(self.dmg_dice) * multiplier, self.dmg_type]
+            return [_roll_dice_multi(self.dmg_dice) * multiplier, self.dmg_type]
         return None
 
     def calculate_threat(self, attacker, target, **kwargs):

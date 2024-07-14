@@ -22,7 +22,7 @@ MAX_HP_MODIFIER_MULTIPLIER = 1.25
 
 # @cache  # Seems to be faster than njit
 @njit(cache=True)
-def mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, is_immune=False, is_resistant=False, crit_range=1):
+def _mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, is_immune=False, is_resistant=False, crit_range=1):
     """
     Calculates mean damage of an attack-like ability.
     """
@@ -55,7 +55,7 @@ def calc_p_hit(to_hit, ac):
 
 
 @njit(cache=True)
-def mean_dmg_auto_hit(dmg_dice, is_resistant=False):
+def _mean_dmg_auto_hit(dmg_dice, is_resistant=False):
     """
     Calculates mean dmg of an attack-like ability
     @param dmg_dice: damage dice as a list of tuples
@@ -80,14 +80,14 @@ def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increm
     @param dmg_type:
     @return: mean damage increment not accounting for critical failures
     """
-    return (mean_dmg(to_hit + to_hit_increment,
+    return (_mean_dmg(to_hit + to_hit_increment,
                      dmg_dice,
                      dmg_bonus,
                      ac,
                      target.is_immune_to(dmg_type),
                      target.is_resistant_to(dmg_type),
                      crit_range) -
-            mean_dmg(to_hit,
+            _mean_dmg(to_hit,
                      dmg_dice,
                      dmg_bonus,
                      ac,
@@ -109,13 +109,13 @@ def dmg_increment_for_dmg_flat(to_hit, dmg_dice, dmg_bonus, ac, dmg_increment, t
     @param dmg_type:
     @return: mean damage increment not accounting for critical failures
     """
-    return (mean_dmg(to_hit,
+    return (_mean_dmg(to_hit,
                     dmg_dice,
                     dmg_bonus + dmg_increment,
                     ac,
                     target.is_immune_to(dmg_type),
                     target.is_resistant_to(dmg_type)) -
-            mean_dmg(to_hit,
+            _mean_dmg(to_hit,
                      dmg_dice,
                      dmg_bonus,
                      ac,
@@ -137,14 +137,14 @@ def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus, target,
     @param crit_range:
     @return: mean damage decrement not accounting for critical failures (positive value)
     """
-    return (mean_dmg(to_hit,
+    return (_mean_dmg(to_hit,
                     dmg_dice,
                     dmg_bonus,
                     ac,
                     target.is_immune_to(dmg_type),
                     target.is_resistant_to(dmg_type),
                     crit_range) -
-            mean_dmg(to_hit,
+            _mean_dmg(to_hit,
                      dmg_dice,
                      dmg_bonus,
                      ac + ac_bonus,
@@ -264,6 +264,7 @@ def calculate_avg_threat_in(combatant, threat_radius, battle_map, factory_flags)
     return incoming_threat_acc
 
 
+#njit candidate
 @cache
 def get_saving_throw_success_prob(dc, st_bonus):
     """
@@ -277,6 +278,7 @@ def get_saving_throw_success_prob(dc, st_bonus):
     return 1 - p_fail
 
 
+#njit candidate
 @cache
 def get_saving_throw_fail_prob(dc, st_bonus):
     """
@@ -289,9 +291,10 @@ def get_saving_throw_fail_prob(dc, st_bonus):
     return rv.cdf(dc - 1)
 
 
-# @njit
-@cache  # Seems to be about the same as njit
-def mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_immune=False, is_resistant=False):
+# @njit candidate
+# @cache  # Seems to be about the same as njit
+@njit(cache=True)
+def _mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_immune=False, is_resistant=False):
     """
     Calculates mean damage of a DC-based ability
     @param dc: DC

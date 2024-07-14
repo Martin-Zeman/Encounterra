@@ -12,7 +12,7 @@ from ..effects.aoe_spheric_effect import AoeSphericEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, avg_roll_multi, roll_dice
+from ..misc import DamageType, avg_roll_multi, _roll_dice
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat, AoEThreat
@@ -99,7 +99,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         pass
 
     def on_enter(self, combatant):
-        dmg = roll_dice(self.factory.dmg_dice)
+        dmg = _roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, SpikeGrowthFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
@@ -107,7 +107,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         pass
 
     def on_move_within(self, combatant):
-        dmg = roll_dice(self.factory.dmg_dice)
+        dmg = _roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, SpikeGrowthFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 

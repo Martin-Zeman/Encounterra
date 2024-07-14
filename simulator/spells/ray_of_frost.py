@@ -11,7 +11,7 @@ from ..spells.spell import SpellStats
 from ..misc import DamageType, RollType, avg_roll, Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from ..threat_utils import mean_dmg
+from ..threat_utils import _mean_dmg
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
@@ -89,7 +89,7 @@ class RayOfFrostFactory(DirectThreatFactory):
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= RayOfFrostFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
-            return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, target.is_immune_to(RayOfFrostFactory.dmg_type),
+            return _mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, target.is_immune_to(RayOfFrostFactory.dmg_type),
                             target.is_resistant_to(RayOfFrostFactory.dmg_type), ROLL_TYPE_CRIT_DELTA[roll_type])
         return 0
 
@@ -111,10 +111,10 @@ class RayOfFrostFactory(DirectThreatFactory):
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
-        return (mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac,
+        return (_mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac,
                          target.is_immune_to(RayOfFrostFactory.dmg_type),
                          target.is_resistant_to(RayOfFrostFactory.dmg_type), total_crit) -
-                mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+                _mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
                          target.is_immune_to(RayOfFrostFactory.dmg_type),
                          target.is_resistant_to(RayOfFrostFactory.dmg_type), 1))
 
@@ -148,7 +148,7 @@ class RayOfFrost(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffect):
             self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
             max(0, min(self.target.ac - self.factory.to_hit, 20))]
-        return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac,
+        return _mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac,
                         self.target.is_immune_to(RayOfFrostFactory.dmg_type),
                         self.target.is_resistant_to(RayOfFrostFactory.dmg_type),
                         ROLL_TYPE_CRIT_DELTA[roll_type])

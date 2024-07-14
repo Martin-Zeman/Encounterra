@@ -9,7 +9,7 @@ from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with
 from ..conditions import get_swallower
 from ..misc import avg_roll
 from ..resources import Uses, ResourceRefreshType
-from ..threat_utils import mean_dmg, calc_p_hit
+from ..threat_utils import _mean_dmg, calc_p_hit
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from enum import Enum, auto
@@ -86,10 +86,10 @@ class AttackFactory(DirectThreatFactory):
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         if not consider_dist or Map.get().get_hop_distance_combatants(self.combatant, target) <= self.range:
-            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac,
+            acc = _mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac,
                            target.is_immune_to(self.dmg_type), target.is_resistant_to(self.dmg_type), self.crit_range)
             for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, (extra[0],), 0, target.ac,
+                acc += _mean_dmg(to_hit_total, (extra[0],), 0, target.ac,
                                 target.is_immune_to(extra[1]), target.is_resistant_to(extra[1]),
                                 self.crit_range)
             for oh in self.on_hit:
@@ -105,10 +105,10 @@ class AttackFactory(DirectThreatFactory):
         if self.to_hit_bonus_die is not None:
             avg_to_hit_bonus_die_roll = avg_roll(self.to_hit_bonus_die)
         baseline_to_hit = self.to_hit + avg_to_hit_bonus_die_roll
-        baseline = mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac,
+        baseline = _mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac,
                             target.is_immune_to(self.dmg_type), target.is_resistant_to(self.dmg_type), self.crit_range)
         for extra in self.extra_dmg:
-            baseline += mean_dmg(baseline_to_hit, (extra[0],), 0, target.ac,
+            baseline += _mean_dmg(baseline_to_hit, (extra[0],), 0, target.ac,
                                  target.is_immune_to(extra[1]), target.is_resistant_to(extra[1]),
                                  self.crit_range)
         for oh in self.on_hit:
@@ -132,16 +132,16 @@ class AttackFactory(DirectThreatFactory):
         total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
         total_crit = 20 if auto_crit else total_crit
         try:
-            modified = mean_dmg(to_hit_total, self.dmg_dice + mod_dmg_die, self.dmg_bonus + mod_dmg_flat,
+            modified = _mean_dmg(to_hit_total, self.dmg_dice + mod_dmg_die, self.dmg_bonus + mod_dmg_flat,
                                 total_target_ac, target.is_immune_to(self.dmg_type),
                                 target.is_resistant_to(self.dmg_type), total_crit)
             for extra in self.extra_dmg:
-                modified += mean_dmg(to_hit_total, (extra[0],), 0, total_target_ac,
+                modified += _mean_dmg(to_hit_total, (extra[0],), 0, total_target_ac,
                                      target.is_immune_to(extra[1]), target.is_resistant_to(extra[1]), total_crit)
             for oh in self.on_hit:
                 modified += calc_p_hit(to_hit_total, total_target_ac) * oh.calculate_threat(self.combatant, target)
         except:
-            logger.error("Error in mean_dmg of calculate_threat_to_target_delta of AttackFactory")
+            logger.error("Error in _mean_dmg of calculate_threat_to_target_delta of AttackFactory")
             modified = baseline
         return modified - baseline
 

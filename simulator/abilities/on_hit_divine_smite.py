@@ -1,5 +1,5 @@
 from ..abilities.on_hit_effect import OnHit
-from ..misc import Class, avg_roll, roll_dice, DamageType
+from ..misc import Class, avg_roll, _roll_dice, DamageType
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -49,7 +49,7 @@ class OnHitDivineSmite(OnHit):
                 if (target_hp - dmg_so_far) * 1.3 >= avg_dmg * multiplier:
                     attacker.spellslots.use_resource(level=level)
                     logger.error(f"{attacker} uses Divine Smite of level {level} on {target}")
-                    return [roll_dice(dmg_dice) * multiplier, DamageType.Radiant]
+                    return [_roll_dice(dmg_dice) * multiplier, DamageType.Radiant]
         return None
 
     def calculate_threat(self, attacker, target, **kwargs):

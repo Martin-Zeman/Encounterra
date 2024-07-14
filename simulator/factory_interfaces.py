@@ -2,7 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 
 from .actions.actoid import FactoryFlags
-from .misc import roll_dice
+from .misc import _roll_dice
 from .threat_interfaces import Threat
 
 logger = logging.getLogger("Encounterra")
@@ -63,7 +63,7 @@ class RechargeFactory(ABC, Factory):
         self.flags |= FactoryFlags.IS_RECHARGE
 
     def roll_for_recharge(self):
-        roll = roll_dice((1, 6))
+        roll = _roll_dice((1, 6))
         resource = self.combatant.resources[self.action_type]
         if not resource.has_resource() and roll >= self.recharge_value:
             logger.info(f"{self.combatant}'s {self.get_ability_name()} recharges")

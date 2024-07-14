@@ -10,7 +10,7 @@ from ..actions.actoid import Actoid, FactoryFlags
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
-from ..threat_utils import mean_dmg_dc_attack
+from ..threat_utils import _mean_dmg_dc_attack
 import logging
 
 logger = logging.getLogger("Encounterra")
@@ -55,7 +55,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+        return min(target.curr_hp, _mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
                                                       target.saving_throws[self.saving_throw],
                                                       target.is_immune_to(self.dmg_type),
                                                       target.is_resistant_to(self.dmg_type)))

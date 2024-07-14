@@ -10,7 +10,7 @@ from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..effects.effect import EffectType
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_utils import mean_dmg
+from ..threat_utils import _mean_dmg
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
 from functools import reduce, cache
@@ -80,7 +80,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:
                 continue
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac,
+            dmg_acc = reduce(lambda acc, pt: acc + _mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac,
                                                             pt.is_immune_to(attack.dmg_type),
                                                             pt.is_resistant_to(attack.dmg_type),
                                                             attack.crit_range), potential_targets, 0)

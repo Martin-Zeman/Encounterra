@@ -2,7 +2,7 @@ import logging
 
 from ..effects.effect import EffectType
 from ..effects.start_of_turn_combatant_auto_effect import StartOfTurnAutoEffect
-from ..misc import roll_dice, DamageType
+from ..misc import _roll_dice, DamageType
 from ..battle_map import Map
 
 logger = logging.getLogger("Encounterra")
@@ -15,7 +15,7 @@ class DigestionEffect(StartOfTurnAutoEffect):
 
     def start_of_turn_for_combatant(self, combatant):
         dice = (3, 6)
-        dmg_dice_sum = roll_dice(dice)
+        dmg_dice_sum = _roll_dice(dice)
         logger.info(f"{combatant} is being digested for {dmg_dice_sum} dmg")
         combatant.receive_dmg(dmg_dice_sum, DamageType.Acid)
         if not combatant.is_alive():

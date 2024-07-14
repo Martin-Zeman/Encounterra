@@ -13,8 +13,8 @@ from .actions.dodge import DodgeFactory
 from .actions.flaming_sphere_ram import FlamingSphereRamFactory
 from .battle_map import Map, _dijkstra
 from .effects.effect import EffectType
-from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, roll_dice, \
-    roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll, avg_roll, roll_dice_multi
+from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, _roll_dice, \
+    roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll, avg_roll, _roll_dice_multi
 from .conditions import Conditions, ConditionWithDC, Condition, break_out_of_grapple, is_affected_by_any, \
     is_affected_by, get_grappled, apply_condition, apply_dc_condition, remove_condition, remove_dc_condition
 from .feasibility import check_feasibility
@@ -90,7 +90,7 @@ def resolve_dmg_saving_throw(ability, dmg, target, half_on_success=True, is_spel
         saved = True
     else:
         for bonus_die in target.saving_throws_dice_mod[ability.factory.saving_throw]:
-            bonus_dice_roll = roll_dice(bonus_die)
+            bonus_dice_roll = _roll_dice(bonus_die)
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll")
             rolled += bonus_dice_roll
         if rolled + bonus >= ability.factory.dc:
@@ -134,7 +134,7 @@ def resolve_on_hit_dmg_saving_throw(ability, dmg, target, half_on_success=True):
         saved = True
     else:
         for bonus_die in target.saving_throws_dice_mod[ability.st]:
-            bonus_dice_roll = roll_dice(bonus_die)
+            bonus_dice_roll = _roll_dice(bonus_die)
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll")
             rolled += bonus_dice_roll
         if rolled + bonus >= ability.dc:
@@ -337,14 +337,14 @@ class ActionResolver:
         elif rolled == 20:
             multiplier = 2
         for bonus_die in caster.to_hit_dice_mod:
-            bonus_dice_roll = roll_dice(bonus_die)
+            bonus_dice_roll = _roll_dice(bonus_die)
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(caster)})
             rolled += bonus_dice_roll
         if caster.to_hit_flat_mod:
             logger.info(f"Adding a flat {caster.to_hit_flat_mod} bonus to the roll", extra={"team": self.teams.get_team(caster)})
             rolled += caster.to_hit_flat_mod
         if rolled + spell.factory.to_hit >= target.ac:
-            dmg = multiplier * roll_dice_multi(spell.factory.dmg_dice)
+            dmg = multiplier * _roll_dice_multi(spell.factory.dmg_dice)
             logger.info(f"{spell.shorthand_str()} {'CRITS' if multiplier == 2 else 'hits'} {target} for {dmg} damage",
                          extra={"team": self.teams.get_team(caster)})
             target.receive_dmg(dmg, spell.factory.dmg_type, multiplier)
@@ -386,7 +386,7 @@ class ActionResolver:
         elif rolled >= 21 - attack.factory.crit_range:
             multiplier = 2
         for bonus_die in attacker.to_hit_dice_mod:
-            bonus_dice_roll = roll_dice(bonus_die)
+            bonus_dice_roll = _roll_dice(bonus_die)
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(attacker)})
             rolled += bonus_dice_roll
         if attacker.to_hit_flat_mod:
@@ -400,7 +400,7 @@ class ActionResolver:
         if FactoryFlags.IS_PRECISION in attack.factory.flags and rolled + attack.factory.to_hit < (
                 target.ac + target.one_time_ac_bonus) <= rolled + attack.factory.to_hit + avg_roll(
                 attack.factory.to_hit_bonus_die) and attacker.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource():
-            to_hit_maneuver_bonus = roll_dice(attack.factory.to_hit_bonus_die)
+            to_hit_maneuver_bonus = _roll_dice(attack.factory.to_hit_bonus_die)
             use_resources(attacker, Action.PRECISION_ATTACK)
             logger.info(f"{attacker} uses the Precision Attack Maneuver adding {to_hit_maneuver_bonus} to the roll", extra={"team": self.teams.get_team(attacker)})
         if rolled + attack.factory.to_hit + to_hit_maneuver_bonus >= (target.ac + target.one_time_ac_bonus):  # Potentially missing or hitting this time
@@ -409,17 +409,17 @@ class ActionResolver:
             if FactoryFlags.TWO_HANDED in attack.factory.flags and attacker.has_passive(Passive.GREAT_WEAPON_FIGHTING):
                 dmg_dice_sum = roll_dice_with_reroll(dice[0], 2)
                 if len(dice) > 1:  # Shouldn't be necessary but njit gives me trouble otherwise
-                    dmg_dice_sum += roll_dice_multi(dice[1:])  # Only the weapon dice can be rerolled
+                    dmg_dice_sum += _roll_dice_multi(dice[1:])  # Only the weapon dice can be rerolled
             else:
-                dmg_dice_sum = roll_dice_multi(dice)
+                dmg_dice_sum = _roll_dice_multi(dice)
             # logger.info(f"Rolled {dmg_dice_sum} on the dmg dice", extra={"team": self.teams.get_team(attacker)})
-            extra_dmg = [(multiplier * roll_dice(e[0]), e[1]) for e in attack.factory.extra_dmg]
+            extra_dmg = [(multiplier * _roll_dice(e[0]), e[1]) for e in attack.factory.extra_dmg]
             # logger.info(f"and {extra_dmg} on the extra dmg dice", extra={"team": self.teams.get_team(attacker)})
             base_dmg = multiplier * dmg_dice_sum + attack.factory.dmg_bonus + attacker.ability_dmg_bonus
             if attacker.has_passive(Passive.FANATIC_ADVANTAGE) and final_modifier is RollType.ADVANTAGE and not attacker.already_used_fanatic_advantage:
                 logger.info(f"{attacker} activates Fanatic Advantage", extra={"team": self.teams.get_team(attacker)})
                 attacker.already_used_fanatic_advantage = True
-                base_dmg += roll_dice((2, 6))
+                base_dmg += _roll_dice((2, 6))
             if self.effect_tracker.is_affecting_combatant(attacker, EffectType.RAY_OF_ENFEEBLEMENT) and FactoryFlags.USES_DEX not in attack.factory.flags:
                 logger.info(f"Damage by {attacker} is halved by Ray of Enfeeblement", extra={"team": self.teams.get_team(attacker)})
                 base_dmg = base_dmg // 2
@@ -474,7 +474,7 @@ class ActionResolver:
             logger.info("Natural 1 rolled!", extra={"team": self.teams.get_team(attacker)})
             return ActionResult.MISS
         for bonus_die in attacker.to_hit_dice_mod:
-            bonus_dice_roll = roll_dice(bonus_die)
+            bonus_dice_roll = _roll_dice(bonus_die)
             logger.info(f"Adding {bonus_dice_roll} from bonus {bonus_die} to the roll", extra={"team": self.teams.get_team(attacker)})
             rolled += bonus_dice_roll
         if attacker.to_hit_flat_mod:
@@ -553,7 +553,7 @@ class ActionResolver:
             case Action.FIREBALL | BonusAction.QUICKENED_FIREBALL:
                 logger.info(f"{combatant} casts {actoid}")
                 affected = battle_map.get_combatants_affected_by_sphere_aoe(combatant, actoid.factory.target, actoid.factory.type, actoid.coord)
-                dmg = roll_dice_multi(actoid.factory.dmg_dice)
+                dmg = _roll_dice_multi(actoid.factory.dmg_dice)
                 for combatant in affected:
                     resolve_dmg_saving_throw(actoid, dmg, combatant, True, True)
                     battle_map.remove_combatant_if_dead(combatant)  # could be a wildshaped druid
@@ -683,7 +683,7 @@ class ActionResolver:
                 _, shortest_paths = _dijkstra(actoid.factory.action_enabler_effect.origin, battle_map.size, adj, mask)
                 path = battle_map.get_effect_path_to_coord(actoid.factory.action_enabler_effect.origin, actoid.coord, shortest_paths)
                 if path is not None and len(path) <= FlamingSphereRamFactory.RANGE + 1:
-                    dmg = roll_dice_multi(actoid.factory.dmg_dice)
+                    dmg = _roll_dice_multi(actoid.factory.dmg_dice)
                     logger.info(f"{ actoid.target} is rammed by Flaming Sphere")
                     resolve_dmg_saving_throw(actoid, dmg, actoid.target, True, True)
                     battle_map.remove_combatant_if_dead(actoid.target)   # TODO revisit if this is really needed
@@ -692,7 +692,7 @@ class ActionResolver:
                 return ActionResult.DMG
             case Action.MAGIC_MISSILE | BonusAction.QUICKENED_MAGIC_MISSILE:
                 logger.info(f"{combatant} casts {actoid}")
-                dmg_dice_sum = roll_dice_multi(actoid.factory.dmg_dice) + actoid.factory.dmg_bonus
+                dmg_dice_sum = _roll_dice_multi(actoid.factory.dmg_dice) + actoid.factory.dmg_bonus
                 hits_received: Dict[ProtoCombatant, int] = Counter(actoid.targets)
                 # They have to hit at the same time in order to incur only one concentration check
                 for target, hits in hits_received.items():
@@ -719,7 +719,7 @@ class ActionResolver:
                 logger.info(f"{combatant} uses {actoid}")
                 actoid.target.heal(actoid.hp_amount)
             case BonusAction.SECOND_WIND:
-                heal_hp = roll_dice((1, 10)) + combatant.level
+                heal_hp = _roll_dice((1, 10)) + combatant.level
                 combatant.heal(heal_hp)
                 logger.info(f"{combatant} uses Second Wind and heals for {heal_hp} damage")
             case FreeAction.ACTION_SURGE:
@@ -728,7 +728,7 @@ class ActionResolver:
             case Action.THUNDERWAVE | BonusAction.QUICKENED_THUNDERWAVE:
                 logger.info(f"{combatant} casts {actoid}")
                 affected = battle_map.get_combatants_affected_by_box_aoe(actoid.factory.target, actoid.coord)
-                dmg = roll_dice_multi(actoid.factory.dmg_dice)
+                dmg = _roll_dice_multi(actoid.factory.dmg_dice)
                 for aff in affected:
                     saved = resolve_dmg_saving_throw(actoid, dmg, aff, True, True)
                     if battle_map.remove_combatant_if_dead(aff) and not saved:  # could be a wildshaped druid
@@ -739,13 +739,13 @@ class ActionResolver:
                 return ActionResult.DMG
             case BonusAction.HEALING_WORD | Action.CURE_WOUNDS:
                 logger.info(f"{combatant} casts {actoid}")
-                heal_hp = roll_dice(actoid.factory.heal_dice) + actoid.factory.mod
+                heal_hp = _roll_dice(actoid.factory.heal_dice) + actoid.factory.mod
                 actoid.target.heal(heal_hp)
                 logger.info(f"{combatant} is healed for {heal_hp} damage")
             case Action.CONIC_BREATH_WEAPON | Action.CONIC_BREATH_WEAPON_ATTACK:
                 logger.info(f"{combatant} uses {actoid}")
                 affected = battle_map.get_combatants_affected_by_cone_aoe(combatant, actoid.factory.target_template, actoid.coord, actoid.angle)
-                dmg = roll_dice_multi(actoid.factory.dmg_dice)
+                dmg = _roll_dice_multi(actoid.factory.dmg_dice)
                 for aff in affected:
                     resolve_dmg_saving_throw(actoid, dmg, aff, True, False)
                     battle_map.remove_combatant_if_dead(aff)  # could be a wildshaped druid
@@ -753,7 +753,7 @@ class ActionResolver:
             case Action.LINE_BREATH_WEAPON:
                 logger.info(f"{combatant} uses {actoid}")
                 affected = battle_map.get_combatants_affected_by_line_aoe(combatant, actoid.coord, actoid.angle, actoid.factory.length, actoid.factory.width)
-                dmg = roll_dice_multi(actoid.factory.dmg_dice)
+                dmg = _roll_dice_multi(actoid.factory.dmg_dice)
                 for aff in affected:
                     resolve_dmg_saving_throw(actoid, dmg, aff, True, False)
                     battle_map.remove_combatant_if_dead(aff)  # could be a wildshaped druid

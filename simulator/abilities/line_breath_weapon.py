@@ -4,7 +4,7 @@ from ..battle_map import Map
 from ..conditions import get_swallower
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
-from ..threat_utils import mean_dmg_dc_attack
+from ..threat_utils import _mean_dmg_dc_attack
 from functools import cache, reduce
 import logging
 

@@ -12,11 +12,11 @@ from ..effects.aoe_spheric_effect import AoeSphericEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import SavingThrow, DamageType, avg_roll_multi, roll_dice
+from ..misc import SavingThrow, DamageType, avg_roll_multi, _roll_dice
 from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_utils import mean_dmg_dc_attack
+from ..threat_utils import _mean_dmg_dc_attack
 from ..threat_interfaces import DirectThreat, AoEThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
@@ -71,11 +71,11 @@ class HungerOfHadarFactory(DirectThreatFactory):
         Calculates threat to one specific target
         """
         # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-        mean_dmg = min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, False,
+        _mean_dmg = min(target.curr_hp, _mean_dmg_dc_attack(self.dc, self.dmg_dice, False,
                                                           target.saving_throws[self.saving_throw],
                                                           target.is_immune_to(DamageType.Acid),
                                                           target.is_resistant_to(DamageType.Acid)))
-        return avg_roll_multi(self.dmg_dice) + 0.5 * mean_dmg
+        return avg_roll_multi(self.dmg_dice) + 0.5 * _mean_dmg
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -103,13 +103,13 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
 
     def on_start_of_turn(self, combatant):
         apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
-        dmg = roll_dice(self.factory.dmg_dice)
+        dmg = _roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, self.factory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
     def on_end_of_turn(self, combatant):
         apply_condition(combatant, Condition(Conditions.BLINDED, self.factory.combatant, self))
-        dmg = roll_dice(self.factory.dmg_dice)
+        dmg = _roll_dice(self.factory.dmg_dice)
         self.factory.dmg_type = DamageType.Acid
         resolve_dmg_saving_throw(self, dmg, combatant, False, True)
         self.factory.dmg_type = DamageType.Cold
@@ -148,11 +148,11 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         for aff in affected:
             acc += avg_roll_multi(self.factory.dmg_dice)  # the initial cold dmg
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
-            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False,
+            _mean_dmg = min(aff.curr_hp, _mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False,
                                                            aff.saving_throws[self.factory.saving_throw],
                                                            aff.is_immune_to(DamageType.Acid),
                                                            aff.is_resistant_to(DamageType.Acid)))
-            acc += 0.5 * mean_dmg
+            acc += 0.5 * _mean_dmg
             acc *= (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3)
         return acc
 
@@ -164,7 +164,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return 0  # Not relevant for this ability
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
-        return min(target.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False,
+        return min(target.curr_hp, _mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False,
                                                       target.saving_throws[self.factory.saving_throw],
                                                       target.is_immune_to(DamageType.Acid),
                                                       target.is_resistant_to(DamageType.Acid)))

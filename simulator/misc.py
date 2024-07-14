@@ -315,32 +315,6 @@ def reconcile_roll_types(types):
     return ret
 
 
-# @cache
-# def parse_dmg_dice(dice_string):
-#     """
-#
-#     @param dice_string:
-#     @return: list of tuples representing (#num dice, dice size)
-#     """
-#     segments = re.split(r'([+-])', dice_string)
-#     res = []
-#     p = re.compile('(\d+)d(\d+)')
-#     sign = 1
-#     for seg in segments:
-#         try:
-#             m = p.match(seg)
-#             res.append((sign * int(m.group(1)), int(m.group(2))))
-#         except AttributeError:
-#             sign = SIGN[seg]
-#     return res
-#
-#
-# @cache
-# def avg_roll(dice_string):
-#     dice = parse_dmg_dice(dice_string)
-#     return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
-
-
 @njit(cache=True)
 def avg_roll(dice: tuple):
     return dice[0] * ((1.0 + dice[1]) / 2.0)
@@ -375,7 +349,7 @@ def percentile_roll(dice, percentile):
 
 
 @njit(cache=True)
-def roll_dice(dice):
+def _roll_dice(dice):
     """
     Basic function for rolling dice
     @param dice: a dice tuple (number of dice, number of sides)
@@ -386,7 +360,7 @@ def roll_dice(dice):
 
 
 @njit(cache=True)
-def roll_dice_multi(dice_list):
+def _roll_dice_multi(dice_list):
     """
     Function for rolling multiple sets of dice
     @param dice_list: list of dice tuples, each tuple is (number of dice, number of sides)
@@ -394,12 +368,12 @@ def roll_dice_multi(dice_list):
     """
     total_sum = 0
     for dice in dice_list:
-        total_sum += roll_dice(dice)
+        total_sum += _roll_dice(dice)
     return total_sum
 
 
 @njit(cache=True)
-def roll_dice_with_reroll_and_log(dice, reroll_max_value):
+def _roll_dice_with_reroll_and_log(dice, reroll_max_value):
     """
     Function for rolling dice which re-rolls results less than or equal to a given value. The re-rolled value must be used.
     @param dice: tuple of (# of dice (1..inf), dice size (4, 6, 8, 10, 12))
@@ -423,34 +397,34 @@ def roll_dice_with_reroll_and_log(dice, reroll_max_value):
 
 # Use the function and handle logging outside the Numba-compiled function
 def roll_dice_with_reroll(dice, reroll_max_value):
-    result, reroll_log = roll_dice_with_reroll_and_log(dice, reroll_max_value)
+    result, reroll_log = _roll_dice_with_reroll_and_log(dice, reroll_max_value)
     for original, reroll in reroll_log:
         logger.info(f"Re-rolling {original} as {reroll}")
     return result
 
-
+# njit candidate
 def roll_saving_throw(bonus, dc, roll_type):
     d20 = (1, 20)
     if roll_type is RollType.STRAIGHT:
-        roll = roll_dice(d20)
+        roll = _roll_dice(d20)
     elif roll_type is RollType.ADVANTAGE:
-        roll = max(roll_dice(d20), roll_dice(d20))
+        roll = max(_roll_dice(d20), _roll_dice(d20))
     else:
-        roll = min(roll_dice(d20), roll_dice(d20))
+        roll = min(_roll_dice(d20), _roll_dice(d20))
 
     if roll == 20:
         return True
     return roll + bonus >= dc
 
-
+#njit cancidate
 def roll_ability_check(bonus, dc, roll_type):
     d20 = (1, 20)
     if roll_type is RollType.STRAIGHT:
-        return roll_dice(d20) + bonus >= dc
+        return _roll_dice(d20) + bonus >= dc
     elif roll_type is RollType.ADVANTAGE:
-        return max(roll_dice(d20), roll_dice(d20)) + bonus >= dc
+        return max(_roll_dice(d20), _roll_dice(d20)) + bonus >= dc
     else:
-        return min(roll_dice(d20), roll_dice(d20)) + bonus >= dc
+        return min(_roll_dice(d20), _roll_dice(d20)) + bonus >= dc
 
 
 def roll_dice_chaos_bolt(dice):
@@ -467,7 +441,7 @@ def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
     dice = parse_dmg_dice(dmg_dice)
     primary_dmg, numbers = roll_dice_chaos_bolt(dice[0])
     dice = parse_dmg_dice(additional_dmg_dice)
-    secondary_dmg = roll_dice(dice)
+    secondary_dmg = _roll_dice(dice)
     return primary_dmg + secondary_dmg, numbers
 
 

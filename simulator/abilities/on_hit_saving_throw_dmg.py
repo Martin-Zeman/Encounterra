@@ -1,9 +1,9 @@
 from ..abilities.on_hit_effect import OnHit
 from ..action_resolver import resolve_on_hit_dmg_saving_throw
-from ..misc import roll_dice_multi
+from ..misc import _roll_dice_multi
 import logging
 
-from ..threat_utils import mean_dmg_dc_attack
+from ..threat_utils import _mean_dmg_dc_attack
 
 logger = logging.getLogger("Encounterra")
 
@@ -18,13 +18,13 @@ class OnHitSavingThrowDmg(OnHit):
         self.name = name
 
     def hit(self, attacker, attack, target, multiplier, dmg_so_far):
-        dmg = roll_dice_multi(self.dmg_dice)
+        dmg = _roll_dice_multi(self.dmg_dice)
         resolve_on_hit_dmg_saving_throw(self, dmg, target, self.half_on_success)
         return None
 
     def calculate_threat(self, attacker, target, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, self.half_on_success,
+        return min(target.curr_hp, _mean_dmg_dc_attack(self.dc, self.dmg_dice, self.half_on_success,
                                                       target.saving_throws[self.st],
                                                       target.is_immune_to(self.dmg_type),
                                                       target.is_resistant_to(self.dmg_type)))

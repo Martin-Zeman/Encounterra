@@ -13,7 +13,7 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import roll_dice, ROUND_HORIZON, avg_roll
+from ..misc import _roll_dice, ROUND_HORIZON, avg_roll
 from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -126,7 +126,7 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
         affected.sort(key=lambda cmbt: cmbt.curr_hp)
         put_to_sleep = []
         hp_acc = 0
-        total_hp_affected = roll_dice((5, 8))
+        total_hp_affected = _roll_dice((5, 8))
         for combatant in affected:
             if combatant.has_passive(Passive.CHARM_IMMUNITY):
                 continue

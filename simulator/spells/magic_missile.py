@@ -10,7 +10,7 @@ from ..spells.spell import SpellStats
 from ..misc import DamageType, Visibility
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_utils import mean_dmg_auto_hit
+from ..threat_utils import _mean_dmg_auto_hit
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from itertools import combinations_with_replacement
@@ -67,7 +67,7 @@ class MagicMissileFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= MagicMissileFactory.range:
-            ret = 3 * (mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)
+            ret = 3 * (_mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)
             return ret
         else:
             return 0
@@ -122,9 +122,9 @@ class MagicMissile(Actoid, DirectThreat):
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        dmg_acc = mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
-        dmg_acc += mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[1].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
-        dmg_acc += mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[2].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
+        dmg_acc = _mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
+        dmg_acc += _mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[1].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
+        dmg_acc += _mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[2].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
         return dmg_acc
 
     def clear_cache(self):
