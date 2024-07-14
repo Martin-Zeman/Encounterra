@@ -9,7 +9,7 @@ from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import RollType, avg_roll, Visibility, SavingThrow, reconcile_roll_types, \
+from ..misc import RollType, _avg_roll, Visibility, SavingThrow, reconcile_roll_types, \
     roll_saving_throw, get_strength_based_attack_factories, ROUND_HORIZON
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -93,7 +93,7 @@ class RayOfEnfeeblementFactory(DirectThreatFactory):
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         total_target_ac = target.ac + target_ac
-        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total = self.to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
         try:
             to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         except KeyError:  # Can happen for extreme differences between the AC and the to_hit

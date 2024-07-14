@@ -11,7 +11,7 @@ from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..misc import reconcile_roll_types
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from functools import reduce
-from ..misc import avg_roll
+from ..misc import _avg_roll
 from ..resources import ResourceRefreshType, Uses
 from ..threat_utils import _mean_dmg, calculate_threat_in_delta
 from ..threat_interfaces import DirectThreat
@@ -84,8 +84,8 @@ class RecklessAttackFactory(DirectThreatFactory):
         potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         if not potential_targets:
             return 0
-        def mean_dmg_delta(acc, pt):
-            to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
+        def local_mean_dmg_delta(acc, pt):
+            to_hit_total = self.to_hit + self.mod_to_hit_flat + _avg_roll(self.mod_to_hit_die)
             to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(pt.ac - to_hit_total, 20))]
             total_crit = self.crit_range + self.mod_crit_range
             total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
@@ -93,7 +93,7 @@ class RecklessAttackFactory(DirectThreatFactory):
                                   self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_immune_to(self.dmg_type),
                                   pt.is_resistant_to(self.dmg_type))
 
-        dmg_acc = reduce(_mean_dmg_delta, potential_targets)
+        dmg_acc = reduce(local_mean_dmg_delta, potential_targets)
         dmg_acc /= len(potential_targets)
         return dmg_acc
 
@@ -138,12 +138,12 @@ class RecklessAttackFactory(DirectThreatFactory):
         modified = baseline
         with battle_map.as_if_dist_delta_from_combatant(self.combatant, target, -mod_range):
             if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
-                to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+                to_hit_total = self.to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
                 to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
                 total_crit = self.crit_range + mod_crit_range
                 total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
                 total_crit = 20 if auto_crit else total_crit
-                modified = mean_dmg(to_hit_total, self.dmg_dice + self.mod_dmg_die, self.dmg_bonus + mod_dmg_flat,
+                modified = _mean_dmg(to_hit_total, self.dmg_dice + self.mod_dmg_die, self.dmg_bonus + mod_dmg_flat,
                                     target.ac, target.is_immune_to(self.dmg_type),
                                     target.is_resistant_to(self.dmg_type), total_crit)
             else:

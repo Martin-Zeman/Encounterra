@@ -14,7 +14,7 @@ from .actions.flaming_sphere_ram import FlamingSphereRamFactory
 from .battle_map import Map, _dijkstra
 from .effects.effect import EffectType
 from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, _roll_dice, \
-    roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll, avg_roll, _roll_dice_multi
+    roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll, _avg_roll, _roll_dice_multi
 from .conditions import Conditions, ConditionWithDC, Condition, break_out_of_grapple, is_affected_by_any, \
     is_affected_by, get_grappled, apply_condition, apply_dc_condition, remove_condition, remove_dc_condition
 from .feasibility import check_feasibility
@@ -398,7 +398,7 @@ class ActionResolver:
                 self.resolve_action(reaction, target)
         to_hit_maneuver_bonus = 0
         if FactoryFlags.IS_PRECISION in attack.factory.flags and rolled + attack.factory.to_hit < (
-                target.ac + target.one_time_ac_bonus) <= rolled + attack.factory.to_hit + avg_roll(
+                target.ac + target.one_time_ac_bonus) <= rolled + attack.factory.to_hit + _avg_roll(
                 attack.factory.to_hit_bonus_die) and attacker.resources[Passive.BATTLE_MASTER_MANEUVERS].has_resource():
             to_hit_maneuver_bonus = _roll_dice(attack.factory.to_hit_bonus_die)
             use_resources(attacker, Action.PRECISION_ATTACK)

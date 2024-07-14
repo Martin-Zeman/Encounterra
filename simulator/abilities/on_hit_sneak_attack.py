@@ -1,6 +1,6 @@
 from ..abilities.on_hit_effect import OnHit
 from ..battle_map import Map
-from ..misc import avg_roll_multi, _roll_dice_multi
+from ..misc import _avg_roll_multi, _roll_dice_multi
 import logging
 
 from ..utils.roll_types import RollType
@@ -59,7 +59,7 @@ class OnHitSneakAttack(OnHit):
             return 0
         battle_map = Map.get()
         if not getattr(attacker, "already_used_sneak_attack_this_turn", True) and (roll_type is RollType.ADVANTAGE or battle_map.is_ally_adjacent_to_target(attacker, target)):
-            avg_dmg_roll = avg_roll_multi(self.dmg_dice)
+            avg_dmg_roll = _avg_roll_multi(self.dmg_dice)
             return avg_dmg_roll + 0.05 * self.crit_range * avg_dmg_roll
         return 0
 

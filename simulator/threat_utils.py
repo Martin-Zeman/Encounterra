@@ -12,7 +12,7 @@ from toposort import toposort_flatten
 from .actions.actoid import FactoryFlags
 from .battle_map import Map, _get_hop_distance_coords
 from .utils.state_machine_template import StateMachineTemplate
-from .misc import reconstruct_path_through_dag, avg_roll_multi
+from .misc import reconstruct_path_through_dag, _avg_roll_multi
 from .spells.misty_step import MistyStepFactory
 from .utils.roll_types import RollType
 
@@ -32,7 +32,7 @@ def _mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, is_immune=False, is_resistant=Fal
     rv = np.arange(1, 21) + to_hit
     p_hit = 1.0 - (np.sum(rv < ac) / 20.0)
 
-    avg_dmg_die_roll = avg_roll_multi(dmg_dice)
+    avg_dmg_die_roll = _avg_roll_multi(dmg_dice)
     res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
     if is_resistant:
         res /= 2.0
@@ -62,7 +62,7 @@ def _mean_dmg_auto_hit(dmg_dice, is_resistant=False):
     @param is_resistant: True if the target is resistant to the dmg type
     @return: mean damage
     """
-    avg_dmg_die_roll = avg_roll_multi(dmg_dice)
+    avg_dmg_die_roll = _avg_roll_multi(dmg_dice)
     return avg_dmg_die_roll if not is_resistant else (avg_dmg_die_roll / 2)
 
 
@@ -308,7 +308,7 @@ def _mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_immune=False
     if is_immune:
         return 0
 
-    avg_dmg_die_roll = avg_roll_multi(dmg_dice)
+    avg_dmg_die_roll = _avg_roll_multi(dmg_dice)
 
     # Calculate probability of failing the saving throw
     p_fail = min(max((dc - st_bonus - 1) / 20, 0), 1)

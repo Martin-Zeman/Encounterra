@@ -12,7 +12,7 @@ from ..effects.aoe_spheric_effect import AoeSphericEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, avg_roll_multi, _roll_dice
+from ..misc import DamageType, _avg_roll_multi, _roll_dice
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat, AoEThreat
@@ -63,7 +63,7 @@ class SpikeGrowthFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return avg_roll_multi(self.dmg_dice)
+        return _avg_roll_multi(self.dmg_dice)
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -133,7 +133,7 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         affected = battle_map.get_combatants_affected_by_sphere_aoe(self.factory.combatant, SpikeGrowthFactory.target, SpikeGrowthFactory.type, self.coord)
         acc = 0
         for aff in affected:
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll_multi(self.factory.dmg_dice)
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * _avg_roll_multi(self.factory.dmg_dice)
         return acc
 
     def clear_cache(self):
@@ -147,13 +147,13 @@ class SpikeGrowth(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThreat,
         return 0
 
     def threat_on_enter(self, target, *args, **kwargs):
-        return avg_roll_multi(self.factory.dmg_dice)
+        return _avg_roll_multi(self.factory.dmg_dice)
 
     def threat_on_start_of_turn(self, target, *args, **kwargs):
         return 0
 
     def threat_on_move_within(self, target, *args, **kwargs):
-        return avg_roll_multi(self.factory.dmg_dice)
+        return _avg_roll_multi(self.factory.dmg_dice)
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):

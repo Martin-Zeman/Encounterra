@@ -16,7 +16,7 @@ from simulator.battle_map import Terrain
 from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
 from simulator.effects.effect import EffectType
 from simulator.logging.custom_logger import CustomLogger
-from simulator.misc import DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow, _is_path_straight
 from simulator.conditions import Conditions, is_affected_by
 from simulator.resources import ResourceDepletionLevel
 from simulator.spells.ray_of_enfeeblement import RayOfEnfeeblementFactory
@@ -1296,3 +1296,40 @@ def test_second_wind_not_used(battle_map, teams, effect_tracker, test_fighter_lv
         assert not any(str(act).startswith("Second Wind") for act in actoids)
     except Exception as e:
         assert False, f"Raised an exception {e}"
+
+
+def test_pounce_is_straight_short_path():
+    path = np.array([[0, 0], [1, 1]])
+    assert _is_path_straight(path, 2) is True
+    assert _is_path_straight(path, 1) is False
+
+
+def test_pounce_is_straight_single_point():
+    path = np.array([[0, 0]])
+    assert _is_path_straight(path, 1) is False
+
+
+def test_pounce_is_straight_none_path():
+    assert _is_path_straight(None, 1) is False
+
+
+def test_pounce_is_straight_length_exceeds_path():
+    path = np.array([[0, 0], [1, 1], [2, 2]])
+    assert _is_path_straight(path, 4) is False
+
+
+def test_pounce_is_straight_horizontal_path():
+    path = np.array([[0, 0], [1, 0], [2, 0], [3, 0]])
+    assert _is_path_straight(path, 4) is True
+
+
+def test_pounce_is_straight_vertical_path():
+    path = np.array([[0, 0], [0, 1], [0, 2], [0, 3]])
+    assert _is_path_straight(path, 4) is True
+
+
+def test_pounce_is_straight_diagonal_path():
+    path = np.array([[0, 0], [1, 1], [2, 2], [3, 3], [4, 4]])
+    assert _is_path_straight(path, 5) is True
+    assert _is_path_straight(path, 6) is False
+    assert _is_path_straight(path, 3) is True

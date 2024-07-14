@@ -1308,6 +1308,14 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
         action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
         actoids.append(get_action(test_sabertoother_tiger))
         action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
+        actoids.append(get_action(test_sabertoother_tiger))
+        action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
+        actoids.append(get_action(test_sabertoother_tiger))
+        action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
+        actoids.append(get_action(test_sabertoother_tiger))
+        action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
+        actoids.append(get_action(test_sabertoother_tiger))
+        action_resolver.resolve_action(actoids[-1], test_sabertoother_tiger)
     except Exception as e:
         assert False, f"Raised an exception {e}"
     assert any([str(a).startswith("Pounce") for a in actoids])

@@ -3,7 +3,7 @@ from cachetools.keys import hashkey
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
     _get_free_coords_in_cartesian_range
 from ..spells.spell import SpellStats
-from ..misc import avg_roll, Class, get_missing_hp
+from ..misc import _avg_roll, Class, get_missing_hp
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat
@@ -64,7 +64,7 @@ class CureWoundsFactory(DirectThreatFactory):
             return 0
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= CureWoundsFactory.range:
             missing_hp = get_missing_hp(self.combatant)
-            return min(missing_hp, avg_roll(self.heal_dice) + self.mod)
+            return min(missing_hp, _avg_roll(self.heal_dice) + self.mod)
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -79,7 +79,7 @@ class CureWoundsFactory(DirectThreatFactory):
             return self.calculate_threat_to_target(target)
 
     def calculate_max_threat(self):
-        return avg_roll(self.heal_dice) + self.mod  # The simplification here is ok
+        return _avg_roll(self.heal_dice) + self.mod  # The simplification here is ok
 
 
 class CureWounds(Actoid, DirectThreat):

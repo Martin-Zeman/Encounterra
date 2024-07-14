@@ -316,12 +316,12 @@ def reconcile_roll_types(types):
 
 
 @njit(cache=True)
-def avg_roll(dice: tuple):
+def _avg_roll(dice: tuple):
     return dice[0] * ((1.0 + dice[1]) / 2.0)
 
 
 @njit(cache=True)
-def avg_roll_multi(dice: tuple):
+def _avg_roll_multi(dice: tuple):
     acc = 0.0
     for d in dice:
         acc += d[0] * ((1.0 + d[1]) / 2.0)
@@ -402,6 +402,7 @@ def roll_dice_with_reroll(dice, reroll_max_value):
         logger.info(f"Re-rolling {original} as {reroll}")
     return result
 
+
 # njit candidate
 def roll_saving_throw(bonus, dc, roll_type):
     d20 = (1, 20)
@@ -416,7 +417,8 @@ def roll_saving_throw(bonus, dc, roll_type):
         return True
     return roll + bonus >= dc
 
-#njit cancidate
+
+# njit candidate
 def roll_ability_check(bonus, dc, roll_type):
     d20 = (1, 20)
     if roll_type is RollType.STRAIGHT:
@@ -438,10 +440,8 @@ def roll_dice_chaos_bolt(dice):
 
 
 def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
-    dice = parse_dmg_dice(dmg_dice)
-    primary_dmg, numbers = roll_dice_chaos_bolt(dice[0])
-    dice = parse_dmg_dice(additional_dmg_dice)
-    secondary_dmg = _roll_dice(dice)
+    primary_dmg, numbers = roll_dice_chaos_bolt(dmg_dice[0])
+    secondary_dmg = _roll_dice(additional_dmg_dice[0])
     return primary_dmg + secondary_dmg, numbers
 
 
@@ -504,18 +504,25 @@ HALF_COVER_ERROR_THRESHOLD = 0.35
 FULL_VISIBILITY_ERROR_THRESHOLD = 0.45
 
 
-def is_path_straight(path):
-    if path is None or len(path) < 2:
+@njit(cache=True)
+def _is_path_straight(path, length):
+    if path is None or len(path) < 2 or length < 2:
+        return False
+    if length > len(path):
         return False
 
-    # Compare the direction of each step in the path
+    # Extract the relevant sub-path
+    sub_path = path[-length:]
+    # Compare the direction of each step in the sub-path
     direction = None
-    for i in range(len(path) - 1):
-        current_direction = path[i + 1] - path[i]  # This will be a numpy array operation
-        if direction is not None and not np.array_equal(current_direction, direction):
-            return False
-        direction = current_direction
-
+    for i in range(len(sub_path) - 1):
+        current_direction = sub_path[i + 1] - sub_path[i]
+        if direction is None:
+            direction = current_direction
+        else:
+            # Manual comparison instead of np.array_equal
+            if not (direction[0] == current_direction[0] and direction[1] == current_direction[1]):
+                return False
     return True
 
 

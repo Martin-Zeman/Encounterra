@@ -13,7 +13,7 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import _roll_dice, ROUND_HORIZON, avg_roll
+from ..misc import _roll_dice, ROUND_HORIZON, _avg_roll
 from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -36,7 +36,7 @@ class SleepFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = None
 
-    mean_sleep_hp = avg_roll((5, 8))
+    mean_sleep_hp = _avg_roll((5, 8))
     max_sleep_hp = 40
 
     def __init__(self, action_type, caster, resource):

@@ -12,7 +12,7 @@ from ..effects.aoe_spheric_effect import AoeSphericEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import SavingThrow, DamageType, avg_roll_multi, _roll_dice
+from ..misc import SavingThrow, DamageType, _avg_roll_multi, _roll_dice
 from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -75,7 +75,7 @@ class HungerOfHadarFactory(DirectThreatFactory):
                                                           target.saving_throws[self.saving_throw],
                                                           target.is_immune_to(DamageType.Acid),
                                                           target.is_resistant_to(DamageType.Acid)))
-        return avg_roll_multi(self.dmg_dice) + 0.5 * _mean_dmg
+        return _avg_roll_multi(self.dmg_dice) + 0.5 * _mean_dmg
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -146,7 +146,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         affected = battle_map.get_combatants_affected_by_sphere_aoe(self.factory.combatant, HungerOfHadarFactory.target, HungerOfHadarFactory.type, self.origin)
         acc = 0
         for aff in affected:
-            acc += avg_roll_multi(self.factory.dmg_dice)  # the initial cold dmg
+            acc += _avg_roll_multi(self.factory.dmg_dice)  # the initial cold dmg
             # The 0.5 is a heuristic which expresses the fact that most targets would leave the area immediately
             _mean_dmg = min(aff.curr_hp, _mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, False,
                                                            aff.saving_throws[self.factory.saving_throw],
@@ -173,7 +173,7 @@ class HungerOfHadar(Actoid, LimitedDurationEffect, AoeSphericEffect, DirectThrea
         return 0
 
     def threat_on_start_of_turn(self, target, *args, **kwargs):
-        threat = avg_roll_multi(self.factory.dmg_dice)
+        threat = _avg_roll_multi(self.factory.dmg_dice)
         return threat if not target.is_resistant_to(self.factory.dmg_type) else threat / 2
 
     def threat_on_move_within(self, target, *args, **kwargs):

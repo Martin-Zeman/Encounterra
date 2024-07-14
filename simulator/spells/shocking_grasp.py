@@ -5,7 +5,7 @@ from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
     _get_free_coords_in_cartesian_range
 from ..spells.spell import SpellStats
-from ..misc import DamageType, RollType, avg_roll
+from ..misc import DamageType, RollType, _avg_roll
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
@@ -89,7 +89,7 @@ class ShockingGraspFactory(DirectThreatFactory):
         target_ac = modifiers.get(ThreatModifierType.TARGET_AC, 0)
 
         total_target_ac = target_ac + target.ac
-        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total = self.to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 

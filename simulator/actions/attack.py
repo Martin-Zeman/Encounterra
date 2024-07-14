@@ -7,7 +7,7 @@ from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from functools import cache
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..conditions import get_swallower
-from ..misc import avg_roll
+from ..misc import _avg_roll
 from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import _mean_dmg, calc_p_hit
 from ..threat_interfaces import DirectThreat
@@ -82,7 +82,7 @@ class AttackFactory(DirectThreatFactory):
         to_hit_total = self.to_hit
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
         if self.to_hit_bonus_die is not None:
-            to_hit_total += avg_roll(self.to_hit_bonus_die)
+            to_hit_total += _avg_roll(self.to_hit_bonus_die)
 
         # TODO: Should I include roll types here? There may be a use-case in the future
         if not consider_dist or Map.get().get_hop_distance_combatants(self.combatant, target) <= self.range:
@@ -103,7 +103,7 @@ class AttackFactory(DirectThreatFactory):
         """
         avg_to_hit_bonus_die_roll = 0
         if self.to_hit_bonus_die is not None:
-            avg_to_hit_bonus_die_roll = avg_roll(self.to_hit_bonus_die)
+            avg_to_hit_bonus_die_roll = _avg_roll(self.to_hit_bonus_die)
         baseline_to_hit = self.to_hit + avg_to_hit_bonus_die_roll
         baseline = _mean_dmg(baseline_to_hit, self.dmg_dice, self.dmg_bonus, target.ac,
                             target.is_immune_to(self.dmg_type), target.is_resistant_to(self.dmg_type), self.crit_range)
@@ -123,7 +123,7 @@ class AttackFactory(DirectThreatFactory):
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         total_target_ac = target.ac + target_ac
-        to_hit_total = baseline_to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total = baseline_to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
         try:
             to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         except KeyError:  # Can happen for extreme differences between the AC and the to_hit

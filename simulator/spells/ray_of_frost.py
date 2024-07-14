@@ -8,7 +8,7 @@ from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, RollType, avg_roll, Visibility
+from ..misc import DamageType, RollType, _avg_roll, Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..threat_utils import _mean_dmg
@@ -107,7 +107,7 @@ class RayOfFrostFactory(DirectThreatFactory):
         target_ac = modifiers.get(ThreatModifierType.TARGET_AC, 0)
 
         total_target_ac = target_ac + target.ac
-        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total = self.to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
