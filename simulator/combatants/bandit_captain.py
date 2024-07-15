@@ -75,7 +75,7 @@ class BanditCaptain(Combatant):
     def prompt_after_hit_reaction(self, attacker, attack, attack_roll):
         if self.has_reaction and attack_roll < self.ac + 2:
             parry_factory = get_factory_of_type(self.reaction_factories, Reaction.PARRY)
-            return parry_factory.create() if parry_factory else None
+            return parry_factory.create(attacker) if parry_factory else None
         elif attack_roll >= self.ac + 2:
             logger.info("Parry would not suffice")
         return None
