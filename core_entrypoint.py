@@ -58,10 +58,22 @@ def simplify_movements(log_lines):
     return simplified_logs
 
 
+def print_numba_cache_contents():
+    cache_dir = '/tmp/numba_cache'
+    try:
+        # List all files and directories in /tmp/numba_cache
+        cache_contents = os.listdir(cache_dir)
+        print(f"Contents of {cache_dir}:")
+        for item in cache_contents:
+            print(item)
+    except FileNotFoundError:
+        print(f"Directory '{cache_dir}' not found.")
+
 def handler(event, context):
+    print_numba_cache_contents()
     if os.path.exists(local_log_file_path):
         os.remove(local_log_file_path)
-    CustomLogger(logging.INFO, False, local_log_file_path)
+    CustomLogger(logging.INFO, True, local_log_file_path)
     logger = logging.getLogger("Encounterra")
     Map.reset_singleton()
     core_input = event['core_input']
