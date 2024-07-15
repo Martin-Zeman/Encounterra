@@ -69,7 +69,25 @@ def print_numba_cache_contents():
     except FileNotFoundError:
         print(f"Directory '{cache_dir}' not found.")
 
+
+def download_numba_cache(bucket_name):
+    local_file_path = os.environ['NUMBA_CACHE_DIR']
+    try:
+        os.makedirs(local_file_path)
+    except FileExistsError:
+        pass
+    # List all objects in the bucket
+    response = s3.list_objects_v2(Bucket=bucket_name)
+    # Download each object to /tmp/numba_cache
+    for obj in response.get('Contents', []):
+        obj_key = obj['Key']
+        download_path = os.path.join(local_file_path, obj_key)
+        s3.download_file(bucket_name, obj_key, download_path)
+
+
 def handler(event, context):
+    bucket_name = os.environ['S3_BUCKET_NAME']
+    download_numba_cache(bucket_name)
     print_numba_cache_contents()
     if os.path.exists(local_log_file_path):
         os.remove(local_log_file_path)

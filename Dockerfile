@@ -83,6 +83,7 @@ RUN pip install --upgrade pip \
 # Set Numba cache directory
 ENV NUMBA_CACHE_DIR=/tmp/numba_cache
 ENV NUMBA_DEBUG_CACHE=1
+ENV S3_BUCKET_NAME=numba-cache-bucket
 
 # Copy the Numba cache from the builder stage
 COPY --from=cache_builder /tmp/numba_cache /tmp/numba_cache
