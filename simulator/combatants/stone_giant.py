@@ -21,10 +21,10 @@ class StoneGiant(Combatant):
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=126, ac=17, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=17)
         self.size = Size.HUGE
-        self.club = self.add_ability(Action.MELEE_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice=((3, 8),), dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3)
-        self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice=((4, 10),), dmg_bonus=6,
+        self.club = self.add_ability(Action.MELEE_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice=[(3, 8)], dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3)
+        self.rock = self.add_ability(Action.RANGED_ATTACK, name="Rock", combatant=self, to_hit=9, dmg_dice=[(4, 10)], dmg_bonus=6,
                                             dmg_type=DamageType.Bludgeoning, attack_range=48, crit_range=1, ammo=Uses(2, ResourceRefreshType.NEVER), on_hit=[OnHitProne(SavingThrow.STR, 17)], uses_dex=False)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice=((3, 8),), dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Greatclub", combatant=self, to_hit=9, dmg_dice=[(3, 8)], dmg_bonus=6, dmg_type=DamageType.Bludgeoning, attack_range=3)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 6
         self.saving_throws[SavingThrow.DEX] = 5

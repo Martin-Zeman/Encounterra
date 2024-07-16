@@ -5,20 +5,21 @@ from cachetools.keys import hashkey
 
 from ..abilities.on_hit_sneak_attack import OnHitSneakAttack
 from ..actions.action_types import HasteAction, BonusAction
-from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..actions.actoid import ActoidFlags, FactoryFlags
+from ..battle_map import Map
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..misc import Visibility, roll_ability_check
-from ..conditions import Conditions, is_affected_by_any, get_swallower, is_affected_by
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import ThreatModifierFactory
 import logging
+import numba_functions as nf
 
-from ..threat_utils import calc_p_hit
 from ..utils.roll_types import RollType, ThreatModifierType, ROLL_TYPE_DELTA
 
 logger = logging.getLogger("Encounterra")
+
 
 class HideFactory(ThreatModifierFactory):
 
@@ -111,7 +112,7 @@ class Hide(AttackThreatModifier, CombatantEffect):
                 return threat_acc  # Sneak Attack condition already met, no extra benefit
             if isinstance(attack.factory.on_hit, OnHitSneakAttack):
                 to_hit_total = attack.factory.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(attack.target.ac - attack.factory.to_hit, 20))]
-                threat_acc += calc_p_hit(to_hit_total, attack.target.ac) * attack.factory.on_hit.calculate_threat(combatant, attack.target, roll_type=RollType.ADVANTAGE)
+                threat_acc += nf.calc_p_hit(to_hit_total, attack.target.ac) * attack.factory.on_hit.calculate_threat(combatant, attack.target, roll_type=RollType.ADVANTAGE)
             return threat_acc
         else:
             return 0

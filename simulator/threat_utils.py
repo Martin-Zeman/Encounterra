@@ -3,67 +3,21 @@ import sys
 from functools import cache, reduce
 
 import numpy as np
+import numba_functions as nf
 from cachetools import cached
 from cachetools.keys import hashkey
-from numba import njit
 from scipy.stats import randint
 from toposort import toposort_flatten
 
 from .actions.actoid import FactoryFlags
-from .battle_map import Map, _get_hop_distance_coords
+from .battle_map import Map
 from .utils.state_machine_template import StateMachineTemplate
-from .misc import reconstruct_path_through_dag, _avg_roll_multi
+from .misc import reconstruct_path_through_dag
 from .spells.misty_step import MistyStepFactory
 from .utils.roll_types import RollType
 
 DZ_CONSTANT = 0.33
 MAX_HP_MODIFIER_MULTIPLIER = 1.25
-
-
-# @cache  # Seems to be faster than njit
-@njit(cache=True)
-def _mean_dmg(to_hit, dmg_dice, dmg_bonus, ac, is_immune=False, is_resistant=False, crit_range=1):
-    """
-    Calculates mean damage of an attack-like ability.
-    """
-    if is_immune:
-        return 0.0
-
-    rv = np.arange(1, 21) + to_hit
-    p_hit = 1.0 - (np.sum(rv < ac) / 20.0)
-
-    avg_dmg_die_roll = _avg_roll_multi(dmg_dice)
-    res = (avg_dmg_die_roll + dmg_bonus) * p_hit + 0.05 * crit_range * avg_dmg_die_roll
-    if is_resistant:
-        res /= 2.0
-
-    return res
-
-
-@njit(cache=True)
-def calc_p_hit(to_hit, ac):
-    """
-    Calculates the probability of hitting
-    @param to_hit: to hit bonus
-    @param ac: target's AC
-    @return: probability of hitting
-    """
-    min_roll = ac - to_hit
-    min_roll = max(1, min(20, min_roll))
-    p_hit = (21 - min_roll) / 20.0
-    return p_hit
-
-
-@njit(cache=True)
-def _mean_dmg_auto_hit(dmg_dice, is_resistant=False):
-    """
-    Calculates mean dmg of an attack-like ability
-    @param dmg_dice: damage dice as a list of tuples
-    @param is_resistant: True if the target is resistant to the dmg type
-    @return: mean damage
-    """
-    avg_dmg_die_roll = _avg_roll_multi(dmg_dice)
-    return avg_dmg_die_roll if not is_resistant else (avg_dmg_die_roll / 2)
 
 
 @cache
@@ -80,14 +34,14 @@ def dmg_increment_for_to_hit_flat(to_hit, dmg_dice, dmg_bonus, ac, to_hit_increm
     @param dmg_type:
     @return: mean damage increment not accounting for critical failures
     """
-    return (_mean_dmg(to_hit + to_hit_increment,
+    return (nf.mean_dmg(to_hit + to_hit_increment,
                      dmg_dice,
                      dmg_bonus,
                      ac,
                      target.is_immune_to(dmg_type),
                      target.is_resistant_to(dmg_type),
                      crit_range) -
-            _mean_dmg(to_hit,
+            nf.mean_dmg(to_hit,
                      dmg_dice,
                      dmg_bonus,
                      ac,
@@ -109,13 +63,13 @@ def dmg_increment_for_dmg_flat(to_hit, dmg_dice, dmg_bonus, ac, dmg_increment, t
     @param dmg_type:
     @return: mean damage increment not accounting for critical failures
     """
-    return (_mean_dmg(to_hit,
+    return (nf.mean_dmg(to_hit,
                     dmg_dice,
                     dmg_bonus + dmg_increment,
                     ac,
                     target.is_immune_to(dmg_type),
                     target.is_resistant_to(dmg_type)) -
-            _mean_dmg(to_hit,
+            nf.mean_dmg(to_hit,
                      dmg_dice,
                      dmg_bonus,
                      ac,
@@ -137,14 +91,14 @@ def dmg_decrement_for_ac_flat(to_hit, dmg_dice, dmg_bonus, ac, ac_bonus, target,
     @param crit_range:
     @return: mean damage decrement not accounting for critical failures (positive value)
     """
-    return (_mean_dmg(to_hit,
+    return (nf.mean_dmg(to_hit,
                     dmg_dice,
                     dmg_bonus,
                     ac,
                     target.is_immune_to(dmg_type),
                     target.is_resistant_to(dmg_type),
                     crit_range) -
-            _mean_dmg(to_hit,
+            nf.mean_dmg(to_hit,
                      dmg_dice,
                      dmg_bonus,
                      ac + ac_bonus,
@@ -291,35 +245,6 @@ def get_saving_throw_fail_prob(dc, st_bonus):
     return rv.cdf(dc - 1)
 
 
-# @njit candidate
-# @cache  # Seems to be about the same as njit
-@njit(cache=True)
-def _mean_dmg_dc_attack(dc, dmg_dice, half_on_success, st_bonus, is_immune=False, is_resistant=False):
-    """
-    Calculates mean damage of a DC-based ability
-    @param dc: DC
-    @param dmg_dice: dmg dice as a list of tuples
-    @param half_on_success: True if half damage is received on a successful saving throw, False if zero
-    @param st_bonus: The relevant saving throw bonus for the check
-    @param is_immune: is target immune to the dmg type
-    @param is_resistant: is target resistant to the dmg type
-    @return: Mean damage
-    """
-    if is_immune:
-        return 0
-
-    avg_dmg_die_roll = _avg_roll_multi(dmg_dice)
-
-    # Calculate probability of failing the saving throw
-    p_fail = min(max((dc - st_bonus - 1) / 20, 0), 1)
-
-    fail_dmg = avg_dmg_die_roll * p_fail
-    success_dmg = avg_dmg_die_roll / 2.0 * (1.0 - p_fail) if half_on_success else 0
-    final_avg_dmg = fail_dmg + success_dmg
-
-    return final_avg_dmg if not is_resistant else final_avg_dmg / 2
-
-
 def get_danger_zone_threat(coords, combatant, delta=0):
     """
     Adds potential threat projected by the virtue of being near an enemy. It adds up all the projected threat for all
@@ -334,7 +259,7 @@ def get_danger_zone_threat(coords, combatant, delta=0):
     enemies = [e for e in battle_map.get_non_swallowed_enemies(combatant)]
     acc = reduce(lambda ac, e: ac + (
         e.danger_zone_attack[1].calculate_threat_to_target(combatant, consider_dist=False) * DZ_CONSTANT if
-        _get_hop_distance_coords(battle_map.get_combatant_position(e).get(), coords) + delta <= e.speed +
+        nf.get_hop_distance_coords(battle_map.get_combatant_position(e).get(), coords) + delta <= e.speed +
         e.danger_zone_attack[1].range else 0), enemies, 0)
     return acc
 
@@ -351,7 +276,7 @@ def get_threat_for_staying_at_coord(coords, combatant):
     battle_map = Map.get()
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     for effect, affected_coords in effect_to_coords.items():
-        if _get_hop_distance_coords(affected_coords, coords) == 0:
+        if nf.get_hop_distance_coords(affected_coords, coords) == 0:
             t = effect.threat_on_start_of_turn(combatant)
             assert t >= 0
             threat_acc += t
@@ -392,8 +317,8 @@ def get_aoe_and_aoo_threat_for_increment(curr_coords_data, increment, combatant,
 
         # account for AoE
         for effect, affected_coords in effect_to_coords.items():
-            pre_increment_dist = _get_hop_distance_coords(curr_coords_data, affected_coords)
-            post_increment_dist = _get_hop_distance_coords(curr_coords_data + increment, affected_coords)
+            pre_increment_dist = nf.get_hop_distance_coords(curr_coords_data, affected_coords)
+            post_increment_dist = nf.get_hop_distance_coords(curr_coords_data + increment, affected_coords)
             if pre_increment_dist == 1 and post_increment_dist == 0:
                 t = effect.threat_on_enter(combatant)
                 assert t >= 0

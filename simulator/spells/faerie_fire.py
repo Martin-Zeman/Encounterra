@@ -4,8 +4,7 @@ import numpy as np
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, _get_cartesian_distance_coords, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
 from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.combatant_effect import CombatantEffect
@@ -20,6 +19,7 @@ from functools import cache
 from ..misc import roll_saving_throw, reconcile_roll_types, SavingThrow
 from ..conditions import Conditions, is_affected_by_any, get_swallower, remove_condition
 import logging
+import numba_functions as nf
 from ..threat_utils import calculate_threat_in_delta
 from ..utils.roll_types import ThreatModifierType, RollType
 
@@ -64,11 +64,11 @@ class FaerieFireFactory(ThreatModifierFactory):
         # Here there really is no need to iterate over all coords. Just find the best score
         coord = self.find_best_args(self.combatant)
         if coord is not None:
-            return [FaerieFire(np.array(coord, dtype=np.int32), self)]
+            return [FaerieFire(np.array(coord, dtype=np.int64), self)]
         return []
 
     def create(self, coord):
-        return FaerieFire(np.array(coord, dtype=np.int32), self)
+        return FaerieFire(np.array(coord, dtype=np.int64), self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         """
@@ -162,13 +162,13 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return _get_free_coords_in_cartesian_range(
+            return nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 Coords(self.origin).get(),  # not actually combatant coords
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=FaerieFireFactory.range, combatant_id=self.factory.combatant.id)
-        elif _get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FaerieFireFactory.range:
+                self.factory.combatant.size.value,
+                FaerieFireFactory.range, self.factory.combatant.id)
+        elif nf.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FaerieFireFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
 

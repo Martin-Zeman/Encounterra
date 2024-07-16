@@ -1,19 +1,16 @@
-from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.spell import SpellStats
 from ..misc import DamageType, Visibility
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 import logging
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from ..threat_utils import _mean_dmg
+import numba_functions as nf
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from ..misc import percent_of_curr_hp
-from functools import cache
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
@@ -39,8 +36,8 @@ class ChaosboltFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # CHAOSBOLT, QUICKENED_CHAOSBOLT
-        self.dmg_dice = ((2, 8),)
-        self.additional_dmg_dice = ((1, 6),)
+        self.dmg_dice = [(2, 8)]
+        self.additional_dmg_dice = [(1, 6)]
         self.combatant = caster
         self.resource = resource
 
@@ -94,10 +91,10 @@ class ChaosboltFactory(DirectThreatFactory):
             P_SAME = 4 / 43  # 8/86 = 4 / 43
             p_acc = P_SAME
             dmg_dice = self.dmg_dice.extend(self.additional_dmg_dice)
-            acc = _mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+            acc = nf.mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
                            target.is_resistant_to(DamageType.Random), DamageType.Random)
             for pt in other_potential_targets:
-                acc += _mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, target.is_immune_to(DamageType.Random),
+                acc += nf.mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, target.is_immune_to(DamageType.Random),
                                 target.is_resistant_to(DamageType.Random), ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
                 p_acc *= P_SAME
         return acc
@@ -115,9 +112,9 @@ class ChaosboltFactory(DirectThreatFactory):
             total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
             dmg_dice = self.dmg_dice + self.additional_dmg_dice
-            return (_mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+            return (nf.mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
                              target.is_resistant_to(DamageType.Random), total_crit) -
-                    _mean_dmg(self.to_hit, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+                    nf.mean_dmg(self.to_hit, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
                              target.is_resistant_to(DamageType.Random)))
         else:
             return 0
@@ -158,12 +155,12 @@ class Chaosbolt(Actoid, DirectThreat):
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME
         dmg_dice = self.factory.dmg_dice + self.factory.additional_dmg_dice
-        acc = _mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac, self.target.is_immune_to(DamageType.Random),
+        acc = nf.mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac, self.target.is_immune_to(DamageType.Random),
                        self.target.is_resistant_to(DamageType.Random))
         for pt in potential_targets:
             to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
                 max(0, min(pt.ac - self.factory.to_hit, 20))]
-            acc += _mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, pt.is_immune_to(DamageType.Random),
+            acc += nf.mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, pt.is_immune_to(DamageType.Random),
                             pt.is_resistant_to(DamageType.Random),
                             ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
             p_acc *= P_SAME
@@ -194,13 +191,13 @@ class Chaosbolt(Actoid, DirectThreat):
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING,
                                   Conditions.RESTRAINED):
-            free_coords_in_range = _get_free_coords_in_cartesian_range(
+            free_coords_in_range = nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.target).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=ChaosboltFactory.range,
-                combatant_id=self.factory.combatant.id)
+                self.factory.combatant.size.value,
+                ChaosboltFactory.range,
+                self.factory.combatant.id)
             return [coord for coord in free_coords_in_range if
                     battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant,

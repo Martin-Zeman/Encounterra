@@ -1,16 +1,12 @@
 from .actions.action_types import Action, BonusAction, HasteAction, Movement, Reaction, Passive, FreeAction
-from .battle_map import Map, _get_hop_distance_coords, _get_cartesian_distance_coords
+from .battle_map import Map
 from .combatant_coords import Coords
 from .effects.effect import EffectType
 from .misc import Size
 from .conditions import Conditions, is_affected_by_any, get_grappled, is_affected_by
 import logging
 import numpy as np
-
-from .spells.fireball import FireballFactory
-from .spells.flaming_sphere import FlamingSphereFactory
-from .spells.haste import HasteFactory
-from .spells.shield import ShieldFactory
+import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
 
@@ -33,13 +29,13 @@ def check_feasibility(combatant, action):
                 res &= action.factory.resource.has_resource(level=3)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.are_valid_coords(action.coord)
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord], dtype=np.int64)) <= action.factory.range
                 return res
             case Action.HUNGER_OF_HADAR:
                 res &= action.factory.resource.has_resource(level=3)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.are_valid_coords(action.origin)
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin], dtype=np.int64)) <= action.factory.range
                 return res
             case Action.HASTE:
                 res &= action.factory.resource.has_resource(level=3)
@@ -189,8 +185,8 @@ def check_feasibility(combatant, action):
                 res &= action.factory.resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
-                res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= battle_map.are_valid_coords(np.array([action.origin], dtype=np.int64))
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin], dtype=np.int64)) <= action.factory.range
                 return res
             case HasteAction.HASTE_BITE_AND_SWALLOW:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()  # TODO I think the is_0 can be omitted
@@ -231,28 +227,28 @@ def check_feasibility(combatant, action):
                 res &= action.factory.resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
-                res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= battle_map.are_valid_coords(np.array([action.origin], dtype=np.int64))
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin], dtype=np.int64)) <= action.factory.range
                 return res
             case Action.SLEEP:
                 res &= action.factory.resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
-                res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= battle_map.are_valid_coords(np.array([action.origin], dtype=np.int64))
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin], dtype=np.int64)) <= action.factory.range
                 return res
             case Action.FAERIE_FIRE:
                 res &= action.factory.resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
-                res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
+                res &= battle_map.are_valid_coords(np.array([action.origin], dtype=np.int64))
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
                 return res
             case Action.THUNDERWAVE:
                 res &= action.factory.resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= battle_map.are_valid_coords(np.array([action.coord]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(),
+                res &= battle_map.are_valid_coords(np.array([action.coord], dtype=np.int64))
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(),
                                                                 action.get_affected_coords()) <= action.factory.range
                 return res
             case Action.LAY_ON_HANDS:
@@ -268,16 +264,16 @@ def check_feasibility(combatant, action):
                 return res
             case Action.CONIC_BREATH_WEAPON:
                 res &= combatant.resources[Action.CONIC_BREATH_WEAPON].has_resource()
-                res &= (_get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) == 0)
+                res &= (nf.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord], dtype=np.int64)) == 0)
                 return res
             case Action.CONIC_BREATH_WEAPON_ATTACK:
                 res |= not combatant.attack_fsm.is_0() and str(action.factory) in combatant.attack_fsm.get_available_transitions()
                 res &= combatant.resources[Action.CONIC_BREATH_WEAPON_ATTACK].has_resource()
-                res &= (_get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) == 0)
+                res &= (nf.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord], dtype=np.int64)) == 0)
                 return res
             case Action.LINE_BREATH_WEAPON:
                 res &= combatant.resources[Action.LINE_BREATH_WEAPON].has_resource()
-                res &= (_get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) == 0)
+                res &= (nf.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord], dtype=np.int64)) == 0)
                 return res
             case _:
                 logger.error(f"check_feasibility: Unknown action type {action_type}")
@@ -298,7 +294,7 @@ def check_feasibility(combatant, action):
             case BonusAction.MISTY_STEP:
                 res &= action.factory.resource.has_resource(level=2)
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord], dtype=np.int64)) <= action.factory.range
                 res &= battle_map.are_valid_coords(action.coord) and battle_map.are_empty_or_self(Coords(action.coord, combatant.size.value), combatant)
                 return res
             case BonusAction.QUICKENED_CHAOSBOLT:
@@ -359,39 +355,39 @@ def check_feasibility(combatant, action):
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_SLEEP:
                 res &= action.factory.resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FAERIE_FIRE:
                 res &= action.factory.resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= not combatant.concentration_effect
                 res &= battle_map.are_valid_coords(np.array([action.origin]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_THUNDERWAVE:
                 res &= action.factory.resource.has_resource(level=1)
                 res &= not combatant.already_cast_leveled_spell_this_turn
                 res &= battle_map.are_valid_coords(np.array([action.coord]))
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), action.get_affected_coords()) <= action.factory.range
                 return res
             case BonusAction.QUICKENED_FIREBALL:
                 res &= action.factory.resource.has_resource(level=3)
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.coord])) <= action.factory.range
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 res &= battle_map.are_valid_coords(action.coord)
                 return res
             case BonusAction.QUICKENED_HUNGER_OF_HADAR:
                 res &= action.factory.resource.has_resource(level=3)
                 res &= not combatant.already_cast_leveled_spell_this_turn
-                res &= _get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
+                res &= nf.get_cartesian_distance_coords(battle_map.get_combatant_position(combatant).get(), np.array([action.origin])) <= action.factory.range
                 res &= combatant.resources[Passive.METAMAGIC].get_resource() > 1
                 res &= battle_map.are_valid_coords(action.origin)
                 return res

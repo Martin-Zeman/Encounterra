@@ -5,7 +5,7 @@ import math
 import sys
 
 import numpy as np
-from numba import njit
+import numba_functions as nf
 
 from .action_dag import replace_combatant_with_wildshape
 from .actoid import ActoidFlags
@@ -13,7 +13,7 @@ from ..actions.action_constants import PRIORITY_ACTIONS, PRIORITY_BONUS_ACTIONS
 from ..actions.action_types import Movement, MovementThreatType, BonusAction
 from ..actions.break_grapple import BreakGrappleFactory
 from ..actions.movement import MovementGenerator, GetUpFactory, MovementIncrement
-from ..battle_map import convert_path_to_increments, Map, _get_hop_distance_coords
+from ..battle_map import convert_path_to_increments, Map
 from ..misc import get_factory_of_type
 from ..conditions import Conditions, needs_to_break_out_of_grapple, is_affected_by
 from ..threat_interfaces import AttackThreatModifier
@@ -215,11 +215,11 @@ def translate_sequence_to_actions(combatant, distances, shortest_paths, transiti
             coord, movement_type = movement_trans_to_coord_and_type[transition]
             match movement_type:
                 case MovementThreatType.STANDARD | MovementThreatType.DODGED:
-                    path = battle_map.get_path_to_coord(combatant,  np.array(coord), distances, shortest_paths, True)
+                    path = battle_map.get_path_to_coord(combatant,  np.array(coord, dtype=np.int64), distances, shortest_paths, True)
                     movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
                 case MovementThreatType.DISENGAGED:
-                    path = battle_map.get_path_to_coord(combatant, np.array(coord), distances, shortest_paths, False)
+                    path = battle_map.get_path_to_coord(combatant, np.array(coord, dtype=np.int64), distances, shortest_paths, False)
                     movement_generator = MovementGenerator(combatant, path, Movement.DISENGAGED).get_generator()
                     actions.extend(list(movement_generator))  # Unpack the movement generator
                 case MovementThreatType.MISTY_STEPPED:
@@ -420,32 +420,6 @@ def get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, di
     return best_sequence, best_out_threat
 
 
-@njit(cache=True)
-def _dfs(dag_forward: np.ndarray, current_state: int, max_sequence_length: int):
-    sequences = []
-    empty_sequence = np.zeros(max_sequence_length, dtype=np.int32)
-    sequence_length = 0
-    stack = [(current_state, sequence_length, empty_sequence.copy())]
-
-    while stack:
-        state, sequence_length, current_sequence = stack.pop()
-
-        if state == 1:  # 'nop' state
-            sequences.append(current_sequence[:sequence_length].copy())
-            continue
-
-        for i in range(dag_forward.shape[1]):
-            transition, next_state = dag_forward[state, i]
-            if transition == -1:
-                break
-            if sequence_length < max_sequence_length:
-                new_sequence = current_sequence.copy()
-                new_sequence[sequence_length] = transition
-                stack.append((next_state, sequence_length + 1, new_sequence))
-
-    return sequences
-
-
 def prune_sequences(sequences, transition_name_to_action, index_to_transition, transition_to_simplified):
     sequence_sets = set()
     pruned_sequences = []
@@ -513,7 +487,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
 
     dag_forward, num_states, index_to_state, index_to_transition, transition_to_simplified = dag.get_numba_compatible_data()
     max_sequence_length = num_states * 2  # This is a rough estimate
-    all_sequences = _dfs(dag_forward, 0, max_sequence_length)
+    all_sequences = nf.dfs(dag_forward, 0, max_sequence_length)
     pruned_sequences = prune_sequences(all_sequences, transition_name_to_action, index_to_transition, transition_to_simplified)
     sequences = []
     for arr in pruned_sequences:
@@ -528,7 +502,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
         if coord_and_movement_type is None:
             continue
         coord, movement_type = coord_and_movement_type
-        path = battle_map.get_path_to_coord(combatant, np.array(coord, dtype=np.int32), distances, shortest_paths, True)
+        path = battle_map.get_path_to_coord(combatant, np.array(coord, dtype=np.int64), distances, shortest_paths, True)
         if path is None:  # Note that an empty path is still a valid one
             continue
         match movement_type:
@@ -578,7 +552,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                                         feasibility_multiplier = 1 if coord in eligible_coords and distances[coord[0] * battle_map.size + coord[1]] <= combatant.movement else infeasibility_multiplier
                                         first_feasibility_check_done = True
                                     else:  # Two location-dependent actions in succession
-                                        remaining_dist = _get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
+                                        remaining_dist = nf.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
                                         feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
                             threat = action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
                             threat_acc += threat

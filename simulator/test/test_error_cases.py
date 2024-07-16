@@ -3,6 +3,7 @@ import logging
 import pstats
 
 import numpy as np
+import numba_functions as nf
 import pytest
 import pickle
 
@@ -10,7 +11,7 @@ from simulator.abilities.wildshape import WildshapeFactory
 from simulator.action_resolver import ActionResolver
 from simulator.actions.action_types import BonusAction, Action, Passive, FreeAction
 from simulator.actions.movement import MovementIncrement
-from simulator.battle_map import Terrain, Map, _get_cartesian_distance_coords
+from simulator.battle_map import Terrain
 from simulator.combatants.giant_toad import GiantToad
 from simulator.logging.custom_logger import CustomLogger
 from simulator.misc import PhaseOfTurn, SkillCheck
@@ -42,16 +43,16 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     itself with a fireball.
     """
     CustomLogger(logging.WARNING)
-    battle_map.place_circular_element(np.array([7, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([10, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([3, 2]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([5, 4]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([7, 10], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([10, 2], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([3, 2], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([5, 4], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 14]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 14], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13], dtype=np.int64))  # Have to set it for fireball placement
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
 
@@ -74,7 +75,7 @@ def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_
         new_coord += ba.increment if isinstance(ba, MovementIncrement) else np.array([[0, 0]])
     fireball = action_plan[0] if isinstance(action_plan[0], Fireball) else action_plan[1]
     # Staying still is actually preferable here
-    assert _get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+    assert nf.get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     assert isinstance(action_plan[0], Fireball) or isinstance(action_plan[0], Firebolt)
     assert isinstance(action_plan[1], Fireball) or isinstance(action_plan[1], Firebolt)
 
@@ -85,19 +86,19 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     CustomLogger(logging.WARNING)
     test_bugbear_2 = copy.deepcopy(test_bugbear)
-    battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([14, 0]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([13, 14]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([14, 14]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([9, 4]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([7, 14]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([6, 2], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([14, 0], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([13, 14], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([14, 14], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 4], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 14], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear_2, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 8]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([1, 9]))
-    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([2, 9]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([1, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([2, 9], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
@@ -105,9 +106,9 @@ def test_error_case_2(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     action_plan = test_draconic_sorcerer_5lvl.calculate_action_plan(distances, shortest_paths)
     try:
         fireball = next(a for a in action_plan if isinstance(a, Fireball))
-        assert _get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-        assert _get_cartesian_distance_coords(battle_map.get_combatant_position(test_bugbear).get(), np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
-        assert _get_cartesian_distance_coords(battle_map.get_combatant_position(test_bugbear_2).get(), np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert nf.get_cartesian_distance_coords(battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get(), np.array([fireball.coord])) > SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert nf.get_cartesian_distance_coords(battle_map.get_combatant_position(test_bugbear).get(), np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
+        assert nf.get_cartesian_distance_coords(battle_map.get_combatant_position(test_bugbear_2).get(), np.array([fireball.coord])) <= SpellStats.TRANSLATE_RADIUS[fireball.factory.target]
     except StopIteration:
         assert False, "No Fireball planned"
     try:
@@ -122,10 +123,10 @@ def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_bugbear)
-    battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([14, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([1, 3]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([1, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([6, 2], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([14, 8], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([1, 3], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([1, 8], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, combatant7]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -135,12 +136,12 @@ def test_error_case_3(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant7, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([14, 13]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 11]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([3, 12]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 11]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([3, 9]))
-    battle_map.set_combatant_coordinates(combatant7, np.array([9, 12]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([14, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([3, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([3, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(combatant7, np.array([9, 12], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -172,10 +173,10 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     CustomLogger(logging.WARNING)
     test_draconic_sorcerer_5lvl_2 = copy.deepcopy(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([2, 13]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([3, 7]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([4, 5]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([5, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([2, 13], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([3, 7], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([4, 5], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([5, 1], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_draconic_sorcerer_5lvl_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -183,10 +184,10 @@ def test_error_case_4(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl_2, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([9, 13]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 9]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([4, 8]))
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl_2, np.array([7, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([9, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([4, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl_2, np.array([7, 8], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -213,9 +214,9 @@ def test_error_case_5(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     CustomLogger(logging.WARNING)
     test_draconic_sorcerer_5lvl_2 = copy.deepcopy(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([4, 13]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([8, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([13, 8]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([4, 13], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([8, 10], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([13, 8], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_stone_giant, test_ogre, test_draconic_sorcerer_5lvl_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -225,12 +226,12 @@ def test_error_case_5(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl_2, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([14, 14]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([9, 14]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 13]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 8]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 10]))
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl_2, np.array([7, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([14, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([9, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl_2, np.array([7, 8], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -269,11 +270,11 @@ def test_error_case_6(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant7, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([14, 14]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([9, 14]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 13]))
-    battle_map.set_combatant_coordinates(combatant7, np.array([0, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([14, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([9, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(combatant7, np.array([0, 8], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -307,19 +308,19 @@ def test_error_case_7(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     CustomLogger(logging.WARNING)
     test_draconic_sorcerer_5lvl_2 = copy.deepcopy(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([0, 6]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([11, 13]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([13, 1]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([10, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([0, 6], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([11, 13], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([13, 1], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([10, 12], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_draconic_sorcerer_5lvl_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([9, 13]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 9]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([9, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 8], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -383,10 +384,10 @@ def test_error_case_8(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     """
     CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([4, 12]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([0, 1]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([14, 13]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([4, 12], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([0, 1], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([6, 12], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([14, 13], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre, combatant7]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -394,10 +395,10 @@ def test_error_case_8(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
     teams.add_combatant_to_team(combatant7, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([10, 10]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 12]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 13]))
-    battle_map.set_combatant_coordinates(combatant7, np.array([8, 13]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([10, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(combatant7, np.array([8, 13], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -428,9 +429,9 @@ def test_error_case_9(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_stone_giant)
     combatant8 = copy.deepcopy(test_ogre)
-    battle_map.place_circular_element(np.array([10, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([13, 14]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([6, 0]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([10, 10], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([13, 14], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([6, 0], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre, combatant7, combatant8]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -439,11 +440,11 @@ def test_error_case_9(battle_map, teams, effect_tracker, test_draconic_sorcerer_
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant7, Teams.Color.RED)
     teams.add_combatant_to_team(combatant8, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 5]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([12, 10]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 10]))
-    battle_map.set_combatant_coordinates(combatant7, np.array([3, 8]))
-    battle_map.set_combatant_coordinates(combatant8, np.array([12, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([12, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(combatant7, np.array([3, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(combatant8, np.array([12, 8], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     try:
@@ -469,17 +470,17 @@ def test_error_case_10(battle_map, teams, effect_tracker, test_draconic_sorcerer
     This test case is based on a scenario encountered during fuzzy testing. Here the sorcerer is out of 3rd level spellslots.
     """
     CustomLogger(logging.WARNING)
-    battle_map.place_circular_element(np.array([3, 3]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([4, 13]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([5, 4]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([13, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([3, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([4, 13], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([5, 4], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([13, 1], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 3]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([3, 6]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([3, 6], dtype=np.int64))
     battle_map.build_adjacency_matrix()
     test_stone_giant.curr_hp = 52
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
@@ -516,10 +517,10 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_draconic_sorcerer_5lvl)
     combatant8 = copy.deepcopy(test_stone_giant)
-    battle_map.place_circular_element(np.array([2, 4]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([4, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([9, 9]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([2, 4], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([4, 1], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 9], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_ogre, combatant7, combatant8]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -529,12 +530,12 @@ def test_error_case_11(battle_map, teams, effect_tracker, test_draconic_sorcerer
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant7, Teams.Color.RED)
     teams.add_combatant_to_team(combatant8, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 8]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 12]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([9, 9]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([6, 10]))
-    battle_map.set_combatant_coordinates(combatant7, np.array([9, 12]))
-    battle_map.set_combatant_coordinates(combatant8, np.array([3, 10]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([9, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([6, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(combatant7, np.array([9, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(combatant8, np.array([3, 10], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].use_resource()
@@ -556,10 +557,10 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     CustomLogger(logging.WARNING)
     combatant7 = copy.deepcopy(test_totem_barbarian)
-    battle_map.place_circular_element(np.array([0, 7]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([7, 14]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([1, 10]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([6, 7]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([0, 7], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 14], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([1, 10], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([6, 7], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_ogre, combatant7]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -568,11 +569,11 @@ def test_error_case_12(battle_map, teams, effect_tracker, test_draconic_sorcerer
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
     teams.add_combatant_to_team(combatant7, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 13]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 11]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([7, 10]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 9]))
-    battle_map.set_combatant_coordinates(combatant7, np.array([6, 12]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([7, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(combatant7, np.array([6, 12], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     test_totem_barbarian.curr_hp = 61
@@ -605,10 +606,10 @@ def test_error_case_13(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     CustomLogger(logging.WARNING)
     test_stone_giant_2 = copy.deepcopy(test_stone_giant)
-    battle_map.place_circular_element(np.array([1, 3]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([12, 14]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([3, 12]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([9, 11]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([1, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([12, 14], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([3, 12], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([9, 11], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_totem_barbarian, test_stone_giant, test_stone_giant_2]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -616,10 +617,10 @@ def test_error_case_13(battle_map, teams, effect_tracker, test_draconic_sorcerer
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_stone_giant_2, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 6]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([1, 10]))
-    battle_map.set_combatant_coordinates(test_stone_giant_2, np.array([8, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([4, 6], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([1, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant_2, np.array([8, 8], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     test_draconic_sorcerer_5lvl.curr_hp = 43
@@ -652,19 +653,19 @@ def test_error_case_14(battle_map, teams, effect_tracker, test_draconic_sorcerer
     This test case is based on a scenario encountered during fuzzy testing.
     """
     CustomLogger(logging.WARNING)
-    battle_map.place_circular_element(np.array([4, 11]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([13, 10]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([10, 13]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([10, 2]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([4, 11], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([13, 10], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([10, 13], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([10, 2], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 14]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 10]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 13]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([1, 13], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
@@ -688,10 +689,10 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
     """
     # TODO Why is this not failing?
     CustomLogger(logging.WARNING)
-    battle_map.place_circular_element(np.array([0, 12]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([7, 10]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([10, 12]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([13, 6]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([0, 12], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 10], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([10, 12], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([13, 6], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_stone_giant, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
@@ -700,11 +701,11 @@ def test_error_case_15(battle_map, teams, effect_tracker, test_draconic_sorcerer
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 8]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 9]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([8, 7]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([8, 12]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([8, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([8, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 8], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     test_stone_giant.add_hasted_factories()
@@ -738,19 +739,19 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
     This test case is based on a scenario encountered during fuzzy testing.
     """
     CustomLogger(logging.WARNING)
-    battle_map.place_circular_element(np.array([7, 8]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([6, 13]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([8, 8]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([10, 11]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 8], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([6, 13], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([8, 8], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([10, 11], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_stone_giant, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 2]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([11, 8]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 10]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 2], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([11, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([9, 10], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     test_draconic_sorcerer_5lvl.spellslots.use_resource(level=3)
@@ -783,10 +784,10 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
     """
     CustomLogger(logging.WARNING)
     test_totem_barbarian_2 = copy.deepcopy(test_totem_barbarian)
-    battle_map.place_circular_element(np.array([6, 14]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    # battle_map.place_circular_element(np.array([0, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([4, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([10, 1]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([6, 14], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    # battle_map.place_circular_element(np.array([0, 5], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([4, 8], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([10, 1], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_moon_druid, test_totem_barbarian, test_goblin, test_draconic_sorcerer_5lvl, test_totem_barbarian_2]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
@@ -796,11 +797,11 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([4, 13]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 10]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 13]))
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 10]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian_2, np.array([3, 11]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([4, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian_2, np.array([3, 11], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -828,8 +829,8 @@ def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_
     This test case is based on a scenario encountered during fuzzy testing. It makes sure that find_wildshaped_coordinate does its job.
     """
     CustomLogger(logging.WARNING)
-    battle_map.place_circular_element(np.array([9, 8]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([13, 6]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([9, 8], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([13, 6], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_moon_druid, test_bugbear, test_goblin]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
@@ -837,9 +838,9 @@ def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 8]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([11, 8]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([12, 13]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([11, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([12, 13], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -874,8 +875,8 @@ def test_error_case_19(battle_map, teams, effect_tracker, test_giant_toad):
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_giant_toad_2, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_giant_toad, np.array([4, 8]))
-    battle_map.set_combatant_coordinates(test_giant_toad_2, np.array([4, 10]))
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([4, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_giant_toad_2, np.array([4, 10], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -902,9 +903,9 @@ def test_error_case_20(battle_map, teams, effect_tracker, test_totem_barbarian, 
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_dragonclaw_cultist, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([13, 9]))
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([10, 14]))
-    battle_map.set_combatant_coordinates(test_dragonclaw_cultist, np.array([1, 10]))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([13, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([10, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_dragonclaw_cultist, np.array([1, 10], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -943,8 +944,8 @@ def test_error_case_21(battle_map, teams, effect_tracker, test_totem_barbarian, 
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 9]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([0, 9]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([0, 9], dtype=np.int64))
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
 
     battle_map.build_adjacency_matrix()
@@ -983,9 +984,9 @@ def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, 
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([7, 13]))
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([7, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8], dtype=np.int64))
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     battle_map.build_adjacency_matrix()
     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
@@ -1030,14 +1031,14 @@ def test_error_case_23(battle_map, teams, effect_tracker, test_ogre, test_stone_
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_brown_bear, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_ogre, np.array([5, 8]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([6, 11]))
-    battle_map.set_combatant_coordinates(test_brown_bear, np.array([0, 9]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([13, 14]))
-    battle_map.place_circular_element(np.array([12, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([11, 8]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([12, 3]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([3, 5]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.set_combatant_coordinates(test_ogre, np.array([5, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([6, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_brown_bear, np.array([0, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([13, 14], dtype=np.int64))
+    battle_map.place_circular_element(np.array([12, 5], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([11, 8], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([12, 3], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([3, 5], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.build_adjacency_matrix()
 
     try:
@@ -1073,12 +1074,12 @@ def test_error_case_24(battle_map, teams, effect_tracker, test_moon_druid, test_
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 11]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([6, 8]))
-    battle_map.set_combatant_coordinates(test_brown_bear, np.array([8, 12]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([9, 11]))
-    battle_map.set_combatant_coordinates(test_giant_toad, np.array([10, 13]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([11, 11]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([6, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_brown_bear, np.array([8, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([9, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([10, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([11, 11], dtype=np.int64))
     battle_map.build_adjacency_matrix()
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
 
@@ -1109,10 +1110,10 @@ def test_error_case_25(battle_map, teams, effect_tracker, test_dire_wolf, test_g
     combatants = [test_dire_wolf, test_giant_toad, test_bugbear, test_totem_barbarian, test_totem_barbarian_2, test_ogre, test_brown_bear]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
-    battle_map.place_circular_element(np.array([3, 3]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([7, 6]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([0, 12]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([8, 3]), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([3, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([7, 6], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([0, 12], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([8, 3], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
 
     teams.add_combatant_to_team(test_dire_wolf, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.BLUE)
@@ -1122,13 +1123,13 @@ def test_error_case_25(battle_map, teams, effect_tracker, test_dire_wolf, test_g
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
     teams.add_combatant_to_team(test_brown_bear, Teams.Color.RED)
 
-    battle_map.set_combatant_coordinates(test_dire_wolf, np.array([6, 9]))
-    battle_map.set_combatant_coordinates(test_giant_toad, np.array([8, 10]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 12]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 14]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian_2, np.array([5, 13]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([12, 13]))
-    battle_map.set_combatant_coordinates(test_brown_bear, np.array([4, 9]))
+    battle_map.set_combatant_coordinates(test_dire_wolf, np.array([6, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([8, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([10, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian_2, np.array([5, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([12, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_brown_bear, np.array([4, 9], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -1150,16 +1151,16 @@ def test_error_case_26(battle_map, teams, effect_tracker, test_ogre, test_dracon
     combatants = [test_ogre, test_draconic_sorcerer_3lvl]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
-    battle_map.place_circular_element(np.array([10, 9]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([11, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([6, 5]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([5, 8]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([10, 9], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([11, 2], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([6, 5], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([5, 8], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
 
     teams.add_combatant_to_team(test_draconic_sorcerer_3lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
 
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_3lvl, np.array([12, 11]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 12]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_3lvl, np.array([12, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([10, 12], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -1186,18 +1187,18 @@ def test_error_case_27(battle_map, teams, effect_tracker, test_twig_blight, test
     combatants = [test_twig_blight, test_giant_constrictor_snake, test_bandit_captain]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
-    battle_map.place_circular_element(np.array([12, 5]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([6, 4]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([7, 7]), Terrain.DIFFICULT_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([5, 3]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([12, 5], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([6, 4], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([7, 7], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([5, 3], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
 
     teams.add_combatant_to_team(test_twig_blight, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bandit_captain, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_giant_constrictor_snake, Teams.Color.RED)
 
-    battle_map.set_combatant_coordinates(test_twig_blight, np.array([5, 9]))
-    battle_map.set_combatant_coordinates(test_bandit_captain, np.array([9, 8]))
-    battle_map.set_combatant_coordinates(test_giant_constrictor_snake, np.array([10, 9]))
+    battle_map.set_combatant_coordinates(test_twig_blight, np.array([5, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bandit_captain, np.array([9, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_giant_constrictor_snake, np.array([10, 9], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -1228,10 +1229,10 @@ def test_error_case_28(battle_map, teams, effect_tracker, test_moon_druid, test_
     combatants = [test_moon_druid, test_sabertoother_tiger, test_dire_wolf, test_berserker, test_twig_blight]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
-    battle_map.place_circular_element(np.array([7, 11]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([6, 2]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([4, 11]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([9, 4]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([7, 11], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([6, 2], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([4, 11], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 4], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
 
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
@@ -1239,11 +1240,11 @@ def test_error_case_28(battle_map, teams, effect_tracker, test_moon_druid, test_
     teams.add_combatant_to_team(test_berserker, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_twig_blight, Teams.Color.BLUE)
 
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([5, 14]))
-    battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([6, 8]))
-    battle_map.set_combatant_coordinates(test_dire_wolf, np.array([8, 8]))
-    battle_map.set_combatant_coordinates(test_berserker, np.array([2, 8]))
-    battle_map.set_combatant_coordinates(test_twig_blight, np.array([13, 10]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([5, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([6, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_dire_wolf, np.array([8, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_berserker, np.array([2, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_twig_blight, np.array([13, 10], dtype=np.int64))
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE,
                                                                             test_moon_druid.wildshape_factory[1])
 
@@ -1279,10 +1280,10 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
     combatants = [test_moon_druid, test_sabertoother_tiger, test_sabertoother_tiger_2, test_bugbear, test_evil_mage]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
-    battle_map.place_circular_element(np.array([9, 12]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([9, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([8, 6]), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 12], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([9, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([6, 12], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([8, 6], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
 
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
     teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
@@ -1290,11 +1291,11 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_evil_mage, Teams.Color.RED)
 
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 11]))
-    battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([5, 10]))
-    battle_map.set_combatant_coordinates(test_sabertoother_tiger_2, np.array([3, 12]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([0, 10]))
-    battle_map.set_combatant_coordinates(test_evil_mage, np.array([0, 12]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([5, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_sabertoother_tiger_2, np.array([3, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([0, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_evil_mage, np.array([0, 12], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -1333,8 +1334,8 @@ def test_error_case_30(battle_map, teams, effect_tracker, test_battle_master_fig
     teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.RED)
     teams.add_combatant_to_team(test_fighter_lvl_2, Teams.Color.BLUE)
 
-    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([14, 10]))
-    battle_map.set_combatant_coordinates(test_fighter_lvl_2, np.array([2, 10]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([14, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_fighter_lvl_2, np.array([2, 10], dtype=np.int64))
 
     test_battle_master_fighter_lvl_3.curr_hp = 17
     test_battle_master_fighter_lvl_3.resources[Passive.BATTLE_MASTER_MANEUVERS].use_resource()
@@ -1375,9 +1376,9 @@ def test_error_case_31(battle_map, teams, effect_tracker, test_battle_master_fig
     teams.add_combatant_to_team(test_fighter_lvl_1, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_fighter_lvl_2, Teams.Color.BLUE)
 
-    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([0, 12]))
-    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([13, 9]))
-    battle_map.set_combatant_coordinates(test_fighter_lvl_2, np.array([2, 11]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([0, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([13, 9], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_fighter_lvl_2, np.array([2, 11], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -1415,10 +1416,10 @@ def test_error_case_32(battle_map, teams, effect_tracker, test_ghoul, test_skele
     teams.add_combatant_to_team(test_hobgoblin, Teams.Color.BLUE)
 
     # I'm trying to create a space where there's no danger zone
-    battle_map.set_combatant_coordinates(test_ghoul, np.array([0, 14]))
-    battle_map.set_combatant_coordinates(test_skeleton, np.array([4, 14]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 11]))
-    battle_map.set_combatant_coordinates(test_hobgoblin, np.array([2, 12]))
+    battle_map.set_combatant_coordinates(test_ghoul, np.array([0, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_skeleton, np.array([4, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_hobgoblin, np.array([2, 12], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -1496,15 +1497,15 @@ def test_error_case_33(battle_map, teams, effect_tracker, test_battle_master_fig
     teams.add_combatant_to_team(test_orc2, Teams.Color.RED)
     teams.add_combatant_to_team(test_orc3, Teams.Color.RED)
 
-    battle_map.place_circular_element(np.array([1, 9]), Terrain.IMPASSABLE_TERRAIN, radius=1)
-    battle_map.place_circular_element(np.array([12, 14]), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([1, 9], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
+    battle_map.place_circular_element(np.array([12, 14], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
 
     # I'm trying to create a space where there's no danger zone
-    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([0, 1]))
-    battle_map.set_combatant_coordinates(test_assassin_rogue_3lvl, np.array([7, 4]))
-    battle_map.set_combatant_coordinates(test_orc, np.array([0, 2]))
-    battle_map.set_combatant_coordinates(test_orc2, np.array([1, 2]))
-    battle_map.set_combatant_coordinates(test_orc3, np.array([8, 5]))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([0, 1], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_assassin_rogue_3lvl, np.array([7, 4], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_orc, np.array([0, 2], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_orc2, np.array([1, 2], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_orc3, np.array([8, 5], dtype=np.int64))
 
     test_orc.curr_hp = 4
     test_orc2.curr_hp = 6

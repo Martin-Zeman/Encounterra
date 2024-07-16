@@ -18,8 +18,8 @@ class DraconicSorcerer4Lvl(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=30, ac=15, init_bonus=2, speed=30, spell_to_hit=6, resistances=set(), dc=14)
-        self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice=((1, 8),), dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice=((1, 8),), dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice=[(1, 8)], dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice=[(1, 8)], dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.firebolt = self.add_ability(Action.FIREBOLT)
         self.add_ability(Action.RAY_OF_FROST)
         self.danger_zone_attack = self.firebolt

@@ -1,16 +1,10 @@
-from functools import cache
-
-from cachetools import cached
-from cachetools.keys import hashkey
-
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache
 from ..spells.spell import SpellStats
 from ..misc import DamageType, Visibility
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_utils import _mean_dmg_auto_hit
+import numba_functions as nf
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from itertools import combinations_with_replacement
@@ -18,6 +12,7 @@ import logging
 from ..utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
+
 
 class MagicMissileFactory(DirectThreatFactory):
     level = 1
@@ -32,7 +27,7 @@ class MagicMissileFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # MAGIC_MISSILE, QUICKENED_MAGIC_MISSILE
-        self.dmg_dice = ((1, 4),)
+        self.dmg_dice = [(1, 4)]
         self.dmg_bonus = 1
         self.combatant = caster
         self.resource = resource
@@ -67,7 +62,7 @@ class MagicMissileFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= MagicMissileFactory.range:
-            ret = 3 * (_mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)
+            ret = 3 * (nf.mean_dmg_auto_hit(self.dmg_dice, target.is_resistant_to(MagicMissileFactory.dmg_type)) + self.dmg_bonus)
             return ret
         else:
             return 0
@@ -122,9 +117,9 @@ class MagicMissile(Actoid, DirectThreat):
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        dmg_acc = _mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
-        dmg_acc += _mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[1].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
-        dmg_acc += _mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[2].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
+        dmg_acc = nf.mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[0].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
+        dmg_acc += nf.mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[1].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
+        dmg_acc += nf.mean_dmg_auto_hit(self.factory.dmg_dice, self.targets[2].is_resistant_to(MagicMissileFactory.dmg_type)) + self.factory.dmg_bonus
         return dmg_acc
 
     def clear_cache(self):
@@ -141,27 +136,27 @@ class MagicMissile(Actoid, DirectThreat):
             return None  # Must be able to see
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_first = set(_get_free_coords_in_cartesian_range(
+            coords_for_first = set(nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.targets[0]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=MagicMissileFactory.range,
-                combatant_id=self.factory.combatant.id))
-            coords_for_second = set(_get_free_coords_in_cartesian_range(
+                self.factory.combatant.size.value,
+                MagicMissileFactory.range,
+                self.factory.combatant.id))
+            coords_for_second = set(nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.targets[1]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=MagicMissileFactory.range,
-                combatant_id=self.factory.combatant.id))
-            coords_for_third = set(_get_free_coords_in_cartesian_range(
+                self.factory.combatant.size.value,
+                MagicMissileFactory.range,
+                self.factory.combatant.id))
+            coords_for_third = set(nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.targets[2]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=MagicMissileFactory.range,
-                combatant_id=self.factory.combatant.id))
+                self.factory.combatant.size.value,
+                MagicMissileFactory.range,
+                self.factory.combatant.id))
             free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
 
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE

@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..battle_map import Map, map_position_toggled_cache, _get_cartesian_distance_coords, _get_free_coords_at_hop_range
+from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
 from ..effects.square_aoe import SquareAoe
 from ..spells.spell import SpellStats
@@ -11,7 +11,7 @@ from ..factory_interfaces import ThreatModifierFactory
 from ..misc import SavingThrow, Size, DamageType
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 import logging
-from ..threat_utils import _mean_dmg_dc_attack
+import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
 
@@ -32,7 +32,7 @@ class ThunderwaveFactory(ThreatModifierFactory):
         self.combatant = caster
         self.saving_throw = SavingThrow.CON
         self.resource = resource
-        self.dmg_dice = ((2, 8),)
+        self.dmg_dice = [(2, 8)]
 
     def __str__(self):
         """
@@ -54,15 +54,15 @@ class ThunderwaveFactory(ThreatModifierFactory):
         # Here there really is no need to iterate over all coords. Just find the best score
         coord = self.find_best_args(self.combatant)
         if coord is not None:
-            return [Thunderwave(np.array(coord, dtype=np.int32), self)]
+            return [Thunderwave(np.array(coord, dtype=np.int64), self)]
         return []
 
     def create(self, coord):
-        return Thunderwave(np.array(coord, dtype=np.int32), self)
+        return Thunderwave(np.array(coord, dtype=np.int64), self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         if Map.get().get_cartesian_distance_combatants(self.combatant, target) <= ThunderwaveFactory.range + SpellStats.TRANSLATE_BOX[ThunderwaveFactory.target]:
-            return min(target.curr_hp, _mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+            return min(target.curr_hp, nf.mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
                                                           target.saving_throws[self.saving_throw],
                                                           target.is_immune_to(ThunderwaveFactory.dmg_type),
                                                           target.is_resistant_to(ThunderwaveFactory.dmg_type)))
@@ -93,7 +93,7 @@ class Thunderwave(Actoid, DirectThreat, SquareAoe):
         affected = battle_map.get_combatants_affected_by_box_aoe(ThunderwaveFactory.target, self.coord)
         acc = 0
         for aff in affected:
-            avg_dmg = min(aff.curr_hp, _mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+            avg_dmg = min(aff.curr_hp, nf.mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
                                                            aff.saving_throws[self.factory.saving_throw],
                                                            aff.is_immune_to(ThunderwaveFactory.dmg_type),
                                                            aff.is_resistant_to(ThunderwaveFactory.dmg_type)))
@@ -113,13 +113,13 @@ class Thunderwave(Actoid, DirectThreat, SquareAoe):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return _get_free_coords_at_hop_range(
+            return nf.get_free_coords_at_hop_range(
                 battle_map.grid,
                 Coords(self.coord, Size.HUGE.value).get(),  # not actually combatant coords
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=ThunderwaveFactory.range, combatant_id=self.factory.combatant.id)
-        elif _get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= ThunderwaveFactory.range:
+                self.factory.combatant.size.value,
+                ThunderwaveFactory.range, self.factory.combatant.id)
+        elif nf.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= ThunderwaveFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None
 

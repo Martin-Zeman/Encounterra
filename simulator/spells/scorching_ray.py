@@ -1,19 +1,16 @@
-from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.spell import SpellStats
-from ..misc import DamageType, _avg_roll, Visibility
+from ..misc import DamageType, Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import cache
-from ..threat_utils import _mean_dmg
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from itertools import combinations_with_replacement
 import logging
+import numba_functions as nf
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
@@ -34,7 +31,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # SCORCHING_RAY, QUICKENED_SCORCHING_RAY
-        self.dmg_dice = ((2, 6),)
+        self.dmg_dice = [(2, 6)]
         self.combatant = caster
         self.resource = resource
 
@@ -69,7 +66,7 @@ class ScorchingRayFactory(DirectThreatFactory):
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ScorchingRayFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
-            return 3 * _mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
+            return 3 * nf.mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
                                 target.is_immune_to(ScorchingRayFactory.dmg_type),
                                 target.is_resistant_to(ScorchingRayFactory.dmg_type), ROLL_TYPE_CRIT_DELTA[roll_type])
         else:
@@ -83,15 +80,15 @@ class ScorchingRayFactory(DirectThreatFactory):
         mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, (0, 0))
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
-        to_hit_total = self.to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
+        to_hit_total = self.to_hit + mod_to_hit_flat + nf.avg_roll(mod_to_hit_die)
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
         # We assume the maximum threat in case where all three rays are aimed at the target
-        return 3 * (_mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
+        return 3 * (nf.mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
                              target.is_immune_to(ScorchingRayFactory.dmg_type),
                              target.is_resistant_to(ScorchingRayFactory.dmg_type), total_crit) -
-                    _mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+                    nf.mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
                              target.is_immune_to(ScorchingRayFactory.dmg_type),
                              target.is_resistant_to(ScorchingRayFactory.dmg_type), 1))
 
@@ -152,15 +149,15 @@ class ScorchingRay(Actoid, DirectThreat):
         crit_multiplier = ROLL_TYPE_CRIT_DELTA[roll_type]
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
             max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
-        dmg_acc = _mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, self.targets[0].is_immune_to(ScorchingRayFactory.dmg_type),
+        dmg_acc = nf.mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac, self.targets[0].is_immune_to(ScorchingRayFactory.dmg_type),
                             self.targets[0].is_resistant_to(ScorchingRayFactory.dmg_type), crit_multiplier)
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
             max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
-        dmg_acc += _mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, self.targets[1].is_immune_to(ScorchingRayFactory.dmg_type),
+        dmg_acc += nf.mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac, self.targets[1].is_immune_to(ScorchingRayFactory.dmg_type),
                             self.targets[1].is_resistant_to(ScorchingRayFactory.dmg_type), crit_multiplier)
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
             max(0, min(self.targets[2].ac - self.factory.to_hit, 20))]
-        dmg_acc += _mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, self.targets[2].is_immune_to(ScorchingRayFactory.dmg_type),
+        dmg_acc += nf.mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[2].ac, self.targets[2].is_immune_to(ScorchingRayFactory.dmg_type),
                             self.targets[2].is_resistant_to(ScorchingRayFactory.dmg_type), crit_multiplier)
         return dmg_acc
 
@@ -186,27 +183,27 @@ class ScorchingRay(Actoid, DirectThreat):
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING,
                                   Conditions.RESTRAINED):
-            coords_for_first = set(_get_free_coords_in_cartesian_range(
+            coords_for_first = set(nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.targets[0]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=ScorchingRayFactory.range,
-                combatant_id=self.factory.combatant.id))
-            coords_for_second = set(_get_free_coords_in_cartesian_range(
+                self.factory.combatant.size.value,
+                ScorchingRayFactory.range,
+                self.factory.combatant.id))
+            coords_for_second = set(nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.targets[1]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=ScorchingRayFactory.range,
-                combatant_id=self.factory.combatant.id))
-            coords_for_third = set(_get_free_coords_in_cartesian_range(
+                self.factory.combatant.size.value,
+                ScorchingRayFactory.range,
+                self.factory.combatant.id))
+            coords_for_third = set(nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.targets[2]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=ScorchingRayFactory.range,
-                combatant_id=self.factory.combatant.id))
+                self.factory.combatant.size.value,
+                ScorchingRayFactory.range,
+                self.factory.combatant.id))
             free_coords_in_range = coords_for_third.intersection(coords_for_first.intersection(coords_for_second))
 
             return [coord for coord in free_coords_in_range if

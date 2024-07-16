@@ -36,9 +36,9 @@ def test_independent_saves(battle_map, teams, effect_tracker, test_goblin, test_
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5]))
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([7, 5]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([7, 5], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
     test_goblin.saving_throws[SavingThrow.WIS] = -20  # Making sure it fails expect for nat 20
@@ -85,10 +85,10 @@ def test_limited_duration_effect_non_self_target(battle_map, teams, effect_track
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5]))
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 5]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 5]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([3, 6]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([3, 6], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
     test_goblin.saving_throws[SavingThrow.DEX] = -20  # Making sure it fails expect for nat 20
@@ -96,7 +96,7 @@ def test_limited_duration_effect_non_self_target(battle_map, teams, effect_track
     test_ogre.saving_throws[SavingThrow.DEX] = -20  # Making sure it fails expect for nat 20
 
     faerie_fire_factory = FaerieFireFactory(15, Action.FAERIE_FIRE, test_moon_druid, test_moon_druid.spellslots)
-    faerie_fire = faerie_fire_factory.create(np.array([3, 5]))
+    faerie_fire = faerie_fire_factory.create(np.array([3, 5], dtype=np.int64))
 
     try:
         action_resolver.resolve_action(faerie_fire, test_moon_druid)
@@ -127,8 +127,8 @@ def test_limited_duration_effect_self_target(battle_map, teams, effect_tracker, 
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([8, 5]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([8, 5], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -159,20 +159,20 @@ def test_spheric_aoe_effects(battle_map, teams, effect_tracker, test_draconic_so
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 5]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 5]))  # Fully insude
-    battle_map.set_combatant_coordinates(test_ogre, np.array([8, 6]))  # Fully inside
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([9, 5]))  # Fully inside
-    battle_map.set_combatant_coordinates(test_commoner, np.array([7, 9]))  # Outside
-    battle_map.set_combatant_coordinates(test_dire_wolf, np.array([5, 1]))  # Touching just with a corner
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 5], dtype=np.int64))  # Fully inside
+    battle_map.set_combatant_coordinates(test_ogre, np.array([8, 6], dtype=np.int64))  # Fully inside
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([9, 5], dtype=np.int64))  # Fully inside
+    battle_map.set_combatant_coordinates(test_commoner, np.array([7, 9], dtype=np.int64))  # Outside
+    battle_map.set_combatant_coordinates(test_dire_wolf, np.array([5, 1], dtype=np.int64))  # Touching just with a corner
 
     battle_map.build_adjacency_matrix()
 
     hunger_of_hadar_factory = HungerOfHadarFactory(15, Action.HUNGER_OF_HADAR, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
-    hunger_of_hadar = hunger_of_hadar_factory.create(np.array([8, 5]))
+    hunger_of_hadar = hunger_of_hadar_factory.create(np.array([8, 5], dtype=np.int64))
 
     spike_growth_factory = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
-    spike_growth = spike_growth_factory.create(np.array([8, 5]))
+    spike_growth = spike_growth_factory.create(np.array([8, 5], dtype=np.int64))
 
     try:
         action_resolver.resolve_action(hunger_of_hadar, test_draconic_sorcerer_5lvl)
@@ -207,8 +207,8 @@ def test_start_of_turn_digestion_effect(battle_map, teams, effect_tracker, test_
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.RED)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_giant_toad, np.array([3, 5]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 5]))
+    battle_map.set_combatant_coordinates(test_giant_toad, np.array([3, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 5], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
@@ -245,8 +245,8 @@ def test_start_of_turn_regeneration_effect(battle_map, teams, effect_tracker, te
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_vampire_spawn, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_vampire_spawn, np.array([3, 5]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([4, 5]))
+    battle_map.set_combatant_coordinates(test_vampire_spawn, np.array([3, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([4, 5], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 

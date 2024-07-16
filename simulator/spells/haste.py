@@ -1,19 +1,15 @@
-from cachetools import cached
-from cachetools.keys import hashkey
-
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..actions.action_types import BonusAction
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_utils import _mean_dmg
+import numba_functions as nf
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
-from functools import reduce, cache
+from functools import reduce
 from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligible_attacks, Visibility
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..utils.roll_types import ThreatModifierType
 import logging
 
@@ -84,7 +80,7 @@ class HasteFactory(ThreatModifierFactory):
             potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:
                 continue
-            dmg_acc = reduce(lambda acc, pt: acc + _mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, pt.is_immune_to(attack.dmg_type),
+            dmg_acc = reduce(lambda acc, pt: acc + nf.mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, pt.is_immune_to(attack.dmg_type),
                             pt.is_resistant_to(attack.dmg_type), attack.crit_range), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_attack_dmg = max(dmg_acc, max_attack_dmg)
@@ -168,12 +164,12 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
         if self.target is self.factory.combatant:
             return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         elif not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = _get_free_coords_in_cartesian_range(
+            free_coords_in_range = nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.target).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=HasteFactory.range)
+                self.factory.combatant.size.value,
+                HasteFactory.range, -1)
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HasteFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:

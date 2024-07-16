@@ -21,10 +21,10 @@ class Manticore(Combatant):
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=68, ac=14, init_bonus=3, spell_to_hit=0, speed=50, resistances=set(), dc=0)
         self.size = Size.LARGE
-        self.claw = self.add_ability(Action.MELEE_ATTACK,  name="Claw", combatant=self, to_hit=5, dmg_dice=((1, 6),), dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice=((1, 8),), dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
-        self.spike = self.add_ability(Action.RANGED_ATTACK,  name="Tail Spike", combatant=self, to_hit=5, dmg_dice=((1, 8),), dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=40, crit_range=1, ammo=Uses(20, ResourceRefreshType.LONG_REST))
-        self.add_ability(Reaction.REACTION_ATTACK, name="Bite", combatant=self, to_hit=5, dmg_dice=((1, 8),), dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.claw = self.add_ability(Action.MELEE_ATTACK,  name="Claw", combatant=self, to_hit=5, dmg_dice=[(1, 6)], dmg_bonus=3, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice=[(1, 8)], dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.spike = self.add_ability(Action.RANGED_ATTACK,  name="Tail Spike", combatant=self, to_hit=5, dmg_dice=[(1, 8)], dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=40, crit_range=1, ammo=Uses(20, ResourceRefreshType.LONG_REST))
+        self.add_ability(Reaction.REACTION_ATTACK, name="Bite", combatant=self, to_hit=5, dmg_dice=[(1, 8)], dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 3
         self.saving_throws[SavingThrow.DEX] = 3

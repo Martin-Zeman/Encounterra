@@ -28,7 +28,7 @@ def extract_movement(combatant, distances, shortest_paths, longest_pth):
         match = REGEX_MOVEMENT_PATTERN.search(action)
         if match:
             _, x, y = match.groups()
-            path = Map.get().get_path_to_coord(combatant,  np.array([int(x), int(y)]), distances, shortest_paths, True)
+            path = Map.get().get_path_to_coord(combatant,  np.array([int(x), int(y)], dtype=np.int64), distances, shortest_paths, True)
             movement_generator = MovementGenerator(combatant, path, Movement.STANDARD).get_generator()
             actions.extend(list(movement_generator))  # Unpack the movement generator
             break

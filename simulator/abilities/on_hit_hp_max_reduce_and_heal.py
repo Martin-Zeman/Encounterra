@@ -1,5 +1,5 @@
+import numba_functions as nf
 from ..abilities.on_hit_effect import OnHit
-from ..misc import _avg_roll_multi, _roll_dice_multi
 import logging
 
 from ..threat_utils import MAX_HP_MODIFIER_MULTIPLIER
@@ -15,7 +15,7 @@ class OnHitHpMaxReduceAndHeal(OnHit):
         self.name = name
 
     def hit(self, attacker, attack, target, multiplier, dmg_so_far):
-        dmg = _roll_dice_multi(self.dmg_dice)
+        dmg = nf.roll_dice_multi(self.dmg_dice)
         dmg *= multiplier
         target.max_hp_modifier -= dmg
         attacker.heal(dmg)
@@ -23,5 +23,5 @@ class OnHitHpMaxReduceAndHeal(OnHit):
         return [dmg, self.dmg_type]
 
     def calculate_threat(self, attacker, target, **kwargs):
-        avg_dmg_roll = _avg_roll_multi(self.dmg_dice)
+        avg_dmg_roll = nf.avg_roll_multi(self.dmg_dice)
         return (avg_dmg_roll + 0.05 * self.crit_range * avg_dmg_roll) * 2 * MAX_HP_MODIFIER_MULTIPLIER

@@ -14,18 +14,6 @@ class StateMachineTemplate(Machine):
         Machine.__init__(self, states=states, initial='0', ignore_invalid_triggers=True, auto_transitions=False)
         self.last_added_state = '-1'
         self.forward_transitions = dict()
-        # self.state_to_index = nb.typed.Dict.empty(key_type=nb.types.unicode_type, value_type=nb.types.int32)
-        # self.index_to_state = nb.typed.Dict.empty(key_type=nb.types.int32, value_type=nb.types.unicode_type)
-        # self.transition_to_index = nb.typed.Dict.empty(key_type=nb.types.unicode_type, value_type=nb.types.int32)
-        # self.index_to_transition = nb.typed.Dict.empty(key_type=nb.types.int32, value_type=nb.types.unicode_type)
-        # self.state_to_index['0'] = 0
-        # self.state_to_index['nop'] = 1
-        # self.index_to_state[0] = '0'
-        # self.index_to_state[1] = 'nop'
-        # self.dag_forward = None
-        # self.num_states = 2
-        # self.max_transitions = 0
-
         self.state_to_index = {'0': 0, 'nop': 1}
         self.index_to_state = {0: '0', 1: 'nop'}
         self.transition_to_index = {}

@@ -1,15 +1,12 @@
-from cachetools import cached
 from cachetools.keys import hashkey
 
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.firebolt import FireboltFactory
 from ..spells.spell import SpellStats
-from ..misc import DamageType, _avg_roll, Visibility
+from ..misc import DamageType, Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import cache
-from ..threat_utils import _mean_dmg
+import numba_functions as nf
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from itertools import combinations
@@ -34,7 +31,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
-        self.dmg_dice = (FireboltFactory.get_dmg_dice(caster.level), )
+        self.dmg_dice = [FireboltFactory.get_dmg_dice(caster.level)]
         self.combatant = caster
         self.resource = resource
 
@@ -66,7 +63,7 @@ class TwinnedFireboltFactory(DirectThreatFactory):
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
             # Cannot target the same combatant twice
-            return _mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
+            return nf.mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
                             target.is_immune_to(TwinnedFireboltFactory.dmg_type),
                             target.is_resistant_to(TwinnedFireboltFactory.dmg_type), ROLL_TYPE_CRIT_DELTA[roll_type])
         else:
@@ -82,14 +79,14 @@ class TwinnedFireboltFactory(DirectThreatFactory):
         mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, (0, 0))
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
-        to_hit_total = self.to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
+        to_hit_total = self.to_hit + mod_to_hit_flat + nf.avg_roll(mod_to_hit_die)
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
-        return (_mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
+        return (nf.mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
                         target.is_immune_to(TwinnedFireboltFactory.dmg_type),
                         target.is_resistant_to(TwinnedFireboltFactory.dmg_type), total_crit) -
-                _mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+                nf.mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
                          target.is_immune_to(TwinnedFireboltFactory.dmg_type),
                          target.is_resistant_to(TwinnedFireboltFactory.dmg_type), 1))
 
@@ -121,13 +118,13 @@ class TwinnedFirebolt(Actoid, DirectThreat):
     def calculate_threat(self, **kwargs):
         roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[0].ac - self.factory.to_hit, 20))]
-        dmg_acc = _mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac,
+        dmg_acc = nf.mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[0].ac,
                            self.targets[0].is_immune_to(TwinnedFireboltFactory.dmg_type),
                            self.targets[0].is_resistant_to(TwinnedFireboltFactory.dmg_type),
                            ROLL_TYPE_CRIT_DELTA[roll_type])
         if self.targets[1] is not None:
             to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.targets[1].ac - self.factory.to_hit, 20))]
-            dmg_acc += _mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac,
+            dmg_acc += nf.mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.targets[1].ac,
                                 self.targets[1].is_immune_to(TwinnedFireboltFactory.dmg_type),
                                 self.targets[1].is_resistant_to(TwinnedFireboltFactory.dmg_type),
                                 ROLL_TYPE_CRIT_DELTA[roll_type])
@@ -151,20 +148,20 @@ class TwinnedFirebolt(Actoid, DirectThreat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_fist = set(_get_free_coords_in_cartesian_range(
+            coords_for_fist = set(nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.targets[0]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=TwinnedFireboltFactory.range,
-                combatant_id=self.factory.combatant.id))
-            coords_for_second = set(_get_free_coords_in_cartesian_range(
+                self.factory.combatant.size.value,
+                TwinnedFireboltFactory.range,
+                self.factory.combatant.id))
+            coords_for_second = set(nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.targets[1]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=TwinnedFireboltFactory.range,
-                combatant_id=self.factory.combatant.id))
+                self.factory.combatant.size.value,
+                TwinnedFireboltFactory.range,
+                self.factory.combatant.id))
             free_coords_in_range = coords_for_fist.intersection(coords_for_second)
 
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE

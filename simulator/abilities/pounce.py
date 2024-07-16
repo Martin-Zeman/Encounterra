@@ -3,14 +3,13 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_hop_range, _reconstruct_from_shortest_path
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..conditions import Conditions, is_affected_by_any, get_swallower
-from ..misc import _is_path_straight
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from ..threat_utils import get_saving_throw_success_prob
 import logging
+import numba_functions as nf
 
 
 logger = logging.getLogger("Encounterra")
@@ -87,24 +86,24 @@ class Pounce(Actoid, DirectThreat):
 
     def is_straight_line_path(self, start_coord, end_coord, shortest_paths):
         # Calculate the distance using Dijkstra's algorithm results
-        path = _reconstruct_from_shortest_path(shortest_paths, start_coord.get()[0], np.array(end_coord, dtype=np.int64))
+        path = nf.reconstruct_from_shortest_path(shortest_paths, start_coord.get()[0], np.array(end_coord, dtype=np.int64))
         if path.shape[0] == 0:
             return False
         # Check if the path is straight and at least 4 squares long
-        return _is_path_straight(path, self.factory.distance)
+        return nf.is_path_straight(path, self.factory.distance)
 
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            all_coords = _get_free_coords_in_hop_range(
+            all_coords = nf.get_free_coords_in_hop_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.target).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=1,
-                combatant_id=self.factory.combatant.id)
+                self.factory.combatant.size.value,
+                1,
+                self.factory.combatant.id)
             eligible_coords = []
             for coord in all_coords:
                 if self.is_straight_line_path(battle_map.get_combatant_position(self.factory.combatant), coord, shortest_paths):

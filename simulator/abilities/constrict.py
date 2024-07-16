@@ -1,15 +1,13 @@
-from functools import cache
-
-from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, _get_free_coords_in_hop_range
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
+import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
 
@@ -94,13 +92,13 @@ class Constrict(Actoid, DirectThreat):
         battle_map = Map.get()
         target = self.target.get_current_form()  # Takes care of possible wildshape
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return _get_free_coords_in_hop_range(
+            return nf.get_free_coords_in_hop_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(target).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=1,
-                combatant_id=self.factory.combatant.id)
+                self.factory.combatant.size.value,
+                1,
+                self.factory.combatant.id)
         elif battle_map.are_in_hop_range(self.factory.combatant, target, self.factory.attack_factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

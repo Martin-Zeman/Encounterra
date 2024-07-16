@@ -1,7 +1,7 @@
 from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, _get_free_coords_in_hop_range
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.spell import SpellStats
 from ..misc import Visibility, Class, get_missing_hp
 from ..conditions import Conditions, is_affected_by_any, get_swallower
@@ -9,6 +9,7 @@ from ..actions.actoid import Actoid
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
+import numba_functions as nf
 from ..utils.roll_types import ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
@@ -118,7 +119,7 @@ class LayOnHands(Actoid, DirectThreat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = _get_free_coords_in_hop_range(
+            free_coords_in_range = nf.get_free_coords_in_hop_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.target).get(),
                 distances,

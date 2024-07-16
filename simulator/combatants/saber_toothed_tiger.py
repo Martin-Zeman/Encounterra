@@ -20,11 +20,11 @@ class SaberToothedTiger(Combatant):
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=52, ac=12, init_bonus=2, spell_to_hit=0, speed=40, resistances=set(), dc=0)
         self.size = Size.LARGE
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice=((1, 10),), dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
-        self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice=((2, 6),), dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.pounce_claws = self.add_ability(Action.MELEE_ATTACK,  name="PounceClaws", combatant=self, to_hit=5, dmg_dice=((2, 6),), dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, on_hit=[OnHitProne(SavingThrow.STR, 14)], suppress=True)
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=6, dmg_dice=[(1, 10)], dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice=[(2, 6)], dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.pounce_claws = self.add_ability(Action.MELEE_ATTACK,  name="PounceClaws", combatant=self, to_hit=5, dmg_dice=[(2, 6)], dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1, on_hit=[OnHitProne(SavingThrow.STR, 14)], suppress=True)
         self.pounce = self.add_ability(Action.POUNCE, combatant=self, primary_attack=self.pounce_claws, secondary_attack=self.bite, distance=4)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice=((2, 6),), dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=5, dmg_dice=[(2, 6)], dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 4
         self.saving_throws[SavingThrow.DEX] = 2

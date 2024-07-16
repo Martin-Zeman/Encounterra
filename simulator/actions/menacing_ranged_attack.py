@@ -9,7 +9,7 @@ from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import SavingThrow, get_superiority_dice
 from ..conditions import Conditions, apply_condition, Condition, remove_condition, \
-    get_source_of_frightened, is_affected_by_any
+    is_affected_by_any
 from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import get_saving_throw_fail_prob, calculate_threat_out_delta
 from ..utils.roll_types import RollType, ThreatModifierType
@@ -21,7 +21,8 @@ logger = logging.getLogger("Encounterra")
 class MenacingRangedAttackFactory(RangedAttackFactory):
 
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=None, extra_dmg=None, uses_dex=True, to_hit_bonus_die=None, **kwargs):
-        dmg_dice = dmg_dice + (get_superiority_dice(combatant.level), )
+        dmg_dice = dmg_dice.copy()
+        dmg_dice.append(get_superiority_dice(combatant.level))
         name = "Menacing " + name
         on_hit.append(OnHitSavingThrowEffect(SavingThrow.WIS, combatant.dc, "Frightened by Menacing Attack"))
         if isinstance(action_type, Action):

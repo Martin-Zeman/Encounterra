@@ -20,9 +20,9 @@ class NeedleBlight(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=11, ac=12, init_bonus=1, spell_to_hit=0, speed=30, resistances=set(), dc=0)
-        self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=3, dmg_dice=((2, 4),), dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
-        self.needles = self.add_ability(Action.RANGED_ATTACK, name="Needles", combatant=self, to_hit=4, dmg_dice=((2, 6),), dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=12, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER))
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=3, dmg_dice=((2, 4),), dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.claws = self.add_ability(Action.MELEE_ATTACK,  name="Claws", combatant=self, to_hit=3, dmg_dice=[(2, 4)], dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
+        self.needles = self.add_ability(Action.RANGED_ATTACK, name="Needles", combatant=self, to_hit=4, dmg_dice=[(2, 6)], dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=12, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER))
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Claws", combatant=self, to_hit=3, dmg_dice=[(2, 4)], dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1)
         self.add_ability(Passive.BLINDSIGHT)
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 1

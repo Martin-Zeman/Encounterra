@@ -1,8 +1,8 @@
 from abc import abstractmethod
 
-from ..battle_map import Map, _get_hop_distance_coords
+from ..battle_map import Map
 from ..effects.effect import Effect
-
+import numba_functions as nf
 
 class AoeEffect(Effect):
 
@@ -33,4 +33,4 @@ class AoeEffect(Effect):
     def is_affecting(self, combatant):
         battle_map = Map.get()
         coords = self.get_affected_coords()
-        return _get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
+        return nf.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0

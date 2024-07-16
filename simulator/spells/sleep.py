@@ -6,14 +6,13 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction, Action, Passive
 from ..actions.shake_ally_awake import ShakeAllyAwakeFactory
-from ..battle_map import Map, map_position_toggled_cache, _get_free_coords_in_cartesian_range, \
-    _get_cartesian_distance_coords
+from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import _roll_dice, ROUND_HORIZON, _avg_roll
+from ..misc import ROUND_HORIZON
 from ..conditions import Conditions, Condition, is_affected_by_any, get_swallower, apply_condition, \
     remove_condition
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
@@ -21,6 +20,7 @@ from ..threat_utils import calculate_threat_in_delta
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
+import numba_functions as nf
 
 from ..utils.roll_types import ThreatModifierType, RollType
 
@@ -36,7 +36,7 @@ class SleepFactory(DirectThreatFactory):
     type = SpellStats.Type.HARMFUL
     dmg_type = None
 
-    mean_sleep_hp = _avg_roll((5, 8))
+    mean_sleep_hp = nf.avg_roll((5, 8))
     max_sleep_hp = 40
 
     def __init__(self, action_type, caster, resource):
@@ -126,7 +126,7 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
         affected.sort(key=lambda cmbt: cmbt.curr_hp)
         put_to_sleep = []
         hp_acc = 0
-        total_hp_affected = _roll_dice((5, 8))
+        total_hp_affected = nf.roll_dice((5, 8))
         for combatant in affected:
             if combatant.has_passive(Passive.CHARM_IMMUNITY):
                 continue
@@ -210,13 +210,13 @@ class Sleep(Actoid, LimitedDurationEffect, CombatantEffect, DirectThreat):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return _get_free_coords_in_cartesian_range(
+            return nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 Coords(self.origin).get(),  # not actually combatant coords
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=SleepFactory.range,
-                combatant_id=self.factory.combatant.id)
-        elif _get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= SleepFactory.range:
+                self.factory.combatant.size.value,
+                SleepFactory.range,
+                self.factory.combatant.id)
+        elif nf.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= SleepFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

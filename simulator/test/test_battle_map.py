@@ -1,14 +1,10 @@
 import copy
-import logging
-import time
 
 import pytest
 
 from simulator.actions.action_types import Passive, Action
-from simulator.battle_map import Terrain, Coords, _get_hop_distance_coords, _get_cartesian_distance_coords, \
-    _get_free_coords_in_cartesian_range, _get_free_coords_in_hop_range, _get_free_coords_at_hop_range
+from simulator.battle_map import Terrain, Coords
 from simulator.combatants.goblin import Goblin
-from simulator.logging.custom_logger import CustomLogger
 from simulator.misc import DistanceMetric, Size, Side, Visibility
 from simulator.conditions import Conditions, Condition, apply_condition, remove_condition
 from simulator.spells.fireball import FireballFactory
@@ -19,6 +15,7 @@ from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, te
     teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, \
     test_sabertoother_tiger, test_evil_mage, test_battle_master_fighter_lvl_5, test_giant_toad, test_green_dragon_wyrmling
 import numpy as np
+import numba_functions as nf
 
 from simulator.utils.roll_types import ThreatModifierType
 
@@ -28,19 +25,19 @@ def test_as_if_combatant_position(teams, battle_map, test_draconic_sorcerer_5lvl
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
 
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7], dtype=np.int64))
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
 
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5
     battle_map.clear_caches()
-    with battle_map.as_if_combatant_position(test_draconic_sorcerer_5lvl, np.array([9, 7])):
+    with battle_map.as_if_combatant_position(test_draconic_sorcerer_5lvl, np.array([9, 7], dtype=np.int64)):
         assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 1
     battle_map.clear_caches()
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5
     battle_map.clear_caches()
-    with battle_map.as_if_combatant_position(test_draconic_sorcerer_5lvl, np.array([0, 7])):
+    with battle_map.as_if_combatant_position(test_draconic_sorcerer_5lvl, np.array([0, 7], dtype=np.int64)):
         assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 10
     battle_map.clear_caches()
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5
@@ -48,17 +45,17 @@ def test_as_if_combatant_position(teams, battle_map, test_draconic_sorcerer_5lvl
 
 def test_get_hop_distance_overlapping_medium_large(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
     with pytest.raises(ValueError):
-        battle_map.set_combatant_coordinates(test_goblin, np.array([6, 8]))
+        battle_map.set_combatant_coordinates(test_goblin, np.array([6, 8], dtype=np.int64))
 
 
 def test_get_hop_distance_overlapping_large_huge(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.HUGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
     with pytest.raises(ValueError):
-        battle_map.set_combatant_coordinates(test_goblin, np.array([7, 8]))
+        battle_map.set_combatant_coordinates(test_goblin, np.array([7, 8], dtype=np.int64))
 
 
 # def test_as_if_dist_from_combatant(teams, battle_map, test_draconic_sorcerer_5lvl, test_goblin):
@@ -67,9 +64,9 @@ def test_get_hop_distance_overlapping_large_huge(battle_map, test_draconic_sorce
 #     test_goblin2 = Goblin("Goblin (2)")
 #     teams.add_combatant_to_team(test_goblin2, Teams.Color.RED)
 #
-#     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-#     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7]))
-#     battle_map.set_combatant_coordinates(test_goblin2, np.array([4, 7]))
+#     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+#     battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7], dtype=np.int64))
+#     battle_map.set_combatant_coordinates(test_goblin2, np.array([4, 7], dtype=np.int64))
 #     # establish baseline
 #     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5
 #     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
@@ -89,7 +86,7 @@ def test_get_hop_distance_overlapping_large_huge(battle_map, test_draconic_sorce
 #     assert battle_map.get_hop_distance(test_draconic_sorcerer_5lvl, test_goblin2) == 1
 #
 #     # Now let's also test cartesian distance
-#     battle_map.set_combatant_coordinates(test_goblin, np.array([6, 8]))
+#     battle_map.set_combatant_coordinates(test_goblin, np.array([6, 8], dtype=np.int64))
 #     assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin) == pytest.approx(1.41, 0.01)
 #     with battle_map.as_if_dist_from_combatant(test_draconic_sorcerer_5lvl, test_goblin, 5.5, dist_type=DistanceMetric.CARTESIAN):
 #         assert battle_map.get_cartesian_distance(test_draconic_sorcerer_5lvl, test_goblin) == 5.5
@@ -103,9 +100,9 @@ def test_as_if_dist_delta_from_combatant(teams, battle_map, test_draconic_sorcer
     test_goblin2 = Goblin("Goblin (2)")
     teams.add_combatant_to_team(test_goblin2, Teams.Color.RED)
 
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7]))
-    battle_map.set_combatant_coordinates(test_goblin2, np.array([4, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin2, np.array([4, 7], dtype=np.int64))
     # establish baseline
     assert battle_map.get_hop_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5
     assert battle_map.get_hop_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin2) == 1
@@ -140,59 +137,59 @@ def test_hop_distance_diagonal(battle_map, test_draconic_sorcerer_5lvl, test_gob
     # Two large combatants
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([4, 4]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([4, 4], dtype=np.int64))
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_hop_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 3, "Incorrect distance between two large combatants"
     battle_map.clear_caches()
-    assert _get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 3, "Incorrect distance between two large combatants"
+    assert nf.get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 3, "Incorrect distance between two large combatants"
 
 
 def test_hop_distance_same_y(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 0]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 0], dtype=np.int64))
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_hop_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5, "Incorrect distance between two large combatants"
-    assert _get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 5, "Incorrect distance between two large combatants"
+    assert nf.get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 5, "Incorrect distance between two large combatants"
 
 
 def test_hop_distance_same_x(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 4]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 4], dtype=np.int64))
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_hop_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 3, "Incorrect distance between two large combatants"
-    assert _get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 3, "Incorrect distance between two large combatants"
+    assert nf.get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 3, "Incorrect distance between two large combatants"
 
 
 def test_hop_distance_random(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_hop_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 4, "Incorrect distance between two large combatants"
-    assert _get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 4, "Incorrect distance between two large combatants"
+    assert nf.get_hop_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 4, "Incorrect distance between two large combatants"
 
 
 def test_are_in_hop_range_medium_medium(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
     assert battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 5)
     assert not battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 4)
     assert battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 6)
 
 def test_are_in_hop_range_medium_large(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
     assert battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 4)
     assert not battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 3)
     assert battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 5)
@@ -201,8 +198,8 @@ def test_are_in_hop_range_medium_large(battle_map, test_draconic_sorcerer_5lvl, 
 def test_are_in_hop_range_medium_large(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
     assert battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 4)
     assert not battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 3)
     assert battle_map.are_in_hop_range(test_draconic_sorcerer_5lvl, test_goblin, 5)
@@ -211,34 +208,34 @@ def test_cartesian_distance_diagonal(battle_map, test_draconic_sorcerer_5lvl, te
     # Two large combatants
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([4, 4]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([4, 4], dtype=np.int64))
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
-    assert _get_cartesian_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
+    assert nf.get_cartesian_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == pytest.approx(4.242, 0.001), "Incorrect distance between two large combatants"
 
 
 def test_cartesian_distance_same_y(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 0]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 0], dtype=np.int64))
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 5, "Incorrect distance between two large combatants"
-    assert _get_cartesian_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 5, "Incorrect distance between two large combatants"
+    assert nf.get_cartesian_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 5, "Incorrect distance between two large combatants"
 
 
 def test_cartesian_distance_same_x(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 4]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([0, 4], dtype=np.int64))
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == 3, "Incorrect distance between two large combatants"
-    assert _get_cartesian_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 3, "Incorrect distance between two large combatants"
+    assert nf.get_cartesian_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == 3, "Incorrect distance between two large combatants"
 
 
 def test_cartesian_distance_random(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin):
@@ -246,19 +243,19 @@ def test_cartesian_distance_random(battle_map, teams, test_draconic_sorcerer_5lv
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
     test_draconic_sorcerer_5lvl_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     test_goblin_coords = battle_map.get_combatant_position(test_goblin)
     assert battle_map.get_cartesian_distance_combatants(test_draconic_sorcerer_5lvl, test_goblin) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
-    assert _get_cartesian_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
+    assert nf.get_cartesian_distance_coords(test_draconic_sorcerer_5lvl_coords.get(), test_goblin_coords.get()) == pytest.approx(4.4721, 0.001), "Incorrect distance between two large combatants"
 
 
 def test_build_combatant_adjacency_mask_medium(battle_map, teams, test_draconic_sorcerer_5lvl):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 12]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 12], dtype=np.int64))
 
-    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 13], dtype=np.int64),  Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(test_draconic_sorcerer_5lvl)
 
     # Check that the obstacle's not inflated for medium size
@@ -276,24 +273,24 @@ def test_build_combatant_adjacency_mask_medium(battle_map, teams, test_draconic_
 def test_build_combatant_adjacency_mask_medium_frightened(battle_map, teams, test_draconic_sorcerer_5lvl, test_battle_master_fighter_lvl_3):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_battle_master_fighter_lvl_3, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 12]))
-    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([11, 1]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_battle_master_fighter_lvl_3, np.array([11, 1], dtype=np.int64))
 
-    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 13], dtype=np.int64),  Terrain.IMPASSABLE_TERRAIN, radius=0)
     apply_condition(test_draconic_sorcerer_5lvl, Condition(Conditions.FRIGHTENED, test_battle_master_fighter_lvl_3))
     adj_mask = battle_map.build_combatant_adjacency_mask(test_draconic_sorcerer_5lvl)
 
     # Get the initial hop distance between the sorcerer and the battle master
-    sorcerer_pos = np.array([5, 12])
-    battle_master_pos = np.array([11, 1])
-    initial_distance = _get_hop_distance_coords(sorcerer_pos.reshape(1, 2), battle_master_pos.reshape(1, 2))
+    sorcerer_pos = np.array([5, 12], dtype=np.int64)
+    battle_master_pos = np.array([11, 1], dtype=np.int64)
+    initial_distance = nf.get_hop_distance_coords(sorcerer_pos.reshape(1, 2), battle_master_pos.reshape(1, 2))
 
     # Iterate through the adjacency mask to check for impassable moves towards the battle master
     N = battle_map.size
     for x in range(N):
         for y in range(N):
             current_pos = np.array([x, y])
-            hop_distance_to_enemy = _get_hop_distance_coords(current_pos.reshape(1, 2),
+            hop_distance_to_enemy = nf.get_hop_distance_coords(current_pos.reshape(1, 2),
                                                                        battle_master_pos.reshape(1, 2))
             index = x * N + y
             if hop_distance_to_enemy < initial_distance:
@@ -308,9 +305,9 @@ def test_build_combatant_adjacency_mask_medium_frightened(battle_map, teams, tes
 def test_build_combatant_adjacency_mask_large(battle_map, teams, test_draconic_sorcerer_5lvl):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 12]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 12], dtype=np.int64))
 
-    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 13], dtype=np.int64),  Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(test_draconic_sorcerer_5lvl)
 
     # Check the inflation of the obstacle
@@ -320,7 +317,7 @@ def test_build_combatant_adjacency_mask_large(battle_map, teams, test_draconic_s
     assert not np.any(adj_mask[:, 9 * battle_map.size + 13])
 
     # Test a corner case where the obstacle has nowhere to inflate to
-    battle_map.place_circular_element(np.array([0, 0]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([0, 0], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(test_draconic_sorcerer_5lvl)
     assert not np.any(adj_mask[:, 0])
     # the other side's intact
@@ -332,9 +329,9 @@ def test_build_combatant_adjacency_mask_large(battle_map, teams, test_draconic_s
 def test_build_combatant_adjacency_mask_huge(battle_map, teams, test_draconic_sorcerer_5lvl):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     test_draconic_sorcerer_5lvl.size = Size.HUGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([4, 11]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([4, 11], dtype=np.int64))
 
-    battle_map.place_circular_element(np.array([9, 13]),  Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([9, 13], dtype=np.int64),  Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(test_draconic_sorcerer_5lvl)
 
     # Check the inflation of the obstacle
@@ -349,7 +346,7 @@ def test_build_combatant_adjacency_mask_huge(battle_map, teams, test_draconic_so
     assert not np.any(adj_mask[:, 9 * battle_map.size + 13])
 
     # Test a corner case where the obstacle has nowhere to inflate to
-    battle_map.place_circular_element(np.array([0, 0]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([0, 0], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj_mask = battle_map.build_combatant_adjacency_mask(test_draconic_sorcerer_5lvl)
     assert not np.any(adj_mask[:, 0])
     # the other side's intact
@@ -362,9 +359,9 @@ def test_get_pam_eligible_combatants_medium_medium(battle_map, test_draconic_sor
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     test_draconic_sorcerer_5lvl.add_ability(Passive.POLEARM_MASTER)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 7]))
-    eligible_combatants = battle_map.get_pam_eligible_combatants(test_goblin, np.array([-1, 0]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 7], dtype=np.int64))
+    eligible_combatants = battle_map.get_pam_eligible_combatants(test_goblin, np.array([-1, 0], dtype=np.int64))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is test_draconic_sorcerer_5lvl
 
@@ -374,10 +371,10 @@ def test_get_pam_eligible_combatants_medium_large(battle_map, test_draconic_sorc
     test_goblin.size = Size.LARGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 7], dtype=np.int64))
     # we're moving the large one from the attack range of the medium one
-    eligible_combatants = battle_map.get_pam_eligible_combatants(test_goblin, np.array([-1, 0]))
+    eligible_combatants = battle_map.get_pam_eligible_combatants(test_goblin, np.array([-1, 0], dtype=np.int64))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is test_draconic_sorcerer_5lvl
 
@@ -387,10 +384,10 @@ def test_get_pam_eligible_combatants_large_medium(battle_map, test_draconic_sorc
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 7], dtype=np.int64))
     # we're moving the medium one from the attack range of the large one
-    eligible_combatants = battle_map.get_pam_eligible_combatants(test_goblin, np.array([-1, 0]))
+    eligible_combatants = battle_map.get_pam_eligible_combatants(test_goblin, np.array([-1, 0], dtype=np.int64))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is test_draconic_sorcerer_5lvl
 
@@ -401,10 +398,10 @@ def test_get_pam_eligible_combatants_large_large(battle_map, test_draconic_sorce
     test_goblin.size = Size.LARGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 7], dtype=np.int64))
     # we're moving the large one from the attack range of the other large one
-    eligible_combatants = battle_map.get_pam_eligible_combatants(test_goblin, np.array([-1, 0]))
+    eligible_combatants = battle_map.get_pam_eligible_combatants(test_goblin, np.array([-1, 0], dtype=np.int64))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is test_draconic_sorcerer_5lvl
 
@@ -413,10 +410,10 @@ def test_get_aoo_eligible_combatants_medium_medium_medium(battle_map, test_draco
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 7]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 6]))
-    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_goblin, np.array([1, 0]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 6], dtype=np.int64))
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_goblin, np.array([1, 0], dtype=np.int64))
     assert len(eligible_combatants) == 2
     assert set(eligible_combatants) == {test_draconic_sorcerer_5lvl, test_bugbear}
 
@@ -426,11 +423,11 @@ def test_get_aoo_eligible_combatants_medium_large_medium(battle_map, test_dracon
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 7]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 8], dtype=np.int64))
     # we're moving the large one from the attack range of the medium one
-    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_goblin, np.array([1, 0]))
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_goblin, np.array([1, 0], dtype=np.int64))
     assert len(eligible_combatants) == 2
     assert set(eligible_combatants) == {test_draconic_sorcerer_5lvl, test_bugbear}
 
@@ -440,14 +437,14 @@ def test_get_aoo_eligible_combatants_large_medium_medium(battle_map, test_dracon
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 7]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([7, 9]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([7, 9], dtype=np.int64))
     # we're moving the medium one from the attack range of the large one
-    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_goblin, np.array([1, 0]))
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_goblin, np.array([1, 0], dtype=np.int64))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is test_draconic_sorcerer_5lvl
-    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_bugbear, np.array([1, 1]))
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_bugbear, np.array([1, 1], dtype=np.int64))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is test_draconic_sorcerer_5lvl
 
@@ -457,124 +454,124 @@ def test_get_aoo_eligible_combatants_large_large(battle_map, test_draconic_sorce
     test_goblin.size = Size.LARGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 9]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 9], dtype=np.int64))
     # we're moving the large one from the attack range of the other large one
-    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_goblin, np.array([1, 1]))
+    eligible_combatants = battle_map.get_aoo_eligible_combatants(test_goblin, np.array([1, 1], dtype=np.int64))
     assert len(eligible_combatants) == 1
     assert eligible_combatants[0] is test_draconic_sorcerer_5lvl
 
 
 def test_get_free_coords_in_hop_range_medium(battle_map, test_draconic_sorcerer_5lvl):
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    adj = _get_free_coords_in_hop_range(battle_map.grid, coords.get())
+    adj = nf.get_free_coords_in_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     assert set(adj) == {(4, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (5, 6), (6, 6)}
     # same but including the combatant's own coord
-    adj = _get_free_coords_in_hop_range(battle_map.grid, coords.get(), combatant_id=test_draconic_sorcerer_5lvl.id)
+    adj = nf.get_free_coords_in_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, test_draconic_sorcerer_5lvl.id)
     assert set(adj) == {(4, 7), (5, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (5, 6), (6, 6)}
 
 
 def test_get_free_coords_in_hop_range_large(battle_map, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    adj = _get_free_coords_in_hop_range(battle_map.grid, coords.get())
+    adj = nf.get_free_coords_in_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     assert set(adj) == {(4, 6), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
     # same but including the combatant's own coord
-    adj = _get_free_coords_in_hop_range(battle_map.grid, coords.get(), combatant_id=test_draconic_sorcerer_5lvl.id)
+    adj = nf.get_free_coords_in_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, test_draconic_sorcerer_5lvl.id)
     assert set(adj) == {(4, 6), (5, 7), (6, 7), (5, 8), (6, 8), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
 
 
 def test_get_free_coords_in_hop_range_large_corner(battle_map, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    adj = _get_free_coords_in_hop_range(battle_map.grid, coords.get())
+    adj = nf.get_free_coords_in_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     assert set(adj) == {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (0, 3), (1, 3), (2, 3)}
 
 
 def test_get_free_coords_in_hop_range_huge_with_terrain(battle_map, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.HUGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 2]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 2], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    adj = _get_free_coords_in_hop_range(battle_map.grid, coords.get())
+    battle_map.place_circular_element(np.array([7, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    adj = nf.get_free_coords_in_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     assert set(adj) == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4), (11, 5)}
     # same but including the combatant's own coord
-    adj = _get_free_coords_in_hop_range(battle_map.grid, coords.get(), combatant_id=test_draconic_sorcerer_5lvl.id)
+    adj = nf.get_free_coords_in_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, test_draconic_sorcerer_5lvl.id)
     assert set(adj) == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (8, 2), (9, 2), (10, 2), (8, 3), (9, 3), (10, 3),
                    (8, 4), (9, 4), (10, 4), (8, 5), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3),
                    (11, 4), (11, 5)}
 
 
 def test_get_free_coords_at_hop_range_medium(battle_map, test_draconic_sorcerer_5lvl):
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    adj = _get_free_coords_at_hop_range(battle_map.grid, coords.get(), rng=1)
+    adj = nf.get_free_coords_at_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     # Expected coordinates exactly at range 1 from the original position
     assert set(adj) == {(4, 6), (5, 6), (6, 6), (4, 7), (6, 7), (4, 8), (5, 8), (6, 8)}
 
 
 def test_get_free_coords_at_hop_range_1_large(battle_map, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    adj = _get_free_coords_at_hop_range(battle_map.grid, coords.get(), rng=1)
+    adj = nf.get_free_coords_at_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     # Assuming the size of the combatant alters the calculation for exact range, with an adjusted example expectation
     assert set(adj) == {(4, 6), (5, 6), (6, 6), (7, 6), (4, 7), (7, 7), (4, 8), (7, 8), (4, 9), (5, 9), (6, 9), (7, 9)}
 
 
 def test_get_free_coords_at_hop_range_2_large(battle_map, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    adj = _get_free_coords_at_hop_range(battle_map.grid, coords.get(), rng=2)
+    adj = nf.get_free_coords_at_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 2, -1)
     # Assuming the size of the combatant alters the calculation for exact range, with an adjusted example expectation
     assert set(adj) == {(3, 5), (4, 5), (5, 5), (6, 5), (7, 5), (8, 5), (3, 6), (8, 6), (3, 7), (8, 7), (3, 8), (8, 8), (3, 9), (8, 9), (3, 10), (4, 10), (5, 10), (6, 10), (7, 10), (8, 10)}
 
 
 def test_get_free_coords_at_hop_range_large_corner(battle_map, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    adj = _get_free_coords_at_hop_range(battle_map.grid, coords.get(), rng=1)
+    adj = nf.get_free_coords_at_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     # Coordinates exactly at range 1 from the position, considering map boundaries
     assert set(adj) == {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (2, 3), (1, 3), (0, 3)}
 
 
 def test_get_free_coords_at_hop_range_huge_with_terrain(battle_map, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.HUGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 2]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 2], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    adj = _get_free_coords_at_hop_range(battle_map.grid, coords.get(), rng=1)
+    battle_map.place_circular_element(np.array([7, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    adj = nf.get_free_coords_at_hop_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     # Example assumes exact range logic, simplified for demonstration
     assert set(adj) == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 5), (9, 5), (10, 5), (11, 5), (11, 4), (11, 3), (11, 2), (11, 1), (10, 1), (9, 1), (8, 1)}
 
 
 def test_get_free_coords_in_cartesian_range_medium(battle_map, teams, test_draconic_sorcerer_5lvl):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=1)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     # only directly above, below and to the sides
     assert set(free_coords) == {(4, 7), (6, 7), (5, 8), (5, 6)}
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=1, combatant_id=test_draconic_sorcerer_5lvl.id)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, test_draconic_sorcerer_5lvl.id)
     # same but including the combatant's own coord
     assert set(free_coords) == {(4, 7), (5, 7), (6, 7), (5, 8), (5, 6)}
 
-    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([8, 13]))
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([8, 13], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=2)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 2, -1)
     assert set(free_coords) == {(6, 13), (7, 13), (9, 13), (10, 13), (7, 14), (8, 14), (9, 14), (7, 12), (8, 12), (9, 12), (8, 11)}
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=2, combatant_id=test_draconic_sorcerer_5lvl.id)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 2, test_draconic_sorcerer_5lvl.id)
     # same but including the combatant's own coord
     assert set(free_coords) == {(6, 13), (7, 13), (8, 13), (9, 13), (10, 13), (7, 14), (8, 14), (9, 14), (7, 12), (8, 12), (9, 12), (8, 11)}
 
-    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([5, 5]))
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([5, 5], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=4)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 4, -1)
     assert (1, 1) not in free_coords and (2, 1) not in free_coords and (3, 1) not in free_coords and (4, 1) not in free_coords and (6, 1) not in free_coords
     assert (7, 1) not in free_coords and (8, 1) not in free_coords
     assert (1, 2) not in free_coords and (1, 3) not in free_coords and (1, 4) not in free_coords and (1, 6) not in free_coords and (1, 7) not in free_coords
@@ -582,35 +579,35 @@ def test_get_free_coords_in_cartesian_range_medium(battle_map, teams, test_draco
     assert (2, 8) not in free_coords and (8, 8) not in free_coords and (9, 8) not in free_coords
     assert (9, 5) in free_coords and (1, 5) in free_coords and (5, 1) in free_coords and (5, 9) in free_coords
     # same but including the combatant's own coord
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=4, combatant_id=test_draconic_sorcerer_5lvl.id)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 4, test_draconic_sorcerer_5lvl.id)
     assert (5, 5) in free_coords
 
 
 def test_get_free_coords_in_cartesian_range_large(battle_map, teams, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 2]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 2], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=1)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
     assert set(free_coords) == {(2, 1), (3, 1), (1, 2), (4, 2), (1, 3), (4, 3), (2, 4), (3, 4)}
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=1, combatant_id=test_draconic_sorcerer_5lvl.id)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, test_draconic_sorcerer_5lvl.id)
     # same but including the combatant's own coord
     assert set(free_coords) == {(2, 1), (2, 2), (3, 2), (2, 3), (3, 3), (3, 1), (1, 2), (4, 2), (1, 3), (4, 3), (2, 4), (3, 4)}
 
-    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([6, 8]))
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([6, 8], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=2)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 2, -1)
     assert set(free_coords) == {(6, 6), (7, 6), (5, 7), (6, 7), (7, 7), (8, 7), (4, 8), (5, 8), (8, 8), (9, 8), (4, 9), (5, 9), (8, 9), (9, 9), (5, 10), (6, 10), (7, 10), (8, 10), (6, 11), (7, 11)}
-    free_coords = _get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), rng=2, combatant_id=test_draconic_sorcerer_5lvl.id)
+    free_coords = nf.get_free_coords_in_cartesian_range(battle_map.grid, coords.get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 2, test_draconic_sorcerer_5lvl.id)
     # same but including the combatant's own coord
     assert set(free_coords) == {(6, 6), (6, 8), (7, 8), (6, 9), (7, 9), (7, 6), (5, 7), (6, 7), (7, 7), (8, 7), (4, 8), (5, 8), (8, 8), (9, 8), (4, 9), (5, 9), (8, 9), (9, 9), (5, 10), (6, 10), (7, 10), (8, 10), (6, 11), (7, 11)}
 
 
 def test_get_adjacent_coords_medium(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 7], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([5, 6]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([5, 6], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj = battle_map.get_adjacent_coords(coords)
     assert set(adj) == {(4, 7), (6, 7), (4, 8), (5, 8), (6, 8), (4, 6), (6, 6)}
 
@@ -618,8 +615,8 @@ def test_get_adjacent_coords_medium(battle_map, test_draconic_sorcerer_5lvl, tes
 def test_get_adjacent_coords_large(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 9]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 9], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     adj = battle_map.get_adjacent_coords(coords)
     assert set(adj) == {(4, 6), (4, 7), (4, 8), (4, 9), (5, 6), (5, 9), (6, 6), (6, 9), (7, 6), (7, 7), (7, 8), (7, 9)}
@@ -627,9 +624,9 @@ def test_get_adjacent_coords_large(battle_map, test_draconic_sorcerer_5lvl, test
 
 def test_get_adjacent_coords_large_corner(battle_map, test_draconic_sorcerer_5lvl):
     test_draconic_sorcerer_5lvl.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([2, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([2, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj = battle_map.get_adjacent_coords(coords)
     assert set(adj) == {(0, 0), (1, 0), (2, 0), (2, 1), (2, 2), (0, 3), (1, 3)}
 
@@ -637,11 +634,11 @@ def test_get_adjacent_coords_large_corner(battle_map, test_draconic_sorcerer_5lv
 def test_get_adjacent_coords_huge_with_terrain(battle_map, test_draconic_sorcerer_5lvl, test_goblin):
     test_draconic_sorcerer_5lvl.size = Size.HUGE
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 2]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([11, 2]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 2], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([11, 2], dtype=np.int64))
     coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
-    battle_map.place_circular_element(np.array([7, 3]), Terrain.IMPASSABLE_TERRAIN, radius=0)
-    battle_map.place_circular_element(np.array([8, 5]), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([7, 3], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
+    battle_map.place_circular_element(np.array([8, 5], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
     adj = battle_map.get_adjacent_coords(coords)
     assert set(adj) == {(7, 1), (7, 2), (7, 4), (7, 5), (8, 1), (9, 1), (9, 5), (10, 1), (10, 5), (11, 1), (11, 2), (11, 3), (11, 4),
                    (11, 5)}
@@ -652,28 +649,28 @@ def test_get_nearest_free_adjacent_coord(battle_map, teams, test_draconic_sorcer
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     test_goblin.size = Size.LARGE
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 7]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 7]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 7], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 7], dtype=np.int64))
     distances, _ = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     target_coords = battle_map.get_combatant_position(test_goblin)
     nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size, target_coords, distances)
-    assert np.array_equal(nearest, np.array([4, 7]), equal_nan=False)
+    assert np.array_equal(nearest, np.array([4, 7], dtype=np.int64), equal_nan=False)
 
-    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([3, 9]))
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([3, 9], dtype=np.int64))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size, target_coords, distances)
-    assert np.array_equal(nearest, np.array([4, 9]), equal_nan=False)
+    assert np.array_equal(nearest, np.array([4, 9], dtype=np.int64), equal_nan=False)
 
-    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([8, 6]))
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([8, 6], dtype=np.int64))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size, target_coords, distances)
-    assert np.array_equal(nearest, np.array([7, 6]), equal_nan=False)
+    assert np.array_equal(nearest, np.array([7, 6], dtype=np.int64), equal_nan=False)
 
-    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([7, 11]))
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([7, 11], dtype=np.int64))
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size, target_coords, distances)
-    assert np.array_equal(nearest, np.array([7, 9]), equal_nan=False)
+    assert np.array_equal(nearest, np.array([7, 9], dtype=np.int64), equal_nan=False)
 
 
 def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear):
@@ -686,22 +683,22 @@ def test_get_nearest_free_adjacent_coord_large_huge(battle_map, teams, test_drac
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([4, 10]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([9, 10]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([9, 13]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([4, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([9, 10], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([9, 13], dtype=np.int64))
     distances, _ = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     my_coords = battle_map.get_combatant_position(test_draconic_sorcerer_5lvl)
     target_coords = battle_map.get_combatant_position(test_bugbear)
     nearest = battle_map.get_nearest_free_adjacent_coords(test_draconic_sorcerer_5lvl, my_coords.get(), my_coords.size, target_coords, distances)
-    assert not np.array_equal(nearest, np.array([7, 10]), equal_nan=False)
+    assert not np.array_equal(nearest, np.array([7, 10], dtype=np.int64), equal_nan=False)
 
 
 def test_get_path_to_combatant_medium_to_medium(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin):
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([11, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([11, 3], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     assert np.array_equal(path, [np.array([1, 1]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]),
                                  np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0])])
@@ -711,7 +708,7 @@ def test_get_path_to_coord_medium_to_coord(battle_map, teams, test_draconic_sorc
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     battle_map.build_adjacency_matrix()
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 1]))
-    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([11, 3]))
+    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([11, 3], dtype=np.int64))
     assert np.array_equal(path, [np.array([1, 1]), np.array([1,1]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]),
                                  np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0]), np.array([1, 0])])
 
@@ -1023,12 +1020,12 @@ def test_find_best_placements_harmful_cone_1(battle_map, teams, test_draconic_so
     battle_map.set_combatant_coordinates(test_ogre, np.array([5, 10]))
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 12]))
     best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
-    assert best_placement[0] == (0, 10)
+    assert np.array_equal(best_placement[0], np.array((0, 10), dtype=np.int64))
     assert best_placement[1] == pytest.approx(48, 0.1)
 
     battle_map.move_combatant(test_ogre, np.array([3, 12]))  # Make the previous best orientation hit an ally
     best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
-    assert best_placement[0] == (2, 10)
+    assert np.array_equal(best_placement[0], np.array((2, 10), dtype=np.int64)) or np.array_equal(best_placement[0], np.array((1, 9), dtype=np.int64))
     assert best_placement[1] == pytest.approx(75.4, 0.1) or best_placement[1] == pytest.approx(78.4, 0.1)
 
 
@@ -1042,7 +1039,7 @@ def test_find_best_placements_harmful_cone_2(battle_map, teams, test_draconic_so
 
     best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
     assert best_placement
-    assert best_placement[0] == (4, 9) or best_placement[0] == (9, 4)
+    assert np.array_equal(best_placement[0], np.array((4, 9), dtype=np.int64)) or np.array_equal(best_placement[0], np.array((9, 4), dtype=np.int64))
     assert best_placement[1] == pytest.approx(135, 0.1) or best_placement[1] == pytest.approx(315, 0.1) or best_placement[1] == pytest.approx(138, 0.1)
     # Note: the opposite-pointing (9, 4) is not there because of rasterization inaccuracy
 
@@ -1105,7 +1102,7 @@ IndexError: list index out of range
     battle_map.set_combatant_coordinates(test_giant_toad, np.array([5, 11]))
 
     best_placement = battle_map.find_best_placement_harmful_cone(test_green_dragon_wyrmling, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_15])
-    assert best_placement
+    assert best_placement[0].shape[0] == 0  # There's no way we can't hit an ally
 
 
 def test_get_combatants_affected_by_sphere_aoe(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian):

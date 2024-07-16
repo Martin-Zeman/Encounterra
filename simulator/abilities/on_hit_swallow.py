@@ -5,8 +5,7 @@ from ..misc import DamageType, ROUND_HORIZON
 from ..conditions import Conditions, Condition, apply_condition, remove_all_conditions_of_type, \
     remove_condition
 import logging
-
-from ..threat_utils import _mean_dmg_auto_hit
+import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
 
@@ -31,4 +30,4 @@ class OnHitSwallow(OnHit):
 
     def calculate_threat(self, attacker, target, **kwargs):
         # The swallow itself it hard to quantify but we just need to make sure it wins out over the regular bite
-        return _mean_dmg_auto_hit(((3, 6),), target.is_resistant_to(DamageType.Acid)) * ROUND_HORIZON
+        return nf.mean_dmg_auto_hit([(3, 6)], target.is_resistant_to(DamageType.Acid)) * ROUND_HORIZON

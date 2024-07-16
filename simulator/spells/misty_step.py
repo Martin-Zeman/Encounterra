@@ -45,13 +45,13 @@ class MistyStepFactory(Factory):
         swallower = get_swallower(self.combatant)
         if swallower:
             return []  # Can't see while being swallowed
-        return ((0, 0),)
+        return [(0, 0)]
         # battle_map = Map.get()
         # # # TODO Add visibility
-        # return _get_free_coords_in_cartesian_range(battle_map.grid, battle_map.get_combatant_position(self.combatant).get(),
+        # return nf.get_free_coords_in_cartesian_range(battle_map.grid, battle_map.get_combatant_position(self.combatant).get(),
         #                                                          distances,
-        #                                                          inflate_to_dist=self.combatant.size.value,
-        #                                                          rng=MistyStepFactory.range)
+        #                                                          self.combatant.size.value,
+        #                                                          MistyStepFactory.range, -1)
 
     def create_all(self, previous_action_in_dag=None):
         targets = self.get_eligible_targets()

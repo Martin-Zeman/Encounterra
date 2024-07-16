@@ -1,24 +1,20 @@
 import copy
 from itertools import combinations
 
-from cachetools import cached
-from cachetools.keys import hashkey
-
 from ..actions.action_types import Passive
-from ..battle_map import Map, map_position_toggled_cache, _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache
 from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import RollType, _avg_roll, Visibility, SavingThrow, reconcile_roll_types, \
+from ..misc import RollType, Visibility, SavingThrow, reconcile_roll_types, \
     roll_saving_throw, get_strength_based_attack_factories, ROUND_HORIZON
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import cache
-from ..threat_utils import calc_p_hit
 from ..threat_interfaces import Threat
 from ..factory_interfaces import DirectThreatFactory
 import logging
+import numba_functions as nf
 from ..utils.roll_types import ROLL_TYPE_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
@@ -40,7 +36,7 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
         self.to_hit = caster.spell_to_hit
         self.dc = caster.dc
         self.action_type = action_type  # RAY_OF_ENFEEBLEMENT, TWINNED_RAY_OF_ENFEEBLEMENT, QUICKENED_RAY_OF_ENFEEBLEMENT
-        self.dmg_dice = ((0, 0),)
+        self.dmg_dice = [(0, 0)]
         self.combatant = caster
         self.resource = resource
         self.saving_throw = SavingThrow.CON
@@ -78,7 +74,7 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
 
     def calculate_threat_to_target(self, target, **kwargs):
         max_threat = 0
-        p_hit = calc_p_hit(self.to_hit, target.ac)
+        p_hit = nf.calc_p_hit(self.to_hit, target.ac)
         afs = get_strength_based_attack_factories(target)
         for af in afs:
             dmg_inc = af.calculate_threat_to_target(self.combatant) / 2
@@ -97,15 +93,15 @@ class TwinnedRayOfEnfeeblementFactory(DirectThreatFactory):
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
 
         total_target_ac = target.ac + target_ac
-        to_hit_total = self.to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
+        to_hit_total = self.to_hit + mod_to_hit_flat + nf.avg_roll(mod_to_hit_die)
         try:
             to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         except KeyError:  # Can happen for extreme differences between the AC and the to_hit
             pass  # The effect is negligible in that case
 
         max_threat = 0
-        baseline_p_hit = calc_p_hit(self.to_hit, target.ac)
-        modified_p_hit = calc_p_hit(to_hit_total, total_target_ac)
+        baseline_p_hit = nf.calc_p_hit(self.to_hit, target.ac)
+        modified_p_hit = nf.calc_p_hit(to_hit_total, total_target_ac)
         afs = get_strength_based_attack_factories(target)
         for af in afs:
             dmg_inc = af.calculate_threat_to_target(self.combatant) / 2
@@ -173,7 +169,7 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
         to_hit_total_1 = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.combatants[0].ac - self.factory.to_hit, 20))]
         max_threat_1 = 0
-        p_hit_1 = calc_p_hit(to_hit_total_1, self.combatants[0].ac)
+        p_hit_1 = nf.calc_p_hit(to_hit_total_1, self.combatants[0].ac)
         afs_1 = get_strength_based_attack_factories(self.combatants[0])
         for af in afs_1:
             dmg_inc = af.calculate_threat_to_target(self.factory.combatant) / 2
@@ -181,7 +177,7 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
 
         to_hit_total_2 = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.combatants[1].ac - self.factory.to_hit, 20))]
         max_threat_2 = 0
-        p_hit_2 = calc_p_hit(to_hit_total_2, self.combatants[1].ac)
+        p_hit_2 = nf.calc_p_hit(to_hit_total_2, self.combatants[1].ac)
         afs_2 = get_strength_based_attack_factories(self.combatants[1])
         for af in afs_2:
             dmg_inc = af.calculate_threat_to_target(self.factory.combatant) / 2
@@ -207,18 +203,18 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            coords_for_first = _get_free_coords_in_cartesian_range(
+            coords_for_first = nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.combatants[0]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=TwinnedRayOfEnfeeblementFactory.range, combatant_id=self.factory.combatant.id)
-            coords_for_second = _get_free_coords_in_cartesian_range(
+                self.factory.combatant.size.value,
+                TwinnedRayOfEnfeeblementFactory.range, self.factory.combatant.id)
+            coords_for_second = nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.combatants[1]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=TwinnedRayOfEnfeeblementFactory.range, combatant_id=self.factory.combatant.id)
+                self.factory.combatant.size.value,
+                TwinnedRayOfEnfeeblementFactory.range, self.factory.combatant.id)
             free_coords_in_range = set(coords_for_first).intersection(set(coords_for_second))
 
             return [coord for coord in free_coords_in_range if

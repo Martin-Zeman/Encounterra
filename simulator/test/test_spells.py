@@ -24,9 +24,9 @@ def test_haste(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, t
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([5, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 0], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([5, 4], dtype=np.int64))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_draconic_sorcerer_5lvl, test_bugbear, test_totem_barbarian]
@@ -59,8 +59,8 @@ def test_thunderwave(battle_map, teams, effect_tracker, test_druid_lvl_1, test_f
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_druid_lvl_1, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_fighter_lvl_1, Teams.Color.BLUE)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([10, 10]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([7, 10]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_druid_lvl_1, np.array([10, 10], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_fighter_lvl_1, np.array([7, 10], dtype=np.int64))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_druid_lvl_1, test_fighter_lvl_1]

@@ -1,15 +1,12 @@
-from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.spell import SpellStats
-from ..misc import DamageType, RollType, _avg_roll
+from ..misc import DamageType, RollType
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import cache
-from ..threat_utils import _mean_dmg
+import numba_functions as nf
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
@@ -34,7 +31,7 @@ class ShockingGraspFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_MELEE
         self.to_hit = to_hit
         self.action_type = action_type  # SHOCKING_GRASP, QUICKENED_SHOCKING_GRASP
-        self.dmg_dice = ((1, 8),)
+        self.dmg_dice = [(1, 8)]
         self.dmg_bonus = 0
         self.combatant = caster
         self.resource = resource
@@ -72,7 +69,7 @@ class ShockingGraspFactory(DirectThreatFactory):
     def calculate_threat_to_target(self, target, **kwargs):
         battle_map = Map.get()
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ShockingGraspFactory.range:
-            return _mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+            return nf.mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
                             target.is_immune_to(ShockingGraspFactory.dmg_type),
                             target.is_resistant_to(ShockingGraspFactory.dmg_type), 1)
         return 0
@@ -89,14 +86,14 @@ class ShockingGraspFactory(DirectThreatFactory):
         target_ac = modifiers.get(ThreatModifierType.TARGET_AC, 0)
 
         total_target_ac = target_ac + target.ac
-        to_hit_total = self.to_hit + mod_to_hit_flat + _avg_roll(mod_to_hit_die)
+        to_hit_total = self.to_hit + mod_to_hit_flat + nf.avg_roll(mod_to_hit_die)
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
-        ret = (_mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac,
+        ret = (nf.mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac,
                         target.is_immune_to(ShockingGraspFactory.dmg_type),
                         target.is_resistant_to(ShockingGraspFactory.dmg_type), total_crit) -
-               _mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+               nf.mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
                         target.is_immune_to(ShockingGraspFactory.dmg_type),
                         target.is_resistant_to(ShockingGraspFactory.dmg_type), 1))
         return ret
@@ -150,12 +147,12 @@ class ShockingGrasp(Actoid, DirectThreat):
             return None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING,
                                   Conditions.RESTRAINED):
-            return _get_free_coords_in_cartesian_range(
+            return nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.target).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=ShockingGraspFactory.range, combatant_id=self.factory.combatant.id)
+                self.factory.combatant.size.value,
+                ShockingGraspFactory.range, self.factory.combatant.id)
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant,
                                                           self.target) <= ShockingGraspFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

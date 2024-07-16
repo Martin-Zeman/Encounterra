@@ -1,15 +1,15 @@
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, \
-    _get_free_coords_in_cartesian_range
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.spell import SpellStats
-from ..misc import _avg_roll, Visibility, Class, get_missing_hp
+from ..misc import Visibility, Class, get_missing_hp
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
+import numba_functions as nf
 from ..utils.roll_types import ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
@@ -65,7 +65,7 @@ class HealingWordFactory(DirectThreatFactory):
             return 0
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= HealingWordFactory.range:
             missing_hp = get_missing_hp(self.combatant)
-            return min(missing_hp, _avg_roll(self.heal_dice) + self.mod)
+            return min(missing_hp, nf.avg_roll(self.heal_dice) + self.mod)
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -80,7 +80,7 @@ class HealingWordFactory(DirectThreatFactory):
             return self.calculate_threat_to_target(target)
 
     def calculate_max_threat(self):
-        return _avg_roll(self.heal_dice) + self.mod  # The simplification here is ok
+        return nf.avg_roll(self.heal_dice) + self.mod  # The simplification here is ok
 
 
 class HealingWord(Actoid, DirectThreat):
@@ -114,12 +114,12 @@ class HealingWord(Actoid, DirectThreat):
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = _get_free_coords_in_cartesian_range(
+            free_coords_in_range = nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
                 battle_map.get_combatant_position(self.target).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=HealingWordFactory.range, combatant_id=self.factory.combatant.id)
+                self.factory.combatant.size.value,
+                HealingWordFactory.range, self.factory.combatant.id)
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HealingWordFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:

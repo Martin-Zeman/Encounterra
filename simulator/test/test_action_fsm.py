@@ -59,12 +59,12 @@ def test_generate_proto_dag(test_draconic_sorcerer_5lvl, test_goblin, test_bugbe
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([10, 12]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 6]))
-    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 0]))
-    battle_map.set_combatant_coordinates(test_ogre, np.array([13, 6]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([7, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([5, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([10, 12], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 6], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_stone_giant, np.array([0, 0], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_ogre, np.array([13, 6], dtype=np.int64))
     fsm, transition_mapping = generate_proto_dag(test_draconic_sorcerer_5lvl)
     assert fsm.state == '0'
 

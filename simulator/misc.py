@@ -5,6 +5,7 @@ from functools import reduce, cache
 from itertools import product
 
 import numpy as np
+import numba_functions as nf
 from numba import njit
 
 from .actions.actoid import FactoryFlags
@@ -315,18 +316,6 @@ def reconcile_roll_types(types):
     return ret
 
 
-@njit(cache=True)
-def _avg_roll(dice: tuple):
-    return dice[0] * ((1.0 + dice[1]) / 2.0)
-
-
-@njit(cache=True)
-def _avg_roll_multi(dice: tuple):
-    acc = 0.0
-    for d in dice:
-        acc += d[0] * ((1.0 + d[1]) / 2.0)
-    return acc
-
 @cache
 def generate_outcomes(dice):
     # Generate all possible outcomes for a given dice configuration
@@ -348,56 +337,9 @@ def percentile_roll(dice, percentile):
     return find_percentile_value(all_outcomes, percentile)
 
 
-@njit(cache=True)
-def _roll_dice(dice):
-    """
-    Basic function for rolling dice
-    @param dice: a dice tuple (number of dice, number of sides)
-    @return: sum of dice rolls
-    """
-    num_dice, num_sides = dice
-    return np.random.randint(1, num_sides + 1, num_dice).sum()
-
-
-@njit(cache=True)
-def _roll_dice_multi(dice_list):
-    """
-    Function for rolling multiple sets of dice
-    @param dice_list: list of dice tuples, each tuple is (number of dice, number of sides)
-    @return: sum of all dice rolls
-    """
-    total_sum = 0
-    for dice in dice_list:
-        total_sum += _roll_dice(dice)
-    return total_sum
-
-
-@njit(cache=True)
-def _roll_dice_with_reroll_and_log(dice, reroll_max_value):
-    """
-    Function for rolling dice which re-rolls results less than or equal to a given value. The re-rolled value must be used.
-    @param dice: tuple of (# of dice (1..inf), dice size (4, 6, 8, 10, 12))
-    @param reroll_max_value: the maximum die value to be rerolled
-    @return: tuple of (sum of dice rolls after rerolls, list of tuples of (original roll, reroll) for logging)
-    """
-    num_dice, dice_size = dice
-    dice_sum = 0
-    reroll_log = []
-
-    for _ in range(num_dice):
-        rolled = np.random.randint(1, dice_size + 1)
-        if rolled <= reroll_max_value:
-            rerolled = np.random.randint(1, dice_size + 1)
-            reroll_log.append((rolled, rerolled))
-            rolled = rerolled
-        dice_sum += rolled
-
-    return dice_sum, reroll_log
-
-
 # Use the function and handle logging outside the Numba-compiled function
 def roll_dice_with_reroll(dice, reroll_max_value):
-    result, reroll_log = _roll_dice_with_reroll_and_log(dice, reroll_max_value)
+    result, reroll_log = nf.roll_dice_with_reroll_and_log(dice, reroll_max_value)
     for original, reroll in reroll_log:
         logger.info(f"Re-rolling {original} as {reroll}")
     return result
@@ -407,11 +349,11 @@ def roll_dice_with_reroll(dice, reroll_max_value):
 def roll_saving_throw(bonus, dc, roll_type):
     d20 = (1, 20)
     if roll_type is RollType.STRAIGHT:
-        roll = _roll_dice(d20)
+        roll = nf.roll_dice(d20)
     elif roll_type is RollType.ADVANTAGE:
-        roll = max(_roll_dice(d20), _roll_dice(d20))
+        roll = max(nf.roll_dice(d20), nf.roll_dice(d20))
     else:
-        roll = min(_roll_dice(d20), _roll_dice(d20))
+        roll = min(nf.roll_dice(d20), nf.roll_dice(d20))
 
     if roll == 20:
         return True
@@ -422,11 +364,11 @@ def roll_saving_throw(bonus, dc, roll_type):
 def roll_ability_check(bonus, dc, roll_type):
     d20 = (1, 20)
     if roll_type is RollType.STRAIGHT:
-        return _roll_dice(d20) + bonus >= dc
+        return nf.roll_dice(d20) + bonus >= dc
     elif roll_type is RollType.ADVANTAGE:
-        return max(_roll_dice(d20), _roll_dice(d20)) + bonus >= dc
+        return max(nf.roll_dice(d20), nf.roll_dice(d20)) + bonus >= dc
     else:
-        return min(_roll_dice(d20), _roll_dice(d20)) + bonus >= dc
+        return min(nf.roll_dice(d20), nf.roll_dice(d20)) + bonus >= dc
 
 
 def roll_dice_chaos_bolt(dice):
@@ -441,7 +383,7 @@ def roll_dice_chaos_bolt(dice):
 
 def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
     primary_dmg, numbers = roll_dice_chaos_bolt(dmg_dice[0])
-    secondary_dmg = _roll_dice(additional_dmg_dice[0])
+    secondary_dmg = nf.roll_dice(additional_dmg_dice[0])
     return primary_dmg + secondary_dmg, numbers
 
 
@@ -502,28 +444,6 @@ class Visibility(Enum):
 THREE_QUARTERS_COVER_ERROR_THRESHOLD = 0.25
 HALF_COVER_ERROR_THRESHOLD = 0.35
 FULL_VISIBILITY_ERROR_THRESHOLD = 0.45
-
-
-@njit(cache=True)
-def _is_path_straight(path, length):
-    if path is None or len(path) < 2 or length < 2:
-        return False
-    if length > len(path):
-        return False
-
-    # Extract the relevant sub-path
-    sub_path = path[-length:]
-    # Compare the direction of each step in the sub-path
-    direction = None
-    for i in range(len(sub_path) - 1):
-        current_direction = sub_path[i + 1] - sub_path[i]
-        if direction is None:
-            direction = current_direction
-        else:
-            # Manual comparison instead of np.array_equal
-            if not (direction[0] == current_direction[0] and direction[1] == current_direction[1]):
-                return False
-    return True
 
 
 def get_missing_hp(combatant):

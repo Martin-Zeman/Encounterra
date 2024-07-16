@@ -22,9 +22,9 @@ class GreenDragonWyrmling(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=38, ac=17, init_bonus=1, spell_to_hit=0, speed=60, immunities={DamageType.Poison}, resistances=set(), dc=0)
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice=((1, 10),), dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 6), DamageType.Poison)])
-        self.add_ability(Action.CONIC_BREATH_WEAPON, recharge=5, dmg_dice=((6, 6),), dmg_type=DamageType.Poison, saving_throw=SavingThrow.CON, dc=11, target_template=SpellStats.Target.CONE_15,  name="Poison Breath")
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice=((1, 10),), dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 6), DamageType.Poison)])
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice=[(1, 10)], dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 6), DamageType.Poison)])
+        self.add_ability(Action.CONIC_BREATH_WEAPON, recharge=5, dmg_dice=[(6, 6)], dmg_type=DamageType.Poison, saving_throw=SavingThrow.CON, dc=11, target_template=SpellStats.Target.CONE_15,  name="Poison Breath")
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice=[(1, 10)], dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 6), DamageType.Poison)])
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 2
         self.saving_throws[SavingThrow.DEX] = 3
