@@ -1,15 +1,15 @@
 import heapq
 import sys
 
-from numba.np.arraymath import cross2d
 from numba.pycc import CC
 import numpy as np
 from numba import int64, float64, int32, types, boolean, njit
 
-from simulator.battle_map import Occupancy, Terrain
-from simulator.misc import Size
+from simulator.misc import Size, Occupancy, Terrain
 
 cc = CC('numba_functions')
+cc.output_file = 'numba_functions.so'
+cc.target_cpu = 'neoverse-n1'
 
 
 @cc.export('reconstruct_from_shortest_path', int64[:, :](int64[:, :, :], int64[:], int64[:]))

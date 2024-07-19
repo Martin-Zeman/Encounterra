@@ -11,11 +11,10 @@ from simulator.action_resolver import ActionResolver, ActionResult
 from simulator.actions.action_selector import get_action
 from simulator.actions.action_types import BonusAction, Action
 from simulator.actions.hide import HideFactory
-from simulator.battle_map import Terrain
 from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
 from simulator.effects.effect import EffectType
 from simulator.logging.custom_logger import CustomLogger
-from simulator.misc import DamageType, SavingThrow
+from simulator.misc import DamageType, SavingThrow, Terrain
 from simulator.conditions import Conditions, is_affected_by
 from simulator.resources import ResourceDepletionLevel
 from simulator.spells.sleep import SleepFactory
@@ -24,9 +23,9 @@ from simulator.test.fixtures import test_moon_druid, test_bugbear, test_giant_to
     test_ogre, test_goblin, test_brown_bear, test_dire_wolf, test_stone_giant, test_totem_barbarian, test_night_hag,\
     test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, test_paladin_lvl_1, \
     test_young_green_dragon, test_skeleton, test_hobgoblin, test_green_dragon_wyrmling
-from simulator.utils.utils import preallocate_wildshape_forms
 from simulator.test.test_singleton import SingletonClass
 import numba_functions as nf
+from simulator.utils.wildshape_utils import preallocate_wildshape_forms
 
 
 def test_basic_wildshape(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):

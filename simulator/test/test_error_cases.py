@@ -1,11 +1,9 @@
 import copy
 import logging
-import pstats
 
 import numpy as np
 import numba_functions as nf
 import pytest
-import pickle
 
 from simulator.abilities.wildshape import WildshapeFactory
 from simulator.action_resolver import ActionResolver
@@ -33,8 +31,7 @@ from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, te
     test_battle_master_fighter_lvl_3, test_fighter_lvl_1, test_ghoul, test_skeleton, test_hobgoblin, test_orc, \
     test_assassin_rogue_3lvl
 from simulator.actions.action_selector import get_action
-from simulator.utils.utils import preallocate_wildshape_forms
-import cProfile
+from simulator.utils.wildshape_utils import preallocate_wildshape_forms
 
 
 def test_error_case_1(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_bugbear):

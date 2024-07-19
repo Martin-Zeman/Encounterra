@@ -17,7 +17,8 @@ from simulator.resources import ResourceDepletionLevel
 from simulator.spells.flaming_sphere import FlamingSphereFactory
 from simulator.teams import Teams
 from simulator.test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
-from simulator.utils.utils import preallocate_wildshape_forms
+from simulator.utils.wildshape_utils import preallocate_wildshape_forms
+
 
 def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid, test_draconic_sorcerer_5lvl):
     """

@@ -1,24 +1,21 @@
 import math
 
-from cachetools import cached
-from cachetools.keys import hashkey
-
-from .action_types import Action
 from .melee_attack import MeleeAttackFactory, MeleeAttack
 from ..abilities.on_hit_saving_throw_paralysis import OnHitSavingThrowParalysis
 from ..actions.actoid import FactoryFlags
 from ..battle_map import Map
 from ..conditions import Conditions, apply_condition, Condition, remove_condition, \
-    get_source_of_paralyzed, is_affected_by_any
+    is_affected_by_any
 import logging
 
 from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
-from ..misc import SavingThrow, roll_saving_throw, ROUND_HORIZON
+from ..misc import SavingThrow, ROUND_HORIZON
 from ..resources import Uses, ResourceRefreshType
 from ..threat_utils import get_saving_throw_fail_prob, calculate_threat_in_delta
 from ..utils.roll_types import RollType, ThreatModifierType
+from ..utils.utils import roll_saving_throw
 
 logger = logging.getLogger("Encounterra")
 

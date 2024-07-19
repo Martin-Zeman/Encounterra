@@ -1,13 +1,6 @@
 from enum import Enum, auto
-import random
-import re
-from functools import reduce, cache
+from functools import cache
 from itertools import product
-
-import numpy as np
-import numba_functions as nf
-from numba import njit
-
 from .actions.actoid import FactoryFlags
 import logging
 from .utils.roll_types import RollType
@@ -284,6 +277,17 @@ class Size(Enum):
     GARGANTUAN = 3
 
 
+class Terrain(Enum):
+    NORMAL_TERRAIN = 0
+    DIFFICULT_TERRAIN = 1
+    IMPASSABLE_TERRAIN = 2
+
+
+class Occupancy(Enum):
+    FREE = 1
+    OCCUPIED_BY_COMBATANT = 2
+
+
 class Side(Enum):
     ENEMY = auto()
     ALLY = auto()
@@ -335,56 +339,6 @@ def percentile_roll(dice, percentile):
     # Generate and sum all possible outcomes
     all_outcomes = [sum(combination) for combination in generate_outcomes(dice)]
     return find_percentile_value(all_outcomes, percentile)
-
-
-# Use the function and handle logging outside the Numba-compiled function
-def roll_dice_with_reroll(dice, reroll_max_value):
-    result, reroll_log = nf.roll_dice_with_reroll_and_log(dice, reroll_max_value)
-    for original, reroll in reroll_log:
-        logger.info(f"Re-rolling {original} as {reroll}")
-    return result
-
-
-# njit candidate
-def roll_saving_throw(bonus, dc, roll_type):
-    d20 = (1, 20)
-    if roll_type is RollType.STRAIGHT:
-        roll = nf.roll_dice(d20)
-    elif roll_type is RollType.ADVANTAGE:
-        roll = max(nf.roll_dice(d20), nf.roll_dice(d20))
-    else:
-        roll = min(nf.roll_dice(d20), nf.roll_dice(d20))
-
-    if roll == 20:
-        return True
-    return roll + bonus >= dc
-
-
-# njit candidate
-def roll_ability_check(bonus, dc, roll_type):
-    d20 = (1, 20)
-    if roll_type is RollType.STRAIGHT:
-        return nf.roll_dice(d20) + bonus >= dc
-    elif roll_type is RollType.ADVANTAGE:
-        return max(nf.roll_dice(d20), nf.roll_dice(d20)) + bonus >= dc
-    else:
-        return min(nf.roll_dice(d20), nf.roll_dice(d20)) + bonus >= dc
-
-
-def roll_dice_chaos_bolt(dice):
-    dice_sum = 0
-    numbers_rolled = []
-    for i in range(dice[0]):
-        rolled = random.randint(1, dice[1])
-        dice_sum += rolled
-        numbers_rolled.append(rolled)
-    return dice_sum, numbers_rolled
-
-
-def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
-    primary_dmg, numbers = roll_dice_chaos_bolt(dmg_dice[0])
-    secondary_dmg = nf.roll_dice(additional_dmg_dice[0])
-    return primary_dmg + secondary_dmg, numbers
 
 
 def percent_of_curr_hp(combatant, dmg):

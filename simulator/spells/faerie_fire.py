@@ -15,13 +15,13 @@ from ..actions.action_types import BonusAction, Passive
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
-from functools import cache
-from ..misc import roll_saving_throw, reconcile_roll_types, SavingThrow
+from ..misc import reconcile_roll_types, SavingThrow
 from ..conditions import Conditions, is_affected_by_any, get_swallower, remove_condition
 import logging
 import numba_functions as nf
 from ..threat_utils import calculate_threat_in_delta
 from ..utils.roll_types import ThreatModifierType, RollType
+from ..utils.utils import roll_saving_throw
 
 logger = logging.getLogger("Encounterra")
 

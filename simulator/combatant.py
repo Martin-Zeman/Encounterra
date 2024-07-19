@@ -26,7 +26,7 @@ from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
 from .factory_interfaces import RechargeFactory
 from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice, DamageType, \
-    reconcile_roll_types, roll_saving_throw
+    reconcile_roll_types
 from .conditions import Conditions, is_affected_by, remove_condition
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
@@ -35,6 +35,7 @@ from .actions.action_types import Passive, Action, BonusAction, Reaction, HasteA
 from .proto_combatant import ProtoCombatant
 from .resources import ResourceDepletionLevel, Uses, ResourceRefreshType
 from .spellslots import spellslot_factory
+from .utils.utils import roll_saving_throw
 
 logger = logging.getLogger("Encounterra")
 

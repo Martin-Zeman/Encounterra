@@ -7,7 +7,7 @@ from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..misc import RollType, Visibility, SavingThrow, reconcile_roll_types, \
-    roll_saving_throw, get_strength_based_attack_factories, ROUND_HORIZON
+    get_strength_based_attack_factories, ROUND_HORIZON
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..threat_interfaces import Threat
@@ -15,6 +15,7 @@ from ..factory_interfaces import DirectThreatFactory
 import logging
 import numba_functions as nf
 from ..utils.roll_types import ROLL_TYPE_DELTA, ThreatModifierType
+from ..utils.utils import roll_saving_throw
 
 logger = logging.getLogger("Encounterra")
 

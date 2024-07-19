@@ -14,7 +14,7 @@ from .combatant_coords import Coords, get_tuples
 from .obstacle import Obstacle
 from .proto_combatant import ProtoCombatant
 from .spells.spell import SpellStats
-from .misc import Size, Visibility
+from .misc import Size, Visibility, Terrain, Occupancy
 from .conditions import Conditions, is_affected_by_any, get_swallower, remove_condition, get_grappler, \
     get_source_of_frightened
 from .geometry import get_affected_by_cone, find_fov_vectors, \
@@ -23,8 +23,6 @@ from .geometry import get_affected_by_cone, find_fov_vectors, \
 from .misc import Side, DistanceMetric
 from contextlib import contextmanager
 from scipy.spatial.distance import euclidean
-from numba.typed import List
-from enum import Enum
 import numba_functions as nf
 
 
@@ -46,45 +44,6 @@ def convert_path_to_increments(path):
         increments.append(tuple(path[i + 1] - path[i]))
     logger.debug(increments)
     return increments
-
-
-class Terrain(Enum):
-    NORMAL_TERRAIN = 0
-    DIFFICULT_TERRAIN = 1
-    IMPASSABLE_TERRAIN = 2
-
-
-class Occupancy(Enum):
-    FREE = 1
-    OCCUPIED_BY_COMBATANT = 2
-
-# def toggled_cache(func):
-#     cached_func = cache(func)
-#     def call_func(*args, **kwargs):
-#         if args[0].cache_enabled:
-#             return cached_func(*args, **kwargs)
-#         else:
-#             return func(*args, **kwargs)
-#     return call_func
-
-
-# def map_toggled_cache(func):
-#     """
-#     A custom cache decorator which is governed by the caching state of the Map.
-#
-#     When applied to a method, this decorator allows caching of the method's results based on the value of `cache_enabled`
-#     of the Map singleton. If `cache_enabled` is True, the decorator caches the results of the method calls. If `cache_enabled`
-#     is False, caching is bypassed, and the method is executed normally without caching.
-#     """
-#     cached_func = cache(func)
-#     def call_func(*args, **kwargs):
-#         if Map.get().cache_enabled:
-#             return cached_func(*args, **kwargs)
-#         else:
-#             return func(*args, **kwargs)
-#
-#     call_func.cache_clear = cached_func.cache_clear
-#     return call_func
 
 
 def map_position_toggled_cache(func):

@@ -1,15 +1,10 @@
-from functools import cache
-
-from cachetools import cached
-from cachetools.keys import hashkey
-
 from ..abilities.on_hit_sneak_attack import OnHitSneakAttack
 from ..actions.action_types import HasteAction, BonusAction
 from ..actions.actoid import ActoidFlags, FactoryFlags
 from ..battle_map import Map
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
-from ..misc import Visibility, roll_ability_check
+from ..misc import Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import ThreatModifierFactory
@@ -17,6 +12,7 @@ import logging
 import numba_functions as nf
 
 from ..utils.roll_types import RollType, ThreatModifierType, ROLL_TYPE_DELTA
+from ..utils.utils import roll_ability_check
 
 logger = logging.getLogger("Encounterra")
 

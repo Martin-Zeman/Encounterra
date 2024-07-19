@@ -14,8 +14,7 @@ from .actions.dodge import DodgeFactory
 from .actions.flaming_sphere_ram import FlamingSphereRamFactory
 from .battle_map import Map
 from .effects.effect import EffectType
-from .misc import SavingThrow, reconcile_roll_types, roll_chaos_bolt_dmg, \
-    roll_ability_check, roll_saving_throw, SkillCheck, PhaseOfTurn, roll_dice_with_reroll
+from .misc import SavingThrow, reconcile_roll_types, SkillCheck, PhaseOfTurn
 from .conditions import Conditions, ConditionWithDC, Condition, break_out_of_grapple, is_affected_by_any, \
     is_affected_by, get_grappled, apply_condition, apply_dc_condition, remove_condition, remove_dc_condition
 from .feasibility import check_feasibility
@@ -24,6 +23,7 @@ from .resources import use_resources
 from .spells.chaosbolt import ChaosboltFactory
 from .spells.magic_missile import MagicMissileFactory
 from .utils.roll_types import RollType
+from .utils.utils import roll_chaos_bolt_dmg, roll_dice_with_reroll, roll_saving_throw, roll_ability_check
 
 logger = logging.getLogger("Encounterra")
 
