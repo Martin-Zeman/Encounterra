@@ -9,7 +9,7 @@ from simulator.misc import Size, Occupancy, Terrain
 
 cc = CC('numba_functions')
 cc.output_file = 'numba_functions.so'
-cc.target_cpu = 'neoverse-n1'
+# cc.target_cpu = 'neoverse-n1'
 
 
 @cc.export('reconstruct_from_shortest_path', int64[:, :](int64[:, :, :], int64[:], int64[:]))
