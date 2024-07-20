@@ -123,8 +123,8 @@ class LayOnHands(Actoid, DirectThreat):
                 battle_map.grid,
                 battle_map.get_combatant_position(self.target).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=LayOnHandsFactory.range, combatant_id=self.factory.combatant.id)
+                self.factory.combatant.size.value,
+                LayOnHandsFactory.range, self.factory.combatant.id)
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_hop_distance_combatants(self.factory.combatant, self.target) <= LayOnHandsFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
