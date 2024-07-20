@@ -48,7 +48,7 @@ class MagicMissileFactory(DirectThreatFactory):
     def get_eligible_targets(self):
         swallower = get_swallower(self.combatant)
         if swallower:
-            return [swallower, swallower, swallower]
+            return [(swallower, swallower, swallower)]
         # Range is so big that it doesn't matter
         return combinations_with_replacement([e for e in Map.get().get_non_swallowed_enemies(self.combatant)], 3)
 

@@ -37,6 +37,8 @@ class LineBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
 
     def create_all(self, previous_action_in_dag=None):
         best_placement = Map.get().find_best_placement_harmful_line(self.combatant, self.length, self.width)
+        if best_placement[0].shape[0] == 0:
+            return []
         return [LineBreathWeapon(best_placement[0], best_placement[1], self)]
 
     def calculate_threat_to_target(self, target, **kwargs):

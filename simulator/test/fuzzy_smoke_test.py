@@ -7,6 +7,7 @@ import pickle
 
 from simulator.battle_map import Map
 from simulator.combatants.berserker import Berserker
+from simulator.combatants.black_dragon_wyrmling import BlackDragonWyrmling
 from simulator.combatants.brown_bear import BrownBear
 from simulator.combatants.bugbear import Bugbear
 from simulator.combatants.dire_wolf import DireWolf
@@ -47,6 +48,7 @@ def test_random_matchup():
 
         blue_team = random.sample(combatant_pool, num_blue_combatants)
         red_team = random.sample(combatant_pool, num_red_combatants)
+        red_team.append(BlackDragonWyrmling)
         logger.info(f"Starting a fuzzy test with:")
         logger.info(f"Blue team: {[str(c) for c in blue_team]}")
         logger.info(f"Red team: {[str(c) for c in red_team]}")

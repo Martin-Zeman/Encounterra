@@ -1207,9 +1207,11 @@ class Map:
                         elif score == max_score and score > 0:
                             best_poses.append((origin, effective_angle))
 
+        if len(best_poses) == 0:
+            return np.empty((0, 2), dtype=np.int64), 0  # Return an empty array if no path is found
         caster_position = self.get_combatant_position(caster).get()
         best_poses.sort(key=lambda coord: nf.get_hop_distance_coords(np.array([coord[0]]), caster_position))
-        return best_poses[0]
+        return np.array(best_poses[0][0], dtype=np.int64), best_poses[0][1]
 
     def get_coords_affected_by_square_aoe(self, origin, length):
         """

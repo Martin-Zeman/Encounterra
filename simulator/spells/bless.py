@@ -103,6 +103,7 @@ class Bless(AttackThreatModifier, CombatantEffect, LimitedDurationEffect):
             target.to_hit_dice_mod.append((1, 4))
 
     def deactivate(self):
+        # TODO looks like bless didn't remove itself fully when the caster died. It then attempted to call this when the fight was over and failed.
         self.factory.combatant.break_concentration()
         for target in self.combatants:
             for mod in target.saving_throws_dice_mod.values():
