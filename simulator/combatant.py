@@ -26,7 +26,7 @@ from .effects.effect import EffectType
 from .effects.regeneration_effect import RegenerationEffect
 from .factory_interfaces import RechargeFactory
 from .misc import SavingThrow, Size, SpellcastingResourceType, Class, get_num_superiority_dice, DamageType, \
-    reconcile_roll_types, roll_saving_throw
+    reconcile_roll_types
 from .conditions import Conditions, is_affected_by, remove_condition
 from .actions.dodge import DodgeFactory
 from .actions.disengage import DisengageFactory
@@ -35,6 +35,7 @@ from .actions.action_types import Passive, Action, BonusAction, Reaction, HasteA
 from .proto_combatant import ProtoCombatant
 from .resources import ResourceDepletionLevel, Uses, ResourceRefreshType
 from .spellslots import spellslot_factory
+from .utils.utils import roll_saving_throw
 
 logger = logging.getLogger("Encounterra")
 
@@ -128,6 +129,7 @@ class Combatant(ProtoCombatant):
         self.current_wildshape_form = None
         self.original_form = self
         self.weapon_dmg_dealt_this_turn = 0
+        self.id = hash(self.name)
 
     @staticmethod
     def generate_unique_id(name, cls, level):
@@ -209,16 +211,16 @@ class Combatant(ProtoCombatant):
                     self.already_used_sneak_attack_this_turn = False
                     for af in self.action_factories:
                         if isinstance(af[1], AttackFactory) and (FactoryFlags.USES_DEX in af[1].flags or FactoryFlags.IS_RANGED in af[1].flags):
-                            af[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), af[1].dmg_type, af[1].crit_range))
+                            af[1].on_hit.append(OnHitSneakAttack([OnHitSneakAttack.get_dmg_dice(self.level)], af[1].dmg_type, af[1].crit_range))
                     for baf in self.bonus_action_factories:
                         if isinstance(baf[1], AttackFactory)and (FactoryFlags.USES_DEX in baf[1].flags or FactoryFlags.IS_RANGED in baf[1].flags):
-                            baf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), baf[1].dmg_type, baf[1].crit_range))
+                            baf[1].on_hit.append(OnHitSneakAttack([OnHitSneakAttack.get_dmg_dice(self.level)], baf[1].dmg_type, baf[1].crit_range))
                     for haf in self.haste_action_factories:
                         if isinstance(haf[1], AttackFactory) and (FactoryFlags.USES_DEX in haf[1].flags or FactoryFlags.IS_RANGED in haf[1].flags):
-                            haf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), haf[1].dmg_type, haf[1].crit_range))
+                            haf[1].on_hit.append(OnHitSneakAttack([OnHitSneakAttack.get_dmg_dice(self.level)], haf[1].dmg_type, haf[1].crit_range))
                     for raf in self.reaction_factories:
                         if isinstance(raf[1], AttackFactory) and (FactoryFlags.USES_DEX in raf[1].flags or FactoryFlags.IS_RANGED in raf[1].flags):
-                            raf[1].on_hit.append(OnHitSneakAttack(OnHitSneakAttack.get_dmg_dice(self.level), raf[1].dmg_type, raf[1].crit_range))
+                            raf[1].on_hit.append(OnHitSneakAttack([OnHitSneakAttack.get_dmg_dice(self.level)], raf[1].dmg_type, raf[1].crit_range))
                     self.display_abilities.append("Sneak Attack")
                 case Passive.REGENERATION:
                     try:

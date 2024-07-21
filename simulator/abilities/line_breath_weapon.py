@@ -4,9 +4,9 @@ from ..battle_map import Map
 from ..conditions import get_swallower
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
-from ..threat_utils import mean_dmg_dc_attack
 from functools import cache, reduce
 import logging
+import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
 
@@ -37,6 +37,8 @@ class LineBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
 
     def create_all(self, previous_action_in_dag=None):
         best_placement = Map.get().find_best_placement_harmful_line(self.combatant, self.length, self.width)
+        if best_placement[0].shape[0] == 0:
+            return []
         return [LineBreathWeapon(best_placement[0], best_placement[1], self)]
 
     def calculate_threat_to_target(self, target, **kwargs):
@@ -44,7 +46,10 @@ class LineBreathWeaponFactory(DirectThreatFactory, RechargeFactory):
         Calculates the threat the factory is capable of dealing to a specific target.
         This is useful for calculating threat_in from the abilities of enemies
         """
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, self.saving_throw, target, self.dmg_type))
+        return min(target.curr_hp, nf.mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+                                                      target.saving_throws[self.saving_throw],
+                                                      target.is_immune_to(self.dmg_type),
+                                                      target.is_resistant_to(self.dmg_type)))
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -86,8 +91,11 @@ class LineBreathWeapon(Actoid, DirectThreat):
         affected = battle_map.get_combatants_affected_by_line_aoe(self.factory.combatant, self.coord, self.angle, self.factory.length, self.factory.width)
         acc = 0
         for aff in affected:
-            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, self.factory.saving_throw, aff, self.factory.dmg_type))
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
+            avg_dmg = min(aff.curr_hp, nf.mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+                                                           aff.saving_throws[self.factory.saving_throw],
+                                                           aff.is_immune_to(self.factory.dmg_type),
+                                                           aff.is_resistant_to(self.factory.dmg_type)))
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_dmg
         return acc
 
     def clear_cache(self):

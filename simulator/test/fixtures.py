@@ -1,42 +1,43 @@
 import pytest
 
-from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
-from ..combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
-from ..combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
-from ..combatants.dire_wolf import DireWolf
-from ..combatants.dragonclaw_cultist import DragonclawCultist
-from ..combatants.druid_1lvl import Druid1Lvl
-from ..combatants.fighter_1lvl import Fighter1Lvl
-from ..combatants.fighter_2lvl import Fighter2Lvl
-from ..combatants.ghoul import Ghoul
-from ..combatants.giant_toad import GiantToad
-from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
-from ..combatants.green_dragon_wyrmling import GreenDragonWyrmling
-from ..combatants.hobgoblin import Hobgoblin
-from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
-from ..combatants.night_hag import NightHag
-from ..combatants.ogre import Ogre
-from ..combatants.bandit_captain import BanditCaptain
-from ..combatants.orc import Orc
-from ..combatants.paladin_1lvl import Paladin1Lvl
-from ..combatants.skeleton import Skeleton
-from ..combatants.twig_blight import TwigBlight
-from ..combatants.stone_giant import StoneGiant
-from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from ..combatants.vampire_spawn import VampireSpawn
-from ..combatants.young_green_dragon import YoungGreenDragon
-from ..effects.effect_tracker import EffectTracker
-from ..combatants.bugbear import Bugbear
-from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from ..combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
-from ..combatants.goblin import Goblin
-from ..combatants.brown_bear import BrownBear
-from ..combatants.saber_toothed_tiger import SaberToothedTiger
-from ..combatants.berserker import Berserker
-from ..combatants.evil_mage import EvilMage
-from ..combatants.commoner import Commoner
-from ..teams import Teams
-from ..battle_map import Map
+from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from simulator.combatants.assassin_rogue_3lvl import AssassinRogue3Lvl
+from simulator.combatants.battlemaster_fighter_3lvl import BattlemasterFighter3Lvl
+from simulator.combatants.battlemaster_fighter_5lvl import BattlemasterFighter5Lvl
+from simulator.combatants.dire_wolf import DireWolf
+from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.combatants.druid_1lvl import Druid1Lvl
+from simulator.combatants.fighter_1lvl import Fighter1Lvl
+from simulator.combatants.fighter_2lvl import Fighter2Lvl
+from simulator.combatants.ghoul import Ghoul
+from simulator.combatants.giant_toad import GiantToad
+from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
+from simulator.combatants.green_dragon_wyrmling import GreenDragonWyrmling
+from simulator.combatants.hobgoblin import Hobgoblin
+from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
+from simulator.combatants.night_hag import NightHag
+from simulator.combatants.ogre import Ogre
+from simulator.combatants.bandit_captain import BanditCaptain
+from simulator.combatants.orc import Orc
+from simulator.combatants.paladin_1lvl import Paladin1Lvl
+from simulator.combatants.skeleton import Skeleton
+from simulator.combatants.twig_blight import TwigBlight
+from simulator.combatants.stone_giant import StoneGiant
+from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from simulator.combatants.vampire_spawn import VampireSpawn
+from simulator.combatants.young_green_dragon import YoungGreenDragon
+from simulator.effects.effect_tracker import EffectTracker
+from simulator.combatants.bugbear import Bugbear
+from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from simulator.combatants.draconic_sorcerer_3lvl import DraconicSorcerer3Lvl
+from simulator.combatants.goblin import Goblin
+from simulator.combatants.brown_bear import BrownBear
+from simulator.combatants.saber_toothed_tiger import SaberToothedTiger
+from simulator.combatants.berserker import Berserker
+from simulator.combatants.evil_mage import EvilMage
+from simulator.combatants.commoner import Commoner
+from simulator.teams import Teams
+from simulator.battle_map import Map
 
 
 @pytest.fixture()
@@ -135,6 +136,11 @@ def test_fighter_lvl_2():
 @pytest.fixture()
 def test_battle_master_fighter_lvl_3():
     return BattlemasterFighter3Lvl()
+
+
+@pytest.fixture()
+def test_battle_master_fighter_lvl_5():
+    return BattlemasterFighter5Lvl()
 
 
 @pytest.fixture()

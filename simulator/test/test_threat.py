@@ -2,19 +2,19 @@ import copy
 
 import numpy as np
 import pytest
-from ..actions.action_types import Action
-from ..actions.action_selector import decode_ms_path_to_actions
-from ..actions.movement import MovementIncrement
-from ..misc import Size
-from ..spells.cloud_of_daggers import CloudOfDaggersFactory
-from ..spells.firebolt import FireboltFactory
-from ..spells.hunger_of_hadar import HungerOfHadarFactory
-from ..spells.misty_step import MistyStepFactory, MistyStep
-from ..spells.spike_growth import SpikeGrowthFactory
-from ..teams import Teams
-from ..threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step, \
+from simulator.actions.action_types import Action
+from simulator.actions.action_selector import decode_ms_path_to_actions
+from simulator.actions.movement import MovementIncrement
+from simulator.misc import Size
+from simulator.spells.cloud_of_daggers import CloudOfDaggersFactory
+from simulator.spells.firebolt import FireboltFactory
+from simulator.spells.hunger_of_hadar import HungerOfHadarFactory
+from simulator.spells.misty_step import MistyStepFactory, MistyStep
+from simulator.spells.spike_growth import SpikeGrowthFactory
+from simulator.teams import Teams
+from simulator.threat_utils import accumulate_threat_along_path, calc_threat_for_path_with_misty_step, \
     DZ_CONSTANT, get_aoe_and_aoo_threat_for_increment
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, teams, effect_tracker, battle_map
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, teams, effect_tracker, battle_map
 
 
 def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map, teams, test_draconic_sorcerer_5lvl, test_goblin, effect_tracker):
@@ -25,11 +25,11 @@ def test_get_path_to_combatant_medium_to_medium_one_full_spike_growth(battle_map
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     sgf = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_goblin, test_goblin.spellslots)
-    sg = sgf.create(np.array([7, 3]))
+    sg = sgf.create(np.array([7, 3], dtype=np.int64))
     effect_tracker.add(sg)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -48,11 +48,11 @@ def test_get_path_to_combatant_medium_to_medium_one_partial_spike_growth(battle_
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     sgf = SpikeGrowthFactory(Action.SPIKE_GROWTH, test_goblin, test_goblin.spellslots)
-    sg = sgf.create(np.array([7, 6]))
+    sg = sgf.create(np.array([7, 6], dtype=np.int64))
     effect_tracker.add(sg)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -73,11 +73,11 @@ def test_get_path_to_combatant_large_to_medium_one_aoe(battle_map, teams, test_d
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
-    cod = codf.create(np.array([4, 2]))
+    cod = codf.create(np.array([4, 2], dtype=np.int64))
     effect_tracker.add(cod)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 1]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 1]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 1], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 1], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
@@ -95,11 +95,11 @@ def test_get_path_to_combatant_large_to_medium_avoided_aoe(battle_map, teams, te
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     hohf = HungerOfHadarFactory(15, Action.HUNGER_OF_HADAR, test_goblin, test_goblin.spellslots)
-    hoh = hohf.create(np.array([4, 7]))
+    hoh = hohf.create(np.array([4, 7], dtype=np.int64))
     effect_tracker.add(hoh)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 1]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 1]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 1], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([7, 1], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -118,13 +118,13 @@ def test_get_path_to_combatant_medium_to_medium_two_overlapping_aoe(battle_map, 
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
-    cod = codf.create(np.array([7, 3]))
+    cod = codf.create(np.array([7, 3], dtype=np.int64))
     effect_tracker.add(cod)
-    cod2 = codf.create(np.array([7, 3]))
+    cod2 = codf.create(np.array([7, 3], dtype=np.int64))
     effect_tracker.add(cod2)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -145,13 +145,13 @@ def test_get_path_to_combatant_large_to_medium_two_overlapping_aoe(battle_map, t
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
-    cod = codf.create(np.array([7, 3]))
+    cod = codf.create(np.array([7, 3], dtype=np.int64))
     effect_tracker.add(cod)
-    hoh = codf.create(np.array([7, 4]))  # Should still be hit due to combatant's size
+    hoh = codf.create(np.array([7, 4], dtype=np.int64))  # Should still be hit due to combatant's size
     effect_tracker.add(hoh)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -171,11 +171,11 @@ def test_get_path_to_combatant_large_to_medium_starting_inside_aoe(battle_map, t
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
-    cod = codf.create(np.array([6, 3]))
+    cod = codf.create(np.array([6, 3], dtype=np.int64))
     effect_tracker.add(cod)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -195,9 +195,9 @@ def test_get_path_to_combatant_medium_to_medium_pass_by_one_aoo(battle_map, team
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 4]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 4], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -224,10 +224,10 @@ def test_get_path_to_combatant_medium_to_medium_pass_by_two_aoo(battle_map, team
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear_2, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 4]))
-    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([7, 4]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 4], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([7, 4], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -255,10 +255,10 @@ def test_get_path_to_combatant_large_to_medium_pass_by_two_aoo(battle_map, teams
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear_2, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 2]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 4]))
-    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([7, 4]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 2], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([13, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([6, 4], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([7, 4], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_goblin)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -281,9 +281,9 @@ def test_get_path_to_coord_medium_stepping_away_from_medium_aoo(battle_map, team
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 2]))
-    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 2], dtype=np.int64))
+    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([3, 5], dtype=np.int64))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
@@ -308,9 +308,9 @@ def test_get_path_to_coord_large_stepping_away_from_huge_aoo(battle_map, teams, 
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 4]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([1, 1]))
-    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([1, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 4], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([1, 1], dtype=np.int64))
+    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([1, 5], dtype=np.int64))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
@@ -334,10 +334,10 @@ def test_get_path_to_cord_large_stepping_away_from_two_medium_aoo(battle_map, te
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 2]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 2]))
-    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([3, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 2], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 2], dtype=np.int64))
+    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([3, 5], dtype=np.int64))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
@@ -363,10 +363,10 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_arrive_by_th
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 1]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([1, 4]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([2, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 1], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([1, 4], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([2, 8], dtype=np.int64))
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_totem_barbarian)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
@@ -396,12 +396,12 @@ def test_get_path_to_combatant_large_to_medium_pass_between_two_aoo_through_aoe_
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 1]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([1, 4]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([2, 8]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 1], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([1, 4], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([2, 8], dtype=np.int64))
     codf = CloudOfDaggersFactory(Action.CLOUD_OF_DAGGERS, test_goblin, test_goblin.spellslots)
-    cod = codf.create(np.array([2, 7]))
+    cod = codf.create(np.array([2, 7], dtype=np.int64))
     effect_tracker.add(cod)
     path = battle_map.get_path_to_combatant(test_draconic_sorcerer_5lvl, test_totem_barbarian)
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
@@ -425,9 +425,9 @@ def test_get_path_to_combatant_medium_getting_out_of_danger_zone(battle_map, tea
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([12, 1]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([14, 1]))
-    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([6, 1]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([12, 1], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([14, 1], dtype=np.int64))
+    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([6, 1], dtype=np.int64))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     accumulate_threat_along_path.cache_clear()
     get_aoe_and_aoo_threat_for_increment.cache_clear()
@@ -446,9 +446,9 @@ def test_calc_threat_for_path_with_misty_step_scenario_1(battle_map, teams, test
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 6]))
-    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([0, 14]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 6], dtype=np.int64))
+    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([0, 14], dtype=np.int64))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
@@ -475,9 +475,9 @@ def test_calc_threat_for_path_with_misty_step_scenario_2(battle_map, teams, test
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 5]))
-    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([11, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([5, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 5], dtype=np.int64))
+    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([11, 5], dtype=np.int64))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
@@ -489,7 +489,7 @@ def test_calc_threat_for_path_with_misty_step_scenario_2(battle_map, teams, test
     decode_ms_path_to_actions(test_draconic_sorcerer_5lvl, battle_map.get_combatant_position(test_draconic_sorcerer_5lvl).get()[0], max_threat_path, actions, ms_factory)
     assert len(actions) == 1
     assert isinstance(actions[0], MistyStep)
-    assert np.array_equal(actions[0].coord, np.array([11, 5]), equal_nan=False)
+    assert np.array_equal(actions[0].coord, np.array([11, 5], dtype=np.int64), equal_nan=False)
 
 
 def test_calc_threat_for_path_with_misty_step_scenario_3(battle_map, teams, test_draconic_sorcerer_5lvl, test_bugbear, effect_tracker):
@@ -501,9 +501,9 @@ def test_calc_threat_for_path_with_misty_step_scenario_3(battle_map, teams, test
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 5]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 5]))
-    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([14, 5]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([2, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([5, 5], dtype=np.int64))
+    path = battle_map.get_path_to_coord(test_draconic_sorcerer_5lvl, np.array([14, 5], dtype=np.int64))
     effect_to_coords = {e: e.get_affected_coords() for e in battle_map.effect_tracker.get_aoe_effects()}
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
     test_draconic_sorcerer_5lvl.shortest_paths_cache = shortest_paths
@@ -526,13 +526,13 @@ def test_ranged_spell_with_enemy_adjacent(battle_map, teams, effect_tracker, tes
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 14]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([3, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13], dtype=np.int64))
 
     ff = FireboltFactory(6, Action.FIREBOLT, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     firebolt = ff.create(test_bugbear)
     threat_enemy_adjacent = firebolt.calculate_threat()
-    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([2, 14]))
+    battle_map.move_combatant(test_draconic_sorcerer_5lvl, np.array([2, 14], dtype=np.int64))
     firebolt.clear_cache()
     threat_no_enemy_adjacent = firebolt.calculate_threat()
     assert threat_no_enemy_adjacent > threat_enemy_adjacent
@@ -546,12 +546,12 @@ def test_ranged_attack_with_enemy_adjacent(battle_map, teams, effect_tracker, te
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 14]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([3, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 13], dtype=np.int64))
 
     shortbow = test_goblin.shortbow[1].create(test_bugbear)
     threat_enemy_adjacent = shortbow.calculate_threat()
-    battle_map.move_combatant(test_goblin, np.array([2, 14]))
+    battle_map.move_combatant(test_goblin, np.array([2, 14], dtype=np.int64))
     # shortbow.clear_cache()
     threat_no_enemy_adjacent = shortbow.calculate_threat()
     assert threat_no_enemy_adjacent > threat_enemy_adjacent

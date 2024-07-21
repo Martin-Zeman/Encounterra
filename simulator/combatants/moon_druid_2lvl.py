@@ -20,15 +20,15 @@ class MoonDruid2Lvl(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=19, ac=13, init_bonus=1, speed=35, spell_to_hit=5, resistances=set(), dc=13)
-        self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
-        self.shillelagh_scimitar = self.add_ability(Action.MELEE_ATTACK, name="Shillelagh Scimitar", combatant=self, to_hit=5, dmg_dice="1d8", dmg_bonus=3, dmg_type=DamageType.SlashingMagical, attack_range=1, ammo=Uses(0, ResourceRefreshType.NEVER), suppress=True)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=3, dmg_dice="1d6", dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
+        self.scimitar = self.add_ability(Action.MELEE_ATTACK, name="Scimitar", combatant=self, to_hit=3, dmg_dice=[(1, 6)], dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
+        self.shillelagh_scimitar = self.add_ability(Action.MELEE_ATTACK, name="Shillelagh Scimitar", combatant=self, to_hit=5, dmg_dice=[(1, 8)], dmg_bonus=3, dmg_type=DamageType.SlashingMagical, attack_range=1, ammo=Uses(0, ResourceRefreshType.NEVER), suppress=True)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Scimitar", combatant=self, to_hit=3, dmg_dice=[(1, 6)], dmg_bonus=1, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(Action.FAERIE_FIRE)
         self.add_ability(Action.THUNDERWAVE)
         self.add_ability(BonusAction.HEALING_WORD, mod=3)
         self.add_ability(BonusAction.SHILLELAGH, original_attack=self.scimitar[1], new_attack=self.shillelagh_scimitar[1])
-        self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=3, dmg_dice="1d8", dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
+        self.longbow = self.add_ability(Action.RANGED_ATTACK, name="Longbow", combatant=self, to_hit=3, dmg_dice=[(1, 8)], dmg_bonus=1, dmg_type=DamageType.Piercing, attack_range=120)
         self.danger_zone_attack = self.scimitar
         self.wildshape_factory = self.add_ability(BonusAction.MOON_WILDSHAPE)
         self.build_attack_fms()

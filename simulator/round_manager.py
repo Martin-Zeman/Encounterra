@@ -3,9 +3,10 @@ from .actions.action_selector import get_action
 from .misc import Statistics
 from .resources import reset_resources
 from .teams import Teams
-from .utils.utils import preallocate_wildshape_forms
 import logging
 import copy
+
+from .utils.wildshape_utils import preallocate_wildshape_forms
 
 logger = logging.getLogger("Encounterra")
 

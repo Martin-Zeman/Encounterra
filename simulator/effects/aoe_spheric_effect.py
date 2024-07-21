@@ -5,6 +5,7 @@ from ..battle_map import Map
 from ..effects.aoe_effect import AoeEffect
 from ..geometry import get_square_center
 
+
 # The order of inheritance is important here
 class AoeSphericEffect(SphericAoe, AoeEffect):
 

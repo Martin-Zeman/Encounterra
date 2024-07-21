@@ -12,6 +12,7 @@ from ..factory_interfaces import DirectThreatFactory, RechargeFactory
 from ..threat_utils import get_saving_throw_success_prob
 from ..misc import Visibility
 import logging
+import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
 
@@ -87,11 +88,13 @@ class Web(Actoid, DirectThreat):
             return None  # Webbing someone from the inside doesn't make sense
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_dist=self.factory.combatant.size.value + self.factory.distance,
-                                                           rng=battle_map.size,  # approximation, could theoretically be longer
-                                                           combatant=self.factory.combatant)
+            free_coords_in_range = nf.get_free_coords_in_hop_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                self.factory.combatant.size.value + self.factory.distance,
+                battle_map.size,  # approximation, could theoretically be longer
+                self.factory.combatant.id)
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
         elif battle_map.get_hop_distance_combatants(self.factory.combatant, self.target) >= self.factory.distance and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:

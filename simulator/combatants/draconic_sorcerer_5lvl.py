@@ -19,8 +19,8 @@ class DraconicSorcerer5Lvl(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=37, ac=15, init_bonus=2, speed=30, spell_to_hit=7, resistances=set(), dc=15)
-        self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice="1d8", dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.quarterstaff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice=[(1, 8)], dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
+        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=2, dmg_dice=[(1, 8)], dmg_bonus=-1, dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.add_ability(Passive.DRACONIC_RESILIENCE)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(Action.FIREBALL)

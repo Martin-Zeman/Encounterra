@@ -4,15 +4,14 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
-from ..misc import DamageType, SavingThrow
-from ..conditions import Conditions, is_affected_by
+from ..battle_map import Map, map_position_toggled_cache
+from ..misc import DamageType, SavingThrow, Size
 from ..actions.actoid import Actoid, FactoryFlags
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
-from ..threat_utils import mean_dmg_dc_attack
 import logging
+import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
 
@@ -24,7 +23,7 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         super().__init__()
         self.flags |= FactoryFlags.TRANSITIONS_TO_WILDSHAPE
         self.action_type = BonusAction.FLAMING_SPHERE_RAM
-        self.dmg_dice = "2d6"
+        self.dmg_dice = [(2, 6)]
         self.combatant = caster
         self.dc = dc
         self.action_enabler_effect = action_enabler_effect
@@ -44,19 +43,22 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         result = []
         for enemy in enemies:
             # Just take the one that is on the far side of the enemy from the combatant's PoV
-            coords_around_enemy = list(battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(enemy), rng=1))
-            coords_around_enemy.sort(key=lambda coord: battle_map.get_cartesian_distance_coords(np.array([coord]), battle_map.get_combatant_position(self.combatant).get()), reverse=True)
-            result.append(FlamingSphereRam(enemy, coords_around_enemy[0], self))
+            coords_around_enemy = nf.get_free_coords_in_hop_range(battle_map.grid, battle_map.get_combatant_position(enemy).get(), np.array([], dtype=np.float64), Size.MEDIUM.value, 1, -1)
+            coords_around_enemy.sort(key=lambda coord: nf.get_cartesian_distance_coords(np.array([coord]), battle_map.get_combatant_position(self.combatant).get()), reverse=True)
+            result.append(FlamingSphereRam(enemy, np.array(coords_around_enemy[0], dtype=np.int64), self))
         return result
 
     def create(self, target, coord):
-        return FlamingSphereRam(target, coord, self)
+        return FlamingSphereRam(target, np.array(coord, dtype=np.int64), self)
 
     def calculate_threat_to_target(self, target, **kwargs):
         """
         Calculates threat to one specific target
         """
-        return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, self.saving_throw, target, self.dmg_type))
+        return min(target.curr_hp, nf.mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+                                                      target.saving_throws[self.saving_throw],
+                                                      target.is_immune_to(self.dmg_type),
+                                                      target.is_resistant_to(self.dmg_type)))
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -101,5 +103,5 @@ class FlamingSphereRam(Actoid, DirectThreat):
         #     return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
         return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
 
-    def move_effect(self, coord):
+    def move_effect(self, coord: np.array):
         self.factory.action_enabler_effect.origin = coord

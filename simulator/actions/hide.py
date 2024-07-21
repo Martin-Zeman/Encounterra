@@ -1,24 +1,21 @@
-from functools import cache
-
-from cachetools import cached
-from cachetools.keys import hashkey
-
 from ..abilities.on_hit_sneak_attack import OnHitSneakAttack
 from ..actions.action_types import HasteAction, BonusAction
-from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..actions.actoid import ActoidFlags, FactoryFlags
+from ..battle_map import Map
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
-from ..misc import Visibility, roll_ability_check
-from ..conditions import Conditions, is_affected_by_any, get_swallower, is_affected_by
+from ..misc import Visibility
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import ThreatModifierFactory
 import logging
+import numba_functions as nf
 
-from ..threat_utils import calc_p_hit
 from ..utils.roll_types import RollType, ThreatModifierType, ROLL_TYPE_DELTA
+from ..utils.utils import roll_ability_check
 
 logger = logging.getLogger("Encounterra")
+
 
 class HideFactory(ThreatModifierFactory):
 
@@ -52,10 +49,10 @@ class HideFactory(ThreatModifierFactory):
         return 0  # Keep at 0 since we only want to hide in order to attack, the threat will be added as an attack modifier
 
 
-class Hide(Actoid, CombatantEffect, AttackThreatModifier):
+class Hide(AttackThreatModifier, CombatantEffect):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, ActoidFlags.IS_HIDE)
+        AttackThreatModifier.__init__(self, ActoidFlags.IS_HIDE)
         CombatantEffect.__init__(self, factory.combatant, combatants=[factory.combatant])
         self.target = target
         self.factory = factory
@@ -111,7 +108,7 @@ class Hide(Actoid, CombatantEffect, AttackThreatModifier):
                 return threat_acc  # Sneak Attack condition already met, no extra benefit
             if isinstance(attack.factory.on_hit, OnHitSneakAttack):
                 to_hit_total = attack.factory.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(attack.target.ac - attack.factory.to_hit, 20))]
-                threat_acc += calc_p_hit(to_hit_total, attack.target.ac) * attack.factory.on_hit.calculate_threat(combatant, attack.target, roll_type=RollType.ADVANTAGE)
+                threat_acc += nf.calc_p_hit(to_hit_total, attack.target.ac) * attack.factory.on_hit.calculate_threat(combatant, attack.target, roll_type=RollType.ADVANTAGE)
             return threat_acc
         else:
             return 0

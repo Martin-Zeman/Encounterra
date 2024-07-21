@@ -4,13 +4,13 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
 from ..spells.spell import SpellStats
 from ..misc import SavingThrow, DamageType
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
-from ..threat_utils import mean_dmg_dc_attack
+import numba_functions as nf
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
@@ -31,8 +31,8 @@ class FireballFactory(DirectThreatFactory):
         self.dc = dc
         self.action_type = action_type  # FIREBALL, QUICKENED_FIREBALL
         self.saving_throw = SavingThrow.DEX
-        self.dmg_dice = "8d6"
-        self.additional_upcast_dmg = "1d6"
+        self.dmg_dice = [(8, 6)]
+        self.additional_upcast_dmg = [(1, 6)]
         self.combatant = caster
         self.has_spell_sculpting = has_spell_sculpting
         self.resource = resource
@@ -68,7 +68,10 @@ class FireballFactory(DirectThreatFactory):
         Calculates threat to one specific target
         """
         if Map.get().get_cartesian_distance_combatants(self.combatant, target) <= FireballFactory.range + SpellStats.TRANSLATE_RADIUS[FireballFactory.target]:
-            return min(target.curr_hp, mean_dmg_dc_attack(self.dc, self.dmg_dice, True, self.saving_throw, target, FireballFactory.dmg_type))
+            return min(target.curr_hp, nf.mean_dmg_dc_attack(self.dc, self.dmg_dice, True,
+                                                          target.saving_throws[self.saving_throw],
+                                                          target.is_immune_to(FireballFactory.dmg_type),
+                                                          target.is_resistant_to(FireballFactory.dmg_type)))
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -103,8 +106,11 @@ class Fireball(Actoid, DirectThreat):
         affected = battle_map.get_combatants_affected_by_sphere_aoe(self.factory.combatant, FireballFactory.target, FireballFactory.type, self.coord)
         acc = 0
         for aff in affected:
-            mean_dmg = min(aff.curr_hp, mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True, self.factory.saving_throw, aff, FireballFactory.dmg_type))
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * mean_dmg
+            avg_dmg = min(aff.curr_hp, nf.mean_dmg_dc_attack(self.factory.dc, self.factory.dmg_dice, True,
+                                                           aff.saving_throws[self.factory.saving_throw],
+                                                           aff.is_immune_to(FireballFactory.dmg_type),
+                                                           aff.is_resistant_to(FireballFactory.dmg_type)))
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_dmg
         return acc
 
     def clear_cache(self):
@@ -120,11 +126,13 @@ class Fireball(Actoid, DirectThreat):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_cartesian_range(Coords(self.coord),  # not actually combatant coords
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=FireballFactory.range,
-                                                                 combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= FireballFactory.range:
+            return nf.get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                Coords(self.coord).get(),  # not actually combatant coords
+                distances,
+                self.factory.combatant.size.value,
+                FireballFactory.range,
+                self.factory.combatant.id)
+        elif nf.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.coord])) <= FireballFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

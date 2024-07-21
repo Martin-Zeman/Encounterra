@@ -1,20 +1,17 @@
 import logging
 from itertools import combinations
 
-from cachetools import cached
-from cachetools.keys import hashkey
-
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..effects.effect import EffectType
 from ..actions.actoid import Actoid, ActoidFlags
-from ..threat_utils import mean_dmg
+import numba_functions as nf
 from ..threat_interfaces import Threat
 from ..factory_interfaces import ThreatModifierFactory
-from functools import reduce, cache
+from functools import reduce
 from ..misc import ROUND_HORIZON, get_attack_factories, get_haste_eligible_attacks, Visibility
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..spells.haste import HasteFactory
 from ..utils.roll_types import ThreatModifierType
 
@@ -79,7 +76,10 @@ class TwinnedHasteFactory(ThreatModifierFactory):
             potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed + attack.range + 1)
             if not potential_targets:
                 continue
-            dmg_acc = reduce(lambda acc, pt: acc + mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, pt, attack.dmg_type, attack.crit_range), potential_targets, 0)
+            dmg_acc = reduce(lambda acc, pt: acc + nf.mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac,
+                                                            pt.is_immune_to(attack.dmg_type),
+                                                            pt.is_resistant_to(attack.dmg_type),
+                                                            attack.crit_range), potential_targets, 0)
             dmg_acc /= len(potential_targets)
             max_attack_dmg = max(dmg_acc, max_attack_dmg)
         attack_dmg_decrement_acc = 0
@@ -161,18 +161,21 @@ class TwinnedHaste(Actoid, LimitedDurationEffect, Threat):
             if self.targets[0] is self.factory.combatant:
                 coords_for_first = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
             else:
-                coords_for_first = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[0]),
-                                                                                 distances,
-                                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                                 rng=TwinnedHasteFactory.range)
-
+                coords_for_first = nf.get_free_coords_in_cartesian_range(
+                    battle_map.grid,
+                    battle_map.get_combatant_position(self.targets[0]).get(),
+                    distances,
+                    self.factory.combatant.size.value,
+                    TwinnedHasteFactory.range, -1)
             if self.targets[1] is self.factory.combatant:
                 coords_for_second = battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
             else:
-                coords_for_second = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.targets[1]),
-                                                                                  distances,
-                                                                                  inflate_to_dist=self.factory.combatant.size.value,
-                                                                                  rng=TwinnedHasteFactory.range)
+                coords_for_second = nf.get_free_coords_in_cartesian_range(
+                    battle_map.grid,
+                    battle_map.get_combatant_position(self.targets[1]).get(),
+                    distances,
+                    self.factory.combatant.size.value,
+                    TwinnedHasteFactory.range, -1)
             free_coords_in_range = set(coords_for_first).intersection(set(coords_for_second))
 
             return [coord for coord in free_coords_in_range if

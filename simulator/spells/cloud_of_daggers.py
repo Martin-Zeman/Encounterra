@@ -1,21 +1,17 @@
-from functools import cache
-
-from cachetools import cached
-from cachetools.keys import hashkey
-
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache
 from ..combatant_coords import Coords
 from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
-from ..misc import DamageType, avg_roll, roll_spell_dmg
+from ..misc import DamageType
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, ActoidFlags
 from ..threat_interfaces import DirectThreat, AoEThreat
 from ..factory_interfaces import DirectThreatFactory
 import numpy as np
+import numba_functions as nf
 
 
 class CloudOfDaggersFactory(DirectThreatFactory):
@@ -30,7 +26,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
     def __init__(self, action_type, caster, resource):
         super().__init__()
         self.action_type = action_type  # SPIKE_GROWTH, QUICKENED_SPIKE_GROWTH
-        self.dmg_dice = "4d4"
+        self.dmg_dice = [(4, 4)]
         self.combatant = caster
         self.resource = resource
 
@@ -52,7 +48,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         # Here there really is no need to iterate over all coords. Just find the best score
         coord = self.find_best_args(self.combatant)
         if coord is not None:
-            return [CloudOfDaggers(coord, self)]
+            return [CloudOfDaggers(np.array(coord, dtype=np.int64), self)]
         return []
 
     def create(self, coord):
@@ -62,7 +58,7 @@ class CloudOfDaggersFactory(DirectThreatFactory):
         """
         Calculates threat to one specific target
         """
-        return avg_roll(self.dmg_dice)
+        return nf.avg_roll_multi(self.dmg_dice)
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
         """
@@ -92,7 +88,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CLOUD_OF_DAGGERS else "") + f"Cloud of Daggers"
 
     def on_start_of_turn(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        dmg = nf.roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
@@ -100,7 +96,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         pass
 
     def on_enter(self, combatant):
-        dmg = roll_spell_dmg(self.factory.dmg_dice)
+        dmg = nf.roll_dice(self.factory.dmg_dice)
         combatant.receive_dmg(dmg, CloudOfDaggersFactory.dmg_type)
         Map.get().remove_combatant_if_dead(combatant)
 
@@ -113,7 +109,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
     def is_affecting(self, combatant):
         coords = self.get_affected_coords()
         battle_map = Map.get()
-        return battle_map.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
+        return nf.get_hop_distance_coords(battle_map.get_combatant_position(combatant).get(), coords) == 0
 
     def activate(self, **kwargs):
         Map.get().effect_tracker.add(self)
@@ -131,7 +127,7 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         affected = battle_map.get_combatants_affected_by_box_aoe(CloudOfDaggersFactory.target, self.origin)
         acc = 0
         for aff in affected:
-            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * avg_roll(self.factory.dmg_dice)
+            acc += (1 if battle_map.teams.are_enemies(self.factory.combatant, aff) else -3) * nf.avg_roll_multi(self.factory.dmg_dice)
         return acc
 
     def clear_cache(self):
@@ -145,10 +141,10 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         return 0
 
     def threat_on_enter(self, target, *args, **kwargs):
-        return avg_roll(self.factory.dmg_dice)
+        return nf.avg_roll_multi(self.factory.dmg_dice)
 
     def threat_on_start_of_turn(self, target, *args, **kwargs):
-        return avg_roll(self.factory.dmg_dice)
+        return nf.avg_roll_multi(self.factory.dmg_dice)
 
     def threat_on_move_within(self, target, *args, **kwargs):
         return 0
@@ -159,10 +155,12 @@ class CloudOfDaggers(Actoid, LimitedDurationEffect, AoeSquareEffect, DirectThrea
         if get_swallower(self.factory.combatant):
             return None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_cartesian_range(Coords(self.origin),  # not actually combatant coords
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=CloudOfDaggersFactory.range, combatant=self.factory.combatant)
-        elif battle_map.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= CloudOfDaggersFactory.range:
+            return nf.get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                Coords(self.origin).get(),  # not actually combatant coords
+                distances,
+                self.factory.combatant.size.value,
+                CloudOfDaggersFactory.range, self.factory.combatant.id)
+        elif nf.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= CloudOfDaggersFactory.range:
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

@@ -1,18 +1,13 @@
 import math
-from functools import cache
-
-from cachetools import cached
-from cachetools.keys import hashkey
-
 from ..actions.actoid import FactoryFlags
 from ..actions.attack import AttackFactory, Attack
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache
 from ..misc import Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..resources import Uses, ResourceRefreshType
-from ..threat_utils import mean_dmg, calc_p_hit
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA
 import logging
+import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
 
@@ -43,11 +38,13 @@ class RangedAttackFactory(AttackFactory):
         # TODO: Should I include roll types here? There may be a use-case in the future
         battle_map = Map.get()
         if not consider_dist or battle_map.get_cartesian_distance_combatants(self.combatant, target) <= self.range:
-            acc = mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, target, self.dmg_type, self.crit_range)
+            acc = nf.mean_dmg(to_hit_total, self.dmg_dice, self.dmg_bonus, target.ac, target.is_immune_to(self.dmg_type),
+                           target.is_resistant_to(self.dmg_type), self.crit_range)
             for extra in self.extra_dmg:
-                acc += mean_dmg(to_hit_total, extra[0], 0, target.ac, target, extra[1], self.crit_range)
+                acc += nf.mean_dmg(to_hit_total, [extra[0]], 0, target.ac,
+                                target.is_immune_to(extra[1]), target.is_resistant_to(extra[1]), self.crit_range)
             for oh in self.on_hit:
-                acc += calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
+                acc += nf.calc_p_hit(to_hit_total, target.ac) * oh.calculate_threat(self.combatant, target)
             return acc
         return 0
 
@@ -77,10 +74,12 @@ class RangedAttack(Attack):
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         # if self.factory.combatant.movement > 0 and not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                                                 distances,
-                                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                                 rng=self.factory.range, combatant=self.factory.combatant)
+            free_coords_in_range = nf.get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                self.factory.combatant.size.value,
+                self.factory.range, self.factory.combatant.id)
             if not battle_map.effect_tracker.is_combatant_hidden_from(self.factory.combatant, self.target):
                 return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
             else:

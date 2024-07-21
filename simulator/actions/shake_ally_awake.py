@@ -1,11 +1,9 @@
-from functools import cache
-
-from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 import logging
+import numba_functions as nf
 from ..battle_map import Map, map_toggled_cache_with_key
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..misc import SHORTER_ROUND_HORIZON
@@ -74,10 +72,12 @@ class ShakeAllyAwake(Actoid, DirectThreat):
             return None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_dist=self.factory.combatant.size.value,
-                                                           rng=1,
-                                                           combatant=self.factory.combatant)
+            return nf.get_free_coords_in_hop_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                self.factory.combatant.size.value,
+                1,
+                self.factory.combatant.id)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]

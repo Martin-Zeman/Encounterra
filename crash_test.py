@@ -6,7 +6,7 @@ from simulator.battle_map import Map
 from simulator.logging.custom_logger import CustomLogger
 from simulator.session import Session
 
-TIMESTAMP = "1715049597"
+TIMESTAMP = "1721486769"
 
 
 def unify_combatants(session, battle_map):

@@ -3,6 +3,7 @@
 !simulator/
 /simulator/**/__pycache__
 /simulator/test
+!numba_functions.py
 !core_entrypoint.py
 !pyproject.toml
 !poetry.lock

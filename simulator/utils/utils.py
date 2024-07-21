@@ -3,15 +3,9 @@ import inspect
 import logging
 import math
 import pkgutil
-from ..abilities.wildshape import Wildshape
-from ..actions.action_types import Action, BonusAction
-from ..combatants.brown_bear import BrownBear
-from ..combatants.dire_wolf import DireWolf
-from ..combatants.giant_constrictor_snake import GiantConstrictorSnake
-from ..combatants.giant_spider import GiantSpider
-from ..combatants.giant_toad import GiantToad
-from ..combatants.quetzalcoatlus import Quetzalcoatlus
-from ..combatants.saber_toothed_tiger import SaberToothedTiger
+import random
+import numba_functions as nf
+from .roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
 
@@ -37,34 +31,53 @@ def get_combatant_classes():
     return classes
 
 
-def get_available_wildshape_forms(level, action_type):
-    if action_type is Action.WILDSHAPE:
-        pass
-    elif action_type is BonusAction.MOON_WILDSHAPE:
-        match level:
-            case lvl if 2 <= lvl <= 5:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider]
-            case lvl if 6 <= lvl <= 8:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
-            case lvl if 9 <= lvl <= 11:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
-                # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion]
-            case lvl if 12 <= lvl <= 14:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
-                # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus]
-            case lvl if 15 <= lvl <= 17:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
-                # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus, GiantCrocodile]
-            case lvl if 18 <= lvl <= 20:
-                return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, SaberToothedTiger]
-                # return [DireWolf, BrownBear, GiantToad, GiantSpider, GiantConstrictorSnake, Quetzalcoatlus, SaberToothedTiger, Ankylosaurus, GiantScorpion, Stegosaurus, GiantCrocodile, Mammoth]
-            case _:
-                logger.error("Incorrect character level. No wildshape forms added!")
-    return []
+# Use the function and handle logging outside the Numba-compiled function
+def roll_dice_with_reroll(dice, reroll_max_value):
+    result, reroll_log = nf.roll_dice_with_reroll_and_log(dice, reroll_max_value)
+    for original, reroll in reroll_log:
+        logger.info(f"Re-rolling {original} as {reroll}")
+    return result
 
 
-def preallocate_wildshape_forms(combatant, action_type, factory):
-    available_forms = get_available_wildshape_forms(combatant.level, action_type)
-    return [Wildshape(combatant, form, factory) for form in available_forms]
+# njit candidate
+def roll_saving_throw(bonus, dc, roll_type):
+    d20 = (1, 20)
+    if roll_type is RollType.STRAIGHT:
+        roll = nf.roll_dice(d20)
+    elif roll_type is RollType.ADVANTAGE:
+        roll = max(nf.roll_dice(d20), nf.roll_dice(d20))
+    else:
+        roll = min(nf.roll_dice(d20), nf.roll_dice(d20))
+
+    if roll == 20:
+        return True
+    return roll + bonus >= dc
+
+
+# njit candidate
+def roll_ability_check(bonus, dc, roll_type):
+    d20 = (1, 20)
+    if roll_type is RollType.STRAIGHT:
+        return nf.roll_dice(d20) + bonus >= dc
+    elif roll_type is RollType.ADVANTAGE:
+        return max(nf.roll_dice(d20), nf.roll_dice(d20)) + bonus >= dc
+    else:
+        return min(nf.roll_dice(d20), nf.roll_dice(d20)) + bonus >= dc
+
+
+def roll_dice_chaos_bolt(dice):
+    dice_sum = 0
+    numbers_rolled = []
+    for i in range(dice[0]):
+        rolled = random.randint(1, dice[1])
+        dice_sum += rolled
+        numbers_rolled.append(rolled)
+    return dice_sum, numbers_rolled
+
+
+def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
+    primary_dmg, numbers = roll_dice_chaos_bolt(dmg_dice[0])
+    secondary_dmg = nf.roll_dice(additional_dmg_dice[0])
+    return primary_dmg + secondary_dmg, numbers
 
 from functools import cache

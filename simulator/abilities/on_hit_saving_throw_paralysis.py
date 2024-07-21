@@ -1,7 +1,8 @@
 from .on_hit_saving_throw_effect import OnHitSavingThrowEffect
-from ..abilities.on_hit_effect import OnHit
-from ..misc import roll_saving_throw, reconcile_roll_types, Class
+from ..misc import reconcile_roll_types, Class
 import logging
+
+from ..utils.utils import roll_saving_throw
 
 logger = logging.getLogger("Encounterra")
 

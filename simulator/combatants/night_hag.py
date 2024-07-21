@@ -19,9 +19,9 @@ class NightHag(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=112, ac=17, init_bonus=2, speed=30, spell_to_hit=6, resistances={DamageType.Fire, DamageType.Cold, DamageType.Bludgeoning, DamageType.Slashing, DamageType.Piercing}, dc=14)
-        self.claws = self.add_ability(Action.MELEE_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice="2d8", dmg_bonus=4,
+        self.claws = self.add_ability(Action.MELEE_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice=[(2, 8)], dmg_bonus=4,
                          dmg_type=DamageType.Slashing, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice="2d8", dmg_bonus=4,
+        self.add_ability(Reaction.REACTION_ATTACK, name="Claws", combatant=self, to_hit=7, dmg_dice=[(2, 8)], dmg_bonus=4,
                          dmg_type=DamageType.Slashing, attack_range=1)
         ray_of_enfeeblement_two_uses = Uses(2, ResourceRefreshType.LONG_REST)
         sleep_two_uses = Uses(2, ResourceRefreshType.LONG_REST)

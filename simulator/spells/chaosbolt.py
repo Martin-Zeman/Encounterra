@@ -1,25 +1,25 @@
-from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.spell import SpellStats
 from ..misc import DamageType, Visibility
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 import logging
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from ..threat_utils import mean_dmg
+import numba_functions as nf
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from ..misc import percent_of_curr_hp
-from functools import cache
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
 
+
 class ChaosboltFactory(DirectThreatFactory):
     DMG_TYPE = (
-        DamageType.Acid, DamageType.Cold, DamageType.Fire, DamageType.Force, DamageType.Lightning, DamageType.Poison, DamageType.Psychic,
+        DamageType.Acid, DamageType.Cold, DamageType.Fire, DamageType.Force, DamageType.Lightning, DamageType.Poison,
+        DamageType.Psychic,
         DamageType.Thunder)
 
     level = 1
@@ -36,8 +36,8 @@ class ChaosboltFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # CHAOSBOLT, QUICKENED_CHAOSBOLT
-        self.dmg_dice = "2d8"
-        self.additional_dmg_dice = "1d6"
+        self.dmg_dice = [(2, 8)]
+        self.additional_dmg_dice = [(1, 6)]
         self.combatant = caster
         self.resource = resource
 
@@ -57,7 +57,8 @@ class ChaosboltFactory(DirectThreatFactory):
         potential_targets = list(zip(potential_targets, hp_percentages))
         potential_targets.sort(key=lambda e: e[1], reverse=True)
         for i in range(1, len(potential_targets)):
-            if battle_map.get_cartesian_distance_combatants(potential_targets[i - 1][0], potential_targets[i][0]) > SpellStats.Range.FEET_30:
+            if battle_map.get_cartesian_distance_combatants(potential_targets[i - 1][0],
+                                                            potential_targets[i][0]) > SpellStats.Range.FEET_30:
                 break
         return list(zip(*potential_targets[:i]))[0]
 
@@ -84,14 +85,17 @@ class ChaosboltFactory(DirectThreatFactory):
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= ChaosboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
-            other_potential_targets = battle_map.get_non_swallowed_enemies_within_radius(self.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
+            other_potential_targets = battle_map.get_non_swallowed_enemies_within_radius(self.combatant,
+                                                                                         ChaosboltFactory.range)  # Relaxes the 30ft distance condition
             other_potential_targets.remove(self.target)
             P_SAME = 4 / 43  # 8/86 = 4 / 43
             p_acc = P_SAME
-            dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
-            acc = mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target, DamageType.Random)
+            dmg_dice = self.dmg_dice.extend(self.additional_dmg_dice)
+            acc = nf.mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+                           target.is_resistant_to(DamageType.Random), DamageType.Random)
             for pt in other_potential_targets:
-                acc += mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, pt, DamageType.Random, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
+                acc += nf.mean_dmg(self.to_hit, dmg_dice, 0, pt.ac, target.is_immune_to(DamageType.Random),
+                                target.is_resistant_to(DamageType.Random), ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
                 p_acc *= P_SAME
         return acc
 
@@ -107,8 +111,11 @@ class ChaosboltFactory(DirectThreatFactory):
             to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
             total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
-            dmg_dice = "+".join([self.dmg_dice, self.additional_dmg_dice])
-            return mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target, DamageType.Random, total_crit) - mean_dmg(self.to_hit, dmg_dice, 0, target.ac, target, DamageType.Random)
+            dmg_dice = self.dmg_dice + self.additional_dmg_dice
+            return (nf.mean_dmg(to_hit_total, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+                             target.is_resistant_to(DamageType.Random), total_crit) -
+                    nf.mean_dmg(self.to_hit, dmg_dice, 0, target.ac, target.is_immune_to(DamageType.Random),
+                             target.is_resistant_to(DamageType.Random)))
         else:
             return 0
 
@@ -129,7 +136,8 @@ class Chaosbolt(Actoid, DirectThreat):
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt on {self.target[0]}"
+        return (
+            "Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt on {self.target[0]}"
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_CHAOSBOLT else "") + f"Chaosbolt"
@@ -137,17 +145,24 @@ class Chaosbolt(Actoid, DirectThreat):
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
         battle_map = Map.get()
-        roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
-        potential_targets = battle_map.get_non_swallowed_enemies_within_radius(self.factory.combatant, ChaosboltFactory.range)   # Relaxes the 30ft distance condition
+        roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(
+            self.factory.combatant) else RollType.DISADVANTAGE
+        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
+            max(0, min(self.target.ac - self.factory.to_hit, 20))]
+        potential_targets = battle_map.get_non_swallowed_enemies_within_radius(self.factory.combatant,
+                                                                               ChaosboltFactory.range)  # Relaxes the 30ft distance condition
         potential_targets.remove(self.target)
         P_SAME = 4 / 43  # 8/86 = 4 / 43
         p_acc = P_SAME
-        dmg_dice = "+".join([self.factory.dmg_dice, self.factory.additional_dmg_dice])
-        acc = mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac, self.target, DamageType.Random)
+        dmg_dice = self.factory.dmg_dice + self.factory.additional_dmg_dice
+        acc = nf.mean_dmg(to_hit_total, dmg_dice, 0, self.target.ac, self.target.is_immune_to(DamageType.Random),
+                       self.target.is_resistant_to(DamageType.Random))
         for pt in potential_targets:
-            to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(pt.ac - self.factory.to_hit, 20))]
-            acc += mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, pt, DamageType.Random, ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
+            to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
+                max(0, min(pt.ac - self.factory.to_hit, 20))]
+            acc += nf.mean_dmg(to_hit_total, dmg_dice, 0, pt.ac, pt.is_immune_to(DamageType.Random),
+                            pt.is_resistant_to(DamageType.Random),
+                            ROLL_TYPE_CRIT_DELTA[roll_type]) * p_acc
             p_acc *= P_SAME
         return acc
 
@@ -156,7 +171,9 @@ class Chaosbolt(Actoid, DirectThreat):
         self.calculate_threat_delta.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    @map_toggled_cache_with_key(
+        key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(
+            Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         """
         The delta in threat when modifiers are applied on this ability.
@@ -172,14 +189,19 @@ class Chaosbolt(Actoid, DirectThreat):
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=ChaosboltFactory.range,
-                                                                 combatant=self.factory.combatant)
-            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
-        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= ChaosboltFactory.range and \
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING,
+                                  Conditions.RESTRAINED):
+            free_coords_in_range = nf.get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                self.factory.combatant.size.value,
+                ChaosboltFactory.range,
+                self.factory.combatant.id)
+            return [coord for coord in free_coords_in_range if
+                    battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant,
+                                                          self.target) <= ChaosboltFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
             return [curr_coord]
         return None

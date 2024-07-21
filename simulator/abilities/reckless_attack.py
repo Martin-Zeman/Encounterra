@@ -11,12 +11,12 @@ from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
 from ..misc import reconcile_roll_types
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from functools import reduce
-from ..misc import avg_roll
 from ..resources import ResourceRefreshType, Uses
-from ..threat_utils import mean_dmg, calculate_threat_in_delta
+from ..threat_utils import calculate_threat_in_delta
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 from enum import Enum, auto
+import numba_functions as nf
 from ..utils.roll_types import RollType, ROLL_TYPE_DELTA, ROLL_TYPE_CRIT_DELTA, ThreatModifierType
 
 logger = logging.getLogger("Encounterra")
@@ -49,10 +49,10 @@ class RecklessAttackFactory(DirectThreatFactory):
 
         # Here I'm keeping them as class instance variables to be able to call them in calculate_threat_approx
         self.mod_range = 0
-        self.mod_to_hit_die = '0d0'
+        self.mod_to_hit_die = (0, 0)
         self.mod_to_hit_flat = 0
         self.mod_dmg_flat = 0
-        self.mod_dmg_die = '0d0'
+        self.mod_dmg_die = [(0, 0)]
         self.mod_crit_range = 0
 
 
@@ -84,15 +84,16 @@ class RecklessAttackFactory(DirectThreatFactory):
         potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(combatant, combatant.speed + 1 + self.mod_range)
         if not potential_targets:
             return 0
-        def mean_dmg_delta(acc, pt):
-            to_hit_total = self.to_hit + self.mod_to_hit_flat + avg_roll(self.mod_to_hit_die)
+        def local_mean_dmg_delta(acc, pt):
+            to_hit_total = self.to_hit + self.mod_to_hit_flat + nf.avg_roll(self.mod_to_hit_die)
             to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(pt.ac - to_hit_total, 20))]
             total_crit = self.crit_range + self.mod_crit_range
             total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
-            return acc + mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]) if self.mod_dmg_die else self.dmg_dice,
-                                  self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt, self.dmg_type)
+            return acc + nf.mean_dmg(to_hit_total, self.dmg_dice + self.mod_dmg_die,
+                                  self.dmg_bonus + self.mod_dmg_flat, pt.ac, total_crit, pt.is_immune_to(self.dmg_type),
+                                  pt.is_resistant_to(self.dmg_type))
 
-        dmg_acc = reduce(mean_dmg_delta, potential_targets)
+        dmg_acc = reduce(local_mean_dmg_delta, potential_targets)
         dmg_acc /= len(potential_targets)
         return dmg_acc
 
@@ -102,7 +103,10 @@ class RecklessAttackFactory(DirectThreatFactory):
         dmg = 0
         battle_map = Map.get()
         if battle_map.get_hop_distance_combatants(self.combatant, target) <= self.range or not consider_dist:
-            dmg = mean_dmg(self.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus, target.ac, target, self.dmg_type, self.crit_range * ROLL_TYPE_CRIT_DELTA[RollType.ADVANTAGE])
+            dmg = nf.mean_dmg(self.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))],
+                           self.dmg_dice, self.dmg_bonus, target.ac, target.is_immune_to(self.dmg_type),
+                           target.is_resistant_to(self.dmg_type),
+                           self.crit_range * ROLL_TYPE_CRIT_DELTA[RollType.ADVANTAGE])
         # even the single target calculation the combatant is still more vulnerable to all potential attackers
         incoming_threat_delta_acc = calculate_threat_in_delta(self.combatant, 6, {ThreatModifierType.ROLL_TYPE: RollType.ADVANTAGE}, FactoryFlags.IS_ATTACK_LIKE)[1] / 2  # Heuristic
         return dmg - incoming_threat_delta_acc
@@ -118,13 +122,15 @@ class RecklessAttackFactory(DirectThreatFactory):
         baseline = 0
         battle_map = Map.get()
         if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
-            baseline = mean_dmg(self.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))], self.dmg_dice, self.dmg_bonus,
-                                    target.ac, target, self.dmg_type, self.crit_range * ROLL_TYPE_CRIT_DELTA[RollType.ADVANTAGE])
+            baseline = nf.mean_dmg(
+                self.to_hit + ROLL_TYPE_DELTA[RollType.ADVANTAGE][max(0, min(target.ac - self.to_hit, 20))],
+                self.dmg_dice, self.dmg_bonus, target.ac, target.is_immune_to(self.dmg_type),
+                target.is_resistant_to(self.dmg_type), self.crit_range * ROLL_TYPE_CRIT_DELTA[RollType.ADVANTAGE])
         mod_range = modifiers.get(ThreatModifierType.RANGE, 0)
         mod_dmg_flat = modifiers.get(ThreatModifierType.DMG_BONUS_FLAT, 0)
-        # mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, '0d0')
+        # mod_dmg_die = modifiers.get(ThreatModifierType.DMG_BONUS_DIE, = [(0, 0)])
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
-        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
+        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, (0, 0))
         mod_crit_range = modifiers.get(ThreatModifierType.CRIT_RANGE, 0)
         auto_crit = modifiers.get(ThreatModifierType.AUTO_CRIT, False)
         roll_type = reconcile_roll_types({RollType.ADVANTAGE, modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.ADVANTAGE)})
@@ -132,12 +138,14 @@ class RecklessAttackFactory(DirectThreatFactory):
         modified = baseline
         with battle_map.as_if_dist_delta_from_combatant(self.combatant, target, -mod_range):
             if battle_map.are_in_hop_range(self.combatant, target, self.range) or not consider_dist:
-                to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+                to_hit_total = self.to_hit + mod_to_hit_flat + nf.avg_roll(mod_to_hit_die)
                 to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - to_hit_total, 20))]
                 total_crit = self.crit_range + mod_crit_range
                 total_crit *= ROLL_TYPE_CRIT_DELTA[roll_type]
                 total_crit = 20 if auto_crit else total_crit
-                modified = mean_dmg(to_hit_total, "+".join([self.dmg_dice, self.mod_dmg_die]), self.dmg_bonus + mod_dmg_flat, target.ac, target, self.dmg_type, total_crit)
+                modified = nf.mean_dmg(to_hit_total, self.dmg_dice + self.mod_dmg_die, self.dmg_bonus + mod_dmg_flat,
+                                    target.ac, target.is_immune_to(self.dmg_type),
+                                    target.is_resistant_to(self.dmg_type), total_crit)
             else:
                 modified = 0
 
@@ -209,11 +217,13 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_dist=self.factory.combatant.size.value,
-                                                           rng=self.factory.range,
-                                                           combatant=self.factory.combatant)
+            return nf.get_free_coords_in_hop_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                self.factory.combatant.size.value,
+                self.factory.range,
+                self.factory.combatant.id)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
         return None

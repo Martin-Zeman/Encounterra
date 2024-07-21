@@ -18,9 +18,9 @@ class BlueDragonWyrmling(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=52, ac=17, init_bonus=0, spell_to_hit=0, speed=60, immunities={DamageType.Lightning}, resistances=set(), dc=0)
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="1d10", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[('1d6', DamageType.Lightning)])
-        self.add_ability(Action.LINE_BREATH_WEAPON, recharge=5, dmg_dice='4d10', dmg_type=DamageType.Lightning, saving_throw=SavingThrow.DEX, dc=12, length=6, width=1, name="Lightning Breath")
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice="1d10", dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[('1d6', DamageType.Lightning)])
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice=[(1, 10)], dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 6), DamageType.Lightning)])
+        self.add_ability(Action.LINE_BREATH_WEAPON, recharge=5, dmg_dice=[(4, 10)], dmg_type=DamageType.Lightning, saving_throw=SavingThrow.DEX, dc=12, length=6, width=1, name="Lightning Breath")
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=5, dmg_dice=[(1, 10)], dmg_bonus=3, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 6), DamageType.Lightning)])
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 3
         self.saving_throws[SavingThrow.DEX] = 0

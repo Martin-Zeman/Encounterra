@@ -19,9 +19,9 @@ class EvilMage(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=22, ac=12, init_bonus=2, speed=30, spell_to_hit=5, resistances=set(), dc=13)
-        self.staff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,
+        self.staff = self.add_ability(Action.MELEE_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice=[(1, 8)], dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
-        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice="1d8", dmg_bonus=-1,
+        self.add_ability(Reaction.REACTION_ATTACK, name="Quarterstaff", combatant=self, to_hit=1, dmg_dice=[(1, 8)], dmg_bonus=-1,
                          dmg_type=DamageType.Bludgeoning, attack_range=1)
         self.shocking_grasp = self.add_ability(Action.SHOCKING_GRASP)
         self.danger_zone_attack = self.shocking_grasp

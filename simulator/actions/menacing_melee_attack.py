@@ -25,8 +25,8 @@ logger = logging.getLogger("Encounterra")
 class MenacingMeleeAttackFactory(MeleeAttackFactory):
 
     def __init__(self, name, combatant, to_hit, dmg_dice, dmg_bonus, dmg_type, attack_range, action_type, crit_range=1, ammo=Uses(math.inf, ResourceRefreshType.NEVER), on_hit=None, extra_dmg=None, uses_dex=False, two_handed=False, to_hit_bonus_die=None):
-        superiority_dice = get_superiority_dice(combatant.level)
-        dmg_dice += "+" + superiority_dice
+        dmg_dice = dmg_dice.copy()
+        dmg_dice.append(get_superiority_dice(combatant.level))
         name = "Menacing " + name
         on_hit.append(OnHitSavingThrowEffect(SavingThrow.WIS, combatant.dc, "Frightened by Menacing Attack"))
         if isinstance(action_type, Action):

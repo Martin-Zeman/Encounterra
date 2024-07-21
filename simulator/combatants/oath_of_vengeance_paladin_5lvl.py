@@ -20,9 +20,9 @@ class OathOfVengeancePaladin5Lvl(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=44, ac=18, init_bonus=-1, spell_to_hit=5, speed=30, resistances=set(), dc=13)
-        self.battleaxe = self.add_ability(Action.MELEE_ATTACK,  name="Battleaxe", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
-        self.javelin = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=7, dmg_dice="1d6", dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=Uses(4, ResourceRefreshType.NEVER), uses_dex=False)
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Battleaxe", combatant=self, to_hit=7, dmg_dice="1d8", dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
+        self.battleaxe = self.add_ability(Action.MELEE_ATTACK,  name="Battleaxe", combatant=self, to_hit=7, dmg_dice=[(1, 8)], dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
+        self.javelin = self.add_ability(Action.RANGED_ATTACK, name="Javelin", combatant=self, to_hit=7, dmg_dice=[(1, 6)], dmg_bonus=4, dmg_type=DamageType.Piercing, attack_range=24, crit_range=1, ammo=Uses(4, ResourceRefreshType.NEVER), uses_dex=False)
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Battleaxe", combatant=self, to_hit=7, dmg_dice=[(1, 8)], dmg_bonus=4, dmg_type=DamageType.Slashing, attack_range=1)
         self.add_ability(Action.LAY_ON_HANDS)
         self.add_ability(Passive.SPELLCASTING, resource_type=SpellcastingResourceType.SPELLSLOTS)
         self.add_ability(Passive.DUELING)
@@ -49,8 +49,8 @@ class OathOfVengeancePaladin5Lvl(Combatant):
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_state('1')  # attacked with melee
-        self.attack_fsm.add_state('2')  # attacked with ranged
+        self.attack_fsm.add_new_state('1')  # attacked with melee
+        self.attack_fsm.add_new_state('2')  # attacked with ranged
         self.attack_fsm.add_transition(str(self.battleaxe[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.battleaxe[1]), '1', 'nop')
         self.attack_fsm.add_transition(str(self.javelin[1]), '0', '2')

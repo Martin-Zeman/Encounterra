@@ -10,6 +10,7 @@ from ..misc import ROUND_HORIZON
 from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import ThreatModifierFactory
 import logging
+import numba_functions as nf
 
 from ..utils.roll_types import ThreatModifierType, RollType
 
@@ -74,10 +75,10 @@ class VowOfEnmityFactory(ThreatModifierFactory):
         return out_threat_max_delta_acc * ROUND_HORIZON
 
 
-class VowOfEnmity(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatModifier):
+class VowOfEnmity(AttackThreatModifier, CombatantEffect, LimitedDurationEffect):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self)
+        AttackThreatModifier.__init__(self)
         CombatantEffect.__init__(self, factory.combatant, combatants=[target])
         LimitedDurationEffect.__init__(self, factory.combatant, turns=10)
         self.factory = factory
@@ -125,11 +126,12 @@ class VowOfEnmity(Actoid, CombatantEffect, LimitedDurationEffect, AttackThreatMo
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(
-                battle_map.get_combatant_position(self.combatants[0]),
+            free_coords_in_range = nf.get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.combatants[0]).get(),
                 distances,
-                inflate_to_dist=self.factory.combatant.size.value,
-                rng=2, combatant=self.factory.combatant)
+                self.factory.combatant.size.value,
+                2, self.factory.combatant.id)
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.combatants[0]] is not Visibility.NONE]
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[0]) <= 2 and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.combatants[0]] is not Visibility.NONE:

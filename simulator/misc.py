@@ -1,7 +1,5 @@
 from enum import Enum, auto
-import random
-import re
-from functools import reduce, cache
+from functools import cache
 from itertools import product
 from .actions.actoid import FactoryFlags
 import logging
@@ -279,6 +277,17 @@ class Size(Enum):
     GARGANTUAN = 3
 
 
+class Terrain(Enum):
+    NORMAL_TERRAIN = 0
+    DIFFICULT_TERRAIN = 1
+    IMPASSABLE_TERRAIN = 2
+
+
+class Occupancy(Enum):
+    FREE = 1
+    OCCUPIED_BY_COMBATANT = 2
+
+
 class Side(Enum):
     ENEMY = auto()
     ALLY = auto()
@@ -312,32 +321,6 @@ def reconcile_roll_types(types):
 
 
 @cache
-def parse_dmg_dice(dice_string):
-    """
-
-    @param dice_string:
-    @return: list of tuples representing (#num dice, dice size)
-    """
-    segments = re.split(r'([+-])', dice_string)
-    res = []
-    p = re.compile('(\d+)d(\d+)')
-    sign = 1
-    for seg in segments:
-        try:
-            m = p.match(seg)
-            res.append((sign * int(m.group(1)), int(m.group(2))))
-        except AttributeError:
-            sign = SIGN[seg]
-    return res
-
-
-@cache
-def avg_roll(dice_string):
-    dice = parse_dmg_dice(dice_string)
-    return reduce(lambda acc, d: acc + d[0] * ((1.0 + d[1]) / 2.0), dice, 0)
-
-
-@cache
 def generate_outcomes(dice):
     # Generate all possible outcomes for a given dice configuration
     outcomes = []
@@ -356,85 +339,6 @@ def percentile_roll(dice, percentile):
     # Generate and sum all possible outcomes
     all_outcomes = [sum(combination) for combination in generate_outcomes(dice)]
     return find_percentile_value(all_outcomes, percentile)
-
-
-def roll_dice(dice):
-    """
-    Basic function for rolling dice
-    @param dice: list of tuples of (# of dice (1..inf), dice sizes (4, 6, 8, 10, 12))
-    @return:
-    """
-    dice_sum = 0
-    for d in dice:
-        for _ in range(d[0]):
-            dice_sum += random.randint(1, d[1])
-    return dice_sum
-
-
-def roll_dice_with_reroll(dice, reroll_max_value):
-    """
-    Function for rolling dice which re-rolls results less than a given value. The re-rolled value must be used.
-    @param dice: list of tuples of (# of dice (1..inf), dice sizes (4, 6, 8, 10, 12))
-    @param reroll_max_value: the maximum die value to be rerolled
-    @return:
-    """
-    dice_sum = 0
-    for d in dice:
-        for _ in range(d[0]):
-            rolled = random.randint(1, d[1])
-            if rolled <= reroll_max_value:
-                rerolled = random.randint(1, d[1])
-                logger.info(f"Re-rolling {rolled} as {rerolled}")
-                rolled = rerolled
-            dice_sum += rolled
-    return dice_sum
-
-
-def roll_saving_throw(bonus, dc, roll_type):
-    d20 = [(1, 20)]
-    if roll_type is RollType.STRAIGHT:
-        roll = roll_dice(d20)
-    elif roll_type is RollType.ADVANTAGE:
-        roll = max(roll_dice(d20), roll_dice(d20))
-    else:
-        roll = min(roll_dice(d20), roll_dice(d20))
-
-    if roll == 20:
-        return True
-    return roll + bonus >= dc
-
-
-def roll_ability_check(bonus, dc, roll_type):
-    d20 = [(1, 20)]
-    if roll_type is RollType.STRAIGHT:
-        return roll_dice(d20) + bonus >= dc
-    elif roll_type is RollType.ADVANTAGE:
-        return max(roll_dice(d20), roll_dice(d20)) + bonus >= dc
-    else:
-        return min(roll_dice(d20), roll_dice(d20)) + bonus >= dc
-
-
-def roll_dice_chaos_bolt(dice):
-    dice_sum = 0
-    numbers_rolled = []
-    for i in range(dice[0]):
-        rolled = random.randint(1, dice[1])
-        dice_sum += rolled
-        numbers_rolled.append(rolled)
-    return dice_sum, numbers_rolled
-
-
-def roll_spell_dmg(dmg_dice):
-    dice = parse_dmg_dice(dmg_dice)
-    return roll_dice(dice)
-
-
-def roll_chaos_bolt_dmg(dmg_dice, additional_dmg_dice):
-    dice = parse_dmg_dice(dmg_dice)
-    primary_dmg, numbers = roll_dice_chaos_bolt(dice[0])
-    dice = parse_dmg_dice(additional_dmg_dice)
-    secondary_dmg = roll_dice(dice)
-    return primary_dmg + secondary_dmg, numbers
 
 
 def percent_of_curr_hp(combatant, dmg):
@@ -496,36 +400,23 @@ HALF_COVER_ERROR_THRESHOLD = 0.35
 FULL_VISIBILITY_ERROR_THRESHOLD = 0.45
 
 
-def is_path_straight(path):
-    if not path or len(path) < 2:
-        return False
-
-    # Compare the direction of each step in the path
-    direction = None
-    for i in range(len(path) - 1):
-        current_direction = (path[i + 1][0] - path[i][0], path[i + 1][1] - path[i][1])
-        if direction and current_direction != direction:
-            return False
-        direction = current_direction
-
-    return True
-
-
 def get_missing_hp(combatant):
     return combatant.max_hp + combatant.max_hp_modifier - combatant.curr_hp
+
 
 @staticmethod
 def get_superiority_dice(level):
     match level:
         case lvl if 3 <= lvl <= 9:
-            return "1d8"
+            return (1, 8)
         case lvl if 10 <= lvl <= 17:
-            return "1d10"
+            return (1, 10)
         case lvl if 18 <= lvl <= 20:
-            return "1d12"
+            return (1, 12)
         case _:
             logger.error("Incorrect Battlemaster level")
-            return "1d8"
+            return (1, 8)
+
 
 @staticmethod
 def get_num_superiority_dice(level):

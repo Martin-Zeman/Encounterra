@@ -61,7 +61,7 @@ def simplify_movements(log_lines):
 def handler(event, context):
     if os.path.exists(local_log_file_path):
         os.remove(local_log_file_path)
-    CustomLogger(logging.INFO, False, local_log_file_path)
+    CustomLogger(logging.INFO, True, local_log_file_path)
     logger = logging.getLogger("Encounterra")
     Map.reset_singleton()
     core_input = event['core_input']

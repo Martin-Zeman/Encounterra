@@ -19,10 +19,10 @@ class YoungBlueDragon(Combatant):
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=152, ac=18, init_bonus=0, spell_to_hit=0, speed=80, immunities={DamageType.Lightning}, resistances=set(), dc=0)
         self.size = Size.LARGE
-        self.claw = self.add_ability(Action.MELEE_ATTACK,  name="Claw", combatant=self, to_hit=9, dmg_dice="2d6", dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=9, dmg_dice="2d10", dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1, extra_dmg=[('1d10', DamageType.Lightning)])
-        self.add_ability(Action.LINE_BREATH_WEAPON, recharge=5, dmg_dice='10d10', dmg_type=DamageType.Lightning, saving_throw=SavingThrow.DEX, dc=16, length=12, width=1,  name="Lightning Breath")
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=9, dmg_dice="2d10", dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1, extra_dmg=[('1d6', DamageType.Lightning)])
+        self.claw = self.add_ability(Action.MELEE_ATTACK,  name="Claw", combatant=self, to_hit=9, dmg_dice=[(2, 6)], dmg_bonus=5, dmg_type=DamageType.Slashing, attack_range=1, crit_range=1)
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=9, dmg_dice=[(2, 10)], dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1, extra_dmg=[((1, 10), DamageType.Lightning)])
+        self.add_ability(Action.LINE_BREATH_WEAPON, recharge=5, dmg_dice=[(10, 10)], dmg_type=DamageType.Lightning, saving_throw=SavingThrow.DEX, dc=16, length=12, width=1,  name="Lightning Breath")
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=9, dmg_dice=[(2, 10)], dmg_bonus=5, dmg_type=DamageType.Piercing, attack_range=2, crit_range=1, extra_dmg=[((1, 6), DamageType.Lightning)])
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 5
         self.saving_throws[SavingThrow.DEX] = 4
@@ -37,11 +37,11 @@ class YoungBlueDragon(Combatant):
 
     def build_attack_fms(self):
         self.attack_fsm = StateMachineTemplate()
-        self.attack_fsm.add_state('1')
-        self.attack_fsm.add_state('2')
-        self.attack_fsm.add_state('3')
-        self.attack_fsm.add_state('4')
-        self.attack_fsm.add_state('5')
+        self.attack_fsm.add_new_state('1')
+        self.attack_fsm.add_new_state('2')
+        self.attack_fsm.add_new_state('3')
+        self.attack_fsm.add_new_state('4')
+        self.attack_fsm.add_new_state('5')
         self.attack_fsm.add_transition(str(self.claw[1]), '0', '1')
         self.attack_fsm.add_transition(str(self.claw[1]), '1', '3')
         self.attack_fsm.add_transition(str(self.bite[1]), '1', '4')

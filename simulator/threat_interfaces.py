@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+from .actions.actoid import Actoid, ActoidFlags
 
 class Threat(ABC):
 
@@ -37,11 +38,15 @@ class DirectThreat(Threat):
         return 0
 
 
-class AttackThreatModifier(Threat):
+class AttackThreatModifier(Actoid, Threat):
     """
     Ability that directly modifies threat of another attack ability. This is a more specialized variant of the ThreatModifier.
     They may be combined.
     """
+
+    def __init__(self, actoid_flags=ActoidFlags.DEFAULT):
+        Actoid.__init__(self, actoid_flags)
+        self.actoid_flags |= ActoidFlags.IS_ATTACK_MODIFIER
 
     @abstractmethod
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):

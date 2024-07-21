@@ -3,14 +3,14 @@ import logging
 import pstats
 import numpy as np
 
-from ..action_resolver import ActionResolver
-from ..actions.action_dag import generate_proto_dag
-from ..logging.custom_logger import CustomLogger
-from ..spells.fireball import Fireball
-from ..spells.twinned_firebolt import TwinnedFirebolt
-from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, teams, effect_tracker, battle_map
-from ..actions.action_selector import build_action_dag, get_action
+from simulator.action_resolver import ActionResolver
+from simulator.actions.action_dag import generate_proto_dag
+from simulator.logging.custom_logger import CustomLogger
+from simulator.spells.fireball import Fireball
+from simulator.spells.twinned_firebolt import TwinnedFirebolt
+from simulator.teams import Teams
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, teams, effect_tracker, battle_map
+from simulator.actions.action_selector import build_action_dag, get_action
 import types
 import cProfile
 
@@ -22,9 +22,9 @@ def test_build_action_dag_misty_step_and_firebolt(battle_map, teams, effect_trac
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([3, 4], dtype=np.int64))  # Have to set it for fireball placement
 
     # fsm, transition_mapping = generate_proto_dag(test_draconic_sorcerer_5lvl)
     # assert fsm.state == '0'
@@ -61,9 +61,9 @@ def test_build_action_dag_movement_and_quickened_fireball(battle_map, teams, eff
         teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
         teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
         # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-        battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-        battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))
-        # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3]))
+        battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+        battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10], dtype=np.int64))
+        # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3], dtype=np.int64))
 
         # Pre-calculate Dijkstra for the combatant
         distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
@@ -101,9 +101,9 @@ def test_build_action_dag_movement_and_fireball(battle_map, teams, effect_tracke
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))
-    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10], dtype=np.int64))
+    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3], dtype=np.int64))  # Have to set it for fireball placement
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
@@ -135,9 +135,9 @@ def test_build_action_dag_movement_and_staff_attack(battle_map, teams, effect_tr
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))
-    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10], dtype=np.int64))
+    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3], dtype=np.int64))
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
@@ -173,9 +173,9 @@ def test_build_action_dag_misty_step_and_staff_attack(battle_map, teams, effect_
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))
-    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10], dtype=np.int64))
+    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3], dtype=np.int64))
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
@@ -199,9 +199,9 @@ def test_build_action_dag_dodge_and_movement_and_quickened_spell(battle_map, tea
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))
-    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10], dtype=np.int64))
+    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3], dtype=np.int64))
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
@@ -230,9 +230,9 @@ def test_build_action_dag_disengage_and_movement_and_quickened_spell(battle_map,
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     # teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))
-    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3]))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10], dtype=np.int64))
+    # battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 3], dtype=np.int64))
 
     # Pre-calculate Dijkstra for the combatant
     distances, shortest_paths = battle_map.calc_dijkstra(test_draconic_sorcerer_5lvl)
@@ -262,9 +262,9 @@ def test_calculate_action_plan_twin_firebolt_and_fireball(battle_map, teams, eff
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([1, 3], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_goblin, np.array([10, 10], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 4], dtype=np.int64))  # Have to set it for fireball placement
 
     class DummyEffect:
         def deactivate(self):
@@ -294,8 +294,8 @@ def test_rage_before_attack(battle_map, teams, effect_tracker, test_bugbear, tes
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([13, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([13, 4], dtype=np.int64))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_bugbear, test_totem_barbarian]
@@ -341,8 +341,8 @@ def test_bugbear_going_into_melee(battle_map, teams, effect_tracker, test_bugbea
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([11, 4], dtype=np.int64))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_bugbear, test_totem_barbarian]
@@ -377,9 +377,9 @@ def test_goblin_using_cunning_disengage(battle_map, teams, effect_tracker, test_
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear_2, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 4]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([7, 4]))  # Have to set it for fireball placement
-    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([8, 4]))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_goblin, np.array([6, 4], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([7, 4], dtype=np.int64))  # Have to set it for fireball placement
+    battle_map.set_combatant_coordinates(test_bugbear_2, np.array([8, 4], dtype=np.int64))  # Have to set it for fireball placement
     battle_map.build_adjacency_matrix()
     battle_map.set_effect_tracker(effect_tracker)
     combatants = [test_goblin, test_bugbear, test_bugbear_2]

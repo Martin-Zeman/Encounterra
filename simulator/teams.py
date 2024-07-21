@@ -20,10 +20,12 @@ class Teams:
     def __init__(self):
         self.team_book = {}  # maps team_color -> [list of combatants]
         self.reverse_team_book = {}  # maps combatant -> team_color
+        self.id_to_combatant = {-1: None}  # maps combatant id -> combatant
         self.team_color_codes = {}
 
     def add_combatant_to_team(self, combatant, team_color):
         try:
+            self.id_to_combatant[combatant.id] = combatant
             self.reverse_team_book[combatant] = team_color
             self.team_book[team_color].append(combatant)
         except KeyError:
@@ -38,6 +40,8 @@ class Teams:
         del self.reverse_team_book[combatant_old]
         self.team_book[self.reverse_team_book[combatant_new]].remove(combatant_old)
         self.team_book[self.reverse_team_book[combatant_new]].append(combatant_new)
+        del self.id_to_combatant[combatant_old.id]
+        self.id_to_combatant[combatant_new.id] = combatant_new
 
     def get_team_color_code(self, combatant):
         return str(self.reverse_team_book[combatant])

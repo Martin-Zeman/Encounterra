@@ -1,4 +1,4 @@
-from ..test.fixtures import teams, effect_tracker, battle_map, test_battle_master_fighter_lvl_3
+from simulator.test.fixtures import teams, effect_tracker, battle_map, test_battle_master_fighter_lvl_3
 
 
 def test_combatant_ammo_reset(battle_map, teams, effect_tracker, test_battle_master_fighter_lvl_3):

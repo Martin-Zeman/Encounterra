@@ -1,14 +1,12 @@
-from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
 from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
 from ..spells.spell import SpellStats
-from ..misc import DamageType, RollType, avg_roll, Visibility
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
+from ..misc import DamageType, RollType, Visibility
+from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from functools import cache
-from ..threat_utils import mean_dmg
+import numba_functions as nf
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
 import logging
@@ -32,7 +30,7 @@ class FireboltFactory(DirectThreatFactory):
         self.flags |= FactoryFlags.IS_ATTACK_LIKE
         self.to_hit = to_hit
         self.action_type = action_type  # FIREBOLT, TWINNED_FIREBOLT, QUICKENED_FIREBOLT TODO
-        self.dmg_dice = self.get_dmg_dice(caster.level)
+        self.dmg_dice = [self.get_dmg_dice(caster.level)]
         self.combatant = caster
         self.resource = resource
 
@@ -55,16 +53,16 @@ class FireboltFactory(DirectThreatFactory):
     def get_dmg_dice(level):
         match level:
             case lvl if 1 <= lvl <= 4:
-                return "1d10"
+                return (1, 10)
             case lvl if 5 <= lvl <= 10:
-                return "2d10"
+                return (2, 10)
             case lvl if 11 <= lvl <= 16:
-                return "3d10"
+                return (3, 10)
             case lvl if lvl <= 17:
-                return "4d10"
+                return (4, 10)
             case _:
                 logger.error("Incorrect caster level of Firebolt")
-                return "1d10"
+                return (1, 10)
 
     def get_eligible_targets(self):
         swallower = get_swallower(self.combatant)
@@ -86,7 +84,9 @@ class FireboltFactory(DirectThreatFactory):
         if battle_map.get_cartesian_distance_combatants(self.combatant, target) <= FireboltFactory.range:
             roll_type = RollType.STRAIGHT if not battle_map.is_enemy_adjacent(self.combatant) else RollType.DISADVANTAGE
             to_hit_total = self.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(target.ac - self.to_hit, 20))]
-            return mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac, target, FireboltFactory.dmg_type, ROLL_TYPE_CRIT_DELTA[roll_type])
+            return nf.mean_dmg(to_hit_total, self.dmg_dice, 0, target.ac,
+                            target.is_immune_to(FireboltFactory.dmg_type),
+                            target.is_resistant_to(FireboltFactory.dmg_type), ROLL_TYPE_CRIT_DELTA[roll_type])
         return 0
 
     def calculate_threat_to_target_delta(self, target, modifiers, *args, **kwargs):
@@ -98,16 +98,21 @@ class FireboltFactory(DirectThreatFactory):
         if target.is_immune_to(FireboltFactory.dmg_type):
             return 0
         mod_to_hit_flat = modifiers.get(ThreatModifierType.TO_HIT_FLAT, 0)
-        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, '0d0')
+        mod_to_hit_die = modifiers.get(ThreatModifierType.TO_HIT_DIE, (0, 0))
         roll_type = modifiers.get(ThreatModifierType.ROLL_TYPE, RollType.STRAIGHT)
         target_ac = modifiers.get(ThreatModifierType.TARGET_AC, 0)
 
         total_target_ac = target_ac + target.ac
-        to_hit_total = self.to_hit + mod_to_hit_flat + avg_roll(mod_to_hit_die)
+        to_hit_total = self.to_hit + mod_to_hit_flat + nf.avg_roll(mod_to_hit_die)
         to_hit_total += ROLL_TYPE_DELTA[roll_type][max(0, min(total_target_ac - to_hit_total, 20))]
         total_crit = ROLL_TYPE_CRIT_DELTA[roll_type]
 
-        return mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac, target, FireboltFactory.dmg_type, total_crit) - mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac, target, FireboltFactory.dmg_type, 1)
+        return (nf.mean_dmg(to_hit_total, self.dmg_dice, 0, total_target_ac,
+                         target.is_immune_to(FireboltFactory.dmg_type),
+                         target.is_resistant_to(FireboltFactory.dmg_type), total_crit) -
+                nf.mean_dmg(self.to_hit, self.dmg_dice, 0, target.ac,
+                         target.is_immune_to(FireboltFactory.dmg_type),
+                         target.is_resistant_to(FireboltFactory.dmg_type), 1))
 
     def calculate_max_threat(self):
         targets = self.get_eligible_targets()
@@ -125,23 +130,31 @@ class Firebolt(Actoid, DirectThreat):
         self.roll_type = RollType.STRAIGHT
 
     def __str__(self):
-        return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + f"Firebolt on {self.target}"
+        return (
+            "Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + f"Firebolt on {self.target}"
 
     def shorthand_str(self):
         return ("Quickened " if self.factory.action_type is BonusAction.QUICKENED_FIREBOLT else "") + "Firebolt"
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
-        roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(self.factory.combatant) else RollType.DISADVANTAGE
-        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][max(0, min(self.target.ac - self.factory.to_hit, 20))]
-        return mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac, self.target, FireboltFactory.dmg_type, ROLL_TYPE_CRIT_DELTA[roll_type])
+        roll_type = RollType.STRAIGHT if not Map.get().is_enemy_adjacent(
+            self.factory.combatant) else RollType.DISADVANTAGE
+        to_hit_total = self.factory.to_hit + ROLL_TYPE_DELTA[roll_type][
+            max(0, min(self.target.ac - self.factory.to_hit, 20))]
+        return nf.mean_dmg(to_hit_total, self.factory.dmg_dice, 0, self.target.ac,
+                        self.target.is_immune_to(FireboltFactory.dmg_type),
+                        self.target.is_resistant_to(FireboltFactory.dmg_type),
+                        ROLL_TYPE_CRIT_DELTA[roll_type])
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
         #self.get_eligible_coords.cache_clear()
 
-    @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
+    @map_toggled_cache_with_key(
+        key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(
+            Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return self.factory.calculate_threat_to_target_delta(self.target, modifiers, *args, **kwargs)
 
@@ -154,14 +167,18 @@ class Firebolt(Actoid, DirectThreat):
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
             return None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
-        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            free_coords_in_range = battle_map.get_free_coords_in_cartesian_range(battle_map.get_combatant_position(self.target),
-                                                                 distances,
-                                                                 inflate_to_dist=self.factory.combatant.size.value,
-                                                                 rng=FireboltFactory.range, combatant=self.factory.combatant)
-            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
-        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= FireboltFactory.range and \
+        if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING,
+                                  Conditions.RESTRAINED):
+            free_coords_in_range = nf.get_free_coords_in_cartesian_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                self.factory.combatant.size.value,
+                FireboltFactory.range, self.factory.combatant.id)
+            return [coord for coord in free_coords_in_range if
+                    battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
+        elif battle_map.get_cartesian_distance_combatants(self.factory.combatant,
+                                                          self.target) <= FireboltFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
             return [curr_coord]
         return None
-

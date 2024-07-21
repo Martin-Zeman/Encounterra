@@ -1,7 +1,8 @@
 from .combatant_effect import CombatantEffect
 import logging
 
-from ..misc import roll_saving_throw, reconcile_roll_types
+from ..misc import reconcile_roll_types
+from ..utils.utils import roll_saving_throw
 
 logger = logging.getLogger("Encounterra")
 

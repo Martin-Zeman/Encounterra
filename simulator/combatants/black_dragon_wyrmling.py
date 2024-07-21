@@ -18,9 +18,9 @@ class BlackDragonWyrmling(Combatant):
 
     def __init__(self, num_or_name=1):
         super().__init__(num_or_name, hp=33, ac=17, init_bonus=2, spell_to_hit=0, speed=60, immunities={DamageType.Acid}, resistances=set(), dc=0)
-        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[('1d4', DamageType.Acid)])
-        self.add_ability(Action.LINE_BREATH_WEAPON, recharge=5, dmg_dice='5d8', dmg_type=DamageType.Acid, saving_throw=SavingThrow.DEX, dc=11, length=3, width=1, name="Acid Breath")
-        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice="1d10", dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[('1d4', DamageType.Acid)])
+        self.bite = self.add_ability(Action.MELEE_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice=[(1, 10)], dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 4), DamageType.Acid)])
+        self.add_ability(Action.LINE_BREATH_WEAPON, recharge=5, dmg_dice=[(5, 8)], dmg_type=DamageType.Acid, saving_throw=SavingThrow.DEX, dc=11, length=3, width=1, name="Acid Breath")
+        self.add_ability(Reaction.REACTION_ATTACK,  name="Bite", combatant=self, to_hit=4, dmg_dice=[(1, 10)], dmg_bonus=2, dmg_type=DamageType.Piercing, attack_range=1, crit_range=1, extra_dmg=[((1, 4), DamageType.Acid)])
         self.build_attack_fms()
         self.saving_throws[SavingThrow.STR] = 2
         self.saving_throws[SavingThrow.DEX] = 4

@@ -1,12 +1,12 @@
 from .action_types import HasteAction
-from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
+from ..actions.actoid import FactoryFlags, ActoidFlags
 from ..battle_map import Map
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower, get_grappler
+from ..conditions import Conditions, is_affected_by_any, get_swallower, get_grappler
 import logging
+import numba_functions as nf
 
 from ..threat_interfaces import AttackThreatModifier
 from ..factory_interfaces import DirectThreatFactory
-from ..threat_utils import calc_p_hit
 from ..utils.roll_types import RollType
 
 logger = logging.getLogger("Encounterra")
@@ -55,7 +55,7 @@ class GrappleAttackFactory(DirectThreatFactory):
         for target in targets:
             if s_affected_by_any(target, Conditions.INCAPACITATED, Conditions.RESTRAINED):
                 continue  # TODO: This is specific to Vampire Spawn, consider removing it
-            p_hit = calc_p_hit(self.follow_up_attack.to_hit, target.ac)
+            p_hit = nf.calc_p_hit(self.follow_up_attack.to_hit, target.ac)
             max_threat = max(max_threat, p_hit * self.follow_up_attack.calculate_threat_to_target(target))
         return max_threat
 
@@ -68,7 +68,7 @@ class GrappleAttackFactory(DirectThreatFactory):
             if s_affected_by_any(target, Conditions.INCAPACITATED, Conditions.RESTRAINED):
                 return 0
 
-            p_hit = calc_p_hit(attack.factory.to_hit, target.ac)
+            p_hit = nf.calc_p_hit(attack.factory.to_hit, target.ac)
             return p_hit * attack.factory.calculate_threat_to_target(target, **kwargs)
         else:
             return 0
@@ -78,10 +78,10 @@ class GrappleAttackFactory(DirectThreatFactory):
         return self.follow_up_attack.calculate_threat_to_target_delta(target, modifiers, *args, **kwargs)
 
 
-class GrappleAttack(Actoid, AttackThreatModifier):
+class GrappleAttack(AttackThreatModifier):
 
     def __init__(self, target, factory):
-        Actoid.__init__(self, ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_ACTION_ENABLER)
+        AttackThreatModifier.__init__(self, ActoidFlags.IS_ATTACK_LIKE | ActoidFlags.IS_ACTION_ENABLER)
         self.target = target
         self.factory = factory
         self.roll_type = RollType.STRAIGHT
@@ -105,11 +105,13 @@ class GrappleAttack(Actoid, AttackThreatModifier):
         if swallower:
             return None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_dist=self.factory.combatant.size.value,
-                                                           rng=self.factory.range,
-                                                           combatant=self.factory.combatant)
+            return nf.get_free_coords_in_hop_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                self.factory.combatant.size.value,
+                self.factory.range,
+                self.factory.combatant.id)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
 

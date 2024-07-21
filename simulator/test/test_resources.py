@@ -2,16 +2,16 @@ import logging
 
 import numpy as np
 
-from ..actions.action_types import Action, BonusAction, Passive
-from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
-from ..logging.custom_logger import CustomLogger
-from ..resources import use_resources, ResourceDepletionLevel
-from ..session import Session
-from ..spells.fireball import FireballFactory
-from ..spells.firebolt import FireboltFactory
-from ..teams import Teams
-from ..test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_moon_druid, teams, effect_tracker, battle_map
+from simulator.actions.action_types import Action, BonusAction, Passive
+from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
+from simulator.logging.custom_logger import CustomLogger
+from simulator.resources import use_resources, ResourceDepletionLevel
+from simulator.session import Session
+from simulator.spells.fireball import FireballFactory
+from simulator.spells.firebolt import FireboltFactory
+from simulator.teams import Teams
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_moon_druid, teams, effect_tracker, battle_map
 
 
 def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
@@ -20,7 +20,7 @@ def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_dracon
     firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     firebolt = firebolt_factory.create(test_goblin)
     fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
-    fireball = fireball_factory.create(np.array([0, 0]))
+    fireball = fireball_factory.create(np.array([0, 0], dtype=np.int64))
 
     assert test_draconic_sorcerer_5lvl.spellslots.get_resource(level=3) == 2
     assert test_draconic_sorcerer_5lvl.spellslots.get_resource(level=2) == 3
@@ -49,7 +49,7 @@ def test_use_resources_already_cast_leveled_spell_this_turn(battle_map, teams, e
     firebolt_factory = FireboltFactory(1, Action.FIREBOLT, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     firebolt = firebolt_factory.create(test_goblin)
     fireball_factory = FireballFactory(1, Action.FIREBALL, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
-    fireball = fireball_factory.create(np.array([0, 0]))
+    fireball = fireball_factory.create(np.array([0, 0], dtype=np.int64))
 
     assert not test_draconic_sorcerer_5lvl.already_cast_leveled_spell_this_turn
     use_resources(test_draconic_sorcerer_5lvl, firebolt)

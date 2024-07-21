@@ -5,28 +5,29 @@ import os
 import pytest
 import pickle
 
-from ..battle_map import Map
-from ..combatants.berserker import Berserker
-from ..combatants.brown_bear import BrownBear
-from ..combatants.bugbear import Bugbear
-from ..combatants.dire_wolf import DireWolf
-from ..combatants.evil_mage import EvilMage
-from ..combatants.giant_toad import GiantToad
-from ..combatants.ogre import Ogre
-from ..combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
-from ..combatants.quetzalcoatlus import Quetzalcoatlus
-from ..combatants.stone_giant import StoneGiant
-from ..logging.custom_logger import CustomLogger
-from ..session import Session
-from ..combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
-from ..combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
-from ..combatants.goblin import Goblin
-from ..combatants.dragonclaw_cultist import DragonclawCultist
-from ..combatants.moon_druid_5lvl import MoonDruid5Lvl
-from ..teams import Teams
+from simulator.battle_map import Map
+from simulator.combatants.berserker import Berserker
+from simulator.combatants.black_dragon_wyrmling import BlackDragonWyrmling
+from simulator.combatants.brown_bear import BrownBear
+from simulator.combatants.bugbear import Bugbear
+from simulator.combatants.dire_wolf import DireWolf
+from simulator.combatants.evil_mage import EvilMage
+from simulator.combatants.giant_toad import GiantToad
+from simulator.combatants.ogre import Ogre
+from simulator.combatants.assassin_rogue_5lvl import AssassinRogue5Lvl
+from simulator.combatants.quetzalcoatlus import Quetzalcoatlus
+from simulator.combatants.stone_giant import StoneGiant
+from simulator.logging.custom_logger import CustomLogger
+from simulator.session import Session
+from simulator.combatants.totem_barbarian_5lvl import TotemBarbarian5Lvl
+from simulator.combatants.draconic_sorcerer_5lvl import DraconicSorcerer5Lvl
+from simulator.combatants.goblin import Goblin
+from simulator.combatants.dragonclaw_cultist import DragonclawCultist
+from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
+from simulator.teams import Teams
 import logging
 
-from ..utils.utils import get_combatant_classes
+from simulator.utils.utils import get_combatant_classes
 
 logger = logging.getLogger("Encounterra")
 
@@ -47,6 +48,7 @@ def test_random_matchup():
 
         blue_team = random.sample(combatant_pool, num_blue_combatants)
         red_team = random.sample(combatant_pool, num_red_combatants)
+        red_team.append(BlackDragonWyrmling)
         logger.info(f"Starting a fuzzy test with:")
         logger.info(f"Blue team: {[str(c) for c in blue_team]}")
         logger.info(f"Red team: {[str(c) for c in red_team]}")

@@ -3,6 +3,8 @@ import math
 from abc import abstractmethod, ABC
 from enum import Enum, auto
 
+import numpy as np
+
 from .actions.action_types import Action, BonusAction, Reaction, Movement, HasteAction, Passive, FreeAction
 from .battle_map import Map
 from .conditions import Conditions, is_affected_by
@@ -220,7 +222,7 @@ def use_resources(combatant, action, **kwargs):
         match action_type:
             case Movement.STANDARD | Movement.DISENGAGED:
                 battle_map = Map.get()
-                target_position = battle_map.get_combatant_position(combatant) + action.increment  # Position is tracked at the original
+                target_position = battle_map.get_combatant_position(combatant) + np.array(action.increment, dtype=np.int64)  # Position is tracked at the original
                 decrement = 1
                 if is_affected_by(combatant, Conditions.PRONE):
                     decrement += 1

@@ -3,21 +3,22 @@ import logging
 import numpy as np
 import pytest
 
-from ..abilities.wildshape import WildshapeFactory
-from ..action_resolver import ActionResolver
-from ..actions.action_selector import get_action
-from ..actions.action_types import BonusAction, Action
-from ..battle_map import Map
-from ..combatants.giant_toad import GiantToad
-from ..conditions import is_affected_by, Conditions
-from ..effects.effect import EffectType
-from ..logging.custom_logger import CustomLogger
-from ..misc import DamageType
-from ..resources import ResourceDepletionLevel
-from ..spells.flaming_sphere import FlamingSphereFactory
-from ..teams import Teams
-from ..test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
-from ..utils.utils import preallocate_wildshape_forms
+from simulator.abilities.wildshape import WildshapeFactory
+from simulator.action_resolver import ActionResolver
+from simulator.actions.action_selector import get_action
+from simulator.actions.action_types import BonusAction, Action
+from simulator.battle_map import Map
+from simulator.combatants.giant_toad import GiantToad
+from simulator.conditions import is_affected_by, Conditions
+from simulator.effects.effect import EffectType
+from simulator.logging.custom_logger import CustomLogger
+from simulator.misc import DamageType
+from simulator.resources import ResourceDepletionLevel
+from simulator.spells.flaming_sphere import FlamingSphereFactory
+from simulator.teams import Teams
+from simulator.test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
+from simulator.utils.wildshape_utils import preallocate_wildshape_forms
+
 
 def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid, test_draconic_sorcerer_5lvl):
     """
@@ -29,15 +30,15 @@ def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid,
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13]))
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8], dtype=np.int64))
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     battle_map.build_adjacency_matrix()
     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
     test_moon_druid.shortest_paths_cache = shortest_paths
 
     fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid, test_moon_druid.spellslots)
-    fs = fs_factory.create(np.array((6, 13)))
+    fs = fs_factory.create(np.array((6, 13), dtype=np.int64))
 
     test_moon_druid.curr_hp = 200  # Make sure we can deal huge damage to it and have it survive
 
@@ -62,8 +63,8 @@ def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker,
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13]))
-    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8], dtype=np.int64))
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
     battle_map.build_adjacency_matrix()
     _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
@@ -72,7 +73,7 @@ def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker,
     ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
     ws = ws_factory.create(GiantToad)
     fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid, test_moon_druid.spellslots)
-    fs = fs_factory.create(np.array((6, 13)))
+    fs = fs_factory.create(np.array((6, 13), dtype=np.int64))
 
     test_moon_druid.curr_hp = 200  # Make sure we can deal huge damage to it and have it survive
 
@@ -99,17 +100,17 @@ def test_map_position_toggled_cache(battle_map, teams, effect_tracker, test_gobl
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 13]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 8]))
+    battle_map.set_combatant_coordinates(test_goblin, np.array([8, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 8], dtype=np.int64))
     battle_map.build_adjacency_matrix()
 
     shortbow = test_goblin.shortbow[1].create(test_bugbear)
     threat_before = shortbow.calculate_threat()
-    battle_map.move_combatant(test_goblin, np.array([8, 9]))
+    battle_map.move_combatant(test_goblin, np.array([8, 9], dtype=np.int64))
     threat_after = shortbow.calculate_threat()
     assert threat_before != threat_after
 
-    battle_map.move_combatant(test_goblin, np.array([8, 13]))
+    battle_map.move_combatant(test_goblin, np.array([8, 13], dtype=np.int64))
     threat_after = shortbow.calculate_threat()
     assert threat_before == threat_after
 
@@ -125,8 +126,8 @@ def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_
     battle_map.set_effect_tracker(effect_tracker)
     teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([2, 2]))
-    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4]))
+    battle_map.set_combatant_coordinates(test_moon_druid, np.array([2, 2], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4], dtype=np.int64))
     battle_map.build_adjacency_matrix()
     combatants = [test_moon_druid, test_bugbear]
     test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])

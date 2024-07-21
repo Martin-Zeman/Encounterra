@@ -1,14 +1,16 @@
 import math
 
 import numpy as np
+from numba import njit
+from numba.np.arraymath import cross2d
 from scipy.spatial.distance import euclidean
-
-from .combatant_coords import Coords
-from .obstacle import Obstacle
+import numba_functions as nf
+from simulator.combatant_coords import Coords
+from simulator.obstacle import Obstacle
 
 
 def get_square_center(coord):
-    return coord + np.array([0.5, 0.5])
+    return coord + np.array([0.5, 0.5], dtype=np.float64)
 
 
 def get_affected_by_cone(origin, angle_deg, radius, grid_size):
@@ -21,7 +23,7 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     :return: affected coordinates
     """
     origin_center = get_square_center(origin)
-    line_increment = lambda angle: np.array([origin_center[0] + radius * math.sin(angle), origin_center[1] + radius * math.cos(angle)])
+    line_increment = lambda angle: np.array([origin_center[0] + radius * math.sin(angle), origin_center[1] + radius * math.cos(angle)], dtype=np.float64)
     # determinant of (AB, AQ) where A is origin, B is line_point and Q is query point
     polarity = lambda line_point, query_point: np.linalg.det([line_point - origin_center, query_point - origin_center])
 
@@ -36,7 +38,7 @@ def get_affected_by_cone(origin, angle_deg, radius, grid_size):
     coords = set()
     for x in range(0, grid_size):
         for y in range(0, grid_size):
-            curr_coord_center = get_square_center(np.array([x, y]))
+            curr_coord_center = get_square_center(np.array([x, y], dtype=np.float64))
             if np.linalg.norm(
                     origin_center - curr_coord_center) < radius and polarity(first_line_point, curr_coord_center) <= 0 and polarity(
                 second_line_point, curr_coord_center) >= 0:
@@ -79,14 +81,14 @@ def get_affected_by_line(origin, angle_deg, length, width, grid_size):
     half_width = width / 2
 
     angle_rad = math.radians(angle_deg)
-    direction_vector = np.array([math.sin(angle_rad), math.cos(angle_rad)])
+    direction_vector = np.array([math.sin(angle_rad), math.cos(angle_rad)], dtype=np.float64)
 
-    perpendicular_vector = np.array([-direction_vector[1], direction_vector[0]])
+    perpendicular_vector = np.array([-direction_vector[1], direction_vector[0]], dtype=np.float64)
 
     coords = set()
     for x in range(grid_size):
         for y in range(grid_size):
-            curr_coord_center = get_square_center(np.array([x, y]))
+            curr_coord_center = get_square_center(np.array([x, y], dtype=np.float64))
             vector_to_coord = curr_coord_center - origin_center
             distance_along_line = np.dot(vector_to_coord, direction_vector)
 
@@ -100,8 +102,8 @@ def get_affected_by_line(origin, angle_deg, length, width, grid_size):
 
 
 def linear_regression(enemy_positions):
-    x = np.array([pos[0] for pos in enemy_positions])
-    y = np.array([pos[1] for pos in enemy_positions])
+    x = np.array([pos[0] for pos in enemy_positions], dtype=np.int64)
+    y = np.array([pos[1] for pos in enemy_positions], dtype=np.int64)
     A = np.vstack([x, np.ones(len(x))]).T
     m, c = np.linalg.lstsq(A, y, rcond=None)[0]
     return m, c
@@ -129,21 +131,6 @@ def do_squares_overlap(origin1: np.array, length1, origin2: np.array, length2):
     return (origin1[0] < (origin2[0] + length2) and (origin1[0] + length1) > origin2[0]) and (origin1[1] < (origin2[1] + length2) and (origin1[1] + length1) > origin2[1])
 
 
-def angle_between_vectors(vector_1: np.array, vector_2: np.array):
-    """
-    Calculates the angle (in degrees) between two points and a given center point
-    :param vector_1: The first vector
-    :param vector_2: The second vector
-    :return: The convex angle (in degrees) formed by the two vectors.
-    """
-    dot_prod = np.dot(vector_1, vector_2)
-    mag_1 = np.dot(vector_1, vector_1)**0.5
-    mag_2 = np.dot(vector_2, vector_2)**0.5
-    angle_rad = math.acos(max(-1.0, min(dot_prod / mag_2 / mag_1, 1.0)))
-    angle_deg = math.degrees(angle_rad) % 360
-    return angle_deg if (angle_deg - 180 < 0) else 360 - angle_deg
-
-
 def angle_between_vectors_rad(vector_1: np.array, vector_2: np.array):
     """
     Calculates the angle (in radians) between two vectors.
@@ -168,24 +155,11 @@ def find_fov_vectors(observer: Coords, target: Coords | Obstacle):
     """
     observer_center = observer.get_center()
     target_center = target.get_center()
-    vectors = sorted([(c - observer_center, angle_between_vectors(target_center - observer_center, c - observer_center)) for c in target.get_corners()], key=lambda x: x[1], reverse=True)
+    vectors = sorted([(c - observer_center, nf.angle_between_vectors(target_center - observer_center, c - observer_center)) for c in target.get_corners()], key=lambda x: x[1], reverse=True)
     assert len(vectors) > 1
     if np.cross(vectors[0][0], vectors[1][0]) > 0:
         return vectors[0][0] / np.linalg.norm(vectors[0][0]), vectors[1][0] / np.linalg.norm(vectors[1][0])
     return vectors[1][0] / np.linalg.norm(vectors[1][0]), vectors[0][0] / np.linalg.norm(vectors[0][0])
-
-
-def get_bounding_box(combatant1: Coords, combatant2: Coords):
-    """
-    Calculates a bounding box which encloses both combatants
-    :param combatant1:
-    :param combatant2:
-    :return: bottom left corner, top right corner
-    """
-    combined = np.concatenate((combatant1.get(), combatant2.get()), axis=0)
-    bottom_left = np.min(combined, axis=0)
-    top_right = np.max(combined, axis=0)
-    return bottom_left, top_right
 
 
 def find_nearest_valid_coordinate_chebyshev(target_coords, init_coords, max_distance):

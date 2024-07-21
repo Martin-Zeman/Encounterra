@@ -3,9 +3,9 @@ import math
 from .grapple_attack import GrappleAttack
 from ..actions.melee_attack import MeleeAttackFactory, MeleeAttack
 from ..battle_map import Map, map_position_toggled_cache
-from ..misc import Size
-from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower, get_grappler
+from ..conditions import Conditions, is_affected_by_any, get_swallower, get_grappler
 import logging
+import numba_functions as nf
 
 from ..resources import Uses, ResourceRefreshType
 
@@ -51,11 +51,13 @@ class VampiricBite(MeleeAttack):
         if swallower:
             return None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_free_coords_in_hop_range(battle_map.get_combatant_position(self.target),
-                                                           distances,
-                                                           inflate_to_dist=self.factory.combatant.size.value,
-                                                           rng=self.factory.range,
-                                                           combatant=self.factory.combatant)
+            return nf.get_free_coords_in_hop_range(
+                battle_map.grid,
+                battle_map.get_combatant_position(self.target).get(),
+                distances,
+                self.factory.combatant.size.value,
+                self.factory.range,
+                self.factory.combatant.id)
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
             return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
 
