@@ -198,7 +198,7 @@ if __name__ == '__main__':
     session.add_combatant(Goblin, Teams.Color.BLUE)
 
 
-    session.set_num_simulations(10)
+    session.set_num_simulations(30)
     start_time = time.time()
     session.place_terrain_and_obstacles(Session.MapType.OBSTACLES.value)
     # session.place_terrain_and_obstacles(Session.MapType.BLANK.value)

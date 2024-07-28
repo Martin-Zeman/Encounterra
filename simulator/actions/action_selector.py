@@ -3,6 +3,7 @@ import logging
 import re
 import math
 import sys
+from collections import defaultdict
 
 import numpy as np
 import numba_functions as nf
@@ -519,7 +520,19 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
         for idx in ids:
             sequence_to_threat[idx] = movement_threat  # We initialize it with the movement threat
 
-    transition_name_to_bin_to_threat = {tn: {bin: None for bin in transition_to_eligible_coords_and_bins[tn][1].values()} for tn in transition_name_to_action.keys() if tn in transition_to_eligible_coords_and_bins}
+    transition_name_to_bin_to_threat = defaultdict(lambda: None)
+
+    def get_threat(transition, coord, idx, did_transform):
+        current_bin = transition_to_eligible_coords_and_bins[transition][1][coord]
+        key = (transition, current_bin)
+        threat = transition_name_to_bin_to_threat[key]
+
+        if threat is None:
+            action = transition_name_to_action[transition]
+            threat = action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
+            transition_name_to_bin_to_threat[key] = threat
+
+        return threat
     # (Bonus) action transitions
     for coord_and_movement_type, ids in coord_to_sequence_ids.items():
         if coord_and_movement_type is None:
@@ -553,11 +566,7 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                                     else:  # Two location-dependent actions in succession
                                         remaining_dist = nf.get_hop_distance_coords(np.array(eligible_coords), np.array([coord]))  # This is a simplification, but good enough
                                         feasibility_multiplier = 1 if remaining_dist <= combatant.movement - distances[coord[0] * battle_map.size + coord[1]] else infeasibility_multiplier
-                            current_bin = transition_to_eligible_coords_and_bins[transition][1][coord]
-                            threat = transition_name_to_bin_to_threat[transition][current_bin]
-                            if threat is None:
-                                threat = action.calculate_threat(consider_dist=(not did_transform), movement_threat=sequence_to_threat[idx])
-                                transition_name_to_bin_to_threat[transition][current_bin] = threat
+                            threat = get_threat(transition, coord, idx, did_transform)
 
                             threat_acc += threat
                             if delta_action:
