@@ -3,7 +3,7 @@ from itertools import combinations
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..spells.spell import SpellStats
 from ..misc import Visibility, Class, get_missing_hp
 from ..conditions import Conditions, is_affected_by_any, get_swallower
@@ -117,7 +117,7 @@ class TwinnedHealingWord(Actoid, DirectThreat):
 
     def get_eligible_coords(self, distances, shortest_paths):
         if get_swallower(self.factory.combatant):
-            return None
+            return None, None
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
@@ -138,10 +138,10 @@ class TwinnedHealingWord(Actoid, DirectThreat):
             free_coords_in_range = coords_for_fist.intersection(coords_for_second)
 
             return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE]
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE], PLACEHOLDER_MAPPING
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= TwinnedHealingWordFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= TwinnedHealingWordFactory.range \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+            return [curr_coord], PLACEHOLDER_MAPPING
+        return None, None

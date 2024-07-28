@@ -1,10 +1,5 @@
-from functools import cache
-
-from cachetools import cached
-from cachetools.keys import hashkey
-
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, PLACEHOLDER_MAPPING
 from ..misc import DamageType, SavingThrow, Size
 from ..actions.actoid import Actoid, FactoryFlags
 from ..threat_interfaces import DirectThreat
@@ -14,6 +9,7 @@ import logging
 import numba_functions as nf
 
 logger = logging.getLogger("Encounterra")
+
 
 class FlamingSphereRamFactory(DirectThreatFactory):
 
@@ -29,7 +25,6 @@ class FlamingSphereRamFactory(DirectThreatFactory):
         self.action_enabler_effect = action_enabler_effect
         self.saving_throw = SavingThrow.DEX
         self.dmg_type = DamageType.Fire
-
 
     def __str__(self):
         """
@@ -91,7 +86,6 @@ class FlamingSphereRam(Actoid, DirectThreat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0  # Doesn't apply here
@@ -101,7 +95,7 @@ class FlamingSphereRam(Actoid, DirectThreat):
         battle_map = Map.get()
         # if self.factory.combatant.movement > 0:
         #     return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
 
     def move_effect(self, coord: np.array):
         self.factory.action_enabler_effect.origin = coord

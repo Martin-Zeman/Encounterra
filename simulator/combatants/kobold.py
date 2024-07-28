@@ -1,6 +1,6 @@
 import copy
 
-from ..actions.action_types import Action, BonusAction, Reaction, Passive
+from ..actions.action_types import Action, Reaction, Passive
 from ..utils.state_machine_template import StateMachineTemplate
 from ..combatant import Combatant
 from ..misc import DamageType, SavingThrow, Class

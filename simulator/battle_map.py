@@ -738,6 +738,7 @@ class Map:
         :param dist_type: either DistanceMetric.HOP or DistanceMetric.CARTESIAN
         :return: the nearest enemy/ally and distance to them in hops or cartesian
         """
+        # TODO: potential improvement. Team adherence could be part of the grid and this migrated to numba
         team_func = self.teams.are_enemies if side is Side.ENEMY else self.teams.are_allies
         dist_func = nf.get_hop_distance_coords if dist_type is DistanceMetric.HOP else nf.get_cartesian_distance_coords
         min_dist = sys.float_info.max
@@ -808,6 +809,17 @@ class Map:
         coords2 = self.combatant_coordinate_cache[combatant2].get()
         return nf.get_hop_distance_coords(coords1, coords2)
 
+    def get_hop_distance_coord_to_combatant(self, coord, combatant2: ProtoCombatant):
+        """
+        Calculates hop distance between a coordinate and a combatant
+        :param coord: coordinate tuple
+        :param combatant2:
+        :return: distance between coord and a combatant in number of hops, None if one of the combatants is dead
+        """
+        coords1 = np.array(coord)
+        coords2 = self.combatant_coordinate_cache[combatant2].get()
+        return nf.get_hop_distance_coords(coords1, coords2)
+
     # @cached(cache={}, key=lambda self, combatant1, combatant2: hashkey(combatant1.name, combatant2.name))
     def get_cartesian_distance_combatants(self, combatant1: ProtoCombatant, combatant2: ProtoCombatant):
         """
@@ -817,6 +829,17 @@ class Map:
         :return: cartesian distance between two combatants, None if one of the combatants is dead
         """
         coords1 = self.combatant_coordinate_cache[combatant1].get()
+        coords2 = self.combatant_coordinate_cache[combatant2].get()
+        return nf.get_cartesian_distance_coords(coords1, coords2)
+
+    def get_cartesian_distance_coord_to_combatant(self, coord, combatant2: ProtoCombatant):
+        """
+        Calculates cartesian distance between a coordinate and a combatant
+        :param coord: coordiante tuple
+        :param combatant2:
+        :return: cartesian distance between coord and a combatant, None if one of the combatants is dead
+        """
+        coords1 = np.array(coord)
         coords2 = self.combatant_coordinate_cache[combatant2].get()
         return nf.get_cartesian_distance_coords(coords1, coords2)
 
@@ -1447,9 +1470,6 @@ class Map:
     def get_non_swallowed_enemies_without_hop_distance(self, combatant, distance):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) > distance]
 
-    def get_non_swallowed_enemies_within_their_movement_range(self, combatant):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) <= e.movement + 1]
-
     def is_difficult_terrain_at(self, coords: Coords):
         """Check if any of the given coordinates are difficult terrain."""
         x_coords = coords.get()[:, 0]
@@ -1485,3 +1505,10 @@ class Map:
                 self.move_combatant(target_combatant, nearest_grid_coord, False)
                 logger.info(f"{target_combatant} is pushed to {nearest_grid_coord}")
                 return
+
+
+PLACEHOLDER_MAPPING = {
+    (x, y): x * 15 + y
+    for x in range(15)
+    for y in range(15)
+}

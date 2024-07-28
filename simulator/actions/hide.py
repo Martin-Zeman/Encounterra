@@ -1,7 +1,7 @@
 from ..abilities.on_hit_sneak_attack import OnHitSneakAttack
 from ..actions.action_types import HasteAction, BonusAction
 from ..actions.actoid import ActoidFlags, FactoryFlags
-from ..battle_map import Map
+from ..battle_map import Map, PLACEHOLDER_MAPPING
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..misc import Visibility
@@ -116,10 +116,10 @@ class Hide(AttackThreatModifier, CombatantEffect):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if get_swallower(self.factory.combatant):
-            return None
+            return None, None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return [coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE]
+            return [coord for coord, vis_dict in battle_map.visibility_dict_for_all_coords.items() if vis_dict[self.target] is Visibility.NONE], PLACEHOLDER_MAPPING
         elif battle_map.visibility_dict_for_all_coords[tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])][self.target] is Visibility.NONE:
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None

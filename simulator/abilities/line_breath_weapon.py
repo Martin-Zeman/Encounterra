@@ -1,6 +1,6 @@
 from ..actions.action_types import Action
 from ..actions.actoid import Actoid
-from ..battle_map import Map
+from ..battle_map import Map, PLACEHOLDER_MAPPING
 from ..conditions import get_swallower
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
@@ -81,9 +81,9 @@ class LineBreathWeapon(Actoid, DirectThreat):
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if get_swallower(self.factory.combatant):
-            return None
+            return None, None
         # We allow the line effect to originate from any square the combatant takes up
-        return battle_map.find_possible_combatant_positions_for_cone_or_line_aoe_placement(self.coord, self.factory.combatant, shortest_paths)
+        return battle_map.find_possible_combatant_positions_for_cone_or_line_aoe_placement(self.coord, self.factory.combatant, shortest_paths), PLACEHOLDER_MAPPING
 
     @cache
     def calculate_threat(self, **kwargs):

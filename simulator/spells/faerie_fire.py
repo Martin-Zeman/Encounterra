@@ -4,7 +4,7 @@ import numpy as np
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, PLACEHOLDER_MAPPING
 from ..combatant_coords import Coords
 from ..effects.aoe_square_effect import AoeSquareEffect
 from ..effects.combatant_effect import CombatantEffect
@@ -142,7 +142,6 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     def threat_on_end_of_turn(self, target, *args, **kwargs):
         return 0
@@ -159,7 +158,7 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if get_swallower(self.factory.combatant):
-            return None
+            return None, None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return nf.get_free_coords_in_cartesian_range(
@@ -167,10 +166,10 @@ class FaerieFire(Actoid, LimitedDurationEffect, Threat, AoeSquareEffect, Combata
                 Coords(self.origin).get(),  # not actually combatant coords
                 distances,
                 self.factory.combatant.size.value,
-                FaerieFireFactory.range, self.factory.combatant.id)
+                FaerieFireFactory.range, self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif nf.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FaerieFireFactory.range:
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None
 
     def on_enter(self, combatant):
         pass

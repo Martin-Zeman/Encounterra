@@ -5,7 +5,7 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import HasteAction, BonusAction
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..battle_map import Map, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
@@ -95,5 +95,5 @@ class Disengage(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
         battle_map = Map.get()
         if is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED, Conditions.SWALLOWED) \
                 or self.factory.combatant.movement == 0:
-            return None  # Disenaging makes no sense if you can't move
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # It's a priority action, the coord is not relevant
+            return None, None  # Disenaging makes no sense if you can't move
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING  # It's a priority action, the coord is not relevant

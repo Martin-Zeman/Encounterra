@@ -1,7 +1,7 @@
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..spells.spell import SpellStats
 from ..misc import DamageType, RollType
 from ..conditions import Conditions, is_affected_by_any, get_swallower
@@ -128,7 +128,6 @@ class ShockingGrasp(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     @map_toggled_cache_with_key(
         key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, self.factory.name,
@@ -144,7 +143,7 @@ class ShockingGrasp(Actoid, DirectThreat):
         if swallower:
             if swallower is self.target:
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-            return None
+            return None, None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING,
                                   Conditions.RESTRAINED):
             return nf.get_free_coords_in_cartesian_range(
@@ -152,8 +151,8 @@ class ShockingGrasp(Actoid, DirectThreat):
                 battle_map.get_combatant_position(self.target).get(),
                 distances,
                 self.factory.combatant.size.value,
-                ShockingGraspFactory.range, self.factory.combatant.id)
+                ShockingGraspFactory.range, self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant,
                                                           self.target) <= ShockingGraspFactory.range:
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None

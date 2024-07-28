@@ -1,4 +1,4 @@
-from ..battle_map import Map
+from ..battle_map import Map, PLACEHOLDER_MAPPING
 from ..misc import get_missing_hp, percentile_roll
 from ..conditions import Conditions, is_affected_by_any
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
@@ -82,8 +82,8 @@ class SecondWind(Actoid, DirectThreat):
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
-            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant), PLACEHOLDER_MAPPING
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
 
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
         return 0

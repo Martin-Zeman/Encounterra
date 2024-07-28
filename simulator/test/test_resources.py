@@ -11,7 +11,7 @@ from simulator.session import Session
 from simulator.spells.fireball import FireballFactory
 from simulator.spells.firebolt import FireboltFactory
 from simulator.teams import Teams
-from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_moon_druid, teams, effect_tracker, battle_map
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_totem_barbarian, test_moon_druid_lvl_5, teams, effect_tracker, battle_map
 
 
 def test_use_resources_spellslots(battle_map, teams, effect_tracker, test_draconic_sorcerer_5lvl, test_goblin):
@@ -96,7 +96,7 @@ def test_deplete_resource_uses(battle_map, teams, effect_tracker, test_totem_bar
     assert not test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].has_resource()
 
 
-def test_deplete_resources_uses_on_combatant(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid, test_draconic_sorcerer_5lvl):
+def test_deplete_resources_uses_on_combatant(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid_lvl_5, test_draconic_sorcerer_5lvl):
     CustomLogger(logging.WARNING)
     assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].has_resource()
     assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 3
@@ -106,13 +106,13 @@ def test_deplete_resources_uses_on_combatant(battle_map, teams, effect_tracker, 
     assert test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].get_resource() == 0
     assert not test_totem_barbarian.resources[BonusAction.TOTEM_RAGE].has_resource()
 
-    assert test_moon_druid.resources[Action.WILDSHAPE].has_resource()
-    assert test_moon_druid.resources[Action.WILDSHAPE].get_resource() == 2
-    test_moon_druid.deplete_resources(ResourceDepletionLevel.PARTIALLY_DEPLETED)
-    assert test_moon_druid.resources[Action.WILDSHAPE].get_resource() == 1
-    test_moon_druid.deplete_resources(ResourceDepletionLevel.FULLY_DEPLETED)
-    assert test_moon_druid.resources[Action.WILDSHAPE].get_resource() == 0
-    assert not test_moon_druid.resources[Action.WILDSHAPE].has_resource()
+    assert test_moon_druid_lvl_5.resources[Action.WILDSHAPE].has_resource()
+    assert test_moon_druid_lvl_5.resources[Action.WILDSHAPE].get_resource() == 2
+    test_moon_druid_lvl_5.deplete_resources(ResourceDepletionLevel.PARTIALLY_DEPLETED)
+    assert test_moon_druid_lvl_5.resources[Action.WILDSHAPE].get_resource() == 1
+    test_moon_druid_lvl_5.deplete_resources(ResourceDepletionLevel.FULLY_DEPLETED)
+    assert test_moon_druid_lvl_5.resources[Action.WILDSHAPE].get_resource() == 0
+    assert not test_moon_druid_lvl_5.resources[Action.WILDSHAPE].has_resource()
 
     assert test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].has_resource()
     assert test_draconic_sorcerer_5lvl.resources[Passive.METAMAGIC].get_resource() == 5

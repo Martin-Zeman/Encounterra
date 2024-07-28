@@ -1,4 +1,5 @@
 import math
+
 from ..actions.actoid import FactoryFlags
 from ..actions.attack import AttackFactory, Attack
 from ..battle_map import Map, map_position_toggled_cache
@@ -61,7 +62,15 @@ class RangedAttack(Attack):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
+
+    def get_coord_to_bin(self, eligible_coords):
+        battle_map = Map.get()
+        short_range = self.factory.short_range
+        target = self.target
+        return {
+            coord: 0 if battle_map.get_cartesian_distance_coord_to_combatant(coord, target) <= short_range else 1
+            for coord in eligible_coords
+        }
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
@@ -69,8 +78,9 @@ class RangedAttack(Attack):
         swallower = get_swallower(self.factory.combatant)
         if swallower:
             if swallower is self.target:
-                return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # Makes barely any sense but ok
-            return None
+                ret = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
+                return [ret], {ret: 0}  # Makes barely any sense but ok
+            return None, None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         # if self.factory.combatant.movement > 0 and not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
@@ -81,7 +91,8 @@ class RangedAttack(Attack):
                 self.factory.combatant.size.value,
                 self.factory.range, self.factory.combatant.id)
             if not battle_map.effect_tracker.is_combatant_hidden_from(self.factory.combatant, self.target):
-                return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
+                ret = [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
+                return ret, self.get_coord_to_bin(ret)
             else:
                 # We only consider the coords where Visibility.NONE transitions into any other kind
                 ret = list()
@@ -92,8 +103,8 @@ class RangedAttack(Attack):
                                 ret.append(coord)
                         except KeyError:
                             ret.append(coord)
-                return ret
+                return ret, self.get_coord_to_bin(ret)
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= self.factory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+            return [curr_coord], {curr_coord: 0}
+        return None, None

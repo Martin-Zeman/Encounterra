@@ -16,80 +16,80 @@ from simulator.misc import DamageType
 from simulator.resources import ResourceDepletionLevel
 from simulator.spells.flaming_sphere import FlamingSphereFactory
 from simulator.teams import Teams
-from simulator.test.fixtures import test_moon_druid, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
+from simulator.test.fixtures import test_moon_druid_lvl_5, test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, teams, effect_tracker, battle_map
 from simulator.utils.wildshape_utils import preallocate_wildshape_forms
 
 
-def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid, test_draconic_sorcerer_5lvl):
+def test_concentration_basic(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_draconic_sorcerer_5lvl):
     """
     Tests the basic concentration mechanic functionality
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_moon_druid, test_draconic_sorcerer_5lvl]
+    combatants = [test_moon_druid_lvl_5, test_draconic_sorcerer_5lvl]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([8, 13], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8], dtype=np.int64))
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE, test_moon_druid_lvl_5.wildshape_factory[1])
     battle_map.build_adjacency_matrix()
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
 
-    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid, test_moon_druid.spellslots)
+    fs_factory = FlamingSphereFactory(test_moon_druid_lvl_5.dc, Action.FLAMING_SPHERE, test_moon_druid_lvl_5, test_moon_druid_lvl_5.spellslots)
     fs = fs_factory.create(np.array((6, 13), dtype=np.int64))
 
-    test_moon_druid.curr_hp = 200  # Make sure we can deal huge damage to it and have it survive
+    test_moon_druid_lvl_5.curr_hp = 200  # Make sure we can deal huge damage to it and have it survive
 
     try:
-        action_resolver.resolve_action(fs, test_moon_druid)
-        assert test_moon_druid.concentration_effect is not None
-        test_moon_druid.receive_dmg(50, DamageType.Slashing)  # Only a nat 20 can save it
-        if not test_moon_druid.concentration_effect:
-            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 0
+        action_resolver.resolve_action(fs, test_moon_druid_lvl_5)
+        assert test_moon_druid_lvl_5.concentration_effect is not None
+        test_moon_druid_lvl_5.receive_dmg(50, DamageType.Slashing)  # Only a nat 20 can save it
+        if not test_moon_druid_lvl_5.concentration_effect:
+            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid_lvl_5)) == 0
 
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
 
-def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker, test_moon_druid, test_draconic_sorcerer_5lvl):
+def test_concentration_two_attacks_wildshaped(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_draconic_sorcerer_5lvl):
     """
     Tests the concentration mechanic functionality in combination with wildshape
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_moon_druid, test_draconic_sorcerer_5lvl]
+    combatants = [test_moon_druid_lvl_5, test_draconic_sorcerer_5lvl]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([8, 13], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8], dtype=np.int64))
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE, test_moon_druid_lvl_5.wildshape_factory[1])
     battle_map.build_adjacency_matrix()
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
 
-    ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
+    ws_factory = WildshapeFactory(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE)
     ws = ws_factory.create(GiantToad)
-    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid, test_moon_druid.spellslots)
+    fs_factory = FlamingSphereFactory(test_moon_druid_lvl_5.dc, Action.FLAMING_SPHERE, test_moon_druid_lvl_5, test_moon_druid_lvl_5.spellslots)
     fs = fs_factory.create(np.array((6, 13), dtype=np.int64))
 
-    test_moon_druid.curr_hp = 200  # Make sure we can deal huge damage to it and have it survive
+    test_moon_druid_lvl_5.curr_hp = 200  # Make sure we can deal huge damage to it and have it survive
 
     try:
-        action_resolver.resolve_action(fs, test_moon_druid)
-        action_resolver.resolve_action(ws, test_moon_druid)
-        assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 2
-        test_moon_druid.get_current_form().curr_hp = 200
-        assert test_moon_druid.get_current_form().concentration_effect is not None
-        assert test_moon_druid.concentration_effect is not None
-        test_moon_druid.get_current_form().receive_dmg(50, DamageType.Slashing)  # Only a nat 20 can save it
-        if not test_moon_druid.get_current_form().concentration_effect:
-            assert not test_moon_druid.concentration_effect
-            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 1
-            test_moon_druid.get_current_form().receive_dmg(1, DamageType.Slashing)
-            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid)) == 1
+        action_resolver.resolve_action(fs, test_moon_druid_lvl_5)
+        action_resolver.resolve_action(ws, test_moon_druid_lvl_5)
+        assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid_lvl_5)) == 2
+        test_moon_druid_lvl_5.get_current_form().curr_hp = 200
+        assert test_moon_druid_lvl_5.get_current_form().concentration_effect is not None
+        assert test_moon_druid_lvl_5.concentration_effect is not None
+        test_moon_druid_lvl_5.get_current_form().receive_dmg(50, DamageType.Slashing)  # Only a nat 20 can save it
+        if not test_moon_druid_lvl_5.get_current_form().concentration_effect:
+            assert not test_moon_druid_lvl_5.concentration_effect
+            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid_lvl_5)) == 1
+            test_moon_druid_lvl_5.get_current_form().receive_dmg(1, DamageType.Slashing)
+            assert len(Map.get().effect_tracker.get_effects_by_initiator(test_moon_druid_lvl_5)) == 1
 
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -116,7 +116,7 @@ def test_map_position_toggled_cache(battle_map, teams, effect_tracker, test_gobl
 
 
 @pytest.mark.flaky(reruns=3)
-def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear):
+def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_bugbear):
     """
     We assert that get_surviving_teams behaves correctly when the last combatant standing is a wildshaped druid who
     just digested the last enemy
@@ -124,13 +124,13 @@ def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_
     CustomLogger(logging.WARNING)
 
     battle_map.set_effect_tracker(effect_tracker)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)  # For the log coloring...
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.BLUE)  # For the log coloring...
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)  # For the log coloring...
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([2, 2], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([2, 2], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 4], dtype=np.int64))
     battle_map.build_adjacency_matrix()
-    combatants = [test_moon_druid, test_bugbear]
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    combatants = [test_moon_druid_lvl_5, test_bugbear]
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE, test_moon_druid_lvl_5.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     class DummyFactory:
         def __init__(self):
@@ -138,9 +138,9 @@ def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_
     class DummyEffect:
         def __init__(self):
             self.factory = DummyFactory()
-            self.initiator = test_moon_druid
+            self.initiator = test_moon_druid_lvl_5
         def deactivate(self):
-            test_moon_druid.break_concentration()
+            test_moon_druid_lvl_5.break_concentration()
 
         def deactivate_for_combatant(self, combatant):
             assert False
@@ -151,28 +151,28 @@ def test_teams_get_surviving_teams(battle_map, teams, effect_tracker, test_moon_
         def get_effect_type(self):
             return EffectType.FAERIE_FIRE
     dummy_effect = DummyEffect()
-    test_moon_druid.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
+    test_moon_druid_lvl_5.concentration_effect = dummy_effect  # Must be non-None, This way we exclude all the concentration spells from the selection
     battle_map.effect_tracker.add(dummy_effect)
-    test_moon_druid.spellslots.deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)  # To prevent the druid from casting
+    test_moon_druid_lvl_5.spellslots.deplete_resource(ResourceDepletionLevel.FULLY_DEPLETED)  # To prevent the druid from casting
 
     try:
-        actoid1 = get_action(test_moon_druid)
-        assert test_moon_druid.curr_hp == 43
+        actoid1 = get_action(test_moon_druid_lvl_5)
+        assert test_moon_druid_lvl_5.curr_hp == 43
         assert str(actoid1) == "Wildshape of Moon Druid 5th LVL (1) into Giant Toad"
-        action_resolver.resolve_action(actoid1, test_moon_druid)
-        assert test_moon_druid.get_current_form() is not test_moon_druid
-        assert test_moon_druid.current_wildshape_form is not None
-        assert test_moon_druid.get_current_form().curr_hp == 39
+        action_resolver.resolve_action(actoid1, test_moon_druid_lvl_5)
+        assert test_moon_druid_lvl_5.get_current_form() is not test_moon_druid_lvl_5
+        assert test_moon_druid_lvl_5.current_wildshape_form is not None
+        assert test_moon_druid_lvl_5.get_current_form().curr_hp == 39
         test_bugbear.curr_hp = 100  # Making sure it survives
         test_bugbear.ac = 0  # Making sure the toad hits
-        test_moon_druid.new_turn()
-        actoid2 = get_action(test_moon_druid)
+        test_moon_druid_lvl_5.new_turn()
+        actoid2 = get_action(test_moon_druid_lvl_5)
         assert str(actoid2) == "Toad Bite on Bugbear (1)"
-        action_resolver.resolve_action(actoid2, test_moon_druid)
-        test_moon_druid.new_turn()
-        actoid3 = get_action(test_moon_druid)
+        action_resolver.resolve_action(actoid2, test_moon_druid_lvl_5)
+        test_moon_druid_lvl_5.new_turn()
+        actoid3 = get_action(test_moon_druid_lvl_5)
         assert str(actoid3) == "Toad Bite and Swallow on Bugbear (1)"
-        action_resolver.resolve_action(actoid3, test_moon_druid)
+        action_resolver.resolve_action(actoid3, test_moon_druid_lvl_5)
         assert is_affected_by(test_bugbear, Conditions.SWALLOWED)
         test_bugbear.curr_hp = 1  # Making sure digestion kills it
         effect_tracker.start_of_turn(test_bugbear)

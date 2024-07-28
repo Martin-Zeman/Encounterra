@@ -21,7 +21,7 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
         :return: list of the following types: np.array, action, bonus action
         """
         proto_dag, transition_name_to_action = generate_proto_dag(self.combatant)
-        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
+        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords_and_bins = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             movement = None
             if self.combatant.movement > 0:  # Explore movement that could benefit next turn's action
@@ -35,7 +35,7 @@ class ActionSurgePlanStrategy(DefaultActionPlanStrategy):
                 if max_threat >= self.combatant.weapon_dmg_dealt_this_turn * self.ACTION_SURGE_TOLERANCE_DELTA:
                     return [ActionSurgeFactory(self.combatant).create(None)]
             return None
-        best_sequence, transition_name_to_ms_path, _ = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
+        best_sequence, transition_name_to_ms_path, _ = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords_and_bins, movement_trans_to_coord_and_type, distances, shortest_paths)
         if best_sequence is None:  # This happens e.g. if the only non-movement actions bring 0 threat
             if not self.combatant.has_action and self.combatant.resources[FreeAction.ACTION_SURGE].has_resource() and self.combatant.weapon_dmg_dealt_this_turn > 0:
                 # Using a strict infeasibility_multiplier here to avoid wasting the Action Surge

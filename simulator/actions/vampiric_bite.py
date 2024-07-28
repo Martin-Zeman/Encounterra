@@ -2,7 +2,7 @@ import math
 
 from .grapple_attack import GrappleAttack
 from ..actions.melee_attack import MeleeAttackFactory, MeleeAttack
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, PLACEHOLDER_MAPPING
 from ..conditions import Conditions, is_affected_by_any, get_swallower, get_grappler
 import logging
 import numba_functions as nf
@@ -49,7 +49,7 @@ class VampiricBite(MeleeAttack):
         battle_map = Map.get()
         swallower = get_swallower(self.factory.combatant)
         if swallower:
-            return None
+            return None, None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return nf.get_free_coords_in_hop_range(
                 battle_map.grid,
@@ -57,9 +57,9 @@ class VampiricBite(MeleeAttack):
                 distances,
                 self.factory.combatant.size.value,
                 self.factory.range,
-                self.factory.combatant.id)
+                self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):

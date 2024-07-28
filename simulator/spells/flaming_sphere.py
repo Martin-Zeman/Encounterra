@@ -6,7 +6,7 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
 from ..actions.flaming_sphere_ram import FlamingSphereRamFactory
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, PLACEHOLDER_MAPPING
 from ..combatant_coords import Coords
 from ..effects.action_enabler_effect import ActionEnablerEffect
 from ..effects.aoe_square_effect import AoeSquareEffect
@@ -143,12 +143,11 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if get_swallower(self.factory.combatant):
-            return None  # Not possible while blinded
+            return None, None  # Not possible while blinded
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return nf.get_free_coords_in_cartesian_range(
@@ -157,10 +156,10 @@ class FlamingSphere(Actoid, LimitedDurationEffect, ActionEnablerEffect, AoeSquar
                 distances,
                 self.factory.combatant.size.value,
                 FlamingSphereFactory.range,
-                self.factory.combatant.id)
+                self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif nf.get_cartesian_distance_coords(battle_map.get_combatant_position(self.factory.combatant).get(), np.array([self.origin])) <= FlamingSphereFactory.range:
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None
 
     def on_start_of_turn(self, combatant):
         pass

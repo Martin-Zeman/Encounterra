@@ -182,7 +182,6 @@ class Attack(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     @map_toggled_cache_with_key(
         key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(

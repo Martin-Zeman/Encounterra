@@ -14,6 +14,8 @@ from simulator.combatants.giant_toad import GiantToad
 from simulator.combatants.giant_constrictor_snake import GiantConstrictorSnake
 from simulator.combatants.green_dragon_wyrmling import GreenDragonWyrmling
 from simulator.combatants.hobgoblin import Hobgoblin
+from simulator.combatants.moon_druid_2lvl import MoonDruid2Lvl
+from simulator.combatants.moon_druid_3lvl import MoonDruid3Lvl
 from simulator.combatants.moon_druid_5lvl import MoonDruid5Lvl
 from simulator.combatants.night_hag import NightHag
 from simulator.combatants.ogre import Ogre
@@ -109,8 +111,18 @@ def test_ogre():
 
 
 @pytest.fixture()
-def test_moon_druid():
+def test_moon_druid_lvl_5():
     return MoonDruid5Lvl()
+
+
+@pytest.fixture()
+def test_moon_druid_lvl_2():
+    return MoonDruid2Lvl()
+
+
+@pytest.fixture()
+def test_moon_druid_lvl_3():
+    return MoonDruid3Lvl()
 
 
 @pytest.fixture()

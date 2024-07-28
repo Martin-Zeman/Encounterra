@@ -1,4 +1,4 @@
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, PLACEHOLDER_MAPPING
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
@@ -26,6 +26,7 @@ class HasteFactory(ThreatModifierFactory):
     type = SpellStats.Type.BUFF
     dc = None
     dmg_type = None
+    CALL_COUNT = dict()
 
     def __init__(self, action_type, caster, resource):
         super().__init__()
@@ -77,7 +78,7 @@ class HasteFactory(ThreatModifierFactory):
         max_attack_dmg = 0
         attacks = get_haste_eligible_attacks(target)
         for attack in attacks:
-            potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed + attack.range + 1)
+            potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed * 2 + attack.range + 1)
             if not potential_targets:
                 continue
             dmg_acc = reduce(lambda acc, pt: acc + nf.mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac, pt.is_immune_to(attack.dmg_type),
@@ -94,6 +95,12 @@ class HasteFactory(ThreatModifierFactory):
             attack_dmg_decrement_acc /= len(enemy_attacks)
             # TODO include the ST-based abilities here
         max_attack_dmg -= attack_dmg_decrement_acc  # Take care to subtract this, because the decrement is non-positive
+        caster_position = battle_map.get_combatant_position(self.combatant).get()[0]
+        try:
+            HasteFactory.CALL_COUNT[tuple(caster_position)] += 1
+        except KeyError:
+            HasteFactory.CALL_COUNT[tuple(caster_position)] = 0
+        print(f"Haste on {target}, coord: {caster_position}, threat: {max_attack_dmg * ROUND_HORIZON}, count: {HasteFactory.CALL_COUNT[tuple(caster_position)]}")
         return max_attack_dmg * ROUND_HORIZON
 
     def calculate_max_threat(self):
@@ -150,7 +157,6 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
@@ -159,10 +165,10 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
         swallower = get_swallower(self.factory.combatant)
         if swallower:
             if self.target is self.factory.combatant:
-                return [curr_coord]
-            return None  # Not possible while blinded
+                return [curr_coord], PLACEHOLDER_MAPPING
+            return None, None  # Not possible while blinded
         if self.target is self.factory.combatant:
-            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
+            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant), PLACEHOLDER_MAPPING
         elif not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = nf.get_free_coords_in_cartesian_range(
                 battle_map.grid,
@@ -170,8 +176,8 @@ class Haste(Actoid, LimitedDurationEffect, Threat):
                 distances,
                 self.factory.combatant.size.value,
                 HasteFactory.range, -1)
-            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE], PLACEHOLDER_MAPPING
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= HasteFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+            return [curr_coord], PLACEHOLDER_MAPPING
+        return None, None

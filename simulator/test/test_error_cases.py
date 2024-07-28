@@ -25,7 +25,7 @@ from simulator.spells.spell import SpellStats
 from simulator.spells.twinned_firebolt import TwinnedFirebolt
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
-    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
+    test_ogre, test_moon_druid_lvl_5, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
     test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_fighter_lvl_2, \
     test_battle_master_fighter_lvl_3, test_fighter_lvl_1, test_ghoul, test_skeleton, test_hobgoblin, test_orc, \
@@ -775,7 +775,7 @@ def test_error_case_16(battle_map, teams, effect_tracker, test_draconic_sorcerer
         assert False, f"Raised an exception {e}"
 
 
-def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_totem_barbarian, test_goblin, test_draconic_sorcerer_5lvl):
+def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_totem_barbarian, test_goblin, test_draconic_sorcerer_5lvl):
     """
     This test case is based on a scenario encountered during fuzzy testing. It makes sure that find_wildshaped_coordinate does its job.
     """
@@ -786,15 +786,15 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
     battle_map.place_circular_element(np.array([4, 8], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([10, 1], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_moon_druid, test_totem_barbarian, test_goblin, test_draconic_sorcerer_5lvl, test_totem_barbarian_2]
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    combatants = [test_moon_druid_lvl_5, test_totem_barbarian, test_goblin, test_draconic_sorcerer_5lvl, test_totem_barbarian_2]
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE, test_moon_druid_lvl_5.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_totem_barbarian_2, Teams.Color.RED)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([4, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([4, 13], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([6, 10], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_goblin, np.array([0, 13], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([0, 10], dtype=np.int64))
@@ -802,26 +802,26 @@ def test_error_case_17(battle_map, teams, effect_tracker, test_moon_druid, test_
 
     battle_map.build_adjacency_matrix()
 
-    test_moon_druid.has_haste_action = True
+    test_moon_druid_lvl_5.has_haste_action = True
 
     try:
-        actoid1 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid4, test_moon_druid)
-        actoid5 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid5, test_moon_druid)
-        actoid6 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid6, test_moon_druid)
+        actoid1 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid1, test_moon_druid_lvl_5)
+        actoid2 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid2, test_moon_druid_lvl_5)
+        actoid3 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid3, test_moon_druid_lvl_5)
+        actoid4 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid4, test_moon_druid_lvl_5)
+        actoid5 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid5, test_moon_druid_lvl_5)
+        actoid6 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid6, test_moon_druid_lvl_5)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
 
-def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_bugbear, test_goblin):
+def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_bugbear, test_goblin):
     """
     This test case is based on a scenario encountered during fuzzy testing. It makes sure that find_wildshaped_coordinate does its job.
     """
@@ -829,33 +829,33 @@ def test_error_case_18(battle_map, teams, effect_tracker, test_moon_druid, test_
     battle_map.place_circular_element(np.array([9, 8], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([13, 6], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=1)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_moon_druid, test_bugbear, test_goblin]
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    combatants = [test_moon_druid_lvl_5, test_bugbear, test_goblin]
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE, test_moon_druid_lvl_5.wildshape_factory[1])
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 8], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([10, 8], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([11, 8], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_goblin, np.array([12, 13], dtype=np.int64))
 
     battle_map.build_adjacency_matrix()
 
-    test_moon_druid.has_haste_action = True
+    test_moon_druid_lvl_5.has_haste_action = True
 
     try:
-        actoid1 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid4, test_moon_druid)
-        actoid5 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid5, test_moon_druid)
-        actoid6 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid6, test_moon_druid)
+        actoid1 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid1, test_moon_druid_lvl_5)
+        actoid2 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid2, test_moon_druid_lvl_5)
+        actoid3 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid3, test_moon_druid_lvl_5)
+        actoid4 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid4, test_moon_druid_lvl_5)
+        actoid5 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid5, test_moon_druid_lvl_5)
+        actoid6 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid6, test_moon_druid_lvl_5)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -931,88 +931,88 @@ def test_error_case_20(battle_map, teams, effect_tracker, test_totem_barbarian, 
         assert False, f"Raised an exception {e}"
 
 
-def test_error_case_21(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid):
+def test_error_case_21(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid_lvl_5):
     """
     Moon druid being prone, exhausting all their movement but still trying to move.
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_totem_barbarian, test_moon_druid]
+    combatants = [test_totem_barbarian, test_moon_druid_lvl_5]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.RED)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 9], dtype=np.int64))
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.BLUE)
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([13, 9], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([0, 9], dtype=np.int64))
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE, test_moon_druid_lvl_5.wildshape_factory[1])
 
     battle_map.build_adjacency_matrix()
 
-    apply_condition(test_moon_druid, Condition(Conditions.PRONE, test_totem_barbarian))
+    apply_condition(test_moon_druid_lvl_5, Condition(Conditions.PRONE, test_totem_barbarian))
 
     try:
-        actoid1 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid4, test_moon_druid)
-        actoid5 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid5, test_moon_druid)
-        actoid6 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid6, test_moon_druid)
-        actoid7 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid7, test_moon_druid)
-        actoid8 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid8, test_moon_druid)
+        actoid1 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid1, test_moon_druid_lvl_5)
+        actoid2 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid2, test_moon_druid_lvl_5)
+        actoid3 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid3, test_moon_druid_lvl_5)
+        actoid4 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid4, test_moon_druid_lvl_5)
+        actoid5 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid5, test_moon_druid_lvl_5)
+        actoid6 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid6, test_moon_druid_lvl_5)
+        actoid7 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid7, test_moon_druid_lvl_5)
+        actoid8 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid8, test_moon_druid_lvl_5)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
 
-def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid, test_draconic_sorcerer_5lvl):
+def test_error_case_22(battle_map, teams, effect_tracker, test_totem_barbarian, test_moon_druid_lvl_5, test_draconic_sorcerer_5lvl):
     """
     Hasted moon druid in a Giant Toad form swallows a barbarian
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_totem_barbarian, test_moon_druid, test_draconic_sorcerer_5lvl]
+    combatants = [test_totem_barbarian, test_moon_druid_lvl_5, test_draconic_sorcerer_5lvl]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_totem_barbarian, Teams.Color.BLUE)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.RED)
     teams.add_combatant_to_team(test_draconic_sorcerer_5lvl, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 13], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([8, 13], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_totem_barbarian, np.array([7, 13], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_draconic_sorcerer_5lvl, np.array([8, 8], dtype=np.int64))
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE, test_moon_druid_lvl_5.wildshape_factory[1])
     battle_map.build_adjacency_matrix()
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
 
-    ws_factory = WildshapeFactory(test_moon_druid, BonusAction.MOON_WILDSHAPE)
+    ws_factory = WildshapeFactory(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE)
     ws = ws_factory.create(GiantToad)
-    fs_factory = FlamingSphereFactory(test_moon_druid.dc, Action.FLAMING_SPHERE, test_moon_druid, test_moon_druid.spellslots)
+    fs_factory = FlamingSphereFactory(test_moon_druid_lvl_5.dc, Action.FLAMING_SPHERE, test_moon_druid_lvl_5, test_moon_druid_lvl_5.spellslots)
     fs = fs_factory.create(np.array((6, 13)))
     haste_factory = HasteFactory(BonusAction.QUICKENED_HASTE, test_draconic_sorcerer_5lvl, test_draconic_sorcerer_5lvl.spellslots)
     test_totem_barbarian.ac = 0
 
     # TODO Failed to reproduce
     try:
-        action_resolver.resolve_action(fs, test_moon_druid)
-        action_resolver.resolve_action(ws, test_moon_druid)
-        test_moon_druid.new_turn()
-        bite = test_moon_druid.get_current_form().bite[1].create(test_totem_barbarian)
-        action_resolver.resolve_action(bite, test_moon_druid)
+        action_resolver.resolve_action(fs, test_moon_druid_lvl_5)
+        action_resolver.resolve_action(ws, test_moon_druid_lvl_5)
+        test_moon_druid_lvl_5.new_turn()
+        bite = test_moon_druid_lvl_5.get_current_form().bite[1].create(test_totem_barbarian)
+        action_resolver.resolve_action(bite, test_moon_druid_lvl_5)
         if is_affected_by(test_totem_barbarian, Conditions.GRAPPLED):
-            test_moon_druid.new_turn()
-            haste = haste_factory.create(test_moon_druid.get_current_form())
+            test_moon_druid_lvl_5.new_turn()
+            haste = haste_factory.create(test_moon_druid_lvl_5.get_current_form())
             action_resolver.resolve_action(haste, test_draconic_sorcerer_5lvl)
-            actoid1 = get_action(test_moon_druid)
-            action_resolver.resolve_action(actoid1, test_moon_druid)
-            actoid2 = get_action(test_moon_druid)
-            action_resolver.resolve_action(actoid2, test_moon_druid)
-            actoid3 = get_action(test_moon_druid)
-            action_resolver.resolve_action(actoid3, test_moon_druid)
+            actoid1 = get_action(test_moon_druid_lvl_5)
+            action_resolver.resolve_action(actoid1, test_moon_druid_lvl_5)
+            actoid2 = get_action(test_moon_druid_lvl_5)
+            action_resolver.resolve_action(actoid2, test_moon_druid_lvl_5)
+            actoid3 = get_action(test_moon_druid_lvl_5)
+            action_resolver.resolve_action(actoid3, test_moon_druid_lvl_5)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
@@ -1057,41 +1057,41 @@ def test_error_case_23(battle_map, teams, effect_tracker, test_ogre, test_stone_
         assert False, f"Raised an exception {e}"
 
 
-def test_error_case_24(battle_map, teams, effect_tracker, test_moon_druid, test_stone_giant, test_brown_bear, test_bugbear, test_giant_toad, test_ogre):
+def test_error_case_24(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_stone_giant, test_brown_bear, test_bugbear, test_giant_toad, test_ogre):
     """
     Not enough space to wildshape. There was a bug in the plan combination when the druid has no eligible non-wildshape action.
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_moon_druid, test_stone_giant, test_brown_bear, test_bugbear, test_giant_toad, test_ogre]
+    combatants = [test_moon_druid_lvl_5, test_stone_giant, test_brown_bear, test_bugbear, test_giant_toad, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_stone_giant, Teams.Color.RED)
     teams.add_combatant_to_team(test_brown_bear, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
     teams.add_combatant_to_team(test_giant_toad, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([10, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([10, 11], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([6, 8], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_brown_bear, np.array([8, 12], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([9, 11], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_giant_toad, np.array([10, 13], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_ogre, np.array([11, 11], dtype=np.int64))
     battle_map.build_adjacency_matrix()
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE, test_moon_druid.wildshape_factory[1])
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE, test_moon_druid_lvl_5.wildshape_factory[1])
 
     # Make the grapple easy to break out of
-    apply_dc_condition(test_moon_druid, ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, SkillCheck.ATHLETICS, 1, test_ogre, PhaseOfTurn.ACTION))
-    test_ogre.constricted_target = test_moon_druid
+    apply_dc_condition(test_moon_druid_lvl_5, ConditionWithDC(Conditions.GRAPPLED | Conditions.RESTRAINED, SkillCheck.ATHLETICS, 1, test_ogre, PhaseOfTurn.ACTION))
+    test_ogre.constricted_target = test_moon_druid_lvl_5
 
     try:
-        actoid1 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid1, test_moon_druid)
-        actoid2 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid2, test_moon_druid)
-        actoid3 = get_action(test_moon_druid)
-        action_resolver.resolve_action(actoid3, test_moon_druid)
-        actoid4 = get_action(test_moon_druid)
+        actoid1 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid1, test_moon_druid_lvl_5)
+        actoid2 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid2, test_moon_druid_lvl_5)
+        actoid3 = get_action(test_moon_druid_lvl_5)
+        action_resolver.resolve_action(actoid3, test_moon_druid_lvl_5)
+        actoid4 = get_action(test_moon_druid_lvl_5)
         assert str(actoid4).startswith("Wildshape")
     except Exception as e:
         assert False, f"Raised an exception {e}"
@@ -1217,13 +1217,13 @@ def test_error_case_27(battle_map, teams, effect_tracker, test_twig_blight, test
         assert False, f"Raised an exception {e}"
 
 
-def test_error_case_28(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_dire_wolf, test_berserker, test_twig_blight):
+def test_error_case_28(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_sabertoother_tiger, test_dire_wolf, test_berserker, test_twig_blight):
     """
     Error in for the Moon Druid "KeyError((<Action.DODGE: 6>, <Encounterra.simulator.actions.dodge.DodgeFactory object at 0x7f8bbb9a5110>))"
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_moon_druid, test_sabertoother_tiger, test_dire_wolf, test_berserker, test_twig_blight]
+    combatants = [test_moon_druid_lvl_5, test_sabertoother_tiger, test_dire_wolf, test_berserker, test_twig_blight]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
     battle_map.place_circular_element(np.array([7, 11], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -1231,42 +1231,42 @@ def test_error_case_28(battle_map, teams, effect_tracker, test_moon_druid, test_
     battle_map.place_circular_element(np.array([4, 11], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([9, 4], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
 
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_dire_wolf, Teams.Color.RED)
     teams.add_combatant_to_team(test_berserker, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_twig_blight, Teams.Color.BLUE)
 
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([5, 14], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([5, 14], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([6, 8], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_dire_wolf, np.array([8, 8], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_berserker, np.array([2, 8], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_twig_blight, np.array([13, 10], dtype=np.int64))
-    test_moon_druid.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid, BonusAction.MOON_WILDSHAPE,
-                                                                            test_moon_druid.wildshape_factory[1])
+    test_moon_druid_lvl_5.available_wildshape_forms = preallocate_wildshape_forms(test_moon_druid_lvl_5, BonusAction.MOON_WILDSHAPE,
+                                                                            test_moon_druid_lvl_5.wildshape_factory[1])
 
     battle_map.build_adjacency_matrix()
 
     actoids = []
     try:
-        actoids.append(get_action(test_moon_druid))
-        action_resolver.resolve_action(actoids[-1], test_moon_druid)
-        actoids.append(get_action(test_moon_druid))
-        action_resolver.resolve_action(actoids[-1], test_moon_druid)
-        actoids.append(get_action(test_moon_druid))
-        action_resolver.resolve_action(actoids[-1], test_moon_druid)
-        actoids.append(get_action(test_moon_druid))
-        action_resolver.resolve_action(actoids[-1], test_moon_druid)
-        actoids.append(get_action(test_moon_druid))
-        action_resolver.resolve_action(actoids[-1], test_moon_druid)
-        actoids.append(get_action(test_moon_druid))
-        action_resolver.resolve_action(actoids[-1], test_moon_druid)
+        actoids.append(get_action(test_moon_druid_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid_lvl_5)
+        actoids.append(get_action(test_moon_druid_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid_lvl_5)
+        actoids.append(get_action(test_moon_druid_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid_lvl_5)
+        actoids.append(get_action(test_moon_druid_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid_lvl_5)
+        actoids.append(get_action(test_moon_druid_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid_lvl_5)
+        actoids.append(get_action(test_moon_druid_lvl_5))
+        action_resolver.resolve_action(actoids[-1], test_moon_druid_lvl_5)
     except Exception as e:
         assert False, f"Raised an exception {e}"
 
 
 @pytest.mark.flaky(reruns=3)
-def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_bugbear, test_evil_mage):
+def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_sabertoother_tiger, test_bugbear, test_evil_mage):
     """
     Error in for the Saber-Toother Tiger's "TypeError("unsupported operand type(s) for +: 'Size' and 'int'")"
     """
@@ -1274,7 +1274,7 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
     battle_map.set_effect_tracker(effect_tracker)
     test_sabertoother_tiger_2 = copy.deepcopy(test_sabertoother_tiger)
     test_sabertoother_tiger_2.name = "Saber-Toothed Tiger 2"
-    combatants = [test_moon_druid, test_sabertoother_tiger, test_sabertoother_tiger_2, test_bugbear, test_evil_mage]
+    combatants = [test_moon_druid_lvl_5, test_sabertoother_tiger, test_sabertoother_tiger_2, test_bugbear, test_evil_mage]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
 
     battle_map.place_circular_element(np.array([9, 12], dtype=np.int64), Terrain.IMPASSABLE_TERRAIN, radius=1)
@@ -1282,13 +1282,13 @@ def test_error_case_29(battle_map, teams, effect_tracker, test_moon_druid, test_
     battle_map.place_circular_element(np.array([6, 12], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([8, 6], dtype=np.int64), Terrain.DIFFICULT_TERRAIN, radius=0)
 
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.RED)
     teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_sabertoother_tiger_2, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_evil_mage, Teams.Color.RED)
 
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 11], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([13, 11], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([5, 10], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_sabertoother_tiger_2, np.array([3, 12], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([0, 10], dtype=np.int64))

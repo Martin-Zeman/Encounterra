@@ -77,7 +77,7 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         ws_movement_increments = [e.increment for e in ws_action_plan if hasattr(e, "increment")]
         sum_of_ws_increments = tuple(np.sum(ws_movement_increments, axis=0)) if ws_movement_increments else (0, 0)
         ws_destination = (current_position[0] + sum_of_ws_increments[0], current_position[1] + sum_of_ws_increments[1])
-        if ws_destination in non_wildshape_action.get_eligible_coords(distances, shortest_paths):
+        if ws_destination in non_wildshape_action.get_eligible_coords(distances, shortest_paths)[0]:
             combined_plan = []
             combined_plan.extend(ws_action_plan[:len(ws_movement_increments)])
             combined_plan.append(non_wildshape_action)
@@ -98,16 +98,16 @@ class MoonDruidActionPlanStrategy(ActionPlanStrategy):
         if self.best_wildshape_plan_data is None and self.combatant.resources[Action.WILDSHAPE].has_resource():
             ws_fsm, ws_transition_name_to_action = generate_wildshape_proto_dag(self.combatant)
             if ws_transition_name_to_action:  # Could be out of wildshape uses
-                ws_proto_dag, ws_movement_trans_to_coord_and_type, ws_transition_to_eligible_coords = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
-                if ws_proto_dag is not None and ws_movement_trans_to_coord_and_type and ws_transition_to_eligible_coords:
-                    ws_best_sequence, ws_transition_name_to_ms_path, _ = find_best_sequence(self.combatant, ws_proto_dag, ws_transition_name_to_action, ws_transition_to_eligible_coords, ws_movement_trans_to_coord_and_type, distances, shortest_paths)
+                ws_proto_dag, ws_movement_trans_to_coord_and_type, ws_transition_to_eligible_coords_and_bins = build_action_dag(self.combatant, ws_fsm, ws_transition_name_to_action, distances, shortest_paths)
+                if ws_proto_dag is not None and ws_movement_trans_to_coord_and_type and ws_transition_to_eligible_coords_and_bins:
+                    ws_best_sequence, ws_transition_name_to_ms_path, _ = find_best_sequence(self.combatant, ws_proto_dag, ws_transition_name_to_action, ws_transition_to_eligible_coords_and_bins, ws_movement_trans_to_coord_and_type, distances, shortest_paths)
                     self.best_wildshape_plan_data = ws_transition_name_to_action, ws_movement_trans_to_coord_and_type, ws_best_sequence, ws_transition_name_to_ms_path
 
         proto_dag, transition_name_to_action = generate_proto_dag(self.combatant)
-        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
+        dag, movement_trans_to_coord_and_type, transition_to_eligible_coords_and_bins = build_action_dag(self.combatant, proto_dag, transition_name_to_action, distances, shortest_paths)
         if dag is None:
             return None
-        best_sequence, transition_name_to_ms_path, _ = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords, movement_trans_to_coord_and_type, distances, shortest_paths)
+        best_sequence, transition_name_to_ms_path, _ = find_best_sequence(self.combatant, dag, transition_name_to_action, transition_to_eligible_coords_and_bins, movement_trans_to_coord_and_type, distances, shortest_paths)
         if best_sequence is None:
             return None
         need_to_combine, non_wildshape_action = evaluate_combination_eligibility(best_sequence, transition_name_to_action)

@@ -1,7 +1,7 @@
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..spells.spell import SpellStats
 from ..misc import DamageType, Visibility
 from ..conditions import Conditions, is_affected_by_any, get_swallower
@@ -164,7 +164,6 @@ class ScorchingRay(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     @map_toggled_cache_with_key(
         key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(
@@ -178,7 +177,7 @@ class ScorchingRay(Actoid, DirectThreat):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if get_swallower(self.factory.combatant):
-            return None  # Doesn't state that vision is required but would make sense
+            return None, None  # Doesn't state that vision is required but would make sense
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING,
@@ -209,7 +208,7 @@ class ScorchingRay(Actoid, DirectThreat):
             return [coord for coord in free_coords_in_range if
                     battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
                     and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE]
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[2]] is not Visibility.NONE], PLACEHOLDER_MAPPING
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant,
                                                           self.targets[0]) <= ScorchingRayFactory.range \
                 and battle_map.get_cartesian_distance_combatants(self.factory.combatant,
@@ -219,5 +218,5 @@ class ScorchingRay(Actoid, DirectThreat):
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE \
                 and battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[2]] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+            return [curr_coord], PLACEHOLDER_MAPPING
+        return None, None

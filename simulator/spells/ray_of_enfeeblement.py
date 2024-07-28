@@ -1,7 +1,7 @@
 import copy
 
 from ..actions.action_types import BonusAction, Passive
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, PLACEHOLDER_MAPPING
 from ..effects.effect import EffectType
 from ..effects.end_of_turn_combatant_effect import EndOfTurnEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
@@ -167,7 +167,6 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         # self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     # @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     # def calculate_threat_delta(self, modifiers, *args, **kwargs):
@@ -181,8 +180,8 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
         battle_map = Map.get()
         if swallower:
             if swallower is self.target:
-                return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-            return None
+                return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+            return None, None
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = nf.get_free_coords_in_cartesian_range(
@@ -191,9 +190,9 @@ class RayOfEnfeeblement(Actoid, LimitedDurationEffect, EndOfTurnEffect, Threat):
                 distances,
                 self.factory.combatant.size.value,
                 RayOfEnfeeblementFactory.range, self.factory.combatant.id)
-            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE], PLACEHOLDER_MAPPING
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.target) <= RayOfEnfeeblementFactory.range and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+            return [curr_coord], PLACEHOLDER_MAPPING
+        return None, None
 

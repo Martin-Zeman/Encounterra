@@ -1,6 +1,6 @@
 from .action_types import HasteAction
 from ..actions.actoid import FactoryFlags, ActoidFlags
-from ..battle_map import Map
+from ..battle_map import Map, PLACEHOLDER_MAPPING
 from ..conditions import Conditions, is_affected_by_any, get_swallower, get_grappler
 import logging
 import numba_functions as nf
@@ -103,7 +103,7 @@ class GrappleAttack(AttackThreatModifier):
         battle_map = Map.get()
         swallower = get_swallower(self.factory.combatant)
         if swallower:
-            return None
+            return None, None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return nf.get_free_coords_in_hop_range(
                 battle_map.grid,
@@ -111,9 +111,9 @@ class GrappleAttack(AttackThreatModifier):
                 distances,
                 self.factory.combatant.size.value,
                 self.factory.range,
-                self.factory.combatant.id)
+                self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
 
     def calculate_threat_for_attack(self, combatant, attack, *args, **kwargs):
         if hasattr(attack, 'target'):  # Could be Nop TODO: Remove this?

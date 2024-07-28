@@ -1,7 +1,7 @@
 import logging
 from itertools import combinations
 
-from ..battle_map import Map, map_position_toggled_cache
+from ..battle_map import Map, map_position_toggled_cache, PLACEHOLDER_MAPPING
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..spells.spell import SpellStats
 from ..effects.effect import EffectType
@@ -73,7 +73,7 @@ class TwinnedHasteFactory(ThreatModifierFactory):
         max_attack_dmg = 0
         attacks = get_haste_eligible_attacks(target)
         for attack in attacks:
-            potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed + attack.range + 1)
+            potential_targets = battle_map.get_non_swallowed_enemies_within_hop_distance(target, target.speed * 2 + attack.range + 1)
             if not potential_targets:
                 continue
             dmg_acc = reduce(lambda acc, pt: acc + nf.mean_dmg(attack.to_hit, attack.dmg_dice, attack.dmg_bonus, pt.ac,
@@ -149,12 +149,11 @@ class TwinnedHaste(Actoid, LimitedDurationEffect, Threat):
 
     def clear_cache(self):
         self.calculate_threat.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if get_swallower(self.factory.combatant):
-            return None  # Better not waste a twinned version even though self could still be targeted
+            return None, None  # Better not waste a twinned version even though self could still be targeted
         battle_map = Map.get()
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
@@ -180,10 +179,10 @@ class TwinnedHaste(Actoid, LimitedDurationEffect, Threat):
 
             return [coord for coord in free_coords_in_range if
                     battle_map.visibility_dict_for_all_coords[coord][self.targets[0]] is not Visibility.NONE
-                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE]
+                    and battle_map.visibility_dict_for_all_coords[coord][self.targets[1]] is not Visibility.NONE], PLACEHOLDER_MAPPING
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[0]) <= TwinnedHasteFactory.range and \
             battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.targets[1]) <= TwinnedHasteFactory.range and \
             battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[0]] is not Visibility.NONE and \
             battle_map.visibility_dict_for_all_coords[curr_coord][self.targets[1]] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+            return [curr_coord], PLACEHOLDER_MAPPING
+        return None, None

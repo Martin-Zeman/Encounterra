@@ -17,7 +17,7 @@ from simulator.spells.spike_growth import SpikeGrowthFactory
 from simulator.spells.twinned_hold_person import TwinnedHoldPersonFactory
 from simulator.teams import Teams
 from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant,\
-    test_ogre, test_moon_druid, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
+    test_ogre, test_moon_druid_lvl_5, test_giant_toad, teams, effect_tracker, battle_map, test_dragonclaw_cultist, test_brown_bear,\
     test_dire_wolf, test_assassin_rogue, test_draconic_sorcerer_3lvl, test_giant_constrictor_snake, test_twig_blight, \
     test_bandit_captain, test_sabertoother_tiger, test_berserker, test_evil_mage, test_commoner, test_vampire_spawn
 from simulator.actions.action_selector import get_action
@@ -72,21 +72,21 @@ def test_independent_saves(battle_map, teams, effect_tracker, test_goblin, test_
 
 
 @pytest.mark.flaky(reruns=3)
-def test_limited_duration_effect_non_self_target(battle_map, teams, effect_tracker, test_goblin, test_moon_druid, test_bugbear, test_ogre):
+def test_limited_duration_effect_non_self_target(battle_map, teams, effect_tracker, test_goblin, test_moon_druid_lvl_5, test_bugbear, test_ogre):
     """
     Tests that effects with a limited duration really expire post their duration. The focus is on the type of effect
     where the target(s) and the initiator are not one and the same.
     """
     CustomLogger(logging.WARNING)
     battle_map.set_effect_tracker(effect_tracker)
-    combatants = [test_goblin, test_moon_druid, test_bugbear, test_ogre]
+    combatants = [test_goblin, test_moon_druid_lvl_5, test_bugbear, test_ogre]
     action_resolver = ActionResolver(combatants, teams, effect_tracker)
     teams.add_combatant_to_team(test_goblin, Teams.Color.RED)
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
     battle_map.set_combatant_coordinates(test_goblin, np.array([3, 5], dtype=np.int64))
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([8, 5], dtype=np.int64))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([8, 5], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 5], dtype=np.int64))
     battle_map.set_combatant_coordinates(test_ogre, np.array([3, 6], dtype=np.int64))
 
@@ -95,23 +95,23 @@ def test_limited_duration_effect_non_self_target(battle_map, teams, effect_track
     test_bugbear.saving_throws[SavingThrow.DEX] = -20  # Making sure it fails expect for nat 20
     test_ogre.saving_throws[SavingThrow.DEX] = -20  # Making sure it fails expect for nat 20
 
-    faerie_fire_factory = FaerieFireFactory(15, Action.FAERIE_FIRE, test_moon_druid, test_moon_druid.spellslots)
+    faerie_fire_factory = FaerieFireFactory(15, Action.FAERIE_FIRE, test_moon_druid_lvl_5, test_moon_druid_lvl_5.spellslots)
     faerie_fire = faerie_fire_factory.create(np.array([3, 5], dtype=np.int64))
 
     try:
-        action_resolver.resolve_action(faerie_fire, test_moon_druid)
+        action_resolver.resolve_action(faerie_fire, test_moon_druid_lvl_5)
 
         for idx in range(10):
             assert effect_tracker.is_affecting_combatant(test_goblin, EffectType.FAERIE_FIRE)
             assert effect_tracker.is_affecting_combatant(test_bugbear, EffectType.FAERIE_FIRE)
             assert effect_tracker.is_affecting_combatant(test_ogre, EffectType.FAERIE_FIRE)
-            assert test_moon_druid.concentration_effect is faerie_fire
-            effect_tracker.start_of_turn_tick(test_moon_druid)
+            assert test_moon_druid_lvl_5.concentration_effect is faerie_fire
+            effect_tracker.start_of_turn_tick(test_moon_druid_lvl_5)
 
         assert not effect_tracker.is_affecting_combatant(test_goblin, EffectType.FAERIE_FIRE)
         assert not effect_tracker.is_affecting_combatant(test_bugbear, EffectType.FAERIE_FIRE)
         assert not effect_tracker.is_affecting_combatant(test_ogre, EffectType.FAERIE_FIRE)
-        assert test_moon_druid.concentration_effect is None
+        assert test_moon_druid_lvl_5.concentration_effect is None
     except Exception as e:
         assert False, f"Raised an exception {e}"
 

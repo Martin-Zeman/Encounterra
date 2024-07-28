@@ -5,7 +5,7 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory, RechargeFactory
@@ -85,7 +85,7 @@ class Web(Actoid, DirectThreat):
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
         if get_swallower(self.factory.combatant):
-            return None  # Webbing someone from the inside doesn't make sense
+            return None, None  # Webbing someone from the inside doesn't make sense
         curr_coord = tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             free_coords_in_range = nf.get_free_coords_in_hop_range(
@@ -94,12 +94,12 @@ class Web(Actoid, DirectThreat):
                 distances,
                 self.factory.combatant.size.value + self.factory.distance,
                 battle_map.size,  # approximation, could theoretically be longer
-                self.factory.combatant.id)
-            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE]
+                self.factory.combatant.id), PLACEHOLDER_MAPPING
+            return [coord for coord in free_coords_in_range if battle_map.visibility_dict_for_all_coords[coord][self.target] is not Visibility.NONE], PLACEHOLDER_MAPPING
         elif battle_map.get_hop_distance_combatants(self.factory.combatant, self.target) >= self.factory.distance and \
                 battle_map.visibility_dict_for_all_coords[curr_coord][self.target] is not Visibility.NONE:
-            return [curr_coord]
-        return None
+            return [curr_coord], PLACEHOLDER_MAPPING
+        return None, None
 
 
     @map_position_toggled_cache
@@ -112,7 +112,6 @@ class Web(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

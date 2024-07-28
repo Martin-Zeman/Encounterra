@@ -3,7 +3,7 @@ import math
 
 from cachetools.keys import hashkey
 
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
@@ -198,7 +198,6 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):
@@ -215,7 +214,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
         if swallower:
             if swallower is self.target:
                 return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-            return None
+            return None, None
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return nf.get_free_coords_in_hop_range(
                 battle_map.grid,
@@ -223,7 +222,7 @@ class RecklessAttack(Actoid, DirectThreat, CombatantEffect, LimitedDurationEffec
                 distances,
                 self.factory.combatant.size.value,
                 self.factory.range,
-                self.factory.combatant.id)
+                self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None

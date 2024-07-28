@@ -11,7 +11,7 @@ from simulator.spells.fireball import FireballFactory
 from simulator.spells.spell import SpellStats
 from simulator.spells.thunderwave import ThunderwaveFactory
 from simulator.teams import Teams
-from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid, \
+from simulator.test.fixtures import test_draconic_sorcerer_5lvl, test_goblin, test_bugbear, test_totem_barbarian, test_stone_giant, test_ogre, test_moon_druid_lvl_5, \
     teams, effect_tracker, battle_map, test_druid_lvl_1, test_fighter_lvl_1, test_battle_master_fighter_lvl_3, \
     test_sabertoother_tiger, test_evil_mage, test_battle_master_fighter_lvl_5, test_giant_toad, test_green_dragon_wyrmling
 import numpy as np
@@ -1159,7 +1159,7 @@ def test_get_enemies_within_radius_sorted_by_distance(battle_map, teams, test_dr
     assert enemies == [test_goblin, test_bugbear]
 
 
-def test_find_wildshaped_coordinate_large_two_options(battle_map, teams, test_moon_druid):
+def test_find_wildshaped_coordinate_large_two_options(battle_map, teams, test_moon_druid_lvl_5):
     """
     We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a large creature.
     The cavity is large enough for two possible placements of the large creature. But it picks the closer one.
@@ -1170,14 +1170,14 @@ def test_find_wildshaped_coordinate_large_two_options(battle_map, teams, test_mo
     battle_map.place_circular_element(np.array([7, 6]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.place_circular_element(np.array([7, 7]), Terrain.IMPASSABLE_TERRAIN, radius=0)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([5, 7]))
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
-    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.LARGE)
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([5, 7]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid_lvl_5, Size.LARGE)
     assert np.array_equal(coord, np.array([5, 6]))
 
 
-def test_find_wildshaped_coordinate_huge_one_options(battle_map, teams, test_moon_druid):
+def test_find_wildshaped_coordinate_huge_one_options(battle_map, teams, test_moon_druid_lvl_5):
     """
     We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a huge creature.
     There's only one option how the huge creature can be placed and that it's two hops away from the druid.
@@ -1185,82 +1185,82 @@ def test_find_wildshaped_coordinate_huge_one_options(battle_map, teams, test_moo
     battle_map.place_circular_element(np.array([1, 4]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.place_circular_element(np.array([4, 1]), Terrain.IMPASSABLE_TERRAIN, radius=1)
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([2, 2]))
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
-    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([2, 2]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid_lvl_5, Size.HUGE)
     assert np.array_equal(coord, np.array([0, 0]))
 
 
-def test_find_wildshaped_coordinate_huge_three_options_variant_1(battle_map, teams, test_moon_druid):
+def test_find_wildshaped_coordinate_huge_three_options_variant_1(battle_map, teams, test_moon_druid_lvl_5):
     """
     The druid wants to wildshape into a huge creature. The druid's at the top edge of the map and they're in open terrain there's three
     options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
     """
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([9, 14]))
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
-    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([9, 14]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid_lvl_5, Size.HUGE)
     assert np.array_equal(coord, np.array([9, 12]))
 
 
-def test_find_wildshaped_coordinate_huge_three_options_variant_2(battle_map, teams, test_moon_druid):
+def test_find_wildshaped_coordinate_huge_three_options_variant_2(battle_map, teams, test_moon_druid_lvl_5):
     """
     The druid wants to wildshape into a huge creature. The druid's at the right edge of the map and they're in open terrain there's three
     options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
     """
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([14, 8]))
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
-    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([14, 8]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid_lvl_5, Size.HUGE)
     assert np.array_equal(coord, np.array([12, 8]))
 
 
-def test_find_wildshaped_coordinate_huge_four_options(battle_map, teams, test_moon_druid):
+def test_find_wildshaped_coordinate_huge_four_options(battle_map, teams, test_moon_druid_lvl_5):
     """
     The druid wants to wildshape into a huge creature. The druid's near the top right edge of the map and they're in open terrain there's four
     options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
     """
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 13]))
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
-    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([13, 13]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid_lvl_5, Size.HUGE)
     assert np.array_equal(coord, np.array([12, 12]))
 
 
-def test_find_wildshaped_coordinate_huge_nine_options(battle_map, teams, test_moon_druid):
+def test_find_wildshaped_coordinate_huge_nine_options(battle_map, teams, test_moon_druid_lvl_5):
     """
     The druid wants to wildshape into a huge creature. The druid's out in open terrain there's nine
     options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
     """
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([4, 12]))
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
-    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.HUGE)
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([4, 12]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid_lvl_5, Size.HUGE)
     assert np.array_equal(coord, np.array([4, 12]))
 
 
-def test_find_wildshaped_coordinate_enemies_around(battle_map, teams, test_moon_druid, test_ogre, test_bugbear):
+def test_find_wildshaped_coordinate_enemies_around(battle_map, teams, test_moon_druid_lvl_5, test_ogre, test_bugbear):
     """
     The druid wants to wildshape into a large creature. There's two enemies around so the best option is to side step and transform.
     This scenario is based on an error encountered during testing.
     """
     battle_map.build_adjacency_matrix()
-    battle_map.set_combatant_coordinates(test_moon_druid, np.array([1, 9]))
+    battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([1, 9]))
     battle_map.set_combatant_coordinates(test_ogre, np.array([2, 7]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([2, 10]))
 
-    teams.add_combatant_to_team(test_moon_druid, Teams.Color.BLUE)
+    teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.BLUE)
     teams.add_combatant_to_team(test_ogre, Teams.Color.RED)
     teams.add_combatant_to_team(test_bugbear, Teams.Color.RED)
 
-    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid)
-    test_moon_druid.shortest_paths_cache = shortest_paths
-    coord = battle_map.find_wildshaped_coordinate(test_moon_druid, Size.LARGE, np.array([1, 9]))
+    _, shortest_paths = battle_map.calc_dijkstra(test_moon_druid_lvl_5)
+    test_moon_druid_lvl_5.shortest_paths_cache = shortest_paths
+    coord = battle_map.find_wildshaped_coordinate(test_moon_druid_lvl_5, Size.LARGE, np.array([1, 9]))
     assert np.array_equal(coord, np.array([0, 8])) or np.array_equal(coord, np.array([0, 9])) or np.array_equal(coord, np.array([0, 10]))
 
 
@@ -1470,7 +1470,7 @@ def test_push_combatant_away_from(battle_map, teams, test_goblin, test_bugbear, 
     assert np.array_equal(battle_map.get_combatant_position(test_ogre).get()[0], np.array([11, 1]))
 
 
-# def test_dijkstra_numba(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_bugbear,
+# def test_dijkstra_numba(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_sabertoother_tiger, test_bugbear,
 #                            test_evil_mage):
 #     CustomLogger(logging.WARNING)
 #     battle_map.set_effect_tracker(effect_tracker)
@@ -1482,13 +1482,13 @@ def test_push_combatant_away_from(battle_map, teams, test_goblin, test_bugbear, 
 #     battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
 #     battle_map.place_circular_element(np.array([8, 6]), Terrain.DIFFICULT_TERRAIN, radius=0)
 #
-#     teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+#     teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.RED)
 #     teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
 #     teams.add_combatant_to_team(test_sabertoother_tiger_2, Teams.Color.RED)
 #     teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
 #     teams.add_combatant_to_team(test_evil_mage, Teams.Color.RED)
 #
-#     battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 11]))
+#     battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([13, 11]))
 #     battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([5, 10]))
 #     battle_map.set_combatant_coordinates(test_sabertoother_tiger_2, np.array([3, 12]))
 #     battle_map.set_combatant_coordinates(test_bugbear, np.array([0, 10]))
@@ -1518,7 +1518,7 @@ def test_push_combatant_away_from(battle_map, teams, test_goblin, test_bugbear, 
 #     # assert shortest_paths_1 == shortest_paths_2
 #     # assert shortest_paths_2 == shortest_paths_3
 
-# def test_adjacency_matrix_numba(battle_map, teams, effect_tracker, test_moon_druid, test_sabertoother_tiger, test_bugbear,
+# def test_adjacency_matrix_numba(battle_map, teams, effect_tracker, test_moon_druid_lvl_5, test_sabertoother_tiger, test_bugbear,
 #                            test_evil_mage):
 #         CustomLogger(logging.WARNING)
 #         battle_map.set_effect_tracker(effect_tracker)
@@ -1530,13 +1530,13 @@ def test_push_combatant_away_from(battle_map, teams, test_goblin, test_bugbear, 
 #         battle_map.place_circular_element(np.array([6, 12]), Terrain.DIFFICULT_TERRAIN, radius=0)
 #         battle_map.place_circular_element(np.array([8, 6]), Terrain.DIFFICULT_TERRAIN, radius=0)
 #
-#         teams.add_combatant_to_team(test_moon_druid, Teams.Color.RED)
+#         teams.add_combatant_to_team(test_moon_druid_lvl_5, Teams.Color.RED)
 #         teams.add_combatant_to_team(test_sabertoother_tiger, Teams.Color.BLUE)
 #         teams.add_combatant_to_team(test_sabertoother_tiger_2, Teams.Color.RED)
 #         teams.add_combatant_to_team(test_bugbear, Teams.Color.BLUE)
 #         teams.add_combatant_to_team(test_evil_mage, Teams.Color.RED)
 #
-#         battle_map.set_combatant_coordinates(test_moon_druid, np.array([13, 11]))
+#         battle_map.set_combatant_coordinates(test_moon_druid_lvl_5, np.array([13, 11]))
 #         battle_map.set_combatant_coordinates(test_sabertoother_tiger, np.array([5, 10]))
 #         battle_map.set_combatant_coordinates(test_sabertoother_tiger_2, np.array([3, 12]))
 #         battle_map.set_combatant_coordinates(test_bugbear, np.array([0, 10]))

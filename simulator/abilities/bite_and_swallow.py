@@ -3,7 +3,7 @@ from cachetools.keys import hashkey
 
 from ..actions.actoid import FactoryFlags
 from ..actions.melee_attack import MeleeAttackFactory, MeleeAttack
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..misc import Size
 from ..conditions import Conditions, is_affected_by_any, get_grappled
 import logging
@@ -50,10 +50,10 @@ class BiteAndSwallow(MeleeAttack):
                 distances,
                 self.factory.combatant.size.value,
                 self.factory.range,
-                self.factory.combatant.id)
+                self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -63,7 +63,6 @@ class BiteAndSwallow(MeleeAttack):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

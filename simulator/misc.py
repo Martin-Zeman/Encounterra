@@ -430,3 +430,39 @@ def get_num_superiority_dice(level):
         case _:
             logger.error("Incorrect Battlemaster level")
             return 4
+
+
+from typing import List, Tuple, Set
+
+
+def combine_action_bins(action_a: List[List[Tuple[int, int]]], action_b: List[List[Tuple[int, int]]]) -> List[
+    Set[Tuple[int, int]]]:
+    # Convert all bins to sets for easier operations
+    a_bins = [set(bin) for bin in action_a]
+    b_bins = [set(bin) for bin in action_b]
+
+    result = []
+
+    # Create a set of all coordinates in action B
+    all_b_coords = set().union(*b_bins)
+
+    for a_bin in a_bins:
+        # Find intersections with B bins
+        intersections = [a_bin.intersection(b_bin) for b_bin in b_bins]
+
+        # Add non-empty intersections to result
+        result.extend(inter for inter in intersections if inter)
+
+        # Add remaining coordinates from A that are not in any B bin
+        remaining_a = a_bin - all_b_coords
+        if remaining_a:
+            result.append(remaining_a)
+
+    # Add remaining coordinates from B that are not in any A bin
+    all_a_coords = set().union(*a_bins)
+    for b_bin in b_bins:
+        remaining_b = b_bin - all_a_coords
+        if remaining_b:
+            result.append(remaining_b)
+
+    return result

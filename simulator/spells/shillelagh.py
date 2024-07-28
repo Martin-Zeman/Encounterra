@@ -6,7 +6,7 @@ from cachetools import cached
 from cachetools.keys import hashkey
 
 from ..actions.action_types import BonusAction
-from ..battle_map import Map
+from ..battle_map import Map, PLACEHOLDER_MAPPING
 from ..effects.action_enabler_effect import ActionEnablerEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..conditions import Conditions, is_affected_by_any
@@ -109,5 +109,5 @@ class Shillelagh(Actoid, LimitedDurationEffect, ActionEnablerEffect, DirectThrea
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING,
                                   Conditions.RESTRAINED):
-            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+            return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant), PLACEHOLDER_MAPPING
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING

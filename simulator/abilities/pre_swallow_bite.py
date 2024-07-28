@@ -2,7 +2,7 @@ import math
 
 from ..actions.actoid import FactoryFlags
 from ..actions.melee_attack import MeleeAttackFactory, MeleeAttack
-from ..battle_map import Map
+from ..battle_map import Map, PLACEHOLDER_MAPPING
 from ..conditions import Conditions, is_affected_by_any, get_grappled
 import logging
 import numba_functions as nf
@@ -51,7 +51,7 @@ class PreSwallowBite(MeleeAttack):
                 distances,
                 self.factory.combatant.size.value,
                 self.factory.range,
-                self.factory.combatant.id)
+                self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None

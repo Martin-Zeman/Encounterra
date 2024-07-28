@@ -4,7 +4,7 @@ from ..actions.action_types import Action
 from ..actions.actoid import Actoid, ActoidFlags, FactoryFlags
 import logging
 import numba_functions as nf
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..battle_map import Map, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..conditions import Conditions, is_affected_by_any, is_affected_by, get_swallower
 from ..misc import SHORTER_ROUND_HORIZON
 from ..threat_interfaces import DirectThreat
@@ -69,7 +69,7 @@ class ShakeAllyAwake(Actoid, DirectThreat):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if get_swallower(self.factory.combatant):
-            return None
+            return None, None
         battle_map = Map.get()
         if not is_affected_by_any(self.factory.combatant, Conditions.GRAPPLED, Conditions.GRAPPLING, Conditions.RESTRAINED):
             return nf.get_free_coords_in_hop_range(
@@ -78,6 +78,6 @@ class ShakeAllyAwake(Actoid, DirectThreat):
                 distances,
                 self.factory.combatant.size.value,
                 1,
-                self.factory.combatant.id)
+                self.factory.combatant.id), PLACEHOLDER_MAPPING
         elif battle_map.are_in_hop_range(self.factory.combatant, self.target, self.factory.range):
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING

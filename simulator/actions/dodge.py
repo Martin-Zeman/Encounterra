@@ -5,7 +5,7 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
 from ..actions.actoid import Actoid, FactoryFlags, ActoidFlags
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..battle_map import Map, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
 from ..effects.limited_duration_effect import LimitedDurationEffect
@@ -91,5 +91,5 @@ class Dodge(Actoid, CombatantEffect, LimitedDurationEffect, Threat):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         battle_map = Map.get()
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]  # It's a priority action so the coord is not relevant
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING  # It's a priority action so the coord is not relevant
 

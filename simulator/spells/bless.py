@@ -1,5 +1,5 @@
 from ..actions.action_types import BonusAction
-from ..battle_map import Map
+from ..battle_map import Map, PLACEHOLDER_MAPPING
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.limited_duration_effect import LimitedDurationEffect
 from ..misc import get_attack_factories, ROUND_HORIZON
@@ -164,9 +164,9 @@ class Bless(AttackThreatModifier, CombatantEffect, LimitedDurationEffect):
                 self.factory.combatant.size.value,
                 BlessFactory.range,
                 self.factory.combatant.id))
-            return list(coords_for_third.intersection(coords_for_first.intersection(coords_for_second)))  # Strangely no visibility required
+            return list(coords_for_third.intersection(coords_for_first.intersection(coords_for_second))), PLACEHOLDER_MAPPING  # Strangely no visibility required
         elif battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[0]) <= BlessFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[1]) <= BlessFactory.range \
             and battle_map.get_cartesian_distance_combatants(self.factory.combatant, self.combatants[2]) <= BlessFactory.range:
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None

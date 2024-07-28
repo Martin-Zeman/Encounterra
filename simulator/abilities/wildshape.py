@@ -3,7 +3,7 @@ import numpy as np
 
 from ..actions.action_types import Action, BonusAction
 from ..actions.actoid import Actoid, FactoryFlags
-from ..battle_map import Map
+from ..battle_map import Map, PLACEHOLDER_MAPPING
 from ..effects.action_enabler_effect import ActionEnablerEffect
 from ..effects.combatant_effect import CombatantEffect
 from ..effects.effect import EffectType
@@ -243,7 +243,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
             # Here we're only interested in the coords with the lowest distance from the original coordinate
             all_coords = np.argwhere(result_matrix == 1).tolist()
             if not all_coords:
-                return None
+                return None, None
             all_coords.sort(key=lambda coord: distances[coord[0] * battle_map.size + coord[1]])
             final_coords = list()
             curr_coord = all_coords[0]
@@ -255,7 +255,7 @@ class Wildshape(Actoid, CombatantEffect, ActionEnablerEffect, DirectThreat):
                 curr_coord = all_coords[idx]
                 curr_distance = distances[curr_coord[0] * battle_map.size + curr_coord[1]]
                 idx += 1
-            return final_coords
+            return final_coords, PLACEHOLDER_MAPPING
         elif battle_map.find_wildshaped_coordinate(self.factory.combatant, self.form.size):
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None

@@ -3,7 +3,7 @@ from cachetools.keys import hashkey
 
 from ..actions.action_types import Action
 from ..actions.actoid import FactoryFlags, Actoid, ActoidFlags
-from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key
+from ..battle_map import Map, map_position_toggled_cache, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..conditions import Conditions, is_affected_by_any, get_swallower
 from ..threat_interfaces import DirectThreat
 from ..factory_interfaces import DirectThreatFactory
@@ -108,10 +108,10 @@ class Pounce(Actoid, DirectThreat):
             for coord in all_coords:
                 if self.is_straight_line_path(battle_map.get_combatant_position(self.factory.combatant), coord, shortest_paths):
                     eligible_coords.append(coord)
-            return eligible_coords
+            return eligible_coords, PLACEHOLDER_MAPPING
         elif battle_map.get_hop_distance_combatants(self.factory.combatant, self.target) >= self.factory.distance:
-            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
-        return None
+            return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
+        return None, None
 
     @map_position_toggled_cache
     def calculate_threat(self, **kwargs):
@@ -123,7 +123,6 @@ class Pounce(Actoid, DirectThreat):
     def clear_cache(self):
         self.calculate_threat.cache_clear()
         self.calculate_threat_delta.cache_clear()
-        #self.get_eligible_coords.cache_clear()
 
     @map_toggled_cache_with_key(key=lambda self, modifiers, *args, **kwargs: hashkey(self.factory.name, tuple(modifiers.items()), tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def calculate_threat_delta(self, modifiers, *args, **kwargs):

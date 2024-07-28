@@ -3,7 +3,7 @@ from functools import cache
 from cachetools import cached
 from cachetools.keys import hashkey
 
-from ..battle_map import Map, map_toggled_cache_with_key
+from ..battle_map import Map, map_toggled_cache_with_key, PLACEHOLDER_MAPPING
 from ..conditions import get_swallower
 from ..spells.spell import SpellStats
 import logging
@@ -80,8 +80,8 @@ class MistyStep(Actoid, Threat):
     #@map_toggled_cache_with_key(key=lambda self, distances, shortest_paths: hashkey(self.factory.name, tuple(Map.get().get_combatant_position(self.factory.combatant).get()[0])))
     def get_eligible_coords(self, distances, shortest_paths):
         if get_swallower(self.factory.combatant):
-            return None
+            return None, None
         battle_map = Map.get()
         # if self.factory.combatant.movement > 0:
         #     return battle_map.get_all_accessible_coords(shortest_paths, self.factory.combatant)
-        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])]
+        return [tuple(battle_map.get_combatant_position(self.factory.combatant).get()[0])], PLACEHOLDER_MAPPING
