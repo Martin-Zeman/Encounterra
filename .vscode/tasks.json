@@ -1,0 +1,60 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "clean build",
+            "type": "shell",
+            "command": "rm -rf * && cmake .. && make -j8",
+            "options": {
+                "cwd": "/home/thisord/repos/Encounterra/c++/build"
+            },
+            "presentation": {
+                "reveal": "always",
+            }
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make -j8",
+            "options": {
+                "cwd": "/home/thisord/repos/Encounterra/c++/build"
+            },
+            "presentation": {
+                "reveal": "always",
+            }
+        },
+        {
+            "label": "clean build release",
+            "type": "shell",
+            "command": "rm -rf * && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j8",
+            "options": {
+                "cwd": "/home/thisord/repos/Encounterra/c++/build"
+            },
+            "presentation": {
+                "reveal": "always",
+            }
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "make runtests",
+            "options": {
+                "cwd": "/home/thisord/repos/Encounterra/c++/build"
+            },
+            "presentation": {
+                "reveal": "always",
+            }
+        },
+        {
+            "label": "encounterra",
+            "type": "shell",
+            "command": "./bin/encounterra",
+            "options": {
+                "cwd": "/home/thisord/repos/Encounterra/c++/build"
+            },
+            "presentation": {
+                "reveal": "always",
+            }
+        },
+    ]
+}

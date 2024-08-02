@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/encounterra.dir/main.cpp.o -o bin/encounterra  libencounterra_lib.a -fopenmp 
