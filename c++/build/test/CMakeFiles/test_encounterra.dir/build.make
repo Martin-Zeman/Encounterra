@@ -110,7 +110,10 @@ test/test_encounterra: test/CMakeFiles/test_encounterra.dir/test_state_machine.c
 test/test_encounterra: test/CMakeFiles/test_encounterra.dir/build.make
 test/test_encounterra: lib/libgtest.a
 test/test_encounterra: lib/libgtest_main.a
+test/test_encounterra: libencounterra_lib.a
 test/test_encounterra: lib/libgtest.a
+test/test_encounterra: /usr/lib/x86_64-linux-gnu/libssl.so
+test/test_encounterra: /usr/lib/x86_64-linux-gnu/libcrypto.so
 test/test_encounterra: test/CMakeFiles/test_encounterra.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable test_encounterra"
 	cd /home/thisord/repos/Encounterra/c++/build/test && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/test_encounterra.dir/link.txt --verbose=$(VERBOSE)

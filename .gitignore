@@ -9,3 +9,4 @@ __pycache__
 actions_*
 simulator_*
 *.so
+/c++/build

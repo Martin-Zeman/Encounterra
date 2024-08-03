@@ -5,8 +5,8 @@ namespace enc
 
   class Goblin : public Combatant
   {
+  public:
     Goblin(int num);
-    // Goblin(std::string name);
   };
 
 }

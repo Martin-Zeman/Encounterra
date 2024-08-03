@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/thisord/repos/Encounterra/c++ -isystem /home/thisord/repos/Encounterra/c++/googletest/googletest/include -isystem /home/thisord/repos/Encounterra/c++/googletest/googletest
 
-CXX_FLAGS = -g -std=gnu++20
+CXX_FLAGS = -g -fopenmp -std=gnu++20
 

@@ -37,15 +37,15 @@ add_subdirectory(${GOOGLE_TEST_DIR})
 include_directories (${COMMON_INCLUDES} ${GTEST_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
 
 #----LIBRARY SOURCES----
-file (GLOB SOURCES "*.cpp")
-file (GLOB CORE "core/*.cpp")
+# file (GLOB SOURCES "*.cpp")
+file (GLOB SOURCES "core/*.cpp")
 file (GLOB ABILITIES "abilities/*.cpp")
 file (GLOB ACTIONS "actions/*.cpp")
 file (GLOB COMBATANTS "combatants/*.cpp")
 file (GLOB EFFECTS "effects/*.cpp")
 file (GLOB SPELLS "spells/*.cpp")
 file (GLOB UTILS "spells/*.cpp")
-list (APPEND MISC ${ABILITIES} ${ACTIONS} ${COMBATANTS} ${EFFECTS} ${SPELLS} ${UTILS})
+list (APPEND SOURCES ${ABILITIES} ${ACTIONS} ${COMBATANTS} ${EFFECTS} ${SPELLS} ${UTILS})
 
 #----LIBRARY CREATION----
 add_library (${PROJECT_NAME}_lib ${SOURCES})

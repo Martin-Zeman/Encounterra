@@ -5,14 +5,16 @@
 namespace enc
 {
 
-  Combatant::Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances = {},
-                       std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {})
-      : _name(name), _max_hp(hp), _curr_hp(hp), _ac(ac), _dc(dc), _init_bonus(init_bonus), _spell_to_hit(spell_to_hit),
-        _speed(speed / 5), _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities)
+  Combatant::Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc,
+                       std::unordered_set<DamageType> resistances, std::unordered_set<DamageType> immunities,
+                       std::unordered_set<DamageType> vulnerabities)
+      : _name(name), _max_hp(hp), _curr_hp(hp), _ac(ac), _dc(dc), _init_bonus(init_bonus), _spell_to_hit(spell_to_hit), _speed(speed / 5),
+        _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities)
   {
     _dodge_factory = std::make_shared<DodgeFactory>();
     _disengage_factory = std::make_shared<DisengageFactory>();
-    _action_factories = {_dodge_factory, _action_factories};
+    _action_factories.push_back(_dodge_factory);
+    _action_factories.push_back(_disengage_factory); 
   }
 
   // Combatant::Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc,

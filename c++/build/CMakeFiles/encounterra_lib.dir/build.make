@@ -69,31 +69,159 @@ include CMakeFiles/encounterra_lib.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/encounterra_lib.dir/flags.make
 
-CMakeFiles/encounterra_lib.dir/main.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
-CMakeFiles/encounterra_lib.dir/main.cpp.o: ../main.cpp
-CMakeFiles/encounterra_lib.dir/main.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/encounterra_lib.dir/main.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/main.cpp.o -MF CMakeFiles/encounterra_lib.dir/main.cpp.o.d -o CMakeFiles/encounterra_lib.dir/main.cpp.o -c /home/thisord/repos/Encounterra/c++/main.cpp
+CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o: ../core/battle_map.cpp
+CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o -MF CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o.d -o CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o -c /home/thisord/repos/Encounterra/c++/core/battle_map.cpp
 
-CMakeFiles/encounterra_lib.dir/main.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/main.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/main.cpp > CMakeFiles/encounterra_lib.dir/main.cpp.i
+CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/core/battle_map.cpp > CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.i
 
-CMakeFiles/encounterra_lib.dir/main.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/main.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/main.cpp -o CMakeFiles/encounterra_lib.dir/main.cpp.s
+CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/core/battle_map.cpp -o CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.s
+
+CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o: ../core/combatant.cpp
+CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o -MF CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o.d -o CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o -c /home/thisord/repos/Encounterra/c++/core/combatant.cpp
+
+CMakeFiles/encounterra_lib.dir/core/combatant.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/core/combatant.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/core/combatant.cpp > CMakeFiles/encounterra_lib.dir/core/combatant.cpp.i
+
+CMakeFiles/encounterra_lib.dir/core/combatant.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/core/combatant.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/core/combatant.cpp -o CMakeFiles/encounterra_lib.dir/core/combatant.cpp.s
+
+CMakeFiles/encounterra_lib.dir/core/coords.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/core/coords.cpp.o: ../core/coords.cpp
+CMakeFiles/encounterra_lib.dir/core/coords.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/encounterra_lib.dir/core/coords.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/core/coords.cpp.o -MF CMakeFiles/encounterra_lib.dir/core/coords.cpp.o.d -o CMakeFiles/encounterra_lib.dir/core/coords.cpp.o -c /home/thisord/repos/Encounterra/c++/core/coords.cpp
+
+CMakeFiles/encounterra_lib.dir/core/coords.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/core/coords.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/core/coords.cpp > CMakeFiles/encounterra_lib.dir/core/coords.cpp.i
+
+CMakeFiles/encounterra_lib.dir/core/coords.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/core/coords.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/core/coords.cpp -o CMakeFiles/encounterra_lib.dir/core/coords.cpp.s
+
+CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o: ../core/geometry.cpp
+CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o -MF CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o.d -o CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o -c /home/thisord/repos/Encounterra/c++/core/geometry.cpp
+
+CMakeFiles/encounterra_lib.dir/core/geometry.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/core/geometry.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/core/geometry.cpp > CMakeFiles/encounterra_lib.dir/core/geometry.cpp.i
+
+CMakeFiles/encounterra_lib.dir/core/geometry.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/core/geometry.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/core/geometry.cpp -o CMakeFiles/encounterra_lib.dir/core/geometry.cpp.s
+
+CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o: ../core/state_machine.cpp
+CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o -MF CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o.d -o CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o -c /home/thisord/repos/Encounterra/c++/core/state_machine.cpp
+
+CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/core/state_machine.cpp > CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.i
+
+CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/core/state_machine.cpp -o CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.s
+
+CMakeFiles/encounterra_lib.dir/core/utils.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/core/utils.cpp.o: ../core/utils.cpp
+CMakeFiles/encounterra_lib.dir/core/utils.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/encounterra_lib.dir/core/utils.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/core/utils.cpp.o -MF CMakeFiles/encounterra_lib.dir/core/utils.cpp.o.d -o CMakeFiles/encounterra_lib.dir/core/utils.cpp.o -c /home/thisord/repos/Encounterra/c++/core/utils.cpp
+
+CMakeFiles/encounterra_lib.dir/core/utils.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/core/utils.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/core/utils.cpp > CMakeFiles/encounterra_lib.dir/core/utils.cpp.i
+
+CMakeFiles/encounterra_lib.dir/core/utils.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/core/utils.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/core/utils.cpp -o CMakeFiles/encounterra_lib.dir/core/utils.cpp.s
+
+CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o: ../actions/disenage.cpp
+CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o -MF CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o.d -o CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o -c /home/thisord/repos/Encounterra/c++/actions/disenage.cpp
+
+CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/actions/disenage.cpp > CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.i
+
+CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/actions/disenage.cpp -o CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.s
+
+CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o: ../actions/dodge.cpp
+CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o -MF CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o.d -o CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o -c /home/thisord/repos/Encounterra/c++/actions/dodge.cpp
+
+CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/actions/dodge.cpp > CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.i
+
+CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/actions/dodge.cpp -o CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.s
+
+CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o: CMakeFiles/encounterra_lib.dir/flags.make
+CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o: ../combatants/goblin.cpp
+CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o: CMakeFiles/encounterra_lib.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o -MF CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o.d -o CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o -c /home/thisord/repos/Encounterra/c++/combatants/goblin.cpp
+
+CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/combatants/goblin.cpp > CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.i
+
+CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/combatants/goblin.cpp -o CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.s
 
 # Object files for target encounterra_lib
 encounterra_lib_OBJECTS = \
-"CMakeFiles/encounterra_lib.dir/main.cpp.o"
+"CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o" \
+"CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o" \
+"CMakeFiles/encounterra_lib.dir/core/coords.cpp.o" \
+"CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o" \
+"CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o" \
+"CMakeFiles/encounterra_lib.dir/core/utils.cpp.o" \
+"CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o" \
+"CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o" \
+"CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o"
 
 # External object files for target encounterra_lib
 encounterra_lib_EXTERNAL_OBJECTS =
 
-libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/main.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/core/coords.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/core/utils.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o
+libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o
 libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/build.make
 libencounterra_lib.a: CMakeFiles/encounterra_lib.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libencounterra_lib.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Linking CXX static library libencounterra_lib.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/encounterra_lib.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/encounterra_lib.dir/link.txt --verbose=$(VERBOSE)
 

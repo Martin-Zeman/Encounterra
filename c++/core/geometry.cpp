@@ -4,7 +4,7 @@
 
 namespace enc {
 
-blaze::DynamicMatrix<double> distanceMatrix(const blaze::DynamicMatrix<double> &coords1, const blaze::DynamicMatrix<double> &coords2)
+blaze::DynamicMatrix<double> distanceMatrix(const Coords &coords1, const Coords &coords2)
 {
   size_t n = coords1.rows();
   size_t m = coords2.rows();
@@ -21,7 +21,7 @@ blaze::DynamicMatrix<double> distanceMatrix(const blaze::DynamicMatrix<double> &
   return distances;
 }
 
-std::vector<Coord> inflateCoords(const blaze::DynamicMatrix<double> &coords, int inflate_to_dist)
+std::vector<Coord> inflateCoords(const Coords &coords, int inflate_to_dist)
 {
   int offset = 0;
   if(inflate_to_dist > static_cast<int>(Size::MEDIUM))

@@ -4,13 +4,14 @@
 #include <vector>
 #include <random>
 #include "types.hpp"
+#include "coords.hpp"
 
 namespace enc
 {
 
-  blaze::DynamicMatrix<double> distanceMatrix(const blaze::DynamicMatrix<double> &coords1, const blaze::DynamicMatrix<double> &coords2);
+  blaze::DynamicMatrix<double> distanceMatrix(const Coords &coords1, const Coords &coords2);
 
-  std::vector<Coord> inflateCoords(const blaze::DynamicMatrix<double> &coords, int inflate_to_dist);
+  std::vector<Coord> inflateCoords(const Coords &coords, int inflate_to_dist);
 
   blaze::DynamicVector<double> linspace(double start, double end, size_t num);
 

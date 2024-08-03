@@ -1,1 +1,1 @@
-/usr/bin/c++ -g CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o -o test_encounterra  ../lib/libgtest.a ../lib/libgtest_main.a -lencounterra.test_lib ../lib/libgtest.a 
+/usr/bin/c++ -g CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o -o test_encounterra  ../lib/libgtest.a ../lib/libgtest_main.a ../libencounterra_lib.a ../lib/libgtest.a -fopenmp /usr/lib/x86_64-linux-gnu/libssl.so /usr/lib/x86_64-linux-gnu/libcrypto.so 

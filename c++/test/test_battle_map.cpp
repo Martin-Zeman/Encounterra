@@ -3,6 +3,7 @@
 #include "core/misc.hpp"
 #include "core/geometry.hpp"
 #include "core/combatant.hpp"
+#include "core/coords.hpp"
 #include "combatants/goblin.hpp"
 #include <set>
 #include <algorithm>
@@ -16,18 +17,16 @@ protected:
     std::unique_ptr<Goblin> test_goblin;
 
     void SetUp() override {
-        // Initialize your battle map and test combatant here
-        battle_map.initializeGrid();
         test_goblin = std::make_unique<Goblin>(1);
     }
 };
 
 TEST_F(BattleMapTest, GetFreeCoordinatesInHopRangeMedium) {
-    battle_map.setGridValue(5, 7, test_goblin.getId());
+    battle_map.setCombatantCoordinates(*test_goblin, Coords({5, 7}, *test_goblin));
     Coord coords{5, 7};
     
     auto adj = battle_map.getFreeCoordsInHopRange(
-        blaze::DynamicMatrix<double>{{5.0, 7.0}},
+        Coords{{5, 7}},
         blaze::DynamicVector<double>(),
         static_cast<int>(Size::MEDIUM),
         1,
@@ -42,11 +41,11 @@ TEST_F(BattleMapTest, GetFreeCoordinatesInHopRangeMedium) {
 
     // Test including the combatant's own coord
     adj = battle_map.getFreeCoordsInHopRange(
-        blaze::DynamicMatrix<double>{{5.0, 7.0}},
+        Coords{{5, 7}},
         blaze::DynamicVector<double>(),
         static_cast<int>(Size::MEDIUM),
         1,
-        test_goblin.getId()
+        test_goblin->_id
     );
 
     expected_adj = {
@@ -57,14 +56,11 @@ TEST_F(BattleMapTest, GetFreeCoordinatesInHopRangeMedium) {
 }
 
 TEST_F(BattleMapTest, GetFreeCoordinatesInHopRangeLarge) {
-    test_goblin.setSize(Size::LARGE);
-    battle_map.setGridValue(5, 7, test_goblin.getId());
-    battle_map.setGridValue(6, 7, test_goblin.getId());
-    battle_map.setGridValue(5, 8, test_goblin.getId());
-    battle_map.setGridValue(6, 8, test_goblin.getId());
+    test_goblin->setSize(Size::LARGE);
+    battle_map.setCombatantCoordinates(*test_goblin, Coords({5, 7}, *test_goblin));
 
     auto adj = battle_map.getFreeCoordsInHopRange(
-        blaze::DynamicMatrix<double>{{5.0, 7.0}},
+        Coords{{5, 7}},
         blaze::DynamicVector<double>(),
         static_cast<int>(Size::MEDIUM),
         1,
@@ -79,11 +75,11 @@ TEST_F(BattleMapTest, GetFreeCoordinatesInHopRangeLarge) {
 
     // Test including the combatant's own coord
     adj = battle_map.getFreeCoordsInHopRange(
-        blaze::DynamicMatrix<double>{{5.0, 7.0}},
+        Coords{{5, 7}},
         blaze::DynamicVector<double>(),
         static_cast<int>(Size::MEDIUM),
         1,
-        test_goblin.getId()
+        test_goblin->_id
     );
 
     expected_adj = {

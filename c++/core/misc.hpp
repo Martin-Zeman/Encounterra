@@ -271,43 +271,29 @@ namespace enc
     GARGANTUAN = 3
   };
 
-enum class RollType : uint8_t {
+  enum class RollType : uint8_t
+  {
     STRAIGHT = 1 << 0,
     ADVANTAGE = 1 << 1,
     DISADVANTAGE = 1 << 2
-};
+  };
 
-inline RollType operator|(RollType a, RollType b) {
-    return static_cast<RollType>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b));
-}
+  inline RollType operator|(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b)); }
 
-inline RollType operator&(RollType a, RollType b) {
-    return static_cast<RollType>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
-}
+  inline RollType operator&(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b)); }
 
-const std::map<RollType, std::map<int, int>> ROLL_TYPE_DELTA = {
-    {RollType::STRAIGHT, {
-        {0, 0}, {1, 0}, {2, 0}, {3, 0}, {4, 0}, {5, 0}, {6, 0}, {7, 0}, {8, 0}, {9, 0},
-        {10, 0}, {11, 0}, {12, 0}, {13, 0}, {14, 0}, {15, 0}, {16, 0}, {17, 0}, {18, 0}, {19, 0}, {20, 0}
-    }},
-    {RollType::ADVANTAGE, {
-        {0, 0}, {1, 0}, {2, 3}, {3, 4}, {4, 5}, {5, 5}, {6, 5}, {7, 5}, {8, 5}, {9, 5},
-        {10, 4}, {11, 4}, {12, 4}, {13, 3}, {14, 3}, {15, 3}, {16, 2}, {17, 2}, {18, 1}, {19, 1}, {20, 0}
-    }},
-    {RollType::DISADVANTAGE, {
-        {0, 0}, {1, 0}, {2, 0}, {3, -1}, {4, -1}, {5, -2}, {6, -2}, {7, -3}, {8, -3}, {9, -3},
-        {10, -4}, {11, -4}, {12, -4}, {13, -5}, {14, -5}, {15, -5}, {16, -5}, {17, -5}, {18, -5},
-        {19, -4}, {20, -3}
-    }}
-};
+  const std::map<RollType, std::map<int, int>> ROLL_TYPE_DELTA
+    = {{RollType::STRAIGHT, {{0, 0},  {1, 0},  {2, 0},  {3, 0},  {4, 0},  {5, 0},  {6, 0},  {7, 0},  {8, 0},  {9, 0}, {10, 0},
+                             {11, 0}, {12, 0}, {13, 0}, {14, 0}, {15, 0}, {16, 0}, {17, 0}, {18, 0}, {19, 0}, {20, 0}}},
+       {RollType::ADVANTAGE, {{0, 0},  {1, 0},  {2, 3},  {3, 4},  {4, 5},  {5, 5},  {6, 5},  {7, 5},  {8, 5},  {9, 5}, {10, 4},
+                              {11, 4}, {12, 4}, {13, 3}, {14, 3}, {15, 3}, {16, 2}, {17, 2}, {18, 1}, {19, 1}, {20, 0}}},
+       {RollType::DISADVANTAGE, {{0, 0},   {1, 0},   {2, 0},   {3, -1},  {4, -1},  {5, -2},  {6, -2},  {7, -3},  {8, -3},  {9, -3}, {10, -4},
+                                 {11, -4}, {12, -4}, {13, -5}, {14, -5}, {15, -5}, {16, -5}, {17, -5}, {18, -5}, {19, -4}, {20, -3}}}};
 
-const std::map<RollType, double> ROLL_TYPE_CRIT_DELTA = {
-    {RollType::STRAIGHT, 1.0},
-    {RollType::ADVANTAGE, 2.0},
-    {RollType::DISADVANTAGE, 0.5}
-};
+  const std::map<RollType, double> ROLL_TYPE_CRIT_DELTA = {{RollType::STRAIGHT, 1.0}, {RollType::ADVANTAGE, 2.0}, {RollType::DISADVANTAGE, 0.5}};
 
-enum class ThreatModifierType {
+  enum class ThreatModifierType
+  {
     TO_HIT_FLAT,
     TO_HIT_DIE,
     ROLL_TYPE,
@@ -317,6 +303,18 @@ enum class ThreatModifierType {
     CRIT_RANGE,
     AUTO_CRIT,
     TARGET_AC
-};
+  };
 
+  enum class Terrain
+  {
+    NORMAL_TERRAIN = 0,
+    DIFFICULT_TERRAIN,
+    IMPASSABLE_TERRAIN
+  };
+
+  enum class Occupancy
+  {
+    FREE = 1,
+    OCCUPIED_BY_COMBATANT
+  };
 }

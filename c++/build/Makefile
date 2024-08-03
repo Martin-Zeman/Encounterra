@@ -278,12 +278,227 @@ test_encounterra/fast:
 	$(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/build
 .PHONY : test_encounterra/fast
 
+actions/disenage.o: actions/disenage.cpp.o
+.PHONY : actions/disenage.o
+
+# target to build an object file
+actions/disenage.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o
+.PHONY : actions/disenage.cpp.o
+
+actions/disenage.i: actions/disenage.cpp.i
+.PHONY : actions/disenage.i
+
+# target to preprocess a source file
+actions/disenage.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.i
+.PHONY : actions/disenage.cpp.i
+
+actions/disenage.s: actions/disenage.cpp.s
+.PHONY : actions/disenage.s
+
+# target to generate assembly for a file
+actions/disenage.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.s
+.PHONY : actions/disenage.cpp.s
+
+actions/dodge.o: actions/dodge.cpp.o
+.PHONY : actions/dodge.o
+
+# target to build an object file
+actions/dodge.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o
+.PHONY : actions/dodge.cpp.o
+
+actions/dodge.i: actions/dodge.cpp.i
+.PHONY : actions/dodge.i
+
+# target to preprocess a source file
+actions/dodge.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.i
+.PHONY : actions/dodge.cpp.i
+
+actions/dodge.s: actions/dodge.cpp.s
+.PHONY : actions/dodge.s
+
+# target to generate assembly for a file
+actions/dodge.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.s
+.PHONY : actions/dodge.cpp.s
+
+combatants/goblin.o: combatants/goblin.cpp.o
+.PHONY : combatants/goblin.o
+
+# target to build an object file
+combatants/goblin.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o
+.PHONY : combatants/goblin.cpp.o
+
+combatants/goblin.i: combatants/goblin.cpp.i
+.PHONY : combatants/goblin.i
+
+# target to preprocess a source file
+combatants/goblin.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.i
+.PHONY : combatants/goblin.cpp.i
+
+combatants/goblin.s: combatants/goblin.cpp.s
+.PHONY : combatants/goblin.s
+
+# target to generate assembly for a file
+combatants/goblin.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.s
+.PHONY : combatants/goblin.cpp.s
+
+core/battle_map.o: core/battle_map.cpp.o
+.PHONY : core/battle_map.o
+
+# target to build an object file
+core/battle_map.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o
+.PHONY : core/battle_map.cpp.o
+
+core/battle_map.i: core/battle_map.cpp.i
+.PHONY : core/battle_map.i
+
+# target to preprocess a source file
+core/battle_map.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.i
+.PHONY : core/battle_map.cpp.i
+
+core/battle_map.s: core/battle_map.cpp.s
+.PHONY : core/battle_map.s
+
+# target to generate assembly for a file
+core/battle_map.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.s
+.PHONY : core/battle_map.cpp.s
+
+core/combatant.o: core/combatant.cpp.o
+.PHONY : core/combatant.o
+
+# target to build an object file
+core/combatant.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o
+.PHONY : core/combatant.cpp.o
+
+core/combatant.i: core/combatant.cpp.i
+.PHONY : core/combatant.i
+
+# target to preprocess a source file
+core/combatant.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/combatant.cpp.i
+.PHONY : core/combatant.cpp.i
+
+core/combatant.s: core/combatant.cpp.s
+.PHONY : core/combatant.s
+
+# target to generate assembly for a file
+core/combatant.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/combatant.cpp.s
+.PHONY : core/combatant.cpp.s
+
+core/coords.o: core/coords.cpp.o
+.PHONY : core/coords.o
+
+# target to build an object file
+core/coords.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/coords.cpp.o
+.PHONY : core/coords.cpp.o
+
+core/coords.i: core/coords.cpp.i
+.PHONY : core/coords.i
+
+# target to preprocess a source file
+core/coords.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/coords.cpp.i
+.PHONY : core/coords.cpp.i
+
+core/coords.s: core/coords.cpp.s
+.PHONY : core/coords.s
+
+# target to generate assembly for a file
+core/coords.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/coords.cpp.s
+.PHONY : core/coords.cpp.s
+
+core/geometry.o: core/geometry.cpp.o
+.PHONY : core/geometry.o
+
+# target to build an object file
+core/geometry.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o
+.PHONY : core/geometry.cpp.o
+
+core/geometry.i: core/geometry.cpp.i
+.PHONY : core/geometry.i
+
+# target to preprocess a source file
+core/geometry.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/geometry.cpp.i
+.PHONY : core/geometry.cpp.i
+
+core/geometry.s: core/geometry.cpp.s
+.PHONY : core/geometry.s
+
+# target to generate assembly for a file
+core/geometry.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/geometry.cpp.s
+.PHONY : core/geometry.cpp.s
+
+core/state_machine.o: core/state_machine.cpp.o
+.PHONY : core/state_machine.o
+
+# target to build an object file
+core/state_machine.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o
+.PHONY : core/state_machine.cpp.o
+
+core/state_machine.i: core/state_machine.cpp.i
+.PHONY : core/state_machine.i
+
+# target to preprocess a source file
+core/state_machine.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.i
+.PHONY : core/state_machine.cpp.i
+
+core/state_machine.s: core/state_machine.cpp.s
+.PHONY : core/state_machine.s
+
+# target to generate assembly for a file
+core/state_machine.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.s
+.PHONY : core/state_machine.cpp.s
+
+core/utils.o: core/utils.cpp.o
+.PHONY : core/utils.o
+
+# target to build an object file
+core/utils.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/utils.cpp.o
+.PHONY : core/utils.cpp.o
+
+core/utils.i: core/utils.cpp.i
+.PHONY : core/utils.i
+
+# target to preprocess a source file
+core/utils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/utils.cpp.i
+.PHONY : core/utils.cpp.i
+
+core/utils.s: core/utils.cpp.s
+.PHONY : core/utils.s
+
+# target to generate assembly for a file
+core/utils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/core/utils.cpp.s
+.PHONY : core/utils.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
 # target to build an object file
 main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/main.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra.dir/build.make CMakeFiles/encounterra.dir/main.cpp.o
 .PHONY : main.cpp.o
 
@@ -292,7 +507,6 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/main.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra.dir/build.make CMakeFiles/encounterra.dir/main.cpp.i
 .PHONY : main.cpp.i
 
@@ -301,7 +515,6 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra_lib.dir/build.make CMakeFiles/encounterra_lib.dir/main.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/encounterra.dir/build.make CMakeFiles/encounterra.dir/main.cpp.s
 .PHONY : main.cpp.s
 
@@ -326,6 +539,33 @@ help:
 	@echo "... gtest"
 	@echo "... gtest_main"
 	@echo "... test_encounterra"
+	@echo "... actions/disenage.o"
+	@echo "... actions/disenage.i"
+	@echo "... actions/disenage.s"
+	@echo "... actions/dodge.o"
+	@echo "... actions/dodge.i"
+	@echo "... actions/dodge.s"
+	@echo "... combatants/goblin.o"
+	@echo "... combatants/goblin.i"
+	@echo "... combatants/goblin.s"
+	@echo "... core/battle_map.o"
+	@echo "... core/battle_map.i"
+	@echo "... core/battle_map.s"
+	@echo "... core/combatant.o"
+	@echo "... core/combatant.i"
+	@echo "... core/combatant.s"
+	@echo "... core/coords.o"
+	@echo "... core/coords.i"
+	@echo "... core/coords.s"
+	@echo "... core/geometry.o"
+	@echo "... core/geometry.i"
+	@echo "... core/geometry.s"
+	@echo "... core/state_machine.o"
+	@echo "... core/state_machine.i"
+	@echo "... core/state_machine.s"
+	@echo "... core/utils.o"
+	@echo "... core/utils.i"
+	@echo "... core/utils.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

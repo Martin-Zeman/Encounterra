@@ -32,7 +32,8 @@ namespace enc
     Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances = {},
               std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
-    // Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances = {},
+    // Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances =
+    // {},
     //           std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
     static int generateUniqueId(const std::string &name, CombatantType type, const SubType &subtype, int level)
@@ -65,6 +66,9 @@ namespace enc
     void onEndOfTurn();
 
     void rollInitiative();
+
+    void setSize(Size size) { _size = size; };
+    Size getSize() const { return _size; };
 
   private:
     int _max_hp;
@@ -101,6 +105,9 @@ namespace enc
     std::unordered_map<SavingThrow, std::vector<Die>> _saving_throws_dice_mod;
     std::unordered_map<SavingThrow, std::unordered_set<RollType>> _saving_throws_roll_type_mod;
     std::unordered_set<std::string> _dmg_types_took_last_round;
+
+  protected:
+    Size _size{Size::MEDIUM};
   };
 
 }
