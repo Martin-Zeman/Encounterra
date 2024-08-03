@@ -1,2 +1,0 @@
-/usr/bin/ar qc libencounterra_lib.a CMakeFiles/encounterra_lib.dir/core/battle_map.cpp.o CMakeFiles/encounterra_lib.dir/core/combatant.cpp.o CMakeFiles/encounterra_lib.dir/core/coords.cpp.o CMakeFiles/encounterra_lib.dir/core/geometry.cpp.o CMakeFiles/encounterra_lib.dir/core/state_machine.cpp.o CMakeFiles/encounterra_lib.dir/core/utils.cpp.o CMakeFiles/encounterra_lib.dir/actions/disenage.cpp.o CMakeFiles/encounterra_lib.dir/actions/dodge.cpp.o CMakeFiles/encounterra_lib.dir/combatants/goblin.cpp.o
-/usr/bin/ranlib libencounterra_lib.a
