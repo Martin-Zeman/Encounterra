@@ -17,36 +17,36 @@ namespace enc
   {
     // Implement this function based on your grid representation
     // This is a placeholder implementation
-    return grid(x, y) == 0 || grid(x, y) == combatant_id;
+    return _grid(x, y) == 0 || _grid(x, y) == combatant_id;
   }
 
   void BattleMap::initializeGrid(size_t size)
   {
-    grid.resize(size, size);
-    grid = 0; // Initialize all elements to 0
+    _grid.resize(size, size);
+    _grid = 0; // Initialize all elements to 0
   }
 
   void BattleMap::setGridValue(size_t x, size_t y, int value)
   {
-    if(x >= grid.rows() || y >= grid.columns())
+    if(x >= _grid.rows() || y >= _grid.columns())
       {
         throw std::out_of_range("Coordinates out of range");
       }
-    grid(x, y) = value;
+    _grid(x, y) = value;
   }
 
   int BattleMap::getGridValue(size_t x, size_t y) const
   {
-    if(x >= grid.rows() || y >= grid.columns())
+    if(x >= _grid.rows() || y >= _grid.columns())
       {
         throw std::out_of_range("Coordinates out of range");
       }
-    return grid(x, y);
+    return _grid(x, y);
   }
 
   size_t BattleMap::getGridSize() const
   {
-    return grid.rows(); // Assuming square grid
+    return _grid.rows(); // Assuming square grid
   }
 
   std::vector<Coord>
@@ -55,7 +55,7 @@ namespace enc
                                      int inflate_to_dist, int rng, int combatant_id) const
   {
     assert(rng > 0);
-    size_t size = grid.rows();
+    size_t size = _grid.rows();
     auto inflated = inflateCoords(coords, inflate_to_dist);
     std::vector<Coord> adjacent_coords;
 

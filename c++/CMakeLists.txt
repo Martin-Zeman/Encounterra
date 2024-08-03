@@ -25,7 +25,9 @@ message ("PROJECT_SOURCE_DIR = ${PROJECT_SOURCE_DIR}")
 message ("PROJECT_BINARY_DIR = ${PROJECT_BINARY_DIR}")
 message ("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 
+# sudo apt-get install libssl-dev
 find_package(OpenSSL REQUIRED)
+
 find_package(blaze REQUIRED)
 
 #----GOOGLETEST BUILD----

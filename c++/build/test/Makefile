@@ -175,29 +175,53 @@ test_encounterra/fast:
 	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/build
 .PHONY : test_encounterra/fast
 
-hello_world.o: hello_world.cpp.o
-.PHONY : hello_world.o
+test_battle_map.o: test_battle_map.cpp.o
+.PHONY : test_battle_map.o
 
 # target to build an object file
-hello_world.cpp.o:
-	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o
-.PHONY : hello_world.cpp.o
+test_battle_map.cpp.o:
+	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o
+.PHONY : test_battle_map.cpp.o
 
-hello_world.i: hello_world.cpp.i
-.PHONY : hello_world.i
+test_battle_map.i: test_battle_map.cpp.i
+.PHONY : test_battle_map.i
 
 # target to preprocess a source file
-hello_world.cpp.i:
-	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/hello_world.cpp.i
-.PHONY : hello_world.cpp.i
+test_battle_map.cpp.i:
+	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.i
+.PHONY : test_battle_map.cpp.i
 
-hello_world.s: hello_world.cpp.s
-.PHONY : hello_world.s
+test_battle_map.s: test_battle_map.cpp.s
+.PHONY : test_battle_map.s
 
 # target to generate assembly for a file
-hello_world.cpp.s:
-	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/hello_world.cpp.s
-.PHONY : hello_world.cpp.s
+test_battle_map.cpp.s:
+	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.s
+.PHONY : test_battle_map.cpp.s
+
+test_state_machine.o: test_state_machine.cpp.o
+.PHONY : test_state_machine.o
+
+# target to build an object file
+test_state_machine.cpp.o:
+	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o
+.PHONY : test_state_machine.cpp.o
+
+test_state_machine.i: test_state_machine.cpp.i
+.PHONY : test_state_machine.i
+
+# target to preprocess a source file
+test_state_machine.cpp.i:
+	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.i
+.PHONY : test_state_machine.cpp.i
+
+test_state_machine.s: test_state_machine.cpp.s
+.PHONY : test_state_machine.s
+
+# target to generate assembly for a file
+test_state_machine.cpp.s:
+	cd /home/thisord/repos/Encounterra/c++/build && $(MAKE) $(MAKESILENT) -f test/CMakeFiles/test_encounterra.dir/build.make test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.s
+.PHONY : test_state_machine.cpp.s
 
 # Help Target
 help:
@@ -212,9 +236,12 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... test_encounterra"
-	@echo "... hello_world.o"
-	@echo "... hello_world.i"
-	@echo "... hello_world.s"
+	@echo "... test_battle_map.o"
+	@echo "... test_battle_map.i"
+	@echo "... test_battle_map.s"
+	@echo "... test_state_machine.o"
+	@echo "... test_state_machine.i"
+	@echo "... test_state_machine.s"
 .PHONY : help
 
 

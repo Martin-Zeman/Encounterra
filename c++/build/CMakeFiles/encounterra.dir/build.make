@@ -93,6 +93,8 @@ encounterra_EXTERNAL_OBJECTS =
 bin/encounterra: CMakeFiles/encounterra.dir/main.cpp.o
 bin/encounterra: CMakeFiles/encounterra.dir/build.make
 bin/encounterra: libencounterra_lib.a
+bin/encounterra: /usr/lib/x86_64-linux-gnu/libssl.so
+bin/encounterra: /usr/lib/x86_64-linux-gnu/libcrypto.so
 bin/encounterra: CMakeFiles/encounterra.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable bin/encounterra"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/encounterra.dir/link.txt --verbose=$(VERBOSE)

@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/test_encounterra.dir/hello_world.cpp.o"
-  "CMakeFiles/test_encounterra.dir/hello_world.cpp.o.d"
+  "CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o"
+  "CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o.d"
+  "CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o"
+  "CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o.d"
   "test_encounterra"
   "test_encounterra.pdb"
 )

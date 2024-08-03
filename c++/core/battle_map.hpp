@@ -16,7 +16,7 @@ namespace enc
   class BattleMap
   {
   private:
-    blaze::DynamicMatrix<int> grid;
+    blaze::DynamicMatrix<int> _grid;
 
     BattleMap() = default;
     BattleMap(const BattleMap &) = delete;

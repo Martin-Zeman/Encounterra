@@ -5,5 +5,9 @@ enable_testing()
 file (GLOB TEST_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
 
 add_executable(test_encounterra ${TEST_SOURCES})
-target_link_libraries(test_encounterra gtest gtest_main)
-add_test( test_encounterra test_encounterra )
+
+# Link the main project library and include directories
+target_link_libraries(test_encounterra gtest gtest_main ${PROJECT_NAME}_lib)
+target_include_directories(test_encounterra PUBLIC ${COMMON_INCLUDES})
+
+add_test(NAME test_encounterra COMMAND test_encounterra)

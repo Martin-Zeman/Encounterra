@@ -8,7 +8,8 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/thisord/repos/Encounterra/c++/test/hello_world.cpp" "test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o" "gcc" "test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o.d"
+  "/home/thisord/repos/Encounterra/c++/test/test_battle_map.cpp" "test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o" "gcc" "test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o.d"
+  "/home/thisord/repos/Encounterra/c++/test/test_state_machine.cpp" "test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o" "gcc" "test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o.d"
   )
 
 # Targets to which this target links.

@@ -69,34 +69,50 @@ include test/CMakeFiles/test_encounterra.dir/progress.make
 # Include the compile flags for this target's objects.
 include test/CMakeFiles/test_encounterra.dir/flags.make
 
-test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o: test/CMakeFiles/test_encounterra.dir/flags.make
-test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o: ../test/hello_world.cpp
-test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o: test/CMakeFiles/test_encounterra.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o"
-	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o -MF CMakeFiles/test_encounterra.dir/hello_world.cpp.o.d -o CMakeFiles/test_encounterra.dir/hello_world.cpp.o -c /home/thisord/repos/Encounterra/c++/test/hello_world.cpp
+test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o: test/CMakeFiles/test_encounterra.dir/flags.make
+test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o: ../test/test_battle_map.cpp
+test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o: test/CMakeFiles/test_encounterra.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o"
+	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o -MF CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o.d -o CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o -c /home/thisord/repos/Encounterra/c++/test/test_battle_map.cpp
 
-test/CMakeFiles/test_encounterra.dir/hello_world.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/test_encounterra.dir/hello_world.cpp.i"
-	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/test/hello_world.cpp > CMakeFiles/test_encounterra.dir/hello_world.cpp.i
+test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/test_encounterra.dir/test_battle_map.cpp.i"
+	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/test/test_battle_map.cpp > CMakeFiles/test_encounterra.dir/test_battle_map.cpp.i
 
-test/CMakeFiles/test_encounterra.dir/hello_world.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test_encounterra.dir/hello_world.cpp.s"
-	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/test/hello_world.cpp -o CMakeFiles/test_encounterra.dir/hello_world.cpp.s
+test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test_encounterra.dir/test_battle_map.cpp.s"
+	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/test/test_battle_map.cpp -o CMakeFiles/test_encounterra.dir/test_battle_map.cpp.s
+
+test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o: test/CMakeFiles/test_encounterra.dir/flags.make
+test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o: ../test/test_state_machine.cpp
+test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o: test/CMakeFiles/test_encounterra.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o"
+	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o -MF CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o.d -o CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o -c /home/thisord/repos/Encounterra/c++/test/test_state_machine.cpp
+
+test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/test_encounterra.dir/test_state_machine.cpp.i"
+	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/thisord/repos/Encounterra/c++/test/test_state_machine.cpp > CMakeFiles/test_encounterra.dir/test_state_machine.cpp.i
+
+test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/test_encounterra.dir/test_state_machine.cpp.s"
+	cd /home/thisord/repos/Encounterra/c++/build/test && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/thisord/repos/Encounterra/c++/test/test_state_machine.cpp -o CMakeFiles/test_encounterra.dir/test_state_machine.cpp.s
 
 # Object files for target test_encounterra
 test_encounterra_OBJECTS = \
-"CMakeFiles/test_encounterra.dir/hello_world.cpp.o"
+"CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o" \
+"CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o"
 
 # External object files for target test_encounterra
 test_encounterra_EXTERNAL_OBJECTS =
 
-test/test_encounterra: test/CMakeFiles/test_encounterra.dir/hello_world.cpp.o
+test/test_encounterra: test/CMakeFiles/test_encounterra.dir/test_battle_map.cpp.o
+test/test_encounterra: test/CMakeFiles/test_encounterra.dir/test_state_machine.cpp.o
 test/test_encounterra: test/CMakeFiles/test_encounterra.dir/build.make
 test/test_encounterra: lib/libgtest.a
 test/test_encounterra: lib/libgtest_main.a
 test/test_encounterra: lib/libgtest.a
 test/test_encounterra: test/CMakeFiles/test_encounterra.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable test_encounterra"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/thisord/repos/Encounterra/c++/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable test_encounterra"
 	cd /home/thisord/repos/Encounterra/c++/build/test && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/test_encounterra.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
