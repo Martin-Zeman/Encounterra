@@ -8,6 +8,9 @@
 
 namespace enc
 {
+  double getCartesianDistanceCoords(const Coords &coords1, const Coords &coords2);
+
+  int getHopDistanceCoords(const Coords &coords1, const Coords &coords2);
 
   blaze::DynamicMatrix<double> distanceMatrix(const Coords &coords1, const Coords &coords2);
 

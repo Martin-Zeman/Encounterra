@@ -19,7 +19,7 @@ namespace enc
 
     const CoordVector &get() const { return _coords; }
     void set(const CoordVector &newCoords) { _coords = newCoords; }
-    size_t rows() const {return std::max(size_t(1), static_cast<size_t>(_size) + 1);}
+    size_t numCoords() const {return _numCoords;}
 
     std::array<Coord, 4> getCorners() const;
 
@@ -31,6 +31,7 @@ namespace enc
   private:
     Size _size;
     CoordVector _coords;
+    size_t _numCoords;
 
     void initCoords(const Coord &coord);
   };

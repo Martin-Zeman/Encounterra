@@ -3,7 +3,7 @@
 namespace enc
 {
   Coords::Coords(const Coord &coord, Size size) : _size(size) { initCoords(coord); }
-  Coords::Coords(const Coord &coord, const Combatant& combatant) : _size(combatant.getSize()) { initCoords(coord); }
+  Coords::Coords(const Coord &coord, const Combatant &combatant) : _size(combatant.getSize()) { initCoords(coord); }
 
   std::array<Coord, 4> Coords::getCorners() const
   {
@@ -30,9 +30,15 @@ namespace enc
   {
     switch(_size)
       {
-      case Size::MEDIUM: _coords = {coord}; break;
+      case Size::MEDIUM:
+      case Size::TINY:
+      case Size::SMALL:
+        _coords = {coord};
+        _numCoords = 1;
+        break;
       case Size::LARGE:
         _coords = {coord, {coord[0], coord[1] + 1}, {coord[0] + 1, coord[1]}, {coord[0] + 1, coord[1] + 1}};
+        _numCoords = 4;
         break;
       case Size::HUGE:
         _coords.reserve(9);
@@ -43,6 +49,7 @@ namespace enc
                 _coords.push_back({coord[0] + i, coord[1] + j});
               }
           }
+        _numCoords = 9;
         break;
       case Size::GARGANTUAN:
         _coords.reserve(16);
@@ -53,6 +60,7 @@ namespace enc
                 _coords.push_back({coord[0] + i, coord[1] + j});
               }
           }
+        _numCoords = 16;
         break;
       default: _coords = {coord}; break;
       }
@@ -60,9 +68,10 @@ namespace enc
 
   int Coords::operator()(size_t row, size_t col) const
   {
-    if (row >= _coords.size() || col > 1) {
-      throw std::out_of_range("Index out of range");
-    }
+    if(row >= _coords.size() || col > 1)
+      {
+        throw std::out_of_range("Index out of range");
+      }
     return _coords[row][col];
   }
 }

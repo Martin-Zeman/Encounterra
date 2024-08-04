@@ -147,7 +147,8 @@ namespace enc
     DRACONIC_BLOODLINE,
     SHADOW_MAGIC,
     STORM_SORCERY,
-    WILD_MAGIC
+    WILD_MAGIC,
+    BEFORE_SUBCLASS
   };
 
   enum class Warlock

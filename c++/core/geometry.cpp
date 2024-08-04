@@ -5,10 +5,41 @@
 
 namespace enc {
 
+double getCartesianDistanceCoords(const Coords& coords1, const Coords& coords2)
+{
+    return blaze::min(distanceMatrix(coords1, coords2));
+}
+
+int getHopDistanceCoords(const Coords& coords1, const Coords& coords2)
+{
+    auto dist_mat = distanceMatrix(coords1, coords2);
+    double min_dist = std::numeric_limits<double>::max();
+    size_t min_row = 0, min_col = 0;
+
+    for (size_t i = 0; i < dist_mat.rows(); ++i) {
+        for (size_t j = 0; j < dist_mat.columns(); ++j) {
+            if (dist_mat(i, j) < min_dist) {
+                min_dist = dist_mat(i, j);
+                min_row = i;
+                min_col = j;
+            }
+        }
+    }
+
+    const auto& coords1_vec = coords1.get();
+    const auto& coords2_vec = coords2.get();
+
+    const Coord& sub1_closest_coord = coords1_vec[std::min(min_row, coords1_vec.size() - 1)];
+    const Coord& sub2_closest_coord = coords2_vec[std::min(min_col, coords2_vec.size() - 1)];
+
+    return std::max(std::abs(sub1_closest_coord[0] - sub2_closest_coord[0]),
+                    std::abs(sub1_closest_coord[1] - sub2_closest_coord[1]));
+}
+
 blaze::DynamicMatrix<double> distanceMatrix(const Coords &coords1, const Coords &coords2)
 {
-  size_t n = coords1.rows();
-  size_t m = coords2.rows();
+  size_t n = coords1.numCoords();
+  size_t m = coords2.numCoords();
   blaze::DynamicMatrix<double> distances(n, m);
 
   for(size_t i = 0; i < n; ++i)
