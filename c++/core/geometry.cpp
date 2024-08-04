@@ -1,6 +1,7 @@
 #include "geometry.hpp"
 #include "misc.hpp"
 #include <cmath>
+#include <unordered_set>
 
 namespace enc {
 
@@ -29,23 +30,21 @@ std::vector<Coord> inflateCoords(const Coords &coords, int inflate_to_dist)
       offset = inflate_to_dist;
     }
 
-  std::vector<Coord> inflated;
-  for(size_t i = 0; i < coords.rows(); ++i)
+  std::unordered_set<Coord> inflated;
+  for(const auto &[x, y] : coords.get())
     {
-      for(int x = static_cast<int>(coords(i, 0)) - offset; x <= coords(i, 0); ++x)
+      for(int dx = -offset; dx <= offset; ++dx)
         {
-          for(int y = static_cast<int>(coords(i, 1)) - offset; y <= coords(i, 1); ++y)
+          for(int dy = -offset; dy <= offset; ++dy)
             {
-              inflated.emplace_back(Coord{std::max(0, x), std::max(0, y)});
+              int newX = std::max(0, x + dx);
+              int newY = std::max(0, y + dy);
+              inflated.insert({newX, newY});
             }
         }
     }
 
-  // Remove duplicates
-  std::sort(inflated.begin(), inflated.end());
-  inflated.erase(std::unique(inflated.begin(), inflated.end()), inflated.end());
-
-  return inflated;
+  return std::vector<Coord>(inflated.begin(), inflated.end());
 }
 
 blaze::DynamicVector<double> linspace(double start, double end, size_t num)

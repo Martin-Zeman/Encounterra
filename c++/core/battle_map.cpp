@@ -7,63 +7,38 @@
 namespace enc
 {
 
-  BattleMap::BattleMap(size_t size = 15) 
-        : _size(size), 
-          _combatantGrid(size, size, -1), // Initialize combatantGrid with -1 (no combatant)
-          _terrainGrid(size, size, static_cast<int>(Terrain::NORMAL_TERRAIN)),
-          _occupancyGrid(size, size, static_cast<int>(Occupancy::FREE)) 
-    {
-    }
+  std::unique_ptr<BattleMap> BattleMap::_instance = nullptr;
+
+  BattleMap::BattleMap(size_t size = 15)
+      : _size(size), _combatantGrid(size, size, -1), // Initialize combatantGrid with -1 (no combatant)
+        _terrainGrid(size, size, static_cast<int>(Terrain::NORMAL_TERRAIN))
+  // _occupancyGrid(size, size, static_cast<int>(Occupancy::FREE))
+  {}
 
   BattleMap &BattleMap::getInstance(size_t size)
   {
-    static BattleMap instance(size);
-    return instance;
+    if(!_instance)
+      {
+        _instance = std::unique_ptr<BattleMap>(new BattleMap(size));
+      }
+    return *_instance;
   }
+
+  void BattleMap::resetInstance(size_t size) { _instance.reset(new BattleMap(size)); }
 
   bool BattleMap::isEmptyOrSelf(int x, int y, int combatant_id) const
   {
-    // Implement this function based on your grid representation
-    // This is a placeholder implementation
-    return _combatantGrid(x, y) == 0 || _combatantGrid(x, y) == combatant_id;
+    return (_combatantGrid(x, y) == -1 && _terrainGrid(x, y) != static_cast<int>(Terrain::IMPASSABLE_TERRAIN))
+           || _combatantGrid(x, y) == combatant_id;
   }
 
-  // void BattleMap::initializeGrid(size_t size)
-  // {
-  //   _grid.resize(size, size);
-  //   _grid = 0; // Initialize all elements to 0
-  // }
+  size_t BattleMap::getGridSize() const { return _size; }
 
-  // void BattleMap::setGridValue(size_t x, size_t y, int value)
-  // {
-  //   if(x >= _grid.rows() || y >= _grid.columns())
-  //     {
-  //       throw std::out_of_range("Coordinates out of range");
-  //     }
-  //   _grid(x, y) = value;
-  // }
-
-  // int BattleMap::getGridValue(size_t x, size_t y) const
-  // {
-  //   if(x >= _grid.rows() || y >= _grid.columns())
-  //     {
-  //       throw std::out_of_range("Coordinates out of range");
-  //     }
-  //   return _grid(x, y);
-  // }
-
-  size_t BattleMap::getGridSize() const
-  {
-    return _size; // Assuming square grid
-  }
-
-  std::vector<Coord>
-  BattleMap::getFreeCoordsInHopRange(const Coords &coords,
-                                     const blaze::DynamicVector<double> &distances,
-                                     int inflate_to_dist, int rng, int combatant_id) const
+  std::vector<Coord> BattleMap::getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances, int mover_size, int rng,
+                                                        int combatant_id) const
   {
     assert(rng > 0);
-    auto inflated = inflateCoords(coords, inflate_to_dist);
+    auto inflated = inflateCoords(target, mover_size);
     std::vector<Coord> adjacent_coords;
 
     for(const auto &coord : inflated)
@@ -97,25 +72,36 @@ namespace enc
     return adjacent_coords;
   }
 
-  void BattleMap::setCombatantCoordinates(const Combatant& combatant, const Coords& coords) {
-        auto coordPairs = coords.get();
-        for (const auto& [x, y] : coordPairs) {
-            if (x >= _size || y >= _size) {
-                throw std::out_of_range("Coordinate out of bounds.");
-            }
+  void BattleMap::setCombatantCoordinates(const Combatant &combatant, const Coord &coord)
+  {
+    auto coords = Coords(coord, combatant);
+    auto coordPairs = coords.get();
+    for(const auto &[x, y] : coordPairs)
+      {
+        if(x >= _size || y >= _size)
+          {
+            throw std::out_of_range("Coordinate out of bounds.");
+          }
 
-            if (_terrainGrid(x, y) == static_cast<int>(Terrain::IMPASSABLE_TERRAIN)) {
-                throw std::runtime_error("Cannot place combatant at (" + std::to_string(x) + ", " + std::to_string(y) + "): Impassable terrain.");
-            }
-            if (_occupancyGrid(x, y) == static_cast<int>(Occupancy::OCCUPIED_BY_COMBATANT) && _combatantGrid(x, y) != combatant._id) {
-                throw std::runtime_error("Cannot place combatant at (" + std::to_string(x) + ", " + std::to_string(y) + "): Already occupied by another combatant.");
-            }
+        if(_terrainGrid(x, y) == static_cast<int>(Terrain::IMPASSABLE_TERRAIN))
+          {
+            throw std::runtime_error("Cannot place combatant at (" + std::to_string(x) + ", " + std::to_string(y) + "): Impassable terrain.");
+          }
+        // if (_occupancyGrid(x, y) == static_cast<int>(Occupancy::OCCUPIED_BY_COMBATANT) && _combatantGrid(x, y) != combatant._id) {
+        if(_combatantGrid(x, y) != -1 && _combatantGrid(x, y) != combatant._id)
+          {
+            throw std::runtime_error("Cannot place combatant at (" + std::to_string(x) + ", " + std::to_string(y)
+                                     + "): Already occupied by another combatant.");
+          }
 
-            _combatantGrid(x, y) = combatant._id;
-            _occupancyGrid(x, y) = static_cast<int>(Occupancy::OCCUPIED_BY_COMBATANT);
-        }
+        _combatantGrid(x, y) = combatant._id;
+        // _occupancyGrid(x, y) = static_cast<int>(Occupancy::OCCUPIED_BY_COMBATANT);
+      }
 
-        // Update the combatant_coordinate_cache using the combatant ID
-        _combatantCoordinateCache.emplace(combatant._id, coords);
-    }
+    // Update the combatant_coordinate_cache using the combatant ID
+    // _combatantCoordinateCache.emplace(combatant._id, coords);
+    _combatantCoordinateCache.insert_or_assign(combatant._id, coords);
+  }
+
+  const Coords &BattleMap::getCombatantCoordinates(const Combatant &combatant) const { return _combatantCoordinateCache.at(combatant._id); }
 };

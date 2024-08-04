@@ -11,19 +11,19 @@ protected:
 TEST_F(StateMachineTest, BasicFunctionality) {
     ASSERT_EQ(fsm.get_current_state(), 0);
 
-    fsm.add_new_state(2); // A
-    fsm.add_new_state(3); // B
-    fsm.add_new_state(4); // C
-    fsm.add_new_state(5); // D
+    fsm.add_new_state(2);
+    fsm.add_new_state(3);
+    fsm.add_new_state(4);
+    fsm.add_new_state(5);
 
     fsm.add_transition("to_2", 0, 2);
     fsm.add_transition("to_3", 2, 3);
     fsm.add_transition("to_4", 3, 4);
-    fsm.add_transition("to_D", 3, 5);
+    fsm.add_transition("to_5", 3, 5);
     fsm.add_transition("to_-1", 4, -1);
     fsm.add_transition("to_-1", 5, -1);
 
-    ASSERT_EQ(fsm.get_available_transitions_in_current_state(), std::vector<std::string>{"to_3"});
+    ASSERT_EQ(fsm.get_available_transitions_in_current_state(), std::vector<std::string>{"to_2"});
 
     fsm.trigger_transition("to_2");
     ASSERT_EQ(fsm.get_current_state(), 2);
@@ -31,14 +31,14 @@ TEST_F(StateMachineTest, BasicFunctionality) {
 
     fsm.trigger_transition("to_3");
     ASSERT_EQ(fsm.get_current_state(), 3);
-    ASSERT_EQ(fsm.get_available_transitions_in_current_state(), (std::vector<std::string>{"to_3", "to_4"}));
+    ASSERT_EQ(fsm.get_available_transitions_in_current_state(), (std::vector<std::string>{"to_4", "to_5"}));
 
     fsm.trigger_transition("to_4");
-    ASSERT_EQ(fsm.get_current_state(), 5);
+    ASSERT_EQ(fsm.get_current_state(), 4);
     ASSERT_EQ(fsm.get_available_transitions_in_current_state(), std::vector<std::string>{"to_-1"});
 
     fsm.trigger_transition("to_-1");
-    ASSERT_EQ(fsm.get_current_state(), 1);
+    ASSERT_EQ(fsm.get_current_state(), -1);
     ASSERT_TRUE(fsm.get_available_transitions_in_current_state().empty());
 }
 
@@ -93,9 +93,9 @@ TEST_F(StateMachineTest, GetAllStates) {
     fsm.add_new_state(2);
     fsm.add_new_state(3);
     auto states = fsm.get_all_states();
-    ASSERT_EQ(states.size(), 4); // 0, 1, 2, 3
+    ASSERT_EQ(states.size(), 4); // 0, -1, 2, 3
     ASSERT_TRUE(std::find(states.begin(), states.end(), 0) != states.end());
-    ASSERT_TRUE(std::find(states.begin(), states.end(), 1) != states.end());
+    ASSERT_TRUE(std::find(states.begin(), states.end(), -1) != states.end());
     ASSERT_TRUE(std::find(states.begin(), states.end(), 2) != states.end());
     ASSERT_TRUE(std::find(states.begin(), states.end(), 3) != states.end());
 }
