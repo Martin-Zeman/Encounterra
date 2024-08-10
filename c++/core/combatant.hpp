@@ -69,42 +69,51 @@ namespace enc
 
     void setSize(Size size) { _size = size; };
     Size getSize() const { return _size; };
+    void setTeamColor(Color teamColor) {_teamColor = teamColor;}
+
+    bool hasAction(){return _hasAction;}
+    bool hasBonusAction(){return _hasBonusAction;}
+    bool hasHasteAction(){return _hasHasteAction;}
+    bool hasReaction(){return _hasReaction;}
+    int getMeleeReactionRange(){return _meleeReactionRange;}
 
   private:
-    int _max_hp;
-    int _curr_hp;
-    int _max_hp_modifier = 0;
-    int _temporary_hp = 0;
+    int _maxHp;
+    int _currHp;
+    int _maxHpModifier = 0;
+    int _temporaryHp = 0;
     int _ac;
     int _dc;
-    int _init_bonus;
-    int _spell_to_hit;
-    int _aoo_factory = 0;
-    int _pam_factory = 0;
-    int _ability_dmg_bonus = 0;
-    int _curr_init = 0;
-    bool _has_action = true;
-    bool _has_bonus_action = true;
-    bool _has_reaction = true;
-    bool _has_haste_action = false;
+    int _initBonus;
+    int _spellToHit;
+    int _aooFactory = 0;
+    int _pamFactory = 0;
+    int _abilityDmgBonus = 0;
+    int _currInit = 0;
+    bool _hasAction = true;
+    bool _hasBonusAction = true;
+    bool _hasReaction = true;
+    bool _hasHasteAction = false;
+    int _meleeReactionRange = 1;
     std::unordered_map<std::string, int> _resources;
     int _speed;
     int _movement;
+    Color _teamColor;
     std::unordered_map<std::string, int> _ammo;
     std::unordered_set<DamageType> _resistances;
     std::unordered_set<DamageType> _immunities;
     std::unordered_set<DamageType> _vulnerabities;
     // ... Other member variables
 
-    std::shared_ptr<Factory> _dodge_factory;
-    std::shared_ptr<Factory> _disengage_factory;
-    std::vector<std::shared_ptr<Factory>> _action_factories;
-    std::unordered_map<SavingThrow, int> _saving_throws
+    std::shared_ptr<Factory> _dodgeFactory;
+    std::shared_ptr<Factory> _disengageFactory;
+    std::vector<std::shared_ptr<Factory>> _actionFactories;
+    std::unordered_map<SavingThrow, int> _savingThrows
       = {{SavingThrow::STR, 0}, {SavingThrow::DEX, 0}, {SavingThrow::CON, 0}, {SavingThrow::INT, 0}, {SavingThrow::WIS, 0}, {SavingThrow::CHA, 0}};
-    std::unordered_map<SavingThrow, std::vector<int>> _saving_throws_flat_mod;
-    std::unordered_map<SavingThrow, std::vector<Die>> _saving_throws_dice_mod;
-    std::unordered_map<SavingThrow, std::unordered_set<RollType>> _saving_throws_roll_type_mod;
-    std::unordered_set<std::string> _dmg_types_took_last_round;
+    std::unordered_map<SavingThrow, std::vector<int>> _savingThrowsFlatMod;
+    std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
+    std::unordered_map<SavingThrow, std::unordered_set<RollType>> _savingThrowsRollTypeMod;
+    std::unordered_set<std::string> _dmgTypesTookLastRound;
 
   protected:
     Size _size{Size::MEDIUM};

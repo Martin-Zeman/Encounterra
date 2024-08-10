@@ -1,8 +1,10 @@
 #include "battle_map.hpp"
 #include "geometry.hpp"
+#include "teams.hpp"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
+#include <queue>
 
 namespace enc
 {
@@ -26,19 +28,254 @@ namespace enc
 
   void BattleMap::resetInstance(size_t size) { _instance.reset(new BattleMap(size)); }
 
-  bool BattleMap::isEmptyOrSelf(int x, int y, int combatant_id) const
+  bool BattleMap::isEmptyOrSelf(int x, int y, int combatantId) const
   {
     return (_combatantGrid(x, y) == -1 && _terrainGrid(x, y) != static_cast<int>(Terrain::IMPASSABLE_TERRAIN))
-           || (_combatantGrid(x, y) != -1 && _combatantGrid(x, y) == combatant_id);
+           || (_combatantGrid(x, y) != -1 && _combatantGrid(x, y) == combatantId);
   }
 
   size_t BattleMap::getGridSize() const { return _size; }
 
-  std::vector<Coord> BattleMap::getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances, int mover_size, int rng,
-                                                        int combatant_id) const
+  void BattleMap::buildBaseAdjacencyMatrix()
+  {
+    int N = _size;
+    int Nsq = N * N;
+
+    // Initialize base_adjacency_matrix with zeros
+    _baseAdjacencyMatrix.resize(Nsq, Nsq);
+    _baseAdjacencyMatrix = 0;
+
+    // Connect the nodes
+    for(int i = 0; i < N; ++i)
+      {
+        for(int j = 0; j < N; ++j)
+          {
+            int idx = i * N + j;
+            _baseAdjacencyMatrix(idx, std::max(i - 1, 0) * N + std::max(j - 1, 0)) = 1;
+            _baseAdjacencyMatrix(idx, std::max(i - 1, 0) * N + j) = 1;
+            _baseAdjacencyMatrix(idx, std::max(i - 1, 0) * N + std::min(j + 1, N - 1)) = 1;
+
+            _baseAdjacencyMatrix(idx, i * N + std::max(j - 1, 0)) = 1;
+            _baseAdjacencyMatrix(idx, i * N + j) = 1;
+            _baseAdjacencyMatrix(idx, i * N + std::min(j + 1, N - 1)) = 1;
+
+            _baseAdjacencyMatrix(idx, std::min(i + 1, N - 1) * N + std::max(j - 1, 0)) = 1;
+            _baseAdjacencyMatrix(idx, std::min(i + 1, N - 1) * N + j) = 1;
+            _baseAdjacencyMatrix(idx, std::min(i + 1, N - 1) * N + std::min(j + 1, N - 1)) = 1;
+          }
+      }
+
+    // Remove self-connections
+    for(int i = 0; i < Nsq; ++i)
+      {
+        _baseAdjacencyMatrix(i, i) = 0;
+      }
+
+    // Handle difficult set
+    for(const auto &coord : _difficultSet)
+      {
+        int idx = coord[0] * N + coord[1];
+        blaze::column(_baseAdjacencyMatrix, idx) *= 2;
+      }
+
+    // Handle impassable set
+    for(const auto &coord : _impassableSet)
+      {
+        int idx = coord[0] * N + coord[1];
+        blaze::column(_baseAdjacencyMatrix, idx) = 0;
+      }
+  }
+
+  void BattleMap::fillRegion(MapMatrix &mask, const Coord &coord, int offset, int value)
+  {
+    int start_x = std::max(0, coord[0] - offset);
+    int start_y = std::max(0, coord[1] - offset);
+    int end_x = std::min(_size, static_cast<size_t>(coord[0] + 1));
+    int end_y = std::min(_size, static_cast<size_t>(coord[1] + 1));
+
+    for(int x = start_x; x < end_x; ++x)
+      {
+        for(int y = start_y; y < end_y; ++y)
+          {
+            for(int i = 0; i < _size * _size; ++i)
+              {
+                mask(i, x * _size + y) = value;
+              }
+          }
+      }
+  }
+
+  MapMatrix BattleMap::buildCombatantAdjacencyMask(const Combatant &combatant, bool consider_aoo)
+  {
+    const int N = _size;
+    Teams &teams = Teams::getInstance();
+
+    int offset = 0;
+    if(combatant.getSize() > Size::MEDIUM)
+      {
+        offset = static_cast<int>(combatant.getSize());
+      }
+
+    MapMatrix mask(N * N, N * N, 1);
+
+    // Handle impassable terrain and other combatants
+    for(const auto &[currCombatantId, coords] : _combatantCoordinateCache)
+      {
+        if(currCombatantId != combatant._id && teams.getCombatantById(currCombatantId)->isAlive())
+          {
+            for(const auto &coord : coords.get())
+              {
+                fillRegion(mask, coord, offset, 0);
+              }
+          }
+      }
+    for(const auto &coord : _impassableSet)
+      {
+        fillRegion(mask, coord, offset, 0);
+      }
+
+    // Handle AoO
+    if(consider_aoo)
+      {
+        auto enemies = teams.getEnemies(combatant);
+        for(const auto &e : enemies)
+          {
+            if(!e->hasReaction())
+              {
+                continue;
+              }
+            int rng = e->getMeleeReactionRange();
+            auto coords = getCombatantCoordinates(*e);
+            auto adj_coords = getFreeCoordsInHopRange(coords, blaze::DynamicVector<double>(), combatant.getSize(), rng);
+            for(const auto &ac : adj_coords)
+              {
+                for(int i = 0; i < N * N; ++i)
+                  {
+                    mask(ac[0] * N + ac[1], i) *= 2;
+                  }
+              }
+          }
+      }
+
+    // Handle map edges for larger combatants
+    for(int i = (N - offset) * N; i < N * N; ++i)
+      {
+        for(int j = 0; j < N * N; ++j)
+          {
+            mask(i, j) = 0;
+            mask(j, i) = 0;
+          }
+      }
+
+    // TODO: Handle frightened condition
+    // auto frightened_source = get_source_of_frightened(combatant);
+    // if(frightened_source && frightened_source->is_alive())
+    //   {
+    //     auto source_coords = _combatantCoordinateCache.at(frightened_source->_id);
+    //     int current_hop_distance = getHopDistanceCombatants(combatant, *frightened_source);
+
+    //     for(int x = 0; x < N; ++x)
+    //       {
+    //         for(int y = 0; y < N; ++y)
+    //           {
+    //             int hop_distance = getHopDistanceCoords({{x, y}}, source_coords);
+    //             if(hop_distance < current_hop_distance)
+    //               {
+    //                 for(int i = 0; i < N * N; ++i)
+    //                   {
+    //                     mask(i, x * N + y) = 0;
+    //                   }
+    //               }
+    //           }
+    //       }
+    //   }
+
+    return mask;
+  }
+
+  DijkstraResult BattleMap::dijkstra(const Coord &src, const MapMatrix &adjMatrix, const MapMatrix &mask)
+  {
+    const int N = _size;
+    const int Nsq = N * N;
+    const int maxsize = std::numeric_limits<int>::max();
+
+    blaze::DynamicVector<int64_t> dist(Nsq, maxsize);
+    int srcIdx = src[0] * N + src[1];
+    dist[srcIdx] = 0;
+
+    std::vector<bool> openSet(Nsq, false);
+
+    // Element-wise multiplication of adjMatrix and mask
+    blaze::DynamicMatrix<int64_t> adj = adjMatrix % mask;
+
+    std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> pq;
+    pq.push({0, srcIdx});
+
+    blaze::DynamicMatrix<Coord> shortestPaths(N, N, Coord{-1, -1});
+
+    while(!pq.empty())
+      {
+        auto [current_dist, x] = pq.top();
+        pq.pop();
+
+        if(openSet[x])
+          continue;
+        openSet[x] = true;
+
+        int fromX = x / N;
+        int fromY = x % N;
+
+        for(int y = 0; y < Nsq; ++y)
+          {
+            if(adj(x, y) > 0 && !openSet[y])
+              {
+                int toX = y / N;
+                int toY = y % N;
+                int newDist = dist[x] + adj(x, y);
+
+                if(dist[y] > newDist)
+                  {
+                    dist[y] = newDist;
+                    // shortestPaths(toX, toY) = Coord{fromX, fromY};
+                    shortestPaths(toX, toY) = {fromX, fromY};
+                    pq.push({newDist, y});
+                  }
+                else if(dist[y] == newDist)
+                  {
+                    // Check for the least zig-zaggy path
+                    int current_path_diff = abs(shortestPaths(toX, toY)[0] - toX) + abs(shortestPaths(toX, toY)[1] - toY);
+                    int new_path_diff = abs(toX - fromX) + abs(toY - fromY);
+                    if(current_path_diff > new_path_diff)
+                      {
+                        // shortestPaths(toX, toY) = Coord{fromX, fromY};
+                        shortestPaths(toX, toY) = {fromX, fromY};
+                        pq.push({newDist, y});
+                      }
+                  }
+              }
+          }
+      }
+
+    return {dist, shortestPaths};
+  }
+
+  DijkstraResult BattleMap::calcDijkstra(const Combatant &combatant)
+  {
+    Coord coord = _combatantCoordinateCache.at(combatant._id).get()[0];
+    auto mask = buildCombatantAdjacencyMask(combatant);
+    return dijkstra(coord, _baseAdjacencyMatrix, mask);
+  }
+
+  int BattleMap::getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const
+  {
+    return getHopDistanceCoords(_combatantCoordinateCache.at(combatant1._id), _combatantCoordinateCache.at(combatant2._id));
+  }
+
+  std::vector<Coord> BattleMap::getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances, Size moverSize, int rng,
+                                                        int combatantId) const
   {
     assert(rng > 0);
-    auto inflated = inflateCoords(target, mover_size);
+    auto inflated = inflateCoords(target, static_cast<int>(moverSize));
     std::vector<Coord> adjacent_coords;
 
     for(const auto &coord : inflated)
@@ -57,7 +294,7 @@ namespace enc
 
                 bool consider_accessibility = distances.size() > 0 ? distances[x * _size + y] < std::numeric_limits<double>::max() : true;
 
-                if(isEmptyOrSelf(x, y, combatant_id) && consider_accessibility)
+                if(isEmptyOrSelf(x, y, combatantId) && consider_accessibility)
                   {
                     adjacent_coords.emplace_back(Coord{x, y});
                   }
@@ -74,10 +311,10 @@ namespace enc
 
 
 std::vector<Coord> BattleMap::getFreeCoordsInCartesianRange(const Coords& target, const blaze::DynamicVector<double>& distances,
-                                                            int mover_size, int rng, int combatant_id) const
+                                                            Size moverSize, int rng, int combatantId) const
 {
     assert(rng > 0);
-    auto inflated = inflateCoords(target, mover_size);
+    auto inflated = inflateCoords(target, static_cast<int>(moverSize));
     std::unordered_set<Coord> coords_in_range;
 
     for (const auto& coord : inflated)
@@ -98,7 +335,7 @@ std::vector<Coord> BattleMap::getFreeCoordsInCartesianRange(const Coords& target
                 bool consider_accessibility = distances.size() > 0 ? 
                     distances[x * _size + y] < std::numeric_limits<double>::max() : true;
 
-                if (isEmptyOrSelf(x, y, combatant_id) && consider_accessibility)
+                if (isEmptyOrSelf(x, y, combatantId) && consider_accessibility)
                 {
                     coords_in_range.insert(Coord{x, y});
                 }

@@ -15,6 +15,11 @@
 
 namespace enc
 {
+  struct DijkstraResult
+  {
+    blaze::DynamicVector<int> dist;
+    blaze::DynamicMatrix<Coord> shortestPaths;
+  };
 
   class BattleMap
   {
@@ -25,19 +30,25 @@ namespace enc
     size_t getGridSize() const;
 
     std::vector<Coord> getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances = blaze::DynamicVector<double>(),
-                                               int mover_size = static_cast<int>(Size::MEDIUM), int rng = 1, int combatant_id = -1) const;
+                                               Size moverSize = Size::MEDIUM, int rng = 1, int combatantId = -1) const;
 
-    std::vector<Coord> getFreeCoordsInCartesianRange(const Coords& target, const blaze::DynamicVector<double>& distances,
-                int mover_size = static_cast<int>(Size::MEDIUM), int rng = 1, int combatant_id = -1) const;
+    std::vector<Coord> getFreeCoordsInCartesianRange(const Coords &target, const blaze::DynamicVector<double> &distances,
+                                                     Size moverSize = Size::MEDIUM, int rng = 1, int combatantId = -1) const;
 
     void setCombatantCoordinates(const Combatant &combatant, const Coord &coord);
-    const Coords& getCombatantCoordinates(const Combatant& combatant) const;
+    const Coords &getCombatantCoordinates(const Combatant &combatant) const;
     bool placeTerrain(const Coord &coord, Terrain terrainType, int radius = 0);
+    MapMatrix buildCombatantAdjacencyMask(const Combatant &combatant, bool consider_aoo = false);
+    void buildBaseAdjacencyMatrix();
+    DijkstraResult dijkstra(const Coord &src, const MapMatrix &adjMatrix, const MapMatrix &mask);
+    DijkstraResult calcDijkstra(const Combatant &combatant);
+    int getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
 
   private:
     size_t _size;
-    blaze::DynamicMatrix<int> _combatantGrid;
-    blaze::DynamicMatrix<int> _terrainGrid;
+    MapMatrix _combatantGrid;
+    MapMatrix _terrainGrid;
+    MapMatrix _baseAdjacencyMatrix;
     // blaze::DynamicMatrix<int> _occupancyGrid TODO: This may actually not be needed
     std::unordered_map<int, Coords> _combatantCoordinateCache;
     static std::unique_ptr<BattleMap> _instance;
@@ -49,6 +60,7 @@ namespace enc
     BattleMap(const BattleMap &) = delete;
     BattleMap &operator=(const BattleMap &) = delete;
 
-    bool isEmptyOrSelf(int x, int y, int combatant_id) const;
+    bool isEmptyOrSelf(int x, int y, int combatantId) const;
+    void fillRegion(MapMatrix &mask, const Coord &coord, int offset, int value);
   };
 }
