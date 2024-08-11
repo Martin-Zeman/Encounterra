@@ -36,12 +36,15 @@ namespace enc
                                                      Size moverSize = Size::MEDIUM, int rng = 1, int combatantId = -1) const;
 
     void setCombatantCoordinates(const Combatant &combatant, const Coord &coord);
+    void moveCombatantByIncrement(const Combatant &combatant, const Coord &increment);
+    void moveCombatant(const Combatant &combatant, const Coord &newCoord, bool log = false);
     const Coords &getCombatantCoordinates(const Combatant &combatant) const;
     bool placeTerrain(const Coord &coord, Terrain terrainType, int radius = 0);
     MapMatrix buildCombatantAdjacencyMask(const Combatant &combatant, bool consider_aoo = false);
     void buildBaseAdjacencyMatrix();
     DijkstraResult dijkstra(const Coord &src, const MapMatrix &adjMatrix, const MapMatrix &mask);
     DijkstraResult calcDijkstra(const Combatant &combatant);
+    std::vector<Coord> reconstructFromShortestPath(const blaze::DynamicMatrix<Coord> &shortest_paths, const Coord &source, const Coord &target);
     int getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
 
   private:

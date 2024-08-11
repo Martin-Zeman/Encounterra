@@ -16,6 +16,7 @@ namespace enc
   public:
     Coords(const Coord &coord, Size size = Size::MEDIUM);
     Coords(const Coord &coord, const Combatant& combatant);
+    Coords(const Coords &existingCoords, const Coord &increment);
 
     const CoordVector &get() const { return _coords; }
     void set(const CoordVector &newCoords) { _coords = newCoords; }

@@ -266,6 +266,32 @@ namespace enc
     return dijkstra(coord, _baseAdjacencyMatrix, mask);
   }
 
+  std::vector<Coord>
+  BattleMap::reconstructFromShortestPath(const blaze::DynamicMatrix<Coord> &shortest_paths, const Coord &source, const Coord &target)
+  {
+    size_t max_path_length = shortest_paths.rows() * shortest_paths.columns();
+    std::vector<Coord> path;
+    path.reserve(max_path_length);
+
+    Coord current = target;
+
+    while(current != source)
+      {
+        path.push_back(current);
+        current = shortest_paths(current[0], current[1]);
+
+        if(current[0] == -1 && current[1] == -1)
+          {
+            return std::vector<Coord>(); // Return an empty vector if no path is found
+          }
+      }
+
+    path.push_back(source);
+    std::reverse(path.begin(), path.end());
+
+    return path;
+  }
+
   int BattleMap::getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const
   {
     return getHopDistanceCoords(_combatantCoordinateCache.at(combatant1._id), _combatantCoordinateCache.at(combatant2._id));
@@ -309,42 +335,40 @@ namespace enc
     return adjacent_coords;
   }
 
-
-std::vector<Coord> BattleMap::getFreeCoordsInCartesianRange(const Coords& target, const blaze::DynamicVector<double>& distances,
-                                                            Size moverSize, int rng, int combatantId) const
-{
+  std::vector<Coord> BattleMap::getFreeCoordsInCartesianRange(const Coords &target, const blaze::DynamicVector<double> &distances, Size moverSize,
+                                                              int rng, int combatantId) const
+  {
     assert(rng > 0);
     auto inflated = inflateCoords(target, static_cast<int>(moverSize));
     std::unordered_set<Coord> coords_in_range;
 
-    for (const auto& coord : inflated)
-    {
-        for (int i = -rng; i <= rng; ++i)
-        {
-            for (int j = -rng; j <= rng; ++j)
-            {
+    for(const auto &coord : inflated)
+      {
+        for(int i = -rng; i <= rng; ++i)
+          {
+            for(int j = -rng; j <= rng; ++j)
+              {
                 int x = coord[0] + i;
                 int y = coord[1] + j;
 
-                if (x < 0 || x >= static_cast<int>(_size) || y < 0 || y >= static_cast<int>(_size) ||
-                    getCartesianDistanceCoords(target, Coords(Coord{x, y}, Size::MEDIUM)) > rng)
-                {
+                if(x < 0 || x >= static_cast<int>(_size) || y < 0 || y >= static_cast<int>(_size)
+                   || getCartesianDistanceCoords(target, Coords(Coord{x, y}, Size::MEDIUM)) > rng)
+                  {
                     continue;
-                }
+                  }
 
-                bool consider_accessibility = distances.size() > 0 ? 
-                    distances[x * _size + y] < std::numeric_limits<double>::max() : true;
+                bool consider_accessibility = distances.size() > 0 ? distances[x * _size + y] < std::numeric_limits<double>::max() : true;
 
-                if (isEmptyOrSelf(x, y, combatantId) && consider_accessibility)
-                {
+                if(isEmptyOrSelf(x, y, combatantId) && consider_accessibility)
+                  {
                     coords_in_range.insert(Coord{x, y});
-                }
-            }
-        }
-    }
+                  }
+              }
+          }
+      }
 
     return std::vector<Coord>(coords_in_range.begin(), coords_in_range.end());
-}
+  }
 
   void BattleMap::setCombatantCoordinates(const Combatant &combatant, const Coord &coord)
   {
@@ -375,6 +399,57 @@ std::vector<Coord> BattleMap::getFreeCoordsInCartesianRange(const Coords& target
     // Update the combatant_coordinate_cache using the combatant ID
     // _combatantCoordinateCache.emplace(combatant._id, coords);
     _combatantCoordinateCache.insert_or_assign(combatant._id, coords);
+  }
+
+  void BattleMap::moveCombatantByIncrement(const Combatant &combatant, const Coord &increment)
+  {
+    const auto &oldCoords = _combatantCoordinateCache.at(combatant._id);
+    for(const auto &[x, y] : oldCoords.get())
+      {
+        _combatantGrid(x, y) = -1;
+      }
+
+    Coords newCoords(oldCoords, increment);
+    // Check bounds and update _combatantGrid for new coordinates
+    for(const auto &[x, y] : newCoords.get())
+      {
+        if(x >= _size || y >= _size || x < 0 || y < 0)
+          {
+            throw std::out_of_range("New coordinate out of bounds.");
+          }
+        _combatantGrid(x, y) = combatant._id;
+      }
+
+    _combatantCoordinateCache.insert_or_assign(combatant._id, std::move(newCoords));
+  }
+
+  void BattleMap::moveCombatant(const Combatant &combatant, const Coord &newCoord, bool log)
+  {
+    const auto &oldCoords = _combatantCoordinateCache.at(combatant._id);
+    for(const auto &[x, y] : oldCoords.get())
+      {
+        _combatantGrid(x, y) = -1;
+      }
+
+    auto newCoords = Coords(newCoord, combatant);
+    auto newCoordsData = newCoords.get();
+
+    for(const auto &[x, y] : newCoordsData)
+      {
+        if(x >= _size || y >= _size || x < 0 || y < 0)
+          {
+            throw std::out_of_range("New coordinate out of bounds.");
+          }
+        _combatantGrid(x, y) = combatant._id;
+      }
+
+    _combatantCoordinateCache.insert_or_assign(combatant._id, std::move(newCoords));
+
+    if(log)
+      {
+        // Assuming you have a logger, you can log the movement here
+        // logger.info(combatant.name + " moved to (" + std::to_string(newCoordsData[0].first) + ", " + std::to_string(newCoordsData[0].second) + ")");
+      }
   }
 
   const Coords &BattleMap::getCombatantCoordinates(const Combatant &combatant) const { return _combatantCoordinateCache.at(combatant._id); }

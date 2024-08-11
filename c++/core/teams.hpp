@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
-#include <memory>
 #include <algorithm>
 #include "combatant.hpp"
 #include "types.hpp"
@@ -15,15 +14,15 @@ namespace enc
   {
   public:
 
-    static Teams &getInstance()
-    {
-      static Teams instance;
-      return instance;
-    }
+    static Teams &getInstance();
 
-    void addCombatantToTeam(std::shared_ptr<Combatant> combatant, Color teamColor);
+    ~Teams() = default;
 
-    void replaceCombatant(std::shared_ptr<Combatant>  combatantOld, std::shared_ptr<Combatant>  combatantNew);
+    static void resetInstance();
+
+    void addCombatantToTeam(Combatant& combatant, Color teamColor);
+
+    void replaceCombatant(const Combatant& combatantOld, Combatant& combatantNew);
 
     std::string getTeamColorCode(const Combatant& combatant) const;
 
@@ -41,21 +40,21 @@ namespace enc
 
     Color getTeam(const Combatant& combatant) const;
 
-    std::vector<std::shared_ptr<Combatant>> getAllies(const Combatant& combatant) const;
+    std::vector<Combatant*> getAllies(const Combatant& combatant) const;
 
-    std::vector<std::shared_ptr<Combatant>> getEnemies(const Combatant& combatant) const;
+    std::vector<Combatant*> getEnemies(const Combatant& combatant) const;
 
-    std::shared_ptr<Combatant> getCombatantById(int id) const;
+    Combatant* getCombatantById(int id) const;
 
   private:
     Teams() = default;
-    ~Teams() = default;
     Teams(const Teams &) = delete;
     Teams &operator=(const Teams &) = delete;
 
+    static std::unique_ptr<Teams> _instance;
     std::unordered_map<Color, std::vector<int>> _colorToCombatantIds;
     std::unordered_map<int, Color> _combatantIdToTeamColor;
-    std::unordered_map<int, std::shared_ptr<Combatant>> _idToCombatant;
+    std::unordered_map<int, Combatant*> _idToCombatant;
 
     static std::string toString(Color color)
     {

@@ -3,7 +3,17 @@
 namespace enc
 {
   Coords::Coords(const Coord &coord, Size size) : _size(size) { initCoords(coord); }
+
   Coords::Coords(const Coord &coord, const Combatant &combatant) : _size(combatant.getSize()) { initCoords(coord); }
+
+  Coords::Coords(const Coords &existingCoords, const Coord &increment) : _size(existingCoords._size), _numCoords(existingCoords._numCoords)
+  {
+    _coords.reserve(existingCoords._coords.size());
+    for(const auto &coord : existingCoords._coords)
+      {
+        _coords.push_back({coord[0] + increment[0], coord[1] + increment[1]});
+      }
+  }
 
   std::array<Coord, 4> Coords::getCorners() const
   {
@@ -20,11 +30,7 @@ namespace enc
     return {_coords[0][0] + static_cast<double>(sizeValue + 1) / 2.0, _coords[0][1] + static_cast<double>(sizeValue + 1) / 2.0};
   }
 
-  Coords Coords::operator+(const Coord &other) const
-  {
-    Coord newRoot = {_coords[0][0] + other[0], _coords[0][1] + other[0]};
-    return Coords(newRoot, _size);
-  }
+  Coords Coords::operator+(const Coord &other) const { return Coords(*this, other); }
 
   void Coords::initCoords(const Coord &coord)
   {
