@@ -97,4 +97,21 @@ blaze::StaticVector<double, 3> cross(const blaze::StaticVector<double, 3> &a, co
 std::mt19937 rng(std::random_device{}());
 int randomInt(int min, int max) { return std::uniform_int_distribution<int>{min, max}(rng); }
 
+std::vector<Coord> convertPathToIncrements(const std::vector<Coord>& path)
+{
+    std::vector<Coord> increments;
+    increments.reserve(path.size() - 1);
+
+    for (size_t i = 0; i < path.size() - 1; ++i)
+    {
+        Coord increment = {
+            path[i + 1][0] - path[i][0],
+            path[i + 1][1] - path[i][1]
+        };
+        increments.push_back(increment);
+    }
+
+    return increments;
+}
+
 }

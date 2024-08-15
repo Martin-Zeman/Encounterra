@@ -272,6 +272,13 @@ namespace enc
     GARGANTUAN = 3
   };
 
+  enum class PhaseOfTurn
+  {
+    START_OF_TURN,
+    END_OF_TURN,
+    ACTION
+  };
+
   enum class RollType : uint8_t
   {
     STRAIGHT = 1 << 0,

@@ -7,6 +7,7 @@
 #include <limits>
 #include <random>
 #include <stdexcept>
+#include <optional>
 #include "misc.hpp"
 #include "types.hpp"
 #include "coords.hpp"
@@ -46,6 +47,17 @@ namespace enc
     DijkstraResult calcDijkstra(const Combatant &combatant);
     std::vector<Coord> reconstructFromShortestPath(const blaze::DynamicMatrix<Coord> &shortest_paths, const Coord &source, const Coord &target);
     int getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
+    std::optional<Coord> getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
+                                                      const Coords &targetLocation, const blaze::DynamicVector<int> &distances, int rng = 1);
+    std::optional<std::vector<Coord>>
+    getPathToCombatant(const Combatant &combatant, const Combatant &target, const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                       const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>(), int rng = 1, bool considerAOO = false);
+    std::optional<std::vector<Coord>>
+    getPathToCoord(const Combatant &combatant, const Coord &targetCoord, const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                   const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>(), bool considerAOO = false);
+    void removeCombatant(const Combatant &combatant);
+    bool removeCombatantIfDead(Combatant &combatant);
+    int getCombatantGridValueAt(const Coord& coord);
 
   private:
     size_t _size;

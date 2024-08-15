@@ -488,3 +488,136 @@ TEST_F(BattleMapTest, EdgeCases)
   EXPECT_EQ(result.dist[14 * N + 7], 14);
   EXPECT_EQ(result.dist[7 * N + 14], 14);
 }
+
+TEST_F(BattleMapTest, GetPathToCombatantMediumToMedium)
+{
+  teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*test_bugbear, Color::BLUE);
+  Coord sorcererSrc{0, 1};
+  Coord bugbearSrc{11, 3};
+  battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, sorcererSrc);
+  battleMap->setCombatantCoordinates(*test_bugbear, bugbearSrc);
+
+  battleMap->buildBaseAdjacencyMatrix();
+
+  auto path = battleMap->getPathToCombatant(*test_draconic_sorcerer_lvl_1, *test_bugbear);
+  ASSERT_TRUE(path.has_value());
+
+  std::vector<Coord> expectedPath = {{1, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
+  EXPECT_EQ(*path, expectedPath);
+}
+
+TEST_F(BattleMapTest, GetPathToCoordMediumToCoord)
+{
+  teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+  battleMap->buildBaseAdjacencyMatrix();
+  Coord sorcererSrc{0, 1};
+  battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, sorcererSrc);
+
+  auto path = battleMap->getPathToCoord(*test_draconic_sorcerer_lvl_1, {11, 3});
+  ASSERT_TRUE(path.has_value());
+
+  std::vector<Coord> expectedPath = {{1, 1}, {1, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
+  EXPECT_EQ(*path, expectedPath);
+}
+
+TEST_F(BattleMapTest, GetPathToCombatantLargeToLarge)
+{
+  teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*test_bugbear, Color::BLUE);
+  battleMap->buildBaseAdjacencyMatrix();
+  test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  test_bugbear->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, {0, 1});
+  battleMap->setCombatantCoordinates(*test_bugbear, {5, 7});
+
+  auto path = battleMap->getPathToCombatant(*test_draconic_sorcerer_lvl_1, *test_bugbear);
+  ASSERT_TRUE(path.has_value());
+
+  std::vector<Coord> expectedPath = {{1, 1}, {1, 1}, {1, 1}, {0, 1}};
+  EXPECT_EQ(*path, expectedPath);
+}
+
+TEST_F(BattleMapTest, GetPathToCombatantMediumToLarge)
+{
+  teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*test_bugbear, Color::BLUE);
+  battleMap->buildBaseAdjacencyMatrix();
+  test_bugbear->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, {0, 1});
+  battleMap->setCombatantCoordinates(*test_bugbear, {5, 7});
+
+  auto path = battleMap->getPathToCombatant(*test_draconic_sorcerer_lvl_1, *test_bugbear);
+  ASSERT_TRUE(path.has_value());
+
+  std::vector<Coord> expectedPath1 = {{1, 1}, {1, 1}, {1, 1}, {1, 1}, {0, 1}};
+  std::vector<Coord> expectedPath2 = {{1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}};
+  EXPECT_TRUE(*path == expectedPath1 || *path == expectedPath2);
+}
+
+TEST_F(BattleMapTest, GetPathToCombatantLargeToMedium)
+{
+  teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*test_bugbear, Color::BLUE);
+  battleMap->buildBaseAdjacencyMatrix();
+  test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, {0, 1});
+  battleMap->setCombatantCoordinates(*test_bugbear, {5, 7});
+
+  auto path = battleMap->getPathToCombatant(*test_draconic_sorcerer_lvl_1, *test_bugbear);
+  ASSERT_TRUE(path.has_value());
+
+  std::vector<Coord> expectedPath = {{1, 1}, {1, 1}, {1, 1}, {0, 1}};
+  EXPECT_EQ(*path, expectedPath);
+}
+
+TEST_F(BattleMapTest, GetPathToCombatantLargeToMedium2)
+{
+  teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*test_bugbear, Color::BLUE);
+  battleMap->placeTerrain(Coord{7, 14}, Terrain::DIFFICULT_TERRAIN);
+  battleMap->placeTerrain(Coord{9, 14}, Terrain::DIFFICULT_TERRAIN);
+  battleMap->buildBaseAdjacencyMatrix();
+  test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, {4, 13});
+  battleMap->setCombatantCoordinates(*test_bugbear, {8, 14});
+
+  auto path = battleMap->getPathToCombatant(*test_draconic_sorcerer_lvl_1, *test_bugbear);
+  ASSERT_TRUE(path.has_value());
+
+  std::vector<Coord> expectedPath = {{1, 0}, {1, 0}};
+  EXPECT_EQ(*path, expectedPath);
+}
+
+TEST_F(BattleMapTest, GetPathToCombatantHugeToHuge)
+{
+  teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*test_bugbear, Color::BLUE);
+  battleMap->buildBaseAdjacencyMatrix();
+  test_draconic_sorcerer_lvl_1->setSize(Size::HUGE);
+  test_bugbear->setSize(Size::HUGE);
+  battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, {0, 1});
+  battleMap->setCombatantCoordinates(*test_bugbear, {5, 7});
+
+  auto path = battleMap->getPathToCombatant(*test_draconic_sorcerer_lvl_1, *test_bugbear);
+  ASSERT_TRUE(path.has_value());
+
+  std::vector<Coord> expectedPath = {{1, 1}, {1, 1}, {0, 1}};
+  EXPECT_EQ(*path, expectedPath);
+}
+
+TEST_F(BattleMapTest, RemoveCombatant) {
+    test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+    battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, {4, 5});
+
+    battleMap->removeCombatant(*test_draconic_sorcerer_lvl_1);
+
+    // Check that the combatant is no longer in the battle map
+    EXPECT_THROW(battleMap->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1), std::out_of_range);
+
+    // Check that the grid cells previously occupied by the combatant are now empty
+    EXPECT_EQ(battleMap->getCombatantGridValueAt({4, 5}), -1);
+    EXPECT_EQ(battleMap->getCombatantGridValueAt({5, 5}), -1);
+    EXPECT_EQ(battleMap->getCombatantGridValueAt({4, 6}), -1);
+    EXPECT_EQ(battleMap->getCombatantGridValueAt({5, 6}), -1);
+}

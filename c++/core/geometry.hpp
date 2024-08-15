@@ -22,4 +22,6 @@ namespace enc
 
   int randomInt(int min, int max);
 
+  std::vector<Coord> convertPathToIncrements(const std::vector<Coord>& path);
+
 }

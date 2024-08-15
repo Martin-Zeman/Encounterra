@@ -13,6 +13,7 @@
 #include "misc.hpp"
 #include "types.hpp"
 #include "interfaces.hpp"
+#include "conditions.hpp"
 
 namespace enc
 {
@@ -69,13 +70,25 @@ namespace enc
 
     void setSize(Size size) { _size = size; };
     Size getSize() const { return _size; };
-    void setTeamColor(Color teamColor) {_teamColor = teamColor;}
+    void setTeamColor(Color teamColor) { _teamColor = teamColor; }
 
-    bool hasAction(){return _hasAction;}
-    bool hasBonusAction(){return _hasBonusAction;}
-    bool hasHasteAction(){return _hasHasteAction;}
-    bool hasReaction(){return _hasReaction;}
-    int getMeleeReactionRange(){return _meleeReactionRange;}
+    bool hasAction() { return _hasAction; }
+    bool hasBonusAction() { return _hasBonusAction; }
+    bool hasHasteAction() { return _hasHasteAction; }
+    bool hasReaction() { return _hasReaction; }
+    int getMeleeReactionRange() { return _meleeReactionRange; }
+    Combatant *getCurrentForm();
+    Combatant *getOriginalForm();
+    const Combatant* getSwallower() const { return _swallower; }
+    void setSwallower(Combatant* swallower) { _swallower = swallower; }
+    bool isSwallowed() const { return _swallower != nullptr; }
+    const std::vector<Condition> &getConditions() const { return _conditions; }
+    const std::vector<ConditionWithDC> &getDCConditions() const { return _dcConditions; }
+    bool hasCondition(Conditions condition) const;
+    void addCondition(const Condition &condition);
+    void addDCCondition(const ConditionWithDC &condition);
+    bool removeCondition(Conditions condition, const Combatant *initiator = nullptr);
+    bool removeDCCondition(Conditions condition, const Combatant *initiator = nullptr);
 
   private:
     int _maxHp;
@@ -114,6 +127,12 @@ namespace enc
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
     std::unordered_map<SavingThrow, std::unordered_set<RollType>> _savingThrowsRollTypeMod;
     std::unordered_set<std::string> _dmgTypesTookLastRound;
+    Combatant *_originalForm = this;
+    Combatant *_currentWildshapeForm = nullptr;
+    Combatant* _swallower = nullptr;
+    Combatant* _swallowedTarget = nullptr;
+    std::vector<Condition> _conditions;
+    std::vector<ConditionWithDC> _dcConditions;
 
   protected:
     Size _size{Size::MEDIUM};

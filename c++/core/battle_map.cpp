@@ -297,6 +297,104 @@ namespace enc
     return getHopDistanceCoords(_combatantCoordinateCache.at(combatant1._id), _combatantCoordinateCache.at(combatant2._id));
   }
 
+  std::optional<Coord> BattleMap::getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
+                                                               const Coords &targetLocation, const blaze::DynamicVector<int> &distances, int rng)
+  {
+    std::vector<Coord> adjacentCoords = getFreeCoordsInHopRange(targetLocation, distances, combatantSize, rng, combatant._id);
+
+    if(adjacentCoords.empty())
+      {
+        return std::nullopt;
+      }
+
+    // Sort adjacent coords based on Cartesian distance to myLocation
+    std::sort(adjacentCoords.begin(), adjacentCoords.end(), [&myLocation](const Coord &a, const Coord &b) {
+      return getCartesianDistanceCoords(a, myLocation.get()[0]) < getCartesianDistanceCoords(b, myLocation.get()[0]);
+    });
+
+    return adjacentCoords[0];
+  }
+
+  std::optional<std::vector<Coord>> BattleMap::getPathToCombatant(const Combatant& combatant, const Combatant& target,
+                                                         const blaze::DynamicVector<int>& distances,
+                                                         const blaze::DynamicMatrix<Coord>& shortestPaths,
+                                                         int rng, bool considerAOO)
+    {
+        Coords myLocation = getCombatantCoordinates(combatant);
+        Coord myCoord = myLocation.get()[0];
+        // spdlog::debug("Origin {}", myCoord);
+
+        Coords enemyLocation = getCombatantCoordinates(target);
+        // spdlog::debug("Destination {}", enemyLocation.get()[0]);
+
+        DijkstraResult dijkstraResult;
+        if (distances.size() == 0 || shortestPaths.rows() == 0)
+        {
+            auto mask = buildCombatantAdjacencyMask(combatant, considerAOO);
+            dijkstraResult = dijkstra(myCoord, _baseAdjacencyMatrix, mask);
+        }
+        else
+        {
+            dijkstraResult.dist = distances;
+            dijkstraResult.shortestPaths = shortestPaths;
+        }
+
+        auto enemyAdjacentLocation = getNearestFreeAdjacentCoords(combatant, myLocation, combatant.getSize(), enemyLocation, dijkstraResult.dist, rng);
+        if (!enemyAdjacentLocation)
+        {
+            return std::nullopt;
+        }
+
+        auto path = reconstructFromShortestPath(dijkstraResult.shortestPaths, myCoord, *enemyAdjacentLocation);
+        if (path.empty())
+        {
+            return std::nullopt;
+        }
+
+        // if (spdlog::get_level() <= spdlog::level::info)
+        // {
+        //     printDijkstra(dijkstraResult.dist, myLocation, enemyLocation.get());
+        // }
+
+        return convertPathToIncrements(path);
+    }
+
+    std::optional<std::vector<Coord>> BattleMap::getPathToCoord(const Combatant& combatant, const Coord& targetCoord,
+                                                     const blaze::DynamicVector<int>& distances,
+                                                     const blaze::DynamicMatrix<Coord>& shortestPaths,
+                                                     bool considerAOO)
+    {
+        Coords myLocation = getCombatantCoordinates(combatant);
+        Coord myCoord = myLocation.get()[0];
+        // spdlog::debug("Origin {}", myCoord);
+        // spdlog::debug("Destination {}", targetCoord);
+
+        DijkstraResult dijkstraResult;
+        if (distances.size() == 0 || shortestPaths.rows() == 0)
+        {
+            auto mask = buildCombatantAdjacencyMask(combatant, considerAOO);
+            dijkstraResult = dijkstra(myCoord, _baseAdjacencyMatrix, mask);
+        }
+        else
+        {
+            dijkstraResult.dist = distances;
+            dijkstraResult.shortestPaths = shortestPaths;
+        }
+
+        auto path = reconstructFromShortestPath(dijkstraResult.shortestPaths, myCoord, targetCoord);
+        if (path.empty())
+        {
+            return std::nullopt;
+        }
+
+        // if (spdlog::get_level() <= spdlog::level::info)
+        // {
+        //     printDijkstra(dijkstraResult.dist, myLocation, std::vector<Coord>{targetCoord});
+        // }
+
+        return convertPathToIncrements(path);
+    }
+
   std::vector<Coord> BattleMap::getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances, Size moverSize, int rng,
                                                         int combatantId) const
   {
@@ -531,4 +629,38 @@ namespace enc
       }
     return true;
   }
+
+  void BattleMap::removeCombatant(const Combatant& combatant) {
+        auto it = _combatantCoordinateCache.find(combatant._id);
+        if (it == _combatantCoordinateCache.end()) {
+            return;  // already removed
+        }
+        
+        const auto& oldCoords = it->second.get();
+        for (const auto& coord : oldCoords) {
+            _combatantGrid(coord[0], coord[1]) = -1;
+            // _occupancyGrid(coord[0], coord[1]) = static_cast<int>(Occupancy::FREE);
+        }
+        
+        _combatantCoordinateCache.erase(it);
+    }
+
+    bool BattleMap::removeCombatantIfDead(Combatant& combatant) {
+        Combatant* targetToRemove = combatant.getOriginalForm();
+
+        if (!targetToRemove->isAlive()) {
+            if (auto grappler = getGrappler(*targetToRemove)) {
+                removeCondition(*grappler, Conditions::GRAPPLING);
+            }
+            targetToRemove->onDie();
+            // spdlog::info("{} died", targetToRemove.getName());
+            removeCombatant(*targetToRemove);
+            return false;
+        }
+        return true;
+    }
+
+    int BattleMap::getCombatantGridValueAt(const Coord& coord){
+      return _combatantGrid(coord[0], coord[1]);
+    }
 };
