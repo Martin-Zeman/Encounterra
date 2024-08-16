@@ -40,13 +40,13 @@ namespace enc
 
   struct Condition
   {
-    Conditions conditions;
-    const Combatant *initiator;
+    Conditions conditionComposite;
+    Combatant *initiator;
     std::optional<Effect *> effect;
-    std::optional<const Combatant *> target;
+    std::optional<Combatant *> target;
 
-    Condition(Conditions conds, const Combatant *init, Effect *eff = nullptr, const Combatant *targ = nullptr)
-        : conditions(conds), initiator(init), effect(eff), target(targ)
+    Condition(Conditions conds, Combatant *init, Effect *eff = nullptr, Combatant *targ = nullptr)
+        : conditionComposite(conds), initiator(init), effect(eff), target(targ)
     {}
   };
 
@@ -56,8 +56,8 @@ namespace enc
     int dc;
     PhaseOfTurn phase;
 
-    ConditionWithDC(Conditions conds, SavingThrow savingThrow, int difficultyClass, const Combatant *init, PhaseOfTurn phaseTurn,
-                    Effect *eff = nullptr, const Combatant *targ = nullptr)
+    ConditionWithDC(Conditions conds, SavingThrow savingThrow, int difficultyClass, Combatant *init, PhaseOfTurn phaseTurn,
+                    Effect *eff = nullptr, Combatant *targ = nullptr)
         : Condition(conds, init, eff, targ), st(savingThrow), dc(difficultyClass), phase(phaseTurn)
     {}
   };
@@ -68,18 +68,4 @@ namespace enc
     return (static_cast<uint32_t>(conditions) & static_cast<uint32_t>(condition)) != 0;
   }
 
-  void applyCondition(Combatant &combatant, const Condition &condition);
-  std::optional<size_t> findConditionIndex(const std::vector<Condition> &conditionList, Conditions condition, const Combatant *initiator = nullptr);
-  std::optional<Condition> removeCondition(Combatant &combatant, Conditions condition, const Combatant *initiator = nullptr);
-  void removeAllConditionsOfType(Combatant &combatant, Conditions condition);
-  bool isAffectedBy(const Combatant &combatant, Conditions condition);
-  const Combatant *getGrappler(const Combatant &combatant);
-  const Combatant *getSourceOfFrightened(const Combatant &combatant);
-  const Combatant *getSourceOfParalyzed(const Combatant &combatant);
-  const Combatant *getGrappled(const Combatant &combatant);
-  std::optional<ConditionWithDC> needsToBreakOutOfGrapple(const Combatant &combatant);
-  void breakOutOfGrapple(Combatant &combatant);
-  bool isAffectedByAny(const Combatant &combatant, const std::vector<Conditions> &conditions);
-  void applyDCCondition(Combatant &combatant, const ConditionWithDC &condition);
-  std::optional<ConditionWithDC> removeDCCondition(Combatant &combatant, Conditions condition, const Combatant *initiator = nullptr);
 }

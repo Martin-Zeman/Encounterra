@@ -645,22 +645,23 @@ namespace enc
         _combatantCoordinateCache.erase(it);
     }
 
-    bool BattleMap::removeCombatantIfDead(Combatant& combatant) {
-        Combatant* targetToRemove = combatant.getOriginalForm();
+    bool BattleMap::removeCombatantIfDead(Combatant &combatant)
+    {
+      Combatant *targetToRemove = combatant.getOriginalForm();
 
-        if (!targetToRemove->isAlive()) {
-            if (auto grappler = getGrappler(*targetToRemove)) {
-                removeCondition(*grappler, Conditions::GRAPPLING);
+      if(!targetToRemove->isAlive())
+        {
+          if(auto* grappler = targetToRemove->getInitiatorOfCondition(Conditions::GRAPPLED))
+            {
+              grappler->removeCondition(Conditions::GRAPPLING);
             }
-            targetToRemove->onDie();
-            // spdlog::info("{} died", targetToRemove.getName());
-            removeCombatant(*targetToRemove);
-            return false;
+          targetToRemove->onDie();
+          // spdlog::info("{} died", targetToRemove.getName());
+          removeCombatant(*targetToRemove);
+          return false;
         }
-        return true;
+      return true;
     }
 
-    int BattleMap::getCombatantGridValueAt(const Coord& coord){
-      return _combatantGrid(coord[0], coord[1]);
-    }
+    int BattleMap::getCombatantGridValueAt(const Coord &coord) { return _combatantGrid(coord[0], coord[1]); }
 };

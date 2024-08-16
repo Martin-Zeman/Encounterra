@@ -84,13 +84,31 @@ namespace enc
     bool isSwallowed() const { return _swallower != nullptr; }
     const std::vector<Condition> &getConditions() const { return _conditions; }
     const std::vector<ConditionWithDC> &getDCConditions() const { return _dcConditions; }
-    bool hasCondition(Conditions condition) const;
-    void addCondition(const Condition &condition);
-    void addDCCondition(const ConditionWithDC &condition);
+    bool isAffectedBy(Conditions condition) const;
+    void applyCondition(const Condition &condition);
+    void applyDCCondition(const ConditionWithDC &dcCondition);
     bool removeCondition(Conditions condition, const Combatant *initiator = nullptr);
     bool removeDCCondition(Conditions condition, const Combatant *initiator = nullptr);
+    void removeAllConditionsOfType(Conditions condition);
+    Combatant *getInitiatorOfCondition(Conditions condition);
+    Combatant *getGrappledTarget();
+    std::optional<ConditionWithDC> needsToBreakOutOfGrapple();
+    void breakOutOfGrapple();
+    bool isAffectedByAny(const std::vector<Conditions> &conditions);
 
   private:
+    template <typename ConditionType> Combatant *checkConditionList(const std::vector<ConditionType> &condList, Conditions condition) const
+    {
+      for(const auto &cond : condList)
+        {
+          if(containsCondition(cond.conditionComposite, condition))
+            {
+              return cond.initiator;
+            }
+        }
+      return nullptr;
+    }
+
     int _maxHp;
     int _currHp;
     int _maxHpModifier = 0;

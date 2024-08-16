@@ -50,35 +50,35 @@ namespace enc
   Combatant *Combatant::getCurrentForm() { return _currentWildshapeForm == nullptr ? _originalForm : _currentWildshapeForm; }
   Combatant *Combatant::getOriginalForm() { return _originalForm; }
 
-  bool Combatant::hasCondition(Conditions condition) const
+  bool Combatant::isAffectedBy(Conditions condition) const
   {
-    return std::any_of(_conditions.begin(), _conditions.end(), [condition](const Condition &c) { return hasCondition(c.conditions, condition); })
+    return std::any_of(_conditions.begin(), _conditions.end(), [condition](const Condition &c) { return containsCondition(c.conditionComposite, condition); })
            || std::any_of(_dcConditions.begin(), _dcConditions.end(),
-                          [condition](const ConditionWithDC &c) { return hasCondition(c.conditions, condition); });
+                          [condition](const ConditionWithDC &c) { return containsCondition(c.conditionComposite, condition); });
   }
 
-  void Combatant::addCondition(const Condition &condition)
+  void Combatant::applyCondition(const Condition &condition)
   {
     _conditions.push_back(condition);
-    if(hasCondition(condition.conditions, Conditions::SWALLOWED))
+    if(containsCondition(condition.conditionComposite, Conditions::SWALLOWED))
       {
         _swallower = condition.initiator;
       }
   }
 
-  void Combatant::addDCCondition(const ConditionWithDC &condition)
+  void Combatant::applyDCCondition(const ConditionWithDC &dcCondition)
   {
-    _dcConditions.push_back(condition);
-    if(hasCondition(condition.conditions, Conditions::SWALLOWED))
+    _dcConditions.push_back(dcCondition);
+    if(containsCondition(dcCondition.conditionComposite, Conditions::SWALLOWED))
       {
-        _swallower = condition.initiator;
+        _swallower = dcCondition.initiator;
       }
   }
 
-  bool Combatant::removeCondition(Conditions condition, const Combatant *initiator = nullptr)
+  bool Combatant::removeCondition(Conditions condition, const Combatant *initiator)
   {
     auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, initiator](const Condition &c) {
-      return hasCondition(c.conditions, condition) && (!initiator || c.initiator == initiator);
+      return containsCondition(c.conditionComposite, condition) && (!initiator || c.initiator == initiator);
     });
     if(it != _conditions.end())
       {
@@ -92,10 +92,10 @@ namespace enc
     return false;
   }
 
-  bool Combatant::removeDCCondition(Conditions condition, const Combatant *initiator = nullptr)
+  bool Combatant::removeDCCondition(Conditions condition, const Combatant *initiator)
   {
     auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, initiator](const ConditionWithDC &c) {
-      return hasCondition(c.conditions, condition) && (!initiator || c.initiator == initiator);
+      return containsCondition(c.conditionComposite, condition) && (!initiator || c.initiator == initiator);
     });
     if(it != _dcConditions.end())
       {
@@ -105,6 +105,78 @@ namespace enc
             _swallower = nullptr;
           }
         return true;
+      }
+    return false;
+  }
+
+  void Combatant::removeAllConditionsOfType(Conditions condition)
+  {
+    while(removeDCCondition(condition)) {};
+    while(removeCondition(condition)) {};
+  }
+
+  Combatant *Combatant::getInitiatorOfCondition(Conditions condition)
+  {
+    auto initiator = checkConditionList(_dcConditions, condition);
+    if(initiator)
+      {
+        return initiator;
+      }
+
+    return checkConditionList(_conditions, condition);
+  }
+
+  Combatant *Combatant::getGrappledTarget()
+  {
+    for(const auto &cond : _dcConditions)
+      {
+        if(containsCondition(cond.conditionComposite, Conditions::GRAPPLING) && cond.target.has_value())
+          {
+            return cond.target.value();
+          }
+      }
+    for(const auto &cond : _conditions)
+      {
+        if(containsCondition(cond.conditionComposite, Conditions::GRAPPLING) && cond.target.has_value())
+          {
+            return cond.target.value();
+          }
+      }
+
+    return nullptr;
+  }
+
+  std::optional<ConditionWithDC> Combatant::needsToBreakOutOfGrapple()
+  {
+    for(const auto &dcCond : _dcConditions)
+      {
+        if(containsCondition(dcCond.conditionComposite, Conditions::GRAPPLED) && dcCond.phase == PhaseOfTurn::ACTION)
+          {
+            return dcCond;
+          }
+      }
+    return std::nullopt;
+  }
+
+  void Combatant::breakOutOfGrapple()
+  {
+    auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [](const ConditionWithDC &cond) {
+      return containsCondition(cond.conditionComposite, Conditions::GRAPPLED) && cond.phase == PhaseOfTurn::ACTION;
+    });
+    if(it != _dcConditions.end())
+      {
+        _dcConditions.erase(it);
+      }
+  }
+
+  bool Combatant::isAffectedByAny(const std::vector<Conditions> &conditions)
+  {
+    for(const auto &condition : conditions)
+      {
+        if(isAffectedBy(condition))
+          {
+            return true;
+          }
       }
     return false;
   }
