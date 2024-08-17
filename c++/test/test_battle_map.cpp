@@ -8,6 +8,8 @@
 #include "combatants/goblin.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
 #include "combatants/bugbear.hpp"
+#include "combatants/stone_giant.hpp"
+#include "combatants/totem_barbarian_lvl_3.hpp"
 #include <set>
 #include <algorithm>
 #include <memory>
@@ -22,6 +24,8 @@ protected:
   std::unique_ptr<Goblin> test_goblin;
   std::unique_ptr<Bugbear> test_bugbear;
   std::unique_ptr<DraconicSorcererLvl1> test_draconic_sorcerer_lvl_1;
+  std::unique_ptr<TotemBarbarianLvl3> test_totem_barbarian;
+  std::unique_ptr<StoneGiant> test_stone_giant;
 
   void SetUp() override
   {
@@ -621,3 +625,74 @@ TEST_F(BattleMapTest, RemoveCombatant) {
     EXPECT_EQ(battleMap->getCombatantGridValueAt({4, 6}), -1);
     EXPECT_EQ(battleMap->getCombatantGridValueAt({5, 6}), -1);
 }
+
+
+TEST_F(BattleMapTest, FindBestPlacementHarmfulSquare)
+{
+    test_stone_giant->setSize(Size::MEDIUM);
+    teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+    teams->addCombatantToTeam(*test_goblin, Color::RED);
+    teams->addCombatantToTeam(*test_bugbear, Color::RED);
+    teams->addCombatantToTeam(*test_totem_barbarian, Color::BLUE);
+    teams->addCombatantToTeam(*test_stone_giant, Color::RED);
+    battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, {1, 1});
+    battleMap->setCombatantCoordinates(*test_goblin, {4, 4});
+    battleMap->setCombatantCoordinates(*test_bugbear, {10, 5});
+    battleMap->setCombatantCoordinates(*test_totem_barbarian, {6, 7});
+    battleMap->setCombatantCoordinates(*test_stone_giant, {5, 5});
+
+    auto [coord, score, affected] = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 20, 2);
+    EXPECT_EQ(coord, (Coord{4, 4}));
+    EXPECT_EQ(score, 2);
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_goblin.get()) != affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_bugbear.get()) == affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_totem_barbarian.get()) == affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_stone_giant.get()) != affected.end());
+
+    battleMap->moveCombatant(*test_totem_barbarian, {5, 4});
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 20, 2);
+    EXPECT_EQ(score, 1);
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_goblin.get()) != affected.end() ||
+                std::find(affected.begin(), affected.end(), test_bugbear.get()) != affected.end() ||
+                std::find(affected.begin(), affected.end(), test_stone_giant.get()) != affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_totem_barbarian.get()) == affected.end());
+}
+
+// TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwave)
+// {
+//     test_stone_giant->setSize(Size::MEDIUM);
+//     teams->addCombatantToTeam(test_draconic_sorcerer_5lvl.get(), Teams::Color::BLUE);
+//     teams->addCombatantToTeam(test_goblin.get(), Teams::Color::RED);
+//     teams->addCombatantToTeam(test_bugbear.get(), Teams::Color::RED);
+//     teams->addCombatantToTeam(test_totem_barbarian.get(), Teams::Color::BLUE);
+//     teams->addCombatantToTeam(test_stone_giant.get(), Teams::Color::RED);
+//     battleMap->setCombatantCoordinates(*test_draconic_sorcerer_5lvl, {3, 4});
+//     battleMap->setCombatantCoordinates(*test_goblin, {4, 4});
+//     battleMap->setCombatantCoordinates(*test_bugbear, {5, 6});
+//     battleMap->setCombatantCoordinates(*test_totem_barbarian, {4, 6});
+//     battleMap->setCombatantCoordinates(*test_stone_giant, {5, 5});
+
+//     ThunderwaveFactory twf(test_draconic_sorcerer_5lvl->getDC(), Action::THUNDERWAVE, test_draconic_sorcerer_5lvl.get(), test_draconic_sorcerer_5lvl->getSpellSlots());
+//     auto coord = twf.findBestArgs(test_draconic_sorcerer_5lvl.get());
+//     EXPECT_EQ(coord, (Coord{4, 3}));
+
+//     battleMap->moveCombatant(*test_draconic_sorcerer_5lvl, {2, 4});
+//     coord = twf.findBestArgs(test_draconic_sorcerer_5lvl.get());
+//     EXPECT_EQ(coord, (Coord{3, 3}));
+
+//     battleMap->moveCombatant(*test_totem_barbarian, {4, 7});
+//     coord = twf.findBestArgs(test_draconic_sorcerer_5lvl.get());
+//     EXPECT_EQ(coord, (Coord{3, 4}));
+// }
+
+// TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwaveOutOfSpellRange)
+// {
+//     teams->addCombatantToTeam(test_fighter_lvl_1.get(), Teams::Color::BLUE);
+//     teams->addCombatantToTeam(test_druid_lvl_1.get(), Teams::Color::RED);
+//     battleMap->setCombatantCoordinates(*test_fighter_lvl_1, {14, 3});
+//     battleMap->setCombatantCoordinates(*test_druid_lvl_1, {2, 9});
+    
+//     ThunderwaveFactory twf(test_druid_lvl_1->getDC(), Action::THUNDERWAVE, test_druid_lvl_1.get(), test_druid_lvl_1->getSpellSlots());
+//     auto coords = twf.findBestArgs(test_druid_lvl_1.get());
+//     EXPECT_EQ(coords, std::nullopt);
+// }

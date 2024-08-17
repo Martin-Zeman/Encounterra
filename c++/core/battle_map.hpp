@@ -57,7 +57,10 @@ namespace enc
                    const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>(), bool considerAOO = false);
     void removeCombatant(const Combatant &combatant);
     bool removeCombatantIfDead(Combatant &combatant);
-    int getCombatantGridValueAt(const Coord& coord);
+    int getCombatantGridValueAt(const Coord &coord);
+    std::tuple<Coord, int, std::vector<Combatant *>>
+    findBestPlacementHarmfulCircular(const Combatant *caster, int spell_range, int radius);
+    std::tuple<Coord, int, std::vector<Combatant *>> findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length);
 
   private:
     size_t _size;
@@ -77,5 +80,6 @@ namespace enc
 
     bool isEmptyOrSelf(int x, int y, int combatantId) const;
     void fillRegion(MapMatrix &mask, const Coord &coord, int offset, int value);
+    blaze::StaticMatrix<int, 2, 2> getHarmfulBoundingBox(const Combatant *caster, int inflation);
   };
 }

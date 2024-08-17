@@ -664,4 +664,133 @@ namespace enc
     }
 
     int BattleMap::getCombatantGridValueAt(const Coord &coord) { return _combatantGrid(coord[0], coord[1]); }
+
+    blaze::StaticMatrix<int, 2, 2> BattleMap::getHarmfulBoundingBox(const Combatant *caster, int inflation)
+    {
+      blaze::StaticMatrix<int, 2, 2> bb = {{static_cast<int>(_size), static_cast<int>(_size)}, {0, 0}}; // top right, bottom left
+      Teams &teams = Teams::getInstance();
+
+      for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+        {
+          const Combatant *combatant = teams.getCombatantById(combatantId);
+          if(teams.areEnemies(*caster, *combatant))
+            {
+              const CoordVector &coordsVector = coords.get();
+              for(const auto &coord : coordsVector)
+                {
+                  bb(0, 0) = std::min(bb(0, 0), coord[0]);
+                  bb(0, 1) = std::min(bb(0, 1), coord[1]);
+                  bb(1, 0) = std::max(bb(1, 0), coord[0]);
+                  bb(1, 1) = std::max(bb(1, 1), coord[1]);
+                }
+            }
+        }
+
+      // Inflate the BB
+      bb(0, 0) = std::max(bb(0, 0) - inflation, 0);
+      bb(0, 1) = std::max(bb(0, 1) - inflation, 0);
+      bb(1, 0) = std::min(bb(1, 0) + inflation, static_cast<int>(_size) - 1);
+      bb(1, 1) = std::min(bb(1, 1) + inflation, static_cast<int>(_size) - 1);
+
+      return bb;
+    }
+
+    std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulCircular(const Combatant *caster, int spell_range, int radius)
+    {
+      auto bb = getHarmfulBoundingBox(caster, radius);
+      int max_score = std::numeric_limits<int>::lowest();
+      Coord best_placement{};
+      std::vector<Combatant *> affected_combatants;
+      Teams &teams = Teams::getInstance();
+
+      const Combatant *swallower = caster->getSwallower();
+      const Coords& caster_coords = swallower ? _combatantCoordinateCache.at(swallower->_id) : _combatantCoordinateCache.at(caster->_id);
+
+      for(int x = bb(0, 0); x <= bb(1, 0); ++x)
+        {
+          for(int y = bb(0, 1); y <= bb(1, 1); ++y)
+            {
+              Coords curr_coords({x, y});
+
+              auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
+              if(dist > spell_range || dist == 0) // TODO: is a 0 possible? Create a unit test for this case
+                {
+                  continue;
+                }
+
+              int score = 0;
+              std::vector<Combatant *> affected;
+
+              for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+                {
+                  const Combatant *combatant = teams.getCombatantById(combatantId);
+                  if(getCartesianDistanceCoords(coords, curr_coords) == 0)
+                    {
+                      score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
+                      affected.push_back(const_cast<Combatant *>(combatant)); // Casting away constness, be cautious
+                    }
+                }
+
+              if(score > max_score)
+                {
+                  max_score = score;
+                  best_placement = curr_coords.get()[0];
+                  affected_combatants = affected;
+                }
+            }
+        }
+
+      return {best_placement, max_score, affected_combatants};
+    }
+
+    std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length)
+    {
+      auto bb = getHarmfulBoundingBox(caster, length);
+      int max_score = std::numeric_limits<int>::lowest();
+      Coord best_placement{};
+      std::vector<Combatant *> affected_combatants;
+      Teams &teams = Teams::getInstance();
+
+      const Coords& caster_coords = _combatantCoordinateCache.at(caster->_id);
+
+      for(int x = bb(0, 0); x <= bb(1, 0); ++x)
+        {
+          for(int y = bb(0, 1); y <= bb(1, 1); ++y)
+            {
+              Coords curr_coords({x, y}, Size(length - 1));
+
+              auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
+              if(dist > spell_range || dist == 0) // TODO: is a 0 possible? Create a unit test for this case
+                {
+                  continue;
+                }
+
+              int score = 0;
+              std::vector<Combatant *> affected;
+
+              for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+                {
+                  const Combatant *combatant = teams.getCombatantById(combatantId);
+                  if(getCartesianDistanceCoords(coords, curr_coords) == 0)
+                    {
+                      score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
+                      affected.push_back(const_cast<Combatant *>(combatant)); // Casting away constness, be cautious
+                    }
+                }
+
+              if(score > max_score)
+                {
+                  max_score = score;
+                  best_placement = curr_coords.get()[0];
+                  affected_combatants = affected;
+                }
+            }
+        }
+
+      if(best_placement[0] != 0 || best_placement[1] != 0)
+        {
+          return std::make_tuple(best_placement, max_score, affected_combatants);
+        }
+      return std::make_tuple(Coord{}, 0, std::vector<Combatant *>{});
+    }
 };
