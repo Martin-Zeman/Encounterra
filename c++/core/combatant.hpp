@@ -16,6 +16,7 @@
 #include "types.hpp"
 #include "interfaces.hpp"
 #include "conditions.hpp"
+#include "resources.hpp"
 
 namespace enc
 {
@@ -113,6 +114,7 @@ namespace enc
     std::optional<ConditionWithDC> needsToBreakOutOfGrapple();
     void breakOutOfGrapple();
     bool isAffectedByAny(const std::vector<Conditions> &conditions);
+    void setResourceDepletionLevel(ResourceDepletionLevel level) { _resouceDepletionLevel = level; }
 
   private:
     template <typename ConditionType> Combatant *checkConditionList(const std::vector<ConditionType> &condList, Conditions condition) const
@@ -170,6 +172,7 @@ namespace enc
     Combatant* _swallowedTarget = nullptr;
     std::vector<Condition> _conditions;
     std::vector<ConditionWithDC> _dcConditions;
+    ResourceDepletionLevel _resouceDepletionLevel;
 
   protected:
     Size _size{Size::MEDIUM};

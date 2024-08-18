@@ -19,7 +19,7 @@ namespace enc
     // Register other combatant types...
   }
 
-  template <typename CombatantType> void Session::addCombatant(Color teamColor, float resourceDepletionLevel)
+  template <typename CombatantType> void Session::addCombatant(Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
   {
     int classId = CombatantType::getClassId();
     auto factoryIt = _combatantFactories.find(classId);
@@ -32,42 +32,7 @@ namespace enc
     combatant->setResourceDepletionLevel(resourceDepletionLevel);
     _teams.addCombatantToTeam(*combatant, teamColor);
     _combatants.push_back(std::move(combatant));
-    generateUniqueShortcodes();
-  }
-
-  void Session::generateUniqueShortCodes()
-  {
-    std::set<std::string> usedCodes;
-
-    for(auto &combatant : _combatants)
-      {
-        char letter = 'A';
-        int number = 1;
-
-        while(true)
-          {
-            std::string shortCode = std::string(1, letter) + std::to_string(number);
-
-            if(usedCodes.find(shortCode) == usedCodes.end())
-              {
-                combatant->setShortCode(std::move(shortCode));
-                usedCodes.insert(shortCode);
-                break;
-              }
-
-            // Move to the next combination
-            number++;
-            if(number > 9)
-              {
-                number = 1;
-                letter++;
-                if(letter > 'Z')
-                  {
-                    throw std::runtime_error("Ran out of unique shortcodes!");
-                  }
-              }
-          }
-      }
+    generateUniqueShortCodes();
   }
 
   template <typename CombatantType> void Session::registerCombatantType()
@@ -77,7 +42,7 @@ namespace enc
   }
 
   // Explicit template instantiations
-  template void Session::addCombatant<BattlemasterFighterLvl5>(Color, float);
-  template void Session::addCombatant<StoneGiant>(Color, float);
+  template void Session::addCombatant<BattlemasterFighterLvl5>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<StoneGiant>(Color, ResourceDepletionLevel);
   // Add more explicit instantiations for other combatant types
 }
