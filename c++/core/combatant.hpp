@@ -8,6 +8,8 @@
 #include <iostream>
 #include <functional>
 #include <sstream>
+#include <string_view>
+#include <cstdint>
 #include <iomanip>
 #include <openssl/sha.h>
 #include "misc.hpp"
@@ -25,40 +27,56 @@ namespace enc
   {
   public:
     std::string _name;
-    CombatantType _type;
-    SubType _subtype;
-    int _level;
+    // CombatantType _type;
+    // SubType _subtype;
+    // int _level;
     int _id;
 
-    Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances = {},
+    Combatant(CombatantType type, SubType subtype, int level, std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances = {},
               std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
     // Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances =
     // {},
     //           std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
-    static int generateUniqueId(const std::string &name, CombatantType type, const SubType &subtype, int level)
-    {
-      std::stringstream ss;
-      ss << name << "-" << static_cast<int>(type) << "-";
 
-      std::visit([&ss](auto &&arg) { ss << typeid(arg).name(); }, subtype);
-
-      ss << "-" << level;
-      std::string unique_str = ss.str();
-
-      unsigned char hash[SHA256_DIGEST_LENGTH];
-      SHA256(reinterpret_cast<const unsigned char *>(unique_str.c_str()), unique_str.size(), hash);
-
-      std::stringstream hash_ss;
-      for(int i = 0; i < 4; ++i)
-        {
-          hash_ss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(hash[i]);
+    static constexpr uint32_t fnv1a_32(uint32_t initial, uint32_t value) {
+        uint32_t hash = initial;
+        for (int i = 0; i < 32; i += 8) {
+            hash ^= (value >> i) & 0xFF;
+            hash *= 16777619u;
         }
-      return std::stoul(hash_ss.str(), nullptr, 16);
+        return hash;
     }
 
+    static constexpr uint32_t fnv1a_32(std::string_view str) {
+        uint32_t hash = 2166136261u;
+        for (char c : str) {
+            hash ^= static_cast<uint32_t>(c);
+            hash *= 16777619u;
+        }
+        return hash;
+    }
+
+    template<typename SubType>
+    static constexpr int generateClassId(std::string_view className, SubType subtype, int level) {
+        uint32_t hash = fnv1a_32(className);
+        hash = fnv1a_32(hash, static_cast<uint32_t>(subtype));
+        hash = fnv1a_32(hash, static_cast<uint32_t>(level));
+        return static_cast<int>(hash);
+    }
+
+    // Method to generate instance ID
+    int generateInstanceId() const
+    {
+      static int nextId = 1;
+      return ++nextId;
+    }
+    
+
     std::string toString() const;
+    void setShortCode(std::string&& shortCode ){_shortCode = std::move(shortCode);}
+    std::string getShortCode(){ return _shortCode;}
 
     bool isAlive() const;
 
@@ -109,6 +127,7 @@ namespace enc
       return nullptr;
     }
 
+    std::string _shortCode;
     int _maxHp;
     int _currHp;
     int _maxHpModifier = 0;
@@ -154,6 +173,11 @@ namespace enc
 
   protected:
     Size _size{Size::MEDIUM};
+    int _classId;
+    int _instanceId;
+    CombatantType _type;
+    SubType _subtype;
+    int _level;
   };
 
 }

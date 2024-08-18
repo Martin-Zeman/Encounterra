@@ -29,6 +29,56 @@ namespace enc
 
   void BattleMap::resetInstance(size_t size) { _instance.reset(new BattleMap(size)); }
 
+  std::string BattleMap::toString() const
+  {
+    std::ostringstream ss;
+    Teams &teams = Teams::getInstance();
+
+    // Print the grid
+    for(int y = _size - 1; y >= 0; --y)
+      {
+        ss << std::setw(2) << y << "\t";
+        for(int x = 0; x < _size; ++x)
+          {
+            Coord currentCoord{x, y};
+            int combatantId = _combatantGrid(x, y);
+
+            if(combatantId != -1)
+              {
+                const Combatant *combatant = teams.getCombatantById(combatantId);
+                if(combatant && !combatant->isSwallowed())
+                  {
+                    std::string combatantStr = combatant->_name;
+                    ss << combatantStr[0] << combatant->_id << "\t";
+                  }
+              }
+            else if(_difficultSet.find(currentCoord) != _difficultSet.end())
+              {
+                ss << "**\t";
+              }
+            else if(_impassableSet.find(currentCoord) != _impassableSet.end())
+              {
+                ss << "XX\t";
+              }
+            else
+              {
+                ss << "..\t";
+              }
+          }
+        ss << "\n";
+      }
+
+    // Print X-axis legend
+    ss << "\t";
+    for(int x = 0; x < _size; ++x)
+      {
+        ss << x << "\t";
+      }
+    ss << "\n";
+
+    return ss.str();
+  }
+
   bool BattleMap::isEmptyOrSelf(int x, int y, int combatantId) const
   {
     return (_combatantGrid(x, y) == -1 && _terrainGrid(x, y) != static_cast<int>(Terrain::IMPASSABLE_TERRAIN))
@@ -316,85 +366,83 @@ namespace enc
     return adjacentCoords[0];
   }
 
-  std::optional<std::vector<Coord>> BattleMap::getPathToCombatant(const Combatant& combatant, const Combatant& target,
-                                                         const blaze::DynamicVector<int>& distances,
-                                                         const blaze::DynamicMatrix<Coord>& shortestPaths,
-                                                         int rng, bool considerAOO)
-    {
-        Coords myLocation = getCombatantCoordinates(combatant);
-        Coord myCoord = myLocation.get()[0];
-        // spdlog::debug("Origin {}", myCoord);
+  std::optional<std::vector<Coord>>
+  BattleMap::getPathToCombatant(const Combatant &combatant, const Combatant &target, const blaze::DynamicVector<int> &distances,
+                                const blaze::DynamicMatrix<Coord> &shortestPaths, int rng, bool considerAOO)
+  {
+    Coords myLocation = getCombatantCoordinates(combatant);
+    Coord myCoord = myLocation.get()[0];
+    // spdlog::debug("Origin {}", myCoord);
 
-        Coords enemyLocation = getCombatantCoordinates(target);
-        // spdlog::debug("Destination {}", enemyLocation.get()[0]);
+    Coords enemyLocation = getCombatantCoordinates(target);
+    // spdlog::debug("Destination {}", enemyLocation.get()[0]);
 
-        DijkstraResult dijkstraResult;
-        if (distances.size() == 0 || shortestPaths.rows() == 0)
-        {
-            auto mask = buildCombatantAdjacencyMask(combatant, considerAOO);
-            dijkstraResult = dijkstra(myCoord, _baseAdjacencyMatrix, mask);
-        }
-        else
-        {
-            dijkstraResult.dist = distances;
-            dijkstraResult.shortestPaths = shortestPaths;
-        }
+    DijkstraResult dijkstraResult;
+    if(distances.size() == 0 || shortestPaths.rows() == 0)
+      {
+        auto mask = buildCombatantAdjacencyMask(combatant, considerAOO);
+        dijkstraResult = dijkstra(myCoord, _baseAdjacencyMatrix, mask);
+      }
+    else
+      {
+        dijkstraResult.dist = distances;
+        dijkstraResult.shortestPaths = shortestPaths;
+      }
 
-        auto enemyAdjacentLocation = getNearestFreeAdjacentCoords(combatant, myLocation, combatant.getSize(), enemyLocation, dijkstraResult.dist, rng);
-        if (!enemyAdjacentLocation)
-        {
-            return std::nullopt;
-        }
+    auto enemyAdjacentLocation = getNearestFreeAdjacentCoords(combatant, myLocation, combatant.getSize(), enemyLocation, dijkstraResult.dist, rng);
+    if(!enemyAdjacentLocation)
+      {
+        return std::nullopt;
+      }
 
-        auto path = reconstructFromShortestPath(dijkstraResult.shortestPaths, myCoord, *enemyAdjacentLocation);
-        if (path.empty())
-        {
-            return std::nullopt;
-        }
+    auto path = reconstructFromShortestPath(dijkstraResult.shortestPaths, myCoord, *enemyAdjacentLocation);
+    if(path.empty())
+      {
+        return std::nullopt;
+      }
 
-        // if (spdlog::get_level() <= spdlog::level::info)
-        // {
-        //     printDijkstra(dijkstraResult.dist, myLocation, enemyLocation.get());
-        // }
+    // if (spdlog::get_level() <= spdlog::level::info)
+    // {
+    //     printDijkstra(dijkstraResult.dist, myLocation, enemyLocation.get());
+    // }
 
-        return convertPathToIncrements(path);
-    }
+    return convertPathToIncrements(path);
+  }
 
-    std::optional<std::vector<Coord>> BattleMap::getPathToCoord(const Combatant& combatant, const Coord& targetCoord,
-                                                     const blaze::DynamicVector<int>& distances,
-                                                     const blaze::DynamicMatrix<Coord>& shortestPaths,
-                                                     bool considerAOO)
-    {
-        Coords myLocation = getCombatantCoordinates(combatant);
-        Coord myCoord = myLocation.get()[0];
-        // spdlog::debug("Origin {}", myCoord);
-        // spdlog::debug("Destination {}", targetCoord);
+  std::optional<std::vector<Coord>>
+  BattleMap::getPathToCoord(const Combatant &combatant, const Coord &targetCoord, const blaze::DynamicVector<int> &distances,
+                            const blaze::DynamicMatrix<Coord> &shortestPaths, bool considerAOO)
+  {
+    Coords myLocation = getCombatantCoordinates(combatant);
+    Coord myCoord = myLocation.get()[0];
+    // spdlog::debug("Origin {}", myCoord);
+    // spdlog::debug("Destination {}", targetCoord);
 
-        DijkstraResult dijkstraResult;
-        if (distances.size() == 0 || shortestPaths.rows() == 0)
-        {
-            auto mask = buildCombatantAdjacencyMask(combatant, considerAOO);
-            dijkstraResult = dijkstra(myCoord, _baseAdjacencyMatrix, mask);
-        }
-        else
-        {
-            dijkstraResult.dist = distances;
-            dijkstraResult.shortestPaths = shortestPaths;
-        }
+    DijkstraResult dijkstraResult;
+    if(distances.size() == 0 || shortestPaths.rows() == 0)
+      {
+        auto mask = buildCombatantAdjacencyMask(combatant, considerAOO);
+        dijkstraResult = dijkstra(myCoord, _baseAdjacencyMatrix, mask);
+      }
+    else
+      {
+        dijkstraResult.dist = distances;
+        dijkstraResult.shortestPaths = shortestPaths;
+      }
 
-        auto path = reconstructFromShortestPath(dijkstraResult.shortestPaths, myCoord, targetCoord);
-        if (path.empty())
-        {
-            return std::nullopt;
-        }
+    auto path = reconstructFromShortestPath(dijkstraResult.shortestPaths, myCoord, targetCoord);
+    if(path.empty())
+      {
+        return std::nullopt;
+      }
 
-        // if (spdlog::get_level() <= spdlog::level::info)
-        // {
-        //     printDijkstra(dijkstraResult.dist, myLocation, std::vector<Coord>{targetCoord});
-        // }
+    // if (spdlog::get_level() <= spdlog::level::info)
+    // {
+    //     printDijkstra(dijkstraResult.dist, myLocation, std::vector<Coord>{targetCoord});
+    // }
 
-        return convertPathToIncrements(path);
-    }
+    return convertPathToIncrements(path);
+  }
 
   std::vector<Coord> BattleMap::getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances, Size moverSize, int rng,
                                                         int combatantId) const
@@ -631,257 +679,260 @@ namespace enc
     return true;
   }
 
-  void BattleMap::removeCombatant(const Combatant& combatant) {
-        auto it = _combatantCoordinateCache.find(combatant._id);
-        if (it == _combatantCoordinateCache.end()) {
-            return;  // already removed
-        }
-        
-        const auto& oldCoords = it->second.get();
-        for (const auto& coord : oldCoords) {
-            _combatantGrid(coord[0], coord[1]) = -1;
-            // _occupancyGrid(coord[0], coord[1]) = static_cast<int>(Occupancy::FREE);
-        }
-        
-        _combatantCoordinateCache.erase(it);
-    }
+  void BattleMap::removeCombatant(const Combatant &combatant)
+  {
+    auto it = _combatantCoordinateCache.find(combatant._id);
+    if(it == _combatantCoordinateCache.end())
+      {
+        return; // already removed
+      }
 
-    bool BattleMap::removeCombatantIfDead(Combatant &combatant)
-    {
-      Combatant *targetToRemove = combatant.getOriginalForm();
+    const auto &oldCoords = it->second.get();
+    for(const auto &coord : oldCoords)
+      {
+        _combatantGrid(coord[0], coord[1]) = -1;
+        // _occupancyGrid(coord[0], coord[1]) = static_cast<int>(Occupancy::FREE);
+      }
 
-      if(!targetToRemove->isAlive())
-        {
-          if(auto* grappler = targetToRemove->getInitiatorOfCondition(Conditions::GRAPPLED))
-            {
-              grappler->removeCondition(Conditions::GRAPPLING);
-            }
-          targetToRemove->onDie();
-          // spdlog::info("{} died", targetToRemove.getName());
-          removeCombatant(*targetToRemove);
-          return false;
-        }
-      return true;
-    }
+    _combatantCoordinateCache.erase(it);
+  }
 
-    int BattleMap::getCombatantGridValueAt(const Coord &coord) { return _combatantGrid(coord[0], coord[1]); }
+  bool BattleMap::removeCombatantIfDead(Combatant &combatant)
+  {
+    Combatant *targetToRemove = combatant.getOriginalForm();
 
-    blaze::StaticMatrix<int, 2, 2> BattleMap::getHarmfulBoundingBox(const Combatant *caster, int inflation)
-    {
-      blaze::StaticMatrix<int, 2, 2> bb = {{static_cast<int>(_size), static_cast<int>(_size)}, {0, 0}}; // top right, bottom left
-      Teams &teams = Teams::getInstance();
+    if(!targetToRemove->isAlive())
+      {
+        if(auto *grappler = targetToRemove->getInitiatorOfCondition(Conditions::GRAPPLED))
+          {
+            grappler->removeCondition(Conditions::GRAPPLING);
+          }
+        targetToRemove->onDie();
+        // spdlog::info("{} died", targetToRemove.getName());
+        removeCombatant(*targetToRemove);
+        return false;
+      }
+    return true;
+  }
 
-      for(const auto &[combatantId, coords] : _combatantCoordinateCache)
-        {
-          const Combatant *combatant = teams.getCombatantById(combatantId);
-          if(teams.areEnemies(*caster, *combatant))
-            {
-              const CoordVector &coordsVector = coords.get();
-              for(const auto &coord : coordsVector)
-                {
-                  bb(0, 0) = std::min(bb(0, 0), coord[0]);
-                  bb(0, 1) = std::min(bb(0, 1), coord[1]);
-                  bb(1, 0) = std::max(bb(1, 0), coord[0]);
-                  bb(1, 1) = std::max(bb(1, 1), coord[1]);
-                }
-            }
-        }
+  int BattleMap::getCombatantGridValueAt(const Coord &coord) { return _combatantGrid(coord[0], coord[1]); }
 
-      // Inflate the BB
-      bb(0, 0) = std::max(bb(0, 0) - inflation, 0);
-      bb(0, 1) = std::max(bb(0, 1) - inflation, 0);
-      bb(1, 0) = std::min(bb(1, 0) + inflation, static_cast<int>(_size) - 1);
-      bb(1, 1) = std::min(bb(1, 1) + inflation, static_cast<int>(_size) - 1);
+  blaze::StaticMatrix<int, 2, 2> BattleMap::getHarmfulBoundingBox(const Combatant *caster, int inflation)
+  {
+    blaze::StaticMatrix<int, 2, 2> bb = {{static_cast<int>(_size), static_cast<int>(_size)}, {0, 0}}; // top right, bottom left
+    Teams &teams = Teams::getInstance();
 
-      return bb;
-    }
+    for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+      {
+        const Combatant *combatant = teams.getCombatantById(combatantId);
+        if(teams.areEnemies(*caster, *combatant))
+          {
+            const CoordVector &coordsVector = coords.get();
+            for(const auto &coord : coordsVector)
+              {
+                bb(0, 0) = std::min(bb(0, 0), coord[0]);
+                bb(0, 1) = std::min(bb(0, 1), coord[1]);
+                bb(1, 0) = std::max(bb(1, 0), coord[0]);
+                bb(1, 1) = std::max(bb(1, 1), coord[1]);
+              }
+          }
+      }
 
-    std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulCircular(const Combatant *caster, int spell_range, int radius)
-    {
-      auto bb = getHarmfulBoundingBox(caster, radius);
-      int max_score = std::numeric_limits<int>::lowest();
-      Coord best_placement{};
-      std::vector<Combatant *> affected_combatants;
-      Teams &teams = Teams::getInstance();
+    // Inflate the BB
+    bb(0, 0) = std::max(bb(0, 0) - inflation, 0);
+    bb(0, 1) = std::max(bb(0, 1) - inflation, 0);
+    bb(1, 0) = std::min(bb(1, 0) + inflation, static_cast<int>(_size) - 1);
+    bb(1, 1) = std::min(bb(1, 1) + inflation, static_cast<int>(_size) - 1);
 
-      const Combatant *swallower = caster->getSwallower();
-      const Coords& caster_coords = swallower ? _combatantCoordinateCache.at(swallower->_id) : _combatantCoordinateCache.at(caster->_id);
+    return bb;
+  }
 
-      for(int x = bb(0, 0); x <= bb(1, 0); ++x)
-        {
-          for(int y = bb(0, 1); y <= bb(1, 1); ++y)
-            {
-              Coords curr_coords({x, y});
+  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulCircular(const Combatant *caster, int spell_range, int radius)
+  {
+    auto bb = getHarmfulBoundingBox(caster, radius);
+    int max_score = std::numeric_limits<int>::lowest();
+    Coord best_placement{};
+    std::vector<Combatant *> affected_combatants;
+    Teams &teams = Teams::getInstance();
 
-              auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
-              if(dist > spell_range || dist <= radius)
-                {
-                  continue;
-                }
+    const Combatant *swallower = caster->getSwallower();
+    const Coords &caster_coords = swallower ? _combatantCoordinateCache.at(swallower->_id) : _combatantCoordinateCache.at(caster->_id);
 
-              int score = 0;
-              std::vector<Combatant *> affected;
+    for(int x = bb(0, 0); x <= bb(1, 0); ++x)
+      {
+        for(int y = bb(0, 1); y <= bb(1, 1); ++y)
+          {
+            Coords curr_coords({x, y});
 
-              for(const auto &[combatantId, coords] : _combatantCoordinateCache)
-                {
-                  const Combatant *combatant = teams.getCombatantById(combatantId);
-                  if(getCartesianDistanceCoords(coords, curr_coords) <= radius)
-                    {
-                      score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
-                      affected.push_back(const_cast<Combatant *>(combatant)); // Casting away constness, be cautious
-                    }
-                }
+            auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
+            if(dist > spell_range || dist <= radius)
+              {
+                continue;
+              }
 
-              if(score > max_score)
-                {
-                  max_score = score;
-                  best_placement = curr_coords.get()[0];
-                  affected_combatants = affected;
-                }
-            }
-        }
+            int score = 0;
+            std::vector<Combatant *> affected;
 
-      return {best_placement, max_score, affected_combatants};
-    }
+            for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+              {
+                const Combatant *combatant = teams.getCombatantById(combatantId);
+                if(getCartesianDistanceCoords(coords, curr_coords) <= radius)
+                  {
+                    score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
+                    affected.push_back(const_cast<Combatant *>(combatant)); // Casting away constness, be cautious
+                  }
+              }
 
-    std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length)
-    {
-      auto bb = getHarmfulBoundingBox(caster, length);
-      int max_score = std::numeric_limits<int>::lowest();
-      Coord best_placement{};
-      std::vector<Combatant *> affected_combatants;
-      Teams &teams = Teams::getInstance();
+            if(score > max_score)
+              {
+                max_score = score;
+                best_placement = curr_coords.get()[0];
+                affected_combatants = affected;
+              }
+          }
+      }
 
-      const Coords &caster_coords = _combatantCoordinateCache.at(caster->_id);
+    return {best_placement, max_score, affected_combatants};
+  }
 
-      for(int x = bb(0, 0); x <= bb(1, 0); ++x)
-        {
-          for(int y = bb(0, 1); y <= bb(1, 1); ++y)
-            {
-              Coords curr_coords({x, y}, Size(length - 1));
+  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length)
+  {
+    auto bb = getHarmfulBoundingBox(caster, length);
+    int max_score = std::numeric_limits<int>::lowest();
+    Coord best_placement{};
+    std::vector<Combatant *> affected_combatants;
+    Teams &teams = Teams::getInstance();
 
-              auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
-              if(dist > spell_range || dist == 0) // TODO: is a 0 possible? Create a unit test for this case
-                {
-                  continue;
-                }
+    const Coords &caster_coords = _combatantCoordinateCache.at(caster->_id);
 
-              int score = 0;
-              std::vector<Combatant *> affected;
+    for(int x = bb(0, 0); x <= bb(1, 0); ++x)
+      {
+        for(int y = bb(0, 1); y <= bb(1, 1); ++y)
+          {
+            Coords curr_coords({x, y}, Size(length - 1));
 
-              for(const auto &[combatantId, coords] : _combatantCoordinateCache)
-                {
-                  const Combatant *combatant = teams.getCombatantById(combatantId);
-                  if(getCartesianDistanceCoords(coords, curr_coords) == 0)
-                    {
-                      score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
-                      affected.push_back(const_cast<Combatant *>(combatant)); // Casting away constness, be cautious
-                    }
-                }
+            auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
+            if(dist > spell_range || dist == 0) // TODO: is a 0 possible? Create a unit test for this case
+              {
+                continue;
+              }
 
-              if(score > max_score)
-                {
-                  max_score = score;
-                  best_placement = curr_coords.get()[0];
-                  affected_combatants = affected;
-                }
-            }
-        }
+            int score = 0;
+            std::vector<Combatant *> affected;
 
-      if(best_placement[0] != 0 || best_placement[1] != 0)
-        {
-          return std::make_tuple(best_placement, max_score, affected_combatants);
-        }
-      return std::make_tuple(Coord{}, 0, std::vector<Combatant *>{});
-    }
+            for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+              {
+                const Combatant *combatant = teams.getCombatantById(combatantId);
+                if(getCartesianDistanceCoords(coords, curr_coords) == 0)
+                  {
+                    score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
+                    affected.push_back(const_cast<Combatant *>(combatant)); // Casting away constness, be cautious
+                  }
+              }
 
-    std::pair<Coord, double> BattleMap::findBestPlacementHarmfulCone(const Combatant *caster, int radius)
-    {
-      std::vector<std::array<double, 2>> enemyPositions;
-      Teams &teams = Teams::getInstance();
-      for(Combatant *enemy : teams.getEnemies(*caster))
-        {
-          enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_id).getCenter());
-        }
+            if(score > max_score)
+              {
+                max_score = score;
+                best_placement = curr_coords.get()[0];
+                affected_combatants = affected;
+              }
+          }
+      }
 
-      auto [m, c] = linearRegression(enemyPositions);
-      double baseAngle = 90.0 - getAngleFromSlope(m);
+    if(best_placement[0] != 0 || best_placement[1] != 0)
+      {
+        return std::make_tuple(best_placement, max_score, affected_combatants);
+      }
+    return std::make_tuple(Coord{}, 0, std::vector<Combatant *>{});
+  }
 
-      std::vector<double> angleRange;
-      for(double angle = baseAngle - 15.0; angle <= baseAngle + 15.1; angle += 3.0)
-        {
-          angleRange.push_back(angle);
-        }
+  std::pair<Coord, double> BattleMap::findBestPlacementHarmfulCone(const Combatant *caster, int radius)
+  {
+    std::vector<std::array<double, 2>> enemyPositions;
+    Teams &teams = Teams::getInstance();
+    for(Combatant *enemy : teams.getEnemies(*caster))
+      {
+        enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_id).getCenter());
+      }
 
-      std::unordered_map<int, const Coords *> combatantIdsToCoords;
-      std::set<Coord> allCombatantCoords;
-      for(const auto &[combatantId, coords] : _combatantCoordinateCache)
-        {
-          if(combatantId != caster->_id)
-            {
-              combatantIdsToCoords[combatantId] = &coords;
-              const auto &coordVec = coords.get();
-              allCombatantCoords.insert(coordVec.begin(), coordVec.end());
-            }
-        }
+    auto [m, c] = linearRegression(enemyPositions);
+    double baseAngle = 90.0 - getAngleFromSlope(m);
 
-      int maxScore = std::numeric_limits<int>::lowest();
-      std::vector<std::pair<Coord, double>> bestPoses;
+    std::vector<double> angleRange;
+    for(double angle = baseAngle - 15.0; angle <= baseAngle + 15.1; angle += 3.0)
+      {
+        angleRange.push_back(angle);
+      }
 
-      for(double angle : angleRange)
-        {
-          auto samplePoints = samplePointsOnLine(std::tan(angle * M_PI / 180.0), c, _size);
-          Coord lastOrigin = {-1, -1};
-          for(const auto &point : samplePoints)
-            {
-              Coord origin = {point[0], point[1]};
-              if(allCombatantCoords.find(origin) != allCombatantCoords.end())
-                {
-                  continue;
-                }
-              if(origin[0] >= 0 && origin[0] < _size && origin[1] >= 0 && origin[1] < _size && origin != lastOrigin)
-                {
-                  lastOrigin = origin;
-                  for(double effectiveAngle : {angle, angle + 180.0})
-                    {
-                      int score = 0;
-                      auto affectedCoords = getAffectedByCone(origin, effectiveAngle, radius, _size);
-                      for(const auto &[combatantId, coords] : combatantIdsToCoords)
-                        {
-                          const auto &coordVec = coords->get();
-                          if(std::any_of(coordVec.begin(), coordVec.end(),
-                                         [&affectedCoords](const Coord &c) { return affectedCoords.find(c) != affectedCoords.end(); }))
-                            {
-                              if(combatantId == caster->_id)
-                                continue;
-                              Combatant *currCombatant = teams.getCombatantById(combatantId);
-                              score += teams.areEnemies(*caster, *currCombatant) && currCombatant->isAlive() ? 1 : -4;
-                            }
-                        }
-                      if(score > maxScore)
-                        {
-                          maxScore = score;
-                          bestPoses = {{origin, effectiveAngle}};
-                        }
-                      else if(score == maxScore && score > 0)
-                        {
-                          bestPoses.push_back({origin, effectiveAngle});
-                        }
-                    }
-                }
-            }
-        }
+    std::unordered_map<int, const Coords *> combatantIdsToCoords;
+    std::set<Coord> allCombatantCoords;
+    for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+      {
+        if(combatantId != caster->_id)
+          {
+            combatantIdsToCoords[combatantId] = &coords;
+            const auto &coordVec = coords.get();
+            allCombatantCoords.insert(coordVec.begin(), coordVec.end());
+          }
+      }
 
-      if(bestPoses.empty())
-        {
-          return {{}, 0};
-        }
+    int maxScore = std::numeric_limits<int>::lowest();
+    std::vector<std::pair<Coord, double>> bestPoses;
 
-      const Coords &casterPosition = getCombatantCoordinates(*caster);
-      std::sort(bestPoses.begin(), bestPoses.end(), [this, &casterPosition](const auto &a, const auto &b) {
-        return getHopDistanceCoords(casterPosition, Coords(a.first)) < getHopDistanceCoords(casterPosition, Coords(b.first));
-      });
+    for(double angle : angleRange)
+      {
+        auto samplePoints = samplePointsOnLine(std::tan(angle * M_PI / 180.0), c, _size);
+        Coord lastOrigin = {-1, -1};
+        for(const auto &point : samplePoints)
+          {
+            Coord origin = {point[0], point[1]};
+            if(allCombatantCoords.find(origin) != allCombatantCoords.end())
+              {
+                continue;
+              }
+            if(origin[0] >= 0 && origin[0] < _size && origin[1] >= 0 && origin[1] < _size && origin != lastOrigin)
+              {
+                lastOrigin = origin;
+                for(double effectiveAngle : {angle, angle + 180.0})
+                  {
+                    int score = 0;
+                    auto affectedCoords = getAffectedByCone(origin, effectiveAngle, radius, _size);
+                    for(const auto &[combatantId, coords] : combatantIdsToCoords)
+                      {
+                        const auto &coordVec = coords->get();
+                        if(std::any_of(coordVec.begin(), coordVec.end(),
+                                       [&affectedCoords](const Coord &c) { return affectedCoords.find(c) != affectedCoords.end(); }))
+                          {
+                            if(combatantId == caster->_id)
+                              continue;
+                            Combatant *currCombatant = teams.getCombatantById(combatantId);
+                            score += teams.areEnemies(*caster, *currCombatant) && currCombatant->isAlive() ? 1 : -4;
+                          }
+                      }
+                    if(score > maxScore)
+                      {
+                        maxScore = score;
+                        bestPoses = {{origin, effectiveAngle}};
+                      }
+                    else if(score == maxScore && score > 0)
+                      {
+                        bestPoses.push_back({origin, effectiveAngle});
+                      }
+                  }
+              }
+          }
+      }
 
-      return bestPoses[0];
-    }
+    if(bestPoses.empty())
+      {
+        return {{}, 0};
+      }
+
+    const Coords &casterPosition = getCombatantCoordinates(*caster);
+    std::sort(bestPoses.begin(), bestPoses.end(), [this, &casterPosition](const auto &a, const auto &b) {
+      return getHopDistanceCoords(casterPosition, Coords(a.first)) < getHopDistanceCoords(casterPosition, Coords(b.first));
+    });
+
+    return bestPoses[0];
+  }
 };

@@ -27,6 +27,7 @@ namespace enc
   public:
     static BattleMap &getInstance(size_t size = 15);
     static void resetInstance(size_t size = 15);
+    std::string toString() const;
 
     size_t getGridSize() const;
 

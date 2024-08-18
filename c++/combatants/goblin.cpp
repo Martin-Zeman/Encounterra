@@ -2,12 +2,12 @@
 #include "core/misc.hpp"
 #include "core/utils.hpp"
 
-namespace enc {
-    Goblin::Goblin(int num) : Combatant(concatName("Goblin", num), 7, 15, 2, 0, 30, 0){
-        _type = CombatantType::MONSTER;
-        _subtype = Monster::HUMANOID;
-        _level = 1;
-        _id = Combatant::generateUniqueId(_name, _type, _subtype, _level);
-        _size = Size::SMALL;
-    }
+namespace enc
+{
+
+  Goblin::Goblin(int num) : Combatant(CombatantType::MONSTER, Monster::HUMANOID, _classLevel, concatName(std::string(_className), num), 7, 15, 2, 0, 30, 0)
+  {
+    _instanceId = generateInstanceId();
+    _size = Size::SMALL;
+  }
 }

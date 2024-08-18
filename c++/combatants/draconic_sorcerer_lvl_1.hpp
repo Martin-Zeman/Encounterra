@@ -7,6 +7,14 @@ namespace enc
   {
   public:
     DraconicSorcererLvl1(int num);
+
+    static constexpr int getClassId() { return _classId; }
+    static constexpr std::string_view getClassName() { return _className; }
+
+  private:
+    static constexpr std::string_view _className = "DraconicSorcerer LVL 1";
+    static constexpr int _classLevel = 1;
+    static constexpr int _classId = Combatant::generateClassId(_className, Sorcerer::BEFORE_SUBCLASS, _classLevel);
   };
 
 }
