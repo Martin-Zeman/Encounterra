@@ -61,6 +61,7 @@ namespace enc
     std::tuple<Coord, int, std::vector<Combatant *>>
     findBestPlacementHarmfulCircular(const Combatant *caster, int spell_range, int radius);
     std::tuple<Coord, int, std::vector<Combatant *>> findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length);
+    std::pair<Coord, double> findBestPlacementHarmfulCone(const Combatant *caster, int radius);
 
   private:
     size_t _size;

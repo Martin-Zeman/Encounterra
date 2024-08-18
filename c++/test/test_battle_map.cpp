@@ -5,6 +5,7 @@
 #include "core/combatant.hpp"
 #include "core/coords.hpp"
 #include "core/teams.hpp"
+#include "spells/spell_stats.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
 #include "combatants/bugbear.hpp"
@@ -36,6 +37,8 @@ protected:
     test_goblin = std::make_unique<Goblin>(1);
     test_draconic_sorcerer_lvl_1 = std::make_unique<DraconicSorcererLvl1>(1);
     test_bugbear = std::make_unique<Bugbear>(1);
+    test_totem_barbarian = std::make_unique<TotemBarbarianLvl3>(1);
+    test_stone_giant = std::make_unique<StoneGiant>(1);
   }
 };
 
@@ -641,6 +644,7 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulSquare)
     battleMap->setCombatantCoordinates(*test_totem_barbarian, {6, 7});
     battleMap->setCombatantCoordinates(*test_stone_giant, {5, 5});
 
+    // Test case 1: Original scenario
     auto [coord, score, affected] = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 20, 2);
     EXPECT_EQ(coord, (Coord{4, 4}));
     EXPECT_EQ(score, 2);
@@ -649,12 +653,93 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulSquare)
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_totem_barbarian.get()) == affected.end());
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_stone_giant.get()) != affected.end());
 
+    // Test case 2: Ally blocking
     battleMap->moveCombatant(*test_totem_barbarian, {5, 4});
     std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 20, 2);
     EXPECT_EQ(score, 1);
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_goblin.get()) != affected.end() ||
                 std::find(affected.begin(), affected.end(), test_bugbear.get()) != affected.end() ||
                 std::find(affected.begin(), affected.end(), test_stone_giant.get()) != affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_totem_barbarian.get()) == affected.end());
+
+    // Test case 3: A corner of a HUGE sized creature can be hit
+    test_stone_giant->setSize(Size::HUGE);
+    battleMap->moveCombatant(*test_stone_giant, {6, 1});  // move him so that only a corner can be hit
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 20, 3);
+    EXPECT_EQ(coord, (Coord{8, 3}));
+    EXPECT_EQ(score, 2);
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_goblin.get()) == affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_bugbear.get()) != affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_totem_barbarian.get()) == affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_stone_giant.get()) != affected.end());
+
+    // Test case 4: Spell range too short to hit anybody
+    test_stone_giant->setSize(Size::MEDIUM);  // shrink him again
+    battleMap->moveCombatant(*test_stone_giant, {5, 5}); // move him back
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 1, 2);
+    EXPECT_EQ(score, 0);
+    EXPECT_TRUE(affected.empty());
+
+    // Test case 5: Larger square size
+    battleMap->moveCombatant(*test_totem_barbarian, {6, 7});  // Move ally out of the way
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 20, 3);
+    EXPECT_EQ(score, 2);
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_goblin.get()) != affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_stone_giant.get()) != affected.end());
+
+    // Test case 6: Edge of map
+    battleMap->moveCombatant(*test_draconic_sorcerer_lvl_1, {14, 14});
+    battleMap->moveCombatant(*test_goblin, {13, 13});
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 5, 2);
+    EXPECT_EQ(coord, (Coord{12, 12}));
+    EXPECT_EQ(score, 1);
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_goblin.get()) != affected.end());
+
+    // Test case 7: Allies and enemies bunched up
+    battleMap->moveCombatant(*test_draconic_sorcerer_lvl_1, {0, 0});
+    battleMap->moveCombatant(*test_goblin, {14, 14});
+    battleMap->moveCombatant(*test_bugbear, {14, 13});
+    battleMap->moveCombatant(*test_stone_giant, {13, 14});
+    battleMap->moveCombatant(*test_totem_barbarian, {13, 13});
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(test_draconic_sorcerer_lvl_1.get(), 16, 2);
+    EXPECT_TRUE(affected.empty());
+}
+
+TEST_F(BattleMapTest, FindBestPlacementHarmfulCircular)
+{
+    test_goblin->setSize(Size::LARGE);
+    teams->addCombatantToTeam(*test_draconic_sorcerer_lvl_1, Color::BLUE);
+    teams->addCombatantToTeam(*test_goblin, Color::RED);
+    teams->addCombatantToTeam(*test_bugbear, Color::RED);
+    teams->addCombatantToTeam(*test_totem_barbarian, Color::BLUE);
+    
+    battleMap->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, {1, 1});
+    battleMap->setCombatantCoordinates(*test_goblin, {4, 4});
+    battleMap->setCombatantCoordinates(*test_bugbear, {10, 5});
+    battleMap->setCombatantCoordinates(*test_totem_barbarian, {6, 7});
+
+    // As if it was a Fireball
+    constexpr int FIREBALL_RANGE = static_cast<int>(enc::SpellRange::FEET_150);
+    constexpr int FIREBALL_RADIUS = 4;
+
+    auto [coord, score, affected] = battleMap->findBestPlacementHarmfulCircular(test_draconic_sorcerer_lvl_1.get(), FIREBALL_RANGE, FIREBALL_RADIUS);
+    
+    EXPECT_EQ(coord, (Coord{7, 3}));
+    EXPECT_EQ(score, 2);
+    EXPECT_EQ(affected.size(), 2);
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_goblin.get()) != affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_bugbear.get()) != affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_totem_barbarian.get()) == affected.end());
+
+    // Move the ally in between the targets
+    battleMap->moveCombatant(*test_totem_barbarian, {6, 4});
+    
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulCircular(test_draconic_sorcerer_lvl_1.get(), FIREBALL_RANGE, FIREBALL_RADIUS);
+    
+    EXPECT_EQ(score, 1);  // Assuming only the large goblin is hit
+    EXPECT_EQ(affected.size(), 1);
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_goblin.get()) != affected.end());
+    EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_bugbear.get()) == affected.end());
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), test_totem_barbarian.get()) == affected.end());
 }
 

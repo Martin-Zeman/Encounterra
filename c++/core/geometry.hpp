@@ -3,6 +3,7 @@
 #include <blaze/Math.h>
 #include <vector>
 #include <random>
+#include <set>
 #include "types.hpp"
 #include "coords.hpp"
 
@@ -22,6 +23,16 @@ namespace enc
 
   int randomInt(int min, int max);
 
-  std::vector<Coord> convertPathToIncrements(const std::vector<Coord>& path);
+  std::vector<Coord> convertPathToIncrements(const std::vector<Coord> &path);
+
+  std::pair<double, double> linearRegression(const std::vector<std::array<double, 2>> &enemyPositions);
+
+  std::vector<Coord> samplePointsOnLine(double m, double c, int gridSize, int numSamples = 20);
+
+  double getAngleFromSlope(double m);
+
+  blaze::StaticVector<double, 2> getSquareCenter(const Coord &coord);
+
+  std::set<Coord> getAffectedByCone(const Coord &origin, double angleDeg, int radius, int gridSize);
 
 }

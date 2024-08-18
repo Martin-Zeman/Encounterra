@@ -5,6 +5,7 @@
 #include <limits>
 #include <stdexcept>
 #include <queue>
+#include <set>
 
 namespace enc
 {
@@ -713,7 +714,7 @@ namespace enc
               Coords curr_coords({x, y});
 
               auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
-              if(dist > spell_range || dist == 0) // TODO: is a 0 possible? Create a unit test for this case
+              if(dist > spell_range || dist <= radius)
                 {
                   continue;
                 }
@@ -724,7 +725,7 @@ namespace enc
               for(const auto &[combatantId, coords] : _combatantCoordinateCache)
                 {
                   const Combatant *combatant = teams.getCombatantById(combatantId);
-                  if(getCartesianDistanceCoords(coords, curr_coords) == 0)
+                  if(getCartesianDistanceCoords(coords, curr_coords) <= radius)
                     {
                       score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
                       affected.push_back(const_cast<Combatant *>(combatant)); // Casting away constness, be cautious
@@ -751,7 +752,7 @@ namespace enc
       std::vector<Combatant *> affected_combatants;
       Teams &teams = Teams::getInstance();
 
-      const Coords& caster_coords = _combatantCoordinateCache.at(caster->_id);
+      const Coords &caster_coords = _combatantCoordinateCache.at(caster->_id);
 
       for(int x = bb(0, 0); x <= bb(1, 0); ++x)
         {
@@ -792,5 +793,95 @@ namespace enc
           return std::make_tuple(best_placement, max_score, affected_combatants);
         }
       return std::make_tuple(Coord{}, 0, std::vector<Combatant *>{});
+    }
+
+    std::pair<Coord, double> BattleMap::findBestPlacementHarmfulCone(const Combatant *caster, int radius)
+    {
+      std::vector<std::array<double, 2>> enemyPositions;
+      Teams &teams = Teams::getInstance();
+      for(Combatant *enemy : teams.getEnemies(*caster))
+        {
+          enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_id).getCenter());
+        }
+
+      auto [m, c] = linearRegression(enemyPositions);
+      double baseAngle = 90.0 - getAngleFromSlope(m);
+
+      std::vector<double> angleRange;
+      for(double angle = baseAngle - 15.0; angle <= baseAngle + 15.1; angle += 3.0)
+        {
+          angleRange.push_back(angle);
+        }
+
+      std::unordered_map<int, const Coords *> combatantIdsToCoords;
+      std::set<Coord> allCombatantCoords;
+      for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+        {
+          if(combatantId != caster->_id)
+            {
+              combatantIdsToCoords[combatantId] = &coords;
+              const auto &coordVec = coords.get();
+              allCombatantCoords.insert(coordVec.begin(), coordVec.end());
+            }
+        }
+
+      int maxScore = std::numeric_limits<int>::lowest();
+      std::vector<std::pair<Coord, double>> bestPoses;
+
+      for(double angle : angleRange)
+        {
+          auto samplePoints = samplePointsOnLine(std::tan(angle * M_PI / 180.0), c, _size);
+          Coord lastOrigin = {-1, -1};
+          for(const auto &point : samplePoints)
+            {
+              Coord origin = {point[0], point[1]};
+              if(allCombatantCoords.find(origin) != allCombatantCoords.end())
+                {
+                  continue;
+                }
+              if(origin[0] >= 0 && origin[0] < _size && origin[1] >= 0 && origin[1] < _size && origin != lastOrigin)
+                {
+                  lastOrigin = origin;
+                  for(double effectiveAngle : {angle, angle + 180.0})
+                    {
+                      int score = 0;
+                      auto affectedCoords = getAffectedByCone(origin, effectiveAngle, radius, _size);
+                      for(const auto &[combatantId, coords] : combatantIdsToCoords)
+                        {
+                          const auto &coordVec = coords->get();
+                          if(std::any_of(coordVec.begin(), coordVec.end(),
+                                         [&affectedCoords](const Coord &c) { return affectedCoords.find(c) != affectedCoords.end(); }))
+                            {
+                              if(combatantId == caster->_id)
+                                continue;
+                              Combatant *currCombatant = teams.getCombatantById(combatantId);
+                              score += teams.areEnemies(*caster, *currCombatant) && currCombatant->isAlive() ? 1 : -4;
+                            }
+                        }
+                      if(score > maxScore)
+                        {
+                          maxScore = score;
+                          bestPoses = {{origin, effectiveAngle}};
+                        }
+                      else if(score == maxScore && score > 0)
+                        {
+                          bestPoses.push_back({origin, effectiveAngle});
+                        }
+                    }
+                }
+            }
+        }
+
+      if(bestPoses.empty())
+        {
+          return {{}, 0};
+        }
+
+      const Coords &casterPosition = getCombatantCoordinates(*caster);
+      std::sort(bestPoses.begin(), bestPoses.end(), [this, &casterPosition](const auto &a, const auto &b) {
+        return getHopDistanceCoords(casterPosition, Coords(a.first)) < getHopDistanceCoords(casterPosition, Coords(b.first));
+      });
+
+      return bestPoses[0];
     }
 };

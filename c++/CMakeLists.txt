@@ -29,6 +29,7 @@ message ("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 find_package(OpenSSL REQUIRED)
 
 find_package(blaze REQUIRED)
+find_package(LAPACK REQUIRED)
 
 #----GOOGLETEST BUILD----
 add_subdirectory(${GOOGLE_TEST_DIR})
@@ -50,7 +51,10 @@ list (APPEND SOURCES ${ABILITIES} ${ACTIONS} ${COMBATANTS} ${EFFECTS} ${SPELLS} 
 #----LIBRARY CREATION----
 add_library (${PROJECT_NAME}_lib ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME}_lib PUBLIC blaze::blaze OpenSSL::SSL OpenSSL::Crypto)
+add_library( blaze_target INTERFACE )
+target_link_libraries( blaze_target INTERFACE blaze::blaze )
+
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC blaze_target OpenSSL::SSL OpenSSL::Crypto ${LAPACK_LIBRARIES})
 
 #----BINARY CREATION----
 add_executable(${PROJECT_NAME} "main.cpp")
