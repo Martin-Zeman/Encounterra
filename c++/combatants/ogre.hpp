@@ -7,7 +7,10 @@ namespace enc
   {
   public:
     Ogre(int num);
-    static constexpr int getClassId() { return _classId; }
+
+    int getClassId() const override { return _classId; }
+
+    static constexpr int getStaticClassId() { return _classId; }
     static constexpr std::string_view getClassName() { return _className; }
 
   private:

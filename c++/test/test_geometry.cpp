@@ -36,8 +36,8 @@ TEST_F(GeometryTest, HopDistanceDiagonalMedium) {
     auto draconic_sorcerer_coords = battle_map->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1);
     auto goblin_coords = battle_map->getCombatantCoordinates(*test_goblin);
 
-    // EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 4) 
-    //     << "Incorrect distance between two large combatants";
+    EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 4) 
+        << "Incorrect distance between two large combatants";
     EXPECT_EQ(getHopDistanceCoords(draconic_sorcerer_coords, goblin_coords), 4) 
         << "Incorrect distance between two large combatants";
 }
@@ -51,8 +51,8 @@ TEST_F(GeometryTest, HopDistanceDiagonalLarge) {
     auto draconic_sorcerer_coords = battle_map->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1);
     auto goblin_coords = battle_map->getCombatantCoordinates(*test_goblin);
 
-    // EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 3) 
-    //     << "Incorrect distance between two large combatants";
+    EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 3) 
+        << "Incorrect distance between two large combatants";
     EXPECT_EQ(getHopDistanceCoords(draconic_sorcerer_coords, goblin_coords), 3) 
         << "Incorrect distance between two large combatants";
 }
@@ -66,8 +66,8 @@ TEST_F(GeometryTest, HopDistanceSameY) {
     auto draconic_sorcerer_coords = battle_map->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1);
     auto goblin_coords = battle_map->getCombatantCoordinates(*test_goblin);
 
-    // EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 5) 
-    //     << "Incorrect distance between two large combatants";
+    EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 5) 
+        << "Incorrect distance between two large combatants";
     EXPECT_EQ(getHopDistanceCoords(draconic_sorcerer_coords, goblin_coords), 5) 
         << "Incorrect distance between two large combatants";
 }
@@ -81,8 +81,8 @@ TEST_F(GeometryTest, HopDistanceSameX) {
     auto draconic_sorcerer_coords = battle_map->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1);
     auto goblin_coords = battle_map->getCombatantCoordinates(*test_goblin);
 
-    // EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *gotest_goblinblin), 3) 
-    //     << "Incorrect distance between two large combatants";
+    EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 3) 
+        << "Incorrect distance between two large combatants";
     EXPECT_EQ(getHopDistanceCoords(draconic_sorcerer_coords, goblin_coords), 3) 
         << "Incorrect distance between two large combatants";
 }
@@ -96,8 +96,8 @@ TEST_F(GeometryTest, HopDistanceRandom) {
     auto draconic_sorcerer_coords = battle_map->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1);
     auto goblin_coords = battle_map->getCombatantCoordinates(*test_goblin);
 
-    // EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 4) 
-    //     << "Incorrect distance between two large combatants";
+    EXPECT_EQ(battle_map->getHopDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 4) 
+        << "Incorrect distance between two large combatants";
     EXPECT_EQ(getHopDistanceCoords(draconic_sorcerer_coords, goblin_coords), 4) 
         << "Incorrect distance between two large combatants";
 }

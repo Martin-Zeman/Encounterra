@@ -37,7 +37,7 @@ namespace enc
     // Print the grid
     for(int y = _size - 1; y >= 0; --y)
       {
-        ss << std::setw(2) << y << "\t";
+        ss << std::setw(3) << y << "\t";
         for(int x = 0; x < _size; ++x)
           {
             Coord currentCoord{x, y};
@@ -48,21 +48,20 @@ namespace enc
                 const Combatant *combatant = teams.getCombatantById(combatantId);
                 if(combatant && !combatant->isSwallowed())
                   {
-                    std::string combatantStr = combatant->_name;
-                    ss << combatantStr[0] << combatant->_id << "\t";
+                    ss << combatant->getShortCode() << "\t";
                   }
               }
             else if(_difficultSet.find(currentCoord) != _difficultSet.end())
               {
-                ss << "**\t";
+                ss << "***\t";
               }
             else if(_impassableSet.find(currentCoord) != _impassableSet.end())
               {
-                ss << "XX\t";
+                ss << "XXX\t";
               }
             else
               {
-                ss << "..\t";
+                ss << "...\t";
               }
           }
         ss << "\n";
@@ -172,7 +171,7 @@ namespace enc
     // Handle impassable terrain and other combatants
     for(const auto &[currCombatantId, coords] : _combatantCoordinateCache)
       {
-        if(currCombatantId != combatant._id && teams.getCombatantById(currCombatantId)->isAlive())
+        if(currCombatantId != combatant._instanceId && teams.getCombatantById(currCombatantId)->isAlive())
           {
             for(const auto &coord : coords.get())
               {
@@ -222,7 +221,7 @@ namespace enc
     // auto frightened_source = get_source_of_frightened(combatant);
     // if(frightened_source && frightened_source->is_alive())
     //   {
-    //     auto source_coords = _combatantCoordinateCache.at(frightened_source->_id);
+    //     auto source_coords = _combatantCoordinateCache.at(frightened_source->_instanceId);
     //     int current_hop_distance = getHopDistanceCombatants(combatant, *frightened_source);
 
     //     for(int x = 0; x < N; ++x)
@@ -312,7 +311,7 @@ namespace enc
 
   DijkstraResult BattleMap::calcDijkstra(const Combatant &combatant)
   {
-    Coord coord = _combatantCoordinateCache.at(combatant._id).get()[0];
+    Coord coord = _combatantCoordinateCache.at(combatant._instanceId).get()[0];
     auto mask = buildCombatantAdjacencyMask(combatant);
     return dijkstra(coord, _baseAdjacencyMatrix, mask);
   }
@@ -345,13 +344,13 @@ namespace enc
 
   int BattleMap::getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const
   {
-    return getHopDistanceCoords(_combatantCoordinateCache.at(combatant1._id), _combatantCoordinateCache.at(combatant2._id));
+    return getHopDistanceCoords(_combatantCoordinateCache.at(combatant1._instanceId), _combatantCoordinateCache.at(combatant2._instanceId));
   }
 
   std::optional<Coord> BattleMap::getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
                                                                const Coords &targetLocation, const blaze::DynamicVector<int> &distances, int rng)
   {
-    std::vector<Coord> adjacentCoords = getFreeCoordsInHopRange(targetLocation, distances, combatantSize, rng, combatant._id);
+    std::vector<Coord> adjacentCoords = getFreeCoordsInHopRange(targetLocation, distances, combatantSize, rng, combatant._instanceId);
 
     if(adjacentCoords.empty())
       {
@@ -532,25 +531,25 @@ namespace enc
           {
             throw std::runtime_error("Cannot place combatant at (" + std::to_string(x) + ", " + std::to_string(y) + "): Impassable terrain.");
           }
-        // if (_occupancyGrid(x, y) == static_cast<int>(Occupancy::OCCUPIED_BY_COMBATANT) && _combatantGrid(x, y) != combatant._id) {
-        if(_combatantGrid(x, y) != -1 && _combatantGrid(x, y) != combatant._id)
+        // if (_occupancyGrid(x, y) == static_cast<int>(Occupancy::OCCUPIED_BY_COMBATANT) && _combatantGrid(x, y) != combatant._instanceId) {
+        if(_combatantGrid(x, y) != -1 && _combatantGrid(x, y) != combatant._instanceId)
           {
             throw std::runtime_error("Cannot place combatant at (" + std::to_string(x) + ", " + std::to_string(y)
                                      + "): Already occupied by another combatant.");
           }
 
-        _combatantGrid(x, y) = combatant._id;
+        _combatantGrid(x, y) = combatant._instanceId;
         // _occupancyGrid(x, y) = static_cast<int>(Occupancy::OCCUPIED_BY_COMBATANT);
       }
 
     // Update the combatant_coordinate_cache using the combatant ID
-    // _combatantCoordinateCache.emplace(combatant._id, coords);
-    _combatantCoordinateCache.insert_or_assign(combatant._id, coords);
+    // _combatantCoordinateCache.emplace(combatant._instanceId coords);
+    _combatantCoordinateCache.insert_or_assign(combatant._instanceId, coords);
   }
 
   void BattleMap::moveCombatantByIncrement(const Combatant &combatant, const Coord &increment)
   {
-    const auto &oldCoords = _combatantCoordinateCache.at(combatant._id);
+    const auto &oldCoords = _combatantCoordinateCache.at(combatant._instanceId);
     for(const auto &[x, y] : oldCoords.get())
       {
         _combatantGrid(x, y) = -1;
@@ -564,15 +563,15 @@ namespace enc
           {
             throw std::out_of_range("New coordinate out of bounds.");
           }
-        _combatantGrid(x, y) = combatant._id;
+        _combatantGrid(x, y) = combatant._instanceId;
       }
 
-    _combatantCoordinateCache.insert_or_assign(combatant._id, std::move(newCoords));
+    _combatantCoordinateCache.insert_or_assign(combatant._instanceId, std::move(newCoords));
   }
 
   void BattleMap::moveCombatant(const Combatant &combatant, const Coord &newCoord, bool log)
   {
-    const auto &oldCoords = _combatantCoordinateCache.at(combatant._id);
+    const auto &oldCoords = _combatantCoordinateCache.at(combatant._instanceId);
     for(const auto &[x, y] : oldCoords.get())
       {
         _combatantGrid(x, y) = -1;
@@ -587,10 +586,10 @@ namespace enc
           {
             throw std::out_of_range("New coordinate out of bounds.");
           }
-        _combatantGrid(x, y) = combatant._id;
+        _combatantGrid(x, y) = combatant._instanceId;
       }
 
-    _combatantCoordinateCache.insert_or_assign(combatant._id, std::move(newCoords));
+    _combatantCoordinateCache.insert_or_assign(combatant._instanceId, std::move(newCoords));
 
     if(log)
       {
@@ -599,7 +598,7 @@ namespace enc
       }
   }
 
-  const Coords &BattleMap::getCombatantCoordinates(const Combatant &combatant) const { return _combatantCoordinateCache.at(combatant._id); }
+  const Coords &BattleMap::getCombatantCoordinates(const Combatant &combatant) const { return _combatantCoordinateCache.at(combatant._instanceId); }
 
   bool BattleMap::placeTerrain(const Coord &coord, Terrain terrainType, int radius)
   {
@@ -681,7 +680,7 @@ namespace enc
 
   void BattleMap::removeCombatant(const Combatant &combatant)
   {
-    auto it = _combatantCoordinateCache.find(combatant._id);
+    auto it = _combatantCoordinateCache.find(combatant._instanceId);
     if(it == _combatantCoordinateCache.end())
       {
         return; // already removed
@@ -708,7 +707,7 @@ namespace enc
             grappler->removeCondition(Conditions::GRAPPLING);
           }
         targetToRemove->onDie();
-        // spdlog::info("{} died", targetToRemove.getName());
+        // spdlog::info("{} died", targetToRemove._name);
         removeCombatant(*targetToRemove);
         return false;
       }
@@ -756,7 +755,7 @@ namespace enc
     Teams &teams = Teams::getInstance();
 
     const Combatant *swallower = caster->getSwallower();
-    const Coords &caster_coords = swallower ? _combatantCoordinateCache.at(swallower->_id) : _combatantCoordinateCache.at(caster->_id);
+    const Coords &caster_coords = swallower ? _combatantCoordinateCache.at(swallower->_instanceId) : _combatantCoordinateCache.at(caster->_instanceId);
 
     for(int x = bb(0, 0); x <= bb(1, 0); ++x)
       {
@@ -803,7 +802,7 @@ namespace enc
     std::vector<Combatant *> affected_combatants;
     Teams &teams = Teams::getInstance();
 
-    const Coords &caster_coords = _combatantCoordinateCache.at(caster->_id);
+    const Coords &caster_coords = _combatantCoordinateCache.at(caster->_instanceId);
 
     for(int x = bb(0, 0); x <= bb(1, 0); ++x)
       {
@@ -852,7 +851,7 @@ namespace enc
     Teams &teams = Teams::getInstance();
     for(Combatant *enemy : teams.getEnemies(*caster))
       {
-        enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_id).getCenter());
+        enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_instanceId).getCenter());
       }
 
     auto [m, c] = linearRegression(enemyPositions);
@@ -868,7 +867,7 @@ namespace enc
     std::set<Coord> allCombatantCoords;
     for(const auto &[combatantId, coords] : _combatantCoordinateCache)
       {
-        if(combatantId != caster->_id)
+        if(combatantId != caster->_instanceId)
           {
             combatantIdsToCoords[combatantId] = &coords;
             const auto &coordVec = coords.get();
@@ -903,7 +902,7 @@ namespace enc
                         if(std::any_of(coordVec.begin(), coordVec.end(),
                                        [&affectedCoords](const Coord &c) { return affectedCoords.find(c) != affectedCoords.end(); }))
                           {
-                            if(combatantId == caster->_id)
+                            if(combatantId == caster->_instanceId)
                               continue;
                             Combatant *currCombatant = teams.getCombatantById(combatantId);
                             score += teams.areEnemies(*caster, *currCombatant) && currCombatant->isAlive() ? 1 : -4;

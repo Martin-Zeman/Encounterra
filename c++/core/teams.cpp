@@ -18,29 +18,29 @@ namespace enc
 
   void Teams::addCombatantToTeam(Combatant &combatant, Color teamColor)
   {
-    _idToCombatant[combatant._id] = &combatant;
-    _combatantIdToTeamColor[combatant._id] = teamColor;
-    _colorToCombatantIds[teamColor].push_back(combatant._id);
+    _idToCombatant[combatant._instanceId] = &combatant;
+    _combatantIdToTeamColor[combatant._instanceId] = teamColor;
+    _colorToCombatantIds[teamColor].push_back(combatant._instanceId);
     combatant.setTeamColor(teamColor);
   }
 
   void Teams::replaceCombatant(const Combatant &combatantOld, Combatant &combatantNew)
   {
-    Color teamColor = _combatantIdToTeamColor[combatantOld._id];
-    _combatantIdToTeamColor[combatantNew._id] = teamColor;
-    _combatantIdToTeamColor.erase(combatantOld._id);
+    Color teamColor = _combatantIdToTeamColor[combatantOld._instanceId];
+    _combatantIdToTeamColor[combatantNew._instanceId] = teamColor;
+    _combatantIdToTeamColor.erase(combatantOld._instanceId);
 
     auto &teamIds = _colorToCombatantIds[teamColor];
-    teamIds.erase(std::remove(teamIds.begin(), teamIds.end(), combatantOld._id), teamIds.end());
-    teamIds.push_back(combatantNew._id);
+    teamIds.erase(std::remove(teamIds.begin(), teamIds.end(), combatantOld._instanceId), teamIds.end());
+    teamIds.push_back(combatantNew._instanceId);
 
-    _idToCombatant.erase(combatantOld._id);
-    _idToCombatant[combatantNew._id] = &combatantNew;
+    _idToCombatant.erase(combatantOld._instanceId);
+    _idToCombatant[combatantNew._instanceId] = &combatantNew;
   }
 
-  std::string Teams::getTeamColorCode(const Combatant &combatant) const { return toString(_combatantIdToTeamColor.at(combatant._id)); }
+  std::string Teams::getTeamColorCode(const Combatant &combatant) const { return toString(_combatantIdToTeamColor.at(combatant._instanceId)); }
 
-  Color Teams::getTeamColor(const Combatant &combatant) const { return _combatantIdToTeamColor.at(combatant._id); }
+  Color Teams::getTeamColor(const Combatant &combatant) const { return _combatantIdToTeamColor.at(combatant._instanceId); }
 
   std::vector<Color> Teams::getSurvivingTeams() const
   {
@@ -77,19 +77,19 @@ namespace enc
 
   bool Teams::areAllies(const Combatant &first, const Combatant &second) const
   {
-    return _combatantIdToTeamColor.at(first._id) == _combatantIdToTeamColor.at(second._id);
+    return _combatantIdToTeamColor.at(first._instanceId) == _combatantIdToTeamColor.at(second._instanceId);
   }
 
   bool Teams::areEnemies(const Combatant &first, const Combatant &second) const
   {
-    return _combatantIdToTeamColor.at(first._id) != _combatantIdToTeamColor.at(second._id);
+    return _combatantIdToTeamColor.at(first._instanceId) != _combatantIdToTeamColor.at(second._instanceId);
   }
 
-  Color Teams::getTeam(const Combatant &combatant) const { return _combatantIdToTeamColor.at(combatant._id); }
+  Color Teams::getTeam(const Combatant &combatant) const { return _combatantIdToTeamColor.at(combatant._instanceId); }
 
   std::vector<Combatant *> Teams::getAllies(const Combatant &combatant) const
   {
-    std::vector<int> allyIds = _colorToCombatantIds.at(_combatantIdToTeamColor.at(combatant._id));
+    std::vector<int> allyIds = _colorToCombatantIds.at(_combatantIdToTeamColor.at(combatant._instanceId));
     std::vector<Combatant *> allies;
     allies.reserve(allyIds.size());
     for(auto id : allyIds)
@@ -101,7 +101,7 @@ namespace enc
 
   std::vector<Combatant *> Teams::getEnemies(const Combatant &combatant) const
   {
-    Color otherTeam = (_combatantIdToTeamColor.at(combatant._id) == Color::BLUE) ? Color::RED : Color::BLUE;
+    Color otherTeam = (_combatantIdToTeamColor.at(combatant._instanceId) == Color::BLUE) ? Color::RED : Color::BLUE;
     std::vector<int> enemyIds = _colorToCombatantIds.at(otherTeam);
     std::vector<Combatant *> enemies;
     enemies.reserve(enemyIds.size());

@@ -31,7 +31,7 @@ namespace enc
     // CombatantType _type;
     // SubType _subtype;
     // int _level;
-    int _id;
+    int _instanceId;
 
     Combatant(CombatantType type, SubType subtype, int level, std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances = {},
               std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
@@ -76,8 +76,9 @@ namespace enc
     
 
     std::string toString() const;
-    void setShortCode(std::string&& shortCode ){_shortCode = std::move(shortCode);}
-    std::string getShortCode(){ return _shortCode;}
+    void setShortCode(const std::string& shortCode ){_shortCode = shortCode;}
+    std::string getShortCode() const { return _shortCode;}
+    virtual int getClassId() const = 0;
 
     bool isAlive() const;
 
@@ -177,7 +178,7 @@ namespace enc
   protected:
     Size _size{Size::MEDIUM};
     int _classId;
-    int _instanceId;
+    // int _instanceId;
     CombatantType _type;
     SubType _subtype;
     int _level;
