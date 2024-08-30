@@ -19,6 +19,7 @@
 #include <set>
 #include <algorithm>
 #include <memory>
+#include <chrono>
 
 using namespace enc;
 
@@ -758,61 +759,184 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulCircular)
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), wild_heart_barbarian) == affected.end());
 }
 
-TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone1) {
-    session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
-    session->addCombatant(goblin, Color::RED);
-    session->addCombatant(bugbear, Color::RED);
-    session->addCombatant(ogre, Color::BLUE);
-    session->addCombatant(stone_giant, Color::RED);
-    // teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
-    // teams->addCombatantToTeam(*goblin, Color::RED);
-    // teams->addCombatantToTeam(*bugbear, Color::RED);
-    // teams->addCombatantToTeam(*ogre, Color::BLUE);
-    // teams->addCombatantToTeam(*stone_giant, Color::RED);
-    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
-    battleMap->setCombatantCoordinates(*goblin, {2, 11});
-    battleMap->setCombatantCoordinates(*bugbear, {4, 11});
-    battleMap->setCombatantCoordinates(*ogre, {5, 10});
-    battleMap->setCombatantCoordinates(*stone_giant, {5, 12});
+TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone1)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  session->addCombatant(ogre, Color::BLUE);
+  session->addCombatant(stone_giant, Color::RED);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
+  battleMap->setCombatantCoordinates(*goblin, {2, 11});
+  battleMap->setCombatantCoordinates(*bugbear, {4, 11});
+  battleMap->setCombatantCoordinates(*ogre, {5, 10});
+  battleMap->setCombatantCoordinates(*stone_giant, {5, 12});
 
-    auto [bestCoord, bestAngle] = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
-    EXPECT_EQ(bestCoord, (Coord{0, 10}));
-    EXPECT_NEAR(bestAngle, 48.43, 0.01);
+  // auto start = std::chrono::high_resolution_clock::now();
+  auto result = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
+  //  auto end = std::chrono::high_resolution_clock::now();
+  // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    
+  // std::cout << "Execution time of findBestPlacementHarmfulCone: " << duration.count() << " microseconds" << std::endl;
+  ASSERT_TRUE(result.has_value());
+  auto [bestCoord, bestAngle, maxScore] = *result;
+  EXPECT_EQ(bestCoord, (Coord{0, 10}));
+  EXPECT_EQ(maxScore, 3);
+  EXPECT_NEAR(bestAngle, 48.43, 0.01);
 
-    battleMap->moveCombatant(*ogre, {3, 12});
-    std::cout << battleMap->toString();
-    std::tie(bestCoord, bestAngle) = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
-    EXPECT_TRUE(bestCoord == (Coord{2, 10}) || bestCoord == (Coord{1, 9}));
-    EXPECT_TRUE(std::abs(bestAngle - 75.43) < 0.1 || std::abs(bestAngle - 78.43) < 0.1);
+  battleMap->moveCombatant(*ogre, {2, 12});
+  result = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
+
+  ASSERT_TRUE(result.has_value());
+  std::tie(bestCoord, bestAngle, maxScore) = *result;
+  EXPECT_EQ(bestCoord, (Coord{0, 9}));
+  EXPECT_EQ(maxScore, 2);
+  EXPECT_NEAR(bestAngle, 75.43, 0.01);
 }
 
-TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone2) {
-    teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
-    teams->addCombatantToTeam(*goblin, Color::RED);
-    teams->addCombatantToTeam(*bugbear, Color::RED);
-    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 4});
-    battleMap->setCombatantCoordinates(*goblin, {5, 8});
-    battleMap->setCombatantCoordinates(*bugbear, {8, 5});
+TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone2)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 4});
+  battleMap->setCombatantCoordinates(*goblin, {5, 8});
+  battleMap->setCombatantCoordinates(*bugbear, {8, 5});
 
-    auto [bestCoord, bestAngle] = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
-    EXPECT_TRUE(bestCoord == (Coord{4, 9}) || bestCoord == (Coord{9, 4}));
-    EXPECT_TRUE(std::abs(bestAngle - 135.0) < 0.1 || std::abs(bestAngle - 315.0) < 0.1 || std::abs(bestAngle - 138.0) < 0.1);
+  auto result = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
+    
+  ASSERT_TRUE(result.has_value());
+  auto [bestCoord, bestAngle, maxScore] = *result;
+  EXPECT_EQ(bestCoord, (Coord{4, 9}));
+  EXPECT_EQ(maxScore, 2);
+  EXPECT_TRUE(std::abs(bestAngle - 135.0) < 0.01 || std::abs(bestAngle - 132.0) < 0.01 || std::abs(bestAngle - 138.0) < 0.01);
 }
 
-TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone3) {
-    teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
-    teams->addCombatantToTeam(*wild_heart_barbarian, Color::RED);
-    teams->addCombatantToTeam(*battlemaster_fighter_lvl_5, Color::BLUE);
-    teams->addCombatantToTeam(*green_dragon_wyrmling, Color::BLUE);
-    teams->addCombatantToTeam(*giant_toad, Color::BLUE);
-    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {8, 8});
-    battleMap->setCombatantCoordinates(*wild_heart_barbarian, {7, 13});
-    battleMap->setCombatantCoordinates(*battlemaster_fighter_lvl_5, {7, 12});
-    battleMap->setCombatantCoordinates(*green_dragon_wyrmling, {8, 7});
-    battleMap->setCombatantCoordinates(*giant_toad, {5, 11});
+TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone3)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(wild_heart_barbarian, Color::RED);
+  session->addCombatant(battlemaster_fighter_lvl_5, Color::BLUE);
+  session->addCombatant(green_dragon_wyrmling, Color::BLUE);
+  session->addCombatant(giant_toad, Color::BLUE);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {8, 8});
+  battleMap->setCombatantCoordinates(*wild_heart_barbarian, {7, 13});
+  battleMap->setCombatantCoordinates(*battlemaster_fighter_lvl_5, {7, 12});
+  battleMap->setCombatantCoordinates(*green_dragon_wyrmling, {8, 7});
+  battleMap->setCombatantCoordinates(*giant_toad, {5, 11});
 
-    auto [bestCoord, bestAngle] = battleMap->findBestPlacementHarmfulCone(green_dragon_wyrmling, TRANSLATE_CONE.at(SpellTarget::CONE_15));
-    EXPECT_TRUE(bestCoord.empty());  // There's no way we can't hit an ally
+  auto result = battleMap->findBestPlacementHarmfulCone(green_dragon_wyrmling, TRANSLATE_CONE.at(SpellTarget::CONE_15));
+
+  EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(BattleMapTest, FindBestPlacementsHarmfulLine1)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  session->addCombatant(ogre, Color::BLUE);
+  session->addCombatant(stone_giant, Color::RED);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
+  battleMap->setCombatantCoordinates(*goblin, {2, 11});
+  battleMap->setCombatantCoordinates(*bugbear, {4, 11});
+  battleMap->setCombatantCoordinates(*ogre, {5, 10});
+  battleMap->setCombatantCoordinates(*stone_giant, {5, 12});
+  // std::cout << battleMap->toString(true);
+
+  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 6, 1); // 6 squares long, 1 square wide
+
+  ASSERT_TRUE(result.has_value());
+  auto [bestCoord, bestAngle, maxScore] = *result;
+  EXPECT_EQ(bestCoord, (Coord{0, 10}));
+  EXPECT_EQ(maxScore, 3);
+  EXPECT_NEAR(bestAngle, 69.43, 0.01);
+}
+
+TEST_F(BattleMapTest, FindBestPlacementsHarmfulLine2)
+{
+  ogre->setSize(Size::MEDIUM);
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  session->addCombatant(ogre, Color::BLUE);
+  session->addCombatant(stone_giant, Color::RED);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
+  battleMap->setCombatantCoordinates(*goblin, {2, 11});
+  battleMap->setCombatantCoordinates(*bugbear, {4, 11});
+  battleMap->setCombatantCoordinates(*ogre, {3, 11});
+  battleMap->setCombatantCoordinates(*stone_giant, {5, 12});
+
+  // std::cout << battleMap->toString(true);
+  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 6, 1);
+
+  ASSERT_TRUE(result.has_value());
+  auto [bestCoord, bestAngle, maxScore] = *result;
+  EXPECT_EQ(bestCoord, (Coord{0, 10}));
+  EXPECT_EQ(maxScore, 2);
+  EXPECT_NEAR(bestAngle, 54.43, 0.01);
+}
+
+TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineDifferentLengths)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(wild_heart_barbarian, Color::RED);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 0});
+  battleMap->setCombatantCoordinates(*wild_heart_barbarian, {14, 14});
+  // std::cout << battleMap->toString(true);
+
+  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 2, 1);
+  EXPECT_TRUE(result.has_value());
+  auto [bestCoord, bestAngle, maxScore] = *result;
+  EXPECT_EQ(bestCoord, (Coord{13, 13}));
+  EXPECT_EQ(maxScore, 1);
+  EXPECT_NEAR(bestAngle, 45.0, 0.01);
+
+  result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 20, 1);
+  EXPECT_TRUE(result.has_value());
+  std::tie(bestCoord, bestAngle, maxScore) = *result;
+  EXPECT_EQ(bestCoord, (Coord{0, 0}));
+  EXPECT_EQ(maxScore, 1);
+  EXPECT_NEAR(bestAngle, 45.0, 0.01);
+}
+
+TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineNoValidPlacement)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::BLUE);
+  session->addCombatant(bugbear, Color::BLUE);
+  session->addCombatant(green_dragon_wyrmling, Color::BLUE);
+  session->addCombatant(wild_heart_barbarian, Color::RED);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 0});
+  battleMap->setCombatantCoordinates(*goblin, {13, 14});
+  battleMap->setCombatantCoordinates(*bugbear, {13, 13});
+  battleMap->setCombatantCoordinates(*green_dragon_wyrmling, {14, 13});
+  battleMap->setCombatantCoordinates(*wild_heart_barbarian, {14, 14});
+  // std::cout << battleMap->toString(true);
+
+  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 2, 1);
+  EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineWiderLine)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  session->addCombatant(wild_heart_barbarian, Color::RED);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 4});
+  battleMap->setCombatantCoordinates(*goblin, {5, 7});
+  battleMap->setCombatantCoordinates(*bugbear, {8, 6});
+  battleMap->setCombatantCoordinates(*wild_heart_barbarian, {8, 4});
+  std::cout << battleMap->toString(true);
+
+  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 6, 3);
+
+  ASSERT_TRUE(result.has_value());
+  auto [bestCoord, bestAngle, maxScore] = *result;
+  EXPECT_EQ(bestCoord, (Coord{4, 8}));
+  EXPECT_EQ(maxScore, 3);
+  EXPECT_NEAR(bestAngle, 135.69, 0.01);
 }
 
 // TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwave)

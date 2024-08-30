@@ -6,6 +6,9 @@
 #include <stdexcept>
 #include <queue>
 #include <set>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
 
 namespace enc
 {
@@ -29,15 +32,20 @@ namespace enc
 
   void BattleMap::resetInstance(size_t size) { _instance.reset(new BattleMap(size)); }
 
-  std::string BattleMap::toString() const
+  std::string BattleMap::toString(bool color) const
   {
     std::ostringstream ss;
     Teams &teams = Teams::getInstance();
 
+    // ANSI escape codes for colors
+    const std::string RED = "\033[1;31m";
+    const std::string BLUE = "\033[1;34m";
+    const std::string RESET = "\033[0m";
+
     // Print the grid
     for(int y = _size - 1; y >= 0; --y)
       {
-        ss << std::setw(3) << y << "\t";
+        ss << std::setw(2) << y << " ";
         for(int x = 0; x < _size; ++x)
           {
             Coord currentCoord{x, y};
@@ -48,30 +56,43 @@ namespace enc
                 const Combatant *combatant = teams.getCombatantById(combatantId);
                 if(combatant && !combatant->isSwallowed())
                   {
-                    ss << combatant->getShortCode() << "\t";
+                    if(color)
+                      {
+                        Color teamColor = teams.getTeam(*combatant);
+                        if(teamColor == Color::RED)
+                          ss << RED;
+                        else if(teamColor == Color::BLUE)
+                          ss << BLUE;
+                      }
+                    ss << combatant->getShortCode();
+                    if(color)
+                      {
+                        ss << RESET;
+                      }
                   }
               }
             else if(_difficultSet.find(currentCoord) != _difficultSet.end())
               {
-                ss << "***\t";
+                ss << "***";
               }
             else if(_impassableSet.find(currentCoord) != _impassableSet.end())
               {
-                ss << "XXX\t";
+                ss << "XXX";
               }
             else
               {
-                ss << "...\t";
+                ss << "...";
               }
+            ss << " "; // Single space between cells
           }
         ss << "\n";
       }
 
     // Print X-axis legend
-    ss << "\t";
+    ss << "  "; // Align with the Y-axis numbers
     for(int x = 0; x < _size; ++x)
       {
-        ss << x << "\t";
+        ss << std::setw(3) << x << " ";
       }
     ss << "\n";
 
@@ -845,13 +866,23 @@ namespace enc
     return std::make_tuple(Coord{}, 0, std::vector<Combatant *>{});
   }
 
-  std::pair<Coord, double> BattleMap::findBestPlacementHarmfulCone(const Combatant *caster, int radius)
+  std::optional<std::tuple<Coord, double, int>> BattleMap::findBestPlacementHarmfulCone(const Combatant *caster, int radius)
   {
     std::vector<std::array<double, 2>> enemyPositions;
     Teams &teams = Teams::getInstance();
     for(Combatant *enemy : teams.getEnemies(*caster))
       {
         enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_instanceId).getCenter());
+      }
+
+    if(enemyPositions.size() == 0)
+      {
+        return std::nullopt;
+      }
+    if(enemyPositions.size() == 1)
+      {
+        // pad with the caster's position
+        enemyPositions.push_back(_combatantCoordinateCache.at(caster->_instanceId).getCenter());
       }
 
     auto [m, c] = linearRegression(enemyPositions);
@@ -875,8 +906,8 @@ namespace enc
           }
       }
 
-    int maxScore = std::numeric_limits<int>::lowest();
-    std::vector<std::pair<Coord, double>> bestPoses;
+    int maxScore = 0;
+    std::vector<std::tuple<Coord, double, int>> bestPoses;
 
     for(double angle : angleRange)
       {
@@ -892,7 +923,7 @@ namespace enc
             if(origin[0] >= 0 && origin[0] < _size && origin[1] >= 0 && origin[1] < _size && origin != lastOrigin)
               {
                 lastOrigin = origin;
-                for(double effectiveAngle : {angle, angle + 180.0})
+                for(double effectiveAngle : {angle, angle + 180.0}) // Try both the angle and its 180-degree opposite
                   {
                     int score = 0;
                     auto affectedCoords = getAffectedByCone(origin, effectiveAngle, radius, _size);
@@ -903,7 +934,7 @@ namespace enc
                                        [&affectedCoords](const Coord &c) { return affectedCoords.find(c) != affectedCoords.end(); }))
                           {
                             if(combatantId == caster->_instanceId)
-                              continue;
+                              continue; // This is important, otherwise the final breath destination will degrade in its rating once reached
                             Combatant *currCombatant = teams.getCombatantById(combatantId);
                             score += teams.areEnemies(*caster, *currCombatant) && currCombatant->isAlive() ? 1 : -4;
                           }
@@ -911,11 +942,11 @@ namespace enc
                     if(score > maxScore)
                       {
                         maxScore = score;
-                        bestPoses = {{origin, effectiveAngle}};
+                        bestPoses = {{origin, effectiveAngle, maxScore}};
                       }
                     else if(score == maxScore && score > 0)
                       {
-                        bestPoses.push_back({origin, effectiveAngle});
+                        bestPoses.push_back({origin, effectiveAngle, maxScore});
                       }
                   }
               }
@@ -924,12 +955,113 @@ namespace enc
 
     if(bestPoses.empty())
       {
-        return {{}, 0};
+        return std::nullopt; // If no path is found
       }
 
     const Coords &casterPosition = getCombatantCoordinates(*caster);
     std::sort(bestPoses.begin(), bestPoses.end(), [this, &casterPosition](const auto &a, const auto &b) {
-      return getHopDistanceCoords(casterPosition, Coords(a.first)) < getHopDistanceCoords(casterPosition, Coords(b.first));
+      return getHopDistanceCoords(casterPosition, Coords(std::get<0>(a))) < getHopDistanceCoords(casterPosition, Coords(std::get<0>(b)));
+    });
+
+    return bestPoses[0];
+  }
+
+  std::optional<std::tuple<Coord, double, int>> BattleMap::findBestPlacementHarmfulLine(const Combatant *caster, int length, int width)
+  {
+    std::vector<std::array<double, 2>> enemyPositions;
+    Teams &teams = Teams::getInstance();
+    for(Combatant *enemy : teams.getEnemies(*caster))
+      {
+        enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_instanceId).getCenter());
+      }
+
+    if(enemyPositions.empty())
+      {
+        return std::nullopt; // Return empty optional if there are no enemies
+      }
+
+    if(enemyPositions.size() == 1)
+      {
+        // pad with the caster's position
+        enemyPositions.push_back(_combatantCoordinateCache.at(caster->_instanceId).getCenter());
+      }
+
+    auto [m, c] = linearRegression(enemyPositions);
+    double baseAngle = 90.0 - getAngleFromSlope(m);
+
+    std::vector<double> angleRange;
+    for(double angle = baseAngle - 15.0; angle <= baseAngle + 15.1; angle += 3.0)
+      {
+        angleRange.push_back(angle);
+      }
+
+    std::unordered_map<int, const Coords *> combatantIdsToCoords;
+    std::set<Coord> allCombatantCoords;
+    for(const auto &[combatantId, coords] : _combatantCoordinateCache)
+      {
+        if(combatantId != caster->_instanceId)
+          {
+            combatantIdsToCoords[combatantId] = &coords;
+            const auto &coordVec = coords.get();
+            allCombatantCoords.insert(coordVec.begin(), coordVec.end());
+          }
+      }
+
+    int maxScore = 0;
+    std::vector<std::tuple<Coord, double, int>> bestPoses;
+
+    for(double angle : angleRange)
+      {
+        auto samplePoints = samplePointsOnLine(std::tan(angle * M_PI / 180.0), c, _size);
+        Coord lastOrigin = {-1, -1};
+        for(const auto &point : samplePoints)
+          {
+            Coord origin = {static_cast<int>(std::round(point[0])), static_cast<int>(std::round(point[1]))};
+            if(allCombatantCoords.find(origin) != allCombatantCoords.end())
+              {
+                continue; // Skip origins that are already occupied by combatants
+              }
+            if(origin[0] >= 0 && origin[0] < _size && origin[1] >= 0 && origin[1] < _size && origin != lastOrigin)
+              {
+                lastOrigin = origin;
+                for(double effectiveAngle : {angle, angle + 180.0}) // Try both the angle and its 180-degree opposite
+                  {
+                    int score = 0;
+                    auto affectedCoords = getAffectedByLine(origin, effectiveAngle, length, width, _size);
+                    for(const auto &[combatantId, coords] : combatantIdsToCoords)
+                      {
+                        const auto &coordVec = coords->get();
+                        if(std::any_of(coordVec.begin(), coordVec.end(),
+                                       [&affectedCoords](const Coord &c) { return affectedCoords.find(c) != affectedCoords.end(); }))
+                          {
+                            if(combatantId == caster->_instanceId)
+                              continue; // This is important, otherwise the final breath destination will degrade in its rating once reached
+                            Combatant *currCombatant = teams.getCombatantById(combatantId);
+                            score += teams.areEnemies(*caster, *currCombatant) && currCombatant->isAlive() ? 1 : -4;
+                          }
+                      }
+                    if(score > maxScore)
+                      {
+                        maxScore = score;
+                        bestPoses = {{origin, effectiveAngle, maxScore}};
+                      }
+                    else if(score == maxScore && score > 0)
+                      {
+                        bestPoses.push_back({origin, effectiveAngle, maxScore});
+                      }
+                  }
+              }
+          }
+      }
+
+    if(bestPoses.empty())
+      {
+        return std::nullopt; // Return empty optional if no valid placement is found
+      }
+
+    const Coords &casterPosition = getCombatantCoordinates(*caster);
+    std::sort(bestPoses.begin(), bestPoses.end(), [this, &casterPosition](const auto &a, const auto &b) {
+      return getHopDistanceCoords(casterPosition, Coords(std::get<0>(a))) < getHopDistanceCoords(casterPosition, Coords(std::get<0>(b)));
     });
 
     return bestPoses[0];

@@ -126,7 +126,7 @@ namespace enc
 
     blaze::DynamicMatrix<double> A(n, 2);
     column(A, 0) = x;
-    column(A, 1) = 1.0;
+    column(A, 1) = blaze::DynamicVector<double>(n, 1.0); // Ensuring a column of ones
 
     // Solve the normal equation: (A^T * A) * result = A^T * y
     blaze::DynamicMatrix<double> ATA = blaze::trans(A) * A;
@@ -138,15 +138,20 @@ namespace enc
     return {result[0], result[1]}; // m, c
   }
 
-  std::vector<Coord> samplePointsOnLine(double m, double c, int gridSize, int numSamples)
+
+  std::vector<std::array<double, 2>> samplePointsOnLine(double m, double c, int gridSize, int numSamples)
   {
-    std::vector<Coord> points;
+    std::vector<std::array<double, 2>> points;
+    points.reserve(numSamples);
+
+    double step = (gridSize - 1.0) / (numSamples - 1);
     for(int i = 0; i < numSamples; ++i)
       {
-        double x = i * (gridSize - 1.0) / (numSamples - 1);
+        double x = i * step;
         double y = m * x + c;
-        points.push_back({static_cast<int>(std::round(x)), static_cast<int>(std::round(y))});
+        points.push_back({x, y});
       }
+
     return points;
   }
 
@@ -204,4 +209,42 @@ namespace enc
     return coords;
   }
 
+  std::set<Coord> getAffectedByLine(const Coord &origin, double angleDeg, double length, double width, int gridSize)
+  {
+    blaze::StaticVector<double, 2> originCenter = getSquareCenter(origin);
+    double halfWidth = width / 2.0;
+
+    double angleRad = angleDeg * M_PI / 180.0;
+    std::array<double, 2> directionVector = {std::sin(angleRad), std::cos(angleRad)};
+
+    std::array<double, 2> perpendicularVector = {-directionVector[1], directionVector[0]};
+
+    std::set<Coord> coords;
+
+    for(int x = 0; x < gridSize; ++x)
+      {
+        for(int y = 0; y < gridSize; ++y)
+          {
+            blaze::StaticVector<double, 2> currCoordCenter = getSquareCenter({x, y});
+            std::array<double, 2> vectorToCoord = {currCoordCenter[0] - originCenter[0], currCoordCenter[1] - originCenter[1]};
+
+            double distanceAlongLine = vectorToCoord[0] * directionVector[0] + vectorToCoord[1] * directionVector[1];
+
+            if(0 <= distanceAlongLine && distanceAlongLine <= length)
+              {
+                double distancePerpendicular = std::abs(vectorToCoord[0] * perpendicularVector[0] + vectorToCoord[1] * perpendicularVector[1]);
+
+                if(distancePerpendicular <= halfWidth)
+                  {
+                    coords.insert({x, y});
+                  }
+              }
+          }
+      }
+
+    // Uncomment the following line if you want to remove the origin from the affected coordinates
+    // coords.erase(origin);
+
+    return coords;
+  }
 }

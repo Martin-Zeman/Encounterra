@@ -27,12 +27,14 @@ namespace enc
 
   std::pair<double, double> linearRegression(const std::vector<std::array<double, 2>> &enemyPositions);
 
-  std::vector<Coord> samplePointsOnLine(double m, double c, int gridSize, int numSamples = 20);
+  std::vector<std::array<double, 2>> samplePointsOnLine(double m, double c, int gridSize, int numSamples = 20);
 
   double getAngleFromSlope(double m);
 
   blaze::StaticVector<double, 2> getSquareCenter(const Coord &coord);
 
   std::set<Coord> getAffectedByCone(const Coord &origin, double angleDeg, int radius, int gridSize);
+
+  std::set<Coord> getAffectedByLine(const Coord &origin, double angleDeg, double length, double width, int gridSize);
 
 }

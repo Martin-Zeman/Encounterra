@@ -13,7 +13,7 @@
 
 using namespace enc;
 
-class GeometryTest : public ::testing::Test
+class getHopDistance : public ::testing::Test
 {
 protected:
   BattleMap *battle_map;
@@ -29,7 +29,7 @@ protected:
   }
 };
 
-TEST_F(GeometryTest, HopDistanceDiagonalMedium) {
+TEST_F(getHopDistance, HopDistanceDiagonalMedium) {
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
     battle_map->setCombatantCoordinates(*test_goblin, Coord{4, 4});
 
@@ -42,7 +42,7 @@ TEST_F(GeometryTest, HopDistanceDiagonalMedium) {
         << "Incorrect distance between two large combatants";
 }
 
-TEST_F(GeometryTest, HopDistanceDiagonalLarge) {
+TEST_F(getHopDistance, HopDistanceDiagonalLarge) {
     test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
     test_goblin->setSize(Size::LARGE);
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
@@ -57,7 +57,7 @@ TEST_F(GeometryTest, HopDistanceDiagonalLarge) {
         << "Incorrect distance between two large combatants";
 }
 
-TEST_F(GeometryTest, HopDistanceSameY) {
+TEST_F(getHopDistance, HopDistanceSameY) {
     test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
     test_goblin->setSize(Size::LARGE);
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
@@ -72,7 +72,7 @@ TEST_F(GeometryTest, HopDistanceSameY) {
         << "Incorrect distance between two large combatants";
 }
 
-TEST_F(GeometryTest, HopDistanceSameX) {
+TEST_F(getHopDistance, HopDistanceSameX) {
     test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
     test_goblin->setSize(Size::LARGE);
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
@@ -87,7 +87,7 @@ TEST_F(GeometryTest, HopDistanceSameX) {
         << "Incorrect distance between two large combatants";
 }
 
-TEST_F(GeometryTest, HopDistanceRandom) {
+TEST_F(getHopDistance, HopDistanceRandom) {
     test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
     test_goblin->setSize(Size::LARGE);
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
@@ -142,4 +142,90 @@ TEST(getAffectedByCone, Cone30Feet) {
         {4, 4}, {4, 5}, {5, 3}, {5, 4}, {5, 5}, {6, 4}
     };
     EXPECT_EQ(coords, expectedCoords);
+}
+
+TEST(GetAffectedByLineTest, VerticalLine)
+{
+  Coord origin = {3, 3};
+  double angleDeg = 0;
+  double length = 5;
+  double width = 1;
+  int gridSize = 15;
+  std::set<Coord> expectedCoords = {{{3, 3}, {3, 4}, {3, 5}, {3, 6}, {3, 7}, {3, 8}}};
+  std::set<Coord> actualCoords = getAffectedByLine(origin, angleDeg, length, width, gridSize);
+  EXPECT_EQ(actualCoords, expectedCoords);
+}
+
+TEST(GetAffectedByLineTest, HorizontalLine)
+{
+  Coord origin = {3, 3};
+  double angleDeg = 90;
+  double length = 5;
+  double width = 1;
+  int gridSize = 15;
+  std::set<Coord> expectedCoords = {{{3, 3}, {4, 3}, {5, 3}, {6, 3}, {7, 3}, {8, 3}}};
+  std::set<Coord> actualCoords = getAffectedByLine(origin, angleDeg, length, width, gridSize);
+  EXPECT_EQ(actualCoords, expectedCoords);
+}
+
+TEST(GetAffectedByLineTest, DiagonalLine)
+{
+  Coord origin = {2, 2};
+  double angleDeg = 45;
+  double length = 4;
+  double width = 2;
+  int gridSize = 15;
+  std::set<Coord> expectedCoords = {{{4, 4}, {3, 4}, {4, 3}, {5, 4}, {2, 3}, {4, 5}, {3, 3}, {2, 2}, {3, 2}}};
+  std::set<Coord> actualCoords = getAffectedByLine(origin, angleDeg, length, width, gridSize);
+  EXPECT_EQ(actualCoords, expectedCoords);
+}
+
+TEST(GetAffectedByLineTest, AngleGreaterThan180)
+{
+  Coord origin = {3, 3};
+  double angleDeg = 270;
+  double length = 5;
+  double width = 1;
+  int gridSize = 15;
+  std::set<Coord> expectedCoords = {{{2, 3}, {0, 3}, {1, 3}, {3, 3}}};
+  std::set<Coord> actualCoords = getAffectedByLine(origin, angleDeg, length, width, gridSize);
+  EXPECT_EQ(actualCoords, expectedCoords);
+}
+
+TEST(GetAffectedByLineTest, OriginAtEdge)
+{
+  Coord origin = {0, 0};
+  double angleDeg = 180;
+  double length = 5;
+  double width = 1;
+  int gridSize = 15;
+  std::set<Coord> expectedCoords = {{{0, 0}}};
+  std::set<Coord> actualCoords = getAffectedByLine(origin, angleDeg, length, width, gridSize);
+  EXPECT_EQ(actualCoords, expectedCoords);
+}
+
+TEST(GetAffectedByLineTest, OriginAtOppositeEdge)
+{
+  Coord origin = {12, 7};
+  double angleDeg = 90;
+  double length = 5;
+  double width = 1;
+  int gridSize = 15;
+  std::set<Coord> expectedCoords = {{{12, 7}, {13, 7}, {14, 7}}};
+  std::set<Coord> actualCoords = getAffectedByLine(origin, angleDeg, length, width, gridSize);
+  EXPECT_EQ(actualCoords, expectedCoords);
+}
+
+TEST(GetAffectedByLineTest, LineWidth3)
+{
+  Coord origin = {3, 3};
+  double angleDeg = 45;
+  double length = 5;
+  double width = 3;
+  int gridSize = 15;
+  std::set<Coord> expectedCoords = {{{3, 4}, {4, 3}, {5, 4}, {4, 6}, {5, 7}, {6, 5}, {4, 5},
+                                     {3, 3}, {5, 6}, {5, 3}, {2, 4}, {6, 4}, {6, 7}, {7, 6},
+                                     {3, 5}, {4, 4}, {5, 5}, {6, 6}, {7, 5}}};
+  std::set<Coord> actualCoords = getAffectedByLine(origin, angleDeg, length, width, gridSize);
+  EXPECT_EQ(actualCoords, expectedCoords);
 }

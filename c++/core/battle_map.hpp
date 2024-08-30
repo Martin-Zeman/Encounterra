@@ -27,7 +27,7 @@ namespace enc
   public:
     static BattleMap &getInstance(size_t size = 15);
     static void resetInstance(size_t size = 15);
-    std::string toString() const;
+    std::string toString(bool color = false) const;
 
     size_t getGridSize() const;
 
@@ -62,7 +62,8 @@ namespace enc
     std::tuple<Coord, int, std::vector<Combatant *>>
     findBestPlacementHarmfulCircular(const Combatant *caster, int spell_range, int radius);
     std::tuple<Coord, int, std::vector<Combatant *>> findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length);
-    std::pair<Coord, double> findBestPlacementHarmfulCone(const Combatant *caster, int radius);
+    std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulCone(const Combatant *caster, int radius);
+    std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulLine(const Combatant* caster, int length, int width);
 
   private:
     size_t _size;

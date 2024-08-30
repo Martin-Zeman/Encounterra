@@ -1,5 +1,5 @@
 import copy
-
+import time
 import pytest
 
 from simulator.actions.action_types import Passive, Action
@@ -1019,12 +1019,22 @@ def test_find_best_placements_harmful_cone_1(battle_map, teams, test_draconic_so
     battle_map.set_combatant_coordinates(test_bugbear, np.array([4, 11]))
     battle_map.set_combatant_coordinates(test_ogre, np.array([5, 10]))
     battle_map.set_combatant_coordinates(test_stone_giant, np.array([5, 12]))
+    start_time = time.time()
     best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    end_time = time.time()
+    execution_time = (end_time - start_time) * 1000000  # Convert to milliseconds
+
+    print(f"Execution time of find_best_placement_harmful_cone: {execution_time:.2f} microseconds")
     assert np.array_equal(best_placement[0], np.array((0, 10), dtype=np.int64))
     assert best_placement[1] == pytest.approx(48, 0.1)
 
     battle_map.move_combatant(test_ogre, np.array([3, 12]))  # Make the previous best orientation hit an ally
+    start_time = time.time()
     best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    end_time = time.time()
+    execution_time = (end_time - start_time) * 1000000  # Convert to milliseconds
+
+    print(f"Execution time of find_best_placement_harmful_cone: {execution_time:.2f} microseconds")
     assert np.array_equal(best_placement[0], np.array((2, 10), dtype=np.int64)) or np.array_equal(best_placement[0], np.array((1, 9), dtype=np.int64))
     assert best_placement[1] == pytest.approx(75.4, 0.1) or best_placement[1] == pytest.approx(78.4, 0.1)
 
@@ -1037,7 +1047,12 @@ def test_find_best_placements_harmful_cone_2(battle_map, teams, test_draconic_so
     battle_map.set_combatant_coordinates(test_goblin, np.array([5, 8]))
     battle_map.set_combatant_coordinates(test_bugbear, np.array([8, 5]))
 
+    start_time = time.time()
     best_placement = battle_map.find_best_placement_harmful_cone(test_draconic_sorcerer_5lvl, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_30])
+    end_time = time.time()
+    execution_time = (end_time - start_time) * 1000000  # Convert to microseconds
+
+    print(f"Execution time of find_best_placement_harmful_cone: {execution_time:.2f} microseconds")
     assert best_placement
     assert np.array_equal(best_placement[0], np.array((4, 9), dtype=np.int64)) or np.array_equal(best_placement[0], np.array((9, 4), dtype=np.int64))
     assert best_placement[1] == pytest.approx(135, 0.1) or best_placement[1] == pytest.approx(315, 0.1) or best_placement[1] == pytest.approx(138, 0.1)
@@ -1101,7 +1116,12 @@ IndexError: list index out of range
     battle_map.set_combatant_coordinates(test_green_dragon_wyrmling, np.array([8, 7]))
     battle_map.set_combatant_coordinates(test_giant_toad, np.array([5, 11]))
 
+    start_time = time.time()
     best_placement = battle_map.find_best_placement_harmful_cone(test_green_dragon_wyrmling, SpellStats.TRANSLATE_CONE[SpellStats.Target.CONE_15])
+    end_time = time.time()
+    execution_time = (end_time - start_time) * 1000000  # Convert to microseconds
+
+    print(f"Execution time of find_best_placement_harmful_cone: {execution_time:.2f} microseconds")
     assert best_placement[0].shape[0] == 0  # There's no way we can't hit an ally
 
 
