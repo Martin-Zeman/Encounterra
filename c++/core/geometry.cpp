@@ -242,8 +242,30 @@ namespace enc
           }
       }
 
-    // Uncomment the following line if you want to remove the origin from the affected coordinates
     // coords.erase(origin);
+    return coords;
+  }
+
+  std::vector<Coord> getCoordsAffectedBySquareAoE(const Coord &origin, int length, int gridSize)
+  {
+    std::vector<Coord> coords;
+    coords.reserve(length * length);
+
+    for(int i = 0; i < length; ++i)
+      {
+        for(int j = 0; j < length; ++j)
+          {
+            int x = origin[0] + i;
+            int y = origin[1] + j;
+
+            if(x < 0 || x >= gridSize || y < 0 || y >= gridSize)
+              {
+                continue;
+              }
+
+            coords.push_back({x, y});
+          }
+      }
 
     return coords;
   }

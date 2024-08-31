@@ -928,7 +928,7 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineWiderLine)
   battleMap->setCombatantCoordinates(*goblin, {5, 7});
   battleMap->setCombatantCoordinates(*bugbear, {8, 6});
   battleMap->setCombatantCoordinates(*wild_heart_barbarian, {8, 4});
-  std::cout << battleMap->toString(true);
+  // std::cout << battleMap->toString(true);
 
   auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 6, 3);
 
@@ -937,6 +937,100 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineWiderLine)
   EXPECT_EQ(bestCoord, (Coord{4, 8}));
   EXPECT_EQ(maxScore, 3);
   EXPECT_NEAR(bestAngle, 135.69, 0.01);
+}
+
+TEST_F(BattleMapTest, GetCombatantsAffectedBySphereAoE)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(ogre, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  session->addCombatant(wild_heart_barbarian, Color::BLUE);
+
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
+  battleMap->setCombatantCoordinates(*ogre, Coord{4, 4});
+  battleMap->setCombatantCoordinates(*bugbear, Coord{10, 5});
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{6, 7});
+  auto combatants = battleMap->getCombatantsAffectedBySphereAoE(draconic_sorcerer_lvl_1, SpellTarget::RADIUS_20, Type::HARMFUL, Coord{7, 3});
+
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
+  EXPECT_NE(std::find(combatants.begin(), combatants.end(), ogre), combatants.end());
+  EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
+}
+
+TEST_F(BattleMapTest, GetCombatantsAffectedByBoxAoE)
+{
+    session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+    session->addCombatant(goblin, Color::RED);
+    session->addCombatant(bugbear, Color::RED);
+    session->addCombatant(wild_heart_barbarian, Color::BLUE);
+    session->addCombatant(stone_giant, Color::BLUE);
+    session->addCombatant(ogre, Color::RED);
+
+    goblin->setSize(Size::LARGE);
+
+    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
+    battleMap->setCombatantCoordinates(*goblin, Coord{8, 5});
+    battleMap->setCombatantCoordinates(*bugbear, Coord{10, 5});
+    battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{11, 4});
+    battleMap->setCombatantCoordinates(*stone_giant, Coord{10, 6});
+    battleMap->setCombatantCoordinates(*ogre, Coord{5, 3});
+
+    auto combatants = battleMap->getCombatantsAffectedByBoxAoE(SpellTarget::BOX_20, Coord{7, 3});
+
+    EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
+    EXPECT_NE(std::find(combatants.begin(), combatants.end(), goblin), combatants.end());
+    EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
+    EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
+    EXPECT_NE(std::find(combatants.begin(), combatants.end(), stone_giant), combatants.end());
+    EXPECT_EQ(std::count(combatants.begin(), combatants.end(), ogre), 0);
+}
+
+TEST_F(BattleMapTest, GetCombatantsAffectedByConeAoE)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  session->addCombatant(wild_heart_barbarian, Color::BLUE);
+  session->addCombatant(stone_giant, Color::RED);
+
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{5, 5});
+  battleMap->setCombatantCoordinates(*goblin, Coord{7, 7});
+  battleMap->setCombatantCoordinates(*bugbear, Coord{8, 8});
+  battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{3, 3});
+  battleMap->setCombatantCoordinates(*stone_giant, Coord{9, 9});
+
+  auto combatants = battleMap->getCombatantsAffectedByConeAoE(draconic_sorcerer_lvl_1, SpellTarget::CONE_30, Coord{5, 5}, 45.0);
+
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
+  EXPECT_NE(std::find(combatants.begin(), combatants.end(), goblin), combatants.end());
+  EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
+  EXPECT_NE(std::find(combatants.begin(), combatants.end(), stone_giant), combatants.end());
+}
+
+TEST_F(BattleMapTest, GetCombatantsAffectedByLineAoE)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  session->addCombatant(wild_heart_barbarian, Color::BLUE);
+  session->addCombatant(stone_giant, Color::RED);
+
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
+  battleMap->setCombatantCoordinates(*goblin, Coord{3, 3});
+  battleMap->setCombatantCoordinates(*bugbear, Coord{5, 5});
+  battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{2, 4});
+  battleMap->setCombatantCoordinates(*stone_giant, Coord{7, 7});
+  std::cout << battleMap->toString(true);
+
+  auto combatants = battleMap->getCombatantsAffectedByLineAoE(draconic_sorcerer_lvl_1, Coord{1, 1}, 45.0, 8, 1);
+
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
+  EXPECT_NE(std::find(combatants.begin(), combatants.end(), goblin), combatants.end());
+  EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), stone_giant), 0);
 }
 
 // TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwave)

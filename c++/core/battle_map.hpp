@@ -13,6 +13,7 @@
 #include "coords.hpp"
 #include "combatant.hpp"
 #include "obstacle.hpp"
+#include "spells/spell_stats.hpp"
 
 namespace enc
 {
@@ -64,6 +65,13 @@ namespace enc
     std::tuple<Coord, int, std::vector<Combatant *>> findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length);
     std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulCone(const Combatant *caster, int radius);
     std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulLine(const Combatant* caster, int length, int width);
+
+    std::vector<Combatant *>
+    getCombatantsAffectedBySphereAoE(const Combatant *caster, SpellTarget targetTemplate, Type abilityType, const Coord &origin) const;
+    std::vector<Combatant *>
+    getCombatantsAffectedByConeAoE(const Combatant *caster, SpellTarget targetTemplate, const Coord &origin, double angle) const;
+    std::vector<Combatant *> getCombatantsAffectedByLineAoE(const Combatant *caster, const Coord &origin, double angle, int length, int width) const;
+    std::vector<Combatant *> getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const;
 
   private:
     size_t _size;

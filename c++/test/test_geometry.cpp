@@ -229,3 +229,61 @@ TEST(GetAffectedByLineTest, LineWidth3)
   std::set<Coord> actualCoords = getAffectedByLine(origin, angleDeg, length, width, gridSize);
   EXPECT_EQ(actualCoords, expectedCoords);
 }
+
+TEST(AffectedBySquareAoETest, SquareAoECenterOfMap) {
+    Coord origin = {7, 7};
+    int length = 3;
+    auto affectedCoords = getCoordsAffectedBySquareAoE(origin, length, 15);
+
+    ASSERT_EQ(affectedCoords.size(), 9);
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{7, 7}) != affectedCoords.end());
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{8, 8}) != affectedCoords.end());
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{9, 9}) != affectedCoords.end());
+}
+
+TEST(AffectedBySquareAoETest, SquareAoECornerOfMap) {
+    Coord origin = {0, 0};
+    int length = 2;
+    auto affectedCoords = getCoordsAffectedBySquareAoE(origin, length, 15);
+
+    ASSERT_EQ(affectedCoords.size(), 4);
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{0, 0}) != affectedCoords.end());
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{1, 1}) != affectedCoords.end());
+}
+
+TEST(AffectedBySquareAoETest, SquareAoEPartiallyOffMap) {
+    Coord origin = {13, 13};
+    int length = 3;
+    auto affectedCoords = getCoordsAffectedBySquareAoE(origin, length, 15);
+
+    ASSERT_EQ(affectedCoords.size(), 4);
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{13, 13}) != affectedCoords.end());
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{14, 14}) != affectedCoords.end());
+}
+
+TEST(AffectedBySquareAoETest, SquareAoECompletelyOffMap) {
+    Coord origin = {15, 15};
+    int length = 2;
+    auto affectedCoords = getCoordsAffectedBySquareAoE(origin, length, 15);
+
+    EXPECT_TRUE(affectedCoords.empty());
+}
+
+TEST(AffectedBySquareAoETest, SquareAoELargeSize) {
+    Coord origin = {0, 0};
+    int length = 15;
+    auto affectedCoords = getCoordsAffectedBySquareAoE(origin, length, 15);
+
+    ASSERT_EQ(affectedCoords.size(), 225);
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{0, 0}) != affectedCoords.end());
+    EXPECT_TRUE(std::find(affectedCoords.begin(), affectedCoords.end(), Coord{14, 14}) != affectedCoords.end());
+}
+
+TEST(AffectedBySquareAoETest, SquareAoESizeOne) {
+    Coord origin = {7, 7};
+    int length = 1;
+    auto affectedCoords = getCoordsAffectedBySquareAoE(origin, length, 15);
+
+    ASSERT_EQ(affectedCoords.size(), 1);
+    EXPECT_EQ(affectedCoords[0], (Coord{7, 7}));
+}

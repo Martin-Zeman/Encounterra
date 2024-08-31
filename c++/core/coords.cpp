@@ -15,6 +15,8 @@ namespace enc
       }
   }
 
+  Coords::Coords(const CoordVector &coords) : _size(Size::CUSTOM), _coords(coords), _numCoords(coords.size()) {}
+
   std::array<Coord, 4> Coords::getCorners() const
   {
     int sizeValue = std::max(0, static_cast<int>(_size));

@@ -37,4 +37,6 @@ namespace enc
 
   std::set<Coord> getAffectedByLine(const Coord &origin, double angleDeg, double length, double width, int gridSize);
 
+  std::vector<Coord> getCoordsAffectedBySquareAoE(const Coord &origin, int length, int gridSize);
+
 }

@@ -209,7 +209,8 @@ namespace enc
     MEDIUM = 0,
     LARGE = 1,
     HUGE = 2,
-    GARGANTUAN = 3
+    GARGANTUAN = 3,
+    CUSTOM = 4 // only used for cases where Coords express a set of coordinates that's not a combatant
   };
 
   enum class PhaseOfTurn

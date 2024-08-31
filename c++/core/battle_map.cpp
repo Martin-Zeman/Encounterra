@@ -1066,4 +1066,111 @@ namespace enc
 
     return bestPoses[0];
   }
-};
+
+  std::vector<Combatant *> BattleMap::getCombatantsAffectedBySphereAoE(const Combatant *caster, SpellTarget targetTemplate,
+                                                                       Type abilityType, const Coord &origin) const
+  {
+    std::vector<Combatant *> affectedCombatants;
+    Teams &teams = Teams::getInstance();
+    double radius = TRANSLATE_RADIUS.at(targetTemplate);
+    Coords originCoords(origin);
+
+    for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
+      {
+        Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
+        if(!potentialTarget->isAlive())
+          continue;
+        
+        if(abilityType == Type::HARMFUL)
+          {
+            if(getCartesianDistanceCoords(combatantCoords, originCoords) <= radius)
+              {
+                affectedCombatants.push_back(potentialTarget);
+              }
+          }
+        else if(abilityType == Type::BUFF)
+          {
+            if(getCartesianDistanceCoords(combatantCoords, originCoords) <= radius
+               && teams.areAllies(*caster, *potentialTarget))
+              {
+                affectedCombatants.push_back(potentialTarget);
+              }
+          }
+      }
+
+    return affectedCombatants;
+  }
+
+  std::vector<Combatant *>
+  BattleMap::getCombatantsAffectedByConeAoE(const Combatant *caster, SpellTarget targetTemplate, const Coord &origin, double angle) const
+  {
+    int radius = TRANSLATE_CONE.at(targetTemplate);
+    Teams &teams = Teams::getInstance();
+    std::set<Coord> affectedCoords = getAffectedByCone(origin, angle, radius, _size);
+    std::vector<Combatant *> affectedCombatants;
+
+    for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
+      {
+        Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
+        if(!potentialTarget->isAlive())
+          continue;
+
+        bool isAffected = std::any_of(combatantCoords.get().begin(), combatantCoords.get().end(),
+                                      [&affectedCoords](const Coord &c) { return affectedCoords.find(c) != affectedCoords.end(); });
+
+        if(isAffected)
+          {
+            affectedCombatants.push_back(potentialTarget);
+          }
+      }
+
+    affectedCombatants.erase(std::remove(affectedCombatants.begin(), affectedCombatants.end(), caster), affectedCombatants.end());
+
+    return affectedCombatants;
+  }
+
+  std::vector<Combatant *>
+  BattleMap::getCombatantsAffectedByLineAoE(const Combatant *caster, const Coord &origin, double angle, int length, int width) const
+  {
+    std::set<Coord> affectedCoords = getAffectedByLine(origin, angle, length, width, _size);
+    Teams &teams = Teams::getInstance();
+    std::vector<Combatant *> affectedCombatants;
+
+    for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
+      {
+        Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
+        if(!potentialTarget->isAlive())
+          continue;
+
+        bool isAffected = std::any_of(combatantCoords.get().begin(), combatantCoords.get().end(),
+                                      [&affectedCoords](const Coord &c) { return affectedCoords.find(c) != affectedCoords.end(); });
+
+        if(isAffected)
+          {
+            affectedCombatants.push_back(potentialTarget);
+          }
+      }
+
+    affectedCombatants.erase(std::remove(affectedCombatants.begin(), affectedCombatants.end(), caster), affectedCombatants.end());
+
+    return affectedCombatants;
+  }
+
+  std::vector<Combatant *> BattleMap::getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const
+  {
+    std::vector<Combatant *> affectedCombatants;
+    Teams &teams = Teams::getInstance();
+    std::vector<Coord> affectedCoords = getCoordsAffectedBySquareAoE(origin, TRANSLATE_BOX.at(targetTemplate), _size);
+
+    for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
+      {
+        Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
+        if(potentialTarget->isAlive() && getCartesianDistanceCoords(combatantCoords, affectedCoords) == 0)
+          {
+            affectedCombatants.push_back(potentialTarget);
+          }
+      }
+
+    return affectedCombatants;
+  }
+}
