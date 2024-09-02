@@ -868,7 +868,7 @@ namespace enc
 
   std::optional<std::tuple<Coord, double, int>> BattleMap::findBestPlacementHarmfulCone(const Combatant *caster, int radius)
   {
-    std::vector<std::array<double, 2>> enemyPositions;
+    std::vector<Vector2D> enemyPositions;
     Teams &teams = Teams::getInstance();
     for(Combatant *enemy : teams.getEnemies(*caster))
       {
@@ -968,7 +968,7 @@ namespace enc
 
   std::optional<std::tuple<Coord, double, int>> BattleMap::findBestPlacementHarmfulLine(const Combatant *caster, int length, int width)
   {
-    std::vector<std::array<double, 2>> enemyPositions;
+    std::vector<Vector2D> enemyPositions;
     Teams &teams = Teams::getInstance();
     for(Combatant *enemy : teams.getEnemies(*caster))
       {
@@ -1172,5 +1172,102 @@ namespace enc
       }
 
     return affectedCombatants;
+  }
+
+  Visibility BattleMap::getVisibility(const Coords &observer, const Coords &target)
+  {
+    auto [bottom_left, top_right] = getBoundingBox(observer.get(), target.get());
+    std::vector<const Rectangle *> objects;
+
+    for(const auto &obstacle : _obstacles)
+      {
+        auto obstacle_tr = blaze::StaticVector<int, 2>{obstacle.getCoord()[0] + obstacle.getRadius(), obstacle.getCoord()[1] + obstacle.getRadius()};
+        auto obstacle_bl = blaze::StaticVector<int, 2>{obstacle.getCoord()[0] - obstacle.getRadius(), obstacle.getCoord()[1] - obstacle.getRadius()};
+
+        if(obstacle_tr[0] < bottom_left[0] || obstacle_bl[0] > top_right[0] || obstacle_bl[1] > top_right[1] || obstacle_tr[1] < bottom_left[1])
+          {
+            continue;
+          }
+        objects.push_back(&obstacle);
+      }
+    objects.push_back(&target);
+
+    std::vector<std::pair<blaze::StaticVector<double, 2>, const Obstacle *>> vec_to_object;
+    for(const auto *obj : objects)
+      {
+        auto fov_vectors = findFovVectors(observer, *obj);
+        vec_to_object.emplace_back(fov_vectors.first, obj);
+        vec_to_object.emplace_back(fov_vectors.second, obj);
+      }
+
+    auto central_vector = target.getCenter() - observer.getCenter();
+    std::sort(vec_to_object.begin(), vec_to_object.end(), [&central_vector](const auto &a, const auto &b) {
+      double angle_a = angleBetweenCectors(central_vector, a.first) * std::copysign(1.0, blaze::cross(a.first, central_vector));
+      double angle_b = angleVetweenVectors(central_vector, b.first) * std::copysign(1.0, blaze::cross(b.first, central_vector));
+      return angle_a > angle_b;
+    });
+
+    bool entered_target_fov = false;
+    std::set<const Obstacle *> opened;
+    blaze::StaticVector<double, 2> start_of_hidden_fov;
+    double hidden_fov = 0.0;
+
+    for(const auto &[vec, obj] : vec_to_object)
+      {
+        if(obj != &target)
+          {
+            if(opened.find(obj) == opened.end())
+              {
+                if(opened.empty())
+                  {
+                    start_of_hidden_fov = vec;
+                  }
+                opened.insert(obj);
+              }
+            else
+              {
+                opened.erase(obj);
+                if(opened.empty() && entered_target_fov)
+                  {
+                    hidden_fov += angleBetweenVectors(start_of_hidden_fov, vec);
+                  }
+              }
+          }
+        else if(entered_target_fov)
+          {
+            if(!opened.empty())
+              {
+                hidden_fov += angleBetweenVectors(start_of_hidden_fov, vec);
+              }
+            break;
+          }
+        else
+          {
+            entered_target_fov = true;
+            start_of_hidden_fov = vec;
+          }
+      }
+
+    auto target_vectors = findFovVectors(observer, target);
+    double target_fov = angleBetweenVectors(target_vectors.first, target_vectors.second);
+    double visible_fov = target_fov - hidden_fov;
+    int visible_percentage = static_cast<int>(visible_fov / (target_fov * 0.01));
+
+    if(visible_percentage > 50)
+      {
+        return Visibility::FULL;
+      }
+    else if(visible_percentage > 25)
+      {
+        return Visibility::HALF_COVER;
+      }
+    else if(visible_percentage > 0)
+      {
+        return Visibility::THREE_QUARTERS_COVER;
+      }
+    else
+      {
+        return Visibility::NONE;
+      }
   }
 }

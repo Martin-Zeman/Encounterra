@@ -72,6 +72,7 @@ namespace enc
     getCombatantsAffectedByConeAoE(const Combatant *caster, SpellTarget targetTemplate, const Coord &origin, double angle) const;
     std::vector<Combatant *> getCombatantsAffectedByLineAoE(const Combatant *caster, const Coord &origin, double angle, int length, int width) const;
     std::vector<Combatant *> getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const;
+    Visibility getVisibility(const Coords &observer, const Coords &target);
 
   private:
     size_t _size;

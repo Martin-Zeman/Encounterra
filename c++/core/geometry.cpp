@@ -112,7 +112,7 @@ namespace enc
     return increments;
   }
 
-  std::pair<double, double> linearRegression(const std::vector<std::array<double, 2>> &enemyPositions)
+  std::pair<double, double> linearRegression(const std::vector<Vector2D> &enemyPositions)
   {
     size_t n = enemyPositions.size();
     blaze::DynamicVector<double> x(n);
@@ -139,9 +139,9 @@ namespace enc
   }
 
 
-  std::vector<std::array<double, 2>> samplePointsOnLine(double m, double c, int gridSize, int numSamples)
+  std::vector<Vector2D> samplePointsOnLine(double m, double c, int gridSize, int numSamples)
   {
-    std::vector<std::array<double, 2>> points;
+    std::vector<Vector2D> points;
     points.reserve(numSamples);
 
     double step = (gridSize - 1.0) / (numSamples - 1);
@@ -215,9 +215,9 @@ namespace enc
     double halfWidth = width / 2.0;
 
     double angleRad = angleDeg * M_PI / 180.0;
-    std::array<double, 2> directionVector = {std::sin(angleRad), std::cos(angleRad)};
+    Vector2D directionVector = {std::sin(angleRad), std::cos(angleRad)};
 
-    std::array<double, 2> perpendicularVector = {-directionVector[1], directionVector[0]};
+    Vector2D perpendicularVector = {-directionVector[1], directionVector[0]};
 
     std::set<Coord> coords;
 
@@ -226,7 +226,7 @@ namespace enc
         for(int y = 0; y < gridSize; ++y)
           {
             blaze::StaticVector<double, 2> currCoordCenter = getSquareCenter({x, y});
-            std::array<double, 2> vectorToCoord = {currCoordCenter[0] - originCenter[0], currCoordCenter[1] - originCenter[1]};
+            Vector2D vectorToCoord = {currCoordCenter[0] - originCenter[0], currCoordCenter[1] - originCenter[1]};
 
             double distanceAlongLine = vectorToCoord[0] * directionVector[0] + vectorToCoord[1] * directionVector[1];
 
@@ -268,5 +268,85 @@ namespace enc
       }
 
     return coords;
+  }
+
+  /**
+   * @brief Calculates the field of view vector from right and leftmost points of a target from the perspective of the observer
+   * @param observer observer coordinates
+   * @param target target coordinates
+   * @return normalized vectors to the left and right most points from the observer's perspective ordered in counter-clockwise manner
+   * (using the convex angle they define)
+   */
+  std::pair<Vector2DBlaze, Vector2DBlaze> findFovVectors(const Rectangle &observer, const Rectangle &target)
+  {
+    auto observer_center = observer.getCenter();
+    auto target_center = target.getCenter();
+
+    std::vector<std::pair<Vector2DBlaze, double>> vectors;
+    for(const auto &corner : target.getCorners())
+      {
+        Vector2DBlaze corner_vec = {static_cast<double>(corner[0]), static_cast<double>(corner[1])};
+        Vector2DBlaze vec = corner_vec - observer_center;
+        Vector2DBlaze target_vec = target_center - observer_center;
+        double angle = std::acos(blaze::dot(vec, target_vec) / (blaze::length(vec) * blaze::length(target_vec)));
+        vectors.emplace_back(vec, angle);
+      }
+
+    std::sort(vectors.begin(), vectors.end(), [](const auto &a, const auto &b) { return a.second > b.second; });
+
+    assert(vectors.size() > 1);
+
+    auto normalize = [](const Vector2DBlaze &v) { return v / blaze::length(v); };
+
+    if(vectors[0].first[0] * vectors[1].first[1] - vectors[0].first[1] * vectors[1].first[0] > 0)
+      {
+        return {normalize(vectors[0].first), normalize(vectors[1].first)};
+      }
+    return {normalize(vectors[1].first), normalize(vectors[0].first)};
+  }
+
+  /**
+   * Calculates a bounding box which encloses both combatants
+   * @param combatant1 Vector of coordinates for the first combatant
+   * @param combatant2 Vector of coordinates for the second combatant
+   * @return std::pair of bottom left corner and top right corner
+   */
+  std::pair<Coord, Coord> getBoundingBox(const CoordVector &combatant1, const CoordVector &combatant2)
+  {
+    if(combatant1.empty() || combatant2.empty())
+      {
+        throw std::invalid_argument("Combatant coordinates cannot be empty");
+      }
+
+    // Initialize min and max values with the first point of combatant1
+    int min_x = combatant1[0][0];
+    int min_y = combatant1[0][1];
+    int max_x = combatant1[0][0];
+    int max_y = combatant1[0][1];
+
+    // Lambda function to update min and max
+    auto update_bounds = [&](const Coord &coord) {
+      min_x = std::min(min_x, coord[0]);
+      min_y = std::min(min_y, coord[1]);
+      max_x = std::max(max_x, coord[0]);
+      max_y = std::max(max_y, coord[1]);
+    };
+
+    // Compute min and max for combatant1
+    for(const auto &coord : combatant1)
+      {
+        update_bounds(coord);
+      }
+
+    // Compute min and max for combatant2
+    for(const auto &coord : combatant2)
+      {
+        update_bounds(coord);
+      }
+
+    Coord bottom_left{min_x, min_y};
+    Coord top_right{max_x, max_y};
+
+    return {bottom_left, top_right};
   }
 }

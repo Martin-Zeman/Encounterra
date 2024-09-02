@@ -1,6 +1,7 @@
 #pragma once
 
 #include <blaze/Math.h>
+#include <cmath>
 #include <vector>
 #include <random>
 #include <set>
@@ -25,9 +26,9 @@ namespace enc
 
   std::vector<Coord> convertPathToIncrements(const std::vector<Coord> &path);
 
-  std::pair<double, double> linearRegression(const std::vector<std::array<double, 2>> &enemyPositions);
+  std::pair<double, double> linearRegression(const std::vector<Vector2D> &enemyPositions);
 
-  std::vector<std::array<double, 2>> samplePointsOnLine(double m, double c, int gridSize, int numSamples = 20);
+  std::vector<Vector2D> samplePointsOnLine(double m, double c, int gridSize, int numSamples = 20);
 
   double getAngleFromSlope(double m);
 
@@ -39,4 +40,43 @@ namespace enc
 
   std::vector<Coord> getCoordsAffectedBySquareAoE(const Coord &origin, int length, int gridSize);
 
+  std::pair<Vector2DBlaze, Vector2DBlaze> findFovVectors(const Rectangle &observer, const Rectangle &target);
+
+  /**
+   * Calculates the angle (in degrees) between two vectors
+   * @param vector_1 The first vector
+   * @param vector_2 The second vector
+   * @return The convex angle (in degrees) formed by the two vectors.
+   */
+  template <typename VectorType> double angleBetweenVectors(const VectorType &vector_1, const VectorType &vector_2)
+  {
+    double dot_prod = blaze::dot(vector_1, vector_2);
+    double mag_1 = blaze::length(vector_1);
+    double mag_2 = blaze::length(vector_2);
+
+    double cos_angle = std::max(-1.0, std::min(dot_prod / (mag_1 * mag_2), 1.0));
+    double angle_rad = std::acos(cos_angle);
+    double angle_deg = angle_rad * 180.0 / M_PI;
+
+    angle_deg = std::fmod(angle_deg, 360.0);
+    return (angle_deg - 180.0 < 0) ? angle_deg : 360.0 - angle_deg;
+  }
+
+  /**
+   * Calculates the angle (in radians) between two vectors
+   * @param vector_1 The first vector
+   * @param vector_2 The second vector
+   * @return The convex angle (in radians) formed by the two vectors.
+   */
+  template <typename VectorType> double angleBetweenVectorsRad(const VectorType &vector_1, const VectorType &vector_2)
+  {
+    double dot_prod = blaze::dot(vector_1, vector_2);
+    double mag_1 = blaze::length(vector_1);
+    double mag_2 = blaze::length(vector_2);
+
+    double cos_angle = std::max(-1.0, std::min(dot_prod / (mag_1 * mag_2), 1.0));
+    return std::acos(cos_angle);
+  }
+
+  std::pair<Coord, Coord> getBoundingBox(const CoordVector &combatant1, const CoordVector &combatant2);
 }

@@ -23,6 +23,8 @@
 
 using namespace enc;
 
+namespace {
+
 class BattleMapTest : public ::testing::Test
 {
 protected:
@@ -1022,7 +1024,7 @@ TEST_F(BattleMapTest, GetCombatantsAffectedByLineAoE)
   battleMap->setCombatantCoordinates(*bugbear, Coord{5, 5});
   battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{2, 4});
   battleMap->setCombatantCoordinates(*stone_giant, Coord{7, 7});
-  std::cout << battleMap->toString(true);
+  // std::cout << battleMap->toString(true);
 
   auto combatants = battleMap->getCombatantsAffectedByLineAoE(draconic_sorcerer_lvl_1, Coord{1, 1}, 45.0, 8, 1);
 
@@ -1031,6 +1033,8 @@ TEST_F(BattleMapTest, GetCombatantsAffectedByLineAoE)
   EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
   EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
   EXPECT_EQ(std::count(combatants.begin(), combatants.end(), stone_giant), 0);
+}
+
 }
 
 // TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwave)

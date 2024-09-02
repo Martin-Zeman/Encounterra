@@ -3,6 +3,8 @@
 
 using namespace enc;
 
+namespace {
+
 class StateMachineTest : public ::testing::Test {
 protected:
     StateMachine fsm;
@@ -103,4 +105,6 @@ TEST_F(StateMachineTest, GetAllStates) {
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
+}
+
 }

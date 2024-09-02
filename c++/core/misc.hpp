@@ -266,4 +266,16 @@ namespace enc
     FREE = 1,
     OCCUPIED_BY_COMBATANT
   };
+
+  enum class Visibility
+  {
+    NONE = 0,
+    THREE_QUARTERS_COVER,
+    HALF_COVER,
+    FULL
+  };
+
+  const double THREE_QUARTERS_COVER_ERROR_THRESHOLD = 0.25;
+  const double HALF_COVER_ERROR_THRESHOLD = 0.35;
+  const double FULL_VISIBILITY_ERROR_THRESHOLD = 0.45;
 }

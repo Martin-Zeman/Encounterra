@@ -7,11 +7,12 @@
 #include "misc.hpp"
 #include "types.hpp"
 #include "combatant.hpp"
+#include "rectangle.hpp"
 
 namespace enc
 {
 
-  class Coords
+  class Coords : public Rectangle
   {
   public:
     Coords(const Coord &coord, Size size = Size::MEDIUM);
@@ -23,9 +24,9 @@ namespace enc
     void set(const CoordVector &newCoords) { _coords = newCoords; }
     size_t numCoords() const {return _numCoords;}
 
-    std::array<Coord, 4> getCorners() const;
+    std::array<Coord, 4> getCorners() const override;
 
-    std::array<double, 2> getCenter() const;
+    Vector2DBlaze getCenter() const override;
 
     Coords operator+(const Coord &other) const;
     int operator()(size_t row, size_t col) const;

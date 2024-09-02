@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <blaze/Math.h>
 #include "core/battle_map.hpp"
 #include "core/misc.hpp"
 #include "core/geometry.hpp"
@@ -12,6 +13,18 @@
 #include <memory>
 
 using namespace enc;
+
+namespace {
+
+bool vectorEqual(const Vector2DBlaze& a, const Vector2DBlaze& b, double epsilon = 1e-6) {
+    return std::abs(a[0] - b[0]) < epsilon && std::abs(a[1] - b[1]) < epsilon;
+}
+
+bool coordEqual(const Coord &a, const Coord &b) { return a[0] == b[0] && a[1] == b[1]; }
+
+Vector2DBlaze normalize(const Vector2DBlaze& v) {
+    return v / blaze::length(v);
+}
 
 class getHopDistance : public ::testing::Test
 {
@@ -286,4 +299,107 @@ TEST(AffectedBySquareAoETest, SquareAoESizeOne) {
 
     ASSERT_EQ(affectedCoords.size(), 1);
     EXPECT_EQ(affectedCoords[0], (Coord{7, 7}));
+}
+
+TEST(FindFovVectorsTest, DirectlySideBySide) {
+    auto outlines = findFovVectors(Coords({3, 7}, Size::MEDIUM), Coords({6, 6}, Size::HUGE));
+    Vector2DBlaze expected1 = normalize(Vector2DBlaze{2.5, 1.5});
+    Vector2DBlaze expected2 = normalize(Vector2DBlaze{2.5, -1.5});
+    EXPECT_TRUE(vectorEqual(outlines.first, expected1) || vectorEqual(outlines.second, expected1));
+    EXPECT_TRUE(vectorEqual(outlines.first, expected2) || vectorEqual(outlines.second, expected2));
+}
+
+TEST(FindFovVectorsTest, SwappedObserverAndTarget) {
+    auto outlines = findFovVectors(Coords({6, 6}, Size::HUGE), Coords({3, 7}, Size::MEDIUM));
+    Vector2DBlaze expected1 = normalize(Vector2DBlaze{-3.5, 0.5});
+    Vector2DBlaze expected2 = normalize(Vector2DBlaze{-3.5, -0.5});
+    EXPECT_TRUE(vectorEqual(outlines.first, expected1) || vectorEqual(outlines.second, expected1));
+    EXPECT_TRUE(vectorEqual(outlines.first, expected2) || vectorEqual(outlines.second, expected2));
+}
+
+TEST(FindFovVectorsTest, SlightAngle) {
+    auto outlines = findFovVectors(Coords({0, 0}, Size::HUGE), Coords({5, 2}, Size::LARGE));
+    Vector2DBlaze expected1 = normalize(Vector2DBlaze{3.5, 2.5});
+    Vector2DBlaze expected2 = normalize(Vector2DBlaze{5.5, 0.5});
+    EXPECT_TRUE(vectorEqual(outlines.first, expected1) || vectorEqual(outlines.second, expected1));
+    EXPECT_TRUE(vectorEqual(outlines.first, expected2) || vectorEqual(outlines.second, expected2));
+}
+
+TEST(FindFovVectorsTest, BreakingPoint1) {
+    auto outlines = findFovVectors(Coords({5, 2}, Size::MEDIUM), Coords({6, 6}, Size::HUGE));
+    Vector2DBlaze expected1 = normalize(Vector2DBlaze{3.5, 3.5});
+    Vector2DBlaze expected2 = normalize(Vector2DBlaze{0.5, 6.5});
+    EXPECT_TRUE(vectorEqual(outlines.first, expected1) || vectorEqual(outlines.second, expected1));
+    EXPECT_TRUE(vectorEqual(outlines.first, expected2) || vectorEqual(outlines.second, expected2));
+}
+
+TEST(FindFovVectorsTest, BreakingPoint2) {
+    auto outlines = findFovVectors(Coords({6, 2}, Size::MEDIUM), Coords({6, 6}, Size::HUGE));
+    Vector2DBlaze expected1 = normalize(Vector2DBlaze{-0.5, 3.5});
+    Vector2DBlaze expected2 = normalize(Vector2DBlaze{2.5, 3.5});
+    EXPECT_TRUE(vectorEqual(outlines.first, expected1) || vectorEqual(outlines.second, expected1));
+    EXPECT_TRUE(vectorEqual(outlines.first, expected2) || vectorEqual(outlines.second, expected2));
+}
+
+TEST(AngleBetweenVectorsTest, AngleBetweenVectors)
+{
+  EXPECT_NEAR(angleBetweenVectors(Vector2DBlaze{0, 1}, Vector2DBlaze{1, 0}), 90.0, 1e-4);
+  EXPECT_NEAR(angleBetweenVectors(Vector2DBlaze{0, 1}, Vector2DBlaze{1, -1}), 135.0, 1e-4);
+  EXPECT_NEAR(angleBetweenVectors(Vector2DBlaze{0, 1}, Vector2DBlaze{0, -1}), 180.0, 1e-4);
+  EXPECT_NEAR(angleBetweenVectors(Vector2DBlaze{0, 2}, Vector2DBlaze{-1, 2}), 26.5650, 1e-4);
+  EXPECT_NEAR(angleBetweenVectors(Vector2DBlaze{1, 0.5}, Vector2DBlaze{1.5, -1}), 60.2551, 1e-4);
+  EXPECT_NEAR(angleBetweenVectors(Vector2DBlaze{6, 4}, Vector2DBlaze{6, 4}), 0.0, 1e-4);
+  EXPECT_NEAR(angleBetweenVectors(Vector2DBlaze{0, 4}, Vector2DBlaze{4, 4}), 45.0, 1e-4);
+}
+
+TEST(AngleBetweenVectorsTest, AngleBetweenVectorsRad)
+{
+  EXPECT_NEAR(angleBetweenVectorsRad(Vector2DBlaze{0, 1}, Vector2DBlaze{1, 0}), M_PI / 2, 1e-4);
+  EXPECT_NEAR(angleBetweenVectorsRad(Vector2DBlaze{0, 1}, Vector2DBlaze{1, -1}), M_PI * 3 / 4, 1e-4);
+  EXPECT_NEAR(angleBetweenVectorsRad(Vector2DBlaze{0, 1}, Vector2DBlaze{0, -1}), M_PI, 1e-4);
+  EXPECT_NEAR(angleBetweenVectorsRad(Vector2DBlaze{0, 2}, Vector2DBlaze{-1, 2}), 0.463647609, 1e-4);     // radians for 26.5650 degrees
+  EXPECT_NEAR(angleBetweenVectorsRad(Vector2DBlaze{1, 0.5}, Vector2DBlaze{1.5, -1}), 1.051650213, 1e-4); // radians for 60.2551 degrees
+  EXPECT_NEAR(angleBetweenVectorsRad(Vector2DBlaze{6, 4}, Vector2DBlaze{6, 4}), 0.0, 1e-4);
+  EXPECT_NEAR(angleBetweenVectorsRad(Vector2DBlaze{0, 4}, Vector2DBlaze{4, 4}), M_PI / 4, 1e-4);
+}
+
+TEST(GetBoundingBoxTest, TwoCombatantsSameSize) {
+    Coords coord1({1, 1}, Size::MEDIUM);
+    Coords coord2({3, 3}, Size::MEDIUM);
+    auto [bottom_left, top_right] = getBoundingBox(coord1.get(), coord2.get());
+    EXPECT_TRUE(coordEqual(bottom_left, {1, 1}));
+    EXPECT_TRUE(coordEqual(top_right, {3, 3}));
+}
+
+TEST(GetBoundingBoxTest, TwoCombatantsDifferentSizes) {
+    Coords coord1({0, 0}, Size::SMALL);
+    Coords coord2({4, 4}, Size::LARGE);
+    auto [bottom_left, top_right] = getBoundingBox(coord1.get(), coord2.get());
+    EXPECT_TRUE(coordEqual(bottom_left, {0, 0}));
+    EXPECT_TRUE(coordEqual(top_right, {5, 5}));
+}
+
+TEST(GetBoundingBoxTest, TwoCombatantsOverlappingPositions) {
+    Coords coord1({2, 2}, Size::HUGE);
+    Coords coord2({3, 3}, Size::GARGANTUAN);
+    auto [bottom_left, top_right] = getBoundingBox(coord1.get(), coord2.get());
+    EXPECT_TRUE(coordEqual(bottom_left, {2, 2}));
+    EXPECT_TRUE(coordEqual(top_right, {6, 6}));
+}
+
+TEST(GetBoundingBoxTest, TwoCombatantsSamePosition) {
+    Coords coord1({0, 0}, Size::TINY);
+    Coords coord2({0, 0}, Size::TINY);
+    auto [bottom_left, top_right] = getBoundingBox(coord1.get(), coord2.get());
+    EXPECT_TRUE(coordEqual(bottom_left, {0, 0}));
+    EXPECT_TRUE(coordEqual(top_right, {0, 0}));
+}
+
+TEST(GetBoundingBoxTest, HugeAndLarge) {
+    Coords coord1({1, 11}, Size::HUGE);
+    Coords coord2({9, 13}, Size::LARGE);
+    auto [bottom_left, top_right] = getBoundingBox(coord1.get(), coord2.get());
+    EXPECT_TRUE(coordEqual(bottom_left, {1, 11}));
+    EXPECT_TRUE(coordEqual(top_right, {10, 14}));
+}
 }
