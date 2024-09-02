@@ -22,6 +22,8 @@ namespace enc
 
   blaze::StaticVector<double, 3> cross(const blaze::StaticVector<double, 3> &a, const blaze::StaticVector<double, 3> &b);
 
+  double cross(const Vector2D &a, const Vector2D &b);
+
   int randomInt(int min, int max);
 
   std::vector<Coord> convertPathToIncrements(const std::vector<Coord> &path);
@@ -32,7 +34,7 @@ namespace enc
 
   double getAngleFromSlope(double m);
 
-  blaze::StaticVector<double, 2> getSquareCenter(const Coord &coord);
+  Vector2D getSquareCenter(const Coord &coord);
 
   std::set<Coord> getAffectedByCone(const Coord &origin, double angleDeg, int radius, int gridSize);
 
@@ -40,7 +42,7 @@ namespace enc
 
   std::vector<Coord> getCoordsAffectedBySquareAoE(const Coord &origin, int length, int gridSize);
 
-  std::pair<Vector2DBlaze, Vector2DBlaze> findFovVectors(const Rectangle &observer, const Rectangle &target);
+  std::pair<Vector2D, Vector2D> findFovVectors(const Rectangle &observer, const Rectangle &target);
 
   /**
    * Calculates the angle (in degrees) between two vectors

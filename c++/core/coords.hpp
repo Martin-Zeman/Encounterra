@@ -26,7 +26,7 @@ namespace enc
 
     std::array<Coord, 4> getCorners() const override;
 
-    Vector2DBlaze getCenter() const override;
+    Vector2D getCenter() const override;
 
     Coords operator+(const Coord &other) const;
     int operator()(size_t row, size_t col) const;

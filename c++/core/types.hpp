@@ -10,8 +10,8 @@ namespace enc
   using CoordVector = std::vector<Coord>;
   using Die = blaze::StaticVector<uint8_t, 2>;
   using MapMatrix = blaze::DynamicMatrix<int>;
-  using Vector2DBlaze = blaze::StaticVector<double, 2UL>;
-  using Vector2D = std::array<double, 2>;
+  using Vector2D = blaze::StaticVector<double, 2UL>;
+  // using Vector2D = std::array<double, 2>;
 
   enum class Color
   {

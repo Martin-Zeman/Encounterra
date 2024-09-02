@@ -1174,17 +1174,36 @@ namespace enc
     return affectedCombatants;
   }
 
+  /**
+      The visibility is calculated terms of how much of the field of view of the target is blocked by obstacles. I find the leftmost and
+      the rightmost vertex of coord2. I then stretch a bounding box between the observer coordinates and the farthest point of the
+      observer. Inside this bounding box I find all obstacles (plus maybe other combatants) and store them as objects. I then find the
+      leftmost and rightmost vertices for all obstacles. Each pair of vertices together with the observer's mid point define a pair of
+      vectors. Then I go obstacle vector pair by vector pair and classify their field of view angles. I need to identify six different
+      cases:
+      A) The obstacle is too far to the right, the target is fully visible
+      B) The right side of the target is partially hidden behind the obstacle
+      C) The obstacle is somewhere in the center of the target but parts of the target can still be seen on left and right
+      D) The left side of the target is partially hidden behind the obstacle
+      E) The obstacle is too far to the left, the target is fully visible
+      F) The target is fully blocked by the obstacle
+      From this I calculate the overall visible percentage.
+
+      @param observer
+      @param target
+      @return the degree of Visibility between the two coordinates
+   */
   Visibility BattleMap::getVisibility(const Coords &observer, const Coords &target)
   {
-    auto [bottom_left, top_right] = getBoundingBox(observer.get(), target.get());
+    auto [bottomLeft, topRight] = getBoundingBox(observer.get(), target.get());
     std::vector<const Rectangle *> objects;
 
     for(const auto &obstacle : _obstacles)
       {
-        auto obstacle_tr = blaze::StaticVector<int, 2>{obstacle.getCoord()[0] + obstacle.getRadius(), obstacle.getCoord()[1] + obstacle.getRadius()};
-        auto obstacle_bl = blaze::StaticVector<int, 2>{obstacle.getCoord()[0] - obstacle.getRadius(), obstacle.getCoord()[1] - obstacle.getRadius()};
+        auto obstacleTr = blaze::StaticVector<int, 2>{obstacle.getCoord()[0] + obstacle.getRadius(), obstacle.getCoord()[1] + obstacle.getRadius()};
+        auto obstacleBl = blaze::StaticVector<int, 2>{obstacle.getCoord()[0] - obstacle.getRadius(), obstacle.getCoord()[1] - obstacle.getRadius()};
 
-        if(obstacle_tr[0] < bottom_left[0] || obstacle_bl[0] > top_right[0] || obstacle_bl[1] > top_right[1] || obstacle_tr[1] < bottom_left[1])
+        if(obstacleTr[0] < bottomLeft[0] || obstacleBl[0] > topRight[0] || obstacleBl[1] > topRight[1] || obstacleTr[1] < bottomLeft[1])
           {
             continue;
           }
@@ -1192,27 +1211,28 @@ namespace enc
       }
     objects.push_back(&target);
 
-    std::vector<std::pair<blaze::StaticVector<double, 2>, const Obstacle *>> vec_to_object;
+    std::vector<std::pair<Vector2D, const Rectangle *>> vecToObject;
     for(const auto *obj : objects)
       {
-        auto fov_vectors = findFovVectors(observer, *obj);
-        vec_to_object.emplace_back(fov_vectors.first, obj);
-        vec_to_object.emplace_back(fov_vectors.second, obj);
+        auto fovVectors = findFovVectors(observer, *obj);
+        vecToObject.emplace_back(fovVectors.first, obj);
+        vecToObject.emplace_back(fovVectors.second, obj);
       }
 
-    auto central_vector = target.getCenter() - observer.getCenter();
-    std::sort(vec_to_object.begin(), vec_to_object.end(), [&central_vector](const auto &a, const auto &b) {
-      double angle_a = angleBetweenCectors(central_vector, a.first) * std::copysign(1.0, blaze::cross(a.first, central_vector));
-      double angle_b = angleVetweenVectors(central_vector, b.first) * std::copysign(1.0, blaze::cross(b.first, central_vector));
+    Vector2D centralVector = target.getCenter() - observer.getCenter();
+
+    std::sort(vecToObject.begin(), vecToObject.end(), [&centralVector](const auto &a, const auto &b) {
+      double angle_a = angleBetweenVectors(centralVector, a.first) * std::copysign(1.0, cross(a.first, centralVector));
+      double angle_b = angleBetweenVectors(centralVector, b.first) * std::copysign(1.0, cross(b.first, centralVector));
       return angle_a > angle_b;
     });
 
-    bool entered_target_fov = false;
-    std::set<const Obstacle *> opened;
-    blaze::StaticVector<double, 2> start_of_hidden_fov;
-    double hidden_fov = 0.0;
+    bool enteredTargetFov = false;
+    std::set<const Rectangle *> opened;
+    Vector2D startOfHiddenFov;
+    double hiddenFov = 0.0;
 
-    for(const auto &[vec, obj] : vec_to_object)
+    for(const auto &[vec, obj] : vecToObject)
       {
         if(obj != &target)
           {
@@ -1220,48 +1240,48 @@ namespace enc
               {
                 if(opened.empty())
                   {
-                    start_of_hidden_fov = vec;
+                    startOfHiddenFov = vec;
                   }
                 opened.insert(obj);
               }
             else
               {
                 opened.erase(obj);
-                if(opened.empty() && entered_target_fov)
+                if(opened.empty() && enteredTargetFov)
                   {
-                    hidden_fov += angleBetweenVectors(start_of_hidden_fov, vec);
+                    hiddenFov += angleBetweenVectors(startOfHiddenFov, vec);
                   }
               }
           }
-        else if(entered_target_fov)
+        else if(enteredTargetFov)
           {
             if(!opened.empty())
               {
-                hidden_fov += angleBetweenVectors(start_of_hidden_fov, vec);
+                hiddenFov += angleBetweenVectors(startOfHiddenFov, vec);
               }
             break;
           }
         else
           {
-            entered_target_fov = true;
-            start_of_hidden_fov = vec;
+            enteredTargetFov = true;
+            startOfHiddenFov = vec;
           }
       }
 
-    auto target_vectors = findFovVectors(observer, target);
-    double target_fov = angleBetweenVectors(target_vectors.first, target_vectors.second);
-    double visible_fov = target_fov - hidden_fov;
-    int visible_percentage = static_cast<int>(visible_fov / (target_fov * 0.01));
+    auto targetVectors = findFovVectors(observer, target);
+    double targetFov = angleBetweenVectors(targetVectors.first, targetVectors.second);
+    double visibleFov = targetFov - hiddenFov;
+    int visiblePercentage = static_cast<int>(visibleFov / (targetFov * 0.01));
 
-    if(visible_percentage > 50)
+    if(visiblePercentage > 50)
       {
         return Visibility::FULL;
       }
-    else if(visible_percentage > 25)
+    else if(visiblePercentage > 25)
       {
         return Visibility::HALF_COVER;
       }
-    else if(visible_percentage > 0)
+    else if(visiblePercentage > 0)
       {
         return Visibility::THREE_QUARTERS_COVER;
       }

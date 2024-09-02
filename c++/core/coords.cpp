@@ -26,7 +26,7 @@ namespace enc
             {_coords[0][0] + sizeValue + 1, _coords[0][1] + sizeValue + 1}};
   }
 
-  Vector2DBlaze Coords::getCenter() const
+  Vector2D Coords::getCenter() const
   {
     int sizeValue = std::max(0, static_cast<int>(_size));
     return {_coords[0][0] + static_cast<double>(sizeValue + 1) / 2.0, _coords[0][1] + static_cast<double>(sizeValue + 1) / 2.0};

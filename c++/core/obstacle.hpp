@@ -17,7 +17,7 @@ namespace enc
     // std::vector<std::array<int64_t, 2>> getCorners() const;
     std::array<Coord, 4> getCorners() const override;
 
-    Vector2DBlaze getCenter() const override;
+    Vector2D getCenter() const override;
 
     const Coord &getCoord() const { return _coord; }
     int32_t getRadius() const { return _radius; }

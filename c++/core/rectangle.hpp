@@ -9,6 +9,6 @@ namespace enc
   {
   public:
     virtual std::array<Coord, 4> getCorners() const = 0;
-    virtual Vector2DBlaze getCenter() const = 0;
+    virtual Vector2D getCenter() const = 0;
   };
 }

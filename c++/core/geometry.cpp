@@ -95,6 +95,11 @@ namespace enc
     return blaze::StaticVector<double, 3>{a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]};
   }
 
+  double cross(const Vector2D &a, const Vector2D &b)
+  {
+    return a[0] * b[1] - a[1] * b[0];
+  };
+
   std::mt19937 rng(std::random_device{}());
   int randomInt(int min, int max) { return std::uniform_int_distribution<int>{min, max}(rng); }
 
@@ -157,17 +162,17 @@ namespace enc
 
   double getAngleFromSlope(double m) { return std::atan(m) * 180.0 / M_PI; }
 
-  blaze::StaticVector<double, 2> getSquareCenter(const Coord &coord) { return {coord[0] + 0.5, coord[1] + 0.5}; }
+  Vector2D getSquareCenter(const Coord &coord) { return {coord[0] + 0.5, coord[1] + 0.5}; }
 
   std::set<Coord> getAffectedByCone(const Coord &origin, double angleDeg, int radius, int gridSize)
   {
-    blaze::StaticVector<double, 2> originCenter = getSquareCenter(origin);
+    Vector2D originCenter = getSquareCenter(origin);
 
     auto lineIncrement = [&originCenter, radius](double angle) {
-      return blaze::StaticVector<double, 2>{originCenter[0] + radius * std::sin(angle), originCenter[1] + radius * std::cos(angle)};
+      return Vector2D{originCenter[0] + radius * std::sin(angle), originCenter[1] + radius * std::cos(angle)};
     };
 
-    auto polarity = [&originCenter](const blaze::StaticVector<double, 2> &linePoint, const blaze::StaticVector<double, 2> &queryPoint) {
+    auto polarity = [&originCenter](const Vector2D &linePoint, const Vector2D &queryPoint) {
       blaze::StaticMatrix<double, 2, 2> mat;
       column(mat, 0) = linePoint - originCenter;
       column(mat, 1) = queryPoint - originCenter;
@@ -175,17 +180,17 @@ namespace enc
     };
 
     double firstAngleRad = (angleDeg - 30) * M_PI / 180.0;
-    blaze::StaticVector<double, 2> firstLinePoint = lineIncrement(firstAngleRad);
+    Vector2D firstLinePoint = lineIncrement(firstAngleRad);
 
     double secondAngleRad = (angleDeg + 30) * M_PI / 180.0;
-    blaze::StaticVector<double, 2> secondLinePoint = lineIncrement(secondAngleRad);
+    Vector2D secondLinePoint = lineIncrement(secondAngleRad);
 
     std::set<Coord> coords;
     for(int x = 0; x < gridSize; ++x)
       {
         for(int y = 0; y < gridSize; ++y)
           {
-            blaze::StaticVector<double, 2> currCoordCenter = getSquareCenter({x, y});
+            Vector2D currCoordCenter = getSquareCenter({x, y});
             if(blaze::length(originCenter - currCoordCenter) < radius && polarity(firstLinePoint, currCoordCenter) <= 0
                && polarity(secondLinePoint, currCoordCenter) >= 0)
               {
@@ -211,7 +216,7 @@ namespace enc
 
   std::set<Coord> getAffectedByLine(const Coord &origin, double angleDeg, double length, double width, int gridSize)
   {
-    blaze::StaticVector<double, 2> originCenter = getSquareCenter(origin);
+    Vector2D originCenter = getSquareCenter(origin);
     double halfWidth = width / 2.0;
 
     double angleRad = angleDeg * M_PI / 180.0;
@@ -225,7 +230,7 @@ namespace enc
       {
         for(int y = 0; y < gridSize; ++y)
           {
-            blaze::StaticVector<double, 2> currCoordCenter = getSquareCenter({x, y});
+            Vector2D currCoordCenter = getSquareCenter({x, y});
             Vector2D vectorToCoord = {currCoordCenter[0] - originCenter[0], currCoordCenter[1] - originCenter[1]};
 
             double distanceAlongLine = vectorToCoord[0] * directionVector[0] + vectorToCoord[1] * directionVector[1];
@@ -277,17 +282,17 @@ namespace enc
    * @return normalized vectors to the left and right most points from the observer's perspective ordered in counter-clockwise manner
    * (using the convex angle they define)
    */
-  std::pair<Vector2DBlaze, Vector2DBlaze> findFovVectors(const Rectangle &observer, const Rectangle &target)
+  std::pair<Vector2D, Vector2D> findFovVectors(const Rectangle &observer, const Rectangle &target)
   {
     auto observer_center = observer.getCenter();
     auto target_center = target.getCenter();
 
-    std::vector<std::pair<Vector2DBlaze, double>> vectors;
+    std::vector<std::pair<Vector2D, double>> vectors;
     for(const auto &corner : target.getCorners())
       {
-        Vector2DBlaze corner_vec = {static_cast<double>(corner[0]), static_cast<double>(corner[1])};
-        Vector2DBlaze vec = corner_vec - observer_center;
-        Vector2DBlaze target_vec = target_center - observer_center;
+        Vector2D corner_vec = {static_cast<double>(corner[0]), static_cast<double>(corner[1])};
+        Vector2D vec = corner_vec - observer_center;
+        Vector2D target_vec = target_center - observer_center;
         double angle = std::acos(blaze::dot(vec, target_vec) / (blaze::length(vec) * blaze::length(target_vec)));
         vectors.emplace_back(vec, angle);
       }
@@ -296,7 +301,7 @@ namespace enc
 
     assert(vectors.size() > 1);
 
-    auto normalize = [](const Vector2DBlaze &v) { return v / blaze::length(v); };
+    auto normalize = [](const Vector2D &v) { return v / blaze::length(v); };
 
     if(vectors[0].first[0] * vectors[1].first[1] - vectors[0].first[1] * vectors[1].first[0] > 0)
       {

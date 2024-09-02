@@ -60,6 +60,8 @@ protected:
   }
 };
 
+class BattleMapTestSizeParam : public BattleMapTest, public ::testing::WithParamInterface<Size> {};
+
 TEST_F(BattleMapTest, GetFreeCoordinatesInHopRangeMedium)
 {
   battleMap->setCombatantCoordinates(*goblin, Coord({5, 7}));
@@ -1035,6 +1037,88 @@ TEST_F(BattleMapTest, GetCombatantsAffectedByLineAoE)
   EXPECT_EQ(std::count(combatants.begin(), combatants.end(), stone_giant), 0);
 }
 
+TEST_P(BattleMapTestSizeParam, BasicVisibilityTests)
+{
+  Size size = GetParam();
+  battleMap->placeTerrain(Coord{5, 5}, Terrain::IMPASSABLE_TERRAIN);
+
+  // Basic fully blocking scenarios
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({6, 5})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({5, 6}, size), Coords({5, 4})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 4}, size), Coords({6, 6})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 6}, size), Coords({6, 4})), Visibility::NONE);
+
+  // From (4, 5)
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({5, 4})), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({5, 6})), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({6, 6})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({6, 4})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({6, 7})), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({7, 7})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({7, 6})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({8, 6})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({9, 6})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({8, 7})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 5}, size), Coords({8, 8})), Visibility::NONE);
+
+  // From (3, 5) we should be able to see a bit more
+  EXPECT_EQ(battleMap->getVisibility(Coords({3, 5}, size), Coords({6, 6})), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({3, 5}, size), Coords({7, 7})), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({3, 5}, size), Coords({7, 6})), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({3, 5}, size), Coords({8, 6})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({3, 5}, size), Coords({9, 6})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({3, 5}, size), Coords({8, 7})), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({3, 5}, size), Coords({9, 7})), Visibility::FULL);
+
+  // From (2, 5) even more
+  EXPECT_EQ(battleMap->getVisibility(Coords({2, 5}, size), Coords({6, 6})), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({2, 5}, size), Coords({7, 7})), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({2, 5}, size), Coords({7, 6})), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({2, 5}, size), Coords({8, 6})), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({2, 5}, size), Coords({9, 6})), Visibility::THREE_QUARTERS_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({2, 5}, size), Coords({8, 7})), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({2, 5}, size), Coords({9, 7})), Visibility::FULL);
+
+  // Testing diagonal cases
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 4}, size), Coords({5, 6})), Visibility::THREE_QUARTERS_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 4}, size), Coords({6, 5})), Visibility::THREE_QUARTERS_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 4}, size), Coords({7, 5})), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 4}, size), Coords({7, 6})), Visibility::NONE);
+  EXPECT_EQ(battleMap->getVisibility(Coords({4, 4}, size), Coords({8, 6})), Visibility::NONE);
+}
+
+INSTANTIATE_TEST_SUITE_P(SmallMedium, BattleMapTestSizeParam, ::testing::Values(Size::SMALL, Size::MEDIUM));
+
+TEST_F(BattleMapTest, LargeAndHugeMultipleObstacles1)
+{
+  battleMap->placeTerrain({7, 2}, Terrain::IMPASSABLE_TERRAIN);
+  battleMap->placeTerrain({7, 5}, Terrain::IMPASSABLE_TERRAIN);
+  EXPECT_EQ(battleMap->getVisibility(Coords({0, 0}, Size::LARGE), Coords({9, 4}, Size::HUGE)), Visibility::FULL);
+
+  battleMap->placeTerrain({7, 3}, Terrain::IMPASSABLE_TERRAIN);
+  EXPECT_EQ(battleMap->getVisibility(Coords({0, 0}, Size::LARGE), Coords({9, 4}, Size::HUGE)), Visibility::THREE_QUARTERS_COVER);
+}
+
+TEST_F(BattleMapTest, LargeAndHugeMultipleObstacles2)
+{
+  battleMap->placeTerrain({5, 3}, Terrain::IMPASSABLE_TERRAIN, 1);
+  battleMap->placeTerrain({5, 8}, Terrain::IMPASSABLE_TERRAIN);
+  battleMap->placeTerrain({5, 9}, Terrain::IMPASSABLE_TERRAIN);
+
+  EXPECT_EQ(battleMap->getVisibility(Coords({9, 5}, Size::HUGE), Coords({5, 0}, Size::LARGE)), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({9, 5}, Size::HUGE), Coords({2, 3}, Size::LARGE)), Visibility::THREE_QUARTERS_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({9, 5}, Size::HUGE), Coords({0, 7}, Size::LARGE)), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({9, 5}, Size::HUGE), Coords({0, 8}, Size::LARGE)), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({9, 5}, Size::HUGE), Coords({1, 8}, Size::LARGE)), Visibility::HALF_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({9, 5}, Size::HUGE), Coords({3, 9}, Size::LARGE)), Visibility::THREE_QUARTERS_COVER);
+  EXPECT_EQ(battleMap->getVisibility(Coords({9, 5}, Size::HUGE), Coords({1, 11}, Size::LARGE)), Visibility::THREE_QUARTERS_COVER);
+}
+
+TEST_F(BattleMapTest, NoObstacles)
+{
+  EXPECT_EQ(battleMap->getVisibility(Coords({0, 0}, Size::LARGE), Coords({9, 4}, Size::HUGE)), Visibility::FULL);
+  EXPECT_EQ(battleMap->getVisibility(Coords({0, 0}, Size::MEDIUM), Coords({1, 0}, Size::MEDIUM)), Visibility::FULL);
+}
 }
 
 // TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwave)

@@ -21,5 +21,5 @@ namespace enc
         }};
     }
 
-  Vector2DBlaze Obstacle::getCenter() const { return {static_cast<double>(_coord[0]) + 0.5, static_cast<double>(_coord[1]) + 0.5}; }
+  Vector2D Obstacle::getCenter() const { return {static_cast<double>(_coord[0]) + 0.5, static_cast<double>(_coord[1]) + 0.5}; }
 }
