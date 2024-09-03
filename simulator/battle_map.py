@@ -1417,8 +1417,8 @@ class Map:
         self.visibility_dict_for_all_coords[tuple(current_position.get()[0])] = self.get_visibility_dict(combatant, current_position.get()[0])
 
 
-    def get_non_swallowed_adjacent_enemies(self, combatant):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) == 1]
+    # def get_non_swallowed_adjacent_enemies(self, combatant):
+    #     return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) == 1]
 
     def get_non_swallowed_enemies_within_radius(self, combatant, radius):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) <= radius]
@@ -1447,8 +1447,8 @@ class Map:
     def get_non_swallowed_enemies_without_hop_distance(self, combatant, distance):
         return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) > distance]
 
-    def get_non_swallowed_enemies_within_their_movement_range(self, combatant):
-        return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) <= e.movement + 1]
+    # def get_non_swallowed_enemies_within_their_movement_range(self, combatant):
+    #     return [e for e in self.teams.get_enemies(combatant) if e.is_alive() and not get_swallower(e) and self.get_hop_distance_combatants(e, combatant) <= e.movement + 1]
 
     def is_difficult_terrain_at(self, coords: Coords):
         """Check if any of the given coordinates are difficult terrain."""

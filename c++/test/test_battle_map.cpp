@@ -1119,6 +1119,37 @@ TEST_F(BattleMapTest, NoObstacles)
   EXPECT_EQ(battleMap->getVisibility(Coords({0, 0}, Size::LARGE), Coords({9, 4}, Size::HUGE)), Visibility::FULL);
   EXPECT_EQ(battleMap->getVisibility(Coords({0, 0}, Size::MEDIUM), Coords({1, 0}, Size::MEDIUM)), Visibility::FULL);
 }
+
+TEST_F(BattleMapTest, GetVisibilityDict)
+{
+  // Place circular element
+  battleMap->placeTerrain(std::array<int, 2>{7, 7}, Terrain::IMPASSABLE_TERRAIN, 1);
+  Ogre *ogre2 = new Ogre(2);
+  Ogre *ogre3 = new Ogre(3);
+
+  // Add combatants to teams
+  session->addCombatant(goblin, Color::RED);
+  session->addCombatant(bugbear, Color::BLUE);
+  session->addCombatant(ogre, Color::BLUE);
+  session->addCombatant(ogre2, Color::BLUE);
+  session->addCombatant(ogre3, Color::BLUE);
+
+  // Set combatant coordinates
+  battleMap->setCombatantCoordinates(*goblin, std::array<int, 2>{14, 14});
+  battleMap->setCombatantCoordinates(*bugbear, std::array<int, 2>{8, 9});
+  battleMap->setCombatantCoordinates(*ogre, std::array<int, 2>{9, 4});
+  battleMap->setCombatantCoordinates(*ogre2, std::array<int, 2>{10, 11});
+  battleMap->setCombatantCoordinates(*ogre3, std::array<int, 2>{7, 4});
+
+  // Get visibility dict
+  auto visibility = battleMap->getVisibilityDict(goblin, std::array<int, 2>{3, 7});
+
+  // Assert visibility results
+  EXPECT_EQ(visibility[bugbear], Visibility::NONE);
+  EXPECT_EQ(visibility[ogre], Visibility::THREE_QUARTERS_COVER);
+  EXPECT_EQ(visibility[ogre2], Visibility::FULL);
+  EXPECT_EQ(visibility[ogre3], Visibility::HALF_COVER);
+}
 }
 
 // TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwave)

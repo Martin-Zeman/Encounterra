@@ -17,6 +17,16 @@
 
 namespace enc
 {
+  struct PairHash
+  {
+    template <class T1, class T2> std::size_t operator()(const std::pair<T1, T2> &pair) const
+    {
+      auto h1 = std::hash<T1>{}(pair.first);
+      auto h2 = std::hash<T2>{}(pair.second);
+      return h1 ^ (h2 << 1);
+    }
+  };
+
   struct DijkstraResult
   {
     blaze::DynamicVector<int> dist;
@@ -73,6 +83,12 @@ namespace enc
     std::vector<Combatant *> getCombatantsAffectedByLineAoE(const Combatant *caster, const Coord &origin, double angle, int length, int width) const;
     std::vector<Combatant *> getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const;
     Visibility getVisibility(const Coords &observer, const Coords &target);
+    std::unordered_map<const Combatant *, Visibility> getVisibilityDict(const Combatant *combatant, const Coord &theoreticalRootCoord);
+    void calcVisibilityDictForAllCoords(const Combatant *combatant, const blaze::DynamicMatrix<Coord> &shortestPaths);
+    std::vector<Combatant*> getNonSwallowedEnemiesWithinRadius(const Combatant* combatant, int radius);
+    std::vector<Combatant*> getNonSwallowedAlliesWithinRadius(const Combatant* combatant, int radius);
+    std::vector<Combatant*> getNonSwallowedEnemiesWithinHopDistance(const Combatant* combatant, int distance);
+    std::vector<Combatant*> getNonSwallowedEnemiesWithoutHopDistance(const Combatant* combatant, int distance);
 
   private:
     size_t _size;
@@ -85,6 +101,8 @@ namespace enc
     std::unordered_set<Coord> _impassableSet;
     std::unordered_set<Coord> _difficultSet;
     std::vector<Obstacle> _obstacles;
+    std::unordered_map<std::pair<int, int>, std::unordered_map<const Combatant*, Visibility>, PairHash> _visibilityDictForAllCoords;
+
 
     BattleMap(size_t size);
     BattleMap(const BattleMap &) = delete;

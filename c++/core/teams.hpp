@@ -34,17 +34,27 @@ namespace enc
 
     std::vector<Color> getTeamColors() const;
 
-    bool areAllies(const Combatant& first, const Combatant& second) const;
+    bool areAllies(const Combatant &first, const Combatant &second) const;
 
-    bool areEnemies(const Combatant& first, const Combatant& second) const;
+    bool areEnemies(const Combatant &first, const Combatant &second) const;
 
-    Color getTeam(const Combatant& combatant) const;
+    Color getTeam(const Combatant &combatant) const;
 
-    std::vector<Combatant*> getAllies(const Combatant& combatant) const;
+    std::vector<Combatant *> getAllAllies(const Combatant &combatant) const;
 
-    std::vector<Combatant*> getEnemies(const Combatant& combatant) const;
+    std::vector<Combatant *> getAllEnemies(const Combatant &combatant) const;
 
-    Combatant* getCombatantById(int id) const;
+    std::vector<Combatant *> getAliveEnemies(const Combatant &combatant) const;
+
+    std::vector<Combatant *> getAliveNonSwallowedEnemies(const Combatant &combatant) const;
+
+    std::vector<Combatant *> getAliveNonSwallowedAllies(const Combatant &combatant) const;
+
+    std::vector<Combatant *> getAliveCombatants(const Combatant *excludeCombatant) const;
+
+    std::vector<Combatant *> getAliveAllies(const Combatant &combatant) const;
+
+    Combatant *getCombatantById(int id) const;
 
   private:
     Teams() = default;

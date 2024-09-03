@@ -17,7 +17,8 @@ namespace enc
 
   BattleMap::BattleMap(size_t size = 15)
       : _size(size), _combatantGrid(size, size, -1), // Initialize combatantGrid with -1 (no combatant)
-        _terrainGrid(size, size, static_cast<int>(Terrain::NORMAL_TERRAIN))
+        _terrainGrid(size, size, static_cast<int>(Terrain::NORMAL_TERRAIN)),
+        _visibilityDictForAllCoords()
   // _occupancyGrid(size, size, static_cast<int>(Occupancy::FREE))
   {}
 
@@ -208,7 +209,7 @@ namespace enc
     // Handle AoO
     if(consider_aoo)
       {
-        auto enemies = teams.getEnemies(combatant);
+        auto enemies = teams.getAliveEnemies(combatant);
         for(const auto &e : enemies)
           {
             if(!e->hasReaction())
@@ -870,7 +871,7 @@ namespace enc
   {
     std::vector<Vector2D> enemyPositions;
     Teams &teams = Teams::getInstance();
-    for(Combatant *enemy : teams.getEnemies(*caster))
+    for(Combatant *enemy : teams.getAliveEnemies(*caster))
       {
         enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_instanceId).getCenter());
       }
@@ -970,7 +971,7 @@ namespace enc
   {
     std::vector<Vector2D> enemyPositions;
     Teams &teams = Teams::getInstance();
-    for(Combatant *enemy : teams.getEnemies(*caster))
+    for(Combatant *enemy : teams.getAliveEnemies(*caster))
       {
         enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_instanceId).getCenter());
       }
@@ -1289,5 +1290,118 @@ namespace enc
       {
         return Visibility::NONE;
       }
+  }
+
+  /**
+          Given a combatant, calculates the visibility to all other combatants of given a theoretical root coord to which the combatant is to be moved.
+          @param combatant
+          @param theoretical_root_coord theoretical root coordinate for combatant
+          @return dict mapping enemy -> Visibility
+   */
+  std::unordered_map<const Combatant *, Visibility> BattleMap::getVisibilityDict(const Combatant *combatant, const Coord &theoreticalRootCoord)
+  {
+    std::unordered_map<const Combatant *, Visibility> ret;
+    Teams &teams = Teams::getInstance();
+
+    if(!combatant->getSwallower())
+      {
+        Coords theoreticalCoords(theoreticalRootCoord, combatant->getSize());
+        for(const auto &e : teams.getAliveCombatants(combatant))
+          {
+            ret[e] = getVisibility(theoreticalCoords, getCombatantCoordinates(*e));
+          }
+      }
+    else
+      {
+        for(const auto &e : teams.getAliveCombatants(combatant))
+          {
+            ret[e] = Visibility::NONE;
+          }
+      }
+    ret[combatant] = Visibility::FULL;
+    return ret;
+  }
+
+  /**
+          Calculates and caches the visibility dict for all coords accessible to a combatant.
+          @param combatant:
+          @param shortest_paths: the shortest paths to all squares (result of Dijkstra as a numpy ndarray of shape (15, 15, 2))
+          @return: None
+   */
+  void BattleMap::calcVisibilityDictForAllCoords(const Combatant *combatant, const blaze::DynamicMatrix<Coord> &shortestPaths)
+  {
+    const Coords &currentPosition = getCombatantCoordinates(*combatant);
+    _visibilityDictForAllCoords.clear();
+
+    for(size_t x = 0; x < shortestPaths.rows(); ++x)
+      {
+        for(size_t y = 0; y < shortestPaths.columns(); ++y)
+          {
+            if(shortestPaths(x, y) != Coord{-1, -1})
+              {
+                Coord theoreticalRootCoord{static_cast<int>(x), static_cast<int>(y)};
+                _visibilityDictForAllCoords[{x, y}] = getVisibilityDict(combatant, theoreticalRootCoord);
+              }
+          }
+      }
+
+    _visibilityDictForAllCoords[{static_cast<size_t>(currentPosition.get()[0][0]), static_cast<size_t>(currentPosition.get()[0][1])}]
+      = getVisibilityDict(combatant, Coord{currentPosition.get()[0][0], currentPosition.get()[0][1]});
+  }
+
+  std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithinRadius(const Combatant *combatant, int radius)
+  {
+    std::vector<Combatant *> result;
+    Teams &teams = Teams::getInstance();
+    for(auto *e : teams.getAliveNonSwallowedEnemies(*combatant))
+      {
+        if(getHopDistanceCombatants(*e, *combatant) <= radius)
+          {
+            result.push_back(e);
+          }
+      }
+    return result;
+  }
+
+  std::vector<Combatant *> BattleMap::getNonSwallowedAlliesWithinRadius(const Combatant *combatant, int radius)
+  {
+    std::vector<Combatant *> result;
+    Teams &teams = Teams::getInstance();
+    for(auto *a : teams.getAliveNonSwallowedAllies(*combatant))
+      {
+        if(getHopDistanceCombatants(*a, *combatant) <= radius)
+          {
+            result.push_back(a);
+          }
+      }
+    return result;
+  }
+
+  std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithinHopDistance(const Combatant *combatant, int distance)
+  {
+    std::vector<Combatant *> result;
+    Teams &teams = Teams::getInstance();
+    for(auto *e : teams.getAliveNonSwallowedEnemies(*combatant))
+      {
+        if(getHopDistanceCombatants(*e, *combatant) <= distance)
+          {
+            result.push_back(e);
+          }
+      }
+    return result;
+  }
+
+  std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithoutHopDistance(const Combatant *combatant, int distance)
+  {
+    std::vector<Combatant *> result;
+    Teams &teams = Teams::getInstance();
+    for(auto *e : teams.getAliveNonSwallowedEnemies(*combatant))
+      {
+        if(getHopDistanceCombatants(*e, *combatant) > distance)
+          {
+            result.push_back(e);
+          }
+      }
+    return result;
   }
 }

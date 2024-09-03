@@ -87,7 +87,7 @@ namespace enc
 
   Color Teams::getTeam(const Combatant &combatant) const { return _combatantIdToTeamColor.at(combatant._instanceId); }
 
-  std::vector<Combatant *> Teams::getAllies(const Combatant &combatant) const
+  std::vector<Combatant *> Teams::getAllAllies(const Combatant &combatant) const
   {
     std::vector<int> allyIds = _colorToCombatantIds.at(_combatantIdToTeamColor.at(combatant._instanceId));
     std::vector<Combatant *> allies;
@@ -99,7 +99,7 @@ namespace enc
     return allies;
   }
 
-  std::vector<Combatant *> Teams::getEnemies(const Combatant &combatant) const
+  std::vector<Combatant *> Teams::getAllEnemies(const Combatant &combatant) const
   {
     Color otherTeam = (_combatantIdToTeamColor.at(combatant._instanceId) == Color::BLUE) ? Color::RED : Color::BLUE;
     std::vector<int> enemyIds = _colorToCombatantIds.at(otherTeam);
@@ -110,6 +110,91 @@ namespace enc
         enemies.push_back(_idToCombatant.at(id));
       }
     return enemies;
+  }
+
+  std::vector<Combatant *> Teams::getAliveEnemies(const Combatant &combatant) const
+  {
+    std::vector<Combatant *> result;
+    Color combatantTeam = getTeam(combatant);
+    for(const auto &[color, ids] : _colorToCombatantIds)
+      {
+        if(color != combatantTeam)
+          {
+            for(int id : ids)
+              {
+                Combatant *enemy = _idToCombatant.at(id);
+                if(enemy->isAlive())
+                  {
+                    result.push_back(enemy);
+                  }
+              }
+          }
+      }
+    return result;
+  }
+
+  std::vector<Combatant *> Teams::getAliveNonSwallowedEnemies(const Combatant &combatant) const
+  {
+    std::vector<Combatant *> result;
+    Color combatantTeam = getTeam(combatant);
+    for(const auto &[color, ids] : _colorToCombatantIds)
+      {
+        if(color != combatantTeam)
+          {
+            for(int id : ids)
+              {
+                Combatant *enemy = _idToCombatant.at(id);
+                if(enemy->isAlive() && !enemy->getSwallower())
+                  {
+                    result.push_back(enemy);
+                  }
+              }
+          }
+      }
+    return result;
+  }
+
+  std::vector<Combatant *> Teams::getAliveNonSwallowedAllies(const Combatant &combatant) const
+  {
+    std::vector<Combatant *> result;
+    Color combatantTeam = getTeam(combatant);
+    for(int id : _colorToCombatantIds.at(combatantTeam))
+      {
+        Combatant *ally = _idToCombatant.at(id);
+        if(ally->isAlive() && !ally->getSwallower() && ally != &combatant)
+          {
+            result.push_back(ally);
+          }
+      }
+    return result;
+  }
+
+  std::vector<Combatant *> Teams::getAliveCombatants(const Combatant *excludeCombatant) const
+  {
+    std::vector<Combatant *> result;
+    for(const auto &[id, combatant] : _idToCombatant)
+      {
+        if(combatant->isAlive() && combatant != excludeCombatant)
+          {
+            result.push_back(combatant);
+          }
+      }
+    return result;
+  }
+
+  std::vector<Combatant *> Teams::getAliveAllies(const Combatant &combatant) const
+  {
+    std::vector<Combatant *> result;
+    Color combatantTeam = getTeam(combatant);
+    for(int id : _colorToCombatantIds.at(combatantTeam))
+      {
+        Combatant *ally = _idToCombatant.at(id);
+        if(ally->isAlive() && ally != &combatant)
+          {
+            result.push_back(ally);
+          }
+      }
+    return result;
   }
 
   Combatant *Teams::getCombatantById(int id) const { return _idToCombatant.at(id); }
