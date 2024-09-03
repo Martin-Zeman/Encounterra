@@ -174,6 +174,8 @@ namespace enc
     std::vector<Condition> _conditions;
     std::vector<ConditionWithDC> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;
+    std::shared_ptr<Spellslots> _spellslots;
+    std::unordered_map<ActionType, std::shared_ptr<Resource>> _resources;
 
   protected:
     Size _size{Size::MEDIUM};
