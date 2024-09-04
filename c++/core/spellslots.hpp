@@ -134,43 +134,15 @@ namespace enc
         : Resource(refreshType), maxSpellslots(spellslotTable), currSpellslots(spellslotTable)
     {}
 
-    bool hasResource(int level) override { return currSpellslots[level] > 0; }
+    bool hasResource(int level) override;
 
-    int getResource(int level) override { return currSpellslots[level]; }
+    int getResource(int level) override;
 
-    void useResource(int level) override
-    {
-      if(currSpellslots.find(level) != currSpellslots.end())
-        {
-          currSpellslots[level]--;
-        }
-      else
-        {
-          throw std::runtime_error("Invalid spell level");
-        }
-    }
+    void useResource(int level) override;
 
-    void reset() override { currSpellslots = maxSpellslots; }
+    void reset() override;
 
-    void depleteResource(ResourceDepletionLevel level) override
-    {
-      switch(level)
-        {
-        case ResourceDepletionLevel::FULLY_DEPLETED:
-          for(auto &slot : currSpellslots)
-            {
-              slot.second = 0;
-            }
-          break;
-        case ResourceDepletionLevel::PARTIALLY_DEPLETED:
-          for(auto &slot : currSpellslots)
-            {
-              slot.second = maxSpellslots[slot.first] / 2;
-            }
-          break;
-        default: break;
-        }
-    }
+    void depleteResource(ResourceDepletionLevel level) override;
 
   private:
     std::unordered_map<int, int> maxSpellslots;
@@ -178,31 +150,6 @@ namespace enc
   };
 
   // Function to create spellslots based on class and level
-  std::unique_ptr<Spellslots> spellslotFactory(Class className, int classLevel)
-  {
-    const SpellslotTable *table = nullptr;
-
-    switch(className)
-      {
-      case Class::BARD:
-      case Class::CLERIC:
-      case Class::DRUID:
-      case Class::SORCERER:
-      case Class::WIZARD: table = &FULL_CASTER_TABLE; break;
-      case Class::PALADIN:
-      case Class::RANGER: table = &HALF_CASTER_TABLE; break;
-      case Class::FIGHTER:
-      case Class::ROGUE: table = &QUARTER_CASTER_TABLE; break;
-      case Class::WARLOCK: table = &WARLOCK_TABLE; break;
-      default: return nullptr;
-      }
-
-    if(table && table->find(classLevel) != table->end())
-      {
-        return std::make_unique<Spellslots>((*table)[classLevel]);
-      }
-
-    return nullptr;
-  }
+  std::unique_ptr<Spellslots> spellslotFactory(Class className, int classLevel);
 
 }

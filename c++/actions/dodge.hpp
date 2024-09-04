@@ -13,10 +13,10 @@ namespace enc
     Dodge() : Actoid(ActoidFlags::IS_MOVEMENT) {}
   };
 
-  class DodgeFactory : public Factory
+  class DodgeFactory : public ActoidFactory
   {
   public:
-    std::vector<std::shared_ptr<Actoid>> create_all(void *previous_action_in_dag = nullptr) override { return {std::make_shared<Dodge>()}; }
+    std::vector<std::shared_ptr<Actoid>> createAll(void *previous_action_in_dag = nullptr) override { return {std::make_shared<Dodge>()}; }
 
     std::shared_ptr<Actoid> create(void *target) override { return std::make_shared<Dodge>(); }
   };

@@ -19,6 +19,14 @@ namespace enc
     RED = 2
   };
 
+  enum class AbilityActionType
+  {
+    ACTION,
+    BONUS_ACTION,
+    REACTION,
+    HASTE_ACTION,
+    PASSIVE
+  };
 }
 
 namespace std

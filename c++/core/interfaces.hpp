@@ -57,11 +57,20 @@ namespace enc
 
   inline FactoryFlags operator|(FactoryFlags a, FactoryFlags b) { return static_cast<FactoryFlags>(static_cast<int>(a) | static_cast<int>(b)); }
 
-  class Factory
+  class ICombatant{};
+
+  class ActoidFactory
   {
   public:
-    virtual ~Factory() = default;
-    virtual std::vector<std::shared_ptr<Actoid>> create_all(void *previous_action_in_dag = nullptr) = 0;
+    virtual ~ActoidFactory() = default;
+    virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previous_action_in_dag = nullptr) = 0;
     virtual std::shared_ptr<Actoid> create(void *target) = 0;
+  };
+
+  class DirectThreatFactory : public ActoidFactory
+  {
+    virtual double calculateThreatToTarget(ICombatant *target) = 0;
+    virtual double calculateThreatToTargetDelta(ICombatant *target /*Add modifiers*/) = 0;
+    virtual double calculateMaxThreat() = 0;
   };
 }

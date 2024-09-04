@@ -17,20 +17,19 @@
 #include "interfaces.hpp"
 #include "conditions.hpp"
 #include "resources.hpp"
+#include "spellslots.hpp"
+#include "actions/action_types.hpp"
+#include "actions/action_constants.hpp"
 
 namespace enc
 {
 
-  class ProtoCombatant
-  {};
+  using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
-  class Combatant : public ProtoCombatant
+  class Combatant : public ICombatant
   {
   public:
     std::string _name;
-    // CombatantType _type;
-    // SubType _subtype;
-    // int _level;
     int _instanceId;
 
     Combatant(CombatantType type, SubType subtype, int level, std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances = {},
@@ -117,6 +116,41 @@ namespace enc
     bool isAffectedByAny(const std::vector<Conditions> &conditions);
     void setResourceDepletionLevel(ResourceDepletionLevel level) { _resouceDepletionLevel = level; }
 
+    template <AbilityType abilityType, typename... Args> std::shared_ptr<ActoidFactory> addAbility(Args &&...args)
+    {
+      using FactoryType = typename AbilityFactoryMap<abilityType>::type;
+      static_assert(!std::is_same_v<FactoryType, void>, "No factory type defined for this ability type");
+      auto factory = std::make_shared<FactoryType>(std::forward<Args>(args)...);
+      auto baseFactory = std::static_pointer_cast<ActoidFactory>(factory);
+
+      if constexpr(abilityType > AbilityType::PASSIVE_DELIMITER)
+        {
+          _passiveAbilities.push_back(abilityType);
+        }
+      else if constexpr(abilityType > AbilityType::HASTE_ACTION_DELIMITER)
+        {
+          _hasteActionFactories.push_back(baseFactory);
+        }
+      else if constexpr(abilityType > AbilityType::REACTION_DELIMITER)
+        {
+          _reactionFactories.push_back(baseFactory);
+        }
+      else if constexpr(abilityType > AbilityType::BONUS_ACTION_DELIMITER)
+        {
+          _bonusActionFactories.push_back(baseFactory);
+        }
+      else if constexpr(static_cast<uint32_t>(abilityType) > 0U)
+        {
+          _actionFactories.push_back(baseFactory);
+        }
+      else
+        {
+          throw std::runtime_error("Unknown ability type");
+        }
+
+      return baseFactory;
+    }
+
   private:
     template <typename ConditionType> Combatant *checkConditionList(const std::vector<ConditionType> &condList, Conditions condition) const
     {
@@ -148,7 +182,6 @@ namespace enc
     bool _hasReaction = true;
     bool _hasHasteAction = false;
     int _meleeReactionRange = 1;
-    std::unordered_map<std::string, int> _resources;
     int _speed;
     int _movement;
     Color _teamColor;
@@ -158,9 +191,13 @@ namespace enc
     std::unordered_set<DamageType> _vulnerabities;
     // ... Other member variables
 
-    std::shared_ptr<Factory> _dodgeFactory;
-    std::shared_ptr<Factory> _disengageFactory;
-    std::vector<std::shared_ptr<Factory>> _actionFactories;
+    std::shared_ptr<ActoidFactory> _dodgeFactory;
+    std::shared_ptr<ActoidFactory> _disengageFactory;
+    std::vector<std::shared_ptr<ActoidFactory>> _actionFactories;
+    std::vector<std::shared_ptr<ActoidFactory>> _bonusActionFactories;
+    std::vector<std::shared_ptr<ActoidFactory>> _reactionFactories;
+    std::vector<std::shared_ptr<ActoidFactory>> _hasteActionFactories;
+    std::vector<AbilityType> _passiveAbilities;
     std::unordered_map<SavingThrow, int> _savingThrows
       = {{SavingThrow::STR, 0}, {SavingThrow::DEX, 0}, {SavingThrow::CON, 0}, {SavingThrow::INT, 0}, {SavingThrow::WIS, 0}, {SavingThrow::CHA, 0}};
     std::unordered_map<SavingThrow, std::vector<int>> _savingThrowsFlatMod;
@@ -175,7 +212,7 @@ namespace enc
     std::vector<ConditionWithDC> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;
     std::shared_ptr<Spellslots> _spellslots;
-    std::unordered_map<ActionType, std::shared_ptr<Resource>> _resources;
+    std::unordered_map<AbilityType, std::shared_ptr<Resource>> _resources;
 
   protected:
     Size _size{Size::MEDIUM};
