@@ -19,5 +19,16 @@ namespace enc
                                           DamageType::Bludgeoning,
                                           1 // attack range
     );
+
+    auto javelinFactory = this->addAbility<AbilityType::RANGED_ATTACK>("Javelin",
+                                                                       4,                                        // to_hit
+                                                                       std::vector<std::pair<int, int>>{{1, 6}}, // damage dice
+                                                                       2,                                        // damage bonus
+                                                                       DamageType::Piercing,
+                                                                       24, // attack range
+                                                                       1,  // crit range
+                                                                       Uses(1, ResourceRefreshType::NEVER),
+                                                                       false // uses_dex
+    );
   }
 }
