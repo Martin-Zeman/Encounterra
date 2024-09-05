@@ -14,8 +14,8 @@ namespace enc
   {
   public:
     AttackFactory(const std::string &name, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange = 1,
-                  Uses &&ammo, OnHit *onHit = nullptr, std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false, bool twoHanded = false,
-                  Die toHitBonusDie = {})
+                  Uses &&ammo = Uses(), OnHit *onHit = nullptr, std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false,
+                  bool twoHanded = false, Die toHitBonusDie = {})
         : _name(name), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType), _attackRange(attackRange), _critRange(critRange),
           _ammo(std::move(ammo)), _onHit(onHit), _extraDmg(extraDmg), _usesDex(usesDex), _twoHanded(twoHanded), _toHitBonusDie(toHitBonusDie)
     {}

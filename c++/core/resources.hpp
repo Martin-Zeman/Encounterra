@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 namespace enc
 {
 
@@ -37,14 +39,17 @@ namespace enc
   class Uses : public Resource
   {
   public:
+    static const int INFINITE_USES = std::numeric_limits<int>::max();
+
+    Uses() : Resource(ResourceRefreshType::LONG_REST), _currUses(Uses::INFINITE_USES), _maxUses(Uses::INFINITE_USES) {}
     Uses(int uses, ResourceRefreshType refreshType = ResourceRefreshType::LONG_REST) : Resource(refreshType), _currUses(uses), _maxUses(uses) {}
 
     bool hasResource(int level) override { return _currUses > 0; } // level is ignored in this case
-    int getResource(int level) override { return _currUses; }  // level is ignored in this case
+    int getResource(int level) override { return _currUses; }      // level is ignored in this case
     void useResource(int uses = 1) override { _currUses -= uses; }
     void addResource(int uses = 1) { _currUses += uses; }
     void setResource(int uses) { _currUses = uses; }
-    bool isInf() const { return _currUses == INFINITY; }
+    bool isInf() const { return _currUses == Uses::INFINITE_USES; }
     void reset() override { _currUses = _maxUses; }
 
     void depleteResource(ResourceDepletionLevel level) override

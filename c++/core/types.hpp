@@ -2,6 +2,7 @@
 
 #include <blaze/Math.h>
 #include <array>
+#include "core/misc.hpp"
 
 namespace enc
 {
@@ -11,6 +12,7 @@ namespace enc
   using Die = blaze::StaticVector<uint8_t, 2>;
   using MapMatrix = blaze::DynamicMatrix<int>;
   using Vector2D = blaze::StaticVector<double, 2UL>;
+  using DmgDieWithType = std::pair<Die, DamageType>;
   // using Vector2D = std::array<double, 2>;
 
   enum class Color
