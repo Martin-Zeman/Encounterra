@@ -9,13 +9,11 @@ namespace enc
   class MeleeAttackFactory : public AttackFactory
   {
   public:
-    MeleeAttackFactory(const std::string &name, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType,
-                       int attackRange, int critRange = 1, Uses &&ammo = Uses(), OnHit *onHit = nullptr,
-                       std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false, bool twoHanded = false,
-                       Die toHitBonusDie = {})
-        : AttackFactory(name, toHit, dmgDice, dmgBonus, dmgType, attackRange, critRange,
-                        std::move(ammo), onHit, extraDmg, usesDex, twoHanded, toHitBonusDie)
-    {}
+    MeleeAttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType,
+                       int attackRange, int critRange = 1, Uses &&ammo = Uses(), OnHit *onHit = nullptr, std::vector<DmgDieWithType> extraDmg = {},
+                       bool usesDex = false, bool twoHanded = false, Die toHitBonusDie = {});
+
+    std::unique_ptr<AttackFactory> clone() const override { return std::make_unique<MeleeAttackFactory>(*this); }
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previous_action_in_dag = nullptr) override;
 

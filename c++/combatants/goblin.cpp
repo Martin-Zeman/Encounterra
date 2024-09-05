@@ -13,22 +13,24 @@ namespace enc
     _size = Size::SMALL;
 
     addAbility(AbilityType::MELEE_ATTACK, "Scimitar",
-               2,                                        // to_hit
-               std::vector<std::pair<int, int>>{{1, 4}}, // damage dice
-               0,                                        // damage bonus
+               2,                        // toHit
+               std::vector<Die>{{1, 4}}, // dmgDice
+               0,                        // dmgBonus
                DamageType::Bludgeoning,
-               1 // attack range
+               1 // attackRange
     );
 
-    auto javelinFactory = this->addAbility(AbilityType::RANGED_ATTACK, "Javelin",
-                                           4,                                        // to_hit
-                                           std::vector<std::pair<int, int>>{{1, 6}}, // damage dice
-                                           2,                                        // damage bonus
-                                           DamageType::Piercing,
-                                           24, // attack range
-                                           1,  // crit range
-                                           Uses(1, ResourceRefreshType::NEVER),
-                                           false // uses_dex
+    auto javelinFactory = addAbility(AbilityType::RANGED_ATTACK, "Javelin",
+                                     4,                        // toHit
+                                     std::vector<Die>{{1, 6}}, // dmgDice
+                                     2,                        // dmgBonus
+                                     DamageType::Piercing,
+                                     24,                                  // attackRange
+                                     1,                                   // critRange
+                                     Uses(1, ResourceRefreshType::NEVER), // ammo
+                                     nullptr,                             // onHit
+                                     std::vector<DmgDieWithType>{},       // extraDmg
+                                     false                                // usesDex
     );
   }
 }

@@ -57,11 +57,19 @@ namespace enc
 
   inline FactoryFlags operator|(FactoryFlags a, FactoryFlags b) { return static_cast<FactoryFlags>(static_cast<int>(a) | static_cast<int>(b)); }
 
-  class ICombatant{};
+  // class ICombatant{};
+  class Combatant;
 
   class ActoidFactory
   {
+  protected:
+    uint32_t _flags;
+
   public:
+    ActoidFactory() : _flags(static_cast<uint32_t>(FactoryFlags::DEFAULT)) {}
+    void setFlag(FactoryFlags flag) { _flags |= static_cast<uint32_t>(flag); }
+    void clearFlag(FactoryFlags flag) { _flags &= ~static_cast<uint32_t>(flag); }
+    bool hasFlag(FactoryFlags flag) const { return (_flags & static_cast<uint32_t>(flag)) != 0; }
     virtual ~ActoidFactory() = default;
     virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previous_action_in_dag = nullptr) = 0;
     virtual std::shared_ptr<Actoid> create(void *target) = 0;
@@ -69,8 +77,10 @@ namespace enc
 
   class DirectThreatFactory : public ActoidFactory
   {
-    virtual double calculateThreatToTarget(ICombatant *target) = 0;
-    virtual double calculateThreatToTargetDelta(ICombatant *target /*Add modifiers*/) = 0;
+  protected:
+    DirectThreatFactory() : ActoidFactory() { setFlag(FactoryFlags::IS_DIRECT_THREAT); }
+    virtual double calculateThreatToTarget(Combatant *target) = 0;
+    virtual double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) = 0;
     virtual double calculateMaxThreat() = 0;
   };
 }

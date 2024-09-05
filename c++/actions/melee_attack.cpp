@@ -2,6 +2,15 @@
 
 namespace enc
 {
+  MeleeAttackFactory::MeleeAttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice, int dmgBonus,
+                                         DamageType dmgType, int attackRange, int critRange, Uses &&ammo, OnHit *onHit,
+                                         std::vector<DmgDieWithType> extraDmg, bool usesDex, bool twoHanded, Die toHitBonusDie)
+      : AttackFactory(name, combatant, toHit, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo), onHit, extraDmg, usesDex,
+                      twoHanded, toHitBonusDie)
+  {
+    setFlag(FactoryFlags::IS_MELEE);
+  }
+
   std::vector<std::shared_ptr<Actoid>> MeleeAttackFactory::createAll(void *previous_action_in_dag)
   {
     //! @todo

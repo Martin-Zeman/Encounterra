@@ -26,7 +26,7 @@ namespace enc
 
   using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
-  class Combatant : public ICombatant
+  class Combatant/* : public ICombatant*/
   {
   public:
     std::string _name;
@@ -101,7 +101,7 @@ namespace enc
     int getMeleeReactionRange() { return _meleeReactionRange; }
     Combatant *getCurrentForm();
     Combatant *getOriginalForm();
-    const Combatant *getSwallower() const { return _swallower; }
+    Combatant *getSwallower() const { return _swallower; }
     void setSwallower(Combatant *swallower) { _swallower = swallower; }
     bool isSwallowed() const { return _swallower != nullptr; }
     const std::vector<Condition> &getConditions() const { return _conditions; }
@@ -128,10 +128,12 @@ namespace enc
           // Action
           case AbilityType::MELEE_ATTACK: {
             factory = std::make_shared<MeleeAttackFactory>(std::forward<Args>(args)...);
+            _actionFactories.push_back(factory);
           }
           break;
           case AbilityType::RANGED_ATTACK: {
             factory = std::make_shared<RangedAttackFactory>(std::forward<Args>(args)...);
+            _actionFactories.push_back(factory);
           }
           break;
         case AbilityType::RECKLESS_ATTACK: break;

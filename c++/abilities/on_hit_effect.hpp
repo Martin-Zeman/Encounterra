@@ -5,8 +5,10 @@
 
 namespace enc{
 
+    class Combatant;
+
     class OnHit{
-        virtual std::vector<std::pair<int, DamageType>> hit(ICombatant* attacker, Actoid* attack,  ICombatant* target, double multiplier, double dmgSoFar) = 0;
-        virtual double calculateThreat(ICombatant* attacker, ICombatant* target) = 0;
+        virtual std::vector<std::pair<int, DamageType>> hit(Combatant* attacker, Actoid* attack,  Combatant* target, double multiplier, double dmgSoFar) = 0;
+        virtual double calculateThreat(Combatant* attacker, Combatant* target) = 0;
     };
 }
