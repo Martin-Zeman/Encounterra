@@ -3,6 +3,8 @@
 #include <blaze/Math.h>
 #include <array>
 #include <utility>
+#include <any>
+#include <map>
 
 namespace enc
 {
@@ -28,6 +30,8 @@ namespace enc
     HASTE_ACTION,
     PASSIVE
   };
+
+  using Kwargs = std::map<std::string, std::any>;
 }
 
 namespace std

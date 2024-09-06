@@ -138,4 +138,49 @@ namespace
     EXPECT_THROW(percentileRoll(d6, 101), std::invalid_argument);
     EXPECT_THROW(percentileRoll(d6, -1), std::invalid_argument);
   }
+
+  TEST(DamageCalculationTest, AvgRoll)
+  {
+    Die d6 = {1, 6};
+    Die d8 = {1, 8};
+    Die d2d12 = {2, 12};
+
+    EXPECT_NEAR(avgRoll(d6), 3.5, 1e-6);
+    EXPECT_NEAR(avgRoll(d8), 4.5, 1e-6);
+    EXPECT_NEAR(avgRoll(d2d12), 13.0, 1e-6);
+  }
+
+  TEST(DamageCalculationTest, AvgRollMulti)
+  {
+    std::vector<Die> dice1 = {{1, 6}, {1, 8}};
+    std::vector<Die> dice2 = {{2, 6}, {1, 4}};
+
+    EXPECT_NEAR(avgRollMulti(dice1), 8.0, 1e-6);
+    EXPECT_NEAR(avgRollMulti(dice2), 9.5, 1e-6);
+  }
+
+  TEST(DamageCalculationTest, CalcPHit)
+  {
+    EXPECT_NEAR(calcPHit(5, 15), 0.55, 1e-6);
+    EXPECT_NEAR(calcPHit(0, 20), 0.05, 1e-6);  // Minimum probability
+    EXPECT_NEAR(calcPHit(20, 10), 0.95, 1e-6); // Maximum probability
+    EXPECT_NEAR(calcPHit(10, 10), 0.8, 1e-6);
+  }
+
+  TEST(DamageCalculationTest, MeanDmg)
+  {
+    std::vector<Die> dmgDice = {{2, 6}, {1, 8}};
+
+    // Test normal case
+    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15), 9.675, 1e-6);
+
+    // Test with immunity
+    EXPECT_DOUBLE_EQ(meanDmg(5, dmgDice, 3, 15, true), 0.0);
+
+    // Test with resistance
+    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15, false, true), 4.8375, 1e-6);
+
+    // Test with increased crit range
+    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15, false, false, 2.0), 10.075, 1e-6);
+  }
 }

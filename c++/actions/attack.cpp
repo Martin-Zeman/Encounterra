@@ -16,16 +16,29 @@ namespace enc
     return teams.getAliveNonSwallowedEnemies(*_combatant);
   }
 
-  double AttackFactory::calculateThreatToTarget(Combatant *target /*, const ThreatCalculationParams& params*/)
+  double AttackFactory::calculateThreatToTarget(Combatant *target, const Kwargs& kwargs)
   {
-    // int toHitTotal = _toHit;
-    // toHitTotal += getRollTypeDelta(params.rollType, std::max(0, std::min(target->getAC() - toHitTotal, 20)));
-    // if (_toHitBonusDie.sides > 0)
-    // {
-    //     toHitTotal += avgRoll(_toHitBonusDie);
-    // }
+    bool considerDist = false;
+    RollType rollType = RollType::STRAIGHT;
 
-    // if (!params.considerDist || Map::getInstance().getHopDistanceCombatants(_combatant, target) <= _attackRange)
+    // Extract parameters from kwargs
+    if(kwargs.find("consider_dist") != kwargs.end())
+      {
+        considerDist = std::any_cast<bool>(kwargs.at("consider_dist"));
+      }
+    if(kwargs.find("roll_type") != kwargs.end())
+      {
+        rollType = std::any_cast<RollType>(kwargs.at("roll_type"));
+      }
+
+    int toHitTotal = _toHit;
+    toHitTotal += getRollTypeDelta(rollType, std::max(0, std::min(target->getAC() - toHitTotal, 20)));
+    if (_toHitBonusDie[0] > 0)
+    {
+        toHitTotal += avgRoll(_toHitBonusDie);
+    }
+
+    // if (!considerDist || Map::getInstance().getHopDistanceCombatants(_combatant, target) <= _attackRange)
     // {
     //     double acc = meanDmg(toHitTotal, _dmgDice, _dmgBonus, target->getAC(),
     //                          target->isImmuneTo(_dmgType), target->isResistantTo(_dmgType),

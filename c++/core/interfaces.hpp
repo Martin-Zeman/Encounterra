@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <vector>
+#include "core/types.hpp"
 
 namespace enc
 {
@@ -79,7 +80,7 @@ namespace enc
   {
   protected:
     DirectThreatFactory() : ActoidFactory() { setFlag(FactoryFlags::IS_DIRECT_THREAT); }
-    virtual double calculateThreatToTarget(Combatant *target) = 0;
+    virtual double calculateThreatToTarget(Combatant *target, const Kwargs& kwargs) = 0;
     virtual double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) = 0;
     virtual double calculateMaxThreat() = 0;
   };

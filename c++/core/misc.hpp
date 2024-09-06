@@ -257,6 +257,15 @@ namespace enc
 
   double percentOfCurrHp(double curr_hp, double dmg);
 
+  double avgRoll(const Die& die);
+
+  double avgRollMulti(const std::vector<Die> &dice);
+
+  double
+  meanDmg(int toHit, const std::vector<Die> &dmgDice, int dmgBonus, int ac, bool isImmune = false, bool isResistant = false, double critRange = 1.0);
+
+  double calcPHit(int toHit, int ac);
+
   const std::map<RollType, double> ROLL_TYPE_CRIT_DELTA = {{RollType::STRAIGHT, 1.0}, {RollType::ADVANTAGE, 2.0}, {RollType::DISADVANTAGE, 0.5}};
 
   enum class ThreatModifierType

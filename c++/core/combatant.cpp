@@ -57,6 +57,12 @@ namespace enc
                           [condition](const ConditionWithDC &c) { return containsCondition(c.conditionComposite, condition); });
   }
 
+  bool Combatant::isImmuneTo(DamageType dmgType) { return _immunities.find(dmgType) != _immunities.end(); }
+  
+  bool Combatant::isResistantTo(DamageType dmgType) { return _resistances.find(dmgType) != _resistances.end(); }
+
+  bool Combatant::isVulnerableTo(DamageType dmgType) { return _vulnerabities.find(dmgType) != _vulnerabities.end(); }
+
   void Combatant::applyCondition(const Condition &condition)
   {
     _conditions.push_back(condition);

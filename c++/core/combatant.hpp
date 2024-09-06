@@ -92,6 +92,7 @@ namespace enc
 
     void setSize(Size size) { _size = size; };
     Size getSize() const { return _size; };
+    int getAC() const { return _ac; };
     void setTeamColor(Color teamColor) { _teamColor = teamColor; }
 
     bool hasAction() { return _hasAction; }
@@ -118,6 +119,9 @@ namespace enc
     void breakOutOfGrapple();
     bool isAffectedByAny(const std::vector<Conditions> &conditions);
     void setResourceDepletionLevel(ResourceDepletionLevel level) { _resouceDepletionLevel = level; }
+    bool isImmuneTo(DamageType dmgType);
+    bool isResistantTo(DamageType dmgType);
+    bool isVulnerableTo(DamageType dmgType);
 
     template <typename... Args> std::shared_ptr<ActoidFactory> addAbility(AbilityType abilityType, Args &&...args)
     {
