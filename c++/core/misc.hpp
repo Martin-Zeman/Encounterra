@@ -1,8 +1,11 @@
 #pragma once
 
+#include "core/types.hpp"
 #include <map>
 #include <cstdint>
 #include <variant>
+#include <unordered_map>
+#include <vector>
 
 namespace enc
 {
@@ -202,6 +205,8 @@ namespace enc
     Random
   };
 
+  using DmgDieWithType = std::pair<Die, DamageType>;
+
   enum class Size
   {
     TINY = -2,
@@ -229,15 +234,28 @@ namespace enc
 
   inline RollType operator|(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b)); }
 
-  inline RollType operator&(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b)); }
+  // inline RollType operator&(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b)); }
 
-  const std::map<RollType, std::map<int, int>> ROLL_TYPE_DELTA
-    = {{RollType::STRAIGHT, {{0, 0},  {1, 0},  {2, 0},  {3, 0},  {4, 0},  {5, 0},  {6, 0},  {7, 0},  {8, 0},  {9, 0}, {10, 0},
+  const std::unordered_map<RollType, std::map<int, int>> ROLL_TYPE_DELTA
+    = {{RollType::STRAIGHT, {{1, 0},  {2, 0},  {3, 0},  {4, 0},  {5, 0},  {6, 0},  {7, 0},  {8, 0},  {9, 0},  {10, 0},
                              {11, 0}, {12, 0}, {13, 0}, {14, 0}, {15, 0}, {16, 0}, {17, 0}, {18, 0}, {19, 0}, {20, 0}}},
-       {RollType::ADVANTAGE, {{0, 0},  {1, 0},  {2, 3},  {3, 4},  {4, 5},  {5, 5},  {6, 5},  {7, 5},  {8, 5},  {9, 5}, {10, 4},
-                              {11, 4}, {12, 4}, {13, 3}, {14, 3}, {15, 3}, {16, 2}, {17, 2}, {18, 1}, {19, 1}, {20, 0}}},
-       {RollType::DISADVANTAGE, {{0, 0},   {1, 0},   {2, 0},   {3, -1},  {4, -1},  {5, -2},  {6, -2},  {7, -3},  {8, -3},  {9, -3}, {10, -4},
-                                 {11, -4}, {12, -4}, {13, -5}, {14, -5}, {15, -5}, {16, -5}, {17, -5}, {18, -5}, {19, -4}, {20, -3}}}};
+       {RollType::ADVANTAGE, {{1, 0},  {2, 1},  {3, 2},  {4, 3},  {5, 3},  {6, 4},  {7, 4},  {8, 5},  {9, 5},  {10, 5},
+                              {11, 5}, {12, 5}, {13, 5}, {14, 5}, {15, 4}, {16, 4}, {17, 3}, {18, 3}, {19, 2}, {20, 1}}},
+       {RollType::DISADVANTAGE, {{1, 0},   {2, -1},  {3, -2},  {4, -3},  {5, -3},  {6, -4},  {7, -4},  {8, -5},  {9, -5},  {10, -5},
+                                 {11, -5}, {12, -5}, {13, -5}, {14, -5}, {15, -4}, {16, -4}, {17, -3}, {18, -3}, {19, -2}, {20, -1}}}};
+
+  // Function to safely get the delta value
+  int getRollTypeDelta(RollType rollType, int rollNeeded, int defaultValue = 0);
+
+  RollType reconcileRollTypes(RollType types);
+
+  std::vector<int> generateOutcomes(const Die &die);
+
+  int findPercentileValue(const std::vector<int> &outcomes, int percentile);
+
+  int percentileRoll(const Die &die, int percentile);
+
+  double percentOfCurrHp(double curr_hp, double dmg);
 
   const std::map<RollType, double> ROLL_TYPE_CRIT_DELTA = {{RollType::STRAIGHT, 1.0}, {RollType::ADVANTAGE, 2.0}, {RollType::DISADVANTAGE, 0.5}};
 

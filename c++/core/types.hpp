@@ -2,7 +2,7 @@
 
 #include <blaze/Math.h>
 #include <array>
-#include "core/misc.hpp"
+#include <utility>
 
 namespace enc
 {
@@ -12,7 +12,6 @@ namespace enc
   using Die = blaze::StaticVector<uint8_t, 2>;
   using MapMatrix = blaze::DynamicMatrix<int>;
   using Vector2D = blaze::StaticVector<double, 2UL>;
-  using DmgDieWithType = std::pair<Die, DamageType>;
   // using Vector2D = std::array<double, 2>;
 
   enum class Color
@@ -36,5 +35,15 @@ namespace std
   template <> struct hash<enc::Coord>
   {
     std::size_t operator()(const enc::Coord &coord) const { return std::hash<int>()(coord[0]) ^ (std::hash<int>()(coord[1]) << 1); }
+  };
+
+  template <> struct hash<enc::Die>
+  {
+    size_t operator()(const enc::Die &d) const { return std::hash<uint8_t>()(d[0]) ^ (std::hash<uint8_t>()(d[1]) << 1); }
+  };
+
+  template <> struct hash<std::pair<enc::Die, int>>
+  {
+    size_t operator()(const std::pair<enc::Die, int> &p) const { return std::hash<enc::Die>()(p.first) ^ std::hash<int>()(p.second); }
   };
 }
