@@ -262,7 +262,7 @@ namespace enc
   double avgRollMulti(const std::vector<Die> &dice);
 
   double
-  meanDmg(int toHit, const std::vector<Die> &dmgDice, int dmgBonus, int ac, bool isImmune = false, bool isResistant = false, double critRange = 1.0);
+  meanDmg(int toHit, const std::vector<Die> &dmgDice, int dmgBonus, int ac, bool isImmune = false, bool isResistant = false, int critRange = 1);
 
   double calcPHit(int toHit, int ac);
 

@@ -162,9 +162,11 @@ namespace
   TEST(DamageCalculationTest, CalcPHit)
   {
     EXPECT_NEAR(calcPHit(5, 15), 0.55, 1e-6);
+    EXPECT_NEAR(calcPHit(0, 10), 0.55, 1e-6);
     EXPECT_NEAR(calcPHit(0, 20), 0.05, 1e-6);  // Minimum probability
-    EXPECT_NEAR(calcPHit(20, 10), 0.95, 1e-6); // Maximum probability
-    EXPECT_NEAR(calcPHit(10, 10), 0.8, 1e-6);
+    EXPECT_NEAR(calcPHit(0, 21), 0.05, 1e-6);  // Minimum probability (nat 20 still possible)
+    EXPECT_NEAR(calcPHit(20, 10), 0.95, 1e-6); // Maximum probability (nat 1 still possible)
+    EXPECT_NEAR(calcPHit(10, 10), 0.95, 1e-6);
   }
 
   TEST(DamageCalculationTest, MeanDmg)
@@ -172,15 +174,15 @@ namespace
     std::vector<Die> dmgDice = {{2, 6}, {1, 8}};
 
     // Test normal case
-    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15), 9.675, 1e-6);
+    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15), 8.55, 1e-6);
 
     // Test with immunity
     EXPECT_DOUBLE_EQ(meanDmg(5, dmgDice, 3, 15, true), 0.0);
 
     // Test with resistance
-    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15, false, true), 4.8375, 1e-6);
+    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15, false, true), 4.275, 1e-6);
 
     // Test with increased crit range
-    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15, false, false, 2.0), 10.075, 1e-6);
+    EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15, false, false, 2), 9.125, 1e-6);
   }
 }

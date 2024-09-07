@@ -123,7 +123,7 @@ double avgRollMulti(const std::vector<Die> &dice)
  * @brief Calculates mean damage of an attack-like ability.
  *
  */
-double meanDmg(int toHit, const std::vector<Die> &dmgDice, int dmgBonus, int ac, bool isImmune, bool isResistant, double critRange)
+double meanDmg(int toHit, const std::vector<Die> &dmgDice, int dmgBonus, int ac, bool isImmune, bool isResistant, int critRange)
 {
   if(isImmune)
     {
