@@ -10,7 +10,7 @@ namespace enc
   {
   public:
     MenacingMeleeAttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType,
-                               int attackRange, int critRange = 1, Uses &&ammo = Uses(), OnHit *onHit = nullptr,
+                               int attackRange, int critRange = 1, Uses &&ammo = Uses(), std::vector<std::unique_ptr<OnHit>> onHit = {},
                                std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false, bool twoHanded = false, Die toHitBonusDie = {});
 
     MenacingMeleeAttackFactory(const MeleeAttackFactory &other);

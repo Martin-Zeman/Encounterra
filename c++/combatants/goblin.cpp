@@ -25,12 +25,12 @@ namespace enc
                                      std::vector<Die>{{1, 6}}, // dmgDice
                                      2,                        // dmgBonus
                                      DamageType::Piercing,
-                                     24,                                  // attackRange
-                                     1,                                   // critRange
-                                     Uses(1, ResourceRefreshType::NEVER), // ammo
-                                     nullptr,                             // onHit
-                                     std::vector<DmgDieWithType>{},       // extraDmg
-                                     false                                // usesDex
+                                     24,                                    // attackRange
+                                     1,                                     // critRange
+                                     Uses(1, ResourceRefreshType::NEVER),   // ammo
+                                     std::vector<std::unique_ptr<OnHit>>{}, // onHit
+                                     std::vector<DmgDieWithType>{},         // extraDmg
+                                     false                                  // usesDex
     );
   }
 }
