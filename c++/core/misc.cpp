@@ -77,89 +77,92 @@ namespace enc
     return outcomes;
   }
 
-int findPercentileValue(const std::vector<int>& outcomes, int percentile) {
-    if (percentile < 0 || percentile > 100) {
+  int findPercentileValue(const std::vector<int> &outcomes, int percentile)
+  {
+    if(percentile < 0 || percentile > 100)
+      {
         throw std::invalid_argument("Percentile must be between 0 and 100");
-    }
+      }
     std::vector<int> sortedOutcomes = outcomes;
     std::sort(sortedOutcomes.begin(), sortedOutcomes.end());
-    
+
     // Use nearest-rank method
     double index = (percentile / 100.0) * sortedOutcomes.size();
     return sortedOutcomes[std::ceil(index) - 1];
-}
+  }
 
-int percentileRoll(const Die &die, int percentile)
-{
-  static std::unordered_map<std::pair<Die, int>, int> cache;
+  int percentileRoll(const Die &die, int percentile)
+  {
+    static std::unordered_map<std::pair<Die, int>, int> cache;
 
-  auto cache_key = std::make_pair(die, percentile);
-  auto it = cache.find(cache_key);
-  if(it != cache.end())
-    {
-      return it->second;
-    }
+    auto cache_key = std::make_pair(die, percentile);
+    auto it = cache.find(cache_key);
+    if(it != cache.end())
+      {
+        return it->second;
+      }
 
-  auto outcomes = generateOutcomes(die);
-  int result = findPercentileValue(outcomes, percentile);
+    auto outcomes = generateOutcomes(die);
+    int result = findPercentileValue(outcomes, percentile);
 
-  cache[cache_key] = result;
-  return result;
-}
+    cache[cache_key] = result;
+    return result;
+  }
 
-double percentOfCurrHp(double currHp, double dmg) {
-    return dmg / (currHp * 0.01);
-}
+  double percentOfCurrHp(double currHp, double dmg) { return dmg / (currHp * 0.01); }
 
-double avgRoll(const Die &die) { return static_cast<double>(die[0]) * ((1.0 + static_cast<double>(die[1])) / 2.0); }
+  double avgRoll(const Die &die) { return static_cast<double>(die[0]) * ((1.0 + static_cast<double>(die[1])) / 2.0); }
 
-double avgRollMulti(const std::vector<Die> &dice)
-{
-  return std::accumulate(dice.begin(), dice.end(), 0.0,
-                         [](double sum, const Die &die) { return sum + static_cast<double>(die[0]) * ((1.0 + static_cast<double>(die[1])) / 2.0); });
-}
+  double avgRollMulti(const std::vector<Die> &dice)
+  {
+    return std::accumulate(dice.begin(), dice.end(), 0.0, [](double sum, const Die &die) {
+      return sum + static_cast<double>(die[0]) * ((1.0 + static_cast<double>(die[1])) / 2.0);
+    });
+  }
 
-/**
- * @brief Calculates mean damage of an attack-like ability.
- *
- */
-double meanDmg(int toHit, const std::vector<Die> &dmgDice, int dmgBonus, int ac, bool isImmune, bool isResistant, int critRange)
-{
-  if(isImmune)
-    {
-      return 0.0;
-    }
+  /**
+   * @brief Calculates mean damage of an attack-like ability.
+   *
+   */
+  double meanDmg(int toHit, const std::vector<Die> &dmgDice, int dmgBonus, int ac, bool isImmune, bool isResistant, int critRange)
+  {
+    if(isImmune)
+      {
+        return 0.0;
+      }
 
-  // Calculate probability of hit
-  double pHit = std::max(0.05, std::min(0.95, 1.0 - (std::max(0, std::min(ac - toHit - 1, 19)) / 20.0)));
+    // Calculate probability of hit
+    double pHit = std::max(0.05, std::min(0.95, 1.0 - (std::max(0, std::min(ac - toHit - 1, 19)) / 20.0)));
 
-  double avgDmgDieRoll = avgRollMulti(dmgDice);
+    double avgDmgDieRoll = avgRollMulti(dmgDice);
 
-  double res = (avgDmgDieRoll + dmgBonus) * pHit + 0.05 * critRange * avgDmgDieRoll;
+    double res = (avgDmgDieRoll + dmgBonus) * pHit + 0.05 * critRange * avgDmgDieRoll;
 
-  if(isResistant)
-    {
-      res /= 2.0;
-    }
+    if(isResistant)
+      {
+        res /= 2.0;
+      }
 
-  return res;
-}
+    return res;
+  }
 
-/**
- * @brief Calculates the probability of hitting
- *
- * This function calculates the probability of a successful hit based on
- * the attacker's to-hit bonus and the target's Armor Class (AC).
- *
- * @param toHit The to-hit bonus of the attacker
- * @param ac The Armor Class of the target
- * @return double The probability of hitting, ranging from 0.05 to 0.95
- */
-double calcPHit(int toHit, int ac)
-{
-  int minRoll = ac - toHit;
-  minRoll = std::max(1, std::min(20, minRoll));
-  double pHit = (21.0 - minRoll) / 20.0;
-  return std::max(0.05, std::min(0.95, pHit));
-}
+  /**
+   * @brief Calculates the probability of hitting
+   *
+   * This function calculates the probability of a successful hit based on
+   * the attacker's to-hit bonus and the target's Armor Class (AC).
+   *
+   * @param toHit The to-hit bonus of the attacker
+   * @param ac The Armor Class of the target
+   * @return double The probability of hitting, ranging from 0.05 to 0.95
+   */
+  double calcPHit(int toHit, int ac)
+  {
+    int minRoll = ac - toHit;
+    minRoll = std::max(1, std::min(20, minRoll));
+    double pHit = (21.0 - minRoll) / 20.0;
+    return std::max(0.05, std::min(0.95, pHit));
+  }
+
+  std::string coordToString(const Coord &coord) { return "(" + std::to_string(coord[0]) + ", " + std::to_string(coord[1]) + ")"; }
 }

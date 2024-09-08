@@ -30,6 +30,7 @@ namespace enc
 
     Coords operator+(const Coord &other) const;
     int operator()(size_t row, size_t col) const;
+    bool areValidCoords(size_t mapSize) const;
 
   private:
     Size _size;

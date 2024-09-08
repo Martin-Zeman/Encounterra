@@ -1,6 +1,7 @@
-#include "battle_map.hpp"
-#include "geometry.hpp"
-#include "teams.hpp"
+#include "core/battle_map.hpp"
+#include "core/geometry.hpp"
+#include "core/teams.hpp"
+#include "core/misc.hpp"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -104,6 +105,13 @@ namespace enc
   {
     return (_combatantGrid(x, y) == -1 && _terrainGrid(x, y) != static_cast<int>(Terrain::IMPASSABLE_TERRAIN))
            || (_combatantGrid(x, y) != -1 && _combatantGrid(x, y) == combatantId);
+  }
+
+  bool BattleMap::areEmptyOrSelf(const Coords &coords, const Combatant &combatant) const
+  {
+    const auto &coordVec = coords.get();
+    return std::all_of(coordVec.begin(), coordVec.end(),
+                       [this, &combatant](const Coord &coord) { return isEmptyOrSelf(coord[0], coord[1], combatant._instanceId); });
   }
 
   size_t BattleMap::getGridSize() const { return _size; }
@@ -1404,4 +1412,50 @@ namespace enc
       }
     return result;
   }
+
+  bool BattleMap::isDifficultTerrainAt(const Coords &coords) const
+  {
+    const auto &coordVec = coords.get();
+    return std::any_of(coordVec.begin(), coordVec.end(),
+                       [this](const Coord &coord) { return _terrainGrid(coord[0], coord[1]) == static_cast<int>(Terrain::DIFFICULT_TERRAIN); });
+  }
+
+  void BattleMap::pushCombatantAwayFrom(const Vector2D &origin, Combatant *targetCombatant, int distance)
+  {
+    const Coords & initCoords = getCombatantCoordinates(*targetCombatant);
+    const Coord & initRootCoord = initCoords.get()[0];
+    Vector2D initCenter = initCoords.getCenter(); // For medium combatant's the difference is small but for larger ones it makes a difference
+    Vector2D direction = initCenter - origin;
+
+    double norm = blaze::length(direction);
+    if(norm == 0)
+      {
+        return; // Protection against (0, 0) vector
+      }
+    direction /= norm;
+
+    for(int dist = distance; dist > 0; --dist)
+      {
+        Vector2D delta = direction * static_cast<double>(dist);
+        double angle = std::fmod(angleBetweenVectorsRad(Vector2D{0, 1}, delta), M_PI / 2);
+
+        if(angle != 0)
+          {
+            delta /= std::sin(angle); // Compensate for diagonals needing a longer push
+          }
+
+        Vector2D targetCoord = Vector2D{static_cast<double>(initRootCoord[0]), static_cast<double>(initRootCoord[1])} + delta;
+        Coord nearestGridCoord = findNearestValidCoordinateChebyshev(targetCoord, initRootCoord, distance);
+        Coords targetCoords(nearestGridCoord, targetCombatant->getSize());
+
+        if(targetCoords.areValidCoords(_size) && areEmptyOrSelf(targetCoords, *targetCombatant))
+          {
+            moveCombatant(*targetCombatant, nearestGridCoord, false);
+            // std::cout << targetCombatant->_name << " is pushed to " << coordToString(nearestGridCoord) << std::endl;
+            return;
+          }
+      }
+  }
+
+  
 }

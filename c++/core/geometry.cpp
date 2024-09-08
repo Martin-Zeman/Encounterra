@@ -354,4 +354,56 @@ namespace enc
 
     return {bottom_left, top_right};
   }
+
+  /**
+   * @brief Find the nearest valid grid coordinate to targetCoords from initCoords,
+   *        ensuring the Chebyshev distance does not exceed maxDistance.
+   *
+   * This function starts searching from maxDistance, moving towards the target if necessary.
+   * It uses the Chebyshev distance metric and Euclidean distance for sorting potential points.
+   *
+   * @param targetCoords The target coordinates as a Vector2D (blaze::StaticVector<double, 2UL>).
+   * @param initCoords The initial coordinates as a Coord (std::array<int, 2>).
+   * @param maxDistance The maximum allowed Chebyshev distance.
+   * @return The adjusted coordinates as a Coord if within maxDistance, else initCoords.
+   */
+  Coord findNearestValidCoordinateChebyshev(const Vector2D &targetCoords, const Coord &initCoords, int maxDistance)
+  {
+    // Directly check if the rounded target is within the allowed distance first
+    Coord roundedCoords = {static_cast<int>(std::round(targetCoords[0])), static_cast<int>(std::round(targetCoords[1]))};
+
+    auto chebyshevDistance = [](const Coord &a, const Coord &b) { return std::max(std::abs(a[0] - b[0]), std::abs(a[1] - b[1])); };
+
+    if(chebyshevDistance(roundedCoords, initCoords) <= maxDistance)
+      {
+        return roundedCoords;
+      }
+
+    // Start from the maximum distance and move inward
+    for(int d = maxDistance; d > 1; --d)
+      {
+        // Explore the perimeter of the square defined by the Chebyshev distance d
+        std::vector<Coord> potentialPoints = {{initCoords[0] + d, initCoords[1] + d},        {initCoords[0] + d + 1, initCoords[1] + d},
+                                              {initCoords[0] + d, initCoords[1] + d + 1},    {initCoords[0] + d - 1, initCoords[1] + d},
+                                              {initCoords[0] + d, initCoords[1] + d - 1},    {initCoords[0] + d + 1, initCoords[1] + d + 1},
+                                              {initCoords[0] + d - 1, initCoords[1] + d - 1}};
+
+        // Filter points based on Chebyshev distance
+        potentialPoints.erase(
+          std::remove_if(potentialPoints.begin(), potentialPoints.end(),
+                         [&initCoords, d, &chebyshevDistance](const Coord &point) { return chebyshevDistance(point, initCoords) != d; }),
+          potentialPoints.end());
+
+        std::sort(potentialPoints.begin(), potentialPoints.end(),
+                  [&targetCoords](const Coord &a, const Coord &b) { return euclidean(targetCoords, a) < euclidean(targetCoords, b); });
+
+        if(!potentialPoints.empty())
+          {
+            return potentialPoints[0];
+          }
+      }
+
+    // If no valid coordinate is found within the constraints, return the initial coordinates
+    return initCoords;
+  }
 }

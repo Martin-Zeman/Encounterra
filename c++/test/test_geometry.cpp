@@ -402,4 +402,44 @@ TEST(GetBoundingBoxTest, HugeAndLarge) {
     EXPECT_TRUE(coordEqual(bottom_left, {1, 11}));
     EXPECT_TRUE(coordEqual(top_right, {10, 14}));
 }
+
+TEST(FindNearestValidCoordinateTest, MaxDistance)
+{
+  Coord initCoords = {5, 5};
+  Coord targetCoords = {9, 9}; // Target is exactly at max_distance
+  int maxDistance = 4;
+  Coord expected = {9, 9};
+  Coord result = findNearestValidCoordinateChebyshev(targetCoords, initCoords, maxDistance);
+  EXPECT_EQ(result, expected);
+}
+
+TEST(FindNearestValidCoordinateTest, WithinMaxDistanceWithoutAdjustment)
+{
+  Coord initCoords = {5, 5};
+  Coord targetCoords = {7, 6}; // Target is within max_distance without needing adjustment
+  int maxDistance = 3;
+  Coord expected = {7, 6};
+  Coord result = findNearestValidCoordinateChebyshev(targetCoords, initCoords, maxDistance);
+  EXPECT_EQ(result, expected);
+}
+
+TEST(FindNearestValidCoordinateTest, ReturnNearestWhenTargetTooFar)
+{
+  Coord initCoords = {5, 5};
+  Coord targetCoords = {10, 10}; // Target is beyond max_distance
+  int maxDistance = 2;
+  Coord expected = {7, 7};
+  Coord result = findNearestValidCoordinateChebyshev(targetCoords, initCoords, maxDistance);
+  EXPECT_EQ(result, expected);
+}
+
+TEST(FindNearestValidCoordinateTest, NearestValidCoordinate)
+{
+  Coord initCoords = {5, 5};
+  Coord targetCoords = {7, 7};
+  int maxDistance = 3;
+  Coord expected = {7, 7};
+  Coord result = findNearestValidCoordinateChebyshev(targetCoords, initCoords, maxDistance);
+  EXPECT_EQ(result, expected);
+}
 }

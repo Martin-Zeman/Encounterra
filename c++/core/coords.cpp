@@ -82,4 +82,14 @@ namespace enc
       }
     return _coords[row][col];
   }
+
+  /**
+   * Validates the Coords given a map size
+   */
+  bool Coords::areValidCoords(size_t mapSize) const
+  {
+    return std::all_of(_coords.begin(), _coords.end(), [mapSize](const Coord &coord) {
+      return coord[0] >= 0 && coord[0] < static_cast<int>(mapSize) && coord[1] >= 0 && coord[1] < static_cast<int>(mapSize);
+    });
+  }
 }

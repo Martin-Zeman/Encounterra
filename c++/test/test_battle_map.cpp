@@ -1150,6 +1150,123 @@ TEST_F(BattleMapTest, GetVisibilityDict)
   EXPECT_EQ(visibility[ogre2], Visibility::FULL);
   EXPECT_EQ(visibility[ogre3], Visibility::HALF_COVER);
 }
+
+TEST_F(BattleMapTest, PushHugeCombatantSimple)
+{
+  session->addCombatant(stone_giant, Color::RED);
+  battleMap->setCombatantCoordinates(*stone_giant, {5, 11});
+
+  // Simple push to the right
+  battleMap->pushCombatantAwayFrom({5.5, 12.5}, stone_giant, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{7, 11}));
+
+  // No push
+  battleMap->pushCombatantAwayFrom({8.5, 12.5}, stone_giant, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{7, 11}));
+
+  // Simple push to the left
+  battleMap->pushCombatantAwayFrom({9.5, 12.5}, stone_giant, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{5, 11}));
+}
+
+TEST_F(BattleMapTest, PushHugeCombatantDiagonal)
+{
+  session->addCombatant(stone_giant, Color::RED);
+  battleMap->setCombatantCoordinates(*stone_giant, {5, 11});
+
+  // Pushing diagonally up and right with only one square space left to push
+  battleMap->pushCombatantAwayFrom({4, 10}, stone_giant, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{6, 12}));
+
+  // Pushing diagonally down and left
+  battleMap->pushCombatantAwayFrom({8, 14}, stone_giant, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{4, 10}));
+
+  // Pushing diagonally up and little bit to the right by a large distance with not enough space left to push
+  battleMap->pushCombatantAwayFrom({4, 9}, stone_giant, 5);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{5, 12}));
+}
+
+TEST_F(BattleMapTest, PushHugeCombatantObstructed)
+{
+  session->addCombatant(stone_giant, Color::RED);
+  session->addCombatant(bugbear, Color::RED);
+  battleMap->setCombatantCoordinates(*stone_giant, {5, 11});
+  battleMap->setCombatantCoordinates(*bugbear, {6, 10});
+
+  // Putting another combatant in the way so that the Stone Giant cannot be pushed all the way
+  battleMap->pushCombatantAwayFrom({6.5, 14.5}, stone_giant, 3);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{5, 11}));
+}
+
+TEST_F(BattleMapTest, PushMediumCombatantSimple)
+{
+  session->addCombatant(goblin, Color::RED);
+  battleMap->setCombatantCoordinates(*goblin, {3, 3});
+
+  // Simple small push to the right
+  battleMap->pushCombatantAwayFrom({2, 3}, goblin, 1);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{4, 3}));
+
+  battleMap->pushCombatantAwayFrom({2, 3}, goblin, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{6, 3}));
+
+  // Simple large push to the left
+  battleMap->pushCombatantAwayFrom({7, 3.5}, goblin, 3);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{3, 3}));
+
+  // Simple push down
+  battleMap->pushCombatantAwayFrom({3.5, 4}, goblin, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{3, 1}));
+
+  // Simple push up
+  battleMap->pushCombatantAwayFrom({3.5, 0}, goblin, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{3, 3}));
+}
+
+TEST_F(BattleMapTest, PushMediumCombatantDiagonal)
+{
+  session->addCombatant(goblin, Color::RED);
+  battleMap->setCombatantCoordinates(*goblin, {3, 3});
+
+  // Diagonal pushes at different angles and lengths
+  battleMap->pushCombatantAwayFrom({5.5, 7.5}, goblin, 1);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{3, 2}));
+
+  battleMap->moveCombatant(*goblin, Coord({3, 3}));
+  battleMap->pushCombatantAwayFrom({5.5, 7.5}, goblin, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{2, 1}));
+
+  battleMap->moveCombatant(*goblin, Coord({3, 3}));
+  battleMap->pushCombatantAwayFrom({7.5, 7.5}, goblin, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{1, 1}));
+
+  battleMap->moveCombatant(*goblin, Coord({3, 3}));
+  battleMap->pushCombatantAwayFrom({8.5, 7.5}, goblin, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{1, 1}));
+}
+
+TEST_F(BattleMapTest, PushLargeCombatant)
+{
+  session->addCombatant(ogre, Color::RED);
+  battleMap->setCombatantCoordinates(*ogre, {13, 5});
+
+  // Can't move in the direction of the wall
+  battleMap->pushCombatantAwayFrom({12, 5}, ogre, 2);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{13, 5}));
+
+  // Can be pushed away from the wall
+  battleMap->pushCombatantAwayFrom({14.5, 6}, ogre, 1);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{12, 5}));
+
+  // Push at a very steep angle
+  battleMap->pushCombatantAwayFrom({14.5, 14.5}, ogre, 3);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{11, 2}));
+
+  battleMap->moveCombatant(*ogre, Coord({12, 5}));
+  battleMap->pushCombatantAwayFrom({14.5, 14.5}, ogre, 4);
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{11, 1}));
+}
 }
 
 // TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwave)

@@ -268,6 +268,8 @@ namespace enc
 
   const std::map<RollType, double> ROLL_TYPE_CRIT_DELTA = {{RollType::STRAIGHT, 1.0}, {RollType::ADVANTAGE, 2.0}, {RollType::DISADVANTAGE, 0.5}};
 
+  std::string coordToString(const Coord& coord);
+
   enum class ThreatModifierType
   {
     TO_HIT_FLAT,

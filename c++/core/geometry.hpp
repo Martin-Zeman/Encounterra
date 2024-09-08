@@ -81,4 +81,24 @@ namespace enc
   }
 
   std::pair<Coord, Coord> getBoundingBox(const CoordVector &combatant1, const CoordVector &combatant2);
+
+  Coord findNearestValidCoordinateChebyshev(const Vector2D &targetCoords, const Coord &initCoords, int maxDistance);
+
+  /**
+   * @brief Calculate the Euclidean distance between two points.
+   *
+   * This function calculates the Euclidean distance between two points in 2D space.
+   * It can handle both integer and floating-point coordinates.
+   *
+   * @tparam T The type of the coordinate components (int or double).
+   * @param a The first point.
+   * @param b The second point.
+   * @return The Euclidean distance between the two points.
+   */
+  template <typename T> double euclidean(const Vector2D &a, const std::array<T, 2> &b)
+  {
+    double dx = static_cast<double>(a[0]) - static_cast<double>(b[0]);
+    double dy = static_cast<double>(a[1]) - static_cast<double>(b[1]);
+    return std::sqrt(dx * dx + dy * dy);
+  }
 }
