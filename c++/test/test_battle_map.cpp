@@ -58,6 +58,20 @@ protected:
     giant_toad = new GiantToad(1);
     green_dragon_wyrmling = new GreenDragonWyrmling(1);
   }
+
+  void TearDown() override
+    {
+        delete session;
+        delete goblin;
+        delete draconic_sorcerer_lvl_1;
+        delete bugbear;
+        delete wild_heart_barbarian;
+        delete stone_giant;
+        delete battlemaster_fighter_lvl_5;
+        delete ogre;
+        delete giant_toad;
+        delete green_dragon_wyrmling;
+    }
 };
 
 class BattleMapTestSizeParam : public BattleMapTest, public ::testing::WithParamInterface<Size> {};

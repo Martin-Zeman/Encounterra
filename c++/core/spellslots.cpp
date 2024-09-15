@@ -40,22 +40,22 @@ namespace enc
       }
   }
 
-  std::unique_ptr<Spellslots> spellslotFactory(Class className, int classLevel)
+  std::unique_ptr<Spellslots> spellslotFactory(CombatantType className, int classLevel)
   {
     const SpellslotTable *table = nullptr;
 
     switch(className)
       {
-      case Class::BARD:
-      case Class::CLERIC:
-      case Class::DRUID:
-      case Class::SORCERER:
-      case Class::WIZARD: table = &FULL_CASTER_TABLE; break;
-      case Class::PALADIN:
-      case Class::RANGER: table = &HALF_CASTER_TABLE; break;
-      case Class::FIGHTER:
-      case Class::ROGUE: table = &QUARTER_CASTER_TABLE; break;
-      case Class::WARLOCK: table = &WARLOCK_TABLE; break;
+      case CombatantType::BARD:
+      case CombatantType::CLERIC:
+      case CombatantType::DRUID:
+      case CombatantType::SORCERER:
+      case CombatantType::WIZARD: table = &FULL_CASTER_TABLE; break;
+      case CombatantType::PALADIN:
+      case CombatantType::RANGER: table = &HALF_CASTER_TABLE; break;
+      case CombatantType::FIGHTER:
+      case CombatantType::ROGUE: table = &QUARTER_CASTER_TABLE; break;
+      case CombatantType::WARLOCK: table = &WARLOCK_TABLE; break;
       default: return nullptr;
       }
 

@@ -99,6 +99,7 @@ namespace enc
     bool hasBonusAction() { return _hasBonusAction; }
     bool hasHasteAction() { return _hasHasteAction; }
     bool hasReaction() { return _hasReaction; }
+    bool alreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
     Combatant *getCurrentForm();
     Combatant *getOriginalForm();
@@ -330,6 +331,7 @@ namespace enc
     bool _hasBonusAction = true;
     bool _hasReaction = true;
     bool _hasHasteAction = false;
+    bool _alreadyUsedSpellslotThisTurn = false;
     int _meleeReactionRange = 1;
     int _speed;
     int _movement;

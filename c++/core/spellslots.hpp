@@ -6,7 +6,8 @@
 #include <memory>
 #include <stdexcept>
 #include <cmath>
-#include "resources.hpp"
+#include "core/resources.hpp"
+#include "core/misc.hpp"
 
 namespace enc
 {
@@ -18,19 +19,19 @@ namespace enc
     QUARTER_CASTER
   };
 
-  enum class Class
-  {
-    BARD,
-    CLERIC,
-    DRUID,
-    FIGHTER,
-    PALADIN,
-    RANGER,
-    ROGUE,
-    SORCERER,
-    WARLOCK,
-    WIZARD
-  };
+  // enum class Class
+  // {
+  //   BARD,
+  //   CLERIC,
+  //   DRUID,
+  //   FIGHTER,
+  //   PALADIN,
+  //   RANGER,
+  //   ROGUE,
+  //   SORCERER,
+  //   WARLOCK,
+  //   WIZARD
+  // };
 
   using SpellslotTable = std::unordered_map<int, std::unordered_map<int, int>>;
 
@@ -150,6 +151,6 @@ namespace enc
   };
 
   // Function to create spellslots based on class and level
-  std::unique_ptr<Spellslots> spellslotFactory(Class className, int classLevel);
+  std::unique_ptr<Spellslots> spellslotFactory(CombatantType className, int classLevel);
 
 }
