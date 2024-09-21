@@ -32,11 +32,11 @@ namespace enc
     std::string _name;
     int _instanceId;
 
-    Combatant(CombatantType type, SubType subtype, int level, std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc,
+    Combatant(CombatantType type, SubType subtype, int level, std::string name, int hp, int ac, int initBonus, int spellToHit, int speed, int dc,
               std::unordered_set<DamageType> resistances = {}, std::unordered_set<DamageType> immunities = {},
-              std::unordered_set<DamageType> vulnerabities = {});
+              std::unordered_set<DamageType> vulnerabities = {}, Conditions conditionImmunities = Conditions::NONE);
 
-    // Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc, std::unordered_set<DamageType> resistances =
+    // Combatant(std::string name, int hp, int ac, int initBonus, int spellToHit, int speed, int dc, std::unordered_set<DamageType> resistances =
     // {},
     //           std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
@@ -131,16 +131,8 @@ namespace enc
       switch(abilityType)
         {
           // Action
-          case AbilityType::MELEE_ATTACK: {
-            factory = std::make_shared<MeleeAttackFactory>(std::forward<Args>(args)...);
-            _actionFactories.push_back(factory);
-          }
-          break;
-          case AbilityType::RANGED_ATTACK: {
-            factory = std::make_shared<RangedAttackFactory>(std::forward<Args>(args)...);
-            _actionFactories.push_back(factory);
-          }
-          break;
+        case AbilityType::MELEE_ATTACK: _actionFactories.emplace_back(std::make_shared<MeleeAttackFactory>(std::forward<Args>(args)...)); break;
+        case AbilityType::RANGED_ATTACK: _actionFactories.emplace_back(std::make_shared<RangedAttackFactory>(std::forward<Args>(args)...)); break;
         case AbilityType::RECKLESS_ATTACK: break;
         case AbilityType::PRE_SWALLOW_BITE: break;
         case AbilityType::BITE_AND_SWALLOW: break;
@@ -255,7 +247,39 @@ namespace enc
         case AbilityType::HASTE_PARALYZING_MELEE_ATTACK: break;
 
         // Passive
-        case AbilityType::SPELLCASTING: break;
+        case AbilityType::SPELLSLOTS:
+          if(_type != CombatantType::MONSTER)
+            {
+              _spellslots = spellslotFactory(_type, _level);
+            }
+          else
+            {
+                // For MONSTER type, we expect CombatantType and level to be passed
+                // Using std::tuple to extract these arguments
+                auto argsTuple = std::forward_as_tuple(std::forward<Args>(args)...);
+                if constexpr (std::tuple_size_v<decltype(argsTuple)> == 2)
+                {
+                    auto combatantType = std::get<0>(argsTuple);
+                    auto level = std::get<1>(argsTuple);
+                    if constexpr (std::is_same_v<std::decay_t<decltype(combatantType)>, CombatantType> &&
+                                  std::is_integral_v<std::decay_t<decltype(level)>>)
+                    {
+                        _spellslots = spellslotFactory(combatantType, level);
+                    }
+                    else
+                    {
+                        // Handle error: incorrect argument types
+                        throw std::invalid_argument("Incorrect argument types for SPELLSLOTS");
+                    }
+                }
+                else
+                {
+                    // Handle error: incorrect number of arguments
+                    throw std::invalid_argument("Incorrect number of arguments for SPELLSLOTS");
+                }
+            }
+          _resources.insert({AbilityType::SPELLSLOTS, _spellslots});
+          break;
         case AbilityType::SENTINEL: break;
         case AbilityType::POLEARM_MASTER: break;
         case AbilityType::DANGER_SENSE: break;
@@ -340,6 +364,7 @@ namespace enc
     std::unordered_set<DamageType> _resistances;
     std::unordered_set<DamageType> _immunities;
     std::unordered_set<DamageType> _vulnerabities;
+    Conditions _conditionImmunities;
     // ... Other member variables
 
     std::shared_ptr<ActoidFactory> _dodgeFactory;

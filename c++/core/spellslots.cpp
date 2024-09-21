@@ -40,7 +40,7 @@ namespace enc
       }
   }
 
-  std::unique_ptr<Spellslots> spellslotFactory(CombatantType className, int classLevel)
+  std::shared_ptr<Spellslots> spellslotFactory(CombatantType className, int classLevel)
   {
     const SpellslotTable *table = nullptr;
 
@@ -61,7 +61,7 @@ namespace enc
 
     if(table && table->find(classLevel) != table->end())
       {
-        return std::make_unique<Spellslots>((*table).at(classLevel));
+        return std::make_shared<Spellslots>((*table).at(classLevel));
       }
 
     return nullptr;

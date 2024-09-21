@@ -239,7 +239,7 @@ namespace enc
 
     /* Passive */
     PASSIVE_DELIMITER,
-    SPELLCASTING,
+    SPELLSLOTS,
     SENTINEL,
     POLEARM_MASTER,
     DANGER_SENSE,

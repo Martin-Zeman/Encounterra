@@ -5,11 +5,11 @@
 namespace enc
 {
 
-  Combatant::Combatant(CombatantType type, SubType subtype, int level, std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed,
+  Combatant::Combatant(CombatantType type, SubType subtype, int level, std::string name, int hp, int ac, int initBonus, int spellToHit, int speed,
                        int dc, std::unordered_set<DamageType> resistances, std::unordered_set<DamageType> immunities,
-                       std::unordered_set<DamageType> vulnerabities)
-      : _name(name), _maxHp(hp), _currHp(hp), _ac(ac), _dc(dc), _initBonus(init_bonus), _spellToHit(spell_to_hit), _speed(speed / 5),
-        _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities)
+                       std::unordered_set<DamageType> vulnerabities, Conditions conditionImmunities)
+      : _name(name), _maxHp(hp), _currHp(hp), _ac(ac), _dc(dc), _initBonus(initBonus), _spellToHit(spellToHit), _speed(speed / 5),
+        _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities), _conditionImmunities(conditionImmunities)
   {
     _dodgeFactory = std::make_shared<DodgeFactory>();
     _disengageFactory = std::make_shared<DisengageFactory>();
@@ -17,10 +17,10 @@ namespace enc
     _actionFactories.push_back(_disengageFactory);
   }
 
-  // Combatant::Combatant(std::string name, int hp, int ac, int init_bonus, int spell_to_hit, int speed, int dc,
+  // Combatant::Combatant(std::string name, int hp, int ac, int initBonus, int spellToHit, int speed, int dc,
   //                      std::unordered_set<DamageType> resistances = {}, std::unordered_set<DamageType> immunities = {},
   //                      std::unordered_set<DamageType> vulnerabities = {})
-  //     : _name(name), _maxHp(hp), _currHp(hp), _ac(ac), _dc(dc), _initBonus(init_bonus), _spellToHit(spell_to_hit), _speed(speed / 5),
+  //     : _name(name), _maxHp(hp), _currHp(hp), _ac(ac), _dc(dc), _initBonus(initBonus), _spellToHit(spellToHit), _speed(speed / 5),
   //       _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities)
   // {
   //   _dodgeFactory = std::make_shared<DodgeFactory>();

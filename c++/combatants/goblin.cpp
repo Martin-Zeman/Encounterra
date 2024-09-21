@@ -13,24 +13,19 @@ namespace enc
     _size = Size::SMALL;
 
     addAbility(AbilityType::MELEE_ATTACK, "Scimitar", this,
-               2,                        // toHit
-               std::vector<Die>{{1, 4}}, // dmgDice
-               0,                        // dmgBonus
-               DamageType::Bludgeoning,
+               4,                        // toHit
+               std::vector<Die>{{1, 6}}, // dmgDice
+               2,                        // dmgBonus
+               DamageType::Slashing,
                1 // attackRange
     );
 
-    auto javelinFactory = addAbility(AbilityType::RANGED_ATTACK, "Javelin", this,
+    auto javelinFactory = addAbility(AbilityType::RANGED_ATTACK, "Shortbow", this,
                                      4,                        // toHit
                                      std::vector<Die>{{1, 6}}, // dmgDice
                                      2,                        // dmgBonus
                                      DamageType::Piercing,
-                                     24,                                    // attackRange
-                                     1,                                     // critRange
-                                     Uses(1, ResourceRefreshType::NEVER),   // ammo
-                                     std::vector<std::unique_ptr<OnHit>>{}, // onHit
-                                     std::vector<DmgDieWithType>{},         // extraDmg
-                                     false                                  // usesDex
+                                     64                                    // attackRange
     );
   }
 }

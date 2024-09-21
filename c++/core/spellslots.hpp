@@ -151,6 +151,6 @@ namespace enc
   };
 
   // Function to create spellslots based on class and level
-  std::unique_ptr<Spellslots> spellslotFactory(CombatantType className, int classLevel);
+  std::shared_ptr<Spellslots> spellslotFactory(CombatantType className, int classLevel);
 
 }
