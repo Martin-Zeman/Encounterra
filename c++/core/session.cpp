@@ -50,7 +50,7 @@ namespace enc
     int classId = CombatantType::getStaticClassId();
     combatant->setResourceDepletionLevel(resourceDepletionLevel);
     _teams.addCombatantToTeam(*combatant, teamColor);
-    _combatants.push_back(std::unique_ptr<Combatant>(combatant));
+    _combatants.emplace_back(std::move(std::unique_ptr<Combatant>(combatant)));
     generateUniqueShortCodes();
   }
 

@@ -40,6 +40,7 @@ namespace enc
     // {},
     //           std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
+
     static constexpr uint32_t fnv1a_32(uint32_t initial, uint32_t value)
     {
       uint32_t hash = initial;
@@ -124,206 +125,241 @@ namespace enc
     bool isResistantTo(DamageType dmgType);
     bool isVulnerableTo(DamageType dmgType);
 
-    template <typename... Args> std::shared_ptr<ActoidFactory> addAbility(AbilityType abilityType, Args &&...args)
+
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     * Action abilities
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+
+    std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
+                                                  DamageType damageType, int attackRange)
     {
-      std::shared_ptr<ActoidFactory> factory;
-
-      switch(abilityType)
-        {
-          // Action
-        case AbilityType::MELEE_ATTACK: _actionFactories.emplace_back(std::make_shared<MeleeAttackFactory>(std::forward<Args>(args)...)); break;
-        case AbilityType::RANGED_ATTACK: _actionFactories.emplace_back(std::make_shared<RangedAttackFactory>(std::forward<Args>(args)...)); break;
-        case AbilityType::RECKLESS_ATTACK: break;
-        case AbilityType::PRE_SWALLOW_BITE: break;
-        case AbilityType::BITE_AND_SWALLOW: break;
-        case AbilityType::DODGE: break;
-        case AbilityType::DASH: break;
-        case AbilityType::DISENGAGE: break;
-        case AbilityType::FIREBALL: break;
-        case AbilityType::FIREBOLT: break;
-        case AbilityType::CHAOSBOLT: break;
-        case AbilityType::HASTE: break;
-        case AbilityType::HUNGER_OF_HADAR: break;
-        case AbilityType::SPIKE_GROWTH: break;
-        case AbilityType::CLOUD_OF_DAGGERS: break;
-        case AbilityType::HIDE: break;
-        case AbilityType::TWINNED_FIREBOLT: break;
-        case AbilityType::TWINNED_HASTE: break;
-        case AbilityType::SCORCHING_RAY: break;
-        case AbilityType::FAERIE_FIRE: break;
-        case AbilityType::WILDSHAPE: break;
-        case AbilityType::POUNCE: break;
-        case AbilityType::CONSTRICT: break;
-        case AbilityType::BREAK_GRAPPLE: break;
-        case AbilityType::FLAMING_SPHERE: break;
-        case AbilityType::WEB: break;
-        case AbilityType::HOLD_PERSON: break;
-        case AbilityType::TWINNED_HOLD_PERSON: break;
-        case AbilityType::SHOCKING_GRASP: break;
-        case AbilityType::TWINNED_SHOCKING_GRASP: break;
-        case AbilityType::MAGIC_MISSILE: break;
-        case AbilityType::GRAPPLE: break;
-        case AbilityType::GRAPPLE_ATTACK: break;
-        case AbilityType::VAMPIRIC_BITE: break;
-        case AbilityType::BLESS: break;
-        case AbilityType::RAY_OF_ENFEEBLEMENT: break;
-        case AbilityType::TWINNED_RAY_OF_ENFEEBLEMENT: break;
-        case AbilityType::SLEEP: break;
-        case AbilityType::SHAKE_ALLY_AWAKE: break;
-        case AbilityType::THUNDERWAVE: break;
-        case AbilityType::MENACING_MELEE_ATTACK: break;
-        case AbilityType::PARALYZING_MELEE_ATTACK: break;
-        case AbilityType::MENACING_RANGED_ATTACK: break;
-        case AbilityType::PRECISION_ATTACK: break;
-        case AbilityType::LAY_ON_HANDS: break;
-        case AbilityType::CURE_WOUNDS: break;
-        case AbilityType::ABJURE_ENEMY: break;
-        case AbilityType::CONIC_BREATH_WEAPON: break;
-        case AbilityType::CONIC_BREATH_WEAPON_ATTACK: break;
-        case AbilityType::LINE_BREATH_WEAPON: break;
-        case AbilityType::RAY_OF_FROST: break;
-
-        // Bonus Action
-        case AbilityType::BONUS_MELEE_ATTACK: break;
-        case AbilityType::BONUS_RANGED_ATTACK: break;
-        case AbilityType::PAM_BONUS_ATTACK: break;
-        case AbilityType::RAGE: break;
-        case AbilityType::TOTEM_RAGE: break;
-        case AbilityType::MISTY_STEP: break;
-        case AbilityType::CUNNING_DISENGAGE: break;
-        case AbilityType::CUNNING_DASH: break;
-        case AbilityType::CUNNING_HIDE: break;
-        case AbilityType::QUICKENED_FIREBALL: break;
-        case AbilityType::QUICKENED_FIREBOLT: break;
-        case AbilityType::QUICKENED_CHAOSBOLT: break;
-        case AbilityType::QUICKENED_HASTE: break;
-        case AbilityType::QUICKENED_HUNGER_OF_HADAR: break;
-        case AbilityType::QUICKENED_SPIKE_GROWTH: break;
-        case AbilityType::QUICKENED_CLOUD_OF_DAGGERS: break;
-        case AbilityType::QUICKENED_SCORCHING_RAY: break;
-        case AbilityType::QUICKENED_FAERIE_FIRE: break;
-        case AbilityType::QUICKENED_BLESS: break;
-        case AbilityType::QUICKENED_FLAMING_SPHERE: break;
-        case AbilityType::QUICKENED_HOLD_PERSON: break;
-        case AbilityType::QUICKENED_RAY_OF_FROST: break;
-        case AbilityType::FLAMING_SPHERE_RAM: break;
-        case AbilityType::MOON_WILDSHAPE: break;
-        case AbilityType::QUICKENED_SHOCKING_GRASP: break;
-        case AbilityType::QUICKENED_MAGIC_MISSILE: break;
-        case AbilityType::QUICKENED_RAY_OF_ENFEEBLEMENT: break;
-        case AbilityType::QUICKENED_SLEEP: break;
-        case AbilityType::SECOND_WIND: break;
-        case AbilityType::HEALING_WORD: break;
-        case AbilityType::TWINNED_HEALING_WORD: break;
-        case AbilityType::SHILLELAGH: break;
-        case AbilityType::QUICKENED_THUNDERWAVE: break;
-        case AbilityType::BONUS_MENACING_MELEE_ATTACK: break;
-        case AbilityType::BONUS_MENACING_RANGED_ATTACK: break;
-        case AbilityType::SHIELD_OF_FAITH: break;
-        case AbilityType::QUICKENED_CURE_WOUNDS: break;
-        case AbilityType::VOW_OF_ENMITY: break;
-        case AbilityType::AGGRESSIVE: break;
-
-        // Reaction
-        case AbilityType::REACTION_ATTACK: break;
-        case AbilityType::SHIELD: break;
-        case AbilityType::PRE_SWALLOW_BITE_REACTION: break;
-        case AbilityType::UNCANNY_DODGE: break;
-        case AbilityType::PARRY: break;
-        case AbilityType::RIPOSTE: break;
-        case AbilityType::REACTION_PARALYZING_MELEE_ATTACK: break;
-
-        // Haste Action
-        case AbilityType::HASTE_MELEE_ATTACK: break;
-        case AbilityType::HASTE_RANGED_ATTACK: break;
-        case AbilityType::HASTE_DASH: break;
-        case AbilityType::HASTE_DISENGAGE: break;
-        case AbilityType::HASTE_HIDE: break;
-        case AbilityType::HASTE_PRE_SWALLOW_BITE: break;
-        case AbilityType::HASTE_BITE_AND_SWALLOW: break;
-        case AbilityType::HASTE_GRAPPLE_ATTACK: break;
-        case AbilityType::HASTE_GRAPPLE: break;
-        case AbilityType::HASTE_VAMPIRIC_BITE: break;
-        case AbilityType::HASTE_PARALYZING_MELEE_ATTACK: break;
-
-        // Passive
-        case AbilityType::SPELLSLOTS:
-          if(_type != CombatantType::MONSTER)
-            {
-              _spellslots = spellslotFactory(_type, _level);
-            }
-          else
-            {
-                // For MONSTER type, we expect CombatantType and level to be passed
-                // Using std::tuple to extract these arguments
-                auto argsTuple = std::forward_as_tuple(std::forward<Args>(args)...);
-                if constexpr (std::tuple_size_v<decltype(argsTuple)> == 2)
-                {
-                    auto combatantType = std::get<0>(argsTuple);
-                    auto level = std::get<1>(argsTuple);
-                    if constexpr (std::is_same_v<std::decay_t<decltype(combatantType)>, CombatantType> &&
-                                  std::is_integral_v<std::decay_t<decltype(level)>>)
-                    {
-                        _spellslots = spellslotFactory(combatantType, level);
-                    }
-                    else
-                    {
-                        // Handle error: incorrect argument types
-                        throw std::invalid_argument("Incorrect argument types for SPELLSLOTS");
-                    }
-                }
-                else
-                {
-                    // Handle error: incorrect number of arguments
-                    throw std::invalid_argument("Incorrect number of arguments for SPELLSLOTS");
-                }
-            }
-          _resources.insert({AbilityType::SPELLSLOTS, _spellslots});
-          break;
-        case AbilityType::SENTINEL: break;
-        case AbilityType::POLEARM_MASTER: break;
-        case AbilityType::DANGER_SENSE: break;
-        case AbilityType::METAMAGIC: break;
-        case AbilityType::PACK_TACTICS: break;
-        case AbilityType::FANATIC_ADVANTAGE: break;
-        case AbilityType::WAR_CASTER: break;
-        case AbilityType::ELDRITCH_MIND: break;
-        case AbilityType::SNEAK_ATTACK: break;
-        case AbilityType::CUNNING_ACTION: break;
-        case AbilityType::ASSASSINATE: break;
-        case AbilityType::REGENERATION: break;
-        case AbilityType::EVASION: break;
-        case AbilityType::HEART_OF_HRUGGEK: break;
-        case AbilityType::DARK_DEVOTION: break;
-        case AbilityType::BLINDSIGHT: break;
-        case AbilityType::MAGIC_RESISTANCE: break;
-        case AbilityType::CHARM_IMMUNITY: break;
-        case AbilityType::GREAT_WEAPON_FIGHTING: break;
-        case AbilityType::DUELING: break;
-        case AbilityType::BATTLE_MASTER_MANEUVERS: break;
-        case AbilityType::DRACONIC_RESILIENCE: break;
-        case AbilityType::UNARMORED_DEFENSE: break;
-        case AbilityType::DIVINE_SMITE: break;
-        case AbilityType::CHANNEL_DIVINITY: break;
-        case AbilityType::UNDEAD_FORTITUDE: break;
-        case AbilityType::MARTIAL_ADVANTAGE: break;
-
-        // Meta Action
-        case AbilityType::QUICKENED_SPELL: break;
-        case AbilityType::TWINNED_SPELL: break;
-        case AbilityType::EMPOWERED_SPELL: break;
-
-        // Free Action
-        case AbilityType::ACTION_SURGE: break;
-
-          default: {
-            throw std::runtime_error("Unknown ability type");
-          }
-          break;
-        }
-
+      auto factory = std::make_shared<MeleeAttackFactory>(name, owner, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      _actionFactories.emplace_back(factory);
       return factory;
     }
+
+    std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
+                                                   int dmgBonus, DamageType damageType, int attackRange)
+    {
+      auto factory = std::make_shared<RangedAttackFactory>(name, owner, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+
+    std::shared_ptr<ActoidFactory> addRecklessAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addPreSwallowBite() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addBiteAndSwallow() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addDodge() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addDash() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addDisengage() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addFireball() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addFirebolt() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addChaosBolt() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHaste() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHungerOfHadar() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addSpikeGrowth() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addCloudOfDaggers() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHide() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addTwinnedFirebolt() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addTwinnedHaste() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addScorchingRay() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addFaerieFire() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addWildshape() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addPounce() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addConstrict() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addBreakGrapple() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addFlamingSphere() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addWeb() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHoldPerson() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addTwinnedHoldPerson() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addShockingGrasp() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addTwinnedShockingGrasp() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addMagicMissile() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addGrapple() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addGrappleAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addVampiricBite() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addBless() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addRayOfEnfeeblement() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addTwinnedRayOfEnfeeblement() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addSleep() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addShakeAllyAwake() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addThunderwave() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addMenacingMeleeAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addParalyzingMeleeAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addMenacingRangedAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addPrecisionAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addLayOnHands() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addCureWounds() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addAbjureEnemy() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addConicBreathWeapon() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addConicBreathWeaponAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addLineBreathWeapon() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addRayOfFrost() { return nullptr; }
+
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     * Bonus Action abilities
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+    std::shared_ptr<ActoidFactory> addBonusMeleeAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addBonusRangedAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addPamBonusAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addRage() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addTotemRage() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addMistyStep() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addCunningDisengage() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addCunningDash() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addCunningHide() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedFireball() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedFirebolt() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedChaosBolt() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedHaste() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedHungerOfHadar() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedSpikeGrowth() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedCloudOfDaggers() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedScorchingRay() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedFaerieFire() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedBless() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedFlamingSphere() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedHoldPerson() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedRayOfFrost() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addFlamingSphereRam() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addMoonWildshape() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedShockingGrasp() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedMagicMissile() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedRayOfEnfeeblement() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedSleep() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addSecondWind() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHealingWord() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addTwinnedHealingWord() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addShillelagh() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedThunderwave() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addBonusMenacingMeleeAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addBonusMenacingRangedAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addShieldOfFaith() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addQuickenedCureWounds() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addVowOfEnmity() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addAggressive() { return nullptr; }
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     * Reaction abilities
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+    std::shared_ptr<ActoidFactory> addReactionAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addShield() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addPreSwallowBiteReaction() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addUncannyDodge() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addParry() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addRiposte() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addReactionParalyzingMeleeAttack() { return nullptr; }
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     * Haste abilities
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+    std::shared_ptr<ActoidFactory> addHasteMeleeAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteRangedAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteDash() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteDisengage() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteHide() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHastePreSwallowBite() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteBiteAndSwallow() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteGrappleAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteGrapple() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteVampiricBite() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHasteParalyzingMeleeAttack() { return nullptr; }
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     * Passive abilities
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+    void addSpellSlots()
+    {
+      if(_type != CombatantType::MONSTER)
+        {
+          _spellslots = spellslotFactory(_type, _level);
+          _resources.insert({AbilityType::SPELLSLOTS, _spellslots});
+        }
+      else
+        {
+          throw std::runtime_error("Cannot use this overload of addSpellSlots for a monster.");
+        }
+    }
+
+    void addSpellSlots(CombatantType type, int level)
+    {
+      if(_type == CombatantType::MONSTER)
+        {
+          _spellslots = spellslotFactory(type, level);
+          _resources.insert({AbilityType::SPELLSLOTS, _spellslots});
+        }
+      else
+        {
+          throw std::runtime_error("Cannot use this overload of addSpellSlots for a non-monster.");
+        }
+    }
+
+    void addSentinel() {}
+    void addPolearmMaster() {}
+    void addDangerSense() {}
+    void addMetamagic() {}
+    void addPackTactics() {}
+    void addFanaticAdvantage() {}
+    void addWarCaster() {}
+    void addEldritchMind() {}
+    void addSneakAttack() {}
+    void addCunningAction() {}
+    void addAssassinate() {}
+    void addRegeneration() {}
+    void addEvasion() {}
+    void addHeartOfHruggek() {}
+    void addDarkDevotion() {}
+    void addBlindsight() {}
+    void addMagicResistance() {}
+    void addCharmImmunity() {}
+    void addGreatWeaponFighting() {}
+    void addDueling() {}
+    void addBattleMasterManeuvers() {}
+    void addDraconicResilience() {}
+    void addUnarmoredDefense() {}
+    void addDivineSmite() {}
+    void addChannelDivinity() {}
+    void addUndeadFortitude() {}
+    void addMartialAdvantage() {}
+    void addQuickenedSpell() {}
+    void addTwinnedSpell() {}
+    void addEmpoweredSpell() {}
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     * Non-action abilities
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
+    void addActionSurge() {}
+    /**
+     * ----------------------------------------------------------------------------------------------------------------------------------------------
+     */
 
   private:
     template <typename ConditionType> Combatant *checkConditionList(const std::vector<ConditionType> &condList, Conditions condition) const

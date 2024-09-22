@@ -12,12 +12,12 @@ namespace enc
   {
     _instanceId = generateInstanceId();
 
-    addAbility(AbilityType::MELEE_ATTACK, "Claws", this,
-               7,                        // toHit
-               std::vector<Die>{{2, 8}}, // dmgDice
-               4,                        // dmgBonus
-               DamageType::Slashing,
-               1 // attackRange
+    addMeleeAttack("Claws", this,
+                   7,                        // toHit
+                   std::vector<Die>{{2, 8}}, // dmgDice
+                   4,                        // dmgBonus
+                   DamageType::Slashing,
+                   1 // attackRange
     );
     // addAbility(AbilityType::SPELLSLOTS, )
   }

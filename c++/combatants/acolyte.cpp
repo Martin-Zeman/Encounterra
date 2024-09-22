@@ -11,13 +11,13 @@ namespace enc
   {
     _instanceId = generateInstanceId();
 
-    addAbility(AbilityType::MELEE_ATTACK, "Club", this,
-               2,                        // toHit
-               std::vector<Die>{{1, 4}}, // dmgDice
-               0,                        // dmgBonus
-               DamageType::Bludgeoning,
-               1 // attackRange
+    addMeleeAttack("Club", this,
+                   2,                        // toHit
+                   std::vector<Die>{{1, 4}}, // dmgDice
+                   0,                        // dmgBonus
+                   DamageType::Bludgeoning,
+                   1 // attackRange
     );
-    addAbility(AbilityType::SPELLSLOTS, CombatantType::CLERIC, 2);
+    addSpellSlots(CombatantType::CLERIC, 2);
   }
 }
