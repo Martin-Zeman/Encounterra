@@ -2,15 +2,15 @@
 
 namespace enc
 {
-  bool Spellslots::hasResource(int level) { return currSpellslots[level] > 0; }
+  bool Spellslots::hasResource(int level) const { return _currSpellslots.at(level) > 0; }
 
-  int Spellslots::getResource(int level) { return currSpellslots[level]; }
+  int Spellslots::getResource(int level) const { return _currSpellslots.at(level); }
 
   void Spellslots::useResource(int level)
   {
-    if(currSpellslots.find(level) != currSpellslots.end())
+    if(_currSpellslots.find(level) != _currSpellslots.end())
       {
-        currSpellslots[level]--;
+        _currSpellslots[level]--;
       }
     else
       {
@@ -18,22 +18,22 @@ namespace enc
       }
   }
 
-  void Spellslots::reset() { currSpellslots = maxSpellslots; }
+  void Spellslots::reset() { _currSpellslots = _maxSpellslots; }
 
   void Spellslots::depleteResource(ResourceDepletionLevel level)
   {
     switch(level)
       {
       case ResourceDepletionLevel::FULLY_DEPLETED:
-        for(auto &slot : currSpellslots)
+        for(auto &slot : _currSpellslots)
           {
             slot.second = 0;
           }
         break;
       case ResourceDepletionLevel::PARTIALLY_DEPLETED:
-        for(auto &slot : currSpellslots)
+        for(auto &slot : _currSpellslots)
           {
-            slot.second = maxSpellslots[slot.first] / 2;
+            slot.second = _maxSpellslots[slot.first] / 2;
           }
         break;
       default: break;

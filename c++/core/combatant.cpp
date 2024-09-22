@@ -9,7 +9,8 @@ namespace enc
                        int dc, std::unordered_set<DamageType> resistances, std::unordered_set<DamageType> immunities,
                        std::unordered_set<DamageType> vulnerabities, Conditions conditionImmunities)
       : _name(name), _maxHp(hp), _currHp(hp), _ac(ac), _dc(dc), _initBonus(initBonus), _spellToHit(spellToHit), _speed(speed / 5),
-        _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities), _conditionImmunities(conditionImmunities)
+        _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities),
+        _conditionImmunities(conditionImmunities), _type(type), _subtype(subtype), _level(level)
   {
     _dodgeFactory = std::make_shared<DodgeFactory>();
     _disengageFactory = std::make_shared<DisengageFactory>();

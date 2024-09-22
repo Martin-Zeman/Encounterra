@@ -25,15 +25,25 @@ namespace enc
 
   inline ActoidFlags operator|(ActoidFlags a, ActoidFlags b) { return static_cast<ActoidFlags>(static_cast<int>(a) | static_cast<int>(b)); }
 
+  class ActoidFactory;
+
   class Actoid
   {
   public:
-    explicit Actoid(ActoidFlags flags = ActoidFlags::DEFAULT) : actoid_flags(flags) {}
+    explicit Actoid(ActoidFactory& factory, ActoidFlags flags = ActoidFlags::DEFAULT, AbilityType abilityType = AbilityType::NOP)
+        : _factory(factory), _actoidFlags(flags), _abilityType(abilityType)
+    {}
     virtual ~Actoid() = default;
-    ActoidFlags getFlags() const { return actoid_flags; }
+    ActoidFlags getFlags() const { return _actoidFlags; }
+    AbilityType getAbilityType() const { return _abilityType; }
+    ActoidFactory &getFactory() override { return _factory; }
+
+  protected:
+    ActoidFactory &_factory;
 
   private:
-    ActoidFlags actoid_flags;
+    ActoidFlags _actoidFlags;
+    AbilityType _abilityType;
   };
 
   enum class FactoryFlags

@@ -124,7 +124,7 @@ namespace enc
     bool isImmuneTo(DamageType dmgType);
     bool isResistantTo(DamageType dmgType);
     bool isVulnerableTo(DamageType dmgType);
-
+    const Spellslots &getSpellslots() { return *_spellslots; }
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------

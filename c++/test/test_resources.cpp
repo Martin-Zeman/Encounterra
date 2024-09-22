@@ -14,6 +14,7 @@
 #include "combatants/goblin.hpp"
 #include "combatants/acolyte.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
+#include "combatants/draconic_sorcerer_lvl_5.hpp"
 #include "combatants/moon_druid_lvl_5.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
 #include <memory>
@@ -32,7 +33,8 @@ protected:
     Goblin* goblin;
     Acolyte* acolyte;
     DraconicSorcererLvl1* draconic_sorcerer_lvl_1;
-    MoonDruidLvl5* Colormoon_druid_lvl_5;
+    DraconicSorcererLvl5* draconic_sorcerer_lvl_5;
+    MoonDruidLvl5* moon_druid_lvl_5;
     WildHeartBarbarianLvl3* wild_heart_barbarian_lvl_3;
 
     void SetUp() override
@@ -45,7 +47,8 @@ protected:
         goblin = new Goblin(1);
         acolyte = new Acolyte(1);
         draconic_sorcerer_lvl_1 = new DraconicSorcererLvl1(1);
-        Colormoon_druid_lvl_5 = new MoonDruidLvl5(1);
+        draconic_sorcerer_lvl_5 = new DraconicSorcererLvl5(1);
+        moon_druid_lvl_5 = new MoonDruidLvl5(1);
         wild_heart_barbarian_lvl_3 = new WildHeartBarbarianLvl3(1);
     }
 
@@ -55,10 +58,34 @@ protected:
         delete goblin;
         delete acolyte;
         delete draconic_sorcerer_lvl_1;
-        delete Colormoon_druid_lvl_5;
+        delete draconic_sorcerer_lvl_5;
+        delete moon_druid_lvl_5;
         delete wild_heart_barbarian_lvl_3;
     }
 };
+
+TEST_F(ResourceTest, CombatantSimpleSpellslotCount)
+{
+  auto spellslots = draconic_sorcerer_lvl_5->getSpellslots();
+  EXPECT_TRUE(spellslots.hasResource(1));
+  EXPECT_EQ(spellslots.getResource(1), 4);
+  EXPECT_TRUE(spellslots.hasResource(2));
+  EXPECT_EQ(spellslots.getResource(2), 3);
+  EXPECT_TRUE(spellslots.hasResource(3));
+  EXPECT_EQ(spellslots.getResource(3), 2);
+  EXPECT_FALSE(spellslots.hasResource(4));
+  EXPECT_EQ(spellslots.getResource(4), 0);
+}
+
+TEST_F(ResourceTest, MonsterWithRegularSpellslots)
+{
+  auto spellslots = acolyte->getSpellslots();
+  EXPECT_TRUE(spellslots.hasResource(1));
+  EXPECT_EQ(spellslots.getResource(1), 3);
+  EXPECT_FALSE(spellslots.hasResource(2));
+  EXPECT_EQ(spellslots.getResource(2), 0);
+}
+
 
 // TEST_F(ResourceTest, UseResourcesSpellslots)
 // {
@@ -162,7 +189,7 @@ protected:
 // TEST_F(ResourceTest, DepleteResourcesUsesOnCombatant)
 // {
 //     auto& barbarian_rage = wild_heart_barbarian_lvl_3->getResources()[BonusAction::TOTEM_RAGE];
-//     auto& druid_wildshape = Colormoon_druid_lvl_5->getResources()[Action::WILDSHAPE];
+//     auto& druid_wildshape = moon_druid_lvl_5->getResources()[Action::WILDSHAPE];
 //     auto& sorcerer_metamagic = draconic_sorcerer_lvl_1->getResources()[Passive::METAMAGIC];
 
 //     EXPECT_TRUE(barbarian_rage->hasResource(1));
@@ -175,9 +202,9 @@ protected:
 
 //     EXPECT_TRUE(druid_wildshape->hasResource(1));
 //     EXPECT_EQ(druid_wildshape->getResource(1), 2);
-//     Colormoon_druid_lvl_5->depleteResources(ResourceDepletionLevel::PARTIALLY_DEPLETED);
+//     moon_druid_lvl_5->depleteResources(ResourceDepletionLevel::PARTIALLY_DEPLETED);
 //     EXPECT_EQ(druid_wildshape->getResource(1), 1);
-//     Colormoon_druid_lvl_5->depleteResources(ResourceDepletionLevel::FULLY_DEPLETED);
+//     moon_druid_lvl_5->depleteResources(ResourceDepletionLevel::FULLY_DEPLETED);
 //     EXPECT_EQ(druid_wildshape->getResource(1), 0);
 //     EXPECT_FALSE(druid_wildshape->hasResource(1));
 
@@ -207,11 +234,6 @@ protected:
 //     EXPECT_FALSE(session->getCombatants()[0]->getResources()[Passive::METAMAGIC]->hasResource(1));
 //     EXPECT_EQ(session->getCombatants()[1]->getResources()[Action::WILDSHAPE]->getResource(1), 1);
 // }
-
-TEST_F(ResourceTest, MonsterWithRegularSpellslots)
-{
-
-}
 
 
 } // namespace

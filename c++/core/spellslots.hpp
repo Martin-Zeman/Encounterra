@@ -132,12 +132,12 @@ namespace enc
   {
   public:
     Spellslots(const std::unordered_map<int, int> &spellslotTable, ResourceRefreshType refreshType = ResourceRefreshType::LONG_REST)
-        : Resource(refreshType), maxSpellslots(spellslotTable), currSpellslots(spellslotTable)
+        : Resource(refreshType), _maxSpellslots(spellslotTable), _currSpellslots(spellslotTable)
     {}
 
-    bool hasResource(int level) override;
+    bool hasResource(int level) const override;
 
-    int getResource(int level) override;
+    int getResource(int level) const override;
 
     void useResource(int level) override;
 
@@ -146,8 +146,8 @@ namespace enc
     void depleteResource(ResourceDepletionLevel level) override;
 
   private:
-    std::unordered_map<int, int> maxSpellslots;
-    std::unordered_map<int, int> currSpellslots;
+    std::unordered_map<int, int> _maxSpellslots;
+    std::unordered_map<int, int> _currSpellslots;
   };
 
   // Function to create spellslots based on class and level
