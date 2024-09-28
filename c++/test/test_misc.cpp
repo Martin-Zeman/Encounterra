@@ -185,4 +185,78 @@ namespace
     // Test with increased crit range
     EXPECT_NEAR(meanDmg(5, dmgDice, 3, 15, false, false, 2), 9.125, 1e-6);
   }
+
+  TEST(DamageCalculationTest, MeanDmgDcAttack)
+  {
+    std::vector<Die> dmgDice = {{2, 6}, {1, 8}};
+
+    // Test normal case
+    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, true, 2), 7.7, 1e-6);
+
+    // Test with immunity
+    EXPECT_DOUBLE_EQ(meanDmgDcAttack(15, dmgDice, true, 2, true), 0.0);
+
+    // Test with resistance
+    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, true, 2, false, true), 3.85, 1e-6);
+
+    // Test without half damage on success
+    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, false, 2), 5.775, 1e-6);
+  }
+
+  TEST(DamageCalculationTest, MeanDmgAutoHit)
+  {
+    std::vector<Die> dmgDice = {{2, 6}, {1, 8}};
+
+    // Test normal case
+    EXPECT_NEAR(meanDmgAutoHit(dmgDice), 13.0, 1e-6);
+
+    // Test with immunity
+    EXPECT_DOUBLE_EQ(meanDmgAutoHit(dmgDice, true), 0.0);    
+    
+    // Test with resistance
+    EXPECT_NEAR(meanDmgAutoHit(dmgDice, false, true), 6.5, 1e-6);
+  }
+
+  TEST(DamageCalculationTest, RollDice)
+  {
+    Die die = {3, 6};
+    int result = rollDice(die);
+    EXPECT_GE(result, 3);
+    EXPECT_LE(result, 18);
+  }
+
+  TEST(DamageCalculationTest, RollDiceMulti)
+  {
+    std::vector<Die> dice = {{2, 6}, {1, 8}};
+    int result = rollDiceMulti(dice);
+    EXPECT_GE(result, 3);
+    EXPECT_LE(result, 20);
+  }
+
+  // This test checks the distribution of rollDice results
+  TEST(DamageCalculationTest, RollDiceDistribution)
+  {
+    Die die = {1, 6};
+    std::vector<int> counts(6, 0);
+    int numRolls = 10000;
+
+    for(int i = 0; i < numRolls; ++i)
+      {
+        int roll = rollDice(die);
+        ASSERT_GE(roll, 1);
+        ASSERT_LE(roll, 6);
+        counts[roll - 1]++;
+      }
+
+    // Check if the distribution is roughly uniform
+    double expectedCount = numRolls / 6.0;
+    double chiSquared = 0.0;
+    for(int count : counts)
+      {
+        chiSquared += std::pow(count - expectedCount, 2) / expectedCount;
+      }
+
+    // Chi-squared test with 5 degrees of freedom, 99% confidence level
+    EXPECT_LT(chiSquared, 15.086); // Critical value for 99% confidence
+  }
 }

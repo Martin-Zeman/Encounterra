@@ -1090,14 +1090,14 @@ namespace enc
         if(!potentialTarget->isAlive())
           continue;
         
-        if(abilityType == Type::HARMFUL)
+        if(abilityType == SpellType::HARMFUL)
           {
             if(getCartesianDistanceCoords(combatantCoords, originCoords) <= radius)
               {
                 affectedCombatants.push_back(potentialTarget);
               }
           }
-        else if(abilityType == Type::BUFF)
+        else if(abilityType == SpellType::BUFF)
           {
             if(getCartesianDistanceCoords(combatantCoords, originCoords) <= radius
                && teams.areAllies(*caster, *potentialTarget))

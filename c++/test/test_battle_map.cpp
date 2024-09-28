@@ -968,7 +968,7 @@ TEST_F(BattleMapTest, GetCombatantsAffectedBySphereAoE)
   battleMap->setCombatantCoordinates(*ogre, Coord{4, 4});
   battleMap->setCombatantCoordinates(*bugbear, Coord{10, 5});
   battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{6, 7});
-  auto combatants = battleMap->getCombatantsAffectedBySphereAoE(draconic_sorcerer_lvl_1, SpellTarget::RADIUS_20, Type::HARMFUL, Coord{7, 3});
+  auto combatants = battleMap->getCombatantsAffectedBySphereAoE(draconic_sorcerer_lvl_1, SpellTarget::RADIUS_20, SpellType::HARMFUL, Coord{7, 3});
 
   EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
   EXPECT_NE(std::find(combatants.begin(), combatants.end(), ogre), combatants.end());

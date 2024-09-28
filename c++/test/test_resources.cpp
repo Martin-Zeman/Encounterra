@@ -89,37 +89,37 @@ TEST_F(ResourceTest, MonsterWithRegularSpellslots)
 
 // TEST_F(ResourceTest, UseResourcesSpellslots)
 // {
-//     teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+//     teams->addCombatantToTeam(*draconic_sorcerer_lvl_5, Color::BLUE);
     
-//     FireboltFactory firebolt_factory(1, Action::FIREBOLT, draconic_sorcerer_lvl_1, draconic_sorcerer_lvl_1->getSpellslots());
+//     FireboltFactory firebolt_factory(1, Action::FIREBOLT, draconic_sorcerer_lvl_5, draconic_sorcerer_lvl_5->getSpellslots());
 //     auto firebolt = firebolt_factory.create(goblin);
     
-//     FireballFactory fireball_factory(1, Action::FIREBALL, draconic_sorcerer_lvl_1, draconic_sorcerer_lvl_1->getSpellslots());
+//     FireballFactory fireball_factory(1, Action::FIREBALL, draconic_sorcerer_lvl_5, draconic_sorcerer_lvl_5->getSpellslots());
 //     auto fireball = fireball_factory.create(std::array<int, 2>{0, 0});
 
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(3), 2);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(2), 3);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(1), 4);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(3), 2);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(2), 3);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(1), 4);
 
-//     useResources(draconic_sorcerer_lvl_1, firebolt.get());
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(3), 2);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(2), 3);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(1), 4);
+//     useResources(draconic_sorcerer_lvl_5, firebolt.get());
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(3), 2);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(2), 3);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(1), 4);
 
-//     useResources(draconic_sorcerer_lvl_1, fireball.get());
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(3), 1);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(2), 3);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(1), 4);
+//     useResources(draconic_sorcerer_lvl_5, fireball.get());
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(3), 1);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(2), 3);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(1), 4);
 
-//     useResources(draconic_sorcerer_lvl_1, fireball.get());
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(3), 0);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(2), 3);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(1), 4);
+//     useResources(draconic_sorcerer_lvl_5, fireball.get());
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(3), 0);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(2), 3);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(1), 4);
 
-//     draconic_sorcerer_lvl_1->getSpellslots()->reset();
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(3), 2);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(2), 3);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getResource(1), 4);
+//     draconic_sorcerer_lvl_5->getSpellslots()->reset();
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(3), 2);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(2), 3);
+//     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots()->getResource(1), 4);
 // }
 
 // TEST_F(ResourceTest, UseResourcesAlreadyUsedSpellslotThisTurn)

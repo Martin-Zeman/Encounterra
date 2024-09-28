@@ -51,7 +51,7 @@ namespace enc
     TEN_MINUTES = 100
   };
 
-  enum class Type
+  enum class SpellType
   {
     HARMFUL = 1,
     BUFF = 2,

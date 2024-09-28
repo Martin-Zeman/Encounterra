@@ -100,7 +100,8 @@ namespace enc
     bool hasBonusAction() { return _hasBonusAction; }
     bool hasHasteAction() { return _hasHasteAction; }
     bool hasReaction() { return _hasReaction; }
-    bool alreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
+    bool hasAlreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
+    bool setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
     Combatant *getCurrentForm();
     Combatant *getOriginalForm();

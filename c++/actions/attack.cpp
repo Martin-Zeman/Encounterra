@@ -150,7 +150,7 @@ namespace enc
   }
   double AttackFactory::calculateMaxThreat()
   {
-    //! @todoa
+    //! @todo
     return 0;
   }
 }

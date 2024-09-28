@@ -36,7 +36,7 @@ namespace enc
     virtual ~Actoid() = default;
     ActoidFlags getFlags() const { return _actoidFlags; }
     AbilityType getAbilityType() const { return _abilityType; }
-    ActoidFactory &getFactory() override { return _factory; }
+    ActoidFactory &getFactory() { return _factory; }
 
   protected:
     ActoidFactory &_factory;
@@ -93,5 +93,20 @@ namespace enc
     virtual double calculateThreatToTarget(Combatant *target, const Kwargs& kwargs) = 0;
     virtual double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) = 0;
     virtual double calculateMaxThreat() = 0;
+  };
+
+  class Threat
+  {
+  public:
+    virtual ~Threat() = default;
+    virtual double calculateThreat(const Kwargs &kwargs) = 0;
+    virtual double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) = 0;
+  };
+
+  class DirectThreat : public Threat
+  {
+  public:
+    virtual ~DirectThreat() = default;
+    virtual double calculateThreatDelta(const Kwargs &kwargs) = 0;
   };
 }

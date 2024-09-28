@@ -199,9 +199,6 @@ namespace enc
     Force,
     Psychic,
     Thunder,
-    BludgeoningMagical,
-    SlashingMagical,
-    PiercingMagical,
     Random
   };
 
@@ -265,6 +262,14 @@ namespace enc
   meanDmg(int toHit, const std::vector<Die> &dmgDice, int dmgBonus, int ac, bool isImmune = false, bool isResistant = false, int critRange = 1);
 
   double calcPHit(int toHit, int ac);
+
+  double meanDmgDcAttack(int dc, const std::vector<Die> &dmgDice, bool halfOnSuccess, int stBonus, bool isImmune = false, bool isResistant = false);
+
+  double meanDmgAutoHit(const std::vector<Die> &dmgDice, bool isImmune = false, bool isResistant = false);
+
+  int rollDice(const Die &dice);
+
+  int rollDiceMulti(const std::vector<Die> &diceList);
 
   const std::map<RollType, double> ROLL_TYPE_CRIT_DELTA = {{RollType::STRAIGHT, 1.0}, {RollType::ADVANTAGE, 2.0}, {RollType::DISADVANTAGE, 0.5}};
 

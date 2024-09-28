@@ -164,5 +164,58 @@ namespace enc
     return std::max(0.05, std::min(0.95, pHit));
   }
 
+double meanDmgDcAttack(int dc, const std::vector<Die> &dmgDice, bool halfOnSuccess, int stBonus, bool isImmune, bool isResistant)
+{
+  if(isImmune)
+    {
+      return 0.0;
+    }
+
+  double avgDmgDieRoll = avgRollMulti(dmgDice);
+
+  // Calculate probability of failing the saving throw
+  double pFail = std::min(std::max((dc - stBonus - 1.0) / 20.0, 0.0), 1.0);
+
+  double failDmg = avgDmgDieRoll * pFail;
+  double successDmg = halfOnSuccess ? (avgDmgDieRoll / 2.0 * (1.0 - pFail)) : 0.0;
+  double finalAvgDmg = failDmg + successDmg;
+
+  return isResistant ? finalAvgDmg / 2.0 : finalAvgDmg;
+}
+
+double meanDmgAutoHit(const std::vector<Die> &dmgDice, bool isImmune, bool isResistant)
+{
+  if(isImmune)
+    {
+      return 0.0;
+    }
+  double avgDmgDieRoll = avgRollMulti(dmgDice);
+  return isResistant ? avgDmgDieRoll / 2.0 : avgDmgDieRoll;
+}
+
+int rollDice(const Die &dice)
+{
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+
+  int numDice = dice[0];
+  int numSides = dice[1];
+
+  std::uniform_int_distribution<> dis(1, numSides);
+
+  int sum = 0;
+  for(int i = 0; i < numDice; ++i)
+    {
+      sum += dis(gen);
+    }
+
+  return sum;
+}
+
+int rollDiceMulti(const std::vector<Die> &diceList)
+{
+  return std::accumulate(diceList.begin(), diceList.end(), 0, [](int sum, const Die &dice) { return sum + rollDice(dice); });
+}
+
   std::string coordToString(const Coord &coord) { return "(" + std::to_string(coord[0]) + ", " + std::to_string(coord[1]) + ")"; }
 }
