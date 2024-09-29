@@ -2,9 +2,9 @@
 
 namespace enc
 {
-  bool Spellslots::hasResource(int level) const { return _currSpellslots.at(level) > 0; }
+  bool Spellslots::hasUses(int level) const { return _currSpellslots.at(level) > 0; }
 
-  int Spellslots::getResource(int level) const { return _currSpellslots.at(level); }
+  int Spellslots::getUses(int level) const { return _currSpellslots.at(level); }
 
   void Spellslots::useResource(int level)
   {

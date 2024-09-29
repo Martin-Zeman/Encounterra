@@ -101,7 +101,7 @@ namespace enc
     bool hasHasteAction() { return _hasHasteAction; }
     bool hasReaction() { return _hasReaction; }
     bool hasAlreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
-    bool setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
+    void setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
     Combatant *getCurrentForm();
     Combatant *getOriginalForm();

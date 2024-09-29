@@ -776,7 +776,7 @@ namespace enc
     return bb;
   }
 
-  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulCircular(const Combatant *caster, int spell_range, int radius)
+  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulCircular(const Combatant *caster, int spellRange, int radius)
   {
     auto bb = getHarmfulBoundingBox(caster, radius);
     int max_score = std::numeric_limits<int>::lowest();
@@ -794,7 +794,7 @@ namespace enc
             Coords curr_coords({x, y});
 
             auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
-            if(dist > spell_range || dist <= radius)
+            if(dist > spellRange || dist <= radius)
               {
                 continue;
               }
@@ -824,7 +824,7 @@ namespace enc
     return {best_placement, max_score, affected_combatants};
   }
 
-  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length)
+  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulSquare(const Combatant *caster, int spellRange, int length)
   {
     auto bb = getHarmfulBoundingBox(caster, length);
     int max_score = std::numeric_limits<int>::lowest();
@@ -841,7 +841,7 @@ namespace enc
             Coords curr_coords({x, y}, Size(length - 1));
 
             auto dist = getCartesianDistanceCoords(caster_coords, curr_coords);
-            if(dist > spell_range || dist == 0) // TODO: is a 0 possible? Create a unit test for this case
+            if(dist > spellRange || dist == 0) // TODO: is a 0 possible? Create a unit test for this case
               {
                 continue;
               }
@@ -1077,7 +1077,7 @@ namespace enc
   }
 
   std::vector<Combatant *> BattleMap::getCombatantsAffectedBySphereAoE(const Combatant *caster, SpellTarget targetTemplate,
-                                                                       Type abilityType, const Coord &origin) const
+                                                                       SpellType abilityType, const Coord &origin) const
   {
     std::vector<Combatant *> affectedCombatants;
     Teams &teams = Teams::getInstance();

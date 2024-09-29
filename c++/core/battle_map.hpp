@@ -71,13 +71,13 @@ namespace enc
     bool removeCombatantIfDead(Combatant &combatant);
     int getCombatantGridValueAt(const Coord &coord);
     std::tuple<Coord, int, std::vector<Combatant *>>
-    findBestPlacementHarmfulCircular(const Combatant *caster, int spell_range, int radius);
-    std::tuple<Coord, int, std::vector<Combatant *>> findBestPlacementHarmfulSquare(const Combatant *caster, int spell_range, int length);
+    findBestPlacementHarmfulCircular(const Combatant *caster, int spellRange, int radius);
+    std::tuple<Coord, int, std::vector<Combatant *>> findBestPlacementHarmfulSquare(const Combatant *caster, int spellRange, int length);
     std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulCone(const Combatant *caster, int radius);
     std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulLine(const Combatant* caster, int length, int width);
 
     std::vector<Combatant *>
-    getCombatantsAffectedBySphereAoE(const Combatant *caster, SpellTarget targetTemplate, Type abilityType, const Coord &origin) const;
+    getCombatantsAffectedBySphereAoE(const Combatant *caster, SpellTarget targetTemplate, SpellType abilityType, const Coord &origin) const;
     std::vector<Combatant *>
     getCombatantsAffectedByConeAoE(const Combatant *caster, SpellTarget targetTemplate, const Coord &origin, double angle) const;
     std::vector<Combatant *> getCombatantsAffectedByLineAoE(const Combatant *caster, const Coord &origin, double angle, int length, int width) const;

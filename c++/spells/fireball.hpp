@@ -3,6 +3,7 @@
 #include "spells/spell_stats.hpp"
 #include "core/misc.hpp"
 #include "core/interfaces.hpp"
+#include "core/resources.hpp"
 #include "actions/action_types.hpp"
 
 namespace enc
@@ -22,7 +23,7 @@ namespace enc
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Fire;
 
-    FireballFactory(int dc, AbilityType abilityType, Combatant *caster, int resource, bool hasSpellSculpting = false)
+    FireballFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource, bool hasSpellSculpting = false)
         : _dc(dc), _abilityType(abilityType), _caster(caster), _resource(resource), _hasSpellSculpting(hasSpellSculpting)
     {
       _savingThrow = SavingThrow::DEX;
@@ -37,15 +38,17 @@ namespace enc
 
     std::shared_ptr<Actoid> create(void *target) override;
 
-    virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) override;
-    virtual double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) override;
-    virtual double calculateMaxThreat() override;
+    std::optional<Resource *> getResource() override { return _resource; }
+
+    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) override;
+    double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) override;
+    double calculateMaxThreat() override;
 
   private:
     int _dc;
     AbilityType _abilityType;
     Combatant *_caster;
-    int _resource;
+    Resource *_resource;
     bool _hasSpellSculpting;
     SavingThrow _savingThrow;
     std::vector<std::pair<int, int>> _dmgDice;
@@ -56,16 +59,21 @@ namespace enc
   {
   public:
     Fireball(const Coord &coord, const FireballFactory &factory, bool empowered = false, bool heightened = false)
-        : _coord(coord), _factory(factory), _empowered(empowered), _heightened(heightened)
+        : Actoid(const_cast<FireballFactory &>(factory), ActoidFlags::IS_SPELL, AbilityType::FIREBALL), _coord(coord), _factory(factory),
+          _empowered(empowered), _heightened(heightened)
     {}
 
     std::string toString() const
     {
-      return (_factory._abilityType == AbilityType::QUICKENED_FIREBALL ? "Quickened " : "") + "Fireball at (" + std::to_string(_coord[0]) + ", "
-             + std::to_string(_coord[1]) + ")";
+      std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_FIREBALL) ? "Quickened " : "";
+      return prefix + "Fireball at (" + std::to_string(_coord[0]) + ", " + std::to_string(_coord[1]) + ")";
     }
 
-    std::string shorthandStr() const { return (_factory._abilityType == AbilityType::QUICKENED_FIREBALL ? "Quickened " : "") + "Fireball"; }
+    std::string shorthandStr() const
+    {
+      std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_FIREBALL) ? "Quickened " : "";
+      return prefix + "Fireball";
+    }
 
     double calculateThreat(const Kwargs &kwargs) override;
     double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;

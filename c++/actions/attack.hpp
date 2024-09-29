@@ -30,6 +30,7 @@ namespace enc
     virtual std::unique_ptr<AttackFactory> clone() const = 0;
 
     std::vector<Combatant *> getEligibleTargets() const;
+    std::optional<Resource *> getResource() override { return &_ammo; }
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) override;
     double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) override;
     double calculateMaxThreat() override;

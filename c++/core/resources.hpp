@@ -2,6 +2,8 @@
 
 #include <limits>
 
+#include "actions/action_types.hpp"
+
 namespace enc
 {
 
@@ -26,8 +28,8 @@ namespace enc
     Resource(ResourceRefreshType refreshType) : _refreshType(refreshType) {}
     virtual ~Resource() = default;
 
-    virtual bool hasResource(int level) const = 0;
-    virtual int getResource(int level) const = 0;
+    virtual bool hasUses(int level) const = 0;
+    virtual int getUses(int level) const = 0;
     virtual void useResource(int amount = 1) = 0;
     virtual void reset() = 0;
     virtual void depleteResource(ResourceDepletionLevel level) = 0;
@@ -44,8 +46,8 @@ namespace enc
     Uses() : Resource(ResourceRefreshType::LONG_REST), _currUses(Uses::INFINITE_USES), _maxUses(Uses::INFINITE_USES) {}
     Uses(int uses, ResourceRefreshType refreshType = ResourceRefreshType::LONG_REST) : Resource(refreshType), _currUses(uses), _maxUses(uses) {}
 
-    bool hasResource(int level) const override { return _currUses > 0; } // level is ignored in this case
-    int getResource(int level) const override { return _currUses; }      // level is ignored in this case
+    bool hasUses(int level) const override { return _currUses > 0; } // level is ignored in this case
+    int getUses(int level) const override { return _currUses; }      // level is ignored in this case
     void useResource(int uses = 1) override { _currUses -= uses; }
     void addResource(int uses = 1) { _currUses += uses; }
     void setResource(int uses) { _currUses = uses; }

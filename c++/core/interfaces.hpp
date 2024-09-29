@@ -1,8 +1,10 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <vector>
 #include "core/types.hpp"
+#include "actions/action_types.hpp"
 
 namespace enc
 {
@@ -70,6 +72,7 @@ namespace enc
 
   // class ICombatant{};
   class Combatant;
+  class Resource;
 
   class ActoidFactory
   {
@@ -84,6 +87,7 @@ namespace enc
     virtual ~ActoidFactory() = default;
     virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previous_action_in_dag = nullptr) = 0;
     virtual std::shared_ptr<Actoid> create(void *target) = 0;
+    virtual std::optional<Resource *> getResource() = 0;
   };
 
   class DirectThreatFactory : public ActoidFactory

@@ -135,9 +135,9 @@ namespace enc
         : Resource(refreshType), _maxSpellslots(spellslotTable), _currSpellslots(spellslotTable)
     {}
 
-    bool hasResource(int level) const override;
+    bool hasUses(int level) const override;
 
-    int getResource(int level) const override;
+    int getUses(int level) const override;
 
     void useResource(int level) override;
 
