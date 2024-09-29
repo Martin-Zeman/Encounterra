@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "actions/action_types.hpp"
+#include "core/interfaces.hpp"
 
 namespace enc
 {
@@ -71,5 +72,5 @@ namespace enc
 
   class Combatant;
   
-  void useResources(Combatant *combatant, AbilityType abilityType);
+  void useResources(Combatant *combatant, Actoid &actoid);
 }

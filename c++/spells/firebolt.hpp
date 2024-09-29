@@ -1,0 +1,94 @@
+#pragma once
+
+#include "spells/spell_stats.hpp"
+#include "core/misc.hpp"
+#include "core/interfaces.hpp"
+#include "core/resources.hpp"
+#include "actions/action_types.hpp"
+
+namespace enc
+{
+  class Combatant;
+
+  class FireboltFactory : public DirectThreatFactory
+  {
+    friend class Firebolt; // Allow Firebolt to access private members of FireboltFactory
+
+  public:
+    static constexpr int level = 0;
+    static constexpr SpellRange range = SpellRange::FEET_120;
+    static constexpr SpellTarget target = SpellTarget::ONE_CREATURE;
+    static constexpr Duration duration = Duration::INSTANTANEOUS;
+    static constexpr bool concentration = false;
+    static constexpr SpellType type = SpellType::HARMFUL;
+    static constexpr DamageType dmgType = DamageType::Fire;
+
+    static std::pair<int, int> getDmgDice(int level)
+    {
+      if(level >= 1 && level <= 4)
+        {
+          return {1, 10};
+        }
+      else if(level >= 5 && level <= 10)
+        {
+          return {2, 10};
+        }
+      else if(level >= 11 && level <= 16)
+        {
+          return {3, 10};
+        }
+      else if(level >= 17)
+        {
+          return {4, 10};
+        }
+      else
+        {
+          throw std::runtime_error("Incorrect caster level of Firebolt");
+        }
+    }
+
+    //! @todo Can I remove the resource here?
+    FireboltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
+
+    std::string getAbilityName() const { return "Firebolt"; }
+
+    std::vector<Combatant*> getEligibleTargets() const;
+    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
+
+    std::shared_ptr<Actoid> create(void *target) override;
+
+    std::optional<Resource *> getResource() override { return _resource; }
+
+    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) override;
+    double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) override;
+    double calculateMaxThreat() override;
+
+  private:
+    int _toHit;
+    AbilityType _abilityType;
+    Resource *_resource;
+    std::pair<int, int> _dmgDice;
+  };
+
+  class Firebolt : public Actoid, public DirectThreat
+  {
+  public:
+    Firebolt(Combatant &target, const FireboltFactory &factory, RollType rollType = RollType::STRAIGHT)
+        : Actoid(const_cast<FireboltFactory &>(factory), ActoidFlags::IS_SPELL | ActoidFlags::IS_ATTACK_LIKE, AbilityType::FIREBOLT), _target(target),
+          _factory(factory)
+    {}
+
+    std::string toString() const;
+
+    std::string shorthandStr() const;
+
+    double calculateThreat(const Kwargs &kwargs) override;
+    double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
+    double calculateThreatDelta(/*Add modifiers*/ const Kwargs &kwargs) override;
+
+  private:
+    Combatant& _target;
+    const FireboltFactory &_factory;
+    RollType _rollType;
+  };
+}

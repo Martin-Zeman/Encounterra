@@ -22,6 +22,8 @@ namespace enc
         combatant->setAlreadyUsedSpellslotThisTurn(true);
         break;
 
+      case AbilityType::FIREBOLT: /*Nothing to do*/ break;
+
       default: break;
       }
   }
