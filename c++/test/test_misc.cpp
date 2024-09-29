@@ -191,16 +191,16 @@ namespace
     std::vector<Die> dmgDice = {{2, 6}, {1, 8}};
 
     // Test normal case
-    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, true, 2), 7.7, 1e-6);
+    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, true, 2), 9.2, 1e-6);
 
     // Test with immunity
     EXPECT_DOUBLE_EQ(meanDmgDcAttack(15, dmgDice, true, 2, true), 0.0);
 
     // Test with resistance
-    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, true, 2, false, true), 3.85, 1e-6);
+    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, true, 2, false, true), 4.6, 1e-6);
 
     // Test without half damage on success
-    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, false, 2), 5.775, 1e-6);
+    EXPECT_NEAR(meanDmgDcAttack(15, dmgDice, false, 2), 6.8999999999999995, 1e-6);
   }
 
   TEST(DamageCalculationTest, MeanDmgAutoHit)
@@ -208,13 +208,13 @@ namespace
     std::vector<Die> dmgDice = {{2, 6}, {1, 8}};
 
     // Test normal case
-    EXPECT_NEAR(meanDmgAutoHit(dmgDice), 13.0, 1e-6);
+    EXPECT_NEAR(meanDmgAutoHit(dmgDice), 11.5, 1e-6);
 
     // Test with immunity
     EXPECT_DOUBLE_EQ(meanDmgAutoHit(dmgDice, true), 0.0);    
     
     // Test with resistance
-    EXPECT_NEAR(meanDmgAutoHit(dmgDice, false, true), 6.5, 1e-6);
+    EXPECT_NEAR(meanDmgAutoHit(dmgDice, false, true), 5.75, 1e-6);
   }
 
   TEST(DamageCalculationTest, RollDice)
