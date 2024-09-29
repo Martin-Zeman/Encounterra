@@ -24,17 +24,16 @@ namespace enc
     static constexpr DamageType dmgType = DamageType::Fire;
 
     FireballFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource, bool hasSpellSculpting = false)
-        : _dc(dc), _abilityType(abilityType), _caster(caster), _resource(resource), _hasSpellSculpting(hasSpellSculpting)
+        : DirectThreatFactory("FireballFactory", caster), _dc(dc), _abilityType(abilityType), _resource(resource),
+          _hasSpellSculpting(hasSpellSculpting), _savingThrow(SavingThrow::DEX), _dmgDice({{8, 6}})
     {
-      _savingThrow = SavingThrow::DEX;
-      _dmgDice = {{8, 6}};
       // _additionalUpcastDmg = {{1, 6}};
     }
 
     std::string getAbilityName() const { return "Fireball"; }
 
     Coord findBestArgs(const Combatant &combatant) const;
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previous_action_in_dag = nullptr) override;
+    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
 
@@ -47,7 +46,6 @@ namespace enc
   private:
     int _dc;
     AbilityType _abilityType;
-    Combatant *_caster;
     Resource *_resource;
     bool _hasSpellSculpting;
     SavingThrow _savingThrow;

@@ -11,7 +11,7 @@ namespace enc
     setFlag(FactoryFlags::IS_MELEE);
   }
 
-  std::vector<std::shared_ptr<Actoid>> MeleeAttackFactory::createAll(void *previous_action_in_dag)
+  std::vector<std::shared_ptr<Actoid>> MeleeAttackFactory::createAll(void *previousActionInDag)
   {
     //! @todo
     return {};

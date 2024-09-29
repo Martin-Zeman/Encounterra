@@ -12,7 +12,7 @@ namespace enc
     setFlag(FactoryFlags::IS_RANGED);
   }
 
-  std::vector<std::shared_ptr<Actoid>> RangedAttackFactory::createAll(void *previous_action_in_dag)
+  std::vector<std::shared_ptr<Actoid>> RangedAttackFactory::createAll(void *previousActionInDag)
   {
     //! @todo
     return {};

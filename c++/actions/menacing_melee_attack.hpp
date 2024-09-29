@@ -17,7 +17,7 @@ namespace enc
 
     std::unique_ptr<AttackFactory> clone() const override { return std::make_unique<MenacingMeleeAttackFactory>(*this); }
 
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previous_action_in_dag = nullptr) override;
+    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
 

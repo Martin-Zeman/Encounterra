@@ -12,8 +12,8 @@ namespace enc
         _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities),
         _conditionImmunities(conditionImmunities), _type(type), _subtype(subtype), _level(level)
   {
-    _dodgeFactory = std::make_shared<DodgeFactory>();
-    _disengageFactory = std::make_shared<DisengageFactory>();
+    _dodgeFactory = std::make_shared<DodgeFactory>(this);
+    _disengageFactory = std::make_shared<DisengageFactory>(this);
     _actionFactories.push_back(_dodgeFactory);
     _actionFactories.push_back(_disengageFactory);
   }

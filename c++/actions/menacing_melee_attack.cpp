@@ -22,7 +22,7 @@ namespace enc
     // _actionType = (std::holds_alternative<Action>(_actionType)) ? Action::MENACING_MELEE_ATTACK : BonusAction::BONUS_MENACING_MELEE_ATTACK;
   }
 
-  std::vector<std::shared_ptr<Actoid>> MenacingMeleeAttackFactory::createAll(void *previous_action_in_dag)
+  std::vector<std::shared_ptr<Actoid>> MenacingMeleeAttackFactory::createAll(void *previousActionInDag)
   {
     //! @todo
     return {};

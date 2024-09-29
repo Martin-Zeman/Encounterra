@@ -42,8 +42,6 @@ namespace enc
 
   protected:
     ActoidFactory &_factory;
-
-  private:
     ActoidFlags _actoidFlags;
     AbilityType _abilityType;
   };
@@ -76,16 +74,22 @@ namespace enc
 
   class ActoidFactory
   {
+  public:
+    std::string _name;
+
   protected:
+    Combatant *_combatant;
     uint32_t _flags;
 
   public:
-    ActoidFactory() : _flags(static_cast<uint32_t>(FactoryFlags::DEFAULT)) {}
+    ActoidFactory(std::string name, Combatant *combatant) : _name(name), _combatant(combatant), _flags(static_cast<uint32_t>(FactoryFlags::DEFAULT))
+    {}
     void setFlag(FactoryFlags flag) { _flags |= static_cast<uint32_t>(flag); }
     void clearFlag(FactoryFlags flag) { _flags &= ~static_cast<uint32_t>(flag); }
     bool hasFlag(FactoryFlags flag) const { return (_flags & static_cast<uint32_t>(flag)) != 0; }
+    Combatant *getCombatant() { return _combatant; }
     virtual ~ActoidFactory() = default;
-    virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previous_action_in_dag = nullptr) = 0;
+    virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) = 0;
     virtual std::shared_ptr<Actoid> create(void *target) = 0;
     virtual std::optional<Resource *> getResource() = 0;
   };
@@ -93,8 +97,8 @@ namespace enc
   class DirectThreatFactory : public ActoidFactory
   {
   protected:
-    DirectThreatFactory() : ActoidFactory() { setFlag(FactoryFlags::IS_DIRECT_THREAT); }
-    virtual double calculateThreatToTarget(Combatant *target, const Kwargs& kwargs) = 0;
+    DirectThreatFactory(std::string name, Combatant *combatant) : ActoidFactory(name, combatant) { setFlag(FactoryFlags::IS_DIRECT_THREAT); }
+    virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) = 0;
     virtual double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) = 0;
     virtual double calculateMaxThreat() = 0;
   };

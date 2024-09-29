@@ -8,19 +8,18 @@ namespace enc
   AttackFactory::AttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType,
                                int attackRange, int critRange, Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit,
                                std::vector<DmgDieWithType> extraDmg, bool usesDex, bool twoHanded, Die toHitBonusDie)
-      : DirectThreatFactory(), _name(name), _combatant(combatant), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType),
-        _attackRange(attackRange), _shortRange(attackRange / 4), _critRange(critRange), _ammo(std::move(ammo)), _onHit(std::move(onHit)),
-        _extraDmg(extraDmg), _usesDex(usesDex), _twoHanded(twoHanded), _toHitBonusDie(toHitBonusDie)
+      : DirectThreatFactory(name, combatant), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType), _attackRange(attackRange),
+        _shortRange(attackRange / 4), _critRange(critRange), _ammo(std::move(ammo)), _onHit(std::move(onHit)), _extraDmg(extraDmg), _usesDex(usesDex),
+        _twoHanded(twoHanded), _toHitBonusDie(toHitBonusDie)
   {
     setFlag(FactoryFlags::IS_ATTACK_LIKE);
     setFlag(FactoryFlags::IS_HASTE_ELIGIBLE_ATTACK);
   }
 
   AttackFactory::AttackFactory(const AttackFactory &other)
-      : DirectThreatFactory(other), _name(other._name), _combatant(other._combatant), _toHit(other._toHit), _dmgDice(other._dmgDice),
-        _dmgBonus(other._dmgBonus), _dmgType(other._dmgType), _attackRange(other._attackRange), _shortRange(other._shortRange),
-        _critRange(other._critRange), _ammo(other._ammo), _extraDmg(other._extraDmg), _usesDex(other._usesDex), _twoHanded(other._twoHanded),
-        _toHitBonusDie(other._toHitBonusDie)
+      : DirectThreatFactory(other), _toHit(other._toHit), _dmgDice(other._dmgDice), _dmgBonus(other._dmgBonus), _dmgType(other._dmgType),
+        _attackRange(other._attackRange), _shortRange(other._shortRange), _critRange(other._critRange), _ammo(other._ammo),
+        _extraDmg(other._extraDmg), _usesDex(other._usesDex), _twoHanded(other._twoHanded), _toHitBonusDie(other._toHitBonusDie)
   {
     for(const auto &onHit : other._onHit)
       {
@@ -29,10 +28,10 @@ namespace enc
   }
 
   AttackFactory::AttackFactory(AttackFactory &&other) noexcept
-      : DirectThreatFactory(std::move(other)), _name(std::move(other._name)), _combatant(other._combatant), _toHit(other._toHit),
-        _dmgDice(std::move(other._dmgDice)), _dmgBonus(other._dmgBonus), _dmgType(other._dmgType), _attackRange(other._attackRange),
-        _shortRange(other._shortRange), _critRange(other._critRange), _ammo(std::move(other._ammo)), _onHit(std::move(other._onHit)),
-        _extraDmg(std::move(other._extraDmg)), _usesDex(other._usesDex), _twoHanded(other._twoHanded), _toHitBonusDie(other._toHitBonusDie)
+      : DirectThreatFactory(std::move(other)), _toHit(other._toHit), _dmgDice(std::move(other._dmgDice)), _dmgBonus(other._dmgBonus),
+        _dmgType(other._dmgType), _attackRange(other._attackRange), _shortRange(other._shortRange), _critRange(other._critRange),
+        _ammo(std::move(other._ammo)), _onHit(std::move(other._onHit)), _extraDmg(std::move(other._extraDmg)), _usesDex(other._usesDex),
+        _twoHanded(other._twoHanded), _toHitBonusDie(other._toHitBonusDie)
   {}
 
   AttackFactory &AttackFactory::operator=(const AttackFactory &other)
@@ -40,8 +39,6 @@ namespace enc
     if(this != &other)
       {
         DirectThreatFactory::operator=(other);
-        _name = other._name;
-        _combatant = other._combatant;
         _toHit = other._toHit;
         _dmgDice = other._dmgDice;
         _dmgBonus = other._dmgBonus;
@@ -69,8 +66,6 @@ namespace enc
     if(this != &other)
       {
         DirectThreatFactory::operator=(std::move(other));
-        _name = std::move(other._name);
-        _combatant = other._combatant;
         _toHit = other._toHit;
         _dmgDice = std::move(other._dmgDice);
         _dmgBonus = other._dmgBonus;
@@ -153,4 +148,25 @@ namespace enc
     //! @todo
     return 0;
   }
+
+  std::string Attack::toString() const
+  {
+    std::string formPrefix = "";
+    if(_factory.getCombatant()->getCurrentForm() != _factory.getCombatant()->getOriginalForm())
+      {
+        formPrefix = std::string(_factory.getCombatant()->getCurrentForm()->_name) + " ";
+      }
+    std::string hastedPrefix = (_abilityType > AbilityType::HASTE_ACTION_DELIMITER && _abilityType < AbilityType::PASSIVE_DELIMITER) ? "Hasted " : "";
+    return formPrefix + hastedPrefix + _factory._name + " on " + _target._name;
+  }
+
+  std::string Attack::shorthandStr() const
+  {
+    std::string hastedPrefix = (_abilityType > AbilityType::HASTE_ACTION_DELIMITER && _abilityType < AbilityType::PASSIVE_DELIMITER) ? "Hasted " : "";
+    return hastedPrefix + _factory._name;
+  }
+
+  double Attack::calculateThreat(const Kwargs &kwargs) { return 0; }
+  double Attack::calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; }
+  double Attack::calculateThreatDelta(const Kwargs &kwargs) { return 0; }
 }

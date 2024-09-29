@@ -10,9 +10,9 @@ namespace enc
     return Coord{0, 0}; // Placeholder
   }
 
-  std::vector<std::shared_ptr<Actoid>> FireballFactory::createAll(void *previous_action_in_dag)
+  std::vector<std::shared_ptr<Actoid>> FireballFactory::createAll(void *previousActionInDag)
   {
-    auto bestCoord = findBestArgs(*_caster);
+    auto bestCoord = findBestArgs(*_combatant);
     return {std::make_unique<Fireball>(bestCoord, *this)};
   }
 
@@ -30,7 +30,7 @@ namespace enc
   }
   double FireballFactory::calculateMaxThreat()
   {
-    auto bestCoord = findBestArgs(*_caster);
+    auto bestCoord = findBestArgs(*_combatant);
     return Fireball(bestCoord, *this).calculateThreat(Kwargs());
   }
 

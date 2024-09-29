@@ -13,6 +13,9 @@ namespace enc
 
   class AttackFactory : public DirectThreatFactory
   {
+
+    friend class Attack;
+
   public:
     AttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType,
                   int attackRange, int critRange = 1, Uses &&ammo = Uses(), std::vector<std::unique_ptr<OnHit>> onHit = {},
@@ -38,8 +41,6 @@ namespace enc
     bool isTwoHanded() { return _twoHanded; }
 
   protected:
-    std::string _name;
-    Combatant *_combatant;
     int _toHit;
     std::vector<Die> _dmgDice;
     int _dmgBonus;
@@ -55,4 +56,22 @@ namespace enc
     Die _toHitBonusDie;
   };
 
+  class Attack : public Actoid, public DirectThreat
+  {
+    Attack(AbilityType abilityType, Combatant &target, AttackFactory &factory, RollType rollType = RollType::STRAIGHT)
+        : Actoid(const_cast<AttackFactory &>(factory), ActoidFlags::IS_ATTACK_LIKE, abilityType), _target(target), _factory(factory),
+          _rollType(rollType)
+    {}
+
+    std::string toString() const;
+    std::string shorthandStr() const;
+    double calculateThreat(const Kwargs &kwargs) override;
+    double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
+    double calculateThreatDelta(const Kwargs &kwargs) override;
+
+  protected:
+    Combatant &_target;
+    AttackFactory &_factory;
+    RollType _rollType;
+  };
 }
