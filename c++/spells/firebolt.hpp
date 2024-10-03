@@ -23,7 +23,7 @@ namespace enc
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Fire;
 
-    static std::pair<int, int> getDmgDice(int level)
+    static Die getDmgDice(int level)
     {
       if(level >= 1 && level <= 4)
         {
@@ -67,7 +67,7 @@ namespace enc
     int _toHit;
     AbilityType _abilityType;
     Resource *_resource;
-    std::pair<int, int> _dmgDice;
+    Die _dmgDice;
   };
 
   class Firebolt : public Actoid, public DirectThreat
@@ -85,6 +85,9 @@ namespace enc
     double calculateThreat(const Kwargs &kwargs) override;
     double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(/*Add modifiers*/ const Kwargs &kwargs) override;
+
+    std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
   private:
     Combatant& _target;

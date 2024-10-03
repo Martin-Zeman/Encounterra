@@ -375,6 +375,11 @@ namespace enc
   int BattleMap::getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const
   {
     return getHopDistanceCoords(_combatantCoordinateCache.at(combatant1._instanceId), _combatantCoordinateCache.at(combatant2._instanceId));
+  }  
+  
+  double BattleMap::getCartesianDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const
+  {
+    return getCartesianDistanceCoords(_combatantCoordinateCache.at(combatant1._instanceId), _combatantCoordinateCache.at(combatant2._instanceId));
   }
 
   std::optional<Coord> BattleMap::getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
@@ -779,9 +784,9 @@ namespace enc
   std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulCircular(const Combatant *caster, int spellRange, int radius)
   {
     auto bb = getHarmfulBoundingBox(caster, radius);
-    int max_score = std::numeric_limits<int>::lowest();
-    Coord best_placement{};
-    std::vector<Combatant *> affected_combatants;
+    int maxScore = std::numeric_limits<int>::lowest();
+    Coord bestPlacement{};
+    std::vector<Combatant *> affectedCombatants;
     Teams &teams = Teams::getInstance();
 
     const Combatant *swallower = caster->getSwallower();
@@ -812,16 +817,16 @@ namespace enc
                   }
               }
 
-            if(score > max_score)
+            if(score > maxScore)
               {
-                max_score = score;
-                best_placement = curr_coords.get()[0];
-                affected_combatants = affected;
+                maxScore = score;
+                bestPlacement = curr_coords.get()[0];
+                affectedCombatants = affected;
               }
           }
       }
 
-    return {best_placement, max_score, affected_combatants};
+    return {bestPlacement, maxScore, affectedCombatants};
   }
 
   std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulSquare(const Combatant *caster, int spellRange, int length)

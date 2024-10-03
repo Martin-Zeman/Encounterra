@@ -32,7 +32,7 @@ namespace enc
 
     std::string getAbilityName() const { return "Fireball"; }
 
-    Coord findBestArgs(const Combatant &combatant) const;
+    Coord findBestArgs() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
@@ -49,8 +49,8 @@ namespace enc
     Resource *_resource;
     bool _hasSpellSculpting;
     SavingThrow _savingThrow;
-    std::vector<std::pair<int, int>> _dmgDice;
-    // std::vector<std::pair<int, int>> _additionalUpcastDmg;
+    std::vector<Die> _dmgDice;
+    // std::vector<Die>_additionalUpcastDmg;
   };
 
   class Fireball : public Actoid, public DirectThreat
@@ -74,8 +74,9 @@ namespace enc
     }
 
     double calculateThreat(const Kwargs &kwargs) override;
-    double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
-    double calculateThreatDelta(/*Add modifiers*/ const Kwargs &kwargs) override;
+    std::optional<std::vector<Coord>>
+    getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                      const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
   private:
     Coord _coord;

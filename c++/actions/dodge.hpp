@@ -25,6 +25,9 @@ namespace enc
   {
   public:
     Dodge(ActoidFactory &factory) : Actoid(factory, ActoidFlags::IS_MOVEMENT, AbilityType::DODGE) {}
+
+    std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
   };
 
 }

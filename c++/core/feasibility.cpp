@@ -89,7 +89,7 @@ namespace enc
       }
     else
       {
-        throw std::runtime_error("Unknown Ability Type in checkFeasibility!");
+        throw std::runtime_error("Unknown Ability Type in checkFeasibilityLight!");
       }
     switch(actoid.getAbilityType())
       {

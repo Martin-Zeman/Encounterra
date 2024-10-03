@@ -26,7 +26,7 @@ Vector2D normalize(const Vector2D& v) {
     return v / blaze::length(v);
 }
 
-class getHopDistance : public ::testing::Test
+class basicDistanceTests : public ::testing::Test
 {
 protected:
   BattleMap *battle_map;
@@ -42,7 +42,7 @@ protected:
   }
 };
 
-TEST_F(getHopDistance, HopDistanceDiagonalMedium) {
+TEST_F(basicDistanceTests, HopDistanceDiagonalMedium) {
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
     battle_map->setCombatantCoordinates(*test_goblin, Coord{4, 4});
 
@@ -55,7 +55,7 @@ TEST_F(getHopDistance, HopDistanceDiagonalMedium) {
         << "Incorrect distance between two large combatants";
 }
 
-TEST_F(getHopDistance, HopDistanceDiagonalLarge) {
+TEST_F(basicDistanceTests, HopDistanceDiagonalLarge) {
     test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
     test_goblin->setSize(Size::LARGE);
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
@@ -70,7 +70,7 @@ TEST_F(getHopDistance, HopDistanceDiagonalLarge) {
         << "Incorrect distance between two large combatants";
 }
 
-TEST_F(getHopDistance, HopDistanceSameY) {
+TEST_F(basicDistanceTests, HopDistanceSameY) {
     test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
     test_goblin->setSize(Size::LARGE);
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
@@ -85,7 +85,7 @@ TEST_F(getHopDistance, HopDistanceSameY) {
         << "Incorrect distance between two large combatants";
 }
 
-TEST_F(getHopDistance, HopDistanceSameX) {
+TEST_F(basicDistanceTests, HopDistanceSameX) {
     test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
     test_goblin->setSize(Size::LARGE);
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
@@ -100,7 +100,7 @@ TEST_F(getHopDistance, HopDistanceSameX) {
         << "Incorrect distance between two large combatants";
 }
 
-TEST_F(getHopDistance, HopDistanceRandom) {
+TEST_F(basicDistanceTests, HopDistanceRandom) {
     test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
     test_goblin->setSize(Size::LARGE);
     battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
@@ -115,6 +115,50 @@ TEST_F(getHopDistance, HopDistanceRandom) {
         << "Incorrect distance between two large combatants";
 }
 
+TEST_F(basicDistanceTests, CartesianDistanceDiagonal)
+{
+  test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  test_goblin->setSize(Size::LARGE);
+  battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
+  battle_map->setCombatantCoordinates(*test_goblin, Coord{4, 4});
+
+  auto draconic_sorcerer_coords = battle_map->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1);
+  auto goblin_coords = battle_map->getCombatantCoordinates(*test_goblin);
+
+  EXPECT_NEAR(battle_map->getCartesianDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 4.242, 0.001)
+    << "Incorrect distance between two large combatants";
+  EXPECT_NEAR(getCartesianDistanceCoords(draconic_sorcerer_coords, goblin_coords), 4.242, 0.001) << "Incorrect distance between two large combatants";
+}
+
+TEST_F(basicDistanceTests, CartesianDistanceSameY)
+{
+  test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  test_goblin->setSize(Size::LARGE);
+  battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
+  battle_map->setCombatantCoordinates(*test_goblin, Coord{6, 0});
+
+  auto draconic_sorcerer_coords = battle_map->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1);
+  auto goblin_coords = battle_map->getCombatantCoordinates(*test_goblin);
+
+  EXPECT_EQ(battle_map->getCartesianDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 5)
+    << "Incorrect distance between two large combatants";
+  EXPECT_EQ(getCartesianDistanceCoords(draconic_sorcerer_coords, goblin_coords), 5) << "Incorrect distance between two large combatants";
+}
+
+TEST_F(basicDistanceTests, CartesianDistanceSameX)
+{
+  test_draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  test_goblin->setSize(Size::LARGE);
+  battle_map->setCombatantCoordinates(*test_draconic_sorcerer_lvl_1, Coord{0, 0});
+  battle_map->setCombatantCoordinates(*test_goblin, Coord{0, 4});
+
+  auto draconic_sorcerer_coords = battle_map->getCombatantCoordinates(*test_draconic_sorcerer_lvl_1);
+  auto goblin_coords = battle_map->getCombatantCoordinates(*test_goblin);
+
+  EXPECT_EQ(battle_map->getCartesianDistanceCombatants(*test_draconic_sorcerer_lvl_1, *test_goblin), 3)
+    << "Incorrect distance between two large combatants";
+  EXPECT_EQ(getCartesianDistanceCoords(draconic_sorcerer_coords, goblin_coords), 3) << "Incorrect distance between two large combatants";
+}
 
 TEST(getAffectedByCone, Cone15Feet) {
     std::set<Coord> coords = getAffectedByCone({2, 0}, 45, TRANSLATE_CONE.at(SpellTarget::CONE_15), 15);

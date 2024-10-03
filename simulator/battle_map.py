@@ -287,7 +287,7 @@ class Map:
             self.cache_enabled = False
             yield self
         finally:
-            self.get_hop_distance_combatants = orig_dist_hop_func
+            self.get_hop_distance_combatantsget_hop_distance_combatants = orig_dist_hop_func
             self.get_cartesian_distance_combatants = orig_dist_cartesian_func
             self.cache_enabled = True
 

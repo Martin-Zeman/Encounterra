@@ -20,7 +20,9 @@ namespace enc
     std::shared_ptr<Actoid> create(void *target) override;
   };
 
-  class MeleeAttack : public Attack{
-
+  class MeleeAttack : public Attack
+  {
+    std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
   };
 }

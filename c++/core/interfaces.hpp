@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <blaze/Math.h>
 #include "core/types.hpp"
 #include "actions/action_types.hpp"
 
@@ -32,13 +33,16 @@ namespace enc
   class Actoid
   {
   public:
-    explicit Actoid(ActoidFactory& factory, ActoidFlags flags = ActoidFlags::DEFAULT, AbilityType abilityType = AbilityType::NOP)
+    explicit Actoid(ActoidFactory &factory, ActoidFlags flags = ActoidFlags::DEFAULT, AbilityType abilityType = AbilityType::NOP)
         : _factory(factory), _actoidFlags(flags), _abilityType(abilityType)
     {}
     virtual ~Actoid() = default;
     ActoidFlags getFlags() const { return _actoidFlags; }
     AbilityType getAbilityType() const { return _abilityType; }
     ActoidFactory &getFactory() { return _factory; }
+    virtual std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                                const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>())
+      = 0;
 
   protected:
     ActoidFactory &_factory;
@@ -107,14 +111,14 @@ namespace enc
   {
   public:
     virtual ~Threat() = default;
-    virtual double calculateThreat(const Kwargs &kwargs) = 0;
-    virtual double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) = 0;
+    virtual double calculateThreat(const Kwargs &kwargs) { return 0; };
+    virtual double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; };
   };
 
   class DirectThreat : public Threat
   {
   public:
     virtual ~DirectThreat() = default;
-    virtual double calculateThreatDelta(const Kwargs &kwargs) = 0;
+    virtual double calculateThreatDelta(const Kwargs &kwargs) { return 0; };
   };
 }

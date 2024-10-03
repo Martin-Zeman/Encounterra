@@ -5,8 +5,8 @@ namespace enc
   MeleeAttackFactory::MeleeAttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice, int dmgBonus,
                                          DamageType dmgType, int attackRange, int critRange, Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit,
                                          std::vector<DmgDieWithType> extraDmg, bool usesDex, bool twoHanded, Die toHitBonusDie)
-      : AttackFactory(name, combatant, toHit, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo), std::move(onHit), extraDmg, usesDex,
-                      twoHanded, toHitBonusDie)
+      : AttackFactory(name, combatant, toHit, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo), std::move(onHit), extraDmg,
+                      usesDex, twoHanded, toHitBonusDie)
   {
     setFlag(FactoryFlags::IS_MELEE);
   }
@@ -20,6 +20,12 @@ namespace enc
   std::shared_ptr<Actoid> MeleeAttackFactory::create(void *target)
   {
     //! @todo
+    return {};
+  }
+
+  std::optional<std::vector<Coord>>
+  MeleeAttack::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+  {
     return {};
   }
 }

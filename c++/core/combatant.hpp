@@ -127,6 +127,8 @@ namespace enc
     bool isVulnerableTo(DamageType dmgType);
     Spellslots &getSpellslots() { return *_spellslots; }
     int getLevel() { return _level; }
+    int getCurrentHp() { return _currHp; }
+    const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------

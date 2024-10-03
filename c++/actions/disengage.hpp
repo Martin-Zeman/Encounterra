@@ -24,5 +24,8 @@ namespace enc
   {
   public:
     Disengage(ActoidFactory &factory) : Actoid(factory, ActoidFlags::IS_MOVEMENT, AbilityType::DISENGAGE) {}
+
+    std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
   };
 }

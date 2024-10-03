@@ -27,7 +27,7 @@ namespace enc
   extern const std::unordered_map<SpellTarget, int> TRANSLATE_CONE;
   extern const std::unordered_map<SpellTarget, int> TRANSLATE_BOX;
 
-  enum class SpellRange
+  enum class SpellRange : int
   {
     SELF = -1,
     SIGHT = 0,

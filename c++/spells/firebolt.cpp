@@ -70,4 +70,10 @@ namespace enc
   double Firebolt::calculateThreat(const Kwargs &kwargs) { return 0; }
   double Firebolt::calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; }
   double Firebolt::calculateThreatDelta(/*Add modifiers*/ const Kwargs &kwargs) { return 0; }
+
+  std::optional<std::vector<Coord>>
+  Firebolt::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+  {
+    return {};
+  }
 }
