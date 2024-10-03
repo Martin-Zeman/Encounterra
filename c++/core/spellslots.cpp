@@ -2,9 +2,23 @@
 
 namespace enc
 {
-  bool Spellslots::hasUses(int level) const { return _currSpellslots.at(level) > 0; }
+  bool Spellslots::hasUses(int level) const
+  {
+    if(level == NO_LEVEL)
+      {
+        throw std::runtime_error("Must specify a spellslot level to use!");
+      }
+    return _currSpellslots.at(level) > 0;
+  }
 
-  int Spellslots::getUses(int level) const { return _currSpellslots.at(level); }
+  int Spellslots::getUses(int level) const
+  {
+    if(level == NO_LEVEL)
+      {
+        throw std::runtime_error("Must specify a spellslot level to get!");
+      }
+    return _currSpellslots.at(level);
+  }
 
   void Spellslots::useResource(int level)
   {

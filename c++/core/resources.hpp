@@ -29,8 +29,6 @@ namespace enc
     Resource(ResourceRefreshType refreshType) : _refreshType(refreshType) {}
     virtual ~Resource() = default;
 
-    virtual bool hasUses(int level) const = 0;
-    virtual int getUses(int level) const = 0;
     virtual void useResource(int amount = 1) = 0;
     virtual void reset() = 0;
     virtual void depleteResource(ResourceDepletionLevel level) = 0;
@@ -39,16 +37,32 @@ namespace enc
     ResourceRefreshType _refreshType;
   };
 
-  class Uses : public Resource
+  class LeveledResource : public Resource
+  {
+  public:
+    LeveledResource(ResourceRefreshType refreshType) : Resource(refreshType) {}
+    virtual bool hasUses(int level) const = 0;
+    virtual int getUses(int level) const = 0;
+  };
+
+  class UnleveledResource : public Resource
+  {
+  public:
+    UnleveledResource(ResourceRefreshType refreshType) : Resource(refreshType) {}
+    virtual bool hasUses() const = 0;
+    virtual int getUses() const = 0;
+  };
+
+  class Uses : public UnleveledResource
   {
   public:
     static const int INFINITE_USES = std::numeric_limits<int>::max();
 
-    Uses() : Resource(ResourceRefreshType::LONG_REST), _currUses(Uses::INFINITE_USES), _maxUses(Uses::INFINITE_USES) {}
-    Uses(int uses, ResourceRefreshType refreshType = ResourceRefreshType::LONG_REST) : Resource(refreshType), _currUses(uses), _maxUses(uses) {}
+    Uses() : UnleveledResource(ResourceRefreshType::LONG_REST), _currUses(Uses::INFINITE_USES), _maxUses(Uses::INFINITE_USES) {}
+    Uses(int uses, ResourceRefreshType refreshType = ResourceRefreshType::LONG_REST) : UnleveledResource(refreshType), _currUses(uses), _maxUses(uses) {}
 
-    bool hasUses(int level) const override { return _currUses > 0; } // level is ignored in this case
-    int getUses(int level) const override { return _currUses; }      // level is ignored in this case
+    bool hasUses() const override { return _currUses > 0; } // level is ignored in this case
+    int getUses() const override { return _currUses; }      // level is ignored in this case
     void useResource(int uses = 1) override { _currUses -= uses; }
     void addResource(int uses = 1) { _currUses += uses; }
     void setResource(int uses) { _currUses = uses; }
