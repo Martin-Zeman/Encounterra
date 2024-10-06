@@ -92,4 +92,6 @@ namespace enc
       return coord[0] >= 0 && coord[0] < static_cast<int>(mapSize) && coord[1] >= 0 && coord[1] < static_cast<int>(mapSize);
     });
   }
+
+  Size Coords::getSize() const { return _size; }
 }

@@ -103,7 +103,7 @@ namespace enc
   protected:
     DirectThreatFactory(std::string name, Combatant *combatant) : ActoidFactory(name, combatant) { setFlag(FactoryFlags::IS_DIRECT_THREAT); }
     virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) = 0;
-    virtual double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) = 0;
+    virtual double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) { return 0; }; //  Not always needed
     virtual double calculateMaxThreat() = 0;
   };
 

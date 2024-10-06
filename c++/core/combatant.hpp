@@ -120,7 +120,7 @@ namespace enc
     Combatant *getGrappledTarget();
     std::optional<ConditionWithDC> needsToBreakOutOfGrapple();
     void breakOutOfGrapple();
-    bool isAffectedByAny(const std::vector<Conditions> &conditions);
+    bool isAffectedByAny(const std::vector<Conditions> &conditions) const;
     void setResourceDepletionLevel(ResourceDepletionLevel level) { _resouceDepletionLevel = level; }
     bool isImmuneTo(DamageType dmgType);
     bool isResistantTo(DamageType dmgType);

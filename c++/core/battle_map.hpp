@@ -60,8 +60,14 @@ namespace enc
     std::vector<Coord> reconstructFromShortestPath(const blaze::DynamicMatrix<Coord> &shortest_paths, const Coord &source, const Coord &target);
     int getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
     double getCartesianDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
+    std::unordered_set<Coord> getAdjacentCoords(const Coords &coords) const;
     std::optional<Coord> getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
                                                       const Coords &targetLocation, const blaze::DynamicVector<int> &distances, int rng = 1);
+    template <typename DistType>
+    std::tuple<const Combatant *, DistType>
+    getNearest(const Combatant &combatant, Side side = Side::ENEMY, DistanceMetric distType = DistanceMetric::HOP) const;
+    bool isEnemyAdjacent(const Combatant &combatant) const;
+    bool isAllyAdjacentToTarget(const Combatant &combatant, const Combatant &target) const;
     std::optional<std::vector<Coord>>
     getPathToCombatant(const Combatant &combatant, const Combatant &target, const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>(), int rng = 1, bool considerAOO = false);
@@ -70,7 +76,7 @@ namespace enc
                    const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>(), bool considerAOO = false);
     void removeCombatant(const Combatant &combatant);
     bool removeCombatantIfDead(Combatant &combatant);
-    int getCombatantGridValueAt(const Coord &coord);
+    int getCombatantGridValueAt(const Coord &coord) const;
     std::tuple<Coord, int, std::vector<Combatant *>>
     findBestPlacementHarmfulCircular(const Combatant *caster, int spellRange, int radius);
     std::tuple<Coord, int, std::vector<Combatant *>> findBestPlacementHarmfulSquare(const Combatant *caster, int spellRange, int length);

@@ -222,6 +222,18 @@ namespace enc
     ACTION
   };
 
+  enum class Side
+  {
+    ENEMY,
+    ALLY
+  };  
+  
+  enum class DistanceMetric
+  {
+    HOP,
+    CARTESIAN
+  };
+
   enum class RollType : uint8_t
   {
     STRAIGHT = 1 << 0,

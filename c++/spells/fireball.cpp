@@ -41,11 +41,7 @@ namespace enc
     return 0;
   }
 
-  double FireballFactory::calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/)
-  {
-    // No need for this ability
-    return 0;
-  }
+
   double FireballFactory::calculateMaxThreat()
   {
     auto bestCoord = findBestArgs();

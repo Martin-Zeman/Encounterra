@@ -1281,6 +1281,104 @@ TEST_F(BattleMapTest, PushLargeCombatant)
   battleMap->pushCombatantAwayFrom({14.5, 14.5}, ogre, 4);
   EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{11, 1}));
 }
+
+TEST_F(BattleMapTest, GetAdjacentCoordsMedium)
+{
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {5, 7});
+  battleMap->setCombatantCoordinates(*goblin, {6, 7});
+  auto coords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  battleMap->placeTerrain({5, 6}, Terrain::IMPASSABLE_TERRAIN);
+  auto adj = battleMap->getAdjacentCoords(coords);
+  std::unordered_set<Coord> expected = {{4, 7}, {6, 7}, {4, 8}, {5, 8}, {6, 8}, {4, 6}, {6, 6}};
+  EXPECT_EQ(adj, expected);
+}
+
+TEST_F(BattleMapTest, GetAdjacentCoordsLarge)
+{
+  draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  goblin->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {5, 7});
+  battleMap->setCombatantCoordinates(*goblin, {5, 9});
+  auto coords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  auto adj = battleMap->getAdjacentCoords(coords);
+  std::unordered_set<Coord> expected = {{4, 6}, {4, 7}, {4, 8}, {4, 9}, {5, 6}, {5, 9}, {6, 6}, {6, 9}, {7, 6}, {7, 7}, {7, 8}, {7, 9}};
+  EXPECT_EQ(adj, expected);
+}
+
+TEST_F(BattleMapTest, GetAdjacentCoordsLargeCorner)
+{
+  draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 1});
+  auto coords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  battleMap->placeTerrain({2, 3}, Terrain::IMPASSABLE_TERRAIN);
+  auto adj = battleMap->getAdjacentCoords(coords);
+  std::unordered_set<Coord> expected = {{0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {0, 3}, {1, 3}};
+  EXPECT_EQ(adj, expected);
+}
+
+TEST_F(BattleMapTest, GetAdjacentCoordsHugeWithTerrain)
+{
+  draconic_sorcerer_lvl_1->setSize(Size::HUGE);
+  goblin->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {8, 2});
+  battleMap->setCombatantCoordinates(*goblin, {11, 2});
+  auto coords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  battleMap->placeTerrain({7, 3}, Terrain::IMPASSABLE_TERRAIN);
+  battleMap->placeTerrain({8, 5}, Terrain::IMPASSABLE_TERRAIN);
+  auto adj = battleMap->getAdjacentCoords(coords);
+  std::unordered_set<Coord> expected
+    = {{7, 1}, {7, 2}, {7, 4}, {7, 5}, {8, 1}, {9, 1}, {9, 5}, {10, 1}, {10, 5}, {11, 1}, {11, 2}, {11, 3}, {11, 4}, {11, 5}};
+  EXPECT_EQ(adj, expected);
+}
+
+TEST_F(BattleMapTest, GetNearestFreeAdjacentCoord)
+{
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::RED);
+  session->addCombatant(goblin, Color::BLUE);
+
+  battleMap->buildBaseAdjacencyMatrix();
+  goblin->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 7});
+  battleMap->setCombatantCoordinates(*goblin, {5, 7});
+  auto [distances, _] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
+  auto myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  auto targetCoords = battleMap->getCombatantCoordinates(*goblin);
+  auto nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  EXPECT_EQ(nearest.value(), (Coord{4, 7}));
+
+  battleMap->moveCombatant(*draconic_sorcerer_lvl_1, {3, 9});
+  myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  EXPECT_EQ(nearest.value(), (Coord{4, 9}));
+
+  battleMap->moveCombatant(*draconic_sorcerer_lvl_1, {8, 6});
+  myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  EXPECT_EQ(nearest.value(), (Coord{7, 6}));
+
+  battleMap->moveCombatant(*draconic_sorcerer_lvl_1, {7, 11});
+  myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  EXPECT_EQ(nearest.value(), (Coord{7, 9}));
+}
+
+TEST_F(BattleMapTest, GetNearestFreeAdjacentCoordLargeHuge)
+{
+  battleMap->buildBaseAdjacencyMatrix();
+  draconic_sorcerer_lvl_1->setSize(Size::HUGE);
+  goblin->setSize(Size::LARGE);
+  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(goblin, Color::BLUE);
+  session->addCombatant(bugbear, Color::RED);
+  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 10});
+  battleMap->setCombatantCoordinates(*goblin, {9, 10});
+  battleMap->setCombatantCoordinates(*bugbear, {9, 13});
+  auto [distances, _] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
+  auto myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  auto targetCoords = battleMap->getCombatantCoordinates(*bugbear);
+  auto nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  EXPECT_NE(nearest.value(), (Coord{7, 10}));
+}
 }
 
 // TEST_F(BattleMapTest, FindBestPlacementHarmfulSquareThunderwave)

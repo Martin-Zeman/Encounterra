@@ -176,7 +176,7 @@ namespace enc
       }
   }
 
-  bool Combatant::isAffectedByAny(const std::vector<Conditions> &conditions)
+  bool Combatant::isAffectedByAny(const std::vector<Conditions> &conditions) const
   {
     for(const auto &condition : conditions)
       {

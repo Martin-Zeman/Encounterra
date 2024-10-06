@@ -382,6 +382,42 @@ namespace enc
     return getCartesianDistanceCoords(_combatantCoordinateCache.at(combatant1._instanceId), _combatantCoordinateCache.at(combatant2._instanceId));
   }
 
+  std::unordered_set<Coord> BattleMap::getAdjacentCoords(const Coords &coords) const
+  {
+    std::unordered_set<Coord> adjacentCoords;
+    const auto &selfCoords = coords.get();
+
+    for(const auto &coord : selfCoords)
+      {
+        for(int i = -1; i <= 1; ++i)
+          {
+            for(int j = -1; j <= 1; ++j)
+              {
+                if(i == 0 && j == 0)
+                  continue;
+
+                int x = coord[0] + i;
+                int y = coord[1] + j;
+
+                // Check if the new coordinates are within the self coordinates
+                bool inSelfCoords = std::any_of(selfCoords.begin(), selfCoords.end(), [x, y](const auto &c) { return c[0] == x && c[1] == y; });
+
+                if(inSelfCoords || x < 0 || x >= _size || y < 0 || y >= _size)
+                  {
+                    continue;
+                  }
+
+                if(_terrainGrid(x, y) != static_cast<int>(Terrain::IMPASSABLE_TERRAIN))
+                  {
+                    adjacentCoords.insert({x, y});
+                  }
+              }
+          }
+      }
+
+    return adjacentCoords;
+  }
+
   std::optional<Coord> BattleMap::getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
                                                                const Coords &targetLocation, const blaze::DynamicVector<int> &distances, int rng)
   {
@@ -399,6 +435,76 @@ namespace enc
 
     return adjacentCoords[0];
   }
+
+  template <typename DistType>
+  std::tuple<const Combatant *, DistType> BattleMap::getNearest(const Combatant &combatant, Side side, DistanceMetric distType) const
+  {
+    auto teamFunc = (side == Side::ENEMY) ? &Teams::areEnemies : &Teams::areAllies;
+
+    std::function<DistType(const Coords &, const Coords &)> distFunc;
+    if constexpr(std::is_same_v<DistType, int>)
+      {
+        distFunc = &getHopDistanceCoords;
+      }
+    else if constexpr(std::is_same_v<DistType, double>)
+      {
+        distFunc = &getCartesianDistanceCoords;
+      }
+    else
+      {
+        throw std::invalid_argument("Unsupported distance type");
+      }
+
+    DistType minDist = std::numeric_limits<DistType>::max();
+    const Combatant *nearest = nullptr;
+    const Coords &selfPosition = getCombatantCoordinates(combatant);
+
+    for(const auto &[potentialTarget, coord] : _combatantCoordinateCache)
+      {
+        if(potentialTarget == combatant._instanceId)
+          continue;
+
+        const Combatant *potentialTargetCombatant = Teams::getInstance().getCombatantById(potentialTarget);
+        if(!potentialTargetCombatant || !potentialTargetCombatant->isAlive())
+          continue;
+
+        DistType dist = distFunc(selfPosition, coord);
+        if((Teams::getInstance().*teamFunc)(*potentialTargetCombatant, combatant) && dist < minDist)
+          {
+            minDist = dist;
+            nearest = potentialTargetCombatant;
+          }
+      }
+
+    return std::make_tuple(nearest, minDist);
+  }
+
+bool BattleMap::isEnemyAdjacent(const Combatant &combatant) const
+{
+  auto [nearest, dist] = getNearest<int>(combatant, Side::ENEMY, DistanceMetric::HOP);
+  return nearest && dist == 1;
+}
+
+bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combatant &target) const
+{
+  const Coords &targetCoords = getCombatantCoordinates(target);
+
+  std::unordered_set<Coord> adjacentCoords = getAdjacentCoords(targetCoords);
+  for(const auto &adjacentCoord : adjacentCoords)
+    {
+      int combatantId = getCombatantGridValueAt(adjacentCoord);
+      if(combatantId != -1)
+        {
+          const Combatant *potentialAlly = Teams::getInstance().getCombatantById(combatantId);
+          if(potentialAlly && potentialAlly != &combatant && Teams::getInstance().areAllies(combatant, *potentialAlly)
+             && !potentialAlly->isAffectedByAny({Conditions::INCAPACITATED}))
+            {
+              return true;
+            }
+        }
+    }
+  return false;
+}
 
   std::optional<std::vector<Coord>>
   BattleMap::getPathToCombatant(const Combatant &combatant, const Combatant &target, const blaze::DynamicVector<int> &distances,
@@ -749,7 +855,7 @@ namespace enc
     return true;
   }
 
-  int BattleMap::getCombatantGridValueAt(const Coord &coord) { return _combatantGrid(coord[0], coord[1]); }
+  int BattleMap::getCombatantGridValueAt(const Coord &coord) const { return _combatantGrid(coord[0], coord[1]); }
 
   blaze::StaticMatrix<int, 2, 2> BattleMap::getHarmfulBoundingBox(const Combatant *caster, int inflation)
   {

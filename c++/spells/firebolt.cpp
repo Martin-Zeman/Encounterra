@@ -1,5 +1,6 @@
 #include "spells/firebolt.hpp"
 #include "core/combatant.hpp"
+#include "core/battle_map.hpp"
 #include <memory>
 #include <limits>
 
@@ -35,7 +36,27 @@ namespace enc
     return std::make_shared<Firebolt>(*static_cast<Combatant*>(target), *this);
   }
 
-  double FireboltFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) { return 0; }
+  double FireboltFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs)
+  {
+    BattleMap &battleMap = BattleMap::getInstance();
+    Combatant *swallower = target->getSwallower();
+    // Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).get()[0];
+    if(swallower)
+      {
+        return 0;
+      }
+    if(battleMap.getCartesianDistanceCombatants(*_combatant, *target) <= static_cast<int>(FireboltFactory::range))
+      {
+        auto rollType = battleMap.isEnemyAdjacent(*_combatant) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
+        int acDifference = std::max(0, std::min(20, target->getAC() - _toHit));
+        int toHitTotal = _toHit + ROLL_TYPE_DELTA.at(rollType).at(acDifference);
+        return meanDmg(toHitTotal, {_dmgDice}, 0, target->getAC(), target->isImmuneTo(FireboltFactory::dmgType),
+                       target->isResistantTo(FireboltFactory::dmgType), ROLL_TYPE_CRIT_DELTA.at(rollType));
+      }
+
+    return 0;
+  }
+
   double FireboltFactory::calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/)
   {
     return 0;
@@ -74,6 +95,30 @@ namespace enc
   std::optional<std::vector<Coord>>
   Firebolt::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
+    FireboltFactory &factory = dynamic_cast<FireboltFactory &>(getFactory());
+    BattleMap &battleMap = BattleMap::getInstance();
+    Combatant *swallower = factory._combatant->getSwallower();
+    Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).get()[0];
+    if(swallower)
+      {
+        if(swallower == &_target)
+          {
+            std::vector<Coord> coords = {currCoord};
+            return coords;
+          }
+        return {};
+      }
+
+    if(!factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+      {
+        return battleMap.getFreeCoordsInCartesianRange(battleMap.getCombatantCoordinates(_target).get(), distances, factory._combatant->getSize(),
+                                                       static_cast<int>(FireboltFactory::range), factory._combatant->_instanceId);
+      }
+    else if(battleMap.getCartesianDistanceCombatants(*factory._combatant, _target) <= static_cast<int>(FireboltFactory::range))
+      {
+        std::vector<Coord> coords = {currCoord};
+        return coords;
+      }
     return {};
   }
 }
