@@ -8,7 +8,7 @@ namespace enc
 {
 
   FireboltFactory::FireboltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource)
-      : DirectThreatFactory("FireboltFactory", caster), _toHit(toHit), _abilityType(abilityType), _resource(resource),
+      : DirectThreatFactory("FireboltFactory", caster, abilityType), _toHit(toHit), _resource(resource),
         _dmgDice(FireboltFactory::getDmgDice(caster->getLevel()))
   {
     setFlag(FactoryFlags::IS_ATTACK_LIKE);
@@ -57,9 +57,32 @@ namespace enc
     return 0;
   }
 
-  double FireboltFactory::calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/)
+  double FireboltFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers)
   {
-    return 0;
+        if (target->isImmuneTo(FireboltFactory::dmgType))
+    {
+        return 0;
+    }
+
+    int modToHitFlat = modifiers.getOrDefault(ThreatModifierType::TO_HIT_FLAT, 0);
+    Die modToHitDie = modifiers.getOrDefault(ThreatModifierType::TO_HIT_DIE, Die{0, 0});
+    RollType rollType = modifiers.getOrDefault(ThreatModifierType::ROLL_TYPE, RollType::STRAIGHT);
+    int targetAC = modifiers.getOrDefault(ThreatModifierType::TARGET_AC, 0);
+
+    int totalTargetAC = targetAC + target->getAC();
+    double toHitTotal = _toHit + modToHitFlat + avgRoll(modToHitDie);
+    toHitTotal += ROLL_TYPE_DELTA.at(rollType).at(std::max(0, std::min(totalTargetAC - static_cast<int>(toHitTotal), 20)));
+    double totalCrit = ROLL_TYPE_CRIT_DELTA.at(rollType);
+
+    double modifiedThreat = meanDmg(toHitTotal, {_dmgDice}, 0, totalTargetAC,
+                                    target->isImmuneTo(FireboltFactory::dmgType),
+                                    target->isResistantTo(FireboltFactory::dmgType), totalCrit);
+
+    double originalThreat = meanDmg(_toHit, {_dmgDice}, 0, target->getAC(),
+                                    target->isImmuneTo(FireboltFactory::dmgType),
+                                    target->isResistantTo(FireboltFactory::dmgType), 1);
+
+    return modifiedThreat - originalThreat;
   }
 
   double FireboltFactory::calculateMaxThreat()

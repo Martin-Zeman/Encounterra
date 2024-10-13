@@ -187,4 +187,16 @@ namespace enc
       }
     return false;
   }
+
+  std::shared_ptr<ActoidFactory>& Combatant::getActionFactory(AbilityType type)
+    {
+        for (auto& factory : _actionFactories)
+        {
+            if (factory->getAbilityType() == type)
+            {
+                return factory;
+            }
+        }
+        throw std::runtime_error("Action factory not found for the given AbilityType");
+    }
 }

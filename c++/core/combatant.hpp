@@ -20,6 +20,7 @@
 #include "spellslots.hpp"
 #include "actions/action_types.hpp"
 #include "actions/action_constants.hpp"
+#include "spells/firebolt.hpp"
 
 namespace enc
 {
@@ -129,6 +130,7 @@ namespace enc
     int getLevel() { return _level; }
     int getCurrentHp() { return _currHp; }
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
+    std::shared_ptr<ActoidFactory>& getActionFactory(AbilityType type);
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,7 +141,7 @@ namespace enc
     std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
                                                   DamageType damageType, int attackRange)
     {
-      auto factory = std::make_shared<MeleeAttackFactory>(name, owner, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = std::make_shared<MeleeAttackFactory>(name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -147,7 +149,7 @@ namespace enc
     std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
                                                    int dmgBonus, DamageType damageType, int attackRange)
     {
-      auto factory = std::make_shared<RangedAttackFactory>(name, owner, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = std::make_shared<RangedAttackFactory>(name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -159,7 +161,12 @@ namespace enc
     std::shared_ptr<ActoidFactory> addDash() { return nullptr; }
     std::shared_ptr<ActoidFactory> addDisengage() { return nullptr; }
     std::shared_ptr<ActoidFactory> addFireball() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addFirebolt() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addFirebolt() { 
+      auto factory = std::make_shared<FireboltFactory>(_spellToHit, AbilityType::FIREBOLT, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+
+     }
     std::shared_ptr<ActoidFactory> addChaosBolt() { return nullptr; }
     std::shared_ptr<ActoidFactory> addHaste() { return nullptr; }
     std::shared_ptr<ActoidFactory> addHungerOfHadar() { return nullptr; }

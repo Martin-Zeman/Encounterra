@@ -133,7 +133,10 @@ namespace enc
   public:
     Spellslots(const std::unordered_map<int, int> &spellslotTable, ResourceRefreshType refreshType = ResourceRefreshType::LONG_REST)
         : Resource(refreshType), _maxSpellslots(spellslotTable), _currSpellslots(spellslotTable)
-    {}
+    {
+      _maxSpellslots[0] = std::numeric_limits<int>::max();
+      _currSpellslots[0] = std::numeric_limits<int>::max();
+    }
 
     bool hasUses(int level) const override;
 

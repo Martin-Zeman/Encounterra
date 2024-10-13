@@ -5,6 +5,7 @@
 #include <vector>
 #include <blaze/Math.h>
 #include "core/types.hpp"
+#include "core/threat_modifiers.hpp"
 #include "actions/action_types.hpp"
 
 namespace enc
@@ -38,7 +39,7 @@ namespace enc
     {}
     virtual ~Actoid() = default;
     ActoidFlags getFlags() const { return _actoidFlags; }
-    AbilityType getAbilityType() const { return _abilityType; }
+    AbilityType getAbilityType() const { return _factory.getAbilityType(); }
     ActoidFactory &getFactory() { return _factory; }
     virtual std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>())
@@ -84,9 +85,11 @@ namespace enc
   protected:
     Combatant *_combatant;
     uint32_t _flags;
+    AbilityType _abilityType;
 
   public:
-    ActoidFactory(std::string name, Combatant *combatant) : _name(name), _combatant(combatant), _flags(static_cast<uint32_t>(FactoryFlags::DEFAULT))
+    ActoidFactory(std::string name, Combatant *combatant, AbilityType abilityType)
+        : _name(name), _combatant(combatant), _flags(static_cast<uint32_t>(FactoryFlags::DEFAULT)), _abilityType(abilityType)
     {}
     void setFlag(FactoryFlags flag) { _flags |= static_cast<uint32_t>(flag); }
     void clearFlag(FactoryFlags flag) { _flags &= ~static_cast<uint32_t>(flag); }
@@ -96,14 +99,18 @@ namespace enc
     virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) = 0;
     virtual std::shared_ptr<Actoid> create(void *target) = 0;
     virtual std::optional<Resource *> getResource() = 0;
+    AbilityType getAbilityType() const { return _abilityType; }
   };
 
   class DirectThreatFactory : public ActoidFactory
   {
   protected:
-    DirectThreatFactory(std::string name, Combatant *combatant) : ActoidFactory(name, combatant) { setFlag(FactoryFlags::IS_DIRECT_THREAT); }
+    DirectThreatFactory(std::string name, Combatant *combatant, AbilityType abilityType) : ActoidFactory(name, combatant, abilityType)
+    {
+      setFlag(FactoryFlags::IS_DIRECT_THREAT);
+    }
     virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) = 0;
-    virtual double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) { return 0; }; //  Not always needed
+    virtual double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) { return 0; }; //  Not always needed
     virtual double calculateMaxThreat() = 0;
   };
 

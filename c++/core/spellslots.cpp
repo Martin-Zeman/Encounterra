@@ -22,6 +22,10 @@ namespace enc
 
   void Spellslots::useResource(int level)
   {
+    if (level == 0)
+    {
+      return;
+    }
     if(_currSpellslots.find(level) != _currSpellslots.end())
       {
         _currSpellslots[level]--;
@@ -41,13 +45,19 @@ namespace enc
       case ResourceDepletionLevel::FULLY_DEPLETED:
         for(auto &slot : _currSpellslots)
           {
-            slot.second = 0;
+            if(slot.first != 0) // Don't deplete cantrips
+              {
+                slot.second = 0;
+              }
           }
         break;
       case ResourceDepletionLevel::PARTIALLY_DEPLETED:
         for(auto &slot : _currSpellslots)
           {
-            slot.second = _maxSpellslots[slot.first] / 2;
+            if(slot.first != 0) // Don't deplete cantrips
+              {
+                slot.second = _maxSpellslots[slot.first] / 2;
+              }
           }
         break;
       default: break;

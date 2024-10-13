@@ -10,5 +10,6 @@ namespace enc
   {
     _instanceId = generateInstanceId();
     addSpellSlots();
+    addFirebolt();
   }
 }

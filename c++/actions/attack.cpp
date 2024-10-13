@@ -5,12 +5,13 @@
 namespace enc
 {
 
-  AttackFactory::AttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType,
-                               int attackRange, int critRange, Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit,
-                               std::vector<DmgDieWithType> extraDmg, bool usesDex, bool twoHanded, Die toHitBonusDie)
-      : DirectThreatFactory(name, combatant), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType), _attackRange(attackRange),
-        _shortRange(attackRange / 4), _critRange(critRange), _ammo(std::move(ammo)), _onHit(std::move(onHit)), _extraDmg(extraDmg), _usesDex(usesDex),
-        _twoHanded(twoHanded), _toHitBonusDie(toHitBonusDie)
+  AttackFactory::AttackFactory(const std::string &name, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice,
+                               int dmgBonus, DamageType dmgType, int attackRange, int critRange, Uses &&ammo,
+                               std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg, bool usesDex, bool twoHanded,
+                               Die toHitBonusDie)
+      : DirectThreatFactory(name, combatant, abilityType), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType),
+        _attackRange(attackRange), _shortRange(attackRange / 4), _critRange(critRange), _ammo(std::move(ammo)), _onHit(std::move(onHit)),
+        _extraDmg(extraDmg), _usesDex(usesDex), _twoHanded(twoHanded), _toHitBonusDie(toHitBonusDie)
   {
     setFlag(FactoryFlags::IS_ATTACK_LIKE);
     setFlag(FactoryFlags::IS_HASTE_ELIGIBLE_ATTACK);
@@ -138,7 +139,7 @@ namespace enc
     return 0.0;
   }
 
-  double AttackFactory::calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/)
+  double AttackFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers)
   {
     //! @todo
     return 0;

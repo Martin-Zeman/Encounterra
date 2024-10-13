@@ -60,12 +60,11 @@ namespace enc
     std::optional<Resource *> getResource() override { return _resource; }
 
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) override;
-    double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) override;
+    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) override;
     double calculateMaxThreat() override;
 
   private:
     int _toHit;
-    AbilityType _abilityType;
     Resource *_resource;
     Die _dmgDice;
   };

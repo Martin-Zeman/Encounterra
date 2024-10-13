@@ -17,8 +17,8 @@ namespace enc
     friend class Attack;
 
   public:
-    AttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType,
-                  int attackRange, int critRange = 1, Uses &&ammo = Uses(), std::vector<std::unique_ptr<OnHit>> onHit = {},
+    AttackFactory(const std::string &name, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice, int dmgBonus,
+                  DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(), std::vector<std::unique_ptr<OnHit>> onHit = {},
                   std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false, bool twoHanded = false, Die toHitBonusDie = {});
 
     AttackFactory(const AttackFactory& other);
@@ -35,7 +35,7 @@ namespace enc
     std::vector<Combatant *> getEligibleTargets() const;
     std::optional<Resource *> getResource() override { return &_ammo; }
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) override;
-    double calculateThreatToTargetDelta(Combatant *target /*Add modifiers*/) override;
+    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) override;
     double calculateMaxThreat() override;
     bool usesDex() { return _usesDex; }
     bool isTwoHanded() { return _twoHanded; }

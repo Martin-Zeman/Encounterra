@@ -2,12 +2,12 @@
 
 namespace enc
 {
-  MenacingMeleeAttackFactory::MenacingMeleeAttackFactory(const std::string &name, Combatant *combatant, int toHit, std::vector<Die> dmgDice,
-                                                         int dmgBonus, DamageType dmgType, int attackRange, int critRange, Uses &&ammo,
-                                                         std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg,
+  MenacingMeleeAttackFactory::MenacingMeleeAttackFactory(const std::string &name, Combatant *combatant, AbilityType abilityType, int toHit,
+                                                         std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange,
+                                                         Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg,
                                                          bool usesDex, bool twoHanded, Die toHitBonusDie)
-      : MeleeAttackFactory(name, combatant, toHit, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo), std::move(onHit), extraDmg, usesDex,
-                           twoHanded, toHitBonusDie)
+      : MeleeAttackFactory(name, combatant, toHit, abilityType, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo), std::move(onHit),
+                           extraDmg, usesDex, twoHanded, toHitBonusDie)
   {
     initializeMenacingAttack();
   }
