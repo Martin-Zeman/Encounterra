@@ -6,7 +6,7 @@ namespace enc
                                                          std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange,
                                                          Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg,
                                                          bool usesDex, bool twoHanded, Die toHitBonusDie)
-      : MeleeAttackFactory(name, combatant, toHit, abilityType, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo), std::move(onHit),
+      : MeleeAttackFactory(name, combatant, abilityType, toHit, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo), std::move(onHit),
                            extraDmg, usesDex, twoHanded, toHitBonusDie)
   {
     initializeMenacingAttack();

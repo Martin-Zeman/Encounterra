@@ -35,6 +35,7 @@ namespace enc
       case AbilityType::HASTE_VAMPIRIC_BITE:
       case AbilityType::PARALYZING_MELEE_ATTACK:
       case AbilityType::HASTE_PARALYZING_MELEE_ATTACK:
+      {
         // @todo: Add FSM
         // @todo: Add is reckless attack has been used
         // @todo: Check if they are enemies
@@ -50,9 +51,10 @@ namespace enc
             throw std::runtime_error("Attack factory has no ammo!");
           }
         break;
+      }
       case AbilityType::FIREBALL:
       case AbilityType::HUNGER_OF_HADAR:
-
+      {
         if(auto resource = actoid.getFactory().getResource())
           {
             result &= (*resource)->hasUses(3);
@@ -63,7 +65,7 @@ namespace enc
           }
         result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
         break;
-
+      }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
       default: break;
@@ -101,6 +103,7 @@ namespace enc
       case AbilityType::HASTE_VAMPIRIC_BITE:
       case AbilityType::PARALYZING_MELEE_ATTACK:
       case AbilityType::HASTE_PARALYZING_MELEE_ATTACK:
+      {
         // @todo: Add FSM
         // @todo: Add is reckless attack has been used
         Attack &attack = dynamic_cast<Attack &>(actoid);
@@ -113,10 +116,10 @@ namespace enc
             throw std::runtime_error("Attack factory has no ammo!");
           }
         break;
-
+      }
       case AbilityType::FIREBALL:
       case AbilityType::HUNGER_OF_HADAR:
-
+      {
         if(auto resource = actoid.getFactory().getResource())
           {
             result &= (*resource)->hasUses(3);
@@ -127,7 +130,7 @@ namespace enc
           }
         result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
         break;
-
+      }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
       default: break;

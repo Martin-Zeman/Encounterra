@@ -39,7 +39,7 @@ namespace enc
     {}
     virtual ~Actoid() = default;
     ActoidFlags getFlags() const { return _actoidFlags; }
-    AbilityType getAbilityType() const { return _factory.getAbilityType(); }
+    AbilityType getAbilityType() const;
     ActoidFactory &getFactory() { return _factory; }
     virtual std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>())
@@ -101,6 +101,8 @@ namespace enc
     virtual std::optional<Resource *> getResource() = 0;
     AbilityType getAbilityType() const { return _abilityType; }
   };
+
+  inline AbilityType Actoid::getAbilityType() const { return _factory.getAbilityType(); }
 
   class DirectThreatFactory : public ActoidFactory
   {

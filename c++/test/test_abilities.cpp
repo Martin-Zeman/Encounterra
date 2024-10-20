@@ -64,13 +64,15 @@ protected:
 TEST_F(AbilityTest, FireboltCalculateThreatToTargetDelta) {
   battleMap->setCombatantCoordinates(*goblin, Coord({5, 0}));
   battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord({0, 0}));
+  teams->addCombatantToTeam(*goblin, Color::RED);
+  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
 
-  std::shared_ptr<FireboltFactory> &fireboltFactory
-    = dynamic_cast<std::shared_ptr<FireboltFactory> &>(draconic_sorcerer_lvl_1->getActionFactory(AbilityType::FIREBOLT));
+  std::shared_ptr<ActoidFactory> actoidFactory = draconic_sorcerer_lvl_1->getActionFactory(AbilityType::FIREBOLT);
+  std::shared_ptr<FireboltFactory> fireboltFactory = std::dynamic_pointer_cast<FireboltFactory>(actoidFactory);
+
+  ASSERT_NE(fireboltFactory, nullptr) << "Failed to cast ActoidFactory to FireboltFactory";
+
   ThreatModifiers modifiers;
-
-  // Base threat
-  double baseThreat = fireboltFactory->calculateThreatToTarget(goblin, {});
 
   // Test with advantage
   modifiers.set(ThreatModifierType::ROLL_TYPE, RollType::ADVANTAGE);

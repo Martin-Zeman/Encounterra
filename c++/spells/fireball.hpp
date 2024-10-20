@@ -24,8 +24,8 @@ namespace enc
     static constexpr DamageType dmgType = DamageType::Fire;
 
     FireballFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource, bool hasSpellSculpting = false)
-        : DirectThreatFactory("FireballFactory", caster), _dc(dc), _abilityType(abilityType), _resource(resource),
-          _hasSpellSculpting(hasSpellSculpting), _savingThrow(SavingThrow::DEX), _dmgDice({{8, 6}})
+        : DirectThreatFactory("FireballFactory", caster, abilityType), _dc(dc), _resource(resource), _hasSpellSculpting(hasSpellSculpting),
+          _savingThrow(SavingThrow::DEX), _dmgDice({{8, 6}})
     {
       // _additionalUpcastDmg = {{1, 6}};
     }
@@ -44,7 +44,6 @@ namespace enc
 
   private:
     int _dc;
-    AbilityType _abilityType;
     Resource *_resource;
     bool _hasSpellSculpting;
     SavingThrow _savingThrow;

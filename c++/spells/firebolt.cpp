@@ -71,7 +71,8 @@ namespace enc
 
     int totalTargetAC = targetAC + target->getAC();
     double toHitTotal = _toHit + modToHitFlat + avgRoll(modToHitDie);
-    toHitTotal += ROLL_TYPE_DELTA.at(rollType).at(std::max(0, std::min(totalTargetAC - static_cast<int>(toHitTotal), 20)));
+    int needToRollAtLeast = std::max(0, std::min(totalTargetAC - static_cast<int>(toHitTotal), 20));
+    toHitTotal += ROLL_TYPE_DELTA.at(rollType).at(needToRollAtLeast);
     double totalCrit = ROLL_TYPE_CRIT_DELTA.at(rollType);
 
     double modifiedThreat = meanDmg(toHitTotal, {_dmgDice}, 0, totalTargetAC,
