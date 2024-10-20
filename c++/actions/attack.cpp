@@ -96,7 +96,7 @@ namespace enc
     return teams.getAliveNonSwallowedEnemies(*_combatant);
   }
 
-  double AttackFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs)
+  double AttackFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
   {
     bool considerDist = false;
     RollType rollType = RollType::STRAIGHT;
@@ -139,15 +139,104 @@ namespace enc
     return 0.0;
   }
 
-  double AttackFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers)
+  double AttackFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const
   {
-    //! @todo
-    return 0;
+    double avgToHitBonusDieRoll = 0;
+    if(_toHitBonusDie[0] > 0)
+      {
+        avgToHitBonusDieRoll = avgRoll(_toHitBonusDie);
+      }
+    double baselineToHit = _toHit + avgToHitBonusDieRoll;
+    double baseline
+      = meanDmg(baselineToHit, _dmgDice, _dmgBonus, target->getAC(), target->isImmuneTo(_dmgType), target->isResistantTo(_dmgType), _critRange);
+
+    for(const auto &extra : _extraDmg)
+      {
+        baseline += meanDmg(baselineToHit, {extra.first}, 0, target->getAC(), target->isImmuneTo(extra.second), target->isResistantTo(extra.second),
+                            _critRange);
+      }
+
+    for(const auto &oh : _onHit)
+      {
+        baseline += calcPHit(baselineToHit, target->getAC()) * oh->calculateThreat(_combatant, target);
+      }
+
+    int modDmgFlat = modifiers.getOrDefault(ThreatModifierType::DMG_BONUS_FLAT, 0);
+    std::vector<Die> modDmgDie = modifiers.getOrDefault(ThreatModifierType::DMG_BONUS_DIE, std::vector<Die>{{0, 0}});
+    int modToHitFlat = modifiers.getOrDefault(ThreatModifierType::TO_HIT_FLAT, 0);
+    Die modToHitDie = modifiers.getOrDefault(ThreatModifierType::TO_HIT_DIE, Die{0, 0});
+    int modCritRange = modifiers.getOrDefault(ThreatModifierType::CRIT_RANGE, 0);
+    bool autoCrit = modifiers.getOrDefault(ThreatModifierType::AUTO_CRIT, false);
+    int targetAC = modifiers.getOrDefault(ThreatModifierType::TARGET_AC, 0);
+    RollType rollType = modifiers.getOrDefault(ThreatModifierType::ROLL_TYPE, RollType::STRAIGHT);
+
+    int totalTargetAC = target->getAC() + targetAC;
+    double toHitTotal = std::floor(baselineToHit + modToHitFlat + avgRoll(modToHitDie));
+
+    try
+      {
+        toHitTotal += ROLL_TYPE_DELTA.at(rollType).at(std::max(0, std::min(totalTargetAC - static_cast<int>(toHitTotal), 20)));
+      }
+    catch(const std::out_of_range &)
+      {
+        // Can happen for extreme differences between the AC and the to_hit
+        // The effect is negligible in that case, so we ignore it
+      }
+
+    double totalCrit = _critRange + modCritRange;
+    totalCrit *= ROLL_TYPE_CRIT_DELTA.at(rollType);
+    totalCrit = autoCrit ? 20 : totalCrit;
+
+    double modified;
+    try
+      {
+        std::vector<Die> totalDmgDice = _dmgDice;
+        totalDmgDice.insert(totalDmgDice.end(), modDmgDie.begin(), modDmgDie.end());
+
+        modified = meanDmg(toHitTotal, totalDmgDice, _dmgBonus + modDmgFlat, totalTargetAC, target->isImmuneTo(_dmgType),
+                           target->isResistantTo(_dmgType), totalCrit);
+
+        for(const auto &extra : _extraDmg)
+          {
+            modified += meanDmg(toHitTotal, {extra.first}, 0, totalTargetAC, target->isImmuneTo(extra.second), target->isResistantTo(extra.second),
+                                totalCrit);
+          }
+
+        for(const auto &oh : _onHit)
+          {
+            modified += calcPHit(toHitTotal, totalTargetAC) * oh->calculateThreat(_combatant, target);
+          }
+      }
+    catch(const std::exception &e)
+      {
+        std::cerr << "Error in meanDmg of calculateThreatToTargetDelta of AttackFactory: " << e.what() << std::endl;
+        modified = baseline;
+      }
+
+    return modified - baseline;
   }
-  double AttackFactory::calculateMaxThreat()
+
+  double AttackFactory::calculateMaxThreat() const
   {
-    //! @todo
-    return 0;
+    std::vector<Combatant *> targets = getEligibleTargets();
+
+    if(targets.empty())
+      {
+        return 0.0;
+      }
+
+    double maxThreat = std::numeric_limits<double>::lowest();
+
+    for(auto *target : targets)
+      {
+        double threat = calculateThreatToTarget(target, {});
+        if(threat > maxThreat)
+          {
+            maxThreat = threat;
+          }
+      }
+
+    return maxThreat;
   }
 
   std::string Attack::toString() const
@@ -167,7 +256,7 @@ namespace enc
     return hastedPrefix + _factory._name;
   }
 
-  double Attack::calculateThreat(const Kwargs &kwargs) { return 0; }
-  double Attack::calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; }
-  double Attack::calculateThreatDelta(const Kwargs &kwargs) { return 0; }
+  double Attack::calculateThreat(const Kwargs &kwargs) { return _factory.calculateThreatToTarget(&_target, kwargs); }
+
+  double Attack::calculateThreatDelta(const ThreatModifiers &modifiers) const { return _factory.calculateThreatToTargetDelta(&_target, modifiers); }
 }

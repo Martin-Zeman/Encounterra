@@ -14,15 +14,17 @@ namespace enc
 
   std::vector<std::shared_ptr<Actoid>> MeleeAttackFactory::createAll(void *previousActionInDag)
   {
-    //! @todo
-    return {};
+    auto eligibleTargets = getEligibleTargets();
+    std::vector<std::shared_ptr<Actoid>> result;
+    result.reserve(eligibleTargets.size());
+    for(const auto &target : eligibleTargets)
+      {
+        result.push_back(std::make_unique<MeleeAttack>(*target, *this));
+      }
+    return result;
   }
 
-  std::shared_ptr<Actoid> MeleeAttackFactory::create(void *target)
-  {
-    //! @todo
-    return {};
-  }
+  std::shared_ptr<Actoid> MeleeAttackFactory::create(void *target) { return std::make_shared<MeleeAttack>(*static_cast<Combatant *>(target), *this); }
 
   std::optional<std::vector<Coord>>
   MeleeAttack::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)

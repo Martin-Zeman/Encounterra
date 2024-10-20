@@ -59,9 +59,9 @@ namespace enc
 
     std::optional<Resource *> getResource() override { return _resource; }
 
-    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) override;
-    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) override;
-    double calculateMaxThreat() override;
+    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
+    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;
+    double calculateMaxThreat() const override;
 
   private:
     int _toHit;
@@ -82,8 +82,8 @@ namespace enc
     std::string shorthandStr() const;
 
     double calculateThreat(const Kwargs &kwargs) override;
-    double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
-    double calculateThreatDelta(/*Add modifiers*/ const Kwargs &kwargs) override;
+    // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
+    double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;

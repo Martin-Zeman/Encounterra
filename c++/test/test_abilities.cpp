@@ -90,6 +90,11 @@ TEST_F(AbilityTest, FireboltCalculateThreatToTargetDelta) {
   double bonusToHitThreat = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
   EXPECT_GT(bonusToHitThreat, 0);
 
+  // Test with a negative flat bonus to hit
+  modifiers.set(ThreatModifierType::TO_HIT_FLAT, -2);
+  double negativeBonusToHitThreat = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  EXPECT_LT(negativeBonusToHitThreat, 0);
+
   // Test with increased AC
   modifiers.clear();
   modifiers.set(ThreatModifierType::TARGET_AC, 2);
@@ -98,13 +103,16 @@ TEST_F(AbilityTest, FireboltCalculateThreatToTargetDelta) {
 
   // Test with multiple modifiers
   modifiers.clear();
-  modifiers.set(ThreatModifierType::ROLL_TYPE, RollType::ADVANTAGE);
   modifiers.set(ThreatModifierType::TO_HIT_FLAT, 2);
   modifiers.set(ThreatModifierType::TARGET_AC, 1);
-  double multiModifierThreat = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
-
+  double multiModifierThreatOne = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
   // The combined effect should be positive (advantage and +2 to hit outweigh +1 AC)
-  EXPECT_GT(multiModifierThreat, 0);
+  EXPECT_GT(multiModifierThreatOne, 0);
+
+  // Test a combination of multiple positive effects plus a negative with and overall positive effect
+  modifiers.set(ThreatModifierType::ROLL_TYPE, RollType::ADVANTAGE);
+  double multiModifierThreatTwo = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  EXPECT_GT(multiModifierThreatTwo, multiModifierThreatOne);
 }
 
 }

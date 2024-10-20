@@ -34,9 +34,9 @@ namespace enc
 
     std::vector<Combatant *> getEligibleTargets() const;
     std::optional<Resource *> getResource() override { return &_ammo; }
-    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) override;
-    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) override;
-    double calculateMaxThreat() override;
+    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
+    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;
+    double calculateMaxThreat() const override;
     bool usesDex() { return _usesDex; }
     bool isTwoHanded() { return _twoHanded; }
 
@@ -66,8 +66,7 @@ namespace enc
     std::string toString() const;
     std::string shorthandStr() const;
     double calculateThreat(const Kwargs &kwargs) override;
-    double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
-    double calculateThreatDelta(const Kwargs &kwargs) override;
+    double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
   protected:
     Combatant &_target;

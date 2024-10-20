@@ -111,9 +111,9 @@ namespace enc
     {
       setFlag(FactoryFlags::IS_DIRECT_THREAT);
     }
-    virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) = 0;
-    virtual double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) { return 0; }; //  Not always needed
-    virtual double calculateMaxThreat() = 0;
+    virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const = 0;
+    virtual double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const { return 0; }; //  Not always needed
+    virtual double calculateMaxThreat() const = 0;
   };
 
   class Threat
@@ -128,6 +128,6 @@ namespace enc
   {
   public:
     virtual ~DirectThreat() = default;
-    virtual double calculateThreatDelta(const Kwargs &kwargs) { return 0; };
+    virtual double calculateThreatDelta(const ThreatModifiers &modifiers) const { return 0; };
   };
 }

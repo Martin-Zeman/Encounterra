@@ -15,14 +15,19 @@ namespace enc
 
   std::vector<std::shared_ptr<Actoid>> RangedAttackFactory::createAll(void *previousActionInDag)
   {
-    //! @todo
-    return {};
+    auto eligibleTargets = getEligibleTargets();
+    std::vector<std::shared_ptr<Actoid>> result;
+    result.reserve(eligibleTargets.size());
+    for(const auto &target : eligibleTargets)
+      {
+        result.push_back(std::make_unique<RangedAttack>(*target, *this));
+      }
+    return result;
   }
 
   std::shared_ptr<Actoid> RangedAttackFactory::create(void *target)
   {
-    //! @todo
-    return {};
+    return std::make_shared<RangedAttack>(*static_cast<Combatant *>(target), *this);
   }
 
   std::optional<std::vector<Coord>>

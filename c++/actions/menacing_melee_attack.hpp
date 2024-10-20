@@ -25,4 +25,10 @@ namespace enc
   private:
     void initializeMenacingAttack();
   };
+
+  class MenacingMeleeAttack : public MeleeAttack//! @todo LimitedDurationEffect
+  {
+    std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+  };
 }

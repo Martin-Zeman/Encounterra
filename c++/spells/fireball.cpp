@@ -28,7 +28,7 @@ namespace enc
     return std::make_shared<Fireball>(*coord, *this);
   }
 
-  double FireballFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs)
+  double FireballFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
     if(battleMap.getCartesianDistanceCombatants(*_combatant, *target)
@@ -42,7 +42,7 @@ namespace enc
   }
 
 
-  double FireballFactory::calculateMaxThreat()
+  double FireballFactory::calculateMaxThreat() const
   {
     auto bestCoord = findBestArgs();
     return Fireball(bestCoord, *this).calculateThreat(Kwargs());

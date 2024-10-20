@@ -9,7 +9,7 @@ namespace enc{
 
 class ThreatModifiers {
 public:
-    using ModifierValue = std::variant<int, Die, RollType, bool>;
+    using ModifierValue = std::variant<int, Die, RollType, bool, std::vector<Die>>;
 
     void set(ThreatModifierType type, ModifierValue value) {
         _modifiers[type] = value;

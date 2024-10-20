@@ -24,13 +24,18 @@ namespace enc
 
   std::vector<std::shared_ptr<Actoid>> MenacingMeleeAttackFactory::createAll(void *previousActionInDag)
   {
-    //! @todo
-    return {};
+    auto eligibleTargets = getEligibleTargets();
+    std::vector<std::shared_ptr<Actoid>> result;
+    result.reserve(eligibleTargets.size());
+    for(const auto &target : eligibleTargets)
+      {
+        result.push_back(std::make_unique<MenacingMeleeAttack>(*target, *this));
+      }
+    return result;
   }
 
   std::shared_ptr<Actoid> MenacingMeleeAttackFactory::create(void *target)
   {
-    //! @todo
-    return {};
+    return std::make_shared<MenacingMeleeAttack>(*static_cast<Combatant *>(target), *this);
   }
 }

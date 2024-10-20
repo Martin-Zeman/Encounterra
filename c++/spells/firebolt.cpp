@@ -36,7 +36,7 @@ namespace enc
     return std::make_shared<Firebolt>(*static_cast<Combatant*>(target), *this);
   }
 
-  double FireboltFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs)
+  double FireboltFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
     Combatant *swallower = target->getSwallower();
@@ -57,12 +57,12 @@ namespace enc
     return 0;
   }
 
-  double FireboltFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers)
+  double FireboltFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const
   {
-        if (target->isImmuneTo(FireboltFactory::dmgType))
-    {
+    if(target->isImmuneTo(FireboltFactory::dmgType))
+      {
         return 0;
-    }
+      }
 
     int modToHitFlat = modifiers.getOrDefault(ThreatModifierType::TO_HIT_FLAT, 0);
     Die modToHitDie = modifiers.getOrDefault(ThreatModifierType::TO_HIT_DIE, Die{0, 0});
@@ -75,18 +75,16 @@ namespace enc
     toHitTotal += ROLL_TYPE_DELTA.at(rollType).at(needToRollAtLeast);
     double totalCrit = ROLL_TYPE_CRIT_DELTA.at(rollType);
 
-    double modifiedThreat = meanDmg(toHitTotal, {_dmgDice}, 0, totalTargetAC,
-                                    target->isImmuneTo(FireboltFactory::dmgType),
+    double modifiedThreat = meanDmg(toHitTotal, {_dmgDice}, 0, totalTargetAC, target->isImmuneTo(FireboltFactory::dmgType),
                                     target->isResistantTo(FireboltFactory::dmgType), totalCrit);
 
-    double originalThreat = meanDmg(_toHit, {_dmgDice}, 0, target->getAC(),
-                                    target->isImmuneTo(FireboltFactory::dmgType),
+    double originalThreat = meanDmg(_toHit, {_dmgDice}, 0, target->getAC(), target->isImmuneTo(FireboltFactory::dmgType),
                                     target->isResistantTo(FireboltFactory::dmgType), 1);
 
     return modifiedThreat - originalThreat;
   }
 
-  double FireboltFactory::calculateMaxThreat()
+  double FireboltFactory::calculateMaxThreat() const
   {
     auto eligibleTargets = getEligibleTargets();
     std::vector<std::shared_ptr<Actoid>> result;
@@ -112,9 +110,22 @@ namespace enc
     return prefix + "Firebolt";
   }
 
-  double Firebolt::calculateThreat(const Kwargs &kwargs) { return 0; }
-  double Firebolt::calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; }
-  double Firebolt::calculateThreatDelta(/*Add modifiers*/ const Kwargs &kwargs) { return 0; }
+  double Firebolt::calculateThreat(const Kwargs &kwargs)
+  {
+    BattleMap &battleMap = BattleMap::getInstance();
+    auto rollType = battleMap.isEnemyAdjacent(*_factory._combatant) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
+    int acDifference = std::max(0, std::min(20, _target.getAC() - _factory._toHit));
+    int toHitTotal = _factory._toHit + ROLL_TYPE_DELTA.at(rollType).at(acDifference);
+    return meanDmg(toHitTotal, {_factory._dmgDice}, 0, _target.getAC(), _target.isImmuneTo(FireboltFactory::dmgType),
+                   _target.isResistantTo(FireboltFactory::dmgType), ROLL_TYPE_CRIT_DELTA.at(rollType));
+  }
+
+  // Default
+  // double Firebolt::calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; }
+
+  double Firebolt::calculateThreatDelta(const ThreatModifiers &modifiers) const { 
+    return _factory.calculateThreatToTargetDelta(&_target, modifiers);
+   }
 
   std::optional<std::vector<Coord>>
   Firebolt::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
