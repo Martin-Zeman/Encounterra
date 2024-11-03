@@ -1,4 +1,6 @@
 #include "actions/melee_attack.hpp"
+#include "core/battle_map.hpp"
+#include "core/combatant.hpp"
 
 namespace enc
 {
@@ -29,6 +31,29 @@ namespace enc
   std::optional<std::vector<Coord>>
   MeleeAttack::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
+    MeleeAttackFactory &factory = dynamic_cast<MeleeAttackFactory &>(getFactory());
+    BattleMap &battleMap = BattleMap::getInstance();
+    Combatant *swallower = factory._combatant->getSwallower();
+
+    if(swallower)
+      {
+        if(swallower == &_target)
+          {
+            return std::vector<Coord>{battleMap.getCombatantCoordinates(*factory._combatant).get()[0]};
+          }
+        return {};
+      }
+
+    if(!factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+      {
+        return battleMap.getFreeCoordsInHopRange(battleMap.getCombatantCoordinates(_target).get(), distances, factory._combatant->getSize(),
+                                                 factory._attackRange, factory._combatant->_instanceId);
+      }
+    else if(battleMap.getHopDistanceCombatants(*factory._combatant, _target) <= factory._attackRange)
+      {
+        return std::vector<Coord>{battleMap.getCombatantCoordinates(*factory._combatant).get()[0]};
+      }
+
     return {};
   }
 }

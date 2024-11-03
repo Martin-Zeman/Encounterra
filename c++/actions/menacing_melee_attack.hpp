@@ -8,6 +8,8 @@ namespace enc
 
   class MenacingMeleeAttackFactory : public MeleeAttackFactory
   {
+    friend class MenacingMeleeAttack;
+
   public:
     MenacingMeleeAttackFactory(const std::string &name, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice,
                                int dmgBonus, DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(),

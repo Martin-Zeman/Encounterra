@@ -8,6 +8,8 @@ namespace enc
 
   class RangedAttackFactory : public AttackFactory
   {
+    friend class RangedAttack;
+
   public:
     RangedAttackFactory(const std::string &name, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice, int dmgBonus,
                         DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(), std::vector<std::unique_ptr<OnHit>> onHit = {},
