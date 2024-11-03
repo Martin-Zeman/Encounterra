@@ -29,13 +29,13 @@ namespace enc
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
-        result.push_back(std::make_unique<MenacingMeleeAttack>(*target, *this));
+        result.push_back(std::make_shared<MenacingMeleeAttack>(AbilityType::MENACING_MELEE_ATTACK, *target, *this));
       }
     return result;
   }
 
   std::shared_ptr<Actoid> MenacingMeleeAttackFactory::create(void *target)
   {
-    return std::make_shared<MenacingMeleeAttack>(*static_cast<Combatant *>(target), *this);
+    return std::make_shared<MenacingMeleeAttack>(AbilityType::MENACING_MELEE_ATTACK, *static_cast<Combatant *>(target), *this);
   }
 }

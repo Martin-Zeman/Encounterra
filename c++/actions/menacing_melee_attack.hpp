@@ -28,6 +28,10 @@ namespace enc
 
   class MenacingMeleeAttack : public MeleeAttack//! @todo LimitedDurationEffect
   {
+  public:
+    MenacingMeleeAttack(AbilityType abilityType, Combatant &target, MenacingMeleeAttackFactory &factory) : MeleeAttack(abilityType, target, factory)
+    {}
+
     std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
   };

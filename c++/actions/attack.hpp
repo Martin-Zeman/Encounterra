@@ -58,6 +58,7 @@ namespace enc
 
   class Attack : public Actoid, public DirectThreat
   {
+  protected:
     Attack(AbilityType abilityType, Combatant &target, AttackFactory &factory, RollType rollType = RollType::STRAIGHT)
         : Actoid(const_cast<AttackFactory &>(factory), ActoidFlags::IS_ATTACK_LIKE, abilityType), _target(target), _factory(factory),
           _rollType(rollType)
@@ -68,7 +69,6 @@ namespace enc
     double calculateThreat(const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
-  protected:
     Combatant &_target;
     AttackFactory &_factory;
     RollType _rollType;
