@@ -24,11 +24,11 @@ private:
 
 public:
     StateMachine() : current_state(0), next_available_id(1) {
-        add_new_state(0); // Initial state
-        add_new_state(-1); // NOP state
+        addNewState(0); // Initial state
+        addNewState(-1); // NOP state
     }
 
-    void add_new_state(StateId id) {
+    void addNewState(StateId id) {
         if (states.find(id) != states.end()) {
             throw std::runtime_error("State ID already exists");
         }
@@ -36,11 +36,11 @@ public:
         next_available_id = std::max(next_available_id, id + 1);
     }
 
-    StateId get_next_state_id() {
+    StateId getNextStateId() {
         return next_available_id++;
     }
 
-    void remove_state(StateId state_id) {
+    void removeState(StateId state_id) {
         if (state_id != 0 && state_id != 1) {
             states.erase(state_id);
             for (auto& [_, transitions] : states) {
@@ -53,23 +53,23 @@ public:
         }
     }
 
-    StateId get_current_state() const {
+    StateId getCurrentState() const {
         return current_state;
     }
 
-    std::vector<std::string> get_available_transitions_in_current_state() const {
-        return get_available_transitions_in_state(current_state);
+    std::vector<std::string> getAvailableTransitionsInCurrentState() const {
+        return getAvailableTransitionsInState(current_state);
     }
 
-    std::unordered_map<StateId, std::vector<std::string>> get_transitions_in_all_states() const {
+    std::unordered_map<StateId, std::vector<std::string>> getTransitionsInAllStates() const {
         std::unordered_map<StateId, std::vector<std::string>> result;
         for (const auto& [state, transitions] : states) {
-            result[state] = get_available_transitions_in_state(state);
+            result[state] = getAvailableTransitionsInState(state);
         }
         return result;
     }
 
-    std::vector<std::string> get_available_transitions_in_state(StateId state) const {
+    std::vector<std::string> getAvailableTransitionsInState(StateId state) const {
         std::vector<std::string> result;
         if (states.find(state) != states.end()) {
             for (const auto& transition : states.at(state)) {
@@ -79,7 +79,7 @@ public:
         return result;
     }
 
-    void add_transition(const std::string& name, StateId origin, StateId dest) {
+    void addTransition(const std::string& name, StateId origin, StateId dest) {
         if (states.find(origin) != states.end() && states.find(dest) != states.end()) {
             states[origin].push_back({name, origin, dest});
         } else {
@@ -87,7 +87,7 @@ public:
         }
     }
 
-    void remove_transition(const std::string& transition_name, StateId origin) {
+    void removeTransition(const std::string& transition_name, StateId origin) {
         if (states.find(origin) != states.end()) {
             auto& transitions = states[origin];
             transitions.erase(
@@ -102,7 +102,7 @@ public:
         current_state = 0;
     }
 
-    void trigger_transition(const std::string& transition_name) {
+    void triggerTransition(const std::string& transition_name) {
         auto& current_transitions = states[current_state];
         auto it = std::find_if(current_transitions.begin(), current_transitions.end(),
             [&](const Transition& t) { return t.name == transition_name; });
@@ -114,7 +114,7 @@ public:
         }
     }
 
-    std::vector<StateId> get_all_states() const {
+    std::vector<StateId> getAllStates() const {
         std::vector<StateId> state_ids;
         state_ids.reserve(states.size());
         for (const auto& [state, _] : states) {

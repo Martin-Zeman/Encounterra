@@ -215,6 +215,20 @@ namespace enc
     CUSTOM = 4 // only used for cases where Coords express a set of coordinates that's not a combatant
   };
 
+  enum class Statistics
+  {
+    VICTORIES = 1,
+    AT_LEAST_ONE_DIED = 2,
+    AT_LEAST_TWO_DIED = 3,
+    AT_LEAST_THREE_DIED = 4
+  };
+
+  // Helper function to get all statistics for iteration
+  inline std::vector<Statistics> getAllStatistics()
+  {
+    return {Statistics::VICTORIES, Statistics::AT_LEAST_ONE_DIED, Statistics::AT_LEAST_TWO_DIED, Statistics::AT_LEAST_THREE_DIED};
+  }
+
   enum class PhaseOfTurn
   {
     START_OF_TURN,

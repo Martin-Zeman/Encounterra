@@ -11,90 +11,90 @@ protected:
 };
 
 TEST_F(StateMachineTest, BasicFunctionality) {
-    ASSERT_EQ(fsm.get_current_state(), 0);
+    ASSERT_EQ(fsm.getCurrentState(), 0);
 
-    fsm.add_new_state(2);
-    fsm.add_new_state(3);
-    fsm.add_new_state(4);
-    fsm.add_new_state(5);
+    fsm.addNewState(2);
+    fsm.addNewState(3);
+    fsm.addNewState(4);
+    fsm.addNewState(5);
 
-    fsm.add_transition("to_2", 0, 2);
-    fsm.add_transition("to_3", 2, 3);
-    fsm.add_transition("to_4", 3, 4);
-    fsm.add_transition("to_5", 3, 5);
-    fsm.add_transition("to_-1", 4, -1);
-    fsm.add_transition("to_-1", 5, -1);
+    fsm.addTransition("to_2", 0, 2);
+    fsm.addTransition("to_3", 2, 3);
+    fsm.addTransition("to_4", 3, 4);
+    fsm.addTransition("to_5", 3, 5);
+    fsm.addTransition("to_-1", 4, -1);
+    fsm.addTransition("to_-1", 5, -1);
 
-    ASSERT_EQ(fsm.get_available_transitions_in_current_state(), std::vector<std::string>{"to_2"});
+    ASSERT_EQ(fsm.getAvailableTransitionsInCurrentState(), std::vector<std::string>{"to_2"});
 
-    fsm.trigger_transition("to_2");
-    ASSERT_EQ(fsm.get_current_state(), 2);
-    ASSERT_EQ(fsm.get_available_transitions_in_current_state(), std::vector<std::string>{"to_3"});
+    fsm.triggerTransition("to_2");
+    ASSERT_EQ(fsm.getCurrentState(), 2);
+    ASSERT_EQ(fsm.getAvailableTransitionsInCurrentState(), std::vector<std::string>{"to_3"});
 
-    fsm.trigger_transition("to_3");
-    ASSERT_EQ(fsm.get_current_state(), 3);
-    ASSERT_EQ(fsm.get_available_transitions_in_current_state(), (std::vector<std::string>{"to_4", "to_5"}));
+    fsm.triggerTransition("to_3");
+    ASSERT_EQ(fsm.getCurrentState(), 3);
+    ASSERT_EQ(fsm.getAvailableTransitionsInCurrentState(), (std::vector<std::string>{"to_4", "to_5"}));
 
-    fsm.trigger_transition("to_4");
-    ASSERT_EQ(fsm.get_current_state(), 4);
-    ASSERT_EQ(fsm.get_available_transitions_in_current_state(), std::vector<std::string>{"to_-1"});
+    fsm.triggerTransition("to_4");
+    ASSERT_EQ(fsm.getCurrentState(), 4);
+    ASSERT_EQ(fsm.getAvailableTransitionsInCurrentState(), std::vector<std::string>{"to_-1"});
 
-    fsm.trigger_transition("to_-1");
-    ASSERT_EQ(fsm.get_current_state(), -1);
-    ASSERT_TRUE(fsm.get_available_transitions_in_current_state().empty());
+    fsm.triggerTransition("to_-1");
+    ASSERT_EQ(fsm.getCurrentState(), -1);
+    ASSERT_TRUE(fsm.getAvailableTransitionsInCurrentState().empty());
 }
 
 TEST_F(StateMachineTest, RemoveStateAndTransition) {
-    fsm.add_new_state(2); // A
-    fsm.add_transition("to_1", 0, 2);
-    fsm.add_transition("to_-1", 2, -1);
+    fsm.addNewState(2); // A
+    fsm.addTransition("to_1", 0, 2);
+    fsm.addTransition("to_-1", 2, -1);
 
     ASSERT_NO_THROW({
-        fsm.remove_transition("to_1", 0);
-        fsm.add_transition("to_1", 0, 2);
-        fsm.remove_transition("to_1", 0);
-        fsm.add_transition("to_1", 0, 2);
+        fsm.removeTransition("to_1", 0);
+        fsm.addTransition("to_1", 0, 2);
+        fsm.removeTransition("to_1", 0);
+        fsm.addTransition("to_1", 0, 2);
     });
 
     // Test removing a state
     ASSERT_NO_THROW({
-        fsm.remove_state(2);
+        fsm.removeState(2);
     });
 
     // Verify that transitions to the removed state are also removed
-    auto transitions = fsm.get_available_transitions_in_state(0);
+    auto transitions = fsm.getAvailableTransitionsInState(0);
     ASSERT_TRUE(std::find(transitions.begin(), transitions.end(), "to_1") == transitions.end());
 }
 
 TEST_F(StateMachineTest, GetNextStateId) {
-    int id1 = fsm.get_next_state_id();
-    int id2 = fsm.get_next_state_id();
+    int id1 = fsm.getNextStateId();
+    int id2 = fsm.getNextStateId();
     ASSERT_NE(id1, id2);
     ASSERT_LT(id1, id2);
 }
 
 TEST_F(StateMachineTest, AddExistingState) {
-    fsm.add_new_state(2);
-    ASSERT_THROW(fsm.add_new_state(2), std::runtime_error);
+    fsm.addNewState(2);
+    ASSERT_THROW(fsm.addNewState(2), std::runtime_error);
 }
 
 TEST_F(StateMachineTest, TriggerNonexistentTransition) {
-    ASSERT_THROW(fsm.trigger_transition("nonexistent"), std::runtime_error);
+    ASSERT_THROW(fsm.triggerTransition("nonexistent"), std::runtime_error);
 }
 
 TEST_F(StateMachineTest, ResetState) {
-    fsm.add_new_state(2);
-    fsm.add_transition("to_2", 0, 2);
-    fsm.trigger_transition("to_2");
-    ASSERT_EQ(fsm.get_current_state(), 2);
+    fsm.addNewState(2);
+    fsm.addTransition("to_2", 0, 2);
+    fsm.triggerTransition("to_2");
+    ASSERT_EQ(fsm.getCurrentState(), 2);
     fsm.reset();
-    ASSERT_EQ(fsm.get_current_state(), 0);
+    ASSERT_EQ(fsm.getCurrentState(), 0);
 }
 
 TEST_F(StateMachineTest, GetAllStates) {
-    fsm.add_new_state(2);
-    fsm.add_new_state(3);
-    auto states = fsm.get_all_states();
+    fsm.addNewState(2);
+    fsm.addNewState(3);
+    auto states = fsm.getAllStates();
     ASSERT_EQ(states.size(), 4); // 0, -1, 2, 3
     ASSERT_TRUE(std::find(states.begin(), states.end(), 0) != states.end());
     ASSERT_TRUE(std::find(states.begin(), states.end(), -1) != states.end());

@@ -11,16 +11,19 @@
 #include <string_view>
 #include <cstdint>
 #include <iomanip>
+#include <memory>
 #include <openssl/sha.h>
-#include "misc.hpp"
-#include "types.hpp"
-#include "interfaces.hpp"
-#include "conditions.hpp"
-#include "resources.hpp"
-#include "spellslots.hpp"
+#include "core/misc.hpp"
+#include "core/types.hpp"
+#include "core/interfaces.hpp"
+#include "core/conditions.hpp"
+#include "core/resources.hpp"
+#include "core/spellslots.hpp"
 #include "actions/action_types.hpp"
 #include "actions/action_constants.hpp"
 #include "spells/firebolt.hpp"
+#include "effects/effect.hpp"
+#include "core/state_machine.hpp"
 
 namespace enc
 {
@@ -91,6 +94,8 @@ namespace enc
     void onEndOfTurn();
 
     void rollInitiative();
+    void reset();
+    void newTurn();
 
     void setSize(Size size) { _size = size; };
     Size getSize() const { return _size; };
@@ -127,8 +132,9 @@ namespace enc
     bool isResistantTo(DamageType dmgType);
     bool isVulnerableTo(DamageType dmgType);
     Spellslots &getSpellslots() { return *_spellslots; }
-    int getLevel() { return _level; }
-    int getCurrentHp() { return _currHp; }
+    int getLevel() const { return _level; }
+    int getCurrentHp() const { return _currHp; }
+    int getCurrentInit() const { return _currInit; }
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     std::shared_ptr<ActoidFactory>& getActionFactory(AbilityType type);
 
@@ -403,11 +409,14 @@ namespace enc
     bool _hasReaction = true;
     bool _hasHasteAction = false;
     bool _alreadyUsedSpellslotThisTurn = false;
+    bool _isDodging = false;
+    bool _isShieldSpellActive = false;
     int _meleeReactionRange = 1;
     int _speed;
     int _movement;
     Color _teamColor;
-    std::unordered_map<std::string, int> _ammo;
+    StateMachine _attackFsm;
+    std::unordered_map<std::string, std::shared_ptr<Uses>> _ammo; // TODO: Unify this with attacks so that it's shared between them
     std::unordered_set<DamageType> _resistances;
     std::unordered_set<DamageType> _immunities;
     std::unordered_set<DamageType> _vulnerabities;
@@ -431,11 +440,16 @@ namespace enc
     Combatant *_currentWildshapeForm = nullptr;
     Combatant *_swallower = nullptr;
     Combatant *_swallowedTarget = nullptr;
+    Combatant *_constrictedTarget = nullptr;
     std::vector<Condition> _conditions;
     std::vector<ConditionWithDC> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;
     std::shared_ptr<Spellslots> _spellslots;
     std::unordered_map<AbilityType, std::shared_ptr<Resource>> _resources;
+    std::vector<Actoid> _actionPlan; // TODO: This needs to support movement as well
+    int _weaponDmgDealtThisTurn = 0; // This is used for ActionSurge
+    int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
+    Effect *_concentrationEffect = nullptr;
 
   protected:
     Size _size{Size::MEDIUM};

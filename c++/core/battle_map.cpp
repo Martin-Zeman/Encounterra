@@ -855,6 +855,13 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return true;
   }
 
+  void BattleMap::resetCombatantsToInitialPositions(const std::unordered_map<Combatant *, Coord> initialPositions){
+    _combatantCoordinateCache.clear();
+    for (auto& it : initialPositions){
+      _combatantCoordinateCache[it.first->_instanceId] = it.second;
+    }
+  }
+
   int BattleMap::getCombatantGridValueAt(const Coord &coord) const { return _combatantGrid(coord[0], coord[1]); }
 
   blaze::StaticMatrix<int, 2, 2> BattleMap::getHarmfulBoundingBox(const Combatant *caster, int inflation)

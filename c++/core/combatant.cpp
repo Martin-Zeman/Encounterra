@@ -48,6 +48,66 @@ namespace enc
     _currInit = distrib(gen) + _initBonus;
   }
 
+  void Combatant::reset() {
+        _hasAction = true;
+        _hasBonusAction = true;
+        _hasReaction = true;
+        _currHp = _maxHp;
+        _movement = _speed;
+        _isDodging = false;
+        if (_spellslots)
+        {
+            _spellslots->reset();
+        }
+        for (auto& r : _resources)
+        {
+          r.second.reset();
+        }
+        _alreadyUsedSpellslotThisTurn = false;
+        if(_isShieldSpellActive)
+        {
+            _ac -= 5;
+        }
+        _isShieldSpellActive = false;
+        _conditions.clear();
+        _dcConditions.clear();
+        _concentrationEffect = nullptr;
+        _hasHasteAction = false;
+        _savingThrowsFlatMod.clear();
+        _savingThrowsDiceMod.clear();
+        for (auto& ammo : _ammo)
+        {
+          ammo.second.reset();
+        }
+        _oneTimeAcbonus = 0 ; // Not really needed
+        _actionPlan.clear();
+        _weaponDmgDealtThisTurn = 0;
+  }
+
+  void Combatant::newTurn() {
+        _hasAction = true;
+        _hasBonusAction = true;
+        _hasReaction = true;
+        _movement = _speed;
+        // if (_isDodging)
+        // {
+        //     saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.STRAIGHT)
+        // }
+        // _isDodging = false # The effect tracker should be taking care of this
+        _alreadyUsedSpellslotThisTurn = false;
+        if (_isShieldSpellActive){
+            _ac -= 5;
+        }
+        _isShieldSpellActive = false;
+        _hasHasteAction = false;
+        _attackFsm.reset();
+        _actionPlan.clear();
+        if (_constrictedTarget != nullptr && !_constrictedTarget->isAlive()){
+            _constrictedTarget = nullptr;
+            }
+        _weaponDmgDealtThisTurn = 0;
+  }
+
   Combatant *Combatant::getCurrentForm() { return _currentWildshapeForm == nullptr ? _originalForm : _currentWildshapeForm; }
   Combatant *Combatant::getOriginalForm() { return _originalForm; }
 
