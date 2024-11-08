@@ -1,5 +1,8 @@
 #pragma once
 
+#include "effects/effect.hpp"
+#include <vector>
+
 namespace enc
 {
   class AoeEffect : public Effect
@@ -17,19 +20,7 @@ namespace enc
     virtual void onEndOfTurn(Combatant *combatant) = 0;
 
     // Concrete implementation of isAffecting from Effect base class
-    bool isAffecting(Combatant *combatant) const override
-    {
-      BattleMap &battleMap = BattleMap::getInstance();
-      std::vector<Coord> coords = getAffectedCoords();
-
-      auto combatantPosition = battleMap.getCombatantCoordinates(*combatant);
-      if(!combatantPosition.has_value())
-        {
-          return false;
-        }
-
-      return nf::getHopDistanceCoords(combatantPosition.value(), coords) == 0;
-    }
+    bool isAffecting(Combatant *combatant) const override;
 
   protected:
     // Add any protected members needed by derived classes

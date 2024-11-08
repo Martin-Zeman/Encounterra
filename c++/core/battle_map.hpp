@@ -90,8 +90,9 @@ namespace enc
     std::vector<Combatant *> getCombatantsAffectedByLineAoE(const Combatant *caster, const Coord &origin, double angle, int length, int width) const;
     std::vector<Combatant *> getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const;
     Visibility getVisibility(const Coords &observer, const Coords &target);
-    std::unordered_map<const Combatant *, Visibility> getVisibilityDict(const Combatant *combatant, const Coord &theoreticalRootCoord);
+    std::unordered_map<const Combatant *, Visibility> calcVisibilityDict(const Combatant *combatant, const Coord &theoreticalRootCoord);
     void calcVisibilityDictForAllCoords(const Combatant *combatant, const blaze::DynamicMatrix<Coord> &shortestPaths);
+    Visibility getVisibilityFromCoord(const Coord &fromCoord, const Combatant * target) const;
     std::vector<Combatant*> getNonSwallowedEnemiesWithinRadius(const Combatant* combatant, int radius);
     std::vector<Combatant*> getNonSwallowedAlliesWithinRadius(const Combatant* combatant, int radius);
     std::vector<Combatant*> getNonSwallowedEnemiesWithinHopDistance(const Combatant* combatant, int distance);
@@ -110,7 +111,8 @@ namespace enc
     std::unordered_set<Coord> _impassableSet;
     std::unordered_set<Coord> _difficultSet;
     std::vector<Obstacle> _obstacles;
-    std::unordered_map<std::pair<int, int>, std::unordered_map<const Combatant*, Visibility>, PairHash> _visibilityDictForAllCoords;
+    // std::unordered_map<std::pair<int, int>, std::unordered_map<const Combatant*, Visibility>, PairHash> _visibilityDictForAllCoords;
+    std::unordered_map<Coord, std::unordered_map<const Combatant*, Visibility>> _visibilityDictForAllCoords;
 
 
     BattleMap(size_t size);

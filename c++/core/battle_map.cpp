@@ -1417,7 +1417,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
           @param theoretical_root_coord theoretical root coordinate for combatant
           @return dict mapping enemy -> Visibility
    */
-  std::unordered_map<const Combatant *, Visibility> BattleMap::getVisibilityDict(const Combatant *combatant, const Coord &theoreticalRootCoord)
+  std::unordered_map<const Combatant *, Visibility> BattleMap::calcVisibilityDict(const Combatant *combatant, const Coord &theoreticalRootCoord)
   {
     std::unordered_map<const Combatant *, Visibility> ret;
     Teams &teams = Teams::getInstance();
@@ -1459,13 +1459,17 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
             if(shortestPaths(x, y) != Coord{-1, -1})
               {
                 Coord theoreticalRootCoord{static_cast<int>(x), static_cast<int>(y)};
-                _visibilityDictForAllCoords[{x, y}] = getVisibilityDict(combatant, theoreticalRootCoord);
+                _visibilityDictForAllCoords[{x, y}] = calcVisibilityDict(combatant, theoreticalRootCoord);
               }
           }
       }
 
     _visibilityDictForAllCoords[{static_cast<size_t>(currentPosition.get()[0][0]), static_cast<size_t>(currentPosition.get()[0][1])}]
-      = getVisibilityDict(combatant, Coord{currentPosition.get()[0][0], currentPosition.get()[0][1]});
+      = calcVisibilityDict(combatant, Coord{currentPosition.get()[0][0], currentPosition.get()[0][1]});
+  }
+
+  Visibility BattleMap::getVisibilityFromCoord(const Coord &fromCoord, const Combatant * target) const {
+    return _visibilityDictForAllCoords.at(fromCoord).at(target);
   }
 
   std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithinRadius(const Combatant *combatant, int radius)

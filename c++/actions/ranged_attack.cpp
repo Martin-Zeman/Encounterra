@@ -2,6 +2,7 @@
 #include "core/interfaces.hpp"
 #include "core/battle_map.hpp"
 #include "core/combatant.hpp"
+#include "effects/effect_tracker.hpp"
 
 namespace enc
 {
@@ -55,12 +56,12 @@ namespace enc
           = battleMap.getFreeCoordsInCartesianRange(battleMap.getCombatantCoordinates(_target).get(), distances, factory._combatant->getSize(),
                                                     factory._attackRange, factory._combatant->_instanceId);
 
-        if(!battleMap.getEffectTracker().isCombatantHiddenFrom(*factory._combatant, _target))
+        if(!EffectTracker::getInstance().isCombatantHiddenFrom(factory._combatant, &_target))
           {
             std::vector<Coord> visibleCoords;
             std::copy_if(freeCoordsInRange.begin(), freeCoordsInRange.end(), std::back_inserter(visibleCoords),
                          [&battleMap, this](const Coord &coord) {
-                           return battleMap.getVisibilityDictForAllCoords().at(coord).at(&_target) != Visibility::NONE;
+                           return battleMap.getVisibilityFromCoord(coord, &_target) != Visibility::NONE;
                          });
             return visibleCoords;
           }
@@ -70,11 +71,11 @@ namespace enc
             std::vector<Coord> transitionCoords;
             for(const auto &coord : freeCoordsInRange)
               {
-                if(battleMap.getVisibilityDictForAllCoords().at(coord).at(&_target) != Visibility::NONE)
+                if(battleMap.getVisibilityFromCoord(coord, &_target) != Visibility::NONE)
                   {
                     try
                       {
-                        if(battleMap.getVisibilityDictForAllCoords().at(shortestPaths(coord)).at(&_target) == Visibility::NONE)
+                        if(battleMap.getVisibilityFromCoord(shortestPaths(coord[0], coord[1]), &_target) == Visibility::NONE)
                           {
                             transitionCoords.push_back(coord);
                           }
@@ -88,8 +89,8 @@ namespace enc
             return transitionCoords;
           }
       }
-    else if(battleMap.getCartesianDistanceCombatants(*factory._combatant, _target) <= factory._range
-            && battleMap.getVisibilityDictForAllCoords().at(currCoord).at(&_target) != Visibility::NONE)
+    else if(battleMap.getCartesianDistanceCombatants(*factory._combatant, _target) <= factory._attackRange
+            && battleMap.getVisibilityFromCoord(currCoord, &_target) != Visibility::NONE)
       {
         return std::vector<Coord>{currCoord};
       }

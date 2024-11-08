@@ -17,7 +17,7 @@ namespace enc
       return EffectType::CLOUD_OF_DAGGERS; // Or other appropriate type
     }
 
-    void activate(const std::unordered_map<std::string, std::any> &kwargs = {}) override
+    void activate(const Kwargs &kwargs = {}) override
     {
       // Implementation
     }

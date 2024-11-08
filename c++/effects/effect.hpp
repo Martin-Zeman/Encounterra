@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include "core/types.hpp"
 
 namespace enc
 {
@@ -45,7 +46,7 @@ namespace enc
 
     // Pure virtual methods (must be implemented by derived classes)
     virtual EffectType getEffectType() const = 0;
-    virtual void activate(const std::unordered_map<std::string, std::any> &kwargs = {}) = 0;
+    virtual void activate(const Kwargs &kwargs = {}) = 0;
     virtual void deactivate() = 0;
     virtual bool deactivateForCombatant(Combatant *combatant) = 0;
     virtual bool isAffecting(Combatant *combatant) const = 0;

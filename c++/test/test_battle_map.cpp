@@ -1134,7 +1134,7 @@ TEST_F(BattleMapTest, NoObstacles)
   EXPECT_EQ(battleMap->getVisibility(Coords({0, 0}, Size::MEDIUM), Coords({1, 0}, Size::MEDIUM)), Visibility::FULL);
 }
 
-TEST_F(BattleMapTest, GetVisibilityDict)
+TEST_F(BattleMapTest, CalcVisibilityDict)
 {
   // Place circular element
   battleMap->placeTerrain(std::array<int, 2>{7, 7}, Terrain::IMPASSABLE_TERRAIN, 1);
@@ -1156,7 +1156,7 @@ TEST_F(BattleMapTest, GetVisibilityDict)
   battleMap->setCombatantCoordinates(*ogre3, std::array<int, 2>{7, 4});
 
   // Get visibility dict
-  auto visibility = battleMap->getVisibilityDict(goblin, std::array<int, 2>{3, 7});
+  auto visibility = battleMap->calcVisibilityDict(goblin, std::array<int, 2>{3, 7});
 
   // Assert visibility results
   EXPECT_EQ(visibility[bugbear], Visibility::NONE);

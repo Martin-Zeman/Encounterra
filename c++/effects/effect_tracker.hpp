@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/battle_map.hpp"
+// #include "core/battle_map.hpp"
 #include "core/combatant.hpp"
 #include "effects/effect.hpp"
 
@@ -9,7 +9,22 @@ namespace enc
   class EffectTracker
   {
   public:
-    EffectTracker() = default;
+
+    // Delete copy constructor and assignment operator
+    EffectTracker(const EffectTracker&) = delete;
+    EffectTracker& operator=(const EffectTracker&) = delete;
+
+    // Singleton access method
+    static EffectTracker& getInstance() {
+        static EffectTracker instance;
+        return instance;
+    }
+
+    // Reset singleton for testing
+    static void resetInstance() {
+        auto& instance = getInstance();
+        instance.reset();
+    }
 
     void add(std::shared_ptr<Effect> effect);
 
@@ -44,6 +59,8 @@ namespace enc
     void reset();
 
   private:
+    EffectTracker() = default;
+
     std::vector<std::shared_ptr<Effect>> _effects;
   };
 }

@@ -1,11 +1,13 @@
 #include "effects/spheric_aoe.hpp"
+#include "core/battle_map.hpp"
+#include "core/geometry.hpp"
 
 namespace enc
 {
   std::vector<Coord> SphericAoe::calculateAffectedCoords() const
   {
     BattleMap &battleMap = BattleMap::getInstance();
-    int gridSize = battleMap.getSize();
+    size_t gridSize = battleMap.getGridSize();
     std::vector<Coord> coords;
 
     blaze::StaticVector<double, 2> originCenter = getSquareCenter(_origin);
@@ -25,7 +27,6 @@ namespace enc
             Coord currentCoord({x, y});
             blaze::StaticVector<double, 2> currentCenter = getSquareCenter(currentCoord);
 
-            // Calculate Euclidean distance
             double distance = std::sqrt(std::pow(originCenter[0] - currentCenter[0], 2) + std::pow(originCenter[1] - currentCenter[1], 2));
 
             if(distance <= _radius)

@@ -1,4 +1,4 @@
-#include "core/limited_duration_effect.hpp"
+#include "effects/limited_duration_effect.hpp"
 
 namespace enc
 {
