@@ -8,6 +8,7 @@
 #include <random>
 #include <stdexcept>
 #include <optional>
+#include <cstdint>
 #include "misc.hpp"
 #include "types.hpp"
 #include "coords.hpp"
@@ -100,6 +101,8 @@ namespace enc
     std::vector<Combatant*> getNonSwallowedEnemiesWithoutHopDistance(const Combatant* combatant, int distance);
     bool isDifficultTerrainAt(const Coords &coords) const;
     void pushCombatantAwayFrom(const Vector2D &origin, Combatant *targetCombatant, int distance);
+    void setCombatRound(uint32_t round);
+    uint32_t getCombatRound();
 
   private:
     size_t _size;
@@ -114,6 +117,7 @@ namespace enc
     std::vector<Obstacle> _obstacles;
     // std::unordered_map<std::pair<int, int>, std::unordered_map<const Combatant*, Visibility>, PairHash> _visibilityDictForAllCoords;
     std::unordered_map<Coord, std::unordered_map<const Combatant*, Visibility>> _visibilityDictForAllCoords;
+    uint32_t _combatRound = 0U; // this isn't the best place for it
 
 
     BattleMap(size_t size);

@@ -5,6 +5,7 @@
 #include <utility>
 #include <any>
 #include <map>
+#include <unordered_map>
 
 namespace enc
 {
@@ -20,6 +21,11 @@ namespace enc
   {
     BLUE = 1,
     RED = 2
+  };
+
+  inline const std::unordered_map<Color, std::string_view> COLOR_NAMES{
+    {Color::BLUE, "BLUE"},
+    {Color::RED, "RED"}
   };
 
   enum class AbilityActionType

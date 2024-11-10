@@ -1579,5 +1579,6 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
       }
   }
 
-  
+  void BattleMap::setCombatRound(uint32_t round) { _combatRound = round; }
+  uint32_t BattleMap::getCombatRound() { return _combatRound; }
 }

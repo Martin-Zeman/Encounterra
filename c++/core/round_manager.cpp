@@ -1,4 +1,5 @@
 #include "core/round_manager.hpp"
+#include "actions/action_selection.hpp"
 
 namespace enc
 {
@@ -26,11 +27,7 @@ namespace enc
     std::unordered_map<Combatant *, Coord> combatantInitialPositions;
     for(const auto &combatant : _combatants)
       {
-        auto pos = battleMap.getCombatantCoordinates(*combatant);
-        if(pos.has_value())
-          {
-            combatantInitialPositions[combatant] = pos.value()[0];
-          }
+        combatantInitialPositions.emplace(combatant, battleMap.getCombatantCoordinates(*combatant));
       }
 
     prepCombatants();
@@ -51,7 +48,7 @@ namespace enc
           }
         else
           {
-            std::cout << "Team " << toString(survivingTeams[0]) << " wins\n";
+            std::cout << "Team " << COLOR_NAMES.at(survivingTeams[0]) << " wins\n";
             teamTally[survivingTeams[0]][Statistics::VICTORIES]++;
 
             auto [deadBlue, deadRed] = Teams::getInstance().getDeathCount();
@@ -104,9 +101,13 @@ namespace enc
         for(auto &combatant : _combatants)
           {
             if(done)
-              break;
+              {
+                break;
+              }
             if(!combatant->isAlive())
-              continue;
+              {
+                continue;
+              }
 
             std::cout << "It's " << combatant->toString() << "'s turn\n";
             _currCombatant = combatant;
@@ -117,7 +118,9 @@ namespace enc
             effectTracker.startOfTurn(combatant);
 
             if(!combatant->isAlive())
-              continue; // Start of turn effects can kill
+              {
+                continue; // Start of turn effects can kill
+              }
 
             combatant->newTurn();
             auto effects = effectTracker.getAffectingCombatant(combatant);

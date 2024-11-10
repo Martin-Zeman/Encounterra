@@ -1,6 +1,7 @@
 #include "combatant.hpp"
 #include "actions/dodge.hpp"
 #include "actions/disengage.hpp"
+#include "core/rechargeable_factory.hpp"
 
 namespace enc
 {
@@ -258,5 +259,24 @@ namespace enc
             }
         }
         throw std::runtime_error("Action factory not found for the given AbilityType");
+    }
+
+    void Combatant::rollForRecharge()
+    {
+      for(auto &factory : _actionFactories)
+        {
+          if(factory->hasFlag(FactoryFlags::IS_RECHARGE))
+            {
+              static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
+            }
+        }
+
+      for(auto &factory : _bonusActionFactories)
+        {
+          if(factory->hasFlag(FactoryFlags::IS_RECHARGE))
+            {
+              static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
+            }
+        }
     }
 }

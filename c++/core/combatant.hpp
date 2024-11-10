@@ -137,6 +137,7 @@ namespace enc
     int getCurrentInit() const { return _currInit; }
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     std::shared_ptr<ActoidFactory>& getActionFactory(AbilityType type);
+    void rollForRecharge();
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
