@@ -1,6 +1,8 @@
 #include "actions/action_selection.hpp"
+#include "actions/movement.hpp"
 #include "core/battle_map.hpp"
 #include "core/threat_utils.hpp"
+#include "core/geometry.hpp"
 // #include "combat/actions/movement.hpp"
 #include <regex>
 #include <limits>
@@ -14,49 +16,60 @@ namespace {
     const std::regex REGEX_MS_MOVEMENT_PATTERN(R"([mschdio_]+\((\d+), (\d+)\))");
 }
 
-std::vector<std::string> pruneSequences(
-    const std::vector<std::vector<std::string>>& sequences,
-    const std::unordered_map<std::string, std::shared_ptr<Actoid>>& transitionNameToAction,
-    const std::unordered_map<size_t, std::string>& indexToTransition,
-    const std::unordered_map<std::string, std::string>& transitionToSimplified
-) {
-    std::set<std::string> sequenceSets;
-    std::vector<std::vector<std::string>> prunedSequences;
+std::vector<std::vector<std::string>> pruneSequences(const std::vector<std::vector<std::string>> &sequences,
+                                                     const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+                                                     const std::unordered_map<size_t, std::string> &indexToTransition,
+                                                     const std::unordered_map<std::string, std::string> &transitionToSimplified)
+{
+  std::set<std::string> sequenceSets;
+  std::vector<std::vector<std::string>> prunedSequences;
 
-    for (const auto& sequence : sequences) {
-        std::set<std::string> currentSequenceSet;
-        for (const auto& txIdx : sequence) {
-            auto it = transitionToSimplified.find(txIdx);
-            if (it != transitionToSimplified.end()) {
-                currentSequenceSet.insert(it->second);
+  for(const auto &sequence : sequences)
+    {
+      std::set<std::string> currentSequenceSet;
+      for(const auto &txIdx : sequence)
+        {
+          auto it = transitionToSimplified.find(txIdx);
+          if(it != transitionToSimplified.end())
+            {
+              currentSequenceSet.insert(it->second);
             }
         }
 
-        std::string setKey = std::accumulate(currentSequenceSet.begin(), currentSequenceSet.end(), std::string{},
-            [](const std::string& a, const std::string& b) { return a + "," + b; });
+      std::string setKey = std::accumulate(currentSequenceSet.begin(), currentSequenceSet.end(), std::string{},
+                                           [](const std::string &a, const std::string &b) { return a + "," + b; });
 
-        if (sequenceSets.find(setKey) == sequenceSets.end()) {
-            prunedSequences.push_back(sequence);
-            sequenceSets.insert(setKey);
-        } else {
-            bool hasAttackModifier = false;
-            for (const auto& tx : sequence) {
-                try {
-                    const auto& action = transitionNameToAction.at(indexToTransition.at(std::stoul(tx)));
-                    if (action->hasFlag(ActoidFlags::IS_ATTACK_MODIFIER)) {
-                        hasAttackModifier = true;
-                        break;
+      if(sequenceSets.find(setKey) == sequenceSets.end())
+        {
+          prunedSequences.push_back(sequence);
+          sequenceSets.insert(setKey);
+        }
+      else
+        {
+          bool hasAttackModifier = false;
+          for(const auto &tx : sequence)
+            {
+              try
+                {
+                  const auto &action = transitionNameToAction.at(indexToTransition.at(std::stoul(tx)));
+                  if(action->hasFlag(ActoidFlags::IS_ATTACK_MODIFIER))
+                    {
+                      hasAttackModifier = true;
+                      break;
                     }
-                } catch (const std::exception&) {
-                    continue;
+                }
+              catch(const std::exception &)
+                {
+                  continue;
                 }
             }
-            if (hasAttackModifier) {
-                prunedSequences.push_back(sequence);
+          if(hasAttackModifier)
+            {
+              prunedSequences.push_back(sequence);
             }
         }
     }
-    return prunedSequences;
+  return prunedSequences;
 }
 
 CoordToSequenceIds createCoordToSequenceMapping(
@@ -84,34 +97,34 @@ CoordToSequenceIds createCoordToSequenceMapping(
     return coordToSequenceIds;
 }
 
-double getDistToActionSequenceCoord(
-    const std::vector<std::string>& sequence,
-    const std::vector<double>& distances
-) {
-    std::smatch match;
-    for (const auto& transition : sequence) {
-        if (transition == "dummy") continue;
-        
-        if (std::regex_search(transition, match, REGEX_MOVEMENT_PATTERN)) {
-            int x = std::stoi(match[2]);
-            int y = std::stoi(match[3]);
-            auto& battleMap = BattleMap::getInstance();
-            return distances[x * battleMap.getGridSize() + y];
+double getDistToActionSequenceCoord(const std::vector<std::string> &sequence, const blaze::DynamicVector<int> &distances)
+{
+  std::smatch match;
+  for(const auto &transition : sequence)
+    {
+      if(transition == "dummy")
+        continue;
+
+      if(std::regex_search(transition, match, REGEX_MOVEMENT_PATTERN))
+        {
+          int x = std::stoi(match[2]);
+          int y = std::stoi(match[3]);
+          auto &battleMap = BattleMap::getInstance();
+          return distances[x * battleMap.getGridSize() + y];
         }
     }
     return 0.0;
 }
 
-std::pair<std::vector<std::string>, std::array<double, 2>> getNearestAndMinimize(
-    std::vector<std::vector<std::string>>& sequences,
-    const std::vector<size_t>& sortedSequences,
-    const SequenceToThreat& sequenceToThreat,
-    const std::vector<double>& distances,
-    const TransitionStepThreat& sequenceIdxToTransitionStepThreat,
-    const std::unordered_map<std::string, std::shared_ptr<Actoid>>& transitionNameToAction
-) {
-    if (sortedSequences.empty()) {
-        return {{}, {0.0, 0.0}};
+std::pair<std::vector<std::string>, std::array<double, 2>>
+getNearestAndMinimize(std::vector<std::vector<std::string>> &sequences, const std::vector<size_t> &sortedSequences,
+                      const SequenceToThreat &sequenceToThreat, const blaze::DynamicVector<int> &distances,
+                      const TransitionStepThreat &sequenceIdxToTransitionStepThreat,
+                      const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction)
+{
+  if(sortedSequences.empty())
+    {
+      return {{}, {0.0, 0.0}};
     }
 
     // Find max threat
@@ -213,21 +226,23 @@ void decodeMsPathToActions(
         std::optional<size_t>(msPath.size() - 1) : std::nullopt;
 
     // Handle pre-MS movement
-    if (beforeMsIdx) {
+    if(beforeMsIdx)
+      {
         std::vector<Coord> beforePath = {initialCoord};
-        for (size_t i = 0; i <= *beforeMsIdx; ++i) {
+        for(size_t i = 0; i <= *beforeMsIdx; ++i)
+          {
             std::smatch match;
-            if (std::regex_search(msPath[i], match, REGEX_MS_MOVEMENT_PATTERN)) {
+            if(std::regex_search(msPath[i], match, REGEX_MS_MOVEMENT_PATTERN))
+              {
                 beforePath.push_back({std::stoi(match[1]), std::stoi(match[2])});
-            }
-        }
-        
+              }
+          }
+
         auto incrementPath = convertPathToIncrements(beforePath);
-        auto movementGen = std::make_unique<MovementGenerator>(combatant, incrementPath, Movement::STANDARD);
-        for (auto& action : movementGen->getGenerator()) {
-            actions.push_back(std::move(action));
-        }
-    }
+        auto movementFactory = std::make_unique<MovementFactory>(combatant, incrementPath, AbilityType::STANDARD_MOVEMENT);
+        auto moveActions = movementFactory->createAll();
+        actions.insert(actions.end(), moveActions.begin(), moveActions.end());
+      }
 
     // Handle MS
     if (msIdx) {
@@ -239,118 +254,133 @@ void decodeMsPathToActions(
     }
 
     // Handle post-MS movement
-    if (afterMsIdx) {
+    if(afterMsIdx)
+      {
         std::vector<Coord> afterPath = {actions.back()->getCoord()};
-        for (size_t i = *msIdx + 1; i <= *afterMsIdx; ++i) {
+        for(size_t i = *msIdx + 1; i <= *afterMsIdx; ++i)
+          {
             std::smatch match;
-            if (std::regex_search(msPath[i], match, REGEX_MS_MOVEMENT_PATTERN)) {
+            if(std::regex_search(msPath[i], match, REGEX_MS_MOVEMENT_PATTERN))
+              {
                 afterPath.push_back({std::stoi(match[1]), std::stoi(match[2])});
-            }
-        }
-        
+              }
+          }
+
         auto incrementPath = convertPathToIncrements(afterPath);
-        auto movementGen = std::make_unique<MovementGenerator>(combatant, incrementPath, Movement::STANDARD);
-        for (auto& action : movementGen->getGenerator()) {
-            actions.push_back(std::move(action));
-        }
-    }
+        auto movementFactory = std::make_unique<MovementFactory>(combatant, incrementPath, AbilityType::STANDARD_MOVEMENT);
+        auto moveActions = movementFactory->createAll();
+        actions.insert(actions.end(), moveActions.begin(), moveActions.end());
+      }
 }
 
-std::vector<std::shared_ptr<Actoid>> translateSequenceToActions(
-    Combatant* combatant,
-    const std::vector<double>& distances,
-    const std::vector<std::vector<size_t>>& shortestPaths,
-    const std::unordered_map<std::string, std::shared_ptr<Actoid>>& transitionNameToAction,
-    const MovementTransitionMap& movementTransitionToCoordAndType,
-    const std::vector<std::string>& sequence,
-    const TransitionToMsPath& transitionNameToMsPath
-) {
-    std::vector<std::shared_ptr<Actoid>> actions;
-    auto& battleMap = BattleMap::getInstance();
+std::vector<std::shared_ptr<Actoid>>
+translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
+                           const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+                           const MovementTransitionMap &movementTransitionToCoordAndType, const std::vector<std::string> &sequence,
+                           const TransitionToMsPath &transitionNameToMsPath)
+{
+  std::vector<std::shared_ptr<Actoid>> actions;
+  auto &battleMap = BattleMap::getInstance();
 
-    for (const auto& transition : sequence) {
-        if (transition == "dummy") continue;
+  for(const auto &transition : sequence)
+    {
+      if(transition == "dummy")
+        continue;
 
-        try {
-            actions.push_back(transitionNameToAction.at(transition));
-        } catch (const std::out_of_range&) {
-            try {
-                const auto& [coord, movementType] = movementTransitionToCoordAndType.at(transition);
-                
-                switch (movementType) {
-                    case MovementThreatType::STANDARD:
-                    case MovementThreatType::DODGED: {
-                        auto path = battleMap.getPathToCoord(combatant, coord, distances, shortestPaths, true);
-                        auto generator = std::make_unique<MovementGenerator>(combatant, path, Movement::STANDARD);
-                        auto moveActions = generator->getGenerator();
-                        actions.insert(actions.end(), moveActions.begin(), moveActions.end());
-                        break;
-                    }
-                    case MovementThreatType::DISENGAGED: {
-                        auto path = battleMap.getPathToCoord(combatant, coord, distances, shortestPaths, false);
-                        auto generator = std::make_unique<MovementGenerator>(combatant, path, Movement::DISENGAGED);
-                        auto moveActions = generator->getGenerator();
-                        actions.insert(actions.end(), moveActions.begin(), moveActions.end());
-                        break;
-                    }
-                    case MovementThreatType::MISTY_STEPPED: {
-                        auto msFactory = getFactoryOfType(combatant->getBonusActionFactories(), BonusAction::MISTY_STEP);
-                        if (!msFactory) {
-                            std::cerr << "Could not find Misty Step factory\n";
-                            continue;
-                        }
-                        decodeMsPathToActions(
-                            combatant,
-                            battleMap.getCombatantPosition(combatant),
-                            transitionNameToMsPath.at(transition),
-                            actions,
-                            msFactory
-                        );
-                        break;
-                    }
-                    default:
-                        std::cerr << "Unknown movement type: " << static_cast<int>(movementType) << '\n';
+      try
+        {
+          actions.push_back(transitionNameToAction.at(transition));
+        }
+      catch(const std::out_of_range &)
+        {
+          try
+            {
+              const auto &[coord, movementType] = movementTransitionToCoordAndType.at(transition);
+
+              switch(movementType)
+                {
+                case MovementThreatType::STANDARD:
+                  case MovementThreatType::DODGED: {
+                    auto pathOpt = battleMap.getPathToCoord(*combatant, coord, distances, shortestPaths, true);
+                    if(!pathOpt)
+                      {
+                        std::cerr << "Could not find path for standard movement\n";
+                        continue;
+                      }
+                    auto movementFactory = std::make_unique<MovementFactory>(combatant, *pathOpt, AbilityType::STANDARD_MOVEMENT);
+                    auto moveActions = movementFactory->createAll();
+                    actions.insert(actions.end(), moveActions.begin(), moveActions.end());
+                    break;
+                  }
+                  case MovementThreatType::DISENGAGED: {
+                    auto pathOpt = battleMap.getPathToCoord(*combatant, coord, distances, shortestPaths, false);
+                    if(!pathOpt)
+                      {
+                        std::cerr << "Could not find path for disengage movement\n";
+                        continue;
+                      }
+                    auto movementFactory = std::make_unique<MovementFactory>(combatant, *pathOpt, AbilityType::DISENGAGED_MOVEMENT);
+                    auto moveActions = movementFactory->createAll();
+                    actions.insert(actions.end(), moveActions.begin(), moveActions.end());
+                    break;
+                  }
+                  case MovementThreatType::MISTY_STEPPED: {
+                    auto msFactory = getFactoryOfType(combatant->getBonusActionFactories(), AbilityType::MISTY_STEP);
+                    if(!msFactory)
+                      {
+                        std::cerr << "Could not find Misty Step factory\n";
+                        continue;
+                      }
+                    decodeMsPathToActions(combatant, battleMap.getCombatantCoordinates(combatant), transitionNameToMsPath.at(transition), actions,
+                                          msFactory);
+                    break;
+                  }
+                default: std::cerr << "Unknown movement type: " << static_cast<int>(movementType) << '\n';
                 }
-            } catch (const std::out_of_range&) {
-                std::cerr << "Unknown transition type: " << transition << '\n';
+            }
+          catch(const std::out_of_range &)
+            {
+              std::cerr << "Unknown transition type: " << transition << '\n';
             }
         }
     }
 
-    return actions;
+  return actions;
 }
-std::optional<DagBuildResult> buildActionDag(
-    Combatant* combatant,
-    const std::unique_ptr<ActionDag>& protoDag,
-    const std::unordered_map<std::string, std::shared_ptr<Actoid>>& transitionNameToAction,
-    const std::vector<double>& distances,
-    const std::vector<std::vector<size_t>>& shortestPaths
-) {
-    auto& battleMap = BattleMap::getInstance();
-    battleMap.calcVisibilityDictForAllCoords(combatant, shortestPaths);
 
-    // Clear calculation caches
-    for (const auto& [_, action] : transitionNameToAction) {
-        action->clearCache();
-    }
+std::optional<DagBuildResult> buildActionDag(Combatant *combatant, const std::unique_ptr<ActionDag> &protoDag,
+                                             const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+                                             const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+{
+  auto &battleMap = BattleMap::getInstance();
+  battleMap.calcVisibilityDictForAllCoords(combatant, shortestPaths);
 
-    // Get post-transitions of priority actions
-    PostTransitions postPriorityActionTransitions;
-    PostTransitions postPriorityBonusActionTransitions;
-    auto protoTransitions = protoDag->getAllTransitions();
+  // Clear calculation caches
+  // for (const auto& [_, action] : transitionNameToAction) {
+  //     action->clearCache();
+  // }
 
-    // Handle Misty Step related transitions
-    std::optional<std::vector<std::pair<std::string, std::string>>> postMistyStepTransitions;
-    if (std::find(protoTransitions.begin(), protoTransitions.end(), "Misty Step to 0, 0_1") != protoTransitions.end()) {
-        auto tempDag = std::make_unique<ActionDag>(*protoDag);
-        tempDag->trigger("Misty Step to 0, 0_1");
-        
-        std::vector<std::pair<std::string, std::string>> msTransitions;
-        try {
-            for (const auto& trans : tempDag->getForwardTransitions(tempDag->getState())) {
-                const auto& action = transitionNameToAction.at(trans.first);
-                if (!action->hasFlag(ActoidFlags::IS_PRIORITY)) {
-                    msTransitions.push_back(trans);
+  // Get post-transitions of priority actions
+  PostTransitions postPriorityActionTransitions;
+  PostTransitions postPriorityBonusActionTransitions;
+  auto protoTransitions = protoDag->getAllTransitions();
+
+  // Handle Misty Step related transitions
+  std::optional<std::vector<std::pair<std::string, std::string>>> postMistyStepTransitions;
+  if(std::find(protoTransitions.begin(), protoTransitions.end(), "Misty Step to 0, 0_1") != protoTransitions.end())
+    {
+      auto tempDag = std::make_unique<ActionDag>(*protoDag);
+      tempDag->trigger("Misty Step to 0, 0_1");
+
+      std::vector<std::pair<std::string, std::string>> msTransitions;
+      try
+        {
+          for(const auto &trans : tempDag->getForwardTransitions(tempDag->getState()))
+            {
+              const auto &action = transitionNameToAction.at(trans.first);
+              if(!action->hasFlag(ActoidFlags::IS_PRIORITY))
+                {
+                  msTransitions.push_back(trans);
                 }
             }
             postMistyStepTransitions = msTransitions;
@@ -436,28 +466,24 @@ std::optional<DagBuildResult> buildActionDag(
     return std::nullopt;
 }
 
-
-std::optional<BestSequenceResult> findBestSequence(
-    Combatant* combatant,
-    const ActionDag& dag,
-    const std::unordered_map<std::string, std::shared_ptr<Actoid>>& transitionNameToAction,
-    const TransitionToEligibleCoords& transitionToEligibleCoords,
-    const MovementTransitionMap& movementTransitionToCoordAndType,
-    const std::vector<double>& distances,
-    const std::vector<std::vector<size_t>>& shortestPaths,
-    double infeasibilityMultiplier
-) {
-    auto& battleMap = BattleMap::getInstance();
-    std::unordered_map<Effect*, std::vector<Coord>> effectToCoords;
-    for (const auto& effect : battleMap.getEffectTracker().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+std::optional<BestSequenceResult>
+findBestSequence(Combatant *combatant, const ActionDag &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+                 const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
+                 const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
+{
+  auto &battleMap = BattleMap::getInstance();
+  auto &effectTracker = EffectTracker::getInstance();
+  std::unordered_map<Effect *, std::vector<Coord>> effectToCoords;
+  for(const auto &effect : effectTracker.getAoeEffects())
+    {
+      effectToCoords[effect.get()] = effect->getAffectedCoords();
     }
 
     TransitionToMsPath transitionNameToMsPath;
     SequenceToThreat sequenceToThreat;
     TransitionStepThreat sequenceIdxToTransitionStepThreat;
     
-    Coord currentCoords = battleMap.getCombatantPosition(combatant);
+    Coord currentCoords = battleMap.getCombatantCoordinates(combatant);
     
     // Remove Misty Step to current coordinate if it exists
     auto msCurrentCoordKey = "ms_(" + std::to_string(currentCoords[0]) + ", " + std::to_string(currentCoords[1]) + ")";
@@ -537,7 +563,7 @@ std::optional<BestSequenceResult> findBestSequence(
         if (coordAndType.first.empty()) continue;
         
         const auto& [coord, _] = coordAndType;
-        battleMap.clearCaches();
+        // battleMap.clearCaches();
         
         auto withPosition = [&](const std::function<void()>& fn) {
             battleMap.withCombatantPosition(combatant, coord, fn);
@@ -650,8 +676,8 @@ std::optional<BestSequenceResult> findBestSequence(
 
 // Main action selector function
 std::shared_ptr<Actoid> getAction(Combatant* combatant) {
-    auto& battleMap = BattleMap::get();
-    battleMap.clearCaches();
+    auto& battleMap = BattleMap::getInstance();
+    // battleMap.clearCaches();
     
     // Handle wildshape
     combatant = combatant->getCurrentForm();
@@ -664,13 +690,13 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     }
 
     // Check if we need to get up from prone
-    if (isAffectedBy(combatant, Conditions::PRONE) && 
+    if (combatant->isAffectedBy(Conditions::PRONE) && 
         combatant->getMovement() >= combatant->getSpeed() / 2) {
         return GetUpFactory().create();
     }
 
     // Calculate distances and paths
-    auto [distances, shortestPaths] = battleMap.calcDijkstra(combatant);
+    auto [distances, shortestPaths] = battleMap.calcDijkstra(*combatant);
     combatant->setShortestPathsCache(shortestPaths);
 
     // Check existing action plan

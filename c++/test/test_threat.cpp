@@ -255,7 +255,7 @@ TEST_F(ThreatUtilsTest, MediumToMediumPassByOneAoo) {
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-    battleMap->clearCaches();
+    // battleMap->clearCaches();
     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
     EXPECT_NEAR(threat.back(), -5.95 - 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01);
 
@@ -501,7 +501,7 @@ TEST_F(ThreatUtilsTest, RangedSpellWithEnemyAdjacent) {
     auto threatEnemyAdjacent = firebolt->calculateThreat();
 
     battleMap->moveCombatant(*draconic_sorcerer_lvl_1, Coord{2, 14});
-    firebolt->clearCache();
+    // firebolt->clearCache();
     auto threatNoEnemyAdjacent = firebolt->calculateThreat();
 
     EXPECT_GT(threatNoEnemyAdjacent, threatEnemyAdjacent);

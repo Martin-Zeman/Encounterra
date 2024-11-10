@@ -1,8 +1,66 @@
 #include "core/round_manager.hpp"
 #include "actions/action_selection.hpp"
+#include "abilities/wildshape_utils.hpp"
 
 namespace enc
 {
+
+  void RoundManager::rollInitiative()
+  {
+    for(auto &combatant : _combatants)
+      {
+        combatant->rollInitiative();
+      }
+  }
+
+  void RoundManager::orderByInitiative()
+  {
+    std::sort(_combatants.begin(), _combatants.end(),
+              [](const Combatant *a, const Combatant *b) { return a->getCurrentInit() > b->getCurrentInit(); });
+
+    std::cout << "--------------INITIATIVE ORDER--------------\n";
+    for(const auto &combatant : _combatants)
+      {
+        std::cout << combatant->toString() << " with " << combatant->getCurrentInit() << "\n";
+      }
+  }
+
+  void RoundManager::prepCombatants()
+  {
+    for(auto &combatant : _combatants)
+      {
+        // Check for moon & regular wildshape
+        for(const auto &factory : combatant->getBonusActionFactories())
+          {
+            if(factory->getAbilityType() == AbilityType::MOON_WILDSHAPE || factory->getAbilityType() == AbilityType::WILDSHAPE)
+              {
+                auto *wildshapeFactory = static_cast<WildshapeFactory *>(factory.get());
+                combatant->setAvailableWildshapeForms(
+                  WildshapeUtils::preallocateWildshapeForms(combatant, factory->getAbilityType(), *wildshapeFactory));
+                break;
+              }
+          }
+      }
+  }
+
+  bool RoundManager::goesBeforeInInitiative(Combatant *combatant1, Combatant *combatant2) const
+  {
+    auto it1 = std::find(_combatants.begin(), _combatants.end(), combatant1);
+    auto it2 = std::find(_combatants.begin(), _combatants.end(), combatant2);
+    return it1 < it2;
+  }
+
+  bool RoundManager::isOnlyOneTeamStanding() const { return Teams::getInstance().getSurvivingTeams().size() == 1; }
+
+  void RoundManager::reset(const std::unordered_map<Combatant *, Coord> &combatantInitialPositions)
+  {
+    EffectTracker::getInstance().reset();
+    for(auto &combatant : _combatants)
+      {
+        combatant->reset();
+      }
+    BattleMap::getInstance().resetCombatantsToInitialPositions(combatantInitialPositions);
+  }
 
   std::unordered_map<Color, std::unordered_map<Statistics, int>>
   RoundManager::simulateN(int n, std::queue<std::unordered_map<Color, std::unordered_map<Statistics, int>>> *resultQueue)

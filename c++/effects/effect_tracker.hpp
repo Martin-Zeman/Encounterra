@@ -40,7 +40,7 @@ namespace enc
 
     bool isAffectingCombatant(Combatant *combatant, EffectType effectType) const;
 
-    std::vector<std::shared_ptr<Effect>> getAoeEffects() const;
+    std::vector<std::shared_ptr<AoeEffect>> getAoeEffects() const;
 
     std::vector<std::shared_ptr<Effect>> getEffectsByInitiator(Combatant *initiator) const;
 

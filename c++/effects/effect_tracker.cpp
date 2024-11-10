@@ -97,14 +97,14 @@ namespace enc
     return false;
   }
 
-  std::vector<std::shared_ptr<Effect>> EffectTracker::getAoeEffects() const
+  std::vector<std::shared_ptr<AoeEffect>> EffectTracker::getAoeEffects() const
   {
-    std::vector<std::shared_ptr<Effect>> aoeEffects;
+    std::vector<std::shared_ptr<AoeEffect>> aoeEffects;
     for(const auto &effect : _effects)
       {
-        if(std::dynamic_pointer_cast<AoeSquareEffect>(effect) || std::dynamic_pointer_cast<AoeSphericEffect>(effect))
+        if(auto aoeEffect = std::dynamic_pointer_cast<AoeEffect>(effect))
           {
-            aoeEffects.push_back(effect);
+            aoeEffects.push_back(aoeEffect);
           }
       }
     return aoeEffects;

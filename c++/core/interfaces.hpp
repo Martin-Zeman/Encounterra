@@ -11,7 +11,7 @@
 namespace enc
 {
 
-  enum class ActoidFlags
+  enum class ActoidFlags : uint32_t
   {
     DEFAULT = 1 << 0,
     IS_ATTACK_LIKE = 1 << 1,
@@ -35,10 +35,11 @@ namespace enc
   {
   public:
     explicit Actoid(ActoidFactory &factory, ActoidFlags flags = ActoidFlags::DEFAULT, AbilityType abilityType = AbilityType::NOP)
-        : _factory(factory), _actoidFlags(flags), _abilityType(abilityType)
+        : _factory(factory), _actoidFlags(static_cast<uint32_t>(flags)), _abilityType(abilityType)
     {}
     virtual ~Actoid() = default;
-    ActoidFlags getFlags() const { return _actoidFlags; }
+    ActoidFlags getFlags() const { return static_cast<ActoidFlags>(_actoidFlags); }
+    bool hasFlag(ActoidFlags flag) const { return (_actoidFlags & static_cast<uint32_t>(flag)) != 0; }
     AbilityType getAbilityType() const;
     ActoidFactory &getFactory() { return _factory; }
     virtual std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
@@ -47,11 +48,11 @@ namespace enc
 
   protected:
     ActoidFactory &_factory;
-    ActoidFlags _actoidFlags;
+    uint32_t _actoidFlags;
     AbilityType _abilityType;
   };
 
-  enum class FactoryFlags
+  enum class FactoryFlags : uint32_t
   {
     DEFAULT = 1 << 0,
     IS_ATTACK_LIKE = 1 << 1,
@@ -129,5 +130,17 @@ namespace enc
   public:
     virtual ~DirectThreat() = default;
     virtual double calculateThreatDelta(const ThreatModifiers &modifiers) const { return 0; };
+  };
+
+  /**
+   * A factory that modifies the user and the factories they have at their disposal
+   */
+  class TransformerFactory : public Threat, public ActoidFactory
+  {
+  public:
+    explicit TransformerFactory(const std::string &name, Combatant *combatant, AbilityType abilityType) : ActoidFactory(name, combatant, abilityType)
+    {}
+
+    virtual ~TransformerFactory() = default;
   };
 }

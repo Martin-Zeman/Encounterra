@@ -21,6 +21,7 @@
 #include "core/spellslots.hpp"
 #include "actions/action_types.hpp"
 #include "actions/action_constants.hpp"
+#include "abilities/wildshape.hpp"
 #include "spells/firebolt.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
@@ -135,9 +136,16 @@ namespace enc
     int getLevel() const { return _level; }
     int getCurrentHp() const { return _currHp; }
     int getCurrentInit() const { return _currInit; }
+    int getMovement() const { return _movement; }
+    int getSpeed() const { return _speed; }
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     std::shared_ptr<ActoidFactory>& getActionFactory(AbilityType type);
     void rollForRecharge();
+    const std::vector<std::shared_ptr<ActoidFactory>> &getActionFactories() { return _actionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactories() { return _bonusActionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactories() { return _reactionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactories() { return _hasteActionFactories; }
+    void setAvailableWildshapeForms(std::vector<std::shared_ptr<Wildshape>> wildshapeForms) { _availableWildshapeForms = wildshapeForms; }
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -451,6 +459,7 @@ namespace enc
     int _weaponDmgDealtThisTurn = 0; // This is used for ActionSurge
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
     Effect *_concentrationEffect = nullptr;
+    std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
 
   protected:
     Size _size{Size::MEDIUM};

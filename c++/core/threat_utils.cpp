@@ -1,4 +1,8 @@
-#include "combat/threat_utils.hpp"
+#include "core/threat_utils.hpp"
+#include "core/geometry.hpp"
+#include "core/misc.hpp"
+#include "core/teams.hpp"
+#include "effects/effect_tracker.hpp"
 #include <numeric>
 #include <algorithm>
 #include <cmath>
@@ -30,7 +34,7 @@ namespace enc
   std::pair<double, double>
   calculateThreatInDelta(Combatant *combatant, int threatRadius, const std::unordered_map<std::string, double> &modifiers, uint32_t factoryFlags)
   {
-    auto &battleMap = BattleMap::get();
+    auto &battleMap = BattleMap::getInstance();
     auto potentialAttackers = battleMap.getNonSwallowedEnemiesWithinHopDistance(combatant, threatRadius);
     double minThreat = 0.0;
     double maxThreat = 0.0;
@@ -73,7 +77,7 @@ namespace enc
   std::pair<double, double>
   calculateThreatOutDelta(Combatant *combatant, int threatRadius, const std::unordered_map<std::string, double> &modifiers, uint32_t factoryFlags)
   {
-    auto &battleMap = BattleMap::get();
+    auto &battleMap = BattleMap::getInstance();
     auto potentialTargets = battleMap.getNonSwallowedEnemiesWithinHopDistance(combatant, threatRadius);
     double outThreatMaxDeltaAcc = 0.0;
     double outThreatMinDeltaAcc = 0.0;
@@ -129,7 +133,7 @@ namespace enc
 
   double calculateAvgThreatIn(Combatant *combatant, int threatRadius, uint32_t factoryFlags)
   {
-    auto &battleMap = BattleMap::get();
+    auto &battleMap = BattleMap::getInstance();
     auto potentialAttackers = battleMap.getNonSwallowedEnemiesWithinHopDistance(combatant, threatRadius);
     double incomingThreatAcc = 0.0;
     int counter = 0;
@@ -171,18 +175,19 @@ namespace enc
 
   double getSavingThrowFailProb(int dc, int stBonus) { return std::max(0.0, std::min(1.0, (dc - 1 - stBonus) / 20.0)); }
 
-  double getDangerZoneThreat(const std::vector<Coord> &coords, Combatant *combatant, int delta)
+  double getDangerZoneThreat(const Coords &coords, Combatant *combatant, int delta)
   {
-    auto &battleMap = BattleMap::get();
-    auto enemies = battleMap.getNonSwallowedEnemies(combatant);
+    auto &battleMap = BattleMap::getInstance();
+    Teams &teams = Teams::getInstance();
+    auto enemies = teams.getAliveNonSwallowedEnemies(*combatant);
     double threatAcc = 0.0;
 
     for(auto *enemy : enemies)
       {
-        auto enemyPos = battleMap.getCombatantPosition(enemy);
+        auto enemyPos = Coords(battleMap.getCombatantCoordinates(*enemy));
         auto &[dzAction, dzFactory] = enemy->getDangerZoneAttack();
 
-        if(battleMap.getHopDistance(enemyPos, coords) + delta <= enemy->getSpeed() + dzFactory->getRange())
+        if(getHopDistanceCoords(enemyPos, coords) + delta <= enemy->getSpeed() + dzFactory->getRange())
           {
             threatAcc += dzFactory->calculateThreatToTarget(combatant, false) * DZ_CONSTANT;
           }
@@ -191,13 +196,13 @@ namespace enc
     return threatAcc;
   }
 
-  double getThreatForStayingAtCoord(const std::vector<Coord> &coords, Combatant *combatant)
+  double getThreatForStayingAtCoord(const Coords &coords, Combatant *combatant)
   {
     double threatAcc = 0.0;
-    auto &battleMap = BattleMap::get();
-    auto &effectTracker = battleMap.getEffectTracker();
+    auto &battleMap = BattleMap::getInstance();
+    auto &effectTracker = EffectTracker::getInstance();
 
-    std::unordered_map<Effect *, std::vector<Coord>> effectToCoords;
+    std::unordered_map<AoeEffect *, Coords> effectToCoords;
     for(const auto &effect : effectTracker.getAoeEffects())
       {
         effectToCoords[effect.get()] = effect->getAffectedCoords();
@@ -206,7 +211,7 @@ namespace enc
     // Process AoE effects
     for(const auto &[effect, affectedCoords] : effectToCoords)
       {
-        if(battleMap.getHopDistance(affectedCoords, coords) == 0)
+        if(getHopDistanceCoords(affectedCoords, coords) == 0)
           {
             double startTurnThreat = effect->threatOnStartOfTurn(combatant);
             assert(startTurnThreat >= 0);
@@ -226,12 +231,12 @@ namespace enc
     return threatAcc;
   }
 
-  double getAoeAndAooThreatForIncrement(const std::vector<Coord> &currCoordsData, const std::vector<int> &increment, Combatant *combatant,
-                                        const std::unordered_map<Effect *, std::vector<Coord>> &effectToCoords, bool disengaged, bool dodged)
+  double getAoeAndAooThreatForIncrement(const Coords &currCoordsData, const std::vector<int> &increment, Combatant *combatant,
+                                        const std::unordered_map<AoeEffect *, Coords> &effectToCoords, bool disengaged, bool dodged)
   {
     auto rollType = dodged ? RollType::DISADVANTAGE : RollType::STRAIGHT;
     double threatAcc = 0.0;
-    auto &battleMap = BattleMap::get();
+    auto &battleMap = BattleMap::getInstance();
 
     auto withPosition = [&](const std::function<void()> &fn) { battleMap.withCombatantPosition(combatant, currCoordsData[0], fn); };
 
@@ -250,7 +255,7 @@ namespace enc
         }
 
       // Account for AoE
-      std::vector<Coord> postIncrementCoords = currCoordsData;
+      Coords postIncrementCoords = currCoordsData;
       for(auto &coord : postIncrementCoords)
         {
           coord[0] += increment[0];
@@ -259,8 +264,8 @@ namespace enc
 
       for(const auto &[effect, affectedCoords] : effectToCoords)
         {
-          int preIncrementDist = battleMap.getHopDistance(currCoordsData, affectedCoords);
-          int postIncrementDist = battleMap.getHopDistance(postIncrementCoords, affectedCoords);
+          int preIncrementDist = getHopDistanceCoords(currCoordsData, affectedCoords);
+          int postIncrementDist = getHopDistanceCoords(postIncrementCoords, affectedCoords);
 
           if(preIncrementDist == 1 && postIncrementDist == 0)
             {
@@ -281,11 +286,11 @@ namespace enc
   }
 
   std::vector<double> accumulateThreatAlongPath(const std::vector<std::vector<int>> &path, Combatant *combatant,
-                                                const std::unordered_map<Effect *, std::vector<Coord>> &effectToCoords, bool disengaged, bool dodged)
+                                                const std::unordered_map<AoeEffect *, Coords> &effectToCoords, bool disengaged, bool dodged)
   {
     double threatAcc = 0.0;
-    auto &battleMap = BattleMap::get();
-    auto currCoords = battleMap.getCombatantPosition(combatant);
+    auto &battleMap = BattleMap::getInstance();
+    auto currCoords = battleMap.getCombatantCoordinates(*combatant);
 
     std::vector<double> threatAlongPath;
     threatAlongPath.push_back(-getThreatForStayingAtCoord({currCoords}, combatant));
@@ -308,22 +313,22 @@ namespace enc
 
   std::pair<std::vector<double>, std::vector<std::string>>
   calcThreatForPathWithMistyStep(const std::vector<std::vector<int>> &path, Combatant *combatant,
-                                 const std::unordered_map<Effect *, std::vector<Coord>> &effectToCoords)
+                                 const std::unordered_map<AoeEffect *, std::vector<Coord>> &effectToCoords)
   {
     double threatAcc = 0.0;
     std::vector<double> maxThreatPath;
     std::vector<std::string> bestPath;
-    auto &battleMap = BattleMap::get();
+    auto &battleMap = BattleMap::getInstance();
 
     // No path case
     if(path.empty())
       {
-        return {{-getThreatForStayingAtCoord({battleMap.getCombatantPosition(combatant)}, combatant)}, {}};
+        return {{-getThreatForStayingAtCoord({battleMap.getCombatantCoordinates(*combatant)}, combatant)}, {}};
       }
 
     // Build the Misty Step DAG
-    auto currCoords = battleMap.getCombatantPosition(combatant);
-    std::vector<Coord> coords = {currCoords};
+    auto currCoords = battleMap.getCombatantCoordinates(*combatant);
+    std::vector<Coord> coords = currCoords.get();
 
     // Create state machine for path analysis
     StateMachineTemplate msDAG;
@@ -335,7 +340,7 @@ namespace enc
     std::unordered_map<std::string, double> transitionToThreat;
 
     // Build states and transitions along the path
-    Coord currentPos = currCoords;
+    Coord currentPos = currCoords.get()[0];
     std::string previousState = initialStateName;
     std::string previousMsState = initialStateName;
 
