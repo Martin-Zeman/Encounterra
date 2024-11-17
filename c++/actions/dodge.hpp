@@ -12,7 +12,7 @@ namespace enc
     friend class Dodge;
 
   public:
-    DodgeFactory(Combatant *combatant) : ActoidFactory("DodgeFactory", combatant, AbilityType::DODGE) {}
+    DodgeFactory(Combatant *combatant) : ActoidFactory("DodgeFactory", "Dodge", combatant, AbilityType::DODGE) {}
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 

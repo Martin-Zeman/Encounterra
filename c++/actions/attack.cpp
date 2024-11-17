@@ -5,11 +5,11 @@
 namespace enc
 {
 
-  AttackFactory::AttackFactory(const std::string &name, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice,
+  AttackFactory::AttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice,
                                int dmgBonus, DamageType dmgType, int attackRange, int critRange, Uses &&ammo,
                                std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg, bool usesDex, bool twoHanded,
                                Die toHitBonusDie)
-      : DirectThreatFactory(name, combatant, abilityType), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType),
+      : DirectThreatFactory(name, abilityName, combatant, abilityType), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType),
         _attackRange(attackRange), _shortRange(attackRange / 4), _critRange(critRange), _ammo(std::move(ammo)), _onHit(std::move(onHit)),
         _extraDmg(extraDmg), _usesDex(usesDex), _twoHanded(twoHanded), _toHitBonusDie(toHitBonusDie)
   {
@@ -101,9 +101,9 @@ namespace enc
     bool considerDist = false;
     RollType rollType = RollType::STRAIGHT;
 
-    if(kwargs.find("consider_dist") != kwargs.end())
+    if(kwargs.find("considerDist") != kwargs.end())
       {
-        considerDist = std::any_cast<bool>(kwargs.at("consider_dist"));
+        considerDist = std::any_cast<bool>(kwargs.at("considerDist"));
       }
     if(kwargs.find("roll_type") != kwargs.end())
       {

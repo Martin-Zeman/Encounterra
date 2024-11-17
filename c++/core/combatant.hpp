@@ -89,20 +89,15 @@ namespace enc
     virtual int getClassId() const = 0;
 
     bool isAlive() const;
-
     void onDie();
-
     void onEndOfTurn();
-
     void rollInitiative();
     void reset();
     void newTurn();
-
     void setSize(Size size) { _size = size; };
     Size getSize() const { return _size; };
     int getAC() const { return _ac; };
     void setTeamColor(Color teamColor) { _teamColor = teamColor; }
-
     bool hasAction() { return _hasAction; }
     bool hasBonusAction() { return _hasBonusAction; }
     bool hasHasteAction() { return _hasHasteAction; }
@@ -137,6 +132,8 @@ namespace enc
     int getCurrentHp() const { return _currHp; }
     int getCurrentInit() const { return _currInit; }
     int getMovement() const { return _movement; }
+    bool hasMovement(int dist = 1) const { return _movement >= dist; }
+    void decrementMovement(int dist = 1) { _movement -= dist; }
     int getSpeed() const { return _speed; }
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     std::shared_ptr<ActoidFactory>& getActionFactory(AbilityType type);
@@ -146,6 +143,9 @@ namespace enc
     const std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactories() { return _reactionFactories; }
     const std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactories() { return _hasteActionFactories; }
     void setAvailableWildshapeForms(std::vector<std::shared_ptr<Wildshape>> wildshapeForms) { _availableWildshapeForms = wildshapeForms; }
+    DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
+    AttackFactory* getAoOFactory() { return _aoOFactory; }
+    void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { *_shortestPathsCache = shortestPaths; }
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -156,7 +156,7 @@ namespace enc
     std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
                                                   DamageType damageType, int attackRange)
     {
-      auto factory = std::make_shared<MeleeAttackFactory>(name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -164,7 +164,7 @@ namespace enc
     std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
                                                    int dmgBonus, DamageType damageType, int attackRange)
     {
-      auto factory = std::make_shared<RangedAttackFactory>(name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = std::make_shared<RangedAttackFactory>("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -438,6 +438,8 @@ namespace enc
     std::vector<std::shared_ptr<ActoidFactory>> _bonusActionFactories;
     std::vector<std::shared_ptr<ActoidFactory>> _reactionFactories;
     std::vector<std::shared_ptr<ActoidFactory>> _hasteActionFactories;
+    DirectThreatFactory *_dangerZoneAttack = nullptr;
+    AttackFactory *_aoOFactory = nullptr;
     std::vector<AbilityType> _passiveAbilities;
     std::unordered_map<SavingThrow, int> _savingThrows
       = {{SavingThrow::STR, 0}, {SavingThrow::DEX, 0}, {SavingThrow::CON, 0}, {SavingThrow::INT, 0}, {SavingThrow::WIS, 0}, {SavingThrow::CHA, 0}};
@@ -460,6 +462,7 @@ namespace enc
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
     Effect *_concentrationEffect = nullptr;
     std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
+    blaze::DynamicMatrix<Coord> *_shortestPathsCache = nullptr; // TODO: Do I still need this?
 
   protected:
     Size _size{Size::MEDIUM};

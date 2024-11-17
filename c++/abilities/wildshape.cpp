@@ -6,7 +6,7 @@
 namespace enc
 {
   WildshapeFactory::WildshapeFactory(Combatant *combatant, AbilityType actionType)
-      : TransformerFactory("Wildshape", combatant, actionType), _combatant(combatant), _actionType(actionType)
+      : TransformerFactory("WildshapeFactory", "Wildshape", combatant, actionType), _combatant(combatant), _actionType(actionType)
   {
     setFlag(FactoryFlags::TARGETS_SELF);
   }

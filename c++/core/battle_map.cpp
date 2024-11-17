@@ -1581,4 +1581,257 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
   void BattleMap::setCombatRound(uint32_t round) { _combatRound = round; }
   uint32_t BattleMap::getCombatRound() { return _combatRound; }
+
+  void BattleMap::withCombatantPosition(Combatant *combatant, const Coord &temporaryPosition, const std::function<void()> &fn)
+  {
+    Coord originalPosition = getCombatantCoordinates(*combatant).get()[0];
+
+    try
+      {
+        moveCombatant(*combatant, temporaryPosition);
+        fn();
+        moveCombatant(*combatant, originalPosition);
+      }
+    catch(...)
+      {
+        // Ensure we restore the original position even if an exception occurs
+        moveCombatant(*combatant, originalPosition);
+        throw; // Re-throw the exception
+      }
+  }
+
+  void BattleMap::withCombatantWildshapeReplacement(Actoid &actoid, Combatant *combatant, const Coord &origCoords,
+                                                    const std::function<void(bool)> &fn)
+  {
+    if(combatant != actoid.getFactory().getCombatant())
+      {
+        Coords beforeWildshapePosition = getCombatantCoordinates(*combatant);
+        
+        Teams &teams = Teams::getInstance();
+        try
+          {
+            teams.replaceCombatant(*combatant, *actoid.getFactory().getCombatant());
+
+            auto wildshapePosition = findWildshapedCoordinate(combatant, actoid.getFactory().getCombatant()->getSize(), origCoords);
+
+            if(!wildshapePosition)
+              {
+                throw std::runtime_error("Could not find valid wildshape position");
+              }
+
+            removeCombatant(*combatant);
+            setCombatantCoordinates(*actoid.getFactory().getCombatant(), *wildshapePosition);
+
+            fn(true);
+          }
+        catch(...)
+          {
+            teams.replaceCombatant(*actoid.getFactory().getCombatant(), *combatant);
+            removeCombatant(*actoid.getFactory().getCombatant());
+            setCombatantCoordinates(*combatant, beforeWildshapePosition.get()[0]);
+            throw;
+          }
+
+        // Restore original state
+        teams.replaceCombatant(*actoid.getFactory().getCombatant(), *combatant);
+        removeCombatant(*actoid.getFactory().getCombatant());
+        setCombatantCoordinates(*combatant, beforeWildshapePosition.get()[0]);
+      }
+    else
+      {
+        fn(false);
+      }
+  }
+
+  std::optional<Coord> BattleMap::findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoords)
+  {
+    // Get original position and convert to matrix coordinates
+    Coord beforeWildshapeCoord = getCombatantCoordinates(*combatant).get()[0];
+    Coord matrixCoord = {static_cast<int>(_size - beforeWildshapeCoord[1] - 1), beforeWildshapeCoord[0]};
+
+    // Create accessibility matrix
+    MapMatrix mapAccessibilityMatrix(_size, _size, 0);
+
+    // Get accessible coordinates from shortest paths
+    // Note: This part needs adaptation since we're not using the Python cache
+    // Instead, we'll use whatever coordinate calculation method you have
+    auto accessibleCoords = getFreeCoordsInHopRange(getCombatantCoordinates(*combatant));
+    for(const auto &coord : accessibleCoords)
+      {
+        mapAccessibilityMatrix(_size - coord[1] - 1, coord[0]) = 1;
+      }
+
+    // Mark current position as accessible
+    mapAccessibilityMatrix(matrixCoord[0], matrixCoord[1]) = 1;
+
+    // Mark original coordinates if provided
+    if(origCoords)
+      {
+        mapAccessibilityMatrix(_size - (*origCoords)[1] - 1, (*origCoords)[0]) = 1;
+      }
+
+    // Calculate boundaries for possible positions
+    int startRow = matrixCoord[0];
+    int endRow = std::min(matrixCoord[0] + static_cast<int>(size), static_cast<int>(_size - 1));
+    int startCol = std::max(matrixCoord[1] - static_cast<int>(size), 0);
+    int endCol = matrixCoord[1];
+
+    // Generate possible root coordinates
+    std::vector<std::pair<int, int>> possibleRootCoordinates;
+    for(int row = startRow; row <= endRow; ++row)
+      {
+        for(int col = startCol; col <= endCol; ++col)
+          {
+            possibleRootCoordinates.emplace_back(row, col);
+          }
+      }
+
+    // Check each possible position
+    std::vector<Coord> resultCoordinates;
+    for(const auto &[rootRow, rootCol] : possibleRootCoordinates)
+      {
+        // Check if the area would fit within bounds
+        if(rootRow - static_cast<int>(size) < 0 || rootCol + static_cast<int>(size) >= static_cast<int>(_size))
+          {
+            continue;
+          }
+
+        // Check if the entire area is accessible
+        bool isValid = true;
+        for(int r = rootRow - static_cast<int>(size); r <= rootRow && isValid; ++r)
+          {
+            for(int c = rootCol; c <= rootCol + static_cast<int>(size); ++c)
+              {
+                if(mapAccessibilityMatrix(r, c) == 0)
+                  {
+                    isValid = false;
+                    break;
+                  }
+              }
+          }
+
+        if(isValid)
+          {
+            // Convert back to battle map coordinates
+            resultCoordinates.push_back({rootCol, static_cast<int>(_size - 1 - rootRow)});
+          }
+      }
+
+    // If no valid positions found, return nullopt
+    if(resultCoordinates.empty())
+      {
+        return std::nullopt;
+      }
+
+    // Convert original coordinate for distance comparison
+    Coord originalCoord = {matrixCoord[1], static_cast<int>(_size - 1 - matrixCoord[0])};
+
+    // Sort by distance to original position
+    std::sort(resultCoordinates.begin(), resultCoordinates.end(), [&originalCoord](const Coord &a, const Coord &b) {
+      double distA = std::sqrt(std::pow(originalCoord[0] - a[0], 2) + std::pow(originalCoord[1] - a[1], 2));
+      double distB = std::sqrt(std::pow(originalCoord[0] - b[0], 2) + std::pow(originalCoord[1] - b[1], 2));
+      return distA < distB;
+    });
+
+    return resultCoordinates[0];
+  }
+
+  std::vector<Combatant *> BattleMap::getPamEligibleCombatants(Combatant *combatant, const Coord &increment) const
+  {
+    std::vector<Combatant *> eligibleCombatants;
+
+    // Retrieve the combatant's current position
+    auto combatantCoordIt = _combatantCoordinateCache.find(combatant->_instanceId);
+    if(combatantCoordIt == _combatantCoordinateCache.end())
+      {
+        // The combatant might be dead, e.g., following an AoO
+        return eligibleCombatants;
+      }
+    const Coord &combatantCoords = combatantCoordIt->second;
+
+    Teams& teams = Teams::getInstance();
+
+    // Iterate over all other combatants in the map
+    for(const auto &[currCombatantId, coords] : _combatantCoordinateCache)
+      {
+        Combatant * currCombatant = teams.getCombatantById(currCombatantId);
+        if(currCombatantId != combatant->_instanceId && teams.areEnemies(*currCombatant, *combatant))
+          {
+            // Skip if the combatant is incapacitated or affected by certain conditions
+            if(currCombatant->isAffectedByAny({Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED, Conditions::UNCONSCIOUS,
+                                               Conditions::PETRIFIED}))
+              {
+                continue;
+              }
+
+            try
+              {
+                // Calculate pre- and post-increment distances
+                
+                int preIncrementDist = getHopDistanceCombatants(*combatant, *currCombatant);
+                int postIncrementDist = getHopDistanceCoords(combatantCoords + increment, coords);
+
+                // Check for Polearm Master eligibility
+                if(currCombatant->hasAbility(AbilityType::POLEARM_MASTER) && preIncrementDist > currCombatant->getMeleeReactionRange()
+                   && postIncrementDist == currCombatant->getMeleeReactionRange() && currCombatant->hasReaction())
+                  {
+                    eligibleCombatants.push_back(currCombatant);
+                  }
+              }
+            catch(const std::exception &)
+              {
+                // Ignore errors related to invalid distance calculations
+                continue;
+              }
+          }
+      }
+
+    return eligibleCombatants;
+  }
+
+  std::vector<Combatant *> BattleMap::getAooEligibleCombatants(Combatant *combatant, const Coord &increment) const
+  {
+    std::vector<Combatant *> eligibleCombatants;
+    Teams& teams = Teams::getInstance();
+
+    // Iterate over all combatants on the map
+    for(const auto &[currCombatantId, pos] : _combatantCoordinateCache)
+      {
+        Combatant * currCombatant = teams.getCombatantById(currCombatantId);
+        if(currCombatantId != combatant->_instanceId && currCombatant->isAlive() && teams.areEnemies(*currCombatant, *combatant))
+          {
+            // Skip if the combatant is incapacitated or affected by certain conditions
+            if(currCombatant->isAffectedByAny({Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED, Conditions::UNCONSCIOUS,
+                                               Conditions::PETRIFIED}))
+              {
+                continue;
+              }
+
+            try
+              {
+                // Retrieve positions
+                const Coord &combatantPos = _combatantCoordinateCache.at(combatant->_instanceId);
+                const Coord &currCombatantPos = _combatantCoordinateCache.at(currCombatant);
+
+                // Calculate pre- and post-increment distances
+                int preIncrementDist = getHopDistanceCoords(combatantPos, currCombatantPos);
+                int postIncrementDist = getHopDistanceCoords(combatantPos + increment, pos);
+
+                // Check for Attack of Opportunity (AoO) eligibility
+                if(preIncrementDist == currCombatant->getMeleeReactionRange() && postIncrementDist > currCombatant->getMeleeReactionRange()
+                   && currCombatant->hasReaction())
+                  {
+                    eligibleCombatants.push_back(currCombatant);
+                  }
+              }
+            catch(const std::exception &)
+              {
+                // Ignore errors related to invalid distance calculations
+                continue;
+              }
+          }
+      }
+
+    return eligibleCombatants;
+  }
 }

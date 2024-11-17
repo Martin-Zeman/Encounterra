@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <limits>
 #include <blaze/Math.h>
 #include "core/types.hpp"
 #include "core/threat_modifiers.hpp"
@@ -82,6 +83,7 @@ namespace enc
   {
   public:
     std::string _name;
+    std::string _abilityName;
 
   protected:
     Combatant *_combatant;
@@ -89,12 +91,14 @@ namespace enc
     AbilityType _abilityType;
 
   public:
-    ActoidFactory(std::string name, Combatant *combatant, AbilityType abilityType)
-        : _name(name), _combatant(combatant), _flags(static_cast<uint32_t>(FactoryFlags::DEFAULT)), _abilityType(abilityType)
+    ActoidFactory(std::string name, std::string abilityName, Combatant *combatant, AbilityType abilityType)
+        : _name(name), _abilityName(abilityName), _combatant(combatant), _flags(static_cast<uint32_t>(FactoryFlags::DEFAULT)),
+          _abilityType(abilityType)
     {}
     void setFlag(FactoryFlags flag) { _flags |= static_cast<uint32_t>(flag); }
     void clearFlag(FactoryFlags flag) { _flags &= ~static_cast<uint32_t>(flag); }
     bool hasFlag(FactoryFlags flag) const { return (_flags & static_cast<uint32_t>(flag)) != 0; }
+    uint32_t getFlags() const { return _flags; }
     Combatant *getCombatant() { return _combatant; }
     virtual ~ActoidFactory() = default;
     virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) = 0;
@@ -108,13 +112,17 @@ namespace enc
   class DirectThreatFactory : public ActoidFactory
   {
   protected:
-    DirectThreatFactory(std::string name, Combatant *combatant, AbilityType abilityType) : ActoidFactory(name, combatant, abilityType)
+    DirectThreatFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType)
+        : ActoidFactory(name, abilityName, combatant, abilityType)
     {
       setFlag(FactoryFlags::IS_DIRECT_THREAT);
     }
+    virtual double calculateMaxThreat() const = 0;
+
+  public:
+    virtual int getRange() const { return std::numeric_limits<int>::max(); }
     virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const = 0;
     virtual double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const { return 0; }; //  Not always needed
-    virtual double calculateMaxThreat() const = 0;
   };
 
   class Threat
@@ -132,13 +140,24 @@ namespace enc
     virtual double calculateThreatDelta(const ThreatModifiers &modifiers) const { return 0; };
   };
 
+  class AoeThreat : public Threat
+  {
+  public:
+    virtual ~AoeThreat() = default;
+    virtual double threatOnEnter(Combatant *target, const Kwargs & kwargs) const { return 0; };
+    virtual double threatOnMoveWithin(Combatant *target, const Kwargs & kwargs) const { return 0; };
+    virtual double threatOnStartOfTurn(Combatant *target, const Kwargs & kwargs) const { return 0; };
+    virtual double threatOnEndOfTurn(Combatant *target, const Kwargs & kwargs) const { return 0; };
+  };
+
   /**
    * A factory that modifies the user and the factories they have at their disposal
    */
   class TransformerFactory : public Threat, public ActoidFactory
   {
   public:
-    explicit TransformerFactory(const std::string &name, Combatant *combatant, AbilityType abilityType) : ActoidFactory(name, combatant, abilityType)
+    explicit TransformerFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType)
+        : ActoidFactory(name, abilityName, combatant, abilityType)
     {}
 
     virtual ~TransformerFactory() = default;

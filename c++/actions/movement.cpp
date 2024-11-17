@@ -1,7 +1,18 @@
 #include "actions/movement.hpp"
+#include "core/combatant.hpp"
 
 namespace enc
 {
+  const std::unordered_map<AbilityType, std::string> MovementFactory::MOVEMENT_TYPE_NAMES
+    = {{AbilityType::STANDARD_MOVEMENT, "Standard Movement"},
+       {AbilityType::DISENGAGED_MOVEMENT, "Disengaged Movement"},
+       {AbilityType::FORCED_MOVEMENT, "Forced Movement"},
+       {AbilityType::GET_UP_FROM_PRONE, "Get Up From Prone"}};
+
+  MovementFactory::MovementFactory(Combatant *combatant, std::vector<Coord> path, AbilityType movementType)
+      : ActoidFactory("MovementFactory", MOVEMENT_TYPE_NAMES.at(movementType), combatant, movementType), _path(path)
+  {}
+
   std::vector<std::shared_ptr<Actoid>> MovementFactory::createAll(void *previousActionInDag)
   {
     std::vector<std::shared_ptr<Actoid>> increments;
@@ -11,12 +22,12 @@ namespace enc
 
     for(const auto &increment : _path)
       {
-        if(!getCombatant()->hasMovement())
-          break;
+        // if(!_combatant->hasMovement()) actually, how much movement a combatant has should not enter into this
+        //   break;
 
         increments.push_back(std::make_shared<MovementIncrement>(increment, isStandardMovement, *this));
 
-        getCombatant()->decrementMovement(1); // Assuming 1 movement per increment
+        // _combatant->decrementMovement();
       }
 
     return increments;

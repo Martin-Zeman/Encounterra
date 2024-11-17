@@ -14,7 +14,7 @@ namespace enc
         : Actoid(factory, ActoidFlags::IS_MOVEMENT), _increment(increment), _incursAOO(incursAOO)
     {}
 
-    std::string toString() const override { return "(" + std::to_string(_increment[0]) + "," + std::to_string(_increment[1]) + ")"; }
+    operator std::string() const { return "(" + std::to_string(_increment[0]) + "," + std::to_string(_increment[1]) + ")"; }
     const Coord &getIncrement() const { return _increment; }
     bool incursAOO() const { return _incursAOO; }
 
@@ -26,9 +26,9 @@ namespace enc
   class MovementFactory : public ActoidFactory
   {
   public:
-    MovementFactory(Combatant *combatant, std::vector<Coord> path, AbilityType movementType = AbilityType::STANDARD_MOVEMENT)
-        : ActoidFactory("Movement", combatant, movementType), _path(path)
-    {}
+    static const std::unordered_map<AbilityType, std::string> MOVEMENT_TYPE_NAMES;
+
+    MovementFactory(Combatant *combatant, std::vector<Coord> path, AbilityType movementType = AbilityType::STANDARD_MOVEMENT);
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
     std::shared_ptr<Actoid> create(void *target) override;
@@ -42,8 +42,9 @@ namespace enc
 
   class GetUpFactory : public ActoidFactory
   {
+    friend class GetUpFromProne; // Allow GetUpFromProne to access private members of GetUpFactory
   public:
-    GetUpFactory(Combatant *combatant) : ActoidFactory("Get Up", combatant, AbilityType::GET_UP_FROM_PRONE) {}
+    GetUpFactory(Combatant *combatant) : ActoidFactory("Get Up Factory", "Get Up", combatant, AbilityType::GET_UP_FROM_PRONE) {}
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override { return {create(nullptr)}; }
 
@@ -56,7 +57,7 @@ namespace enc
   public:
     explicit GetUpFromProne(ActoidFactory &factory) : Actoid(factory, ActoidFlags::IS_GET_UP_FROM_PRONE) {}
 
-    std::string toString() const override { return "Get Up from Prone"; }
+    operator std::string() const { return "Get Up from Prone"; }
     std::string shorthandStr() const { return "Get Up from Prone"; }
   };
 }

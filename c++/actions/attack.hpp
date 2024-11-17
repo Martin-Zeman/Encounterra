@@ -17,9 +17,10 @@ namespace enc
     friend class Attack;
 
   public:
-    AttackFactory(const std::string &name, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice, int dmgBonus,
-                  DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(), std::vector<std::unique_ptr<OnHit>> onHit = {},
-                  std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false, bool twoHanded = false, Die toHitBonusDie = {});
+    AttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType, int toHit,
+                  std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(),
+                  std::vector<std::unique_ptr<OnHit>> onHit = {}, std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false,
+                  bool twoHanded = false, Die toHitBonusDie = {});
 
     AttackFactory(const AttackFactory& other);
 

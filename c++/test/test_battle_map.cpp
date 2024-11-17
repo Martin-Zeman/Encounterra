@@ -13,6 +13,7 @@
 #include "combatants/stone_giant.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
 #include "combatants/battlemaster_fighter_lvl_5.hpp"
+#include "combatants/moon_druid_lvl_5.hpp"
 #include "combatants/giant_toad.hpp"
 #include "combatants/green_dragon_wyrmling.hpp"
 #include "combatants/ogre.hpp"
@@ -36,6 +37,7 @@ protected:
   DraconicSorcererLvl1* draconic_sorcerer_lvl_1;
   WildHeartBarbarianLvl3* wild_heart_barbarian;
   BattlemasterFighterLvl5* battlemaster_fighter_lvl_5;
+  MoonDruidLvl5* moon_druid_lvl_5;
   StoneGiant* stone_giant;
   Ogre* ogre;
   GiantToad* giant_toad;
@@ -54,6 +56,7 @@ protected:
     wild_heart_barbarian = new WildHeartBarbarianLvl3(1);
     stone_giant = new StoneGiant(1);
     battlemaster_fighter_lvl_5 = new BattlemasterFighterLvl5(1);
+    moon_druid_lvl_5 = new MoonDruidLvl5(1);
     ogre = new Ogre(1);
     giant_toad = new GiantToad(1);
     green_dragon_wyrmling = new GreenDragonWyrmling(1);
@@ -66,8 +69,9 @@ protected:
         // delete draconic_sorcerer_lvl_1;
         // delete bugbear;
         // delete wild_heart_barbarian;
+        // delete wild_heart_barbarian;
         // delete stone_giant;
-        // delete battlemaster_fighter_lvl_5;
+        // delete moon_druid_lvl_5;
         // delete ogre;
         // delete giant_toad;
         // delete green_dragon_wyrmling;
@@ -1378,6 +1382,186 @@ TEST_F(BattleMapTest, GetNearestFreeAdjacentCoordLargeHuge)
   auto targetCoords = battleMap->getCombatantCoordinates(*bugbear);
   auto nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
   EXPECT_NE(nearest.value(), (Coord{7, 10}));
+}
+
+/*
+    We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a large creature.
+    The cavity is large enough for two possible placements of the large creature. But it picks the closer one.
+*/
+TEST_F(BattleMapTest, FindWildshapedCoordinateLargeTwoOptions)
+{
+  ASSERT_TRUE(battleMap->placeTerrain({2, 6}, Terrain::IMPASSABLE_TERRAIN, 1));
+  ASSERT_TRUE(battleMap->placeTerrain({5, 4}, Terrain::IMPASSABLE_TERRAIN, 1));
+  ASSERT_TRUE(battleMap->placeTerrain({5, 9}, Terrain::IMPASSABLE_TERRAIN, 1));
+  ASSERT_TRUE(battleMap->placeTerrain({7, 6}, Terrain::IMPASSABLE_TERRAIN, 0));
+  ASSERT_TRUE(battleMap->placeTerrain({7, 7}, Terrain::IMPASSABLE_TERRAIN, 0));
+
+  battleMap->buildBaseAdjacencyMatrix();
+
+  battleMap->setCombatantCoordinates(*moon_druid_lvl_5, {5, 7});
+
+  auto dijkstraResult = battleMap->calcDijkstra(*moon_druid_lvl_5);
+  moon_druid_lvl_5->setShortestPathsCache(dijkstraResult.shortestPaths);
+
+  auto coordOpt = battleMap->findWildshapedCoordinate(moon_druid_lvl_5, Size::LARGE);
+
+  ASSERT_TRUE(coordOpt.has_value());
+  auto coord = coordOpt.value();
+  EXPECT_EQ(coord[0], 5);
+  EXPECT_EQ(coord[1], 6);
+}
+
+/*
+    We create a cavity surrounded bv impassable terrain and place a druid in it. The druid wants to wildshape into a huge creature.
+    There's only one option how the huge creature can be placed and that it's two hops away from the druid.
+*/
+TEST_F(BattleMapTest, FindWildshapedCoordinateHugeOneOption)
+{
+  ASSERT_TRUE(battleMap->placeTerrain({1, 4}, Terrain::IMPASSABLE_TERRAIN, 1));
+  ASSERT_TRUE(battleMap->placeTerrain({4, 1}, Terrain::IMPASSABLE_TERRAIN, 1));
+
+  battleMap->buildBaseAdjacencyMatrix();
+
+  battleMap->setCombatantCoordinates(*moon_druid_lvl_5, {2, 2});
+
+  auto dijkstraResult = battleMap->calcDijkstra(*moon_druid_lvl_5);
+  moon_druid_lvl_5->setShortestPathsCache(dijkstraResult.shortestPaths);
+
+  auto coordOpt = battleMap->findWildshapedCoordinate(moon_druid_lvl_5, Size::HUGE);
+
+  ASSERT_TRUE(coordOpt.has_value());
+  auto coord = coordOpt.value();
+  EXPECT_EQ(coord[0], 0);
+  EXPECT_EQ(coord[1], 0);
+}
+
+/**
+ *  The druid wants to wildshape into a huge creature. The druid's at the top edge of the map and they're in open terrain there's three
+    options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
+ */
+TEST_F(BattleMapTest, FindWildshapedCoordinateHugeThreeOptionsVariant1)
+{
+  // Druid's position near the top edge of the map
+  battleMap->setCombatantCoordinates(*moon_druid_lvl_5, {9, 14});
+
+  // Build adjacency matrix for pathfinding
+  battleMap->buildBaseAdjacencyMatrix();
+
+  // Calculate shortest paths and cache them
+  auto dijkstraResult = battleMap->calcDijkstra(*moon_druid_lvl_5);
+  moon_druid_lvl_5->setShortestPathsCache(dijkstraResult.shortestPaths);
+
+  // Find Huge creature placement
+  auto coordOpt = battleMap->findWildshapedCoordinate(moon_druid_lvl_5, Size::HUGE);
+
+  // Verify the placement
+  ASSERT_TRUE(coordOpt.has_value());
+  EXPECT_EQ(coordOpt.value(), Coord({9, 12}));
+}
+
+/**
+    The druid wants to wildshape into a huge creature. The druid's at the right edge of the map and they're in open terrain there's three
+    options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
+ */
+TEST_F(BattleMapTest, FindWildshapedCoordinateHugeThreeOptionsVariant2)
+{
+  // Druid's position near the right edge of the map
+  battleMap->setCombatantCoordinates(*moon_druid_lvl_5, {14, 8});
+
+  // Build adjacency matrix for pathfinding
+  battleMap->buildBaseAdjacencyMatrix();
+
+  // Calculate shortest paths and cache them
+  auto dijkstraResult = battleMap->calcDijkstra(*moon_druid_lvl_5);
+  moon_druid_lvl_5->setShortestPathsCache(dijkstraResult.shortestPaths);
+
+  // Find Huge creature placement
+  auto coordOpt = battleMap->findWildshapedCoordinate(moon_druid_lvl_5, Size::HUGE);
+
+  // Verify the placement
+  ASSERT_TRUE(coordOpt.has_value());
+  EXPECT_EQ(coordOpt.value(), Coord({12, 8}));
+}
+
+/**
+ *  The druid wants to wildshape into a huge creature. The druid's near the top right edge of the map and they're in open terrain there's four
+    options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
+ */
+TEST_F(BattleMapTest, FindWildshapedCoordinateHugeFourOptions)
+{
+  // Druid's position near the top-right edge of the map
+  battleMap->setCombatantCoordinates(*moon_druid_lvl_5, {13, 13});
+
+  // Build adjacency matrix for pathfinding
+  battleMap->buildBaseAdjacencyMatrix();
+
+  // Calculate shortest paths and cache them
+  auto dijkstraResult = battleMap->calcDijkstra(*moon_druid_lvl_5);
+  moon_druid_lvl_5->setShortestPathsCache(dijkstraResult.shortestPaths);
+
+  // Find Huge creature placement
+  auto coordOpt = battleMap->findWildshapedCoordinate(moon_druid_lvl_5, Size::HUGE);
+
+  // Verify the placement
+  ASSERT_TRUE(coordOpt.has_value());
+  EXPECT_EQ(coordOpt.value(), Coord({12, 12}));
+}
+
+/**
+    The druid wants to wildshape into a huge creature. The druid's out in open terrain there's nine
+    options how the huge creature can be placed and that it's two hops away from the druid. But only the closest one will be picked.
+ */
+TEST_F(BattleMapTest, FindWildshapedCoordinateHugeNineOptions)
+{
+  // Druid's position in open terrain
+  battleMap->setCombatantCoordinates(*moon_druid_lvl_5, {4, 12});
+
+  // Build adjacency matrix for pathfinding
+  battleMap->buildBaseAdjacencyMatrix();
+
+  // Calculate shortest paths and cache them
+  auto dijkstraResult = battleMap->calcDijkstra(*moon_druid_lvl_5);
+  moon_druid_lvl_5->setShortestPathsCache(dijkstraResult.shortestPaths);
+
+  // Find Huge creature placement
+  auto coordOpt = battleMap->findWildshapedCoordinate(moon_druid_lvl_5, Size::HUGE);
+
+  // Verify the placement
+  ASSERT_TRUE(coordOpt.has_value());
+  EXPECT_EQ(coordOpt.value(), Coord({4, 12}));
+}
+
+/**
+ *  The druid wants to wildshape into a large creature. There's two enemies around so the best option is to side step and transform.
+    This scenario is based on an error encountered during testing.
+ */
+TEST_F(BattleMapTest, FindWildshapedCoordinateEnemiesAround)
+{
+  // Druid's position
+  battleMap->setCombatantCoordinates(*moon_druid_lvl_5, {1, 9});
+
+  // Enemy positions
+  battleMap->setCombatantCoordinates(*ogre, {2, 7});
+  battleMap->setCombatantCoordinates(*bugbear, {2, 10});
+
+  // Assign teams
+  teams->addCombatantToTeam(*moon_druid_lvl_5, Color::BLUE);
+  teams->addCombatantToTeam(*ogre, Color::RED);
+  teams->addCombatantToTeam(*bugbear, Color::RED);
+
+  // Build adjacency matrix for pathfinding
+  battleMap->buildBaseAdjacencyMatrix();
+
+  // Calculate shortest paths and cache them
+  auto dijkstraResult = battleMap->calcDijkstra(*moon_druid_lvl_5);
+  moon_druid_lvl_5->setShortestPathsCache(dijkstraResult.shortestPaths);
+
+  // Find Large creature placement, sidestepping enemies
+  auto coordOpt = battleMap->findWildshapedCoordinate(moon_druid_lvl_5, Size::LARGE, Coord{1, 9});
+
+  // Verify one of the possible placements
+  ASSERT_TRUE(coordOpt.has_value());
+  EXPECT_TRUE(coordOpt.value() == Coord({0, 8}) || coordOpt.value() == Coord({0, 9}) || coordOpt.value() == Coord({0, 10}));
 }
 }
 

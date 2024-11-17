@@ -8,7 +8,7 @@ namespace enc
 {
 
   FireboltFactory::FireboltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource)
-      : DirectThreatFactory("FireboltFactory", caster, abilityType), _toHit(toHit), _resource(resource),
+      : DirectThreatFactory("FireboltFactory", "Firebolt", caster, abilityType), _toHit(toHit), _resource(resource),
         _dmgDice(FireboltFactory::getDmgDice(caster->getLevel()))
   {
     setFlag(FactoryFlags::IS_ATTACK_LIKE);

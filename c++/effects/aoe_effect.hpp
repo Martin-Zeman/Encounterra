@@ -1,11 +1,12 @@
 #pragma once
 
 #include "effects/effect.hpp"
+#include "core/interfaces.hpp"
 #include <vector>
 
 namespace enc
 {
-  class AoeEffect : public Effect
+  class AoeEffect : public Effect, public AoeThreat
   {
   public:
     explicit AoeEffect(Combatant *initiator) : Effect(initiator) {}

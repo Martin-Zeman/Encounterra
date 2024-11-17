@@ -6,12 +6,12 @@
 
 namespace enc
 {
-  RangedAttackFactory::RangedAttackFactory(const std::string &name, Combatant *combatant, AbilityType abilityType, int toHit,
-                                           std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange, Uses &&ammo,
-                                           std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg, bool usesDex,
+  RangedAttackFactory::RangedAttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType,
+                                           int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange,
+                                           Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg, bool usesDex,
                                            bool twoHanded, Die toHitBonusDie)
-      : AttackFactory(name, combatant, abilityType, toHit, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo), std::move(onHit),
-                      extraDmg, usesDex, twoHanded, toHitBonusDie)
+      : AttackFactory(name, abilityName, combatant, abilityType, toHit, dmgDice, dmgBonus, dmgType, attackRange, critRange, std::move(ammo),
+                      std::move(onHit), extraDmg, usesDex, twoHanded, toHitBonusDie)
   {
     setFlag(FactoryFlags::IS_RANGED);
   }

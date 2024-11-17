@@ -31,8 +31,20 @@ namespace enc
            - meanDmg(toHit, dmgDice, dmgBonus, ac + acBonus, target->isImmuneTo(dmgType), target->isResistantTo(dmgType), critRange);
   }
 
-  std::pair<double, double>
-  calculateThreatInDelta(Combatant *combatant, int threatRadius, const std::unordered_map<std::string, double> &modifiers, uint32_t factoryFlags)
+  // std::vector<std::shared_ptr<DirectThreatFactory>> getDirectThreatFactories(const std::vector<std::shared_ptr<ActoidFactory>> &factories)
+  // {
+  //   std::vector<std::shared_ptr<DirectThreatFactory>> threatFactories;
+  //   for(const auto &factory : factories)
+  //     {
+  //       if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+  //         {
+  //           threatFactories.push_back(threatFactory);
+  //         }
+  //     }
+  //   return threatFactories;
+  // }
+
+  std::pair<double, double> calculateThreatInDelta(Combatant *combatant, int threatRadius, const ThreatModifiers &modifiers, uint32_t factoryFlags)
   {
     auto &battleMap = BattleMap::getInstance();
     auto potentialAttackers = battleMap.getNonSwallowedEnemiesWithinHopDistance(combatant, threatRadius);
@@ -41,41 +53,52 @@ namespace enc
 
     for(auto *pa : potentialAttackers)
       {
-        for(const auto &[_, factory] : pa->getActionFactories())
+        for(const auto &factory : pa->getActionFactories())
           {
-            if((factory->getFlags() & factoryFlags) && !(factory->getFlags() & FactoryFlags::PREVENT_ENDLESS_RECURSION))
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                double delta = factory->calculateThreatToTargetDelta(combatant, modifiers);
-                maxThreat = std::max(delta, maxThreat);
-                minThreat = std::min(delta, minThreat);
+                if((threatFactory->getFlags() & factoryFlags)
+                   && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
+                  {
+                    double delta = threatFactory->calculateThreatToTargetDelta(combatant, modifiers);
+                    maxThreat = std::max(delta, maxThreat);
+                    minThreat = std::min(delta, minThreat);
+                  }
               }
           }
 
-        for(const auto &[_, factory] : pa->getBonusActionFactories())
+        for(const auto &factory : pa->getBonusActionFactories())
           {
-            if((factory->getFlags() & factoryFlags) && !(factory->getFlags() & FactoryFlags::PREVENT_ENDLESS_RECURSION))
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                double delta = factory->calculateThreatToTargetDelta(combatant, modifiers);
-                maxThreat = std::max(delta, maxThreat);
-                minThreat = std::min(delta, minThreat);
+                if((threatFactory->getFlags() & factoryFlags)
+                   && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
+                  {
+                    double delta = threatFactory->calculateThreatToTargetDelta(combatant, modifiers);
+                    maxThreat = std::max(delta, maxThreat);
+                    minThreat = std::min(delta, minThreat);
+                  }
               }
           }
 
-        for(const auto &[_, factory] : pa->getHasteActionFactories())
+        for(const auto &factory : pa->getHasteActionFactories())
           {
-            if((factory->getFlags() & factoryFlags) && !(factory->getFlags() & FactoryFlags::PREVENT_ENDLESS_RECURSION))
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                double delta = factory->calculateThreatToTargetDelta(combatant, modifiers);
-                maxThreat = std::max(delta, maxThreat);
-                minThreat = std::min(delta, minThreat);
+                if((threatFactory->getFlags() & factoryFlags)
+                   && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
+                  {
+                    double delta = threatFactory->calculateThreatToTargetDelta(combatant, modifiers);
+                    maxThreat = std::max(delta, maxThreat);
+                    minThreat = std::min(delta, minThreat);
+                  }
               }
           }
       }
     return {minThreat, maxThreat};
   }
 
-  std::pair<double, double>
-  calculateThreatOutDelta(Combatant *combatant, int threatRadius, const std::unordered_map<std::string, double> &modifiers, uint32_t factoryFlags)
+  std::pair<double, double> calculateThreatOutDelta(Combatant *combatant, int threatRadius, const ThreatModifiers &modifiers, uint32_t factoryFlags)
   {
     auto &battleMap = BattleMap::getInstance();
     auto potentialTargets = battleMap.getNonSwallowedEnemiesWithinHopDistance(combatant, threatRadius);
@@ -87,42 +110,51 @@ namespace enc
         double minThreat = 0.0;
         double maxThreat = 0.0;
 
-        // Check action factories
-        for(const auto &[_, factory] : combatant->getActionFactories())
+        for(const auto &factory : combatant->getActionFactories())
           {
-            if((factory->getFlags() & factoryFlags) && !(factory->getFlags() & FactoryFlags::PREVENT_ENDLESS_RECURSION))
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                double delta = factory->calculateThreatToTargetDelta(pt, modifiers);
-                maxThreat = std::max(delta, maxThreat);
-                minThreat = std::min(delta, minThreat);
+                if((threatFactory->getFlags() & factoryFlags)
+                   && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
+                  {
+                    double delta = threatFactory->calculateThreatToTargetDelta(pt, modifiers);
+                    maxThreat = std::max(delta, maxThreat);
+                    minThreat = std::min(delta, minThreat);
+                  }
               }
           }
         outThreatMaxDeltaAcc += maxThreat;
         outThreatMinDeltaAcc += minThreat;
 
-        // Check bonus action factories
         minThreat = maxThreat = 0.0;
-        for(const auto &[_, factory] : combatant->getBonusActionFactories())
+        for(const auto &factory : combatant->getBonusActionFactories())
           {
-            if((factory->getFlags() & factoryFlags) && !(factory->getFlags() & FactoryFlags::PREVENT_ENDLESS_RECURSION))
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                double delta = factory->calculateThreatToTargetDelta(pt, modifiers);
-                maxThreat = std::max(delta, maxThreat);
-                minThreat = std::min(delta, minThreat);
+                if((threatFactory->getFlags() & factoryFlags)
+                   && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
+                  {
+                    double delta = threatFactory->calculateThreatToTargetDelta(pt, modifiers);
+                    maxThreat = std::max(delta, maxThreat);
+                    minThreat = std::min(delta, minThreat);
+                  }
               }
           }
         outThreatMaxDeltaAcc += maxThreat;
         outThreatMinDeltaAcc += minThreat;
 
-        // Check haste action factories
         minThreat = maxThreat = 0.0;
-        for(const auto &[_, factory] : combatant->getHasteActionFactories())
+        for(const auto &factory : combatant->getHasteActionFactories())
           {
-            if((factory->getFlags() & factoryFlags) && !(factory->getFlags() & FactoryFlags::PREVENT_ENDLESS_RECURSION))
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                double delta = factory->calculateThreatToTargetDelta(pt, modifiers);
-                maxThreat = std::max(delta, maxThreat);
-                minThreat = std::min(delta, minThreat);
+                if((threatFactory->getFlags() & factoryFlags)
+                   && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
+                  {
+                    double delta = threatFactory->calculateThreatToTargetDelta(pt, modifiers);
+                    maxThreat = std::max(delta, maxThreat);
+                    minThreat = std::min(delta, minThreat);
+                  }
               }
           }
         outThreatMaxDeltaAcc += maxThreat;
@@ -140,30 +172,39 @@ namespace enc
 
     for(auto *pa : potentialAttackers)
       {
-        for(const auto &[_, factory] : pa->getActionFactories())
+        for(const auto &factory : pa->getActionFactories())
           {
-            if(factory->getFlags() & factoryFlags)
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                incomingThreatAcc += factory->calculateThreatToTarget(combatant);
-                ++counter;
+                if(threatFactory->getFlags() & factoryFlags)
+                  {
+                    incomingThreatAcc += threatFactory->calculateThreatToTarget(combatant, {});
+                    ++counter;
+                  }
               }
           }
 
-        for(const auto &[_, factory] : pa->getBonusActionFactories())
+        for(const auto &factory : pa->getBonusActionFactories())
           {
-            if(factory->getFlags() & factoryFlags)
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                incomingThreatAcc += factory->calculateThreatToTarget(combatant);
-                ++counter;
+                if(threatFactory->getFlags() & factoryFlags)
+                  {
+                    incomingThreatAcc += threatFactory->calculateThreatToTarget(combatant, {});
+                    ++counter;
+                  }
               }
           }
 
-        for(const auto &[_, factory] : pa->getHasteActionFactories())
+        for(const auto &factory : pa->getHasteActionFactories())
           {
-            if(factory->getFlags() & factoryFlags)
+            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
-                incomingThreatAcc += factory->calculateThreatToTarget(combatant);
-                ++counter;
+                if(threatFactory->getFlags() & factoryFlags)
+                  {
+                    incomingThreatAcc += threatFactory->calculateThreatToTarget(combatant, {});
+                    ++counter;
+                  }
               }
           }
       }
@@ -184,12 +225,12 @@ namespace enc
 
     for(auto *enemy : enemies)
       {
-        auto enemyPos = Coords(battleMap.getCombatantCoordinates(*enemy));
-        auto &[dzAction, dzFactory] = enemy->getDangerZoneAttack();
+        const Coords& enemyPos = battleMap.getCombatantCoordinates(*enemy);
+        DirectThreatFactory* dzFactory = enemy->getDangerZoneAttack();
 
-        if(getHopDistanceCoords(enemyPos, coords) + delta <= enemy->getSpeed() + dzFactory->getRange())
+        if(dzFactory && getHopDistanceCoords(enemyPos, coords) + delta <= enemy->getSpeed() + dzFactory->getRange())
           {
-            threatAcc += dzFactory->calculateThreatToTarget(combatant, false) * DZ_CONSTANT;
+            threatAcc += dzFactory->calculateThreatToTarget(combatant, {{"considerDist", false}}) * DZ_CONSTANT;
           }
       }
 
@@ -213,11 +254,11 @@ namespace enc
       {
         if(getHopDistanceCoords(affectedCoords, coords) == 0)
           {
-            double startTurnThreat = effect->threatOnStartOfTurn(combatant);
+            double startTurnThreat = effect->threatOnStartOfTurn(combatant, {});
             assert(startTurnThreat >= 0);
             threatAcc += startTurnThreat;
 
-            double endTurnThreat = effect->threatOnEndOfTurn(combatant);
+            double endTurnThreat = effect->threatOnEndOfTurn(combatant, {});
             assert(endTurnThreat >= 0);
             threatAcc += endTurnThreat;
           }
@@ -231,14 +272,14 @@ namespace enc
     return threatAcc;
   }
 
-  double getAoeAndAooThreatForIncrement(const Coords &currCoordsData, const std::vector<int> &increment, Combatant *combatant,
+  double getAoeAndAooThreatForIncrement(const Coords &currCoordsData, const Coord &increment, Combatant *combatant,
                                         const std::unordered_map<AoeEffect *, Coords> &effectToCoords, bool disengaged, bool dodged)
   {
     auto rollType = dodged ? RollType::DISADVANTAGE : RollType::STRAIGHT;
     double threatAcc = 0.0;
     auto &battleMap = BattleMap::getInstance();
 
-    auto withPosition = [&](const std::function<void()> &fn) { battleMap.withCombatantPosition(combatant, currCoordsData[0], fn); };
+    auto withPosition = [&](const std::function<void()> &fn) { battleMap.withCombatantPosition(combatant, currCoordsData.get()[0], fn); };
 
     withPosition([&]() {
       // Account for AoO
@@ -247,20 +288,19 @@ namespace enc
           auto enemies = battleMap.getAooEligibleCombatants(combatant, increment);
           for(auto *enemy : enemies)
             {
-              auto &[_, aooFactory] = enemy->getAooFactory();
-              double threat = aooFactory->calculateThreatToTarget(combatant, rollType, /*considerDist=*/false);
+              AttackFactory* aooFactory = enemy->getAoOFactory();
+              if (!aooFactory)
+              {
+                continue;
+              }
+              double threat = aooFactory->calculateThreatToTarget(combatant, Kwargs{{"rollType", rollType}, {"considerDist", false}});
               assert(threat >= 0);
               threatAcc -= threat;
             }
         }
 
       // Account for AoE
-      Coords postIncrementCoords = currCoordsData;
-      for(auto &coord : postIncrementCoords)
-        {
-          coord[0] += increment[0];
-          coord[1] += increment[1];
-        }
+      Coords postIncrementCoords = currCoordsData + increment;
 
       for(const auto &[effect, affectedCoords] : effectToCoords)
         {
@@ -269,13 +309,13 @@ namespace enc
 
           if(preIncrementDist == 1 && postIncrementDist == 0)
             {
-              double threat = effect->threatOnEnter(combatant);
+              double threat = effect->threatOnEnter(combatant, {});
               assert(threat >= 0);
               threatAcc -= threat;
             }
           else if(preIncrementDist == 0 && postIncrementDist == 0)
             {
-              double threat = effect->threatOnMoveWithin(combatant);
+              double threat = effect->threatOnMoveWithin(combatant, {});
               assert(threat >= 0);
               threatAcc -= threat;
             }
@@ -285,7 +325,7 @@ namespace enc
     return threatAcc;
   }
 
-  std::vector<double> accumulateThreatAlongPath(const std::vector<std::vector<int>> &path, Combatant *combatant,
+  std::vector<double> accumulateThreatAlongPath(const std::vector<Coord> &path, Combatant *combatant,
                                                 const std::unordered_map<AoeEffect *, Coords> &effectToCoords, bool disengaged, bool dodged)
   {
     double threatAcc = 0.0;
@@ -302,8 +342,7 @@ namespace enc
         assert(t <= 0);
         threatAcc += t;
 
-        currCoordsData[0] += increment[0];
-        currCoordsData[1] += increment[1];
+        currCoordsData = currCoordsData + increment;
 
         threatAlongPath.push_back(threatAcc - getThreatForStayingAtCoord({currCoordsData}, combatant));
       }
@@ -312,7 +351,7 @@ namespace enc
   }
 
   std::pair<std::vector<double>, std::vector<std::string>>
-  calcThreatForPathWithMistyStep(const std::vector<std::vector<int>> &path, Combatant *combatant,
+  calcThreatForPathWithMistyStep(const std::vector<Coord> &path, Combatant *combatant,
                                  const std::unordered_map<AoeEffect *, std::vector<Coord>> &effectToCoords)
   {
     double threatAcc = 0.0;
