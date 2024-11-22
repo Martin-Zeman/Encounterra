@@ -1,11 +1,13 @@
 #pragma once
 
 // #include "core/battle_map.hpp"
-#include "core/combatant.hpp"
 #include "effects/effect.hpp"
+#include <unordered_set>
 
 namespace enc
 {
+  class Combatant;
+
   class EffectTracker
   {
   public:
@@ -26,9 +28,9 @@ namespace enc
         instance.reset();
     }
 
-    void add(std::shared_ptr<Effect> effect);
+    std::weak_ptr<Effect> add(std::shared_ptr<Effect> effect);
 
-    void remove(std::shared_ptr<Effect> effect);
+    void remove(const std::shared_ptr<Effect> &effect);
 
     void startOfTurnTick(Combatant *combatant);
 
@@ -50,7 +52,7 @@ namespace enc
 
     void removeEffectFromCombatantByType(Combatant *combatant, EffectType effectType);
 
-    void removeEffectFromCombatant(Combatant *combatant, std::shared_ptr<Effect> effect);
+    void removeEffectFromCombatant(Combatant *combatant, const std::shared_ptr<Effect>& effect);
 
     bool isCombatantHiddenFrom(Combatant *combatant, Combatant *target) const;
 

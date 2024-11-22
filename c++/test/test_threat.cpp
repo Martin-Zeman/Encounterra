@@ -2,11 +2,11 @@
 #include "core/threat_utils.hpp"
 #include "core/battle_map.hpp"
 // #include "combat/actions/movement.hpp"
-// #include "combat/spells/cloud_of_daggers.hpp"
-// #include "combat/spells/firebolt.hpp"
-// #include "combat/spells/hunger_of_hadar.hpp"
-// #include "combat/spells/misty_step.hpp"
-// #include "combat/spells/spike_growth.hpp"
+#include "spells/cloud_of_daggers.hpp"
+// #include "spells/firebolt.hpp"
+// #include "spells/hunger_of_hadar.hpp"
+#include "spells/misty_step.hpp"
+#include "spells/spike_growth.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
 #include "combatants/bugbear.hpp"
@@ -55,7 +55,7 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
 
-    auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, *goblin, goblin->getSpellslots());
+    auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, goblin, &goblin->getSpellslots());
     auto spikeGrowth = sgFactory.create(Coord{7, 3});
     effectTracker->add(std::move(spikeGrowth));
 

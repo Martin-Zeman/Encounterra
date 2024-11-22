@@ -122,6 +122,9 @@ namespace enc
     Combatant *getGrappledTarget();
     std::optional<ConditionWithDC> needsToBreakOutOfGrapple();
     void breakOutOfGrapple();
+    void setConcentrationEffect(std::shared_ptr<Effect> effect);
+    void breakConcentration();
+    bool isConcentrating() const;
     bool isAffectedByAny(const std::vector<Conditions> &conditions) const;
     void setResourceDepletionLevel(ResourceDepletionLevel level) { _resouceDepletionLevel = level; }
     bool isImmuneTo(DamageType dmgType);
@@ -460,7 +463,7 @@ namespace enc
     std::vector<Actoid> _actionPlan; // TODO: This needs to support movement as well
     int _weaponDmgDealtThisTurn = 0; // This is used for ActionSurge
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
-    Effect *_concentrationEffect = nullptr;
+    std::weak_ptr<Effect> _concentrationEffect;
     std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
     blaze::DynamicMatrix<Coord> *_shortestPathsCache = nullptr; // TODO: Do I still need this?
 

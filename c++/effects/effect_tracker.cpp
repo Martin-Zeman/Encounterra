@@ -4,9 +4,13 @@
 
 namespace enc
 {
-  void EffectTracker::add(std::shared_ptr<Effect> effect) { _effects.push_back(effect); }
+  std::weak_ptr<Effect> EffectTracker::add(std::shared_ptr<Effect> effect)
+  {
+    _effects.push_back(effect);
+    return std::weak_ptr<Effect>(effect);
+  }
 
-  void EffectTracker::remove(std::shared_ptr<Effect> effect)
+  void EffectTracker::remove(const std::shared_ptr<Effect> &effect)
   {
     effect->deactivate();
     _effects.erase(std::remove(_effects.begin(), _effects.end(), effect), _effects.end());
@@ -156,7 +160,7 @@ namespace enc
     _effects = std::move(remainingEffects);
   }
 
-  void EffectTracker::removeEffectFromCombatant(Combatant *combatant, std::shared_ptr<Effect> effect)
+  void EffectTracker::removeEffectFromCombatant(Combatant *combatant, const std::shared_ptr<Effect>& effect)
   {
     if(!effect->deactivateForCombatant(combatant))
       {

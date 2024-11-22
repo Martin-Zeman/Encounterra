@@ -2,6 +2,7 @@
 #include "actions/dodge.hpp"
 #include "actions/disengage.hpp"
 #include "core/rechargeable_factory.hpp"
+#include "effects/effect_tracker.hpp"
 
 namespace enc
 {
@@ -72,7 +73,7 @@ namespace enc
         _isShieldSpellActive = false;
         _conditions.clear();
         _dcConditions.clear();
-        _concentrationEffect = nullptr;
+        breakConcentration();
         _hasHasteAction = false;
         _savingThrowsFlatMod.clear();
         _savingThrowsDiceMod.clear();
@@ -236,6 +237,37 @@ namespace enc
         _dcConditions.erase(it);
       }
   }
+
+  void Combatant::setConcentrationEffect(std::shared_ptr<Effect> effect)
+  {
+    breakConcentration(); // Break existing concentration if any
+
+    // Store weak_ptr to avoid circular reference
+    _concentrationEffect = EffectTracker::getInstance().add(effect);
+
+    // Also set concentration for original form if in wildshape
+    if(_currentWildshapeForm != nullptr && _originalForm != this)
+      {
+        _originalForm->_concentrationEffect = _concentrationEffect;
+      }
+  }
+
+  void Combatant::breakConcentration()
+  {
+    if(auto effect = _concentrationEffect.lock())
+      {
+        EffectTracker::getInstance().remove(effect);
+      }
+    _concentrationEffect.reset();
+
+    // Also break concentration for original form if in wildshape
+    if(_currentWildshapeForm != nullptr && _originalForm != this)
+      {
+        _originalForm->_concentrationEffect.reset();
+      }
+  }
+
+  bool Combatant::isConcentrating() const { return !_concentrationEffect.expired(); }
 
   bool Combatant::isAffectedByAny(const std::vector<Conditions> &conditions) const
   {
