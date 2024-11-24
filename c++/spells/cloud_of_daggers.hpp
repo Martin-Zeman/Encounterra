@@ -29,7 +29,6 @@ namespace enc
     //! @todo Can I remove the resource here?
     CloudOfDaggersFactory(AbilityType abilityType, Combatant *caster, Resource *resource);
 
-    std::string getAbilityName() const { return "CloudOfDaggers"; }
 
     std::vector<Combatant*> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;

@@ -2,6 +2,7 @@
 
 // #include "core/battle_map.hpp"
 #include "effects/effect.hpp"
+#include "effects/aoe_effect.hpp"
 #include <unordered_set>
 
 namespace enc

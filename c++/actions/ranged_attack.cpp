@@ -39,7 +39,7 @@ namespace enc
     RangedAttackFactory &factory = dynamic_cast<RangedAttackFactory &>(getFactory());
     BattleMap &battleMap = BattleMap::getInstance();
     Combatant *swallower = factory._combatant->getSwallower();
-    Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).get()[0];
+    Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).getRoot();
 
     if(swallower)
       {

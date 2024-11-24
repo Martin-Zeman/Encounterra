@@ -257,7 +257,7 @@ TEST_F(BattleMapTest, MoveCombatantByIncrementMedium)
 
   auto coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 1);
-  EXPECT_EQ(coords.get()[0], initialPos);
+  EXPECT_EQ(coords.getRoot(), initialPos);
 
   Coord increment{1, 1};
   battleMap->moveCombatantByIncrement(*goblin, increment);
@@ -265,7 +265,7 @@ TEST_F(BattleMapTest, MoveCombatantByIncrementMedium)
   coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 1);
   Coord expectedCoord{1, 2};
-  EXPECT_EQ(coords.get()[0], expectedCoord);
+  EXPECT_EQ(coords.getRoot(), expectedCoord);
 }
 
 TEST_F(BattleMapTest, MoveCombatantByIncrementMediumInvalid)
@@ -275,7 +275,7 @@ TEST_F(BattleMapTest, MoveCombatantByIncrementMediumInvalid)
 
   auto coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 1);
-  EXPECT_EQ(coords.get()[0], initialPos);
+  EXPECT_EQ(coords.getRoot(), initialPos);
 
   Coord invalidIncrement{-1, 0};
   EXPECT_THROW(battleMap->moveCombatantByIncrement(*goblin, invalidIncrement), std::out_of_range);
@@ -309,14 +309,14 @@ TEST_F(BattleMapTest, MoveCombatantMedium)
 
   auto coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 1);
-  EXPECT_EQ(coords.get()[0], initialPos);
+  EXPECT_EQ(coords.getRoot(), initialPos);
 
   Coord newPos{14, 14};
   battleMap->moveCombatant(*goblin, newPos);
 
   coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 1);
-  EXPECT_EQ(coords.get()[0], newPos);
+  EXPECT_EQ(coords.getRoot(), newPos);
 }
 
 TEST_F(BattleMapTest, MoveCombatantMediumInvalid)
@@ -326,7 +326,7 @@ TEST_F(BattleMapTest, MoveCombatantMediumInvalid)
 
   auto coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 1);
-  EXPECT_EQ(coords.get()[0], initialPos);
+  EXPECT_EQ(coords.getRoot(), initialPos);
 
   Coord invalidPos{15, 15};
   EXPECT_THROW(battleMap->moveCombatant(*goblin, invalidPos), std::out_of_range);
@@ -1176,15 +1176,15 @@ TEST_F(BattleMapTest, PushHugeCombatantSimple)
 
   // Simple push to the right
   battleMap->pushCombatantAwayFrom({5.5, 12.5}, stone_giant, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{7, 11}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).getRoot(), (Coord{7, 11}));
 
   // No push
   battleMap->pushCombatantAwayFrom({8.5, 12.5}, stone_giant, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{7, 11}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).getRoot(), (Coord{7, 11}));
 
   // Simple push to the left
   battleMap->pushCombatantAwayFrom({9.5, 12.5}, stone_giant, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{5, 11}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).getRoot(), (Coord{5, 11}));
 }
 
 TEST_F(BattleMapTest, PushHugeCombatantDiagonal)
@@ -1194,15 +1194,15 @@ TEST_F(BattleMapTest, PushHugeCombatantDiagonal)
 
   // Pushing diagonally up and right with only one square space left to push
   battleMap->pushCombatantAwayFrom({4, 10}, stone_giant, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{6, 12}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).getRoot(), (Coord{6, 12}));
 
   // Pushing diagonally down and left
   battleMap->pushCombatantAwayFrom({8, 14}, stone_giant, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{4, 10}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).getRoot(), (Coord{4, 10}));
 
   // Pushing diagonally up and little bit to the right by a large distance with not enough space left to push
   battleMap->pushCombatantAwayFrom({4, 9}, stone_giant, 5);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{5, 12}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).getRoot(), (Coord{5, 12}));
 }
 
 TEST_F(BattleMapTest, PushHugeCombatantObstructed)
@@ -1214,7 +1214,7 @@ TEST_F(BattleMapTest, PushHugeCombatantObstructed)
 
   // Putting another combatant in the way so that the Stone Giant cannot be pushed all the way
   battleMap->pushCombatantAwayFrom({6.5, 14.5}, stone_giant, 3);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).get()[0], (Coord{5, 11}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*stone_giant).getRoot(), (Coord{5, 11}));
 }
 
 TEST_F(BattleMapTest, PushMediumCombatantSimple)
@@ -1224,22 +1224,22 @@ TEST_F(BattleMapTest, PushMediumCombatantSimple)
 
   // Simple small push to the right
   battleMap->pushCombatantAwayFrom({2, 3}, goblin, 1);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{4, 3}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{4, 3}));
 
   battleMap->pushCombatantAwayFrom({2, 3}, goblin, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{6, 3}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{6, 3}));
 
   // Simple large push to the left
   battleMap->pushCombatantAwayFrom({7, 3.5}, goblin, 3);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{3, 3}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{3, 3}));
 
   // Simple push down
   battleMap->pushCombatantAwayFrom({3.5, 4}, goblin, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{3, 1}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{3, 1}));
 
   // Simple push up
   battleMap->pushCombatantAwayFrom({3.5, 0}, goblin, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{3, 3}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{3, 3}));
 }
 
 TEST_F(BattleMapTest, PushMediumCombatantDiagonal)
@@ -1249,19 +1249,19 @@ TEST_F(BattleMapTest, PushMediumCombatantDiagonal)
 
   // Diagonal pushes at different angles and lengths
   battleMap->pushCombatantAwayFrom({5.5, 7.5}, goblin, 1);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{3, 2}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{3, 2}));
 
   battleMap->moveCombatant(*goblin, Coord({3, 3}));
   battleMap->pushCombatantAwayFrom({5.5, 7.5}, goblin, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{2, 1}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{2, 1}));
 
   battleMap->moveCombatant(*goblin, Coord({3, 3}));
   battleMap->pushCombatantAwayFrom({7.5, 7.5}, goblin, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{1, 1}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{1, 1}));
 
   battleMap->moveCombatant(*goblin, Coord({3, 3}));
   battleMap->pushCombatantAwayFrom({8.5, 7.5}, goblin, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).get()[0], (Coord{1, 1}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*goblin).getRoot(), (Coord{1, 1}));
 }
 
 TEST_F(BattleMapTest, PushLargeCombatant)
@@ -1271,19 +1271,19 @@ TEST_F(BattleMapTest, PushLargeCombatant)
 
   // Can't move in the direction of the wall
   battleMap->pushCombatantAwayFrom({12, 5}, ogre, 2);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{13, 5}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).getRoot(), (Coord{13, 5}));
 
   // Can be pushed away from the wall
   battleMap->pushCombatantAwayFrom({14.5, 6}, ogre, 1);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{12, 5}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).getRoot(), (Coord{12, 5}));
 
   // Push at a very steep angle
   battleMap->pushCombatantAwayFrom({14.5, 14.5}, ogre, 3);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{11, 2}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).getRoot(), (Coord{11, 2}));
 
   battleMap->moveCombatant(*ogre, Coord({12, 5}));
   battleMap->pushCombatantAwayFrom({14.5, 14.5}, ogre, 4);
-  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).get()[0], (Coord{11, 1}));
+  EXPECT_EQ(battleMap->getCombatantCoordinates(*ogre).getRoot(), (Coord{11, 1}));
 }
 
 TEST_F(BattleMapTest, GetAdjacentCoordsMedium)

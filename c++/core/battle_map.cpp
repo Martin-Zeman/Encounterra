@@ -341,7 +341,7 @@ namespace enc
 
   DijkstraResult BattleMap::calcDijkstra(const Combatant &combatant)
   {
-    Coord coord = _combatantCoordinateCache.at(combatant._instanceId).get()[0];
+    Coord coord = _combatantCoordinateCache.at(combatant._instanceId).getRoot();
     auto mask = buildCombatantAdjacencyMask(combatant);
     return dijkstra(coord, _baseAdjacencyMatrix, mask);
   }
@@ -430,7 +430,7 @@ namespace enc
 
     // Sort adjacent coords based on Cartesian distance to myLocation
     std::sort(adjacentCoords.begin(), adjacentCoords.end(), [&myLocation](const Coord &a, const Coord &b) {
-      return getCartesianDistanceCoords(a, myLocation.get()[0]) < getCartesianDistanceCoords(b, myLocation.get()[0]);
+      return getCartesianDistanceCoords(a, myLocation.getRoot()) < getCartesianDistanceCoords(b, myLocation.getRoot());
     });
 
     return adjacentCoords[0];
@@ -511,11 +511,11 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
                                 const blaze::DynamicMatrix<Coord> &shortestPaths, int rng, bool considerAOO)
   {
     Coords myLocation = getCombatantCoordinates(combatant);
-    Coord myCoord = myLocation.get()[0];
+    Coord myCoord = myLocation.getRoot();
     // spdlog::debug("Origin {}", myCoord);
 
     Coords enemyLocation = getCombatantCoordinates(target);
-    // spdlog::debug("Destination {}", enemyLocation.get()[0]);
+    // spdlog::debug("Destination {}", enemyLocation.getRoot());
 
     DijkstraResult dijkstraResult;
     if(distances.size() == 0 || shortestPaths.rows() == 0)
@@ -554,7 +554,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
                             const blaze::DynamicMatrix<Coord> &shortestPaths, bool considerAOO)
   {
     Coords myLocation = getCombatantCoordinates(combatant);
-    Coord myCoord = myLocation.get()[0];
+    Coord myCoord = myLocation.getRoot();
     // spdlog::debug("Origin {}", myCoord);
     // spdlog::debug("Destination {}", targetCoord);
 
@@ -933,7 +933,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
             if(score > maxScore)
               {
                 maxScore = score;
-                bestPlacement = curr_coords.get()[0];
+                bestPlacement = curr_coords.getRoot();
                 affectedCombatants = affected;
               }
           }
@@ -980,7 +980,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
             if(score > max_score)
               {
                 max_score = score;
-                best_placement = curr_coords.get()[0];
+                best_placement = curr_coords.getRoot();
                 affected_combatants = affected;
               }
           }
@@ -1471,8 +1471,8 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
           }
       }
 
-    _visibilityDictForAllCoords[{static_cast<size_t>(currentPosition.get()[0][0]), static_cast<size_t>(currentPosition.get()[0][1])}]
-      = calcVisibilityDict(combatant, Coord{currentPosition.get()[0][0], currentPosition.get()[0][1]});
+    _visibilityDictForAllCoords[{static_cast<size_t>(currentPosition.getRoot()[0]), static_cast<size_t>(currentPosition.getRoot()[1])}]
+      = calcVisibilityDict(combatant, Coord{currentPosition.getRoot()[0], currentPosition.getRoot()[1]});
   }
 
   Visibility BattleMap::getVisibilityFromCoord(const Coord &fromCoord, const Combatant * target) const {
@@ -1545,7 +1545,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
   void BattleMap::pushCombatantAwayFrom(const Vector2D &origin, Combatant *targetCombatant, int distance)
   {
     const Coords & initCoords = getCombatantCoordinates(*targetCombatant);
-    const Coord & initRootCoord = initCoords.get()[0];
+    const Coord & initRootCoord = initCoords.getRoot();
     Vector2D initCenter = initCoords.getCenter(); // For medium combatant's the difference is small but for larger ones it makes a difference
     Vector2D direction = initCenter - origin;
 
@@ -1584,7 +1584,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
   void BattleMap::withCombatantPosition(Combatant *combatant, const Coord &temporaryPosition, const std::function<void()> &fn)
   {
-    Coord originalPosition = getCombatantCoordinates(*combatant).get()[0];
+    Coord originalPosition = getCombatantCoordinates(*combatant).getRoot();
 
     try
       {
@@ -1628,14 +1628,14 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
           {
             teams.replaceCombatant(*actoid.getFactory().getCombatant(), *combatant);
             removeCombatant(*actoid.getFactory().getCombatant());
-            setCombatantCoordinates(*combatant, beforeWildshapePosition.get()[0]);
+            setCombatantCoordinates(*combatant, beforeWildshapePosition.getRoot());
             throw;
           }
 
         // Restore original state
         teams.replaceCombatant(*actoid.getFactory().getCombatant(), *combatant);
         removeCombatant(*actoid.getFactory().getCombatant());
-        setCombatantCoordinates(*combatant, beforeWildshapePosition.get()[0]);
+        setCombatantCoordinates(*combatant, beforeWildshapePosition.getRoot());
       }
     else
       {
@@ -1646,7 +1646,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
   std::optional<Coord> BattleMap::findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoords)
   {
     // Get original position and convert to matrix coordinates
-    Coord beforeWildshapeCoord = getCombatantCoordinates(*combatant).get()[0];
+    Coord beforeWildshapeCoord = getCombatantCoordinates(*combatant).getRoot();
     Coord matrixCoord = {static_cast<int>(_size - beforeWildshapeCoord[1] - 1), beforeWildshapeCoord[0]};
 
     // Create accessibility matrix

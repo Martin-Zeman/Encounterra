@@ -98,15 +98,22 @@ namespace enc
     Size getSize() const { return _size; };
     int getAC() const { return _ac; };
     void setTeamColor(Color teamColor) { _teamColor = teamColor; }
-    bool hasAction() { return _hasAction; }
-    bool hasBonusAction() { return _hasBonusAction; }
-    bool hasHasteAction() { return _hasHasteAction; }
-    bool hasReaction() { return _hasReaction; }
+    bool hasAction() const { return _hasAction; }
+    bool hasBonusAction() const { return _hasBonusAction; }
+    bool hasHasteAction() const { return _hasHasteAction; }
+    bool hasReaction() const { return _hasReaction; }
+    void setHasAction(bool has) { _hasAction = has; }
+    void setHasBonusAction(bool has) { _hasBonusAction = has; }
+    void setHasHasteAction(bool has) { _hasHasteAction = has; }
+    void setHasReaction(bool has) { _hasReaction = has; }
     bool hasAlreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
     void setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
     Combatant *getCurrentForm();
     Combatant *getOriginalForm();
+    void setOriginalForm(Combatant *form) { _originalForm = form; };
+    void setCurrentWildshapeForm(Combatant *form) { _currentWildshapeForm = form; };
+    Combatant *getCurrentWildshapeForm() { return _currentWildshapeForm; };
     Combatant *getSwallower() const { return _swallower; }
     void setSwallower(Combatant *swallower) { _swallower = swallower; }
     bool isSwallowed() const { return _swallower != nullptr; }
@@ -123,6 +130,7 @@ namespace enc
     std::optional<ConditionWithDC> needsToBreakOutOfGrapple();
     void breakOutOfGrapple();
     void setConcentrationEffect(std::shared_ptr<Effect> effect);
+    std::weak_ptr<Effect> getConcentrationEffect() { return _concentrationEffect; }
     void breakConcentration();
     bool isConcentrating() const;
     bool isAffectedByAny(const std::vector<Conditions> &conditions) const;
@@ -133,19 +141,40 @@ namespace enc
     Spellslots &getSpellslots() { return *_spellslots; }
     int getLevel() const { return _level; }
     int getCurrentHp() const { return _currHp; }
+    void setCurrentHp(int hp) { _currHp = hp; }
+    int getMaxHp() const { return _maxHp; }
     int getCurrentInit() const { return _currInit; }
     int getMovement() const { return _movement; }
+    void setMovement(int movement) { _movement = movement; }
     bool hasMovement(int dist = 1) const { return _movement >= dist; }
     void decrementMovement(int dist = 1) { _movement -= dist; }
     int getSpeed() const { return _speed; }
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
-    std::shared_ptr<ActoidFactory>& getActionFactory(AbilityType type);
+    int getSavingThrow(SavingThrow st) { return _savingThrows.at(st); }
+    void setSavingThrow(SavingThrow st, int value) { _savingThrows.at(st) = value; }
+    const std::vector<int> &getSavingThrowFlatMods(SavingThrow type) const;
+    void addSavingThrowFlatMod(SavingThrow type, int mod);
+    void clearSavingThrowFlatMods(SavingThrow type);
+    const std::vector<Die> &getSavingThrowDiceMods(SavingThrow type) const;
+    void addSavingThrowDiceMod(SavingThrow type, const Die &mod);
+    void clearSavingThrowDiceMods(SavingThrow type);
+    const std::unordered_set<RollType> &getSavingThrowRollTypeMods(SavingThrow type) const;
+    void addSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
+    void removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
+    void clearSavingThrowRollTypeMods(SavingThrow type);
+    std::shared_ptr<ActoidFactory> &getActionFactory(AbilityType type);
+    void clearAllSavingThrowMods();
     void rollForRecharge();
-    const std::vector<std::shared_ptr<ActoidFactory>> &getActionFactories() { return _actionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactories() { return _bonusActionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactories() { return _reactionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactories() { return _hasteActionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getActionFactoriesConst() { return _actionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactoriesConst() { return _bonusActionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactoriesConst() { return _reactionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactoriesConst() { return _hasteActionFactories; }
+    std::vector<std::shared_ptr<ActoidFactory>> &getActionFactories() { return _actionFactories; }
+    std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactories() { return _bonusActionFactories; }
+    std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactories() { return _reactionFactories; }
+    std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactories() { return _hasteActionFactories; }
     void setAvailableWildshapeForms(std::vector<std::shared_ptr<Wildshape>> wildshapeForms) { _availableWildshapeForms = wildshapeForms; }
+    const std::vector<std::shared_ptr<Wildshape>> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
     void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { *_shortestPathsCache = shortestPaths; }

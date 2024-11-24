@@ -7,7 +7,7 @@ namespace enc
 {
   class Combatant;
 
-  class CombatantEffect : public Effect
+  class CombatantEffect : virtual public Effect
   {
   public:
     explicit CombatantEffect(Combatant* initiator, const std::vector<Combatant*>& combatants = {});

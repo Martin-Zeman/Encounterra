@@ -99,7 +99,7 @@ namespace enc
     else if(getCartesianDistanceCoords(battleMap.getCombatantCoordinates(*_factory._combatant), Coords(_coord))
             <= static_cast<int>(SpikeGrowthFactory::range))
       {
-        return std::vector<Coord>{battleMap.getCombatantCoordinates(*_factory._combatant).get()[0]};
+        return std::vector<Coord>{battleMap.getCombatantCoordinates(*_factory._combatant).getRoot()};
       }
 
     return std::nullopt;

@@ -40,7 +40,7 @@ namespace enc
   {
     BattleMap &battleMap = BattleMap::getInstance();
     Combatant *swallower = target->getSwallower();
-    // Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).get()[0];
+    // Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).getRoot();
     if(swallower)
       {
         return 0;
@@ -133,7 +133,7 @@ namespace enc
     FireboltFactory &factory = dynamic_cast<FireboltFactory &>(getFactory());
     BattleMap &battleMap = BattleMap::getInstance();
     Combatant *swallower = factory._combatant->getSwallower();
-    Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).get()[0];
+    Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).getRoot();
     if(swallower)
       {
         if(swallower == &_target)

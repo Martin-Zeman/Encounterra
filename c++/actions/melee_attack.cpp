@@ -39,7 +39,7 @@ namespace enc
       {
         if(swallower == &_target)
           {
-            return std::vector<Coord>{battleMap.getCombatantCoordinates(*factory._combatant).get()[0]};
+            return std::vector<Coord>{battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
           }
         return {};
       }
@@ -51,7 +51,7 @@ namespace enc
       }
     else if(battleMap.getHopDistanceCombatants(*factory._combatant, _target) <= factory._attackRange)
       {
-        return std::vector<Coord>{battleMap.getCombatantCoordinates(*factory._combatant).get()[0]};
+        return std::vector<Coord>{battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
       }
 
     return {};

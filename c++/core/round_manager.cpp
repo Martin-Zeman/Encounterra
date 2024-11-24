@@ -30,13 +30,12 @@ namespace enc
     for(auto &combatant : _combatants)
       {
         // Check for moon & regular wildshape
-        for(const auto &factory : combatant->getBonusActionFactories())
+        for(const auto &factory : combatant->getBonusActionFactoriesConst())
           {
             if(factory->getAbilityType() == AbilityType::MOON_WILDSHAPE || factory->getAbilityType() == AbilityType::WILDSHAPE)
               {
                 auto *wildshapeFactory = static_cast<WildshapeFactory *>(factory.get());
-                combatant->setAvailableWildshapeForms(
-                  WildshapeUtils::preallocateWildshapeForms(combatant, factory->getAbilityType(), *wildshapeFactory));
+                combatant->setAvailableWildshapeForms(preallocateWildshapeForms(combatant, factory->getAbilityType(), *wildshapeFactory));
                 break;
               }
           }

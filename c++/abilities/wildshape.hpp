@@ -23,12 +23,10 @@ namespace enc
   public:
     WildshapeFactory(Combatant *combatant, AbilityType actionType);
 
-    std::string getAbilityName() const override { return "Wildshape"; }
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
     std::shared_ptr<Actoid> create(void *form) override;
     std::optional<Resource *> getResource() override { return {}; }
-    double calculateThreat(const Kwargs &kwargs) const override;
-    double calculateMaxThreat() const override;
+    double calculateThreat(const Kwargs &kwargs) override;
 
     static int getWildshapeUses(int level);
     static std::vector<Size> getWildshapeFormSizes(int level, AbilityType actionType);
@@ -38,15 +36,10 @@ namespace enc
     AbilityType _actionType;
   };
 
-  class Wildshape : public Actoid, public CombatantEffect, public ActionEnablerEffect, public DirectThreat
+  class Wildshape : public Actoid, virtual public CombatantEffect, virtual public ActionEnablerEffect, public DirectThreat
   {
   public:
-    Wildshape(Combatant *combatant, std::shared_ptr<Combatant> form, WildshapeFactory &factory)
-        : Actoid(factory), CombatantEffect(combatant, std::vector<Combatant *>{combatant}), ActionEnablerEffect(combatant), _form(form),
-          _factory(factory)
-    {
-      _form->setOriginalForm(combatant);
-    }
+    Wildshape(Combatant *combatant, std::unique_ptr<Combatant> form, WildshapeFactory &factory);
 
     ~Wildshape() override = default;
 
@@ -67,8 +60,17 @@ namespace enc
 
     std::string toString() const;
 
+    void transferFactories();
+    void restoreFactories();
+
+    // Helper methods
+    void transferFactoryList(const std::vector<std::shared_ptr<ActoidFactory>> &sourceFactories,
+                             std::vector<std::shared_ptr<ActoidFactory>> &targetFactories);
+    void removeTransferredFactories(std::vector<std::shared_ptr<ActoidFactory>> &factories);
+    void resetFactoryPointers(const std::vector<std::shared_ptr<ActoidFactory>> &factories);
+
   protected:
-    std::shared_ptr<Combatant> _form;
+    std::unique_ptr<Combatant> _form;
     WildshapeFactory &_factory;
   };
 }

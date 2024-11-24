@@ -21,6 +21,7 @@ namespace enc
     Coords(const CoordVector &coords);
 
     const CoordVector &get() const { return _coords; }
+    const Coord &getRoot() const { return _coords[0]; }
     void set(const CoordVector &newCoords) { _coords = newCoords; }
     size_t numCoords() const {return _numCoords;}
 

@@ -75,8 +75,7 @@ namespace enc
         _dcConditions.clear();
         breakConcentration();
         _hasHasteAction = false;
-        _savingThrowsFlatMod.clear();
-        _savingThrowsDiceMod.clear();
+        clearAllSavingThrowMods();
         for (auto& ammo : _ammo)
         {
           ammo.second.reset();
@@ -310,5 +309,54 @@ namespace enc
               static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
             }
         }
+    }
+
+    const std::vector<int> &Combatant::getSavingThrowFlatMods(SavingThrow type) const
+    {
+      auto it = _savingThrowsFlatMod.find(type);
+      static const std::vector<int> empty;
+      return it != _savingThrowsFlatMod.end() ? it->second : empty;
+    }
+
+    void Combatant::addSavingThrowFlatMod(SavingThrow type, int mod) { _savingThrowsFlatMod[type].push_back(mod); }
+
+    void Combatant::clearSavingThrowFlatMods(SavingThrow type) { _savingThrowsFlatMod[type].clear(); }
+
+    const std::vector<Die> &Combatant::getSavingThrowDiceMods(SavingThrow type) const
+    {
+      auto it = _savingThrowsDiceMod.find(type);
+      static const std::vector<Die> empty;
+      return it != _savingThrowsDiceMod.end() ? it->second : empty;
+    }
+
+    void Combatant::addSavingThrowDiceMod(SavingThrow type, const Die &mod) { _savingThrowsDiceMod[type].push_back(mod); }
+
+    void Combatant::clearSavingThrowDiceMods(SavingThrow type) { _savingThrowsDiceMod[type].clear(); }
+
+    const std::unordered_set<RollType> &Combatant::getSavingThrowRollTypeMods(SavingThrow type) const
+    {
+      auto it = _savingThrowsRollTypeMod.find(type);
+      static const std::unordered_set<RollType> empty;
+      return it != _savingThrowsRollTypeMod.end() ? it->second : empty;
+    }
+
+    void Combatant::addSavingThrowRollTypeMod(SavingThrow type, RollType rollType) { _savingThrowsRollTypeMod[type].insert(rollType); }
+
+    void Combatant::removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType)
+    {
+      auto it = _savingThrowsRollTypeMod.find(type);
+      if(it != _savingThrowsRollTypeMod.end())
+        {
+          it->second.erase(rollType);
+        }
+    }
+
+    void Combatant::clearSavingThrowRollTypeMods(SavingThrow type) { _savingThrowsRollTypeMod[type].clear(); }
+
+    void Combatant::clearAllSavingThrowMods()
+    {
+      _savingThrowsFlatMod.clear();
+      _savingThrowsDiceMod.clear();
+      _savingThrowsRollTypeMod.clear();
     }
 }

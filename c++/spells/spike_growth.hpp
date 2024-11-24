@@ -31,8 +31,6 @@ namespace enc
 
     Coord findBestArgs() const;
 
-    std::string getAbilityName() const { return "SpikeGrowth"; }
-
     std::vector<Combatant*> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 

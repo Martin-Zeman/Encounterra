@@ -84,7 +84,7 @@ namespace enc
     else if(getCartesianDistanceCoords(battleMap.getCombatantCoordinates(*factory._combatant), Coords(_coord))
             <= static_cast<int>(FireballFactory::range))
       {
-        std::vector<Coord> coords = {battleMap.getCombatantCoordinates(*factory._combatant).get()[0]};
+        std::vector<Coord> coords = {battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
         return coords;
       }
     return {};

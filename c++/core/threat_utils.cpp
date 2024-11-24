@@ -55,7 +55,7 @@ namespace enc
 
     for(auto *pa : potentialAttackers)
       {
-        for(const auto &factory : pa->getActionFactories())
+        for(const auto &factory : pa->getActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -69,7 +69,7 @@ namespace enc
               }
           }
 
-        for(const auto &factory : pa->getBonusActionFactories())
+        for(const auto &factory : pa->getBonusActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -83,7 +83,7 @@ namespace enc
               }
           }
 
-        for(const auto &factory : pa->getHasteActionFactories())
+        for(const auto &factory : pa->getHasteActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -112,7 +112,7 @@ namespace enc
         double minThreat = 0.0;
         double maxThreat = 0.0;
 
-        for(const auto &factory : combatant->getActionFactories())
+        for(const auto &factory : combatant->getActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -129,7 +129,7 @@ namespace enc
         outThreatMinDeltaAcc += minThreat;
 
         minThreat = maxThreat = 0.0;
-        for(const auto &factory : combatant->getBonusActionFactories())
+        for(const auto &factory : combatant->getBonusActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -146,7 +146,7 @@ namespace enc
         outThreatMinDeltaAcc += minThreat;
 
         minThreat = maxThreat = 0.0;
-        for(const auto &factory : combatant->getHasteActionFactories())
+        for(const auto &factory : combatant->getHasteActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -174,7 +174,7 @@ namespace enc
 
     for(auto *pa : potentialAttackers)
       {
-        for(const auto &factory : pa->getActionFactories())
+        for(const auto &factory : pa->getActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -186,7 +186,7 @@ namespace enc
               }
           }
 
-        for(const auto &factory : pa->getBonusActionFactories())
+        for(const auto &factory : pa->getBonusActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -198,7 +198,7 @@ namespace enc
               }
           }
 
-        for(const auto &factory : pa->getHasteActionFactories())
+        for(const auto &factory : pa->getHasteActionFactoriesConst())
           {
             if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
               {
@@ -281,7 +281,7 @@ namespace enc
     double threatAcc = 0.0;
     auto &battleMap = BattleMap::getInstance();
 
-    auto withPosition = [&](const std::function<void()> &fn) { battleMap.withCombatantPosition(combatant, currCoordsData.get()[0], fn); };
+    auto withPosition = [&](const std::function<void()> &fn) { battleMap.withCombatantPosition(combatant, currCoordsData.getRoot(), fn); };
 
     withPosition([&]() {
       // Account for AoO
@@ -382,7 +382,7 @@ namespace enc
   //   std::unordered_map<std::string, double> transitionToThreat;
 
   //   // Build states and transitions along the path
-  //   Coord currentPos = currCoords.get()[0];
+  //   Coord currentPos = currCoords.getRoot();
   //   std::string previousState = initialStateName;
   //   std::string previousMsState = initialStateName;
 

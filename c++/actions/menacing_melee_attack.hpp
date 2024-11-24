@@ -24,6 +24,7 @@ namespace enc
 
     std::shared_ptr<Actoid> create(void *target) override;
 
+
   private:
     void initializeMenacingAttack();
   };

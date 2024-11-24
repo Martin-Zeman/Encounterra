@@ -325,7 +325,7 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
                     break;
                   }
                   case MovementThreatType::MISTY_STEPPED: {
-                    auto msFactory = getFactoryOfType(combatant->getBonusActionFactories(), AbilityType::MISTY_STEP);
+                    auto msFactory = getFactoryOfType(combatant->getBonusActionFactoriesConst(), AbilityType::MISTY_STEP);
                     if(!msFactory)
                       {
                         std::cerr << "Could not find Misty Step factory\n";

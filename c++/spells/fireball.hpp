@@ -30,7 +30,6 @@ namespace enc
       // _additionalUpcastDmg = {{1, 6}};
     }
 
-    std::string getAbilityName() const { return "Fireball"; }
 
     Coord findBestArgs() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;

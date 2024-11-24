@@ -1,9 +1,16 @@
 #include "abilities/wildshape_utils.hpp"
+#include "combatants/brown_bear.hpp"
+#include "combatants/dire_wolf.hpp"
+#include "combatants/giant_constrictor_snake.hpp"
+#include "combatants/giant_spider.hpp"
+#include "combatants/giant_toad.hpp"
+// #include "combatants/quetzalcoatlus.hpp"
+#include "combatants/saber_toothed_tiger.hpp"
 #include <iostream>
 
 namespace enc
 {
-  std::vector<WildshapeUtils::CombatantFactory> WildshapeUtils::getAvailableWildshapeForms(int level, AbilityType actionType)
+  std::vector<CombatantFactory> getAvailableWildshapeForms(int level, AbilityType actionType)
   {
     if(actionType == AbilityType::WILDSHAPE)
       {
@@ -20,16 +27,16 @@ namespace enc
           }
 
         // Base forms available at all levels 3+
-        forms = {[](const std::string &name) { return std::make_unique<DireWolf>(name); },
-                 [](const std::string &name) { return std::make_unique<BrownBear>(name); },
-                 [](const std::string &name) { return std::make_unique<GiantToad>(name); },
-                 [](const std::string &name) { return std::make_unique<GiantSpider>(name); }};
+        forms = {[](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<DireWolf>(name); },
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<BrownBear>(name); },
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantToad>(name); },
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantSpider>(name); }};
 
         // Add additional forms based on level
         if(level >= 6)
           {
-            forms.push_back([](const std::string &name) { return std::make_unique<GiantConstrictorSnake>(name); });
-            forms.push_back([](const std::string &name) { return std::make_unique<SaberToothedTiger>(name); });
+            forms.push_back([](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantConstrictorSnake>(name); });
+            forms.push_back([](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<SaberToothedTiger>(name); });
           }
 
         /* Commented out forms
@@ -62,8 +69,7 @@ namespace enc
     return {};
   }
 
-  std::vector<std::shared_ptr<Wildshape>>
-  WildshapeUtils::preallocateWildshapeForms(Combatant *combatant, AbilityType actionType, WildshapeFactory &factory)
+  std::vector<std::shared_ptr<Wildshape>> preallocateWildshapeForms(Combatant *combatant, AbilityType actionType, WildshapeFactory &factory)
   {
     auto formFactories = getAvailableWildshapeForms(combatant->getLevel(), actionType);
     std::vector<std::shared_ptr<Wildshape>> forms;
@@ -71,7 +77,7 @@ namespace enc
 
     for(const auto &formFactory : formFactories)
       {
-        auto form = formFactory(combatant->getName() + " wildshaped");
+        auto form = formFactory(combatant->_name + " wildshaped");
         forms.push_back(std::make_shared<Wildshape>(combatant, std::move(form), factory));
       }
 

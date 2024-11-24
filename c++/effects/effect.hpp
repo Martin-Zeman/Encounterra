@@ -38,7 +38,7 @@ namespace enc
     VOW_OF_ENMITY
   };
 
-  class Effect
+  class Effect : public std::enable_shared_from_this<Effect>
   {
   public:
     explicit Effect(Combatant *initiator, Combatant *target = nullptr) : _initiator(initiator), _target(target) {}

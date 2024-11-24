@@ -21,6 +21,7 @@ namespace enc
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
+
   };
 
   class RangedAttack : public Attack

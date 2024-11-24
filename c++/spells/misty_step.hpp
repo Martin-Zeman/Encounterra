@@ -23,10 +23,9 @@ namespace enc
     static constexpr SpellType type = SpellType::OTHER;
 
     MistyStepFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource)
-        : ActoidFactory("MistyStepFactory", "MistyStep", caster, abilityType), _resource(resource)
+        : ActoidFactory("MistyStepFactory", "Misty Step", caster, abilityType), _resource(resource)
     {}
 
-    std::string getAbilityName() const { return "MistyStep"; }
 
     Coord findBestArgs() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;

@@ -4,7 +4,7 @@
 
 namespace enc
 {
-  class ActionEnablerEffect : public Effect
+  class ActionEnablerEffect : virtual public Effect
   {
   public:
     explicit ActionEnablerEffect(Combatant *initiator, Combatant *target = nullptr) : Effect(initiator, target) {}
