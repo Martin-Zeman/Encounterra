@@ -56,7 +56,8 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
     session->addCombatant(goblin, Color::RED);
 
     auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, goblin, &goblin->getSpellslots());
-    auto spikeGrowth = sgFactory.create(Coord{7, 3});
+    Coord coord{7, 3};
+    auto spikeGrowth = sgFactory.create(&coord);
     effectTracker->add(std::move(spikeGrowth));
 
     battleMap->buildBaseAdjacencyMatrix();

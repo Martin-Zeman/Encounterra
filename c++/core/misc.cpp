@@ -1,4 +1,5 @@
 #include "core/misc.hpp"
+#include <iostream>
 
 namespace enc
 {
@@ -215,7 +216,127 @@ int rollDice(const Die &dice)
 int rollDiceMulti(const std::vector<Die> &diceList)
 {
   return std::accumulate(diceList.begin(), diceList.end(), 0, [](int sum, const Die &dice) { return sum + rollDice(dice); });
+  
 }
 
-  std::string coordToString(const Coord &coord) { return "(" + std::to_string(coord[0]) + ", " + std::to_string(coord[1]) + ")"; }
+// Helper function to create random number generator
+inline std::mt19937 &getRNG()
+{
+  //! @todo: use this in the other instances too
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  return gen;
+}
+
+int rollDiceWithReroll(const Die &die, int rerollMaxValue)
+{
+  int numDice = die[0];
+  int diceSides = die[1];
+  std::uniform_int_distribution<> dis(1, diceSides);
+  auto &gen = getRNG();
+
+  int diceSum = 0;
+  for(int i = 0; i < numDice; ++i)
+    {
+      int rolled = dis(gen);
+      if(rolled <= rerollMaxValue)
+        {
+          int rerolled = dis(gen);
+          std::cout << "Re-rolling " << rolled << " as " << rerolled << std::endl;
+          rolled = rerolled;
+        }
+      diceSum += rolled;
+    }
+
+  return diceSum;
+}
+
+bool rollSavingThrow(int bonus, int dc, RollType rollType)
+{
+  Die d20{1, 20};
+  std::uniform_int_distribution<> dis(1, 20);
+  auto &gen = getRNG();
+
+  int roll;
+  switch(rollType)
+    {
+    case RollType::STRAIGHT: roll = dis(gen); break;
+
+      case RollType::ADVANTAGE: {
+        int roll1 = dis(gen);
+        int roll2 = dis(gen);
+        roll = std::max(roll1, roll2);
+        break;
+      }
+
+      case RollType::DISADVANTAGE: {
+        int roll1 = dis(gen);
+        int roll2 = dis(gen);
+        roll = std::min(roll1, roll2);
+        break;
+      }
+    }
+
+  if(roll == 20)
+    return true;
+  return roll + bonus >= dc;
+}
+
+bool rollAbilityCheck(int bonus, int dc, RollType rollType)
+{
+  Die d20{1, 20};
+  std::uniform_int_distribution<> dis(1, 20);
+  auto &gen = getRNG();
+
+  int roll;
+  switch(rollType)
+    {
+    case RollType::STRAIGHT: roll = dis(gen); break;
+
+      case RollType::ADVANTAGE: {
+        int roll1 = dis(gen);
+        int roll2 = dis(gen);
+        roll = std::max(roll1, roll2);
+        break;
+      }
+
+      case RollType::DISADVANTAGE: {
+        int roll1 = dis(gen);
+        int roll2 = dis(gen);
+        roll = std::min(roll1, roll2);
+        break;
+      }
+    }
+
+  return roll + bonus >= dc;
+}
+
+ChaosBoltResult rollDiceChaosBolt(const Die &die)
+{
+  int numDice = die[0];
+  int diceSides = die[1];
+  std::uniform_int_distribution<> dis(1, diceSides);
+  auto &gen = getRNG();
+
+  ChaosBoltResult result;
+  result.sum = 0;
+
+  for(int i = 0; i < numDice; ++i)
+    {
+      int rolled = dis(gen);
+      result.sum += rolled;
+      result.numbersRolled.push_back(rolled);
+    }
+
+  return result;
+}
+
+std::pair<int, std::vector<int>> rollChaosBoltDmg(const DmgDieWithType &dmgDice, const Die &additionalDmgDice)
+{
+  auto [primaryDmg, numbers] = rollDiceChaosBolt(dmgDice.first);
+  int secondaryDmg = rollDice(additionalDmgDice);
+  return {primaryDmg + secondaryDmg, numbers};
+}
+
+std::string coordToString(const Coord &coord) { return "(" + std::to_string(coord[0]) + ", " + std::to_string(coord[1]) + ")"; }
 }

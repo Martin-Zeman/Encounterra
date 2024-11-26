@@ -202,6 +202,23 @@ namespace enc
     Random
   };
 
+  const std::unordered_map<DamageType, std::string> DAMAGE_TYPE_TO_STRING = {
+    {DamageType::Bludgeoning, "Bludgeoning"},
+    {DamageType::Slashing, "Slashing"},
+    {DamageType::Piercing, "Piercing"},
+    {DamageType::Fire, "Fire"},
+    {DamageType::Cold, "Cold"},
+    {DamageType::Poison, "Poison"},
+    {DamageType::Acid, "Acid"},
+    {DamageType::Lightning, "Lightning"},
+    {DamageType::Radiant, "Radiant"},
+    {DamageType::Necrotic, "Necrotic"},
+    {DamageType::Force, "Force"},
+    {DamageType::Psychic, "Psychic"},
+    {DamageType::Thunder, "Thunder"},
+    {DamageType::Random, "Random"},
+  };
+
   using DmgDieWithType = std::pair<Die, DamageType>;
 
   enum class Size
@@ -221,6 +238,18 @@ namespace enc
     AT_LEAST_ONE_DIED = 2,
     AT_LEAST_TWO_DIED = 3,
     AT_LEAST_THREE_DIED = 4
+  };
+
+  struct RollResult
+  {
+    int sum;
+    std::vector<std::pair<int, int>> rerollLog; // pairs of (original, reroll)
+  };
+
+  struct ChaosBoltResult
+  {
+    int sum;
+    std::vector<int> numbersRolled;
   };
 
   // Helper function to get all statistics for iteration
@@ -296,6 +325,16 @@ namespace enc
   int rollDice(const Die &dice);
 
   int rollDiceMulti(const std::vector<Die> &diceList);
+
+  int rollDiceWithReroll(const Die &die, int rerollMaxValue);
+
+  bool rollSavingThrow(int bonus, int dc, RollType rollType);
+
+  bool rollAbilityCheck(int bonus, int dc, RollType rollType);
+
+  ChaosBoltResult rollDiceChaosBolt(const Die &die);
+
+  std::pair<int, std::vector<int>> rollChaosBoltDmg(const DmgDieWithType &dmgDice, const Die &additionalDmgDice);
 
   const std::map<RollType, double> ROLL_TYPE_CRIT_DELTA = {{RollType::STRAIGHT, 1.0}, {RollType::ADVANTAGE, 2.0}, {RollType::DISADVANTAGE, 0.5}};
 

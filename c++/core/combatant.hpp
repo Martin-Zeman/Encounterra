@@ -149,6 +149,7 @@ namespace enc
     bool hasMovement(int dist = 1) const { return _movement >= dist; }
     void decrementMovement(int dist = 1) { _movement -= dist; }
     int getSpeed() const { return _speed; }
+    bool hasPassiveAbility(AbilityType ability) const;
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     int getSavingThrow(SavingThrow st) { return _savingThrows.at(st); }
     void setSavingThrow(SavingThrow st, int value) { _savingThrows.at(st) = value; }
@@ -178,6 +179,17 @@ namespace enc
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
     void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { *_shortestPathsCache = shortestPaths; }
+    int doReceiveDmg(int dmg, DamageType dmg_type);
+    int receiveDmg(int dmg, DamageType dmg_type, int multiplier);
+    int receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>& dmg, int multiplier);
+    /**
+     * Handles concentration checks when a combatant takes damage.
+     *
+     * @param combatant The combatant who needs to make the concentration check
+     * @param dmg The amount of damage that triggered the check
+     * @return true if concentration was maintained, false if it was lost
+     */
+    bool checkConcentration(Combatant *combatant, int dmg);
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -400,7 +412,7 @@ namespace enc
     void addUnarmoredDefense() {}
     void addDivineSmite() {}
     void addChannelDivinity() {}
-    void addUndeadFortitude() {}
+    void addUndeadFortitude();
     void addMartialAdvantage() {}
     void addQuickenedSpell() {}
     void addTwinnedSpell() {}
@@ -472,13 +484,13 @@ namespace enc
     std::vector<std::shared_ptr<ActoidFactory>> _hasteActionFactories;
     DirectThreatFactory *_dangerZoneAttack = nullptr;
     AttackFactory *_aoOFactory = nullptr;
-    std::vector<AbilityType> _passiveAbilities;
+    std::unordered_set<AbilityType> _passiveAbilities;
     std::unordered_map<SavingThrow, int> _savingThrows
       = {{SavingThrow::STR, 0}, {SavingThrow::DEX, 0}, {SavingThrow::CON, 0}, {SavingThrow::INT, 0}, {SavingThrow::WIS, 0}, {SavingThrow::CHA, 0}};
     std::unordered_map<SavingThrow, std::vector<int>> _savingThrowsFlatMod;
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
     std::unordered_map<SavingThrow, std::unordered_set<RollType>> _savingThrowsRollTypeMod;
-    std::unordered_set<std::string> _dmgTypesTookLastRound;
+    std::unordered_set<DamageType> _dmgTypesTookLastRound;
     Combatant *_originalForm = this;
     Combatant *_currentWildshapeForm = nullptr;
     Combatant *_swallower = nullptr;
@@ -495,6 +507,7 @@ namespace enc
     std::weak_ptr<Effect> _concentrationEffect;
     std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
     blaze::DynamicMatrix<Coord> *_shortestPathsCache = nullptr; // TODO: Do I still need this?
+    bool _uncannyDodgeActive = false;
 
   protected:
     Size _size{Size::MEDIUM};

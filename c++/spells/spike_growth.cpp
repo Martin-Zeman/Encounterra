@@ -105,10 +105,9 @@ namespace enc
     return std::nullopt;
   }
 
-  void SpikeGrowth::activate()
+  void SpikeGrowth::activate(const Kwargs &kwargs)
   {
-    BattleMap::getInstance().effectTracker.add(this);
-    _factory._combatant->concentrationEffect = this;
+    _factory._combatant->setConcentrationEffect(shared_from_this());
   }
 
   void SpikeGrowth::deactivate() { _factory._combatant->breakConcentration(); }

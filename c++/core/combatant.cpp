@@ -125,6 +125,10 @@ namespace enc
 
   bool Combatant::isVulnerableTo(DamageType dmgType) { return _vulnerabities.find(dmgType) != _vulnerabities.end(); }
 
+  bool Combatant::hasPassiveAbility(AbilityType ability) const{
+    return _passiveAbilities.contains(ability);
+  }
+
   void Combatant::applyCondition(const Condition &condition)
   {
     _conditions.push_back(condition);
@@ -359,4 +363,157 @@ namespace enc
       _savingThrowsDiceMod.clear();
       _savingThrowsRollTypeMod.clear();
     }
+
+    // Private helper for damage calculations
+int Combatant::doReceiveDmg(int dmg, DamageType dmgType) {
+    // Check immunities first
+    if (_immunities.find(dmgType) != _immunities.end()) {
+        std::cout << _name << " is immune to " << DAMAGE_TYPE_TO_STRING.at(dmgType) << " and reduces the damage to 0" << std::endl;
+        return 0;
+    }
+    
+    // Check resistances
+    if (_resistances.find(dmgType) != _resistances.end()) {
+        dmg = std::floor(dmg / 2);
+        std::cout << _name <<" is resistant to " << DAMAGE_TYPE_TO_STRING.at(dmgType) << " and reduces the damage to " << dmg << std::endl;
+    }
+    
+    // Check vulnerabilities
+    if (_vulnerabities.find(dmgType) != _vulnerabities.end()) {
+        dmg *= 2;
+        std::cout << _name << " is vulnerable to " << DAMAGE_TYPE_TO_STRING.at(dmgType) << " which doubles the damage to " << dmg << std::endl;
+    }
+
+    // Apply uncanny dodge if active
+    if (_uncannyDodgeActive) {
+        dmg = std::floor(dmg / 2);
+        std::cout << _name << " uses Uncanny Dodge which reduces the damage to " << dmg << std::endl;
+    }
+    
+    assert(_temporaryHp >= 0);
+    _temporaryHp -= dmg;
+    
+    if (_temporaryHp < 0) {
+        _currHp += _temporaryHp;
+        _temporaryHp = 0;
+    }
+    
+    _dmgTypesTookLastRound.insert(dmgType);
+    return dmg;
+}
+
+// Main damage receiving function
+int Combatant::receiveDmg(int dmg, DamageType dmg_type, int multiplier) {
+    dmg = doReceiveDmg(dmg, dmg_type);
+    
+    // Undead Fortitude check
+    if (_currHp <= 0 && hasPassiveAbility(AbilityType::UNDEAD_FORTITUDE) && 
+        multiplier == 1 && dmg_type != DamageType::Radiant) {
+        
+        std::vector<RollType> rollTypes(_savingThrowsRollTypeMod[SavingThrow::CON].begin(),
+                                      _savingThrowsRollTypeMod[SavingThrow::CON].end());
+        bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 
+                                     5 + dmg, 
+                                     reconcileRollTypes(rollTypes));
+        if (saved) {
+            _currHp = 1;
+            std::cout << "Instead of dying, " << _name << " drops to 1 HP thanks to Undead Fortitude" << std::endl;
+        }
+    }
+
+    // Handle wildshape damage overflow
+    if (_currHp <= 0 && getOriginalForm() != this) {
+        getOriginalForm()->_currHp += _currHp;  // Carry-over damage
+        EffectTracker::getInstance().removeEffectFromCombatantByType(getOriginalForm(), EffectType::WILDSHAPE);
+    }
+
+    // Handle effects of taking damage
+    if (dmg > 0) {
+        checkConcentration(this, dmg);
+        
+        if (isAffectedBy(Conditions::AWAKENED_BY_DMG)) {
+            std::cout << _name << " is awakened by taking damage" << std::endl;
+            removeCondition(Conditions::AWAKENED_BY_DMG);
+        }
+    }
+    
+    return dmg;
+}
+
+int Combatant::receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>& dmg, int multiplier) {
+    int totalDmg = 0;
+    bool received_radiant_dmg = false;
+    
+    for (const auto& [damage, type] : dmg) {
+        totalDmg += doReceiveDmg(damage, type);
+        if (type == DamageType::Radiant) {
+            received_radiant_dmg = true;
+        }
+    }
+    
+    if (_currHp <= 0 && hasPassiveAbility(AbilityType::UNDEAD_FORTITUDE) && 
+        multiplier == 1 && !received_radiant_dmg) {
+        
+        std::vector<RollType> rollTypes(_savingThrowsRollTypeMod[SavingThrow::CON].begin(),
+                                      _savingThrowsRollTypeMod[SavingThrow::CON].end());
+        bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 
+                                     5 + totalDmg,
+                                     reconcileRollTypes(rollTypes));
+        if (saved) {
+            _currHp = 1;
+            std::cout << "Instead of dying, " << _name << " drops to 1 HP thanks to Undead Fortitude" << std::endl;
+        }
+    }
+
+    //! @todo this is different now
+    if (_currHp <= 0 && getOriginalForm() != this) {
+        getOriginalForm()->_currHp += _currHp;  // Carry-over damage
+        EffectTracker::getInstance().removeEffectFromCombatantByType(getOriginalForm(), EffectType::WILDSHAPE);
+    }
+
+    if (totalDmg > 0) {
+        checkConcentration(this, totalDmg);
+        
+        if (isAffectedBy(Conditions::AWAKENED_BY_DMG)) {
+            std::cout << _name << " is awakened by taking damage" << std::endl;
+            removeCondition(Conditions::AWAKENED_BY_DMG);
+        }
+    }
+
+    _uncannyDodgeActive = false;
+    return totalDmg;
+}
+
+bool Combatant::checkConcentration(Combatant* combatant, int dmg) {
+    // If not concentrating, no check needed
+    if (!combatant->isConcentrating()) {
+        return true;
+    }
+    
+    // Calculate DC for the check (higher of 10 or half the damage taken)
+    int dc = std::max(10, dmg / 2);
+    
+    // Get saving throw modifiers for Constitution
+    const auto& rollTypes = combatant->getSavingThrowRollTypeMods(SavingThrow::CON);
+    std::vector<RollType> rollTypesVec(rollTypes.begin(), rollTypes.end());
+    
+    // Roll the save
+    bool saved = rollSavingThrow(
+        combatant->getSavingThrow(SavingThrow::CON),
+        dc,
+        reconcileRollTypes(rollTypesVec)
+    );
+    
+    // If failed, break concentration
+    if (!saved) {
+        std::cout << _name << " fails their concentration check and loses concentration" << std::endl;
+        combatant->breakConcentration();
+        return false;
+    }
+    
+    std::cout << _name << " maintains concentration" << std::endl;
+    return true;
+}
+
+void Combatant::addUndeadFortitude() { _passiveAbilities.insert(AbilityType::UNDEAD_FORTITUDE); }
 }

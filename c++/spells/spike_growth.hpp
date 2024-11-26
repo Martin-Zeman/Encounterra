@@ -67,6 +67,12 @@ namespace enc
 
     std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+    void activate(const Kwargs &kwargs = {}) override;
+    void deactivate() override;
+    void onEnter(Combatant *combatant) override;
+    void onMoveWithin(Combatant *combatant) override;
+    double threatOnEnter(Combatant *target) const override;
+    double threatOnMoveWithin(Combatant *target) const override;
 
   private:
     Coord _coord;
