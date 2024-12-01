@@ -143,6 +143,8 @@ namespace enc
     int getCurrentHp() const { return _currHp; }
     void setCurrentHp(int hp) { _currHp = hp; }
     int getMaxHp() const { return _maxHp; }
+    void setTemporaryHp(int hp) { _temporaryHp = std::max(_temporaryHp, hp); }
+    int getTemporaryHp() { return _temporaryHp; }
     int getCurrentInit() const { return _currInit; }
     int getMovement() const { return _movement; }
     void setMovement(int movement) { _movement = movement; }
@@ -179,9 +181,14 @@ namespace enc
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
     void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { *_shortestPathsCache = shortestPaths; }
-    int doReceiveDmg(int dmg, DamageType dmg_type);
-    int receiveDmg(int dmg, DamageType dmg_type, int multiplier);
-    int receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>& dmg, int multiplier);
+    int receiveDmg(int dmg, DamageType dmg_type, int multiplier = 1);
+    int receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>& dmg, int multiplier = 1);
+    void addResistance(DamageType dmgType);
+    void removeResistance(DamageType dmgType);
+    void addImmunity(DamageType dmgType);
+    void removeImmunity(DamageType dmgType);
+    void addVulnerability(DamageType dmgType);
+    void removeVulnerability(DamageType dmgType);
     /**
      * Handles concentration checks when a combatant takes damage.
      *
@@ -443,6 +450,7 @@ namespace enc
         }
       return nullptr;
     }
+    int doReceiveDmg(int dmg, DamageType dmg_type);
 
     std::string _shortCode;
     int _maxHp;

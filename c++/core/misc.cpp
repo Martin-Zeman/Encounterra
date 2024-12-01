@@ -17,31 +17,35 @@ namespace enc
     return defaultValue;
   }
 
-  RollType reconcileRollTypes(RollType types)
+  /**
+   * Reconciles multiple roll type modifiers into a single modifier.
+   * If both advantage and disadvantage are present, returns straight roll.
+   * Otherwise, returns the present modifier (or straight if none).
+   *
+   * @param types Set of roll type modifiers
+   * @return The resulting single modifier
+   */
+  RollType reconcileRollTypes(const std::unordered_set<RollType> &types)
   {
-    uint8_t typeBits = static_cast<uint8_t>(types);
+    bool hasAdvantage = types.contains(RollType::ADVANTAGE);
+    bool hasDisadvantage = types.contains(RollType::DISADVANTAGE);
 
-    // If both ADVANTAGE and DISADVANTAGE are present, or if it's STRAIGHT, return STRAIGHT
-    if((typeBits & (static_cast<uint8_t>(RollType::ADVANTAGE) | static_cast<uint8_t>(RollType::DISADVANTAGE)))
-         == (static_cast<uint8_t>(RollType::ADVANTAGE) | static_cast<uint8_t>(RollType::DISADVANTAGE))
-       || typeBits == static_cast<uint8_t>(RollType::STRAIGHT))
+    // If both are present, it's a straight roll
+    if(hasAdvantage && hasDisadvantage)
       {
         return RollType::STRAIGHT;
       }
 
-    // If only ADVANTAGE is present
-    if(typeBits & static_cast<uint8_t>(RollType::ADVANTAGE))
+    // Return the present modifier (or STRAIGHT if none)
+    if(hasAdvantage)
       {
         return RollType::ADVANTAGE;
       }
-
-    // If only DISADVANTAGE is present
-    if(typeBits & static_cast<uint8_t>(RollType::DISADVANTAGE))
+    if(hasDisadvantage)
       {
         return RollType::DISADVANTAGE;
       }
 
-    // Default case (should not happen with valid input)
     return RollType::STRAIGHT;
   }
 

@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <variant>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace enc
@@ -279,9 +280,9 @@ namespace enc
 
   enum class RollType : uint8_t
   {
-    STRAIGHT = 1 << 0,
-    ADVANTAGE = 1 << 1,
-    DISADVANTAGE = 1 << 2
+    STRAIGHT,
+    ADVANTAGE,
+    DISADVANTAGE
   };
 
   inline RollType operator|(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b)); }
@@ -299,7 +300,7 @@ namespace enc
   // Function to safely get the delta value
   int getRollTypeDelta(RollType rollType, int rollNeeded, int defaultValue = 0);
 
-  RollType reconcileRollTypes(RollType types);
+  RollType reconcileRollTypes(const std::unordered_set<RollType> &types);
 
   std::vector<int> generateOutcomes(const Die &die);
 

@@ -414,7 +414,7 @@ int Combatant::receiveDmg(int dmg, DamageType dmg_type, int multiplier) {
                                       _savingThrowsRollTypeMod[SavingThrow::CON].end());
         bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 
                                      5 + dmg, 
-                                     reconcileRollTypes(rollTypes));
+                                     reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));
         if (saved) {
             _currHp = 1;
             std::cout << "Instead of dying, " << _name << " drops to 1 HP thanks to Undead Fortitude" << std::endl;
@@ -458,7 +458,7 @@ int Combatant::receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>&
                                       _savingThrowsRollTypeMod[SavingThrow::CON].end());
         bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 
                                      5 + totalDmg,
-                                     reconcileRollTypes(rollTypes));
+                                     reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));
         if (saved) {
             _currHp = 1;
             std::cout << "Instead of dying, " << _name << " drops to 1 HP thanks to Undead Fortitude" << std::endl;
@@ -493,15 +493,11 @@ bool Combatant::checkConcentration(Combatant* combatant, int dmg) {
     // Calculate DC for the check (higher of 10 or half the damage taken)
     int dc = std::max(10, dmg / 2);
     
-    // Get saving throw modifiers for Constitution
-    const auto& rollTypes = combatant->getSavingThrowRollTypeMods(SavingThrow::CON);
-    std::vector<RollType> rollTypesVec(rollTypes.begin(), rollTypes.end());
-    
     // Roll the save
     bool saved = rollSavingThrow(
-        combatant->getSavingThrow(SavingThrow::CON),
+        _savingThrows.at(SavingThrow::CON),
         dc,
-        reconcileRollTypes(rollTypesVec)
+        reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON])
     );
     
     // If failed, break concentration
@@ -516,4 +512,16 @@ bool Combatant::checkConcentration(Combatant* combatant, int dmg) {
 }
 
 void Combatant::addUndeadFortitude() { _passiveAbilities.insert(AbilityType::UNDEAD_FORTITUDE); }
+
+void Combatant::addResistance(DamageType dmgType) { _resistances.insert(dmgType); }
+
+void Combatant::removeResistance(DamageType dmgType) { _resistances.erase(dmgType); }
+
+void Combatant::addImmunity(DamageType dmgType) { _immunities.insert(dmgType); }
+
+void Combatant::removeImmunity(DamageType dmgType) { _immunities.erase(dmgType); }
+
+void Combatant::addVulnerability(DamageType dmgType) { _vulnerabities.insert(dmgType); }
+
+void Combatant::removeVulnerability(DamageType dmgType) { _vulnerabities.erase(dmgType); }
 }

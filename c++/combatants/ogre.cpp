@@ -5,7 +5,7 @@
 namespace enc
 {
 
-  Ogre::Ogre(int num) : Combatant(CombatantType::MONSTER, Monster::GIANT, _classLevel, concatName(std::string(_className), num), 39, 11, 1, 0, 20, 0)
+  Ogre::Ogre(int num) : Combatant(CombatantType::MONSTER, Monster::GIANT, _classLevel, concatName(std::string(_className), num), 59, 11, -1, 0, 40, 0)
   {
     _instanceId = generateInstanceId();
     _size = Size::LARGE;
