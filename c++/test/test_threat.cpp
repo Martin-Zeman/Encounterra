@@ -57,8 +57,9 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 
     auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, goblin, &goblin->getSpellslots());
     Coord coord{7, 3};
-    auto spikeGrowth = sgFactory.create(&coord);
-    effectTracker->add(std::move(spikeGrowth));
+    auto actoid = sgFactory.create(&coord);
+    auto effect = std::dynamic_pointer_cast<Effect>(actoid);
+    effectTracker->add(effect);
 
     battleMap->buildBaseAdjacencyMatrix();
     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 3});
@@ -82,8 +83,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumOnePartialSpikeGrowth) {
     session->addCombatant(goblin, Color::RED);
 
     auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, *goblin, goblin->getSpellslots());
-    auto spikeGrowth = sgFactory.create(Coord{7, 6});
-    effectTracker->add(std::move(spikeGrowth));
+    Coord coord{7, 6};
+    auto actoid = sgFactory.create(&coord);
+    auto effect = std::dynamic_pointer_cast<Effect>(actoid);
+    effectTracker->add(effect);
 
     battleMap->buildBaseAdjacencyMatrix();
     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 3});

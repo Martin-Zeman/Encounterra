@@ -6,14 +6,14 @@
 
 namespace enc
 {
-  class AoeEffect : public Effect, public AoeThreat
+  class AoeEffect : virtual public Effect, public AoeThreat
   {
   public:
     explicit AoeEffect(Combatant *initiator) : Effect(initiator) {}
     virtual ~AoeEffect() = default;
 
     // Pure virtual methods specific to AoeEffect
-    virtual std::vector<Coord> getAffectedCoords() const = 0;
+    virtual const std::vector<Coord>& getAffectedCoords() const = 0;
     virtual void onEnter(Combatant *combatant) = 0;
     virtual void onMoveWithin(Combatant *combatant) = 0;
     virtual void onExit(Combatant *combatant) = 0;

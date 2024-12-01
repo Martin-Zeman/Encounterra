@@ -12,7 +12,7 @@ namespace enc
   public:
     explicit CombatantEffect(Combatant* initiator, const std::vector<Combatant*>& combatants = {});
     
-    bool isAffecting(Combatant* combatant) const;
+    bool isAffecting(Combatant* combatant) const override;
     
     // Allow derived classes to access combatants
     const std::vector<Combatant*>& getCombatants() const { return _combatants; }

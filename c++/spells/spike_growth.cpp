@@ -107,10 +107,13 @@ namespace enc
 
   void SpikeGrowth::activate(const Kwargs &kwargs)
   {
-    _factory._combatant->setConcentrationEffect(shared_from_this());
+    _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
   }
 
   void SpikeGrowth::deactivate() { _factory._combatant->breakConcentration(); }
+  bool SpikeGrowth::deactivateForCombatant(Combatant *combatant) {
+    assert(false);
+  }
 
   void SpikeGrowth::onEnter(Combatant *combatant)
   {
@@ -126,8 +129,12 @@ namespace enc
     BattleMap::getInstance().removeCombatantIfDead(*combatant);
   }
 
-  double SpikeGrowth::threatOnEnter(Combatant *target) const { return avgRoll(_factory._dmgDice); }
+  void SpikeGrowth::onExit(Combatant *combatant) {/*NOP*/};
+  void SpikeGrowth::onStartOfTurn(Combatant *combatant) { /*NOP */};
+  void SpikeGrowth::onEndOfTurn(Combatant *combatant) {/*NOP*/ };
 
-  double SpikeGrowth::threatOnMoveWithin(Combatant *target) const { return avgRoll(_factory._dmgDice); }
+  double SpikeGrowth::threatOnEnter(Combatant *target, const Kwargs & kwargs) const { return avgRoll(_factory._dmgDice); }
+
+  double SpikeGrowth::threatOnMoveWithin(Combatant *target, const Kwargs & kwargs) const { return avgRoll(_factory._dmgDice); }
 
 } // namespace enc

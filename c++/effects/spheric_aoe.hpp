@@ -9,7 +9,7 @@ namespace enc
   class SphericAoe
   {
   public:
-    SphericAoe(const Coord &coord, int radius) : _origin(coord), _radius(radius) { _affectedCoords = getAffectedCoords(); }
+    SphericAoe(const Coord &coord, int radius) : _origin(coord), _radius(radius) { _affectedCoords = calculateAffectedCoords(); }
 
     virtual ~SphericAoe() = default;
 

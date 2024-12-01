@@ -6,7 +6,7 @@
 #include "core/resources.hpp"
 #include "actions/action_types.hpp"
 #include "effects/limited_duration_effect.hpp"
-#include "effects/spheric_aoe.hpp"
+#include "effects/aoe_spheric_effect.hpp"
 
 namespace enc
 {
@@ -48,18 +48,23 @@ namespace enc
     Die _dmgDice;
   };
 
-  class SpikeGrowth : public Actoid, public LimitedDurationEffect, public SphericAoe, public DirectThreat, public AoeThreat
+  class SpikeGrowth : public Actoid, public LimitedDurationEffect, public AoeSphericEffect, public DirectThreat, public AoeThreat
   {
   public:
     SpikeGrowth(const Coord &coord, const SpikeGrowthFactory &factory)
-        : Actoid(const_cast<SpikeGrowthFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType),
-          LimitedDurationEffect(factory._combatant, 100), SphericAoe(coord, TRANSLATE_RADIUS.at(SpikeGrowthFactory::target)), _coord(coord),
-          _factory(factory)
+        : Effect(factory._combatant),    // Explicitly construct the virtual base
+          AoeEffect(factory._combatant), // Explicitly construct the virtual base
+          Actoid(const_cast<SpikeGrowthFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType),
+
+          LimitedDurationEffect(factory._combatant, 100),
+          AoeSphericEffect(factory._combatant, coord, TRANSLATE_RADIUS.at(SpikeGrowthFactory::target)), _coord(coord), _factory(factory)
     {}
 
     std::string toString() const;
 
     std::string shorthandStr() const;
+
+    EffectType getEffectType() const override { return EffectType::SPIKE_GROWTH; }
 
     double calculateThreat(const Kwargs &kwargs) override;
     // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
@@ -69,10 +74,18 @@ namespace enc
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
+    bool deactivateForCombatant(Combatant *combatant) override;
     void onEnter(Combatant *combatant) override;
     void onMoveWithin(Combatant *combatant) override;
-    double threatOnEnter(Combatant *target) const override;
-    double threatOnMoveWithin(Combatant *target) const override;
+
+    void onExit(Combatant *combatant) override;
+    void onStartOfTurn(Combatant *combatant) override;
+    void onEndOfTurn(Combatant *combatant) override;
+
+    double threatOnEnter(Combatant *target, const Kwargs & kwargs) const override;
+    double threatOnMoveWithin(Combatant *target, const Kwargs & kwargs) const override;
+
+    const std::vector<Coord> &getAffectedCoords() const { return SphericAoe::getAffectedCoords(); }
 
   private:
     Coord _coord;

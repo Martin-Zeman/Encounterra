@@ -4,7 +4,7 @@
 
 namespace enc
 {
-  class LimitedDurationEffect : public Effect
+  class LimitedDurationEffect : virtual public Effect
   {
   public:
     LimitedDurationEffect(Combatant *initiator, int turns) : Effect(initiator), _turns(turns) {}
