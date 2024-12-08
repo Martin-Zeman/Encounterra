@@ -4,10 +4,10 @@
 #include <array>
 #include <cmath>
 #include <algorithm>
-#include "misc.hpp"
-#include "types.hpp"
-#include "combatant.hpp"
-#include "rectangle.hpp"
+#include "core/misc.hpp"
+#include "core/types.hpp"
+#include "core/combatant.hpp"
+#include "core/rectangle.hpp"
 
 namespace enc
 {

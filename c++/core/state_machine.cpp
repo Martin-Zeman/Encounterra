@@ -216,4 +216,15 @@ namespace enc
       }
     return result;
   }
+
+  std::vector<std::string> StateMachine::getAllTransitions() const
+  {
+    std::vector<std::string> result;
+    for(const auto &[state, transitions] : _states)
+      {
+        result.reserve(result.size() + distance(transitions.begin(), transitions.end()));
+        result.insert(result.end(), transitions.begin(), transitions.end());
+      }
+      return result;
+  }
 }

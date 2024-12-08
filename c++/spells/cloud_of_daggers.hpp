@@ -64,7 +64,7 @@ namespace enc
     // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
-    std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
   private:

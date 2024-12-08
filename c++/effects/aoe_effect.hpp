@@ -13,7 +13,7 @@ namespace enc
     virtual ~AoeEffect() = default;
 
     // Pure virtual methods specific to AoeEffect
-    virtual const std::vector<Coord>& getAffectedCoords() const = 0;
+    virtual const CoordVector& getAffectedCoords() const = 0;
     virtual void onEnter(Combatant *combatant) = 0;
     virtual void onMoveWithin(Combatant *combatant) = 0;
     virtual void onExit(Combatant *combatant) = 0;

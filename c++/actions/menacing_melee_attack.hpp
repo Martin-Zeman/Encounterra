@@ -35,7 +35,7 @@ namespace enc
     MenacingMeleeAttack(AbilityType abilityType, Combatant &target, MenacingMeleeAttackFactory &factory) : MeleeAttack(abilityType, target, factory)
     {}
 
-    std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
   };
 }

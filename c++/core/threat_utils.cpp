@@ -327,7 +327,7 @@ namespace enc
     return threatAcc;
   }
 
-  std::vector<double> accumulateThreatAlongPath(const std::vector<Coord> &path, Combatant *combatant,
+  std::vector<double> accumulateThreatAlongPath(const CoordVector &path, Combatant *combatant,
                                                 const std::unordered_map<AoeEffect *, Coords> &effectToCoords, bool disengaged, bool dodged)
   {
     double threatAcc = 0.0;
@@ -353,8 +353,8 @@ namespace enc
   }
 
   // std::pair<std::vector<double>, std::vector<std::string>>
-  // calcThreatForPathWithMistyStep(const std::vector<Coord> &path, Combatant *combatant,
-  //                                const std::unordered_map<AoeEffect *, std::vector<Coord>> &effectToCoords)
+  // calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
+  //                                const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords)
   // {
   //   double threatAcc = 0.0;
   //   std::vector<double> maxThreatPath;
@@ -370,7 +370,7 @@ namespace enc
 
   //   // Build the Misty Step DAG
     
-  //   std::vector<Coord> coords = currCoords.get();
+  //   CoordVector coords = currCoords.get();
 
   //   // Create state machine for path analysis
   //   StateMachine msDAG;
@@ -485,8 +485,8 @@ namespace enc
   // }
 
   std::pair<std::vector<double>, std::vector<std::string>>
-calcThreatForPathWithMistyStep(const std::vector<Coord> &path, Combatant *combatant,
-                              const std::unordered_map<AoeEffect *, std::vector<Coord>> &effectToCoords)
+calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
+                              const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords)
 {
     double threatAcc = 0.0;
     std::vector<std::string> bestPath;
@@ -500,7 +500,7 @@ calcThreatForPathWithMistyStep(const std::vector<Coord> &path, Combatant *combat
     }
 
     // Build the Misty Step DAG
-    std::vector<Coord> coords = currCoords.get();
+    CoordVector coords = currCoords.get();
     
     // Create state machine for path analysis
     StateMachine msDAG;

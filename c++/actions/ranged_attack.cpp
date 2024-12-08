@@ -33,7 +33,7 @@ namespace enc
     return std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *static_cast<Combatant *>(target), *this);
   }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   RangedAttack::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     RangedAttackFactory &factory = dynamic_cast<RangedAttackFactory &>(getFactory());
@@ -45,20 +45,20 @@ namespace enc
       {
         if(swallower == &_target)
           {
-            return std::vector<Coord>{currCoord};
+            return CoordVector{currCoord};
           }
         return {};
       }
 
     if(!factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
-        std::vector<Coord> freeCoordsInRange
+        CoordVector freeCoordsInRange
           = battleMap.getFreeCoordsInCartesianRange(battleMap.getCombatantCoordinates(_target).get(), distances, factory._combatant->getSize(),
                                                     factory._attackRange, factory._combatant->_instanceId);
 
         if(!EffectTracker::getInstance().isCombatantHiddenFrom(factory._combatant, &_target))
           {
-            std::vector<Coord> visibleCoords;
+            CoordVector visibleCoords;
             std::copy_if(freeCoordsInRange.begin(), freeCoordsInRange.end(), std::back_inserter(visibleCoords),
                          [&battleMap, this](const Coord &coord) {
                            return battleMap.getVisibilityFromCoord(coord, &_target) != Visibility::NONE;
@@ -68,7 +68,7 @@ namespace enc
         else
           {
             // We only consider the coords where Visibility::NONE transitions into any other kind
-            std::vector<Coord> transitionCoords;
+            CoordVector transitionCoords;
             for(const auto &coord : freeCoordsInRange)
               {
                 if(battleMap.getVisibilityFromCoord(coord, &_target) != Visibility::NONE)
@@ -92,7 +92,7 @@ namespace enc
     else if(battleMap.getCartesianDistanceCombatants(*factory._combatant, _target) <= factory._attackRange
             && battleMap.getVisibilityFromCoord(currCoord, &_target) != Visibility::NONE)
       {
-        return std::vector<Coord>{currCoord};
+        return CoordVector{currCoord};
       }
 
     return {};

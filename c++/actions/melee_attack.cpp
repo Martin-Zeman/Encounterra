@@ -28,7 +28,7 @@ namespace enc
 
   std::shared_ptr<Actoid> MeleeAttackFactory::create(void *target) { return std::make_shared<MeleeAttack>(AbilityType::MELEE_ATTACK, *static_cast<Combatant *>(target), *this); }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   MeleeAttack::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     MeleeAttackFactory &factory = dynamic_cast<MeleeAttackFactory &>(getFactory());
@@ -39,7 +39,7 @@ namespace enc
       {
         if(swallower == &_target)
           {
-            return std::vector<Coord>{battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
+            return CoordVector{battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
           }
         return {};
       }
@@ -51,7 +51,7 @@ namespace enc
       }
     else if(battleMap.getHopDistanceCombatants(*factory._combatant, _target) <= factory._attackRange)
       {
-        return std::vector<Coord>{battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
+        return CoordVector{battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
       }
 
     return {};

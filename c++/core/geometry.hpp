@@ -5,8 +5,8 @@
 #include <vector>
 #include <random>
 #include <set>
-#include "types.hpp"
-#include "coords.hpp"
+#include "core/types.hpp"
+#include "core/coords.hpp"
 
 namespace enc
 {
@@ -16,7 +16,7 @@ namespace enc
 
   blaze::DynamicMatrix<double> distanceMatrix(const Coords &coords1, const Coords &coords2);
 
-  std::vector<Coord> inflateCoords(const Coords &coords, int inflate_to_dist);
+  CoordVector inflateCoords(const Coords &coords, int inflate_to_dist);
 
   blaze::DynamicVector<double> linspace(double start, double end, size_t num);
 
@@ -26,7 +26,7 @@ namespace enc
 
   int randomInt(int min, int max);
 
-  std::vector<Coord> convertPathToIncrements(const std::vector<Coord> &path);
+  CoordVector convertPathToIncrements(const CoordVector &path);
 
   std::pair<double, double> linearRegression(const std::vector<Vector2D> &enemyPositions);
 
@@ -40,7 +40,7 @@ namespace enc
 
   std::set<Coord> getAffectedByLine(const Coord &origin, double angleDeg, double length, double width, int gridSize);
 
-  std::vector<Coord> getCoordsAffectedBySquareAoE(const Coord &origin, int length, int gridSize);
+  CoordVector getCoordsAffectedBySquareAoE(const Coord &origin, int length, int gridSize);
 
   std::pair<Vector2D, Vector2D> findFovVectors(const Rectangle &observer, const Rectangle &target);
 

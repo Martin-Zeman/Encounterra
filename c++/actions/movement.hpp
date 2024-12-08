@@ -28,16 +28,16 @@ namespace enc
   public:
     static const std::unordered_map<AbilityType, std::string> MOVEMENT_TYPE_NAMES;
 
-    MovementFactory(Combatant *combatant, std::vector<Coord> path, AbilityType movementType = AbilityType::STANDARD_MOVEMENT);
+    MovementFactory(Combatant *combatant, CoordVector path, AbilityType movementType = AbilityType::STANDARD_MOVEMENT);
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
     std::shared_ptr<Actoid> create(void *target) override;
     std::optional<Resource *> getResource() override { return {}; }
 
-    // void setPath(const std::vector<Coord> &path) { _path = path; }
+    // void setPath(const CoordVector &path) { _path = path; }
 
   private:
-    std::vector<Coord> _path;
+    CoordVector _path;
   };
 
   class GetUpFactory : public ActoidFactory

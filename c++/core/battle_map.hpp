@@ -9,11 +9,11 @@
 #include <stdexcept>
 #include <optional>
 #include <cstdint>
-#include "misc.hpp"
-#include "types.hpp"
-#include "coords.hpp"
-#include "combatant.hpp"
-#include "obstacle.hpp"
+#include "core/misc.hpp"
+#include "core/types.hpp"
+#include "core/coords.hpp"
+#include "core/combatant.hpp"
+#include "core/obstacle.hpp"
 #include "spells/spell_stats.hpp"
 
 namespace enc
@@ -43,10 +43,10 @@ namespace enc
 
     size_t getGridSize() const;
 
-    std::vector<Coord> getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances = blaze::DynamicVector<double>(),
+    CoordVector getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances = blaze::DynamicVector<double>(),
                                                Size moverSize = Size::MEDIUM, int rng = 1, int combatantId = -1) const;
 
-    std::vector<Coord> getFreeCoordsInCartesianRange(const Coords &target, const blaze::DynamicVector<double> &distances,
+    CoordVector getFreeCoordsInCartesianRange(const Coords &target, const blaze::DynamicVector<double> &distances,
                                                      Size moverSize = Size::MEDIUM, int rng = 1, int combatantId = -1) const;
 
     void setCombatantCoordinates(const Combatant &combatant, const Coord &coord);
@@ -58,7 +58,7 @@ namespace enc
     void buildBaseAdjacencyMatrix();
     DijkstraResult dijkstra(const Coord &src, const MapMatrix &adjMatrix, const MapMatrix &mask);
     DijkstraResult calcDijkstra(const Combatant &combatant);
-    std::vector<Coord> reconstructFromShortestPath(const blaze::DynamicMatrix<Coord> &shortest_paths, const Coord &source, const Coord &target);
+    CoordVector reconstructFromShortestPath(const blaze::DynamicMatrix<Coord> &shortest_paths, const Coord &source, const Coord &target);
     int getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
     double getCartesianDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
     std::unordered_set<Coord> getAdjacentCoords(const Coords &coords) const;
@@ -69,15 +69,15 @@ namespace enc
     getNearest(const Combatant &combatant, Side side = Side::ENEMY, DistanceMetric distType = DistanceMetric::HOP) const;
     bool isEnemyAdjacent(const Combatant &combatant) const;
     bool isAllyAdjacentToTarget(const Combatant &combatant, const Combatant &target) const;
-    std::optional<std::vector<Coord>>
+    std::optional<CoordVector>
     getPathToCombatant(const Combatant &combatant, const Combatant &target, const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>(), int rng = 1, bool considerAOO = false);
-    std::optional<std::vector<Coord>>
+    std::optional<CoordVector>
     getPathToCoord(const Combatant &combatant, const Coord &targetCoord, const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                    const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>(), bool considerAOO = false);
     void removeCombatant(const Combatant &combatant);
     bool removeCombatantIfDead(Combatant &combatant);
-    void resetCombatantsToInitialPositions(const std::unordered_map<Combatant *, Coord> initialPositions);
+    void resetCombatantsToInitialPositions(const std::unordered_map<int, Coord> initialPositions);
     int getCombatantGridValueAt(const Coord &coord) const;
     std::tuple<Coord, int, std::vector<Combatant *>>
     findBestPlacementHarmfulCircular(const Combatant *caster, int spellRange, int radius);

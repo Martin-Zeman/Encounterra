@@ -1,5 +1,5 @@
-#include "geometry.hpp"
-#include "misc.hpp"
+#include "core/geometry.hpp"
+#include "core/misc.hpp"
 #include <cmath>
 #include <unordered_set>
 #include <blaze/Math.h>
@@ -54,7 +54,7 @@ namespace enc
     return distances;
   }
 
-  std::vector<Coord> inflateCoords(const Coords &coords, int inflate_to_dist)
+  CoordVector inflateCoords(const Coords &coords, int inflate_to_dist)
   {
     int offset = 0;
     if(inflate_to_dist > static_cast<int>(Size::MEDIUM))
@@ -76,7 +76,7 @@ namespace enc
           }
       }
 
-    return std::vector<Coord>(inflated.begin(), inflated.end());
+    return CoordVector(inflated.begin(), inflated.end());
   }
 
   blaze::DynamicVector<double> linspace(double start, double end, size_t num)
@@ -103,9 +103,9 @@ namespace enc
   std::mt19937 rng(std::random_device{}());
   int randomInt(int min, int max) { return std::uniform_int_distribution<int>{min, max}(rng); }
 
-  std::vector<Coord> convertPathToIncrements(const std::vector<Coord> &path)
+  CoordVector convertPathToIncrements(const CoordVector &path)
   {
-    std::vector<Coord> increments;
+    CoordVector increments;
     increments.reserve(path.size() - 1);
 
     for(size_t i = 0; i < path.size() - 1; ++i)
@@ -251,9 +251,9 @@ namespace enc
     return coords;
   }
 
-  std::vector<Coord> getCoordsAffectedBySquareAoE(const Coord &origin, int length, int gridSize)
+  CoordVector getCoordsAffectedBySquareAoE(const Coord &origin, int length, int gridSize)
   {
-    std::vector<Coord> coords;
+    CoordVector coords;
     coords.reserve(length * length);
 
     for(int i = 0; i < length; ++i)
@@ -383,7 +383,7 @@ namespace enc
     for(int d = maxDistance; d > 1; --d)
       {
         // Explore the perimeter of the square defined by the Chebyshev distance d
-        std::vector<Coord> potentialPoints = {{initCoords[0] + d, initCoords[1] + d},        {initCoords[0] + d + 1, initCoords[1] + d},
+        CoordVector potentialPoints = {{initCoords[0] + d, initCoords[1] + d},        {initCoords[0] + d + 1, initCoords[1] + d},
                                               {initCoords[0] + d, initCoords[1] + d + 1},    {initCoords[0] + d - 1, initCoords[1] + d},
                                               {initCoords[0] + d, initCoords[1] + d - 1},    {initCoords[0] + d + 1, initCoords[1] + d + 1},
                                               {initCoords[0] + d - 1, initCoords[1] + d - 1}};

@@ -21,13 +21,14 @@
 #include "core/spellslots.hpp"
 #include "actions/action_types.hpp"
 #include "actions/action_constants.hpp"
-#include "abilities/wildshape.hpp"
 #include "spells/firebolt.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 
 namespace enc
 {
+
+  class Wildshape;
 
   using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
@@ -165,7 +166,7 @@ namespace enc
     void addSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
     void removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
     void clearSavingThrowRollTypeMods(SavingThrow type);
-    std::shared_ptr<ActoidFactory> &getActionFactory(AbilityType type);
+    std::weak_ptr<ActoidFactory> getActionFactory(AbilityType type);
     void clearAllSavingThrowMods();
     void rollForRecharge();
     const std::vector<std::shared_ptr<ActoidFactory>> &getActionFactoriesConst() { return _actionFactories; }

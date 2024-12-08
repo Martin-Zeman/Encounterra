@@ -199,7 +199,7 @@ TEST_F(BattleMapTest, GetFreeCoordsInCartesianRangeMedium)
     coords = battleMap->getCombatantCoordinates(*goblin);
     free_coords = battleMap->getFreeCoordsInCartesianRange(coords, blaze::DynamicVector<double>(), Size::MEDIUM, 4, -1);
     
-    std::vector<Coord> not_expected = {{1, 1}, {2, 1}, {3, 1}, {4, 1}, {6, 1}, {7, 1}, {8, 1},
+    CoordVector not_expected = {{1, 1}, {2, 1}, {3, 1}, {4, 1}, {6, 1}, {7, 1}, {8, 1},
                                        {1, 2}, {1, 3}, {1, 4}, {1, 6}, {1, 7}, {1, 8}, {8, 8},
                                        {2, 8}, {9, 8}};
     for (const auto& coord : not_expected) {
@@ -207,7 +207,7 @@ TEST_F(BattleMapTest, GetFreeCoordsInCartesianRangeMedium)
             << "Coordinate " << coord[0] << "," << coord[1] << " should not be in free_coords";
     }
 
-    std::vector<Coord> expected = {{9, 5}, {1, 5}, {5, 1}, {5, 9}};
+    CoordVector expected = {{9, 5}, {1, 5}, {5, 1}, {5, 9}};
     for (const auto& coord : expected) {
         EXPECT_NE(std::find(free_coords.begin(), free_coords.end(), coord), free_coords.end())
             << "Coordinate " << coord[0] << "," << coord[1] << " should be in free_coords";
@@ -290,7 +290,7 @@ TEST_F(BattleMapTest, MoveCombatantByIncrementLarge)
 
   auto coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 4);
-  std::vector<Coord> expectedInitialPos{{0, 1}, {0, 2}, {1, 1}, {1, 2}};
+  CoordVector expectedInitialPos{{0, 1}, {0, 2}, {1, 1}, {1, 2}};
   EXPECT_EQ(coords.get(), expectedInitialPos);
 
   Coord increment{1, 1};
@@ -298,7 +298,7 @@ TEST_F(BattleMapTest, MoveCombatantByIncrementLarge)
 
   coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 4);
-  std::vector<Coord> expectedFinalPos{{1, 2}, {1, 3}, {2, 2}, {2, 3}};
+  CoordVector expectedFinalPos{{1, 2}, {1, 3}, {2, 2}, {2, 3}};
   EXPECT_EQ(coords.get(), expectedFinalPos);
 }
 
@@ -341,7 +341,7 @@ TEST_F(BattleMapTest, MoveCombatantLarge)
 
   auto coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 4);
-  std::vector<Coord> expectedInitialPos{{0, 1}, {0, 2}, {1, 1}, {1, 2}};
+  CoordVector expectedInitialPos{{0, 1}, {0, 2}, {1, 1}, {1, 2}};
   EXPECT_EQ(coords.get(), expectedInitialPos);
 
   Coord newPos{9, 9};
@@ -349,7 +349,7 @@ TEST_F(BattleMapTest, MoveCombatantLarge)
 
   coords = battleMap->getCombatantCoordinates(*goblin);
   ASSERT_EQ(coords.get().size(), 4);
-  std::vector<Coord> expectedFinalPos{{9, 9}, {9, 10}, {10, 9}, {10, 10}};
+  CoordVector expectedFinalPos{{9, 9}, {9, 10}, {10, 9}, {10, 10}};
   EXPECT_EQ(coords.get(), expectedFinalPos);
 }
 
@@ -462,7 +462,7 @@ TEST_F(BattleMapTest, WithObstacles)
 
   // Check path
   Coord dest{8, 8};
-  std::vector<Coord> path = battleMap->reconstructFromShortestPath(result.shortestPaths, src, dest);
+  CoordVector path = battleMap->reconstructFromShortestPath(result.shortestPaths, src, dest);
   EXPECT_EQ(path.size(), 6); // [4,6] -> [4,7] -> [5,8] ->[6,8] -> [7,8] -> [8,8]
   EXPECT_EQ(path[0], (Coord{4, 6}));
   EXPECT_EQ(path[1], (Coord{4, 7}));
@@ -548,7 +548,7 @@ TEST_F(BattleMapTest, GetPathToCombatantMediumToMedium)
   auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
-  std::vector<Coord> expectedPath = {{1, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
+  CoordVector expectedPath = {{1, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
   EXPECT_EQ(*path, expectedPath);
 }
 
@@ -562,7 +562,7 @@ TEST_F(BattleMapTest, GetPathToCoordMediumToCoord)
   auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, {11, 3});
   ASSERT_TRUE(path.has_value());
 
-  std::vector<Coord> expectedPath = {{1, 1}, {1, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
+  CoordVector expectedPath = {{1, 1}, {1, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
   EXPECT_EQ(*path, expectedPath);
 }
 
@@ -579,7 +579,7 @@ TEST_F(BattleMapTest, GetPathToCombatantLargeToLarge)
   auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
-  std::vector<Coord> expectedPath = {{1, 1}, {1, 1}, {1, 1}, {0, 1}};
+  CoordVector expectedPath = {{1, 1}, {1, 1}, {1, 1}, {0, 1}};
   EXPECT_EQ(*path, expectedPath);
 }
 
@@ -595,8 +595,8 @@ TEST_F(BattleMapTest, GetPathToCombatantMediumToLarge)
   auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
-  std::vector<Coord> expectedPath1 = {{1, 1}, {1, 1}, {1, 1}, {1, 1}, {0, 1}};
-  std::vector<Coord> expectedPath2 = {{1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}};
+  CoordVector expectedPath1 = {{1, 1}, {1, 1}, {1, 1}, {1, 1}, {0, 1}};
+  CoordVector expectedPath2 = {{1, 1}, {1, 1}, {1, 1}, {1, 1}, {1, 1}};
   EXPECT_TRUE(*path == expectedPath1 || *path == expectedPath2);
 }
 
@@ -612,7 +612,7 @@ TEST_F(BattleMapTest, GetPathToCombatantLargeToMedium)
   auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
-  std::vector<Coord> expectedPath = {{1, 1}, {1, 1}, {1, 1}, {0, 1}};
+  CoordVector expectedPath = {{1, 1}, {1, 1}, {1, 1}, {0, 1}};
   EXPECT_EQ(*path, expectedPath);
 }
 
@@ -630,7 +630,7 @@ TEST_F(BattleMapTest, GetPathToCombatantLargeToMedium2)
   auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
-  std::vector<Coord> expectedPath = {{1, 0}, {1, 0}};
+  CoordVector expectedPath = {{1, 0}, {1, 0}};
   EXPECT_EQ(*path, expectedPath);
 }
 
@@ -647,7 +647,7 @@ TEST_F(BattleMapTest, GetPathToCombatantHugeToHuge)
   auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
-  std::vector<Coord> expectedPath = {{1, 1}, {1, 1}, {0, 1}};
+  CoordVector expectedPath = {{1, 1}, {1, 1}, {0, 1}};
   EXPECT_EQ(*path, expectedPath);
 }
 

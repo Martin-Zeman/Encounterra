@@ -227,7 +227,7 @@ namespace enc
 
   double Wildshape::calculateThreatDelta(const ThreatModifiers &modifiers) const { return 0.0; }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   Wildshape::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     auto &battleMap = BattleMap::getInstance();
@@ -253,7 +253,7 @@ namespace enc
         mapAccessibility(originalCoord[0], originalCoord[1]) = 1;
 
         int wildshapeSizeIncrement = static_cast<int>(_form->getSize());
-        std::vector<Coord> eligibleCoords;
+        CoordVector eligibleCoords;
         double minDistance = std::numeric_limits<double>::max();
 
         // Find eligible coordinates with minimum distance

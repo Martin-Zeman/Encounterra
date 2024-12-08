@@ -70,7 +70,7 @@ namespace enc
     // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
-    std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
@@ -85,7 +85,7 @@ namespace enc
     double threatOnEnter(Combatant *target, const Kwargs & kwargs) const override;
     double threatOnMoveWithin(Combatant *target, const Kwargs & kwargs) const override;
 
-    const std::vector<Coord> &getAffectedCoords() const { return SphericAoe::getAffectedCoords(); }
+    const CoordVector &getAffectedCoords() const { return SphericAoe::getAffectedCoords(); }
 
   private:
     Coord _coord;

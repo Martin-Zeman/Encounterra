@@ -12,21 +12,23 @@
 // #include "combat/action_dag.hpp"
 #include "core/combatant.hpp"
 #include "core/battle_map.hpp"
+#include "core/threat_utils.hpp"
+#include "core/state_machine.hpp"
 
 namespace enc
 {
 
   using PostTransitions = std::unordered_map<std::string, std::vector<std::pair<std::string, std::string>>>;
   using MovementTransitionMap = std::unordered_map<std::string, std::pair<Coord, MovementThreatType>>;
-  using TransitionToEligibleCoords = std::unordered_map<std::string, std::vector<Coord>>;
-  using SequenceToThreat = std::unordered_map<size_t, std::array<double, 2>>;
+  using TransitionToEligibleCoords = std::unordered_map<std::string, CoordVector>;
+  using SequenceToThreat = std::unordered_map<size_t, std::pair<std::vector<double>, double>>; // first part is the movement component of the threat, second is the action component
   using TransitionStepThreat = std::unordered_map<size_t, std::unordered_map<size_t, double>>;
   using CoordToSequenceIds = std::unordered_map<std::pair<Coord, MovementThreatType>, std::vector<size_t>>;
   using TransitionToMsPath = std::unordered_map<std::string, std::vector<std::string>>;
 
   struct DagBuildResult
   {
-    std::unique_ptr<ActionDag> dag;
+    std::unique_ptr<StateMachine> dag;
     MovementTransitionMap movementMap;
     TransitionToEligibleCoords eligibleCoords;
   };
@@ -71,7 +73,7 @@ namespace enc
       :return: A tuple of the action sequence with maximum threat and more distant coordinate requirement after
       minimization and the maximum threat.
    */
-  std::pair<std::vector<std::string>, std::array<double, 2>>
+  std::pair<std::vector<std::string>, std::pair<std::vector<double>, double>>
   getNearestAndMinimize(std::vector<std::vector<std::string>> &sequences, const std::vector<size_t> &sortedSequences,
                         const SequenceToThreat &sequenceToThreat, const blaze::DynamicVector<int> &distances,
                         const TransitionStepThreat &sequenceIdxToTransitionStepThreat,
@@ -122,7 +124,7 @@ namespace enc
           - dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
           - dict which maps a movement transition -> to target coord
    */
-  std::optional<DagBuildResult> buildActionDag(Combatant *combatant, const std::unique_ptr<ActionDag> &protoDag,
+  std::optional<DagBuildResult> buildActionDag(Combatant *combatant, const std::unique_ptr<StateMachine> &protoDag,
                                                const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
                                                const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths);
 
@@ -143,7 +145,7 @@ namespace enc
       to special Misty Step paths
    */
   std::optional<BestSequenceResult>
-  findBestSequence(Combatant *combatant, const ActionDag &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+  findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
                    const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
                    const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
                    double infeasibilityMultiplier = 0.5);

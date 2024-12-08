@@ -66,7 +66,7 @@ namespace enc
     return acc;
   }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   Fireball::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     FireballFactory &factory = dynamic_cast<FireballFactory &>(getFactory());
@@ -84,7 +84,7 @@ namespace enc
     else if(getCartesianDistanceCoords(battleMap.getCombatantCoordinates(*factory._combatant), Coords(_coord))
             <= static_cast<int>(FireballFactory::range))
       {
-        std::vector<Coord> coords = {battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
+        CoordVector coords = {battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
         return coords;
       }
     return {};

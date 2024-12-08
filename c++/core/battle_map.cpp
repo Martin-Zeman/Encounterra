@@ -346,11 +346,11 @@ namespace enc
     return dijkstra(coord, _baseAdjacencyMatrix, mask);
   }
 
-  std::vector<Coord>
+  CoordVector
   BattleMap::reconstructFromShortestPath(const blaze::DynamicMatrix<Coord> &shortest_paths, const Coord &source, const Coord &target)
   {
     size_t max_path_length = shortest_paths.rows() * shortest_paths.columns();
-    std::vector<Coord> path;
+    CoordVector path;
     path.reserve(max_path_length);
 
     Coord current = target;
@@ -362,7 +362,7 @@ namespace enc
 
         if(current[0] == -1 && current[1] == -1)
           {
-            return std::vector<Coord>(); // Return an empty vector if no path is found
+            return CoordVector(); // Return an empty vector if no path is found
           }
       }
 
@@ -421,7 +421,7 @@ namespace enc
   std::optional<Coord> BattleMap::getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
                                                                const Coords &targetLocation, const blaze::DynamicVector<int> &distances, int rng)
   {
-    std::vector<Coord> adjacentCoords = getFreeCoordsInHopRange(targetLocation, distances, combatantSize, rng, combatant._instanceId);
+    CoordVector adjacentCoords = getFreeCoordsInHopRange(targetLocation, distances, combatantSize, rng, combatant._instanceId);
 
     if(adjacentCoords.empty())
       {
@@ -506,7 +506,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
   return false;
 }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   BattleMap::getPathToCombatant(const Combatant &combatant, const Combatant &target, const blaze::DynamicVector<int> &distances,
                                 const blaze::DynamicMatrix<Coord> &shortestPaths, int rng, bool considerAOO)
   {
@@ -549,7 +549,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return convertPathToIncrements(path);
   }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   BattleMap::getPathToCoord(const Combatant &combatant, const Coord &targetCoord, const blaze::DynamicVector<int> &distances,
                             const blaze::DynamicMatrix<Coord> &shortestPaths, bool considerAOO)
   {
@@ -578,18 +578,18 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
     // if (spdlog::get_level() <= spdlog::level::info)
     // {
-    //     printDijkstra(dijkstraResult.dist, myLocation, std::vector<Coord>{targetCoord});
+    //     printDijkstra(dijkstraResult.dist, myLocation, CoordVector{targetCoord});
     // }
 
     return convertPathToIncrements(path);
   }
 
-  std::vector<Coord> BattleMap::getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances, Size moverSize, int rng,
+  CoordVector BattleMap::getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances, Size moverSize, int rng,
                                                         int combatantId) const
   {
     assert(rng > 0);
     auto inflated = inflateCoords(target, static_cast<int>(moverSize));
-    std::vector<Coord> adjacent_coords;
+    CoordVector adjacent_coords;
 
     for(const auto &coord : inflated)
       {
@@ -622,7 +622,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return adjacent_coords;
   }
 
-  std::vector<Coord> BattleMap::getFreeCoordsInCartesianRange(const Coords &target, const blaze::DynamicVector<double> &distances, Size moverSize,
+  CoordVector BattleMap::getFreeCoordsInCartesianRange(const Coords &target, const blaze::DynamicVector<double> &distances, Size moverSize,
                                                               int rng, int combatantId) const
   {
     assert(rng > 0);
@@ -654,7 +654,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
           }
       }
 
-    return std::vector<Coord>(coords_in_range.begin(), coords_in_range.end());
+    return CoordVector(coords_in_range.begin(), coords_in_range.end());
   }
 
   void BattleMap::setCombatantCoordinates(const Combatant &combatant, const Coord &coord)
@@ -855,10 +855,10 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return true;
   }
 
-  void BattleMap::resetCombatantsToInitialPositions(const std::unordered_map<Combatant *, Coord> initialPositions){
+  void BattleMap::resetCombatantsToInitialPositions(const std::unordered_map<int, Coord> initialPositions){
     _combatantCoordinateCache.clear();
     for (auto& it : initialPositions){
-      _combatantCoordinateCache[it.first->_instanceId] = it.second;
+      _combatantCoordinateCache.insert({it.first, it.second});
     }
   }
 
@@ -1042,7 +1042,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
         Coord lastOrigin = {-1, -1};
         for(const auto &point : samplePoints)
           {
-            Coord origin = {point[0], point[1]};
+            Coord origin = {static_cast<int>(point[0]), static_cast<int>(point[1])};
             if(allCombatantCoords.find(origin) != allCombatantCoords.end())
               {
                 continue;
@@ -1287,7 +1287,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
   {
     std::vector<Combatant *> affectedCombatants;
     Teams &teams = Teams::getInstance();
-    std::vector<Coord> affectedCoords = getCoordsAffectedBySquareAoE(origin, TRANSLATE_BOX.at(targetTemplate), _size);
+    CoordVector affectedCoords = getCoordsAffectedBySquareAoE(origin, TRANSLATE_BOX.at(targetTemplate), _size);
 
     for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
       {
@@ -1466,12 +1466,14 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
             if(shortestPaths(x, y) != Coord{-1, -1})
               {
                 Coord theoreticalRootCoord{static_cast<int>(x), static_cast<int>(y)};
-                _visibilityDictForAllCoords[{x, y}] = calcVisibilityDict(combatant, theoreticalRootCoord);
+                _visibilityDictForAllCoords[{static_cast<int>(x), static_cast<int>(y)}] = calcVisibilityDict(combatant, theoreticalRootCoord);
               }
           }
       }
 
-    _visibilityDictForAllCoords[{static_cast<size_t>(currentPosition.getRoot()[0]), static_cast<size_t>(currentPosition.getRoot()[1])}]
+    // _visibilityDictForAllCoords[{static_cast<size_t>(currentPosition.getRoot()[0]), static_cast<size_t>(currentPosition.getRoot()[1])}]
+    //   = calcVisibilityDict(combatant, Coord{currentPosition.getRoot()[0], currentPosition.getRoot()[1]});
+        _visibilityDictForAllCoords[currentPosition.getRoot()]
       = calcVisibilityDict(combatant, Coord{currentPosition.getRoot()[0], currentPosition.getRoot()[1]});
   }
 
@@ -1687,7 +1689,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
       }
 
     // Check each possible position
-    std::vector<Coord> resultCoordinates;
+    CoordVector resultCoordinates;
     for(const auto &[rootRow, rootCol] : possibleRootCoordinates)
       {
         // Check if the area would fit within bounds
@@ -1747,7 +1749,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
         // The combatant might be dead, e.g., following an AoO
         return eligibleCombatants;
       }
-    const Coord &combatantCoords = combatantCoordIt->second;
+    const Coords &combatantCoords = combatantCoordIt->second;
 
     Teams& teams = Teams::getInstance();
 
@@ -1772,7 +1774,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
                 int postIncrementDist = getHopDistanceCoords(combatantCoords + increment, coords);
 
                 // Check for Polearm Master eligibility
-                if(currCombatant->hasAbility(AbilityType::POLEARM_MASTER) && preIncrementDist > currCombatant->getMeleeReactionRange()
+                if(currCombatant->hasPassiveAbility(AbilityType::POLEARM_MASTER) && preIncrementDist > currCombatant->getMeleeReactionRange()
                    && postIncrementDist == currCombatant->getMeleeReactionRange() && currCombatant->hasReaction())
                   {
                     eligibleCombatants.push_back(currCombatant);
@@ -1810,8 +1812,8 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
             try
               {
                 // Retrieve positions
-                const Coord &combatantPos = _combatantCoordinateCache.at(combatant->_instanceId);
-                const Coord &currCombatantPos = _combatantCoordinateCache.at(currCombatant);
+                const Coords &combatantPos = _combatantCoordinateCache.at(combatant->_instanceId);
+                const Coords &currCombatantPos = _combatantCoordinateCache.at(currCombatantId);
 
                 // Calculate pre- and post-increment distances
                 int preIncrementDist = getHopDistanceCoords(combatantPos, currCombatantPos);

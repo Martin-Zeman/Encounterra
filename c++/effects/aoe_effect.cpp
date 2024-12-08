@@ -9,7 +9,7 @@ namespace enc
   bool AoeEffect::isAffecting(Combatant *combatant) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
-    std::vector<Coord> coords = getAffectedCoords();
+    CoordVector coords = getAffectedCoords();
 
     return getHopDistanceCoords(battleMap.getCombatantCoordinates(*combatant), coords) == 0;
   }

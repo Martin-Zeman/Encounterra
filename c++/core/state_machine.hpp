@@ -62,6 +62,8 @@ public:
     // Get all forward transitions from a state (as pairs of transition name and destination state)
     std::vector<std::pair<std::string, StateId>> getForwardTransitions(StateId state) const;
 
+    std::vector<std::string> getAllTransitions() const;
+
   private:
     inline void addDependency(StateId from, StateId to)
     {

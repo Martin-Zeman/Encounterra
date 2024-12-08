@@ -9,5 +9,5 @@ namespace enc
     _affectedCoords = getCoordsAffectedBySquareAoE(_origin, _length, BattleMap::getInstance().getGridSize());
   }
 
-  const std::vector<Coord> &SquareAoe::getAffectedCoords() const { return _affectedCoords; }
+  const CoordVector &SquareAoe::getAffectedCoords() const { return _affectedCoords; }
 }

@@ -67,7 +67,7 @@ TEST_F(AbilityTest, FireboltCalculateThreatToTargetDelta) {
   teams->addCombatantToTeam(*goblin, Color::RED);
   teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
 
-  std::shared_ptr<ActoidFactory> actoidFactory = draconic_sorcerer_lvl_1->getActionFactory(AbilityType::FIREBOLT);
+  std::shared_ptr<ActoidFactory> actoidFactory = draconic_sorcerer_lvl_1->getActionFactory(AbilityType::FIREBOLT).lock();
   std::shared_ptr<FireboltFactory> fireboltFactory = std::dynamic_pointer_cast<FireboltFactory>(actoidFactory);
 
   ASSERT_NE(fireboltFactory, nullptr) << "Failed to cast ActoidFactory to FireboltFactory";

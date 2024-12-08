@@ -43,7 +43,7 @@ namespace enc
     bool hasFlag(ActoidFlags flag) const { return (_actoidFlags & static_cast<uint32_t>(flag)) != 0; }
     AbilityType getAbilityType() const;
     ActoidFactory &getFactory() { return _factory; }
-    virtual std::optional<std::vector<Coord>> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+    virtual std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>())
       = 0;
 

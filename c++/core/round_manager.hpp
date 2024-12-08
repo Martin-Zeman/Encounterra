@@ -7,6 +7,7 @@
 #include <core/combatant.hpp>
 #include <core/teams.hpp>
 #include <core/battle_map.hpp>
+#include <core/action_resolver.hpp>
 #include <effects/effect_tracker.hpp>
 
 namespace enc
@@ -15,7 +16,7 @@ namespace enc
   {
   public:
     RoundManager(std::vector<Combatant *> &combatants, int numRounds = 50)
-        : _combatants(combatants), _numRounds(numRounds), _actionResolver(combatants), _currCombatant(nullptr)
+        : _combatants(combatants), _numRounds(numRounds), _actionResolver(), _currCombatant(nullptr)
     {}
 
     void rollInitiative();
@@ -28,7 +29,7 @@ namespace enc
 
     bool isOnlyOneTeamStanding() const;
 
-    void reset(const std::unordered_map<Combatant *, Coord> &combatantInitialPositions);
+    void reset(const std::unordered_map<int, Coord> &combatantInitialPositions);
 
     std::unordered_map<Color, std::unordered_map<Statistics, int>>
     simulateN(int n = 1, std::queue<std::unordered_map<Color, std::unordered_map<Statistics, int>>> *resultQueue = nullptr);

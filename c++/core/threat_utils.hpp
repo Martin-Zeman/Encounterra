@@ -152,8 +152,8 @@ namespace enc
     @param disengaged: If True then don't include the AoOs
     @return: accumulated threat (negative)
  */
-  double getAoeAndAooThreatForIncrement(const std::vector<Coord> &currCoordsData, const Coord &increment, Combatant *combatant,
-                                        const std::unordered_map<AoeEffect *, std::vector<Coord>> &effectToCoords, bool disengaged = false,
+  double getAoeAndAooThreatForIncrement(const CoordVector &currCoordsData, const Coord &increment, Combatant *combatant,
+                                        const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords, bool disengaged = false,
                                         bool dodged = false);
 
   /**
@@ -167,8 +167,8 @@ namespace enc
       @return: tuple of cumulative threats along the path
    */
   std::vector<double>
-  accumulateThreatAlongPath(const std::vector<Coord> &path, Combatant *combatant,
-                            const std::unordered_map<AoeEffect *, std::vector<Coord>> &effectToCoords, bool disengaged = false, bool dodged = false);
+  accumulateThreatAlongPath(const CoordVector &path, Combatant *combatant,
+                            const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords, bool disengaged = false, bool dodged = false);
 
   /**
    *  Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
@@ -179,7 +179,7 @@ namespace enc
       @return: accumulated threat (negative)
    */
   std::pair<std::vector<double>, std::vector<std::string>>
-  calcThreatForPathWithMistyStep(const std::vector<Coord> &path, Combatant *combatant,
-                                 const std::unordered_map<AoeEffect *, std::vector<Coord>> &effectToCoords);
+  calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
+                                 const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords);
 
 } // namespace enc

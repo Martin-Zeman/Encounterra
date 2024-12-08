@@ -7,7 +7,7 @@ namespace enc
 
   std::shared_ptr<Actoid> DisengageFactory::create(void *target) { return std::make_shared<Disengage>(*this); }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   Disengage::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     return {};

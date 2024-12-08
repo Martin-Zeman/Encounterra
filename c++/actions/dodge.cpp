@@ -7,7 +7,7 @@ namespace enc
 
   std::shared_ptr<Actoid> DodgeFactory::create(void *target) { return std::make_shared<Dodge>(*this); }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   Dodge::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     return {};

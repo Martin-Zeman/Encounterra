@@ -81,7 +81,7 @@ namespace enc
     return 0.0; // As per Python implementation
   }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   SpikeGrowth::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     Combatant *swallower = _factory._combatant->getSwallower();
@@ -99,7 +99,7 @@ namespace enc
     else if(getCartesianDistanceCoords(battleMap.getCombatantCoordinates(*_factory._combatant), Coords(_coord))
             <= static_cast<int>(SpikeGrowthFactory::range))
       {
-        return std::vector<Coord>{battleMap.getCombatantCoordinates(*_factory._combatant).getRoot()};
+        return CoordVector{battleMap.getCombatantCoordinates(*_factory._combatant).getRoot()};
       }
 
     return std::nullopt;

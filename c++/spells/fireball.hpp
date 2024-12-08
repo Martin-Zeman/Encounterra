@@ -71,7 +71,7 @@ namespace enc
     }
 
     double calculateThreat(const Kwargs &kwargs) override;
-    std::optional<std::vector<Coord>>
+    std::optional<CoordVector>
     getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                       const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 

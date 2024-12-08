@@ -33,7 +33,7 @@ namespace enc
     // }
 
     // // Implement pure virtual methods from AoeEffect
-    // std::vector<Coord> getAffectedCoords() const override { return SquareAoe::getAffectedCoords(); }
+    // CoordVector getAffectedCoords() const override { return SquareAoe::getAffectedCoords(); }
 
     // void onEnter(Combatant *combatant) override
     // {

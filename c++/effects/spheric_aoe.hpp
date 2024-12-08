@@ -13,14 +13,14 @@ namespace enc
 
     virtual ~SphericAoe() = default;
 
-    const std::vector<Coord> &getAffectedCoords() const;
+    const CoordVector &getAffectedCoords() const;
 
   protected:
     Coord _origin;
     int _radius;
-    std::vector<Coord> _affectedCoords;
+    CoordVector _affectedCoords;
 
   private:
-    std::vector<Coord> calculateAffectedCoords() const;
+    CoordVector calculateAffectedCoords() const;
   };
 }

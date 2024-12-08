@@ -4,11 +4,11 @@
 
 namespace enc
 {
-  std::vector<Coord> SphericAoe::calculateAffectedCoords() const
+  CoordVector SphericAoe::calculateAffectedCoords() const
   {
     BattleMap &battleMap = BattleMap::getInstance();
     size_t gridSize = battleMap.getGridSize();
-    std::vector<Coord> coords;
+    CoordVector coords;
 
     blaze::StaticVector<double, 2> originCenter = getSquareCenter(_origin);
 
@@ -39,5 +39,5 @@ namespace enc
     return coords;
   }
 
-  const std::vector<Coord> &SphericAoe::getAffectedCoords() const { return _affectedCoords; }
+  const CoordVector &SphericAoe::getAffectedCoords() const { return _affectedCoords; }
 }

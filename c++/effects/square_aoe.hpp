@@ -12,11 +12,11 @@ namespace enc
 
     virtual ~SquareAoe() = default;
 
-    const std::vector<Coord> &getAffectedCoords() const;
+    const CoordVector &getAffectedCoords() const;
 
   protected:
     Coord _origin;
     int _length;
-    std::vector<Coord> _affectedCoords;
+    CoordVector _affectedCoords;
   };
 }

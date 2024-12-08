@@ -9,7 +9,7 @@ namespace enc
        {AbilityType::FORCED_MOVEMENT, "Forced Movement"},
        {AbilityType::GET_UP_FROM_PRONE, "Get Up From Prone"}};
 
-  MovementFactory::MovementFactory(Combatant *combatant, std::vector<Coord> path, AbilityType movementType)
+  MovementFactory::MovementFactory(Combatant *combatant, CoordVector path, AbilityType movementType)
       : ActoidFactory("MovementFactory", MOVEMENT_TYPE_NAMES.at(movementType), combatant, movementType), _path(path)
   {}
 

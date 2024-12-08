@@ -127,7 +127,7 @@ namespace enc
     return _factory.calculateThreatToTargetDelta(&_target, modifiers);
    }
 
-  std::optional<std::vector<Coord>>
+  std::optional<CoordVector>
   Firebolt::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     FireboltFactory &factory = dynamic_cast<FireboltFactory &>(getFactory());
@@ -138,7 +138,7 @@ namespace enc
       {
         if(swallower == &_target)
           {
-            std::vector<Coord> coords = {currCoord};
+            CoordVector coords = {currCoord};
             return coords;
           }
         return {};
@@ -151,7 +151,7 @@ namespace enc
       }
     else if(battleMap.getCartesianDistanceCombatants(*factory._combatant, _target) <= static_cast<int>(FireboltFactory::range))
       {
-        std::vector<Coord> coords = {currCoord};
+        CoordVector coords = {currCoord};
         return coords;
       }
     return {};
