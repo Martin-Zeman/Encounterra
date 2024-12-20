@@ -106,7 +106,7 @@ namespace enc
 
   void StateMachine::reset() { _currentState = 0; }
 
-  void StateMachine::triggerTransition(const std::string &transitionName)
+  bool StateMachine::triggerTransition(const std::string &transitionName)
   {
     auto &current_transitions = _states[_currentState];
     auto it = std::find_if(current_transitions.begin(), current_transitions.end(), [&](const Transition &t) { return t.name == transitionName; });
@@ -114,10 +114,11 @@ namespace enc
     if(it != current_transitions.end())
       {
         _currentState = it->destination;
+        return true;
       }
     else
       {
-        throw std::runtime_error("Invalid transition for current state");
+        return false;
       }
   }
 

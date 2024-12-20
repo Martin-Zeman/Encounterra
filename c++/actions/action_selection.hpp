@@ -15,6 +15,27 @@
 #include "core/threat_utils.hpp"
 #include "core/state_machine.hpp"
 
+struct TransitionSet {
+    std::set<std::string> transitions;
+    
+    bool operator==(const TransitionSet& other) const {
+        return transitions == other.transitions;
+    }
+};
+
+namespace std {
+    template<>
+    struct hash<TransitionSet> {
+        size_t operator()(const TransitionSet& ts) const {
+            size_t hash = 0;
+            for (const auto& str : ts.transitions) {
+                hash ^= std::hash<std::string>{}(str) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+            }
+            return hash;
+        }
+    };
+}
+
 namespace enc
 {
 
@@ -26,11 +47,17 @@ namespace enc
   using CoordToSequenceIds = std::unordered_map<std::pair<Coord, MovementThreatType>, std::vector<size_t>>;
   using TransitionToMsPath = std::unordered_map<std::string, std::vector<std::string>>;
 
+//   struct DagBuildResult
+//   {
+//     std::unique_ptr<StateMachine> dag;
+//     MovementTransitionMap movementMap;
+//     TransitionToEligibleCoords eligibleCoords;
+//   };
+
   struct DagBuildResult
   {
     std::unique_ptr<StateMachine> dag;
-    MovementTransitionMap movementMap;
-    TransitionToEligibleCoords eligibleCoords;
+    std::unordered_map<std::string, std::pair<Coord, MovementThreatType>> movementTransToCoordAndType;
   };
 
   struct BestSequenceResult
@@ -38,6 +65,14 @@ namespace enc
     std::vector<std::string> sequence;
     TransitionToMsPath msPathMap;
     std::array<double, 2> maxThreat;
+  };
+
+  using PostTransitions = std::unordered_map<std::string, std::vector<std::pair<std::string, StateId>>>;
+
+  struct PriorityTransitionsResult
+  {
+    PostTransitions actionTransitions;
+    PostTransitions bonusActionTransitions;
   };
 
   std::vector<std::vector<std::string>> pruneSequences(const std::vector<std::vector<std::string>> &sequences,
@@ -90,7 +125,7 @@ namespace enc
       :return: None but actions shall be modified
    */
   void decodeMsPathToActions(Combatant *combatant, const Coord &initialCoord, const std::vector<std::string> &msPath,
-                             std::vector<std::shared_ptr<Actoid>> &actions, std::shared_ptr<ActoidFactory> msFactory);
+                             std::vector<std::shared_ptr<Actoid>> &actions, std::shared_ptr<ActoidFactory>& msFactory);
 
   /**
    *  Translates the string form of the longest path back to action objects
@@ -103,11 +138,10 @@ namespace enc
       :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
       :return: list of the following types: np.array, action, bonus action
    */
-  std::vector<std::shared_ptr<Actoid>>
-  translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
-                             const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-                             const MovementTransitionMap &movementTransitionToCoordAndType, const std::vector<std::string> &sequence,
-                             const TransitionToMsPath &transitionNameToMsPath);
+
+  PriorityTransitionsResult
+  getPostTransitionsOfAllPriorityTransitions(const std::unique_ptr<StateMachine> &protoDag,
+                                             const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction);
 
   /**
    *  Builds action DAG for a combatant given the combatant's proto_dag. It determines eligible coords for each

@@ -22,8 +22,8 @@ namespace enc
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::OTHER;
 
-    MistyStepFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource)
-        : ActoidFactory("MistyStepFactory", "Misty Step", caster, abilityType), _resource(resource)
+    MistyStepFactory(Combatant *caster, Resource *resource)
+        : ActoidFactory("MistyStepFactory", "Misty Step", caster, AbilityType::MISTY_STEP), _resource(resource)
     {}
 
 

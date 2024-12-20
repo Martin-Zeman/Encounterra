@@ -50,7 +50,7 @@ public:
 
     void reset();
 
-    void triggerTransition(const std::string& transitionName);
+    bool triggerTransition(const std::string& transitionName);
 
     std::vector<StateId> getAllStates() const;
 

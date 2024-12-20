@@ -117,7 +117,7 @@ TEST_F(StateMachineTest, RemoveStateAndTransition) {
     });
 
     // Verify that transitions to the removed state are also removed
-    auto transitions = fsm.getAvailableTransitionsInState(0);
+    auto transitions = fsm.getForwardTransitions(0);
     ASSERT_TRUE(std::find(transitions.begin(), transitions.end(), "to_1") == transitions.end());
 }
 
@@ -134,7 +134,7 @@ TEST_F(StateMachineTest, AddExistingState) {
 }
 
 TEST_F(StateMachineTest, TriggerNonexistentTransition) {
-    ASSERT_THROW(fsm.triggerTransition("nonexistent"), std::runtime_error);
+    ASSERT_FALSE(fsm.triggerTransition("nonexistent"));
 }
 
 TEST_F(StateMachineTest, ResetState) {
