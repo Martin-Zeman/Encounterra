@@ -4,7 +4,7 @@
 // #include "combat/actions/movement.hpp"
 #include "spells/cloud_of_daggers.hpp"
 // #include "spells/firebolt.hpp"
-// #include "spells/hunger_of_hadar.hpp"
+#include "spells/hunger_of_hadar.hpp"
 #include "spells/misty_step.hpp"
 #include "spells/spike_growth.hpp"
 #include "combatants/goblin.hpp"
@@ -78,118 +78,125 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
     EXPECT_NEAR(threat.back(), -9.0 * 5.0 - 2.925 * DZ_CONSTANT, 0.001);
 }
 
-// TEST_F(ThreatUtilsTest, MediumToMediumOnePartialSpikeGrowth) {
-//     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
-//     session->addCombatant(goblin, Color::RED);
+TEST_F(ThreatUtilsTest, MediumToMediumOnePartialSpikeGrowth) {
+    session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+    session->addCombatant(goblin, Color::RED);
 
-//     auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, *goblin, goblin->getSpellslots());
-//     Coord coord{7, 6};
-//     auto actoid = sgFactory.create(&coord);
-//     auto effect = std::dynamic_pointer_cast<Effect>(actoid);
-//     effectTracker->add(effect);
+    auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, goblin, &goblin->getSpellslots());
+    Coord coord{7, 6};
+    auto actoid = sgFactory.create(&coord);
+    auto effect = std::dynamic_pointer_cast<Effect>(actoid);
+    effectTracker->add(effect);
 
-//     battleMap->buildBaseAdjacencyMatrix();
-//     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 3});
-//     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
+    battleMap->buildBaseAdjacencyMatrix();
+    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 3});
+    battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
-//     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
-//     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
-//     }
+    auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
+    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
+    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
+        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    }
 
-//     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
-//     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
+    auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
+    draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
-//     EXPECT_NEAR(threat.back(), -5.0 * 5.0 - 2.925 * DZ_CONSTANT, 0.001);
-// }
+    auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
+    EXPECT_NEAR(threat.back(), -5.0 * 5.0 - 2.925 * DZ_CONSTANT, 0.001);
+}
 
-// TEST_F(ThreatUtilsTest, LargeToMediumOneAoe) {
-//     draconic_sorcerer_lvl_1->setSize(Size::LARGE);
-//     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
-//     session->addCombatant(goblin, Color::RED);
+TEST_F(ThreatUtilsTest, LargeToMediumOneAoe) {
+    draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+    session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+    session->addCombatant(goblin, Color::RED);
 
-//     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, *goblin, goblin->getSpellslots());
-//     auto cloudOfDaggers = cloudFactory.create(Coord{4, 2});
-//     effectTracker->add(std::move(cloudOfDaggers));
+    auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
+    Coord coord{4, 2};
+    auto actoid = cloudFactory.create(&coord);
+    auto effect = std::dynamic_pointer_cast<Effect>(actoid);
+    effectTracker->add(std::move(effect));
 
-//     battleMap->buildBaseAdjacencyMatrix();
-//     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
-//     battleMap->setCombatantCoordinates(*goblin, Coord{7, 1});
+    battleMap->buildBaseAdjacencyMatrix();
+    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
+    battleMap->setCombatantCoordinates(*goblin, Coord{7, 1});
 
-//     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
-//     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
-//     }
+    auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
+    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
+    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
+        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    }
 
-//     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
-//     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
+    auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
+    draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
-//     EXPECT_NEAR(threat.back(), -10.0 - 2.925 * DZ_CONSTANT, 0.001);
-// }
+    auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
+    EXPECT_NEAR(threat.back(), -10.0 - 2.925 * DZ_CONSTANT, 0.001);
+}
 
-// TEST_F(ThreatUtilsTest, LargeToMediumAvoidedAoe) {
-//     draconic_sorcerer_lvl_1->setSize(Size::LARGE);
-//     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
-//     session->addCombatant(goblin, Color::RED);
+TEST_F(ThreatUtilsTest, LargeToMediumAvoidedAoe) {
+    draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+    session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+    session->addCombatant(goblin, Color::RED);
 
-//     auto hungerFactory = HungerOfHadarFactory(15, AbilityType::HUNGER_OF_HADAR, *goblin, goblin->getSpellslots());
-//     auto hungerOfHadar = hungerFactory.create(Coord{4, 7});
-//     effectTracker->add(std::move(hungerOfHadar));
+    auto hungerFactory = HungerOfHadarFactory(15, AbilityType::HUNGER_OF_HADAR, goblin, &goblin->getSpellslots());
+    Coord coord{4, 7};
+    auto actoid = hungerFactory.create(&coord);
+    auto effect = std::dynamic_pointer_cast<Effect>(actoid);
+    effectTracker->add(std::move(effect));
 
-//     battleMap->buildBaseAdjacencyMatrix();
-//     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
-//     battleMap->setCombatantCoordinates(*goblin, Coord{7, 1});
+    battleMap->buildBaseAdjacencyMatrix();
+    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
+    battleMap->setCombatantCoordinates(*goblin, Coord{7, 1});
 
-//     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
-//     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
-//     }
+    auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
+    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
+    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
+        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    }
 
-//     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
-//     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
+    auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
+    draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
-//     EXPECT_NEAR(threat.back(), -2.925 * DZ_CONSTANT, 0.001); // Just danger zone
-// }
+    auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
+    EXPECT_NEAR(threat.back(), -2.925 * DZ_CONSTANT, 0.001); // Just danger zone
+}
 
-// TEST_F(ThreatUtilsTest, MediumToMediumTwoOverlappingAoe) {
-//     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
-//     session->addCombatant(goblin, Color::RED);
+TEST_F(ThreatUtilsTest, MediumToMediumTwoOverlappingAoe) {
+    session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+    session->addCombatant(goblin, Color::RED);
 
-//     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, *goblin, goblin->getSpellslots());
-//     auto cloudOfDaggers1 = cloudFactory.create(Coord{7, 3});
-//     auto cloudOfDaggers2 = cloudFactory.create(Coord{7, 3});
-//     effectTracker->add(std::move(cloudOfDaggers1));
-//     effectTracker->add(std::move(cloudOfDaggers2));
+    auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
+    Coord coord{7, 3};
+    auto actoid1 = cloudFactory.create(&coord);
+    auto actoid2 = cloudFactory.create(&coord);
+    auto effect1 = std::dynamic_pointer_cast<Effect>(actoid1);
+    auto effect2 = std::dynamic_pointer_cast<Effect>(actoid2);
+    effectTracker->add(std::move(effect1));
+    effectTracker->add(std::move(effect2));
 
-//     battleMap->buildBaseAdjacencyMatrix();
-//     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 3});
-//     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
+    battleMap->buildBaseAdjacencyMatrix();
+    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 3});
+    battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
-//     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
-//     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
-//     }
+    auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
+    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
+    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
+        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    }
 
-//     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
-//     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
+    auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
+    draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
-//     EXPECT_NEAR(threat.back(), -20.0 - 2.925 * DZ_CONSTANT, 0.0001);
-// }
+    auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
+    EXPECT_NEAR(threat.back(), -20.0 - 2.925 * DZ_CONSTANT, 0.0001);
+}
 
 // TEST_F(ThreatUtilsTest, LargeToMediumTwoOverlappingAoe) {
 //     draconic_sorcerer_lvl_1->setSize(Size::LARGE);
 //     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
 //     session->addCombatant(goblin, Color::RED);
 
-//     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, *goblin, goblin->getSpellslots());
+//     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
     
 //     // Create two overlapping effects that should hit due to combatant's size
 //     auto cloudOfDaggers1 = cloudFactory.create(Coord{7, 3});
@@ -202,15 +209,15 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
 //     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), -20.0 - 2.925 * DZ_CONSTANT, 0.0001);
 // }
 
@@ -219,7 +226,7 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
 //     session->addCombatant(goblin, Color::RED);
 
-//     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, *goblin, goblin->getSpellslots());
+//     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
 //     auto cloudOfDaggers = cloudFactory.create(Coord{6, 3});
 //     effectTracker->add(std::move(cloudOfDaggers));
 
@@ -228,15 +235,15 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
 //     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), -2.925 * DZ_CONSTANT, 0.001);  // Just danger zone
 // }
 
@@ -251,19 +258,19 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*bugbear, Coord{6, 4});
 
 //     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
 //     // battleMap->clearCaches();
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), -5.95 - 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01);
 
-//     auto disengagedThreat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords, true);
+//     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
 //     EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT, 0.01);
 // }
 
@@ -282,18 +289,18 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*bugbear2, Coord{7, 4});
 
 //     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), 2 * -5.95 - 2 * 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.001);
 
-//     auto disengagedThreat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords, true);
+//     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
 //     EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 2 * 5.95 * DZ_CONSTANT, 0.001);
 // }
 
@@ -306,18 +313,18 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*goblin, Coord{3, 2});
 
 //     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{3, 5});
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT, 0.001);
 
-//     auto disengagedThreat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords, true);
+//     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
 //     EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT, 0.001);
 // }
 
@@ -337,18 +344,18 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*bugbear2, Coord{7, 4});
 
 //     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), 2 * -5.95 - 2 * 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01);
 
-//     auto threatDisengaged = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords, true);
+//     auto threatDisengaged = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
 //     EXPECT_NEAR(threatDisengaged.back(), -2.925 * DZ_CONSTANT - 2 * 5.95 * DZ_CONSTANT, 0.01);
 // }
 
@@ -364,18 +371,18 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*goblin, Coord{1, 1});
 
 //     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{1, 5});
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT, 0.001);
 
-//     auto disengagedThreat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords, true);
+//     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
 //     EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT, 0.001);
 // }
 
@@ -392,18 +399,18 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*bugbear, Coord{4, 2});
 
 //     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{3, 5});
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT, 0.001);
 
-//     auto disengagedThreat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords, true);
+//     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
 //     EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT, 0.001);
 // }
 
@@ -422,18 +429,18 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{2, 8});
 
 //     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *wild_heart_barbarian);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
 
-//     auto disengagedThreat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords, true);
+//     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
 //     EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
 // }
 
@@ -451,23 +458,23 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*bugbear, Coord{4, 4});
 //     battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{2, 8});
 
-//     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, *goblin, goblin->getSpellslots());
+//     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
 //     auto cloudOfDaggers = cloudFactory.create(Coord{2, 7});
 //     effectTracker->add(std::move(cloudOfDaggers));
 
 //     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *wild_heart_barbarian);
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT - 20.0 - 7.149 * DZ_CONSTANT, 0.001);
 
-//     auto disengagedThreat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords, true);
+//     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
 //     EXPECT_NEAR(disengagedThreat.back(), -20.0 - 2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
 // }
 
@@ -480,15 +487,15 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*bugbear, Coord{14, 1});
 
 //     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{6, 1});
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
 //     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
-//     auto threat = accumulateThreatAlongPath(path, *draconic_sorcerer_lvl_1, effectToCoords);
+//     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
 //     EXPECT_NEAR(threat.back(), 0.0, 0.001);
 // }
 
@@ -537,9 +544,9 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
 //     battleMap->setCombatantCoordinates(*bugbear, Coord{5, 6});
 
 //     auto path = battleMap->getPathToCoord(*draconicSorcerer, Coord{0, 14});
-//     std::unordered_map<Effect*, CoordVector> effectToCoords;
+//     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
 //     for (const auto& effect : EffectTracker::getInstance()->getAoeEffects()) {
-//         effectToCoords[*effect] = effect->getAffectedCoords();
+//         effectToCoords[effect.get()] = effect->getAffectedCoords();
 //     }
 
 //     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconicSorcerer);

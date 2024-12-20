@@ -6,6 +6,8 @@
 #include "effects/effect_tracker.hpp"
 #include "effects/aoe_effect.hpp"
 #include "core/conditions.hpp"
+#include "core/action_resolver.hpp"
+#include "core/geometry.hpp"
 
 namespace enc
 {
@@ -19,13 +21,9 @@ namespace enc
   std::vector<std::shared_ptr<Actoid>> HungerOfHadarFactory::createAll(void *previousActionInDag)
   {
     auto &battleMap = BattleMap::getInstance();
-    auto coord = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range), TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
-
-    if(!coord.empty())
-      {
-        return {std::make_shared<HungerOfHadar>(coord, *this)};
-      }
-    return {};
+    auto [coord, _, _] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
+                                                                    TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
+    return {std::make_shared<HungerOfHadar>(coord, *this)};
   }
 
   std::shared_ptr<Actoid> HungerOfHadarFactory::create(void *target) { return std::make_shared<HungerOfHadar>(*static_cast<Coord *>(target), *this); }
@@ -33,9 +31,9 @@ namespace enc
   double HungerOfHadarFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
   {
     // The 0.5 is a heuristic expressing that most targets would leave the area
-    auto avgDmg
-      = std::min(static_cast<double>(target->getCurrentHp()), meanDmgDcAttack(_dc, {_dmgDice}, false, target->getSavingThrow(_savingThrow),
-                                                                  target->isImmuneTo(DamageType::Acid), target->isResistantTo(DamageType::Acid)));
+    auto avgDmg = std::min(static_cast<double>(target->getCurrentHp()),
+                           meanDmgDcAttack(_dc, {_dmgDice}, false, target->getSavingThrow(_savingThrow), target->isImmuneTo(DamageType::Acid),
+                                           target->isResistantTo(DamageType::Acid)));
 
     return avgRoll(_dmgDice) + 0.5 * avgDmg;
   }
@@ -48,14 +46,10 @@ namespace enc
   double HungerOfHadarFactory::calculateMaxThreat() const
   {
     auto &battleMap = BattleMap::getInstance();
-    auto coord = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range), TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
-
-    if(!coord.empty())
-      {
-        HungerOfHadar effect(coord, *this);
-        return effect.calculateThreat();
-      }
-    return 0.0;
+    auto [coord, _, _] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
+                                                                    TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
+    HungerOfHadar effect(coord, *this);
+    return effect.calculateThreat({});
   }
 
   HungerOfHadar::HungerOfHadar(const Coord &coord, const HungerOfHadarFactory &factory)
@@ -67,32 +61,30 @@ namespace enc
 
   void HungerOfHadar::onStartOfTurn(Combatant *combatant)
   {
-    applyCondition(combatant, Condition(Conditions::BLINDED, _factory._combatant, this));
+    combatant->applyCondition(Condition(Conditions::BLINDED, _factory._combatant, this));
     int damage = rollDice(_factory._dmgDice);
-    combatant->receiveDamage(damage, _factory.dmgType);
-    Map::getInstance().removeCombatantIfDead(combatant);
+    combatant->receiveDmg(damage, _factory.dmgType);
+    BattleMap::getInstance().removeCombatantIfDead(*combatant);
   }
 
   void HungerOfHadar::onEndOfTurn(Combatant *combatant)
   {
-    applyCondition(combatant, Condition(Conditions::BLINDED, _factory._combatant, this));
+    combatant->applyCondition(Condition(Conditions::BLINDED, _factory._combatant, this));
     int damage = rollDice(_factory._dmgDice);
 
     // Temporarily change damage type for acid damage
     auto originalDmgType = _factory.dmgType;
-    const_cast<HungerOfHadarFactory &>(_factory).dmgType = DamageType::Acid;
-    resolveDamageSavingThrow(this, damage, combatant, false, true);
-    const_cast<HungerOfHadarFactory &>(_factory).dmgType = originalDmgType;
+    resolveDmgSavingThrow(_factory._savingThrow, _factory._dc, shorthandStr(), damage, DamageType::Acid, combatant, false, true);
   }
 
-  void HungerOfHadar::onEnter(Combatant *combatant) { applyCondition(combatant, Condition(Conditions::BLINDED, _factory._combatant, this)); }
+  void HungerOfHadar::onEnter(Combatant *combatant) { combatant->applyCondition(Condition(Conditions::BLINDED, _factory._combatant, this)); }
 
   void HungerOfHadar::onMoveWithin(Combatant *combatant)
   {
     // No effect when moving within area
   }
 
-  void HungerOfHadar::onExit(Combatant *combatant) { removeCondition(combatant, Conditions::BLINDED, _factory._combatant); }
+  void HungerOfHadar::onExit(Combatant *combatant) { combatant->removeCondition(Conditions::BLINDED, _factory._combatant); }
 
   void HungerOfHadar::activate(const Kwargs &kwargs)
   {
@@ -108,13 +100,13 @@ namespace enc
     // TODO: Remove difficult terrain
   }
 
-  void HungerOfHadar::deactivateForCombatant(Combatant *combatant) { throw std::runtime_error("Not implemented"); }
+  bool HungerOfHadar::deactivateForCombatant(Combatant *combatant) { throw std::runtime_error("Not implemented"); }
 
   double HungerOfHadar::calculateThreat(const Kwargs &kwargs)
   {
     auto &battleMap = BattleMap::getInstance();
     Teams &teams = Teams::getInstance();
-    auto affected = battleMap.getCombatantsAffectedBySphereAoe(_factory._combatant, HungerOfHadarFactory::target, HungerOfHadarFactory::type, _coord);
+    auto affected = battleMap.getCombatantsAffectedBySphereAoE(_factory._combatant, HungerOfHadarFactory::target, HungerOfHadarFactory::type, _coord);
 
     double totalThreat = 0.0;
     for(auto *target : affected)
@@ -125,11 +117,11 @@ namespace enc
         // Potential acid damage with 0.5 multiplier (assuming targets try to leave)
         double avgDmg = std::min(static_cast<double>(target->getCurrentHp()),
                                  meanDmgDcAttack(_factory._dc, {_factory._dmgDice}, false, target->getSavingThrow(_factory._savingThrow),
-                                                          target->isImmuneTo(DamageType::Acid), target->isResistantTo(DamageType::Acid)));
+                                                 target->isImmuneTo(DamageType::Acid), target->isResistantTo(DamageType::Acid)));
         totalThreat += 0.5 * avgDmg;
 
         // Adjust for friendly fire
-        totalThreat *= (teams.areEnemies(*_factory._combatant, target) ? 1.0 : -3.0);
+        totalThreat *= (teams.areEnemies(*_factory._combatant, *target) ? 1.0 : -3.0);
       }
     return totalThreat;
   }
@@ -142,7 +134,9 @@ namespace enc
   std::string HungerOfHadar::toString() const
   {
     std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_HUNGER_OF_HADAR) ? "Quickened " : "";
-    return prefix + "Hunger Of Hadar at " + _coord.toString();
+    std::stringstream ss;
+    ss << _coord;
+    return prefix + "Hunger Of Hadar at " + ss.str();
   }
 
   std::string HungerOfHadar::shorthandStr() const
@@ -152,4 +146,31 @@ namespace enc
   }
 
   EffectType HungerOfHadar::getEffectType() const { return EffectType::HUNGER_OF_HADAR; }
+
+  const CoordVector &HungerOfHadar::getAffectedCoords() const { return SphericAoe::getAffectedCoords(); }
+
+  std::optional<CoordVector>
+  HungerOfHadar::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+  {
+    if(_factory._combatant->getSwallower())
+      {
+        return std::nullopt;
+      }
+
+    auto &battleMap = BattleMap::getInstance();
+
+    if(!_factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+      {
+        return getFreeCoordsInCartesianRange(Coords(_origin), distances, _factory._combatant->getSize(),
+                                                  HungerOfHadarFactory::range, _factory._combatant->_instanceId);
+      }
+
+    const Coords &combatantPos = battleMap.getCombatantCoordinates(*_factory._combatant);
+    if(getCartesianDistanceCoords(combatantPos, _origin) <= static_cast<double>(HungerOfHadarFactory::range))
+      {
+        return CoordVector{combatantPos.getRoot()};
+      }
+
+    return std::nullopt;
+  }
 }

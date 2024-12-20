@@ -190,6 +190,7 @@ namespace enc
     void removeImmunity(DamageType dmgType);
     void addVulnerability(DamageType dmgType);
     void removeVulnerability(DamageType dmgType);
+    bool isDodging() { return _isDodging; }
     /**
      * Handles concentration checks when a combatant takes damage.
      *

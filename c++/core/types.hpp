@@ -6,6 +6,7 @@
 #include <any>
 #include <map>
 #include <unordered_map>
+#include <ostream>
 
 namespace enc
 {
@@ -57,3 +58,10 @@ namespace std
     size_t operator()(const std::pair<enc::Die, int> &p) const { return std::hash<enc::Die>()(p.first) ^ std::hash<int>()(p.second); }
   };
 }
+
+inline std::ostream& operator<<(std::ostream& os, const enc::Coord& coord) {
+    os << "(" << coord[0] << ", " << coord[1] << ")";
+    return os;
+}
+
+inline std::ostream &operator<<(std::ostream &os, const enc::Die &die) { return os << std::to_string(die[0]) + "d" + std::to_string(die[1]); }

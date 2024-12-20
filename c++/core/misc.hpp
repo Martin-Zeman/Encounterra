@@ -200,7 +200,8 @@ namespace enc
     Force,
     Psychic,
     Thunder,
-    Random
+    Random,
+    Original // used for DamageType override
   };
 
   const std::unordered_map<DamageType, std::string> DAMAGE_TYPE_TO_STRING = {

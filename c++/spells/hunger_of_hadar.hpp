@@ -6,7 +6,7 @@
 #include "core/resources.hpp"
 #include "actions/action_types.hpp"
 #include "effects/limited_duration_effect.hpp"
-#include "effects/spheric_aoe.hpp"
+#include "effects/aoe_spheric_effect.hpp"
 
 namespace enc
 {
@@ -44,13 +44,13 @@ namespace enc
     Die _dmgDice;
   };
 
-  class HungerOfHadar : public Actoid, public LimitedDurationEffect, public SphericAoe, public DirectThreat, public AoeThreat
+  class HungerOfHadar : public Actoid, public LimitedDurationEffect, public AoeSphericEffect, public DirectThreat, public AoeThreat
   {
   public:
     HungerOfHadar(const Coord &coord, const HungerOfHadarFactory &factory);
 
-    std::string toString() const override;
-    std::string shorthandStr() const override;
+    std::string toString() const;
+    std::string shorthandStr() const;
 
     void onStartOfTurn(Combatant *combatant) override;
     void onEndOfTurn(Combatant *combatant) override;
@@ -60,10 +60,16 @@ namespace enc
 
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
-    void deactivateForCombatant(Combatant *combatant) override;
+    bool deactivateForCombatant(Combatant *combatant) override;
 
     double calculateThreat(const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) override;
+    EffectType getEffectType() const override;
+
+    const CoordVector &getAffectedCoords() const override;
+
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
   private:
     Coord _coord;
