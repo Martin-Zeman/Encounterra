@@ -139,9 +139,9 @@ namespace enc
       :return: list of the following types: np.array, action, bonus action
    */
 
-  PriorityTransitionsResult
-  getPostTransitionsOfAllPriorityTransitions(const std::unique_ptr<StateMachine> &protoDag,
-                                             const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction);
+  // PriorityTransitionsResult
+  // getPostTransitionsOfAllPriorityTransitions(const std::unique_ptr<StateMachine> &protoDag,
+  //                                            const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction);
 
   /**
    *  Builds action DAG for a combatant given the combatant's proto_dag. It determines eligible coords for each
@@ -158,9 +158,9 @@ namespace enc
           - dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
           - dict which maps a movement transition -> to target coord
    */
-  std::optional<DagBuildResult> buildActionDag(Combatant *combatant, const std::unique_ptr<StateMachine> &protoDag,
-                                               const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-                                               const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths);
+  // std::optional<DagBuildResult> buildActionDag(Combatant *combatant, const std::unique_ptr<StateMachine> &protoDag,
+  //                                              const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+  //                                              const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths);
 
   /**
    *  Finds the path through the DAG which represents the movement and actions with the highest calculated threat.

@@ -5,6 +5,7 @@
 #include <vector>
 #include <algorithm>
 #include <stdexcept>
+// #include <ranges>
 
 namespace enc {
 
@@ -63,6 +64,9 @@ public:
     std::vector<std::pair<std::string, StateId>> getForwardTransitions(StateId state) const;
 
     std::vector<std::string> getAllTransitions() const;
+    // auto getAllTransitions() const
+    //   -> std::ranges::join_view<
+    //     std::ranges::transform_view<std::ranges::ref_view<const std::unordered_map<StateId, std::vector<Transition>>>, std::vector<std::string>>>;
 
   private:
     inline void addDependency(StateId from, StateId to)

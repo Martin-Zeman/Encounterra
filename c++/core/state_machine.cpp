@@ -228,4 +228,13 @@ namespace enc
       }
       return result;
   }
+
+  // auto StateMachine::getAllTransitions() const
+  //   -> std::ranges::join_view<
+  //     std::ranges::transform_view<std::ranges::ref_view<const std::unordered_map<StateId, std::vector<Transition>>>, std::vector<std::string>>>
+  // {
+  //   return std::views::join(_states | std::views::values | std::views::transform([](const auto &transitions) {
+  //                             return transitions | std::views::transform([](const Transition &t) { return t.name; }) | std::ranges::to<std::vector>();
+  //                           }));
+  // }
 }

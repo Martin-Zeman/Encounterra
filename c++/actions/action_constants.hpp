@@ -17,14 +17,14 @@ namespace enc
     MovementThreatType threatType;
   };
 
-  const std::unordered_map<AbilityType, PriorityActionInfo> PRIORITY_ACTIONS
-    = {{AbilityType::DODGE, {"do_", MovementThreatType::DODGED}}, {AbilityType::DISENGAGE, {"di_", MovementThreatType::DISENGAGED}}};
+  // const std::unordered_map<AbilityType, PriorityActionInfo> PRIORITY_ACTIONS
+  //   = {{AbilityType::DODGE, {"do_", MovementThreatType::DODGED}}, {AbilityType::DISENGAGE, {"di_", MovementThreatType::DISENGAGED}}};
 
-  const std::unordered_map<AbilityType, PriorityActionInfo> PRIORITY_BONUS_ACTIONS
-    = {{AbilityType::CUNNING_DISENGAGE, {"cdi_", MovementThreatType::DISENGAGED}},
-       {AbilityType::TOTEM_RAGE, {"m_", MovementThreatType::STANDARD}},
-       {AbilityType::RAGE, {"m_", MovementThreatType::STANDARD}},
-       {AbilityType::AGGRESSIVE, {"m_", MovementThreatType::STANDARD}}};
+  // const std::unordered_map<AbilityType, PriorityActionInfo> PRIORITY_BONUS_ACTIONS
+  //   = {{AbilityType::CUNNING_DISENGAGE, {"cdi_", MovementThreatType::DISENGAGED}},
+  //      {AbilityType::TOTEM_RAGE, {"m_", MovementThreatType::STANDARD}},
+  //      {AbilityType::RAGE, {"m_", MovementThreatType::STANDARD}},
+  //      {AbilityType::AGGRESSIVE, {"m_", MovementThreatType::STANDARD}}};
 
   // Factory mappings TODO This May not be needed with my new concept
   // using ActionFactoryCreator = std::unique_ptr<ActionFactory> (*)(/* params */);
