@@ -20,4 +20,18 @@ namespace enc
     );
     addSpellSlots(CombatantType::CLERIC, 2);
   }
+
+  Acolyte::Acolyte(const std::string &name) : Combatant(CombatantType::MONSTER, Monster::HUMANOID, _classLevel, name, 9, 10, 0, 4, 30, 12)
+  {
+    _instanceId = generateInstanceId();
+
+    addMeleeAttack("Club", this,
+                   2,                        // toHit
+                   std::vector<Die>{{1, 4}}, // dmgDice
+                   0,                        // dmgBonus
+                   DamageType::Bludgeoning,
+                   1 // attackRange
+    );
+    addSpellSlots(CombatantType::CLERIC, 2);
+  }
 }

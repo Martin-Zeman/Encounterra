@@ -58,7 +58,7 @@ namespace enc
           _empowered(empowered), _heightened(heightened)
     {}
 
-    std::string toString() const
+    std::string toString() const override
     {
       std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_FIREBALL) ? "Quickened " : "";
       return prefix + "Fireball at (" + std::to_string(_coord[0]) + ", " + std::to_string(_coord[1]) + ")";

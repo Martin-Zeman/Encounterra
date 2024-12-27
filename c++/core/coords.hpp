@@ -6,11 +6,11 @@
 #include <algorithm>
 #include "core/misc.hpp"
 #include "core/types.hpp"
-#include "core/combatant.hpp"
 #include "core/rectangle.hpp"
 
 namespace enc
 {
+  class Combatant;
 
   class Coords : public Rectangle
   {
@@ -33,6 +33,7 @@ namespace enc
     int operator()(size_t row, size_t col) const;
     bool areValidCoords(size_t mapSize) const;
     Size getSize() const;
+    std::string toString() const;
 
   private:
     Size _size;

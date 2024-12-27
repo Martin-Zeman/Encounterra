@@ -9,4 +9,9 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  Bugbear::Bugbear(const std::string &name) : Combatant(CombatantType::MONSTER, Monster::HUMANOID, _classLevel, name, 27, 16, 2, 0, 30, 0)
+  {
+    _instanceId = generateInstanceId();
+  }
 }

@@ -27,16 +27,16 @@ namespace enc
           }
 
         // Base forms available at all levels 3+
-        forms = {[](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<DireWolf>(name); },
-                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<BrownBear>(name); },
-                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantToad>(name); },
-                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantSpider>(name); }};
+        forms = {[](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<DireWolf>(name + " Direwolf"); },
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<BrownBear>(name + " Brown Bear"); },
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantToad>(name + " Giant Toad"); },
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantSpider>(name + " Giant Spider"); }};
 
         // Add additional forms based on level
         if(level >= 6)
           {
-            forms.push_back([](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantConstrictorSnake>(name); });
-            forms.push_back([](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<SaberToothedTiger>(name); });
+            forms.push_back([](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantConstrictorSnake>(name + " Giant Constrictor Snake"); });
+            forms.push_back([](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<SaberToothedTiger>(name + " Saber Toothed Tiger"); });
           }
 
         /* Commented out forms
@@ -77,7 +77,7 @@ namespace enc
 
     for(const auto &formFactory : formFactories)
       {
-        auto form = formFactory(combatant->_name + " wildshaped");
+        auto form = formFactory(combatant->_name + " wildshaped into ");
         forms.push_back(std::make_shared<Wildshape>(combatant, std::move(form), factory));
       }
 

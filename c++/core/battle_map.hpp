@@ -77,7 +77,7 @@ namespace enc
                    const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>(), bool considerAOO = false);
     void removeCombatant(const Combatant &combatant);
     bool removeCombatantIfDead(Combatant &combatant);
-    void resetCombatantsToInitialPositions(const std::unordered_map<int, Coord> initialPositions);
+    void resetCombatantsToInitialPositions(const std::unordered_map<int, Coords> initialPositions);
     int getCombatantGridValueAt(const Coord &coord) const;
     std::tuple<Coord, int, std::vector<Combatant *>>
     findBestPlacementHarmfulCircular(const Combatant *caster, int spellRange, int radius);

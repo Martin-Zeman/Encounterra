@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     GreenDragonWyrmling(int num);
+    GreenDragonWyrmling(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

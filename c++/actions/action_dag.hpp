@@ -13,12 +13,6 @@
 
 namespace enc {
 
-struct PriorityActionInfo
-{
-    std::string prefix;
-    MovementThreatType threatType;
-};
-
 // Regular expressions for movement patterns
 extern const std::regex regexMovementPattern;
 extern const std::regex regexMsMovementPattern;

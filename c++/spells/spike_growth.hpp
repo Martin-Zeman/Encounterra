@@ -60,7 +60,7 @@ namespace enc
           AoeSphericEffect(factory._combatant, coord, TRANSLATE_RADIUS.at(SpikeGrowthFactory::target)), _coord(coord), _factory(factory)
     {}
 
-    std::string toString() const;
+    std::string toString() const override;
 
     std::string shorthandStr() const;
 

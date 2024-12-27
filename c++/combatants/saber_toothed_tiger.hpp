@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     SaberToothedTiger(int num);
+    SaberToothedTiger(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

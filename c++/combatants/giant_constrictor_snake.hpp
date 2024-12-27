@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     GiantConstrictorSnake(int num);
+    GiantConstrictorSnake(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

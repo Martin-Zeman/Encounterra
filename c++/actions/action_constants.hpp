@@ -3,6 +3,7 @@
 #include "actions/action_types.hpp"
 #include "actions/melee_attack.hpp"
 #include "actions/ranged_attack.hpp"
+#include "core/types.hpp"
 #include <unordered_map>
 #include <string>
 #include <memory>

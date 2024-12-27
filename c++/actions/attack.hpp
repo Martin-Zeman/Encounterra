@@ -65,7 +65,7 @@ namespace enc
           _rollType(rollType)
     {}
 
-    std::string toString() const;
+    std::string toString() const override;
     std::string shorthandStr() const;
     double calculateThreat(const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;

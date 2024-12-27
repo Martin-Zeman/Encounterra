@@ -45,7 +45,7 @@ namespace enc
         : Actoid(const_cast<MistyStepFactory &>(factory), ActoidFlags::IS_SPELL, AbilityType::MISTY_STEP), _coord(coord), _factory(factory)
     {}
 
-    std::string toString() const { return "MistyStep to (" + std::to_string(_coord[0]) + ", " + std::to_string(_coord[1]) + ")"; }
+    std::string toString() const override { return "MistyStep to (" + std::to_string(_coord[0]) + ", " + std::to_string(_coord[1]) + ")"; }
 
     std::string shorthandStr() const { return "MistyStep"; }
 

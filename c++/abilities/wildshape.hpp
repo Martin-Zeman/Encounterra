@@ -58,7 +58,7 @@ namespace enc
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
-    std::string toString() const;
+    std::string toString() const override;
 
     void transferFactories();
     void restoreFactories();

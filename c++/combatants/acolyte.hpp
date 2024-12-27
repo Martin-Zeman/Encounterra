@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     Acolyte(int num);
+    Acolyte(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

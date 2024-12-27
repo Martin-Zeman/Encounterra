@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     StoneGiant(int num);
+    StoneGiant(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

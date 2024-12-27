@@ -3,8 +3,8 @@
 #include <array>
 #include <vector>
 #include <cstdint>
-#include "types.hpp"
-#include "rectangle.hpp"
+#include "core/types.hpp"
+#include "core/rectangle.hpp"
 
 namespace enc
 {

@@ -51,7 +51,7 @@ namespace enc
 
   bool RoundManager::isOnlyOneTeamStanding() const { return Teams::getInstance().getSurvivingTeams().size() == 1; }
 
-  void RoundManager::reset(const std::unordered_map<int, Coord> &combatantInitialPositions)
+  void RoundManager::reset(const std::unordered_map<int, Coords> &combatantInitialPositions)
   {
     EffectTracker::getInstance().reset();
     for(auto &combatant : _combatants)
@@ -81,7 +81,7 @@ namespace enc
       }
 
     auto &battleMap = BattleMap::getInstance();
-    std::unordered_map<int, Coord> combatantInitialPositions;
+    std::unordered_map<int, Coords> combatantInitialPositions;
     for(const auto &combatant : _combatants)
       {
         combatantInitialPositions.emplace(combatant->_instanceId, battleMap.getCombatantCoordinates(*combatant));
@@ -202,11 +202,15 @@ namespace enc
               {
                 auto action = getAction(combatant);
                 if(!action)
-                  break;
+                  {
+                    break;
+                  }
 
-                auto resolution = _actionResolver.resolveAction(action, combatant);
-                if(!resolution)
-                  break;
+                ActionResult resolution = _actionResolver.resolveAction(action, combatant);
+                if(resolution == ActionResult::UNFEASIBLE)
+                  {
+                    break;
+                  }
 
                 if(isOnlyOneTeamStanding())
                   {

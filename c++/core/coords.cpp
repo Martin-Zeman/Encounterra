@@ -1,4 +1,5 @@
-#include "coords.hpp"
+#include "core/coords.hpp"
+#include "core/combatant.hpp"
 
 namespace enc
 {
@@ -94,4 +95,9 @@ namespace enc
   }
 
   Size Coords::getSize() const { return _size; }
+
+  std::string Coords::toString() const
+  {
+    return "(" + std::to_string(_coords[0][0]) + ", " + std::to_string(_coords[0][1]) + ")";
+  }
 }

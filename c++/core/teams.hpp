@@ -4,8 +4,8 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include "combatant.hpp"
-#include "types.hpp"
+#include "core/combatant.hpp"
+#include "core/types.hpp"
 
 namespace enc
 {

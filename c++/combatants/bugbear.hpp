@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     Bugbear(int num);
+    Bugbear(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     GiantSpider(int num);
+    GiantSpider(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

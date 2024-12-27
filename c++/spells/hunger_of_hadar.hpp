@@ -49,7 +49,7 @@ namespace enc
   public:
     HungerOfHadar(const Coord &coord, const HungerOfHadarFactory &factory);
 
-    std::string toString() const;
+    std::string toString() const override;
     std::string shorthandStr() const;
 
     void onStartOfTurn(Combatant *combatant) override;

@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     WildHeartBarbarianLvl3(int num);
+    WildHeartBarbarianLvl3(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

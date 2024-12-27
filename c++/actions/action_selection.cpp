@@ -388,7 +388,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
     Coords currentCoords = battleMap.getCombatantCoordinates(*combatant);
     
     // Remove Misty Step to current coordinate if it exists
-    auto msCurrentCoordKey = "ms_(" + std::to_string(currentCoords[0]) + ", " + std::to_string(currentCoords[1]) + ")";
+    auto msCurrentCoordKey = "ms_" + currentCoords.toString();
     if (auto mtcIt = movementTransitionToCoordAndType.find(msCurrentCoordKey); 
         mtcIt != movementTransitionToCoordAndType.end()) {
         const_cast<MovementTransitionMap&>(movementTransitionToCoordAndType).erase(mtcIt);

@@ -4,9 +4,13 @@
 
 namespace enc
 {
-    // TODO
+  // TODO
   DireWolf::DireWolf(int num)
       : Combatant(CombatantType::MONSTER, Monster::BEAST, _classLevel, concatName(std::string(_className), num), 27, 16, 2, 0, 30, 0)
+  {
+    _instanceId = generateInstanceId();
+  }
+  DireWolf::DireWolf(const std::string &name) : Combatant(CombatantType::MONSTER, Monster::BEAST, _classLevel, name, 27, 16, 2, 0, 30, 0)
   {
     _instanceId = generateInstanceId();
   }

@@ -7,6 +7,7 @@
 #include <array>
 #include <string>
 #include <functional>
+#include <set>
 #include <blaze/Math.h>
 #include "core/interfaces.hpp"
 // #include "combat/action_dag.hpp"
@@ -39,7 +40,6 @@ namespace std {
 namespace enc
 {
 
-  using PostTransitions = std::unordered_map<std::string, std::vector<std::pair<std::string, std::string>>>;
   using MovementTransitionMap = std::unordered_map<std::string, std::pair<Coord, MovementThreatType>>;
   using TransitionToEligibleCoords = std::unordered_map<std::string, CoordVector>;
   using SequenceToThreat = std::unordered_map<size_t, std::pair<std::vector<double>, double>>; // first part is the movement component of the threat, second is the action component
@@ -65,14 +65,6 @@ namespace enc
     std::vector<std::string> sequence;
     TransitionToMsPath msPathMap;
     std::array<double, 2> maxThreat;
-  };
-
-  using PostTransitions = std::unordered_map<std::string, std::vector<std::pair<std::string, StateId>>>;
-
-  struct PriorityTransitionsResult
-  {
-    PostTransitions actionTransitions;
-    PostTransitions bonusActionTransitions;
   };
 
   std::vector<std::vector<std::string>> pruneSequences(const std::vector<std::vector<std::string>> &sequences,

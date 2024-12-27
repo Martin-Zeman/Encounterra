@@ -7,10 +7,10 @@
 #include <cctype>
 #include <algorithm>
 #include <regex>
-#include "combatant.hpp"
-#include "resources.hpp"
-#include "types.hpp"
-#include "teams.hpp"
+#include "core/combatant.hpp"
+#include "core/resources.hpp"
+#include "core/types.hpp"
+#include "core/teams.hpp"
 
 namespace enc
 {

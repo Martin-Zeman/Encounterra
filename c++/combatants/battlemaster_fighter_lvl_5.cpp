@@ -10,4 +10,10 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  BattlemasterFighterLvl5::BattlemasterFighterLvl5(const std::string &name)
+      : Combatant(CombatantType::FIGHTER, Fighter::BATTLE_MASTER, _classLevel, name, 46, 17, 0, 0, 30, 15)
+  {
+    _instanceId = generateInstanceId();
+  }
 }

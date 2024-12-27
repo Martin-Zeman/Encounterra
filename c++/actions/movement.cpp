@@ -25,7 +25,7 @@ namespace enc
         // if(!_combatant->hasMovement()) actually, how much movement a combatant has should not enter into this
         //   break;
 
-        increments.push_back(std::make_shared<MovementIncrement>(increment, isStandardMovement, *this));
+        increments.push_back(std::make_shared<MovementIncrement>(increment, isStandardMovement, static_cast<ActoidFactory&>(*this)));
 
         // _combatant->decrementMovement();
       }

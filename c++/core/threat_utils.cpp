@@ -3,6 +3,7 @@
 #include "core/misc.hpp"
 #include "core/teams.hpp"
 #include "core/state_machine.hpp"
+#include "core/combatant.hpp"
 #include "effects/effect_tracker.hpp"
 #include "spells/misty_step.hpp"
 #include <numeric>
@@ -248,7 +249,7 @@ namespace enc
     std::unordered_map<AoeEffect *, Coords> effectToCoords;
     for(const auto &effect : effectTracker.getAoeEffects())
       {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+        effectToCoords.at(effect.get()) = Coords(effect->getAffectedCoords());
       }
 
     // Process AoE effects

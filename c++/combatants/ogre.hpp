@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     Ogre(int num);
+    Ogre(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

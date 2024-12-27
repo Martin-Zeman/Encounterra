@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     BrownBear(int num);
+    BrownBear(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

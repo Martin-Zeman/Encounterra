@@ -9,6 +9,7 @@ namespace enc
   {
   public:
     BattlemasterFighterLvl5(int num);
+    BattlemasterFighterLvl5(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

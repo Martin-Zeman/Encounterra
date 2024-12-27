@@ -221,12 +221,22 @@ namespace enc
   std::vector<std::string> StateMachine::getAllTransitions() const
   {
     std::vector<std::string> result;
+    size_t totalSize = 0;
     for(const auto &[state, transitions] : _states)
       {
-        result.reserve(result.size() + distance(transitions.begin(), transitions.end()));
-        result.insert(result.end(), transitions.begin(), transitions.end());
+        totalSize += transitions.size();
       }
-      return result;
+    result.reserve(totalSize);
+
+    // Add transition names
+    for(const auto &[state, transitions] : _states)
+      {
+        for(const auto &transition : transitions)
+          {
+            result.push_back(transition.name);
+          }
+      }
+    return result;
   }
 
   // auto StateMachine::getAllTransitions() const

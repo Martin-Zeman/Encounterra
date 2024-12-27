@@ -1,4 +1,4 @@
-#include "combatant.hpp"
+#include "core/combatant.hpp"
 #include "actions/dodge.hpp"
 #include "actions/disengage.hpp"
 #include "core/rechargeable_factory.hpp"

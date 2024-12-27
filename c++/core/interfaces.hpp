@@ -46,6 +46,7 @@ namespace enc
     virtual std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>())
       = 0;
+    virtual std::string toString() const = 0;
 
   protected:
     ActoidFactory &_factory;

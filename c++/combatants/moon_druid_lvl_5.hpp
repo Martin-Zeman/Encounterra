@@ -9,6 +9,7 @@ namespace enc
   {
   public:
     MoonDruidLvl5(int num);
+    MoonDruidLvl5(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

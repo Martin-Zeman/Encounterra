@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     DraconicSorcererLvl5(int num);
+    DraconicSorcererLvl5(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

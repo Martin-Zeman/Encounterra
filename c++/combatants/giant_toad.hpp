@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     GiantToad(int num);
+    GiantToad(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

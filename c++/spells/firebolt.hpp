@@ -76,7 +76,7 @@ namespace enc
           _factory(factory)
     {}
 
-    std::string toString() const;
+    std::string toString() const override;
 
     std::string shorthandStr() const;
 

@@ -38,6 +38,22 @@ namespace enc
     PASSIVE
   };
 
+  enum class MovementThreatType
+  {
+    STANDARD,
+    DISENGAGED,
+    DODGED,
+    MISTY_STEPPED
+  };
+
+  enum class ActionResult
+  {
+    HIT,
+    MISS,
+    OTHER,
+    UNFEASIBLE
+  };
+
   using Kwargs = std::map<std::string, std::any>;
 }
 

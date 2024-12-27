@@ -5,7 +5,7 @@
 #include <memory>
 #include <unordered_map>
 #include "core/misc.hpp"
-#include "core/combatant.hpp"
+#include "core/coords.hpp"
 #include "core/battle_map.hpp"
 #include "core/interfaces.hpp"
 #include "effects/aoe_effect.hpp"
@@ -13,16 +13,10 @@
 namespace enc
 {
 
+  class Combatant;
+
   constexpr double DZ_CONSTANT = 0.33;
   constexpr double MAX_HP_MODIFIER_MULTIPLIER = 1.25;
-
-  enum class MovementThreatType
-  {
-    STANDARD,
-    DISENGAGED,
-    DODGED,
-    MISTY_STEPPED
-  };
 
   /**
    *  Calculates the increase in mean dmg for an attack-like ability using a flat to-hit bonus

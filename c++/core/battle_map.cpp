@@ -855,7 +855,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return true;
   }
 
-  void BattleMap::resetCombatantsToInitialPositions(const std::unordered_map<int, Coord> initialPositions){
+  void BattleMap::resetCombatantsToInitialPositions(const std::unordered_map<int, Coords> initialPositions){
     _combatantCoordinateCache.clear();
     for (auto& it : initialPositions){
       _combatantCoordinateCache.insert({it.first, it.second});

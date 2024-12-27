@@ -9,4 +9,9 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  GiantToad::GiantToad(const std::string &name) : Combatant(CombatantType::MONSTER, Monster::BEAST, _classLevel, name, 56, 11, -1, 0, 40, 0)
+  {
+    _instanceId = generateInstanceId();
+  }
 }

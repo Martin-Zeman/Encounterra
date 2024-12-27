@@ -7,6 +7,7 @@ namespace enc
   {
   public:
     Goblin(int num);
+    Goblin(const std::string &name);
 
     int getClassId() const override { return _classId; }
 

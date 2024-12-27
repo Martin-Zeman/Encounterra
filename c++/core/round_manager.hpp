@@ -29,7 +29,7 @@ namespace enc
 
     bool isOnlyOneTeamStanding() const;
 
-    void reset(const std::unordered_map<int, Coord> &combatantInitialPositions);
+    void reset(const std::unordered_map<int, Coords> &combatantInitialPositions);
 
     std::unordered_map<Color, std::unordered_map<Statistics, int>>
     simulateN(int n = 1, std::queue<std::unordered_map<Color, std::unordered_map<Statistics, int>>> *resultQueue = nullptr);
