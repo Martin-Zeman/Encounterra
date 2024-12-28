@@ -40,6 +40,40 @@ namespace std {
 namespace enc
 {
 
+  struct ActionSequence
+  {
+    std::vector<std::shared_ptr<Actoid>> actions;
+    double threatScore;
+
+    bool operator==(const ActionSequence &other) const
+    {
+      if(actions.size() != other.actions.size())
+        {
+          return false;
+        }
+      for(size_t i = 0; i < actions.size(); ++i)
+        {
+          if(actions[i] != other.actions[i])
+            return false;
+        }
+      return true;
+    }
+  };
+
+  struct ActionSequenceHash
+  {
+    size_t operator()(const ActionSequence &seq) const
+    {
+      size_t hash = 0;
+      for(const auto &action : seq.actions)
+        {
+          // Combine hashes using FNV-1a inspired approach
+          hash ^= std::hash<void *>{}(action.get()) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        }
+      return hash;
+    }
+  };
+
   using MovementTransitionMap = std::unordered_map<std::string, std::pair<Coord, MovementThreatType>>;
   using TransitionToEligibleCoords = std::unordered_map<std::string, CoordVector>;
   using SequenceToThreat = std::unordered_map<size_t, std::pair<std::vector<double>, double>>; // first part is the movement component of the threat, second is the action component
@@ -170,11 +204,11 @@ namespace enc
       :return: the longest path in the DAG as per the threat along its edges and nodes and a mapping of transitions names
       to special Misty Step paths
    */
-  std::optional<BestSequenceResult>
-  findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-                   const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
-                   const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
-                   double infeasibilityMultiplier = 0.5);
+  // std::optional<BestSequenceResult>
+  // findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+  //                  const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
+  //                  const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
+  //                  double infeasibilityMultiplier = 0.5);
 
   /**
    *     Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,
@@ -182,6 +216,6 @@ namespace enc
       the best action is recalculated every time to react to any possible changes on the battle_map.
       :return: the next best actoid
    */
-  std::shared_ptr<Actoid> getAction(Combatant *combatant);
+  // std::shared_ptr<Actoid> getAction(Combatant *combatant);
 
 } // namespace enc

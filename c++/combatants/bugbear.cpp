@@ -14,4 +14,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState Bugbear::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void Bugbear::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

@@ -16,4 +16,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState BattlemasterFighterLvl5::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void BattlemasterFighterLvl5::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

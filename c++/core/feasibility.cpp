@@ -34,38 +34,36 @@ namespace enc
       case AbilityType::VAMPIRIC_BITE:
       case AbilityType::HASTE_VAMPIRIC_BITE:
       case AbilityType::PARALYZING_MELEE_ATTACK:
-      case AbilityType::HASTE_PARALYZING_MELEE_ATTACK:
-      {
-        // @todo: Add FSM
-        // @todo: Add is reckless attack has been used
-        // @todo: Check if they are enemies
-        // @todo: Check range
-        // @todo: Check if target is alive
-        Attack &attack = dynamic_cast<Attack &>(actoid);
-        if(auto ammo = attack.getFactory().getResource())
-          {
-            result &= (*ammo)->hasUses();
-          }
-        else
-          {
-            throw std::runtime_error("Attack factory has no ammo!");
-          }
-        break;
-      }
+        case AbilityType::HASTE_PARALYZING_MELEE_ATTACK: {
+          // @todo: Add FSM
+          // @todo: Add is reckless attack has been used
+          // @todo: Check if they are enemies
+          // @todo: Check range
+          // @todo: Check if target is alive
+          Attack &attack = dynamic_cast<Attack &>(actoid);
+          if(auto ammo = attack.getFactory().getResource())
+            {
+              result &= (*ammo)->hasUses();
+            }
+          else
+            {
+              throw std::runtime_error("Attack factory has no ammo!");
+            }
+          break;
+        }
       case AbilityType::FIREBALL:
-      case AbilityType::HUNGER_OF_HADAR:
-      {
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses(3);
-          }
-        else
-          {
-            throw std::runtime_error("Actoid factory must have an associated resource!");
-          }
-        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
-        break;
-      }
+        case AbilityType::HUNGER_OF_HADAR: {
+          if(auto resource = actoid.getFactory().getResource())
+            {
+              result &= (*resource)->hasUses(3);
+            }
+          else
+            {
+              throw std::runtime_error("Actoid factory must have an associated resource!");
+            }
+          result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+          break;
+        }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
       default: break;
@@ -73,10 +71,10 @@ namespace enc
     return result;
   }
 
-  bool checkFeasibilityLight(Combatant *combatant, Actoid &actoid)
+  bool checkFeasibilityLight(Combatant *combatant, ActoidFactory &factory)
   {
     bool result = false;
-    AbilityType abilityType = actoid.getAbilityType();
+    AbilityType abilityType = factory.getAbilityType();
     if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
       {
         result = combatant->hasAction();
@@ -93,7 +91,7 @@ namespace enc
       {
         throw std::runtime_error("Unknown Ability Type in checkFeasibilityLight!");
       }
-    switch(actoid.getAbilityType())
+    switch(abilityType)
       {
       case AbilityType::MELEE_ATTACK:
       case AbilityType::RANGED_ATTACK:
@@ -102,39 +100,52 @@ namespace enc
       case AbilityType::VAMPIRIC_BITE:
       case AbilityType::HASTE_VAMPIRIC_BITE:
       case AbilityType::PARALYZING_MELEE_ATTACK:
-      case AbilityType::HASTE_PARALYZING_MELEE_ATTACK:
-      {
-        // @todo: Add FSM
-        // @todo: Add is reckless attack has been used
-        Attack &attack = dynamic_cast<Attack &>(actoid);
-        if(auto ammo = attack.getFactory().getResource())
-          {
-            result &= (*ammo)->hasUses();
-          }
-        else
-          {
-            throw std::runtime_error("Attack factory has no ammo!");
-          }
-        break;
-      }
+        case AbilityType::HASTE_PARALYZING_MELEE_ATTACK: {
+          // @todo: Add FSM
+          // @todo: Add is reckless attack has been used
+          if(auto ammo = factory.getResource())
+            {
+              result &= (*ammo)->hasUses();
+            }
+          else
+            {
+              throw std::runtime_error("Attack factory has no ammo!");
+            }
+          break;
+        }
       case AbilityType::FIREBALL:
-      case AbilityType::HUNGER_OF_HADAR:
-      {
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses(3);
-          }
-        else
-          {
-            throw std::runtime_error("Actoid factory must have an associated resource!");
-          }
-        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
-        break;
-      }
+        case AbilityType::HUNGER_OF_HADAR: {
+          if(auto resource = factory.getResource())
+            {
+              result &= (*resource)->hasUses(3);
+            }
+          else
+            {
+              throw std::runtime_error("ActoidFactory factory must have an associated resource!");
+            }
+          result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+          break;
+        }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
       default: break;
       }
     return result;
   }
-}
+
+  std::vector<std::shared_ptr<ActoidFactory>> getFeasibleFactories(const std::vector<std::shared_ptr<ActoidFactory>> &factories, Combatant *combatant)
+  {
+    std::vector<std::shared_ptr<ActoidFactory>> feasible;
+    feasible.reserve(factories.size());
+
+    for(const auto &factory : factories)
+      {
+        if(checkFeasibilityLight(combatant, *factory))
+          {
+            feasible.push_back(factory);
+          }
+      }
+    return feasible;
+  }
+
+} // namespace enc

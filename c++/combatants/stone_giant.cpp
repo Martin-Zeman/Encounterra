@@ -17,4 +17,14 @@ namespace enc
     _instanceId = generateInstanceId();
     _size = Size::HUGE;
   }
+
+  ResourceState StoneGiant::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void StoneGiant::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

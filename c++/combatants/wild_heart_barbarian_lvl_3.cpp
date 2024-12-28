@@ -17,4 +17,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState WildHeartBarbarianLvl3::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void WildHeartBarbarianLvl3::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

@@ -16,4 +16,14 @@ namespace enc
     _instanceId = generateInstanceId();
     _size = Size::LARGE;
   }
+
+  ResourceState Ogre::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void Ogre::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

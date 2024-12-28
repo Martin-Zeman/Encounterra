@@ -16,4 +16,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState MoonDruidLvl5::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void MoonDruidLvl5::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

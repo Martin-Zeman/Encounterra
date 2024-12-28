@@ -28,5 +28,9 @@ namespace enc
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
     std::string toString() const override;
+    bool equals(const Actoid &other) const override;
+
+  protected:
+    size_t hash() const override;
   };
 }

@@ -69,7 +69,11 @@ namespace enc
     void removeTransferredFactories(std::vector<std::shared_ptr<ActoidFactory>> &factories);
     void resetFactoryPointers(const std::vector<std::shared_ptr<ActoidFactory>> &factories);
 
+    bool equals(const Actoid &other) const override;
+
   protected:
+    size_t hash() const override;
+
     std::unique_ptr<Combatant> _form;
     WildshapeFactory &_factory;
   };

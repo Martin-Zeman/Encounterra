@@ -34,6 +34,8 @@ namespace enc
 
   class Actoid
   {
+    mutable std::optional<size_t> _cachedHash;
+
   public:
     explicit Actoid(ActoidFactory &factory, ActoidFlags flags = ActoidFlags::DEFAULT, AbilityType abilityType = AbilityType::NOP)
         : _factory(factory), _actoidFlags(static_cast<uint32_t>(flags)), _abilityType(abilityType)
@@ -44,14 +46,27 @@ namespace enc
     AbilityType getAbilityType() const;
     ActoidFactory &getFactory() { return _factory; }
     virtual std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
-                                                                const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>())
+                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>())
       = 0;
     virtual std::string toString() const = 0;
+
+    virtual bool equals(const Actoid &other) const = 0;
+
+    size_t getHash() const
+    {
+      if(!_cachedHash)
+        {
+          _cachedHash = hash();
+        }
+      return *_cachedHash;
+    }
 
   protected:
     ActoidFactory &_factory;
     uint32_t _actoidFlags;
     AbilityType _abilityType;
+
+    virtual size_t hash() const = 0;
   };
 
   enum class FactoryFlags : uint32_t

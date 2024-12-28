@@ -11,8 +11,8 @@ namespace enc
     friend class MenacingMeleeAttack;
 
   public:
-    MenacingMeleeAttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice,
-                               int dmgBonus, DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(),
+    MenacingMeleeAttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType, int toHit,
+                               std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(),
                                std::vector<std::unique_ptr<OnHit>> onHit = {}, std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false,
                                bool twoHanded = false, Die toHitBonusDie = {});
 
@@ -24,18 +24,22 @@ namespace enc
 
     std::shared_ptr<Actoid> create(void *target) override;
 
-
   private:
     void initializeMenacingAttack();
   };
 
-  class MenacingMeleeAttack : public MeleeAttack//! @todo LimitedDurationEffect
+  class MenacingMeleeAttack : public MeleeAttack //! @todo LimitedDurationEffect
   {
   public:
     MenacingMeleeAttack(AbilityType abilityType, Combatant &target, MenacingMeleeAttackFactory &factory) : MeleeAttack(abilityType, target, factory)
     {}
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
-                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+
+    bool equals(const Actoid &other) const override;
+
+  protected:
+    size_t hash() const override;
   };
 }

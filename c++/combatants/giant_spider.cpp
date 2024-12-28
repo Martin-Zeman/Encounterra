@@ -15,4 +15,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState GiantSpider::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void GiantSpider::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

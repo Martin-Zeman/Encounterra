@@ -14,4 +14,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState DireWolf::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void DireWolf::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

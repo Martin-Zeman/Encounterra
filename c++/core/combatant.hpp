@@ -88,6 +88,8 @@ namespace enc
     void setShortCode(const std::string &shortCode) { _shortCode = shortCode; }
     std::string getShortCode() const { return _shortCode; }
     virtual int getClassId() const = 0;
+    virtual ResourceState exportResources() = 0;
+    virtual void importResources(const ResourceState &resources) = 0;
 
     bool isAlive() const;
     void onDie();

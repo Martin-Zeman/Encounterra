@@ -16,4 +16,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState SaberToothedTiger::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void SaberToothedTiger::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

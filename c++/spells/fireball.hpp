@@ -24,12 +24,11 @@ namespace enc
     static constexpr DamageType dmgType = DamageType::Fire;
 
     FireballFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource, bool hasSpellSculpting = false)
-        : DirectThreatFactory("FireballFactory", "Fireball", caster, abilityType), _dc(dc), _resource(resource), _hasSpellSculpting(hasSpellSculpting),
-          _savingThrow(SavingThrow::DEX), _dmgDice({{8, 6}})
+        : DirectThreatFactory("FireballFactory", "Fireball", caster, abilityType), _dc(dc), _resource(resource),
+          _hasSpellSculpting(hasSpellSculpting), _savingThrow(SavingThrow::DEX), _dmgDice({{8, 6}})
     {
       // _additionalUpcastDmg = {{1, 6}};
     }
-
 
     Coord findBestArgs() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
@@ -71,9 +70,13 @@ namespace enc
     }
 
     double calculateThreat(const Kwargs &kwargs) override;
-    std::optional<CoordVector>
-    getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
-                      const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+
+    bool equals(const Actoid &other) const override;
+
+  protected:
+    size_t hash() const override;
 
   private:
     Coord _coord;

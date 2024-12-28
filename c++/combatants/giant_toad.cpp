@@ -14,4 +14,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState GiantToad::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void GiantToad::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

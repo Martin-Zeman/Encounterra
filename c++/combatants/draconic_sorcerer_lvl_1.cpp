@@ -20,4 +20,14 @@ namespace enc
     addSpellSlots();
     addFirebolt();
   }
+
+  ResourceState DraconicSorcererLvl1::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void DraconicSorcererLvl1::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

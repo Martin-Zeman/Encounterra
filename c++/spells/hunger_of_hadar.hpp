@@ -70,6 +70,10 @@ namespace enc
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+    bool equals(const Actoid &other) const override;
+
+  protected:
+    size_t hash() const override;
 
   private:
     Coord _coord;

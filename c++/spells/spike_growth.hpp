@@ -25,13 +25,12 @@ namespace enc
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Piercing;
 
-
     //! @todo Can I remove the resource here?
     SpikeGrowthFactory(AbilityType abilityType, Combatant *caster, Resource *resource);
 
     Coord findBestArgs() const;
 
-    std::vector<Combatant*> getEligibleTargets() const;
+    std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
@@ -71,7 +70,7 @@ namespace enc
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
-                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
     bool deactivateForCombatant(Combatant *combatant) override;
@@ -82,10 +81,15 @@ namespace enc
     void onStartOfTurn(Combatant *combatant) override;
     void onEndOfTurn(Combatant *combatant) override;
 
-    double threatOnEnter(Combatant *target, const Kwargs & kwargs) const override;
-    double threatOnMoveWithin(Combatant *target, const Kwargs & kwargs) const override;
+    double threatOnEnter(Combatant *target, const Kwargs &kwargs) const override;
+    double threatOnMoveWithin(Combatant *target, const Kwargs &kwargs) const override;
 
     const CoordVector &getAffectedCoords() const { return SphericAoe::getAffectedCoords(); }
+
+    bool equals(const Actoid &other) const override;
+
+  protected:
+    size_t hash() const override;
 
   private:
     Coord _coord;

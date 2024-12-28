@@ -50,4 +50,14 @@ namespace enc
                                           64 // attackRange
     );
   }
+
+  ResourceState Goblin::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void Goblin::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

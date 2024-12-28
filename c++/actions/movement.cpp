@@ -45,4 +45,22 @@ namespace enc
   }
 
   std::shared_ptr<Actoid> GetUpFactory::create(void *target) { return std::make_shared<GetUpFromProne>(*this); }
+
+  size_t MovementIncrement::hash() const
+  {
+    size_t h = std::hash<uint32_t>{}(_actoidFlags);
+    h ^= std::hash<int>{}(_increment[0]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_increment[1]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<bool>{}(_incursAOO) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
+
+  bool MovementIncrement::equals(const Actoid &other) const
+  {
+    if(auto *o = dynamic_cast<const MovementIncrement *>(&other))
+      {
+        return _increment == o->_increment && _incursAOO == o->_incursAOO && _actoidFlags == o->_actoidFlags;
+      }
+    return false;
+  }
 }

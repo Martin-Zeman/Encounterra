@@ -352,4 +352,20 @@ namespace enc
         factory->setCombatant(initiator);
       }
   }
+
+  bool Wildshape::equals(const Actoid &other) const
+  {
+    if(auto *o = dynamic_cast<const Wildshape *>(&other))
+      {
+        return _actoidFlags == o->_actoidFlags && _form->_name == o->_form->_name;
+      }
+    return false;
+  }
+
+  size_t Wildshape::hash() const
+  {
+    size_t h = std::hash<uint32_t>{}(_actoidFlags);
+    h ^= std::hash<std::string>{}(_form->_name) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
 }

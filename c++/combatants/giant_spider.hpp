@@ -10,6 +10,8 @@ namespace enc
     GiantSpider(const std::string &name);
 
     int getClassId() const override { return _classId; }
+    ResourceState exportResources() override;
+    void importResources(const ResourceState &resources) override;
 
     static constexpr int getStaticClassId() { return _classId; }
     static constexpr std::string_view getClassName() { return _className; }

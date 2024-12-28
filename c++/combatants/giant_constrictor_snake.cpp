@@ -16,4 +16,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState GiantConstrictorSnake::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void GiantConstrictorSnake::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

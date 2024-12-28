@@ -368,266 +368,267 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
 }
 
 
-std::optional<BestSequenceResult>
-findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-                 const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
-                 const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
-{
-  auto &battleMap = BattleMap::getInstance();
-  auto &effectTracker = EffectTracker::getInstance();
-  std::unordered_map<AoeEffect *,CoordVector> effectToCoords;
-  for(const auto &effect : effectTracker.getAoeEffects())
-    {
-      effectToCoords[effect.get()] = effect->getAffectedCoords();
-    }
+// std::optional<BestSequenceResult>
+// findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+//                  const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
+//                  const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
+// {
+//   // TODO: Get rid of transitionNameToAction and use the Actoids directly
+//   auto &battleMap = BattleMap::getInstance();
+//   auto &effectTracker = EffectTracker::getInstance();
+//   std::unordered_map<AoeEffect *,CoordVector> effectToCoords;
+//   for(const auto &effect : effectTracker.getAoeEffects())
+//     {
+//       effectToCoords[effect.get()] = effect->getAffectedCoords();
+//     }
 
-    TransitionToMsPath transitionNameToMsPath;
-    SequenceToThreat sequenceToThreat;
-    TransitionStepThreat sequenceIdxToTransitionStepThreat;
+//     TransitionToMsPath transitionNameToMsPath;
+//     SequenceToThreat sequenceToThreat;
+//     TransitionStepThreat sequenceIdxToTransitionStepThreat;
     
-    Coords currentCoords = battleMap.getCombatantCoordinates(*combatant);
+//     Coords currentCoords = battleMap.getCombatantCoordinates(*combatant);
     
-    // Remove Misty Step to current coordinate if it exists
-    auto msCurrentCoordKey = "ms_" + currentCoords.toString();
-    if (auto mtcIt = movementTransitionToCoordAndType.find(msCurrentCoordKey); 
-        mtcIt != movementTransitionToCoordAndType.end()) {
-        const_cast<MovementTransitionMap&>(movementTransitionToCoordAndType).erase(mtcIt);
-    }
+//     // Remove Misty Step to current coordinate if it exists
+//     auto msCurrentCoordKey = "ms_" + currentCoords.toString();
+//     if (auto mtcIt = movementTransitionToCoordAndType.find(msCurrentCoordKey); 
+//         mtcIt != movementTransitionToCoordAndType.end()) {
+//         const_cast<MovementTransitionMap&>(movementTransitionToCoordAndType).erase(mtcIt);
+//     }
 
-    // Get all sequences
-    auto [dagForward, numStates, indexToState, indexToTransition, transitionToSimplified] = dag.getNumbaCompatibleData();
-    size_t maxSequenceLength = numStates * 2;
+//     // Get all sequences
+//     auto [dagForward, numStates, indexToState, indexToTransition, transitionToSimplified] = dag.getNumbaCompatibleData();
+//     size_t maxSequenceLength = numStates * 2;
     
-    auto allSequences = dag.dfs(0, maxSequenceLength);
-    auto prunedSequences = pruneSequences(allSequences, transitionNameToAction, indexToTransition, transitionToSimplified);
+//     auto allSequences = dag.dfs(0, maxSequenceLength);
+//     auto prunedSequences = pruneSequences(allSequences, transitionNameToAction, indexToTransition, transitionToSimplified);
     
-    std::vector<std::vector<std::string>> sequences;
-    for (const auto& arr : prunedSequences) {
-        std::vector<std::string> sequence;
-        for (const auto& item : arr) {
-            auto it = indexToTransition.find(std::stoul(item));
-            sequence.push_back(it != indexToTransition.end() ? it->second : "Unknown_" + item);
-        }
-        sequences.push_back(sequence);
-    }
+//     std::vector<std::vector<std::string>> sequences;
+//     for (const auto& arr : prunedSequences) {
+//         std::vector<std::string> sequence;
+//         for (const auto& item : arr) {
+//             auto it = indexToTransition.find(std::stoul(item));
+//             sequence.push_back(it != indexToTransition.end() ? it->second : "Unknown_" + item);
+//         }
+//         sequences.push_back(sequence);
+//     }
 
-    auto coordToSequenceIds = createCoordToSequenceMapping(sequences, movementTransitionToCoordAndType);
+//     auto coordToSequenceIds = createCoordToSequenceMapping(sequences, movementTransitionToCoordAndType);
 
-    // Clear threat calculation caches
-    // ThreatUtils::clearAccumulateThreatCache();
-    // ThreatUtils::clearAoeAndAooThreatCache();
+//     // Clear threat calculation caches
+//     // ThreatUtils::clearAccumulateThreatCache();
+//     // ThreatUtils::clearAoeAndAooThreatCache();
 
-    // Calculate movement threats
-    for (const auto& [coordAndType, ids] : coordToSequenceIds) {
-        if(coordAndType.first.empty())
-          {
-            continue;
-          }
+//     // Calculate movement threats
+//     for (const auto& [coordAndType, ids] : coordToSequenceIds) {
+//         if(coordAndType.first.empty())
+//           {
+//             continue;
+//           }
 
-        const auto& [coord, movementType] = coordAndType;
-        auto path = battleMap.getPathToCoord(*combatant, coord, distances, shortestPaths, true);
-        if(!path.has_value())
-          {
-            continue;
-          }
+//         const auto& [coord, movementType] = coordAndType;
+//         auto path = battleMap.getPathToCoord(*combatant, coord, distances, shortestPaths, true);
+//         if(!path.has_value())
+//           {
+//             continue;
+//           }
 
-        std::vector<double> movementThreat;
-        std::vector<std::string> mistyStepPath;
-        switch (movementType) {
-            case MovementThreatType::STANDARD:
-                movementThreat = accumulateThreatAlongPath(path.value(), combatant, effectToCoords);
-                break;
+//         std::vector<double> movementThreat;
+//         std::vector<std::string> mistyStepPath;
+//         switch (movementType) {
+//             case MovementThreatType::STANDARD:
+//                 movementThreat = accumulateThreatAlongPath(path.value(), combatant, effectToCoords);
+//                 break;
 
-            case MovementThreatType::DISENGAGED:
-                movementThreat = accumulateThreatAlongPath(path.value(), combatant, effectToCoords, true);
-                break;
+//             case MovementThreatType::DISENGAGED:
+//                 movementThreat = accumulateThreatAlongPath(path.value(), combatant, effectToCoords, true);
+//                 break;
 
-            case MovementThreatType::DODGED:
-                movementThreat = accumulateThreatAlongPath(path.value(), combatant, effectToCoords, false, true);
-                break;
+//             case MovementThreatType::DODGED:
+//                 movementThreat = accumulateThreatAlongPath(path.value(), combatant, effectToCoords, false, true);
+//                 break;
 
-            case MovementThreatType::MISTY_STEPPED: {
-                auto [threat, msPath] = calcThreatForPathWithMistyStep(path.value(), combatant, effectToCoords);
-                movementThreat = threat;
-                mistyStepPath = msPath;
-                std::string msKey = "ms_" + std::to_string(coord[0]) + "," + std::to_string(coord[1]);
-                transitionNameToMsPath[msKey] = msPath;
-                break;
-            }
+//             case MovementThreatType::MISTY_STEPPED: {
+//                 auto [threat, msPath] = calcThreatForPathWithMistyStep(path.value(), combatant, effectToCoords);
+//                 movementThreat = threat;
+//                 mistyStepPath = msPath;
+//                 std::string msKey = "ms_" + std::to_string(coord[0]) + "," + std::to_string(coord[1]);
+//                 transitionNameToMsPath[msKey] = msPath;
+//                 break;
+//             }
 
-            default:
-                std::cerr << "Unknown movement type " << static_cast<int>(movementType) << '\n';
-                movementThreat = accumulateThreatAlongPath(path.value(), combatant, effectToCoords);
-        }
+//             default:
+//                 std::cerr << "Unknown movement type " << static_cast<int>(movementType) << '\n';
+//                 movementThreat = accumulateThreatAlongPath(path.value(), combatant, effectToCoords);
+//         }
 
-        for (size_t idx : ids) {
-            sequenceToThreat[idx] = {std::move(movementThreat), 0.0};
-        }
-    }
+//         for (size_t idx : ids) {
+//             sequenceToThreat[idx] = {std::move(movementThreat), 0.0};
+//         }
+//     }
 
-    // Calculate action threats
-    for (const auto& [coordAndType, ids] : coordToSequenceIds) {
-        if (coordAndType.first.empty()) continue;
+//     // Calculate action threats
+//     for (const auto& [coordAndType, ids] : coordToSequenceIds) {
+//         if (coordAndType.first.empty()) continue;
         
-        const auto& [coord, _] = coordAndType;
-        // battleMap.clearCaches();
+//         const auto& [coord, _] = coordAndType;
+//         // battleMap.clearCaches();
         
-        auto withPosition = [&](const std::function<void()>& fn) {
-            battleMap.withCombatantPosition(combatant, coord, fn);
-        };
+//         auto withPosition = [&](const std::function<void()>& fn) {
+//             battleMap.withCombatantPosition(combatant, coord, fn);
+//         };
 
-        withPosition([&]() {
-            for (size_t idx : ids) {
-                std::shared_ptr<AttackThreatModifier> deltaAction;
-                double threatAcc = 0.0;
-                bool firstFeasibilityCheckDone = false;
-                double feasibilityMultiplier = 1.0;
-                size_t deltaActionTIdx = 0;
+//         withPosition([&]() {
+//             for (size_t idx : ids) {
+//                 std::shared_ptr<AttackThreatModifier> deltaAction;
+//                 double threatAcc = 0.0;
+//                 bool firstFeasibilityCheckDone = false;
+//                 double feasibilityMultiplier = 1.0;
+//                 size_t deltaActionTIdx = 0;
 
-                for (size_t tIdx = 0; tIdx < sequences[idx].size(); ++tIdx) {
-                    const auto& transition = sequences[idx][tIdx];
-                    if (transition == "dummy") break;
+//                 for (size_t tIdx = 0; tIdx < sequences[idx].size(); ++tIdx) {
+//                     const auto& transition = sequences[idx][tIdx];
+//                     if (transition == "dummy") break;
 
-                    try {
-                        const auto& action = transitionNameToAction.at(transition);
+//                     try {
+//                         const auto& action = transitionNameToAction.at(transition);
                         
-                        battleMap.withWildshapeIfNeeded(action, combatant, coord, [&]() {
-                            if (!action->hasFlag(ActoidFlags::LOCATION_INDEPENDENT)) {
-                                if (tIdx == 1) {
-                                    feasibilityMultiplier = distances[coord[0] * battleMap.getGridSize() + coord[1]] <= 
-                                        combatant->getMovement() ? 1.0 : infeasibilityMultiplier;
-                                    firstFeasibilityCheckDone = true;
-                                } else if (tIdx > 1) {
-                                    const auto& eligibleCoords = transitionToEligibleCoords.at(transition);
-                                    if (eligibleCoords.empty()) return;
+//                         battleMap.withWildshapeIfNeeded(action, combatant, coord, [&]() {
+//                             if (!action->hasFlag(ActoidFlags::LOCATION_INDEPENDENT)) {
+//                                 if (tIdx == 1) {
+//                                     feasibilityMultiplier = distances[coord[0] * battleMap.getGridSize() + coord[1]] <= 
+//                                         combatant->getMovement() ? 1.0 : infeasibilityMultiplier;
+//                                     firstFeasibilityCheckDone = true;
+//                                 } else if (tIdx > 1) {
+//                                     const auto& eligibleCoords = transitionToEligibleCoords.at(transition);
+//                                     if (eligibleCoords.empty()) return;
 
-                                    if (!firstFeasibilityCheckDone) {
-                                        feasibilityMultiplier = (std::find(eligibleCoords.begin(), eligibleCoords.end(), coord) != 
-                                            eligibleCoords.end() && distances[coord[0] * battleMap.getGridSize() + coord[1]] <= 
-                                            combatant->getMovement()) ? 1.0 : infeasibilityMultiplier;
-                                        firstFeasibilityCheckDone = true;
-                                    } else {
-                                        auto remainingDist = ThreatUtils::getHopDistanceCoords(eligibleCoords, {coord});
-                                        feasibilityMultiplier = remainingDist <= combatant->getMovement() - 
-                                            distances[coord[0] * battleMap.getGridSize() + coord[1]] ? 1.0 : infeasibilityMultiplier;
-                                    }
-                                }
-                            }
+//                                     if (!firstFeasibilityCheckDone) {
+//                                         feasibilityMultiplier = (std::find(eligibleCoords.begin(), eligibleCoords.end(), coord) != 
+//                                             eligibleCoords.end() && distances[coord[0] * battleMap.getGridSize() + coord[1]] <= 
+//                                             combatant->getMovement()) ? 1.0 : infeasibilityMultiplier;
+//                                         firstFeasibilityCheckDone = true;
+//                                     } else {
+//                                         auto remainingDist = ThreatUtils::getHopDistanceCoords(eligibleCoords, {coord});
+//                                         feasibilityMultiplier = remainingDist <= combatant->getMovement() - 
+//                                             distances[coord[0] * battleMap.getGridSize() + coord[1]] ? 1.0 : infeasibilityMultiplier;
+//                                     }
+//                                 }
+//                             }
 
-                            double threat = action->calculateThreat(!battleMap.isWildshapeActive(), sequenceToThreat[idx][0]);
-                            threatAcc += threat;
+//                             double threat = action->calculateThreat(!battleMap.isWildshapeActive(), sequenceToThreat[idx][0]);
+//                             threatAcc += threat;
 
-                            if (deltaAction) {
-                                double deltaThreat = deltaAction->calculateThreatForAttack(combatant, action);
-                                threatAcc += deltaThreat;
-                                sequenceIdxToTransitionStepThreat[idx][deltaActionTIdx] += deltaThreat;
-                            }
+//                             if (deltaAction) {
+//                                 double deltaThreat = deltaAction->calculateThreatForAttack(combatant, action);
+//                                 threatAcc += deltaThreat;
+//                                 sequenceIdxToTransitionStepThreat[idx][deltaActionTIdx] += deltaThreat;
+//                             }
 
-                            if (auto attackMod = std::dynamic_pointer_cast<AttackThreatModifier>(action)) {
-                                deltaAction = attackMod;
-                                deltaActionTIdx = tIdx;
-                            }
+//                             if (auto attackMod = std::dynamic_pointer_cast<AttackThreatModifier>(action)) {
+//                                 deltaAction = attackMod;
+//                                 deltaActionTIdx = tIdx;
+//                             }
 
-                            for (const auto& existingEffect : effectTracker.getAffectingCombatant(combatant)) {
-                                if (auto existingMod = std::dynamic_pointer_cast<AttackThreatModifier>(existingEffect)) {
-                                    threatAcc += existingMod->calculateThreatForAttack(combatant, action);
-                                }
-                            }
+//                             for (const auto& existingEffect : effectTracker.getAffectingCombatant(combatant)) {
+//                                 if (auto existingMod = std::dynamic_pointer_cast<AttackThreatModifier>(existingEffect)) {
+//                                     threatAcc += existingMod->calculateThreatForAttack(combatant, action);
+//                                 }
+//                             }
 
-                            try {
-                                sequenceIdxToTransitionStepThreat[idx][tIdx] = threat;
-                            } catch (...) {
-                                sequenceIdxToTransitionStepThreat[idx] = {{tIdx, threat}};
-                            }
-                        });
+//                             try {
+//                                 sequenceIdxToTransitionStepThreat[idx][tIdx] = threat;
+//                             } catch (...) {
+//                                 sequenceIdxToTransitionStepThreat[idx] = {{tIdx, threat}};
+//                             }
+//                         });
 
-                    } catch (const std::out_of_range&) {
-                        continue;  // Skip movement transitions
-                    }
-                }
+//                     } catch (const std::out_of_range&) {
+//                         continue;  // Skip movement transitions
+//                     }
+//                 }
 
-                auto& threat = sequenceToThreat[idx];
-                threat[1] = threatAcc * feasibilityMultiplier;
-                // Small bias towards current position prevents oscillations
-                threat[0] += (coord == currentCoords) ? 0.01 : 0.0;
-            }
-        });
-    }
+//                 auto& threat = sequenceToThreat[idx];
+//                 threat[1] = threatAcc * feasibilityMultiplier;
+//                 // Small bias towards current position prevents oscillations
+//                 threat[0] += (coord == currentCoords) ? 0.01 : 0.0;
+//             }
+//         });
+//     }
 
-    // Sort sequences by total threat
-    std::vector<size_t> sortedSequences(sequences.size());
-    std::iota(sortedSequences.begin(), sortedSequences.end(), 0);
+//     // Sort sequences by total threat
+//     std::vector<size_t> sortedSequences(sequences.size());
+//     std::iota(sortedSequences.begin(), sortedSequences.end(), 0);
     
-    std::sort(sortedSequences.begin(), sortedSequences.end(),
-        [&](size_t a, size_t b) {
-            const auto& threatA = sequenceToThreat[a];
-            const auto& threatB = sequenceToThreat[b];
-            return (threatA[1] > 0 ? threatA[0] + threatA[1] : -std::numeric_limits<double>::infinity()) >
-                   (threatB[1] > 0 ? threatB[0] + threatB[1] : -std::numeric_limits<double>::infinity());
-        });
+//     std::sort(sortedSequences.begin(), sortedSequences.end(),
+//         [&](size_t a, size_t b) {
+//             const auto& threatA = sequenceToThreat[a];
+//             const auto& threatB = sequenceToThreat[b];
+//             return (threatA[1] > 0 ? threatA[0] + threatA[1] : -std::numeric_limits<double>::infinity()) >
+//                    (threatB[1] > 0 ? threatB[0] + threatB[1] : -std::numeric_limits<double>::infinity());
+//         });
 
-    auto [nearestAndMinimizedSequence, maxThreat] = getNearestAndMinimize(
-        sequences, sortedSequences, sequenceToThreat, distances,
-        sequenceIdxToTransitionStepThreat, transitionNameToAction);
+//     auto [nearestAndMinimizedSequence, maxThreat] = getNearestAndMinimize(
+//         sequences, sortedSequences, sequenceToThreat, distances,
+//         sequenceIdxToTransitionStepThreat, transitionNameToAction);
 
-    if (nearestAndMinimizedSequence.empty()) {
-        return std::nullopt;
-    }
+//     if (nearestAndMinimizedSequence.empty()) {
+//         return std::nullopt;
+//     }
 
-    return BestSequenceResult{
-        std::move(nearestAndMinimizedSequence),
-        std::move(transitionNameToMsPath),
-        maxThreat
-    };
-}
+//     return BestSequenceResult{
+//         std::move(nearestAndMinimizedSequence),
+//         std::move(transitionNameToMsPath),
+//         maxThreat
+//     };
+// }
 
-// Main action selector function
-std::shared_ptr<Actoid> getAction(Combatant* combatant) {
-    auto& battleMap = BattleMap::getInstance();
-    // battleMap.clearCaches();
+// // Main action selector function
+// std::shared_ptr<Actoid> getAction(Combatant* combatant) {
+//     auto& battleMap = BattleMap::getInstance();
+//     // battleMap.clearCaches();
     
-    // Handle wildshape
-    combatant = combatant->getCurrentForm();
+//     // Handle wildshape
+//     combatant = combatant->getCurrentForm();
 
-    // Check if we need to break grapple
-    if (auto grappleCond = needsToBreakOutOfGrapple(combatant)) {
-        if (combatant->hasAction()) {
-            return BreakGrappleFactory(grappleCond).create();
-        }
-    }
+//     // Check if we need to break grapple
+//     if (auto grappleCond = needsToBreakOutOfGrapple(combatant)) {
+//         if (combatant->hasAction()) {
+//             return BreakGrappleFactory(grappleCond).create();
+//         }
+//     }
 
-    // Check if we need to get up from prone
-    if (combatant->isAffectedBy(Conditions::PRONE) && 
-        combatant->getMovement() >= combatant->getSpeed() / 2) {
-        return GetUpFactory(combatant).create(nullptr);
-    }
+//     // Check if we need to get up from prone
+//     if (combatant->isAffectedBy(Conditions::PRONE) && 
+//         combatant->getMovement() >= combatant->getSpeed() / 2) {
+//         return GetUpFactory(combatant).create(nullptr);
+//     }
 
-    // Calculate distances and paths
-    auto [distances, shortestPaths] = battleMap.calcDijkstra(*combatant);
-    combatant->setShortestPathsCache(shortestPaths);
+//     // Calculate distances and paths
+//     auto [distances, shortestPaths] = battleMap.calcDijkstra(*combatant);
+//     combatant->setShortestPathsCache(shortestPaths);
 
-    // Check existing action plan
-    if (!combatant->getActionPlan().empty()) {
-        auto firstAction = combatant->getActionPlan().front();
-        if (auto movementIncrement = std::dynamic_pointer_cast<MovementIncrement>(firstAction)) {
-            if (combatant->getMovement() > 0) {
-                combatant->getActionPlan().pop_front();
-                return movementIncrement;
-            }
-        }
-    }
+//     // Check existing action plan
+//     if (!combatant->getActionPlan().empty()) {
+//         auto firstAction = combatant->getActionPlan().front();
+//         if (auto movementIncrement = std::dynamic_pointer_cast<MovementIncrement>(firstAction)) {
+//             if (combatant->getMovement() > 0) {
+//                 combatant->getActionPlan().pop_front();
+//                 return movementIncrement;
+//             }
+//         }
+//     }
 
-    // Calculate new action plan if needed
-    combatant->setActionPlan(combatant->calculateActionPlan(distances, shortestPaths));
+//     // Calculate new action plan if needed
+//     combatant->setActionPlan(combatant->calculateActionPlan(distances, shortestPaths));
     
-    // Return first action from plan or nullptr if no actions possible
-    if (combatant->getActionPlan().empty()) {
-        return nullptr;
-    }
+//     // Return first action from plan or nullptr if no actions possible
+//     if (combatant->getActionPlan().empty()) {
+//         return nullptr;
+//     }
     
-    auto action = combatant->getActionPlan().front();
-    combatant->getActionPlan().pop_front();
-    return action;
-}
+//     auto action = combatant->getActionPlan().front();
+//     combatant->getActionPlan().pop_front();
+//     return action;
+// }
 
 } // namespace enc

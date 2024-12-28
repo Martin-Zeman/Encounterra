@@ -1,99 +1,78 @@
-#include "core/state_machine.hpp"
+#pragma once
+
+#include <vector>
+#include <memory>
 #include <queue>
+#include <shared_mutex>
+#include <stdexcept>
+#include "core/state_machine.hpp"
+#include "core/types.hpp"
 
 namespace enc
 {
 
   StateMachine::StateMachine() : _currentState(0), _nextAvailableId(1), _isDagDirty(true)
   {
-    addNewState(0);  // Initial state
-    addNewState(-1); // NOP state
+    // Ensure space for initial and NOP states
+    _states.resize(2);
+    _dependencies.resize(2);
   }
 
   void StateMachine::addNewState(StateId id)
   {
-    if(_states.find(id) != _states.end())
+    if(id >= _states.size())
       {
-        throw std::runtime_error("State ID already exists");
+        _states.resize(id + 1);
+        _dependencies.resize(id + 1);
       }
-    _states[id] = {};
     _nextAvailableId = std::max(_nextAvailableId, id + 1);
   }
 
   StateId StateMachine::getNextStateId() { return _nextAvailableId++; }
 
-  void StateMachine::removeState(StateId state_id)
+  void StateMachine::removeState(StateId stateId)
   {
-    if(state_id != 0 && state_id != 1)
+    if(stateId == 0 || stateId == 1)
+      return; // Protect initial and NOP states
+
+    if(stateId < _states.size())
       {
-        // Remove all transitions to/from this state
-        _states.erase(state_id);
-        _dependencies.erase(state_id);
+        // Clear transitions from this state
+        _states[stateId].clear();
+        _dependencies[stateId].clear();
 
-        // Remove transitions to this state from other states
-        for(auto &[_, transitions] : _states)
+        // Remove transitions to this state and dependencies
+        for(size_t i = 0; i < _states.size(); ++i)
           {
-            transitions.erase(std::remove_if(transitions.begin(), transitions.end(), [&](const Transition &t) { return t.destination == state_id; }),
-                              transitions.end());
-          }
+            auto &transitions = _states[i];
+            transitions.erase(
+              std::remove_if(transitions.begin(), transitions.end(), [stateId](const Transition &t) { return t.destination == stateId; }),
+              transitions.end());
 
-        // Remove dependencies involving this state
-        for(auto &[_, deps] : _dependencies)
-          {
-            deps.erase(std::remove(deps.begin(), deps.end(), state_id), deps.end());
+            auto &deps = _dependencies[i];
+            deps.erase(std::remove(deps.begin(), deps.end(), stateId), deps.end());
           }
-
         _isDagDirty = true;
       }
   }
 
-  StateId StateMachine::getCurrentState() const { return _currentState; }
-
-  // std::vector<std::string> StateMachine::getAvailableTransitionsInCurrentState() const { return getAvailableTransitionsInState(_currentState); }
-
-  // std::unordered_map<StateId, std::vector<std::string>> StateMachine::getTransitionsInAllStates() const
-  // {
-  //   std::unordered_map<StateId, std::vector<std::string>> result;
-  //   for(const auto &[state, transitions] : _states)
-  //     {
-  //       result[state] = getAvailableTransitionsInState(state);
-  //     }
-  //   return result;
-  // }
-
-  // std::vector<std::string> StateMachine::getAvailableTransitionsInState(StateId state) const
-  // {
-  //   std::vector<std::string> result;
-  //   if(_states.find(state) != _states.end())
-  //     {
-  //       for(const auto &transition : _states.at(state))
-  //         {
-  //           result.push_back(transition.name);
-  //         }
-  //     }
-  //   return result;
-  // }
-
-  void StateMachine::addTransition(const std::string &name, StateId origin, StateId dest)
+  void StateMachine::addTransition(std::shared_ptr<Actoid> action, StateId origin, StateId dest)
   {
-    if(_states.find(origin) != _states.end() && _states.find(dest) != _states.end())
-      {
-        _states[origin].push_back({name, origin, dest});
-        addDependency(origin, dest);
-        _isDagDirty = true;
-      }
-    else
+    if(origin >= _states.size() || dest >= _states.size())
       {
         throw std::runtime_error("Origin or destination state does not exist");
       }
+    _states[origin].push_back({action, origin, dest});
+    addDependency(origin, dest);
+    _isDagDirty = true;
   }
 
-  void StateMachine::removeTransition(const std::string &transition_name, StateId origin)
+  void StateMachine::removeTransition(std::shared_ptr<Actoid> action, StateId origin)
   {
-    if(_states.find(origin) != _states.end())
+    if(origin < _states.size())
       {
         auto &transitions = _states[origin];
-        auto it = std::find_if(transitions.begin(), transitions.end(), [&](const Transition &t) { return t.name == transition_name; });
+        auto it = std::find_if(transitions.begin(), transitions.end(), [&](const Transition &t) { return t.action == action; });
 
         if(it != transitions.end())
           {
@@ -104,33 +83,18 @@ namespace enc
       }
   }
 
-  void StateMachine::reset() { _currentState = 0; }
-
-  bool StateMachine::triggerTransition(const std::string &transitionName)
+  std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> StateMachine::getForwardTransitions(StateId state) const
   {
-    auto &current_transitions = _states[_currentState];
-    auto it = std::find_if(current_transitions.begin(), current_transitions.end(), [&](const Transition &t) { return t.name == transitionName; });
+    if(state >= _states.size())
+      return {};
 
-    if(it != current_transitions.end())
+    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> result;
+    result.reserve(_states[state].size());
+    for(const auto &transition : _states[state])
       {
-        _currentState = it->destination;
-        return true;
+        result.emplace_back(transition.action, transition.destination);
       }
-    else
-      {
-        return false;
-      }
-  }
-
-  std::vector<StateId> StateMachine::getAllStates() const
-  {
-    std::vector<StateId> stateIds;
-    stateIds.reserve(_states.size());
-    for(const auto &[state, _] : _states)
-      {
-        stateIds.push_back(state);
-      }
-    return stateIds;
+    return result;
   }
 
   std::vector<StateId> StateMachine::toposort() const
@@ -143,22 +107,64 @@ namespace enc
     return _cachedToposort;
   }
 
+  bool StateMachine::triggerTransition(std::shared_ptr<Actoid> action)
+  {
+    auto &current_transitions = _states[_currentState];
+    auto it = std::find_if(current_transitions.begin(), current_transitions.end(), [&](const Transition &t) { return t.action == action; });
+
+    if(it != current_transitions.end())
+      {
+        _currentState = it->destination;
+        return true;
+      }
+    return false;
+  }
+
+  std::vector<std::shared_ptr<Actoid>> StateMachine::getAllTransitions() const
+  {
+    std::vector<std::shared_ptr<Actoid>> result;
+    for(const auto &transitions : _states)
+      {
+        for(const auto &transition : transitions)
+          {
+            result.push_back(transition.action);
+          }
+      }
+    return result;
+  }
+
+  std::vector<StateId> StateMachine::getAllStates() const
+  {
+    std::vector<StateId> result;
+    for(StateId i = 0; i < _states.size(); ++i)
+      {
+        if(!_states[i].empty() || !_dependencies[i].empty())
+          {
+            result.push_back(i);
+          }
+      }
+    return result;
+  }
+
+  StateId StateMachine::getCurrentState() const { return _currentState; }
+
+  void StateMachine::reset() { _currentState = 0; }
+
   std::vector<StateId> StateMachine::computeToposort() const
   {
     std::vector<StateId> result;
     result.reserve(_states.size());
 
-    std::unordered_map<StateId, int> inDegree;
+    std::vector<int> inDegree(_states.size(), 0);
     std::queue<StateId> zeroInDegree;
 
-    // Initialize in-degrees using stored dependencies
-    for(const auto &[state, _] : _states)
+    // Calculate in-degrees
+    for(size_t i = 0; i < _dependencies.size(); ++i)
       {
-        auto dep_it = _dependencies.find(state);
-        inDegree[state] = (dep_it != _dependencies.end()) ? dep_it->second.size() : 0;
-        if(inDegree[state] == 0)
+        inDegree[i] = _dependencies[i].size();
+        if(inDegree[i] == 0)
           {
-            zeroInDegree.push(state);
+            zeroInDegree.push(i);
           }
       }
 
@@ -168,16 +174,12 @@ namespace enc
         zeroInDegree.pop();
         result.push_back(current);
 
-        auto state_it = _states.find(current);
-        if(state_it != _states.end())
+        for(const auto &transition : _states[current])
           {
-            for(const auto &transition : state_it->second)
+            StateId dest = transition.destination;
+            if(--inDegree[dest] == 0)
               {
-                StateId dest = transition.destination;
-                if(--inDegree[dest] == 0)
-                  {
-                    zeroInDegree.push(dest);
-                  }
+                zeroInDegree.push(dest);
               }
           }
       }
@@ -189,62 +191,4 @@ namespace enc
 
     return result;
   }
-
-  StateId StateMachine::getTransitionDestination(StateId state, const std::string &transitionName) const
-  {
-    if(_states.find(state) != _states.end())
-      {
-        for(const auto &transition : _states.at(state))
-          {
-            if(transition.name == transitionName)
-              {
-                return transition.destination;
-              }
-          }
-      }
-    throw std::runtime_error("Transition not found");
-  }
-
-  std::vector<std::pair<std::string, StateId>> StateMachine::getForwardTransitions(StateId state) const
-  {
-    std::vector<std::pair<std::string, StateId>> result;
-    if(_states.find(state) != _states.end())
-      {
-        for(const auto &transition : _states.at(state))
-          {
-            result.emplace_back(transition.name, transition.destination);
-          }
-      }
-    return result;
-  }
-
-  std::vector<std::string> StateMachine::getAllTransitions() const
-  {
-    std::vector<std::string> result;
-    size_t totalSize = 0;
-    for(const auto &[state, transitions] : _states)
-      {
-        totalSize += transitions.size();
-      }
-    result.reserve(totalSize);
-
-    // Add transition names
-    for(const auto &[state, transitions] : _states)
-      {
-        for(const auto &transition : transitions)
-          {
-            result.push_back(transition.name);
-          }
-      }
-    return result;
-  }
-
-  // auto StateMachine::getAllTransitions() const
-  //   -> std::ranges::join_view<
-  //     std::ranges::transform_view<std::ranges::ref_view<const std::unordered_map<StateId, std::vector<Transition>>>, std::vector<std::string>>>
-  // {
-  //   return std::views::join(_states | std::views::values | std::views::transform([](const auto &transitions) {
-  //                             return transitions | std::views::transform([](const Transition &t) { return t.name; }) | std::ranges::to<std::vector>();
-  //                           }));
-  // }
-}
+} // namespace enc

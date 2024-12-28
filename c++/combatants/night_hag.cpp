@@ -37,4 +37,14 @@ namespace enc
     );
     // addAbility(AbilityType::SPELLSLOTS, )
   }
+
+  ResourceState NightHag::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void NightHag::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

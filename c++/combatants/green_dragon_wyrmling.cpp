@@ -16,4 +16,14 @@ namespace enc
   {
     _instanceId = generateInstanceId();
   }
+
+  ResourceState GreenDragonWyrmling::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void GreenDragonWyrmling::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

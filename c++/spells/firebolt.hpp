@@ -50,8 +50,7 @@ namespace enc
     //! @todo Can I remove the resource here?
     FireboltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
 
-
-    std::vector<Combatant*> getEligibleTargets() const;
+    std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
@@ -85,10 +84,15 @@ namespace enc
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
-                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+
+    bool equals(const Actoid &other) const override;
+
+  protected:
+    size_t hash() const override;
 
   private:
-    Combatant& _target;
+    Combatant &_target;
     const FireboltFactory &_factory;
     RollType _rollType;
   };

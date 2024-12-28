@@ -34,4 +34,14 @@ namespace enc
     );
     addSpellSlots(CombatantType::CLERIC, 2);
   }
+
+  ResourceState Acolyte::exportResources()
+  {
+    // TODO
+    return {};
+  }
+  void Acolyte::importResources(const ResourceState &resources)
+  {
+    // TODO
+  }
 }

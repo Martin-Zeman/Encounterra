@@ -18,6 +18,11 @@ namespace enc
     const Coord &getIncrement() const { return _increment; }
     bool incursAOO() const { return _incursAOO; }
 
+    bool equals(const Actoid &other) const override;
+
+  protected:
+    size_t hash() const override;
+
   private:
     Coord _increment;
     bool _incursAOO;
@@ -59,5 +64,9 @@ namespace enc
 
     operator std::string() const { return "Get Up from Prone"; }
     std::string shorthandStr() const { return "Get Up from Prone"; }
+    bool equals(const Actoid &other) const override;
+
+  protected:
+    size_t hash() const override;
   };
 }

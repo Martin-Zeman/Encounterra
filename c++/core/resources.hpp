@@ -1,12 +1,32 @@
 #pragma once
 
 #include <limits>
+#include <optional>
 
 #include "actions/action_types.hpp"
 #include "core/interfaces.hpp"
 
 namespace enc
 {
+
+  //! @brief This is for importResource and exportResource
+  struct ResourceState
+  {
+    int movement;
+    bool hasAction;
+    bool hasBonusAction;
+    bool hasHasteAction;
+    StateId attackFsmState;
+    std::unordered_map<AbilityType, int> ammo; // Using AbilityType as key for ammo types
+
+    // Optional resources that only some combatants have
+    std::optional<std::unordered_map<int, int>> spellslots; // level -> count
+    std::optional<int> channelDivinity;
+    std::optional<bool> castLeveledSpellThisTurn;
+    std::optional<int> layOnHandsPool;
+    std::optional<bool> usedSneakAttackThisTurn;
+    // ... other optional resources
+  };
 
   enum class ResourceDepletionLevel
   {
