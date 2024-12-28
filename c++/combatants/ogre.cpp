@@ -11,7 +11,7 @@ namespace enc
     _size = Size::LARGE;
   }
 
-  Ogre::Ogre(const std::string &name) : Combatant(CombatantType::MONSTER, Monster::GIANT, name, 59, 11, -1, 0, 40, 0)
+  Ogre::Ogre(const std::string &name) : Combatant(CombatantType::MONSTER, Monster::GIANT, _classLevel, name, 59, 11, -1, 0, 40, 0)
   {
     _instanceId = generateInstanceId();
     _size = Size::LARGE;
