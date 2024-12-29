@@ -38,7 +38,7 @@ namespace
     fsm.addTransition(to_neg1, 4, -1);
     fsm.addTransition(to_neg1, 5, -1);
 
-    auto transitions = fsm.getForwardTransitions(fsm.getCurrentState());
+    auto transitions = fsm.getCurrentForwardTransitions();
     ASSERT_EQ(transitions.size(), 1);
     ASSERT_EQ(transitions[0].first->toString(), "to_2");
     ASSERT_EQ(transitions[0].second, 2);
@@ -46,7 +46,7 @@ namespace
     fsm.triggerTransition(to_2);
     ASSERT_EQ(fsm.getCurrentState(), 2);
 
-    transitions = fsm.getForwardTransitions(fsm.getCurrentState());
+    transitions = fsm.getCurrentForwardTransitions();
     ASSERT_EQ(transitions.size(), 1);
     ASSERT_EQ(transitions[0].first->toString(), "to_3");
     ASSERT_EQ(transitions[0].second, 3);

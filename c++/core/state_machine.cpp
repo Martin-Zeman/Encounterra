@@ -30,6 +30,8 @@ namespace enc
 
   StateId StateMachine::getNextStateId() { return _nextAvailableId++; }
 
+  StateId StateMachine::getNumStates() { return _states.size(); }
+
   void StateMachine::removeState(StateId stateId)
   {
     if(stateId == 0 || stateId == -1)
@@ -85,6 +87,22 @@ namespace enc
       }
   }
 
+  void StateMachine::removeTransitionFromAllStates(std::shared_ptr<Actoid> action)
+  {
+    for(StateId originState = 0; originState < _states.size(); ++originState)
+      {
+        auto &transitions = _states[originState];
+        auto it = std::find_if(transitions.begin(), transitions.end(), [&](const Transition &t) { return t.action == action; });
+
+        if(it != transitions.end())
+          {
+            removeDependency(originState, it->destination);
+            transitions.erase(it);
+            _isDagDirty = true;
+          }
+      }
+  }
+
   std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> StateMachine::getForwardTransitions(StateId state) const
   {
     if(state >= _states.size())
@@ -93,6 +111,17 @@ namespace enc
     std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> result;
     result.reserve(_states[state].size());
     for(const auto &transition : _states[state])
+      {
+        result.emplace_back(transition.action, transition.destination);
+      }
+    return result;
+  }
+
+  std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> StateMachine::getCurrentForwardTransitions() const
+  {
+    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> result;
+    result.reserve(_states[_currentState].size());
+    for(const auto &transition : _states[_currentState])
       {
         result.emplace_back(transition.action, transition.destination);
       }

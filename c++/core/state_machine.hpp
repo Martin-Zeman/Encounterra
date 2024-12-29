@@ -38,13 +38,19 @@ namespace enc
 
     StateId getNextStateId();
 
+    StateId getNumStates();
+
     void removeState(StateId stateId);
 
     void addTransition(std::shared_ptr<Actoid> action, StateId origin, StateId dest);
 
     void removeTransition(std::shared_ptr<Actoid> action, StateId origin);
 
+    void removeTransitionFromAllStates(std::shared_ptr<Actoid> action);
+
     std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> getForwardTransitions(StateId state) const;
+
+    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> getCurrentForwardTransitions() const;
 
     std::vector<StateId> toposort() const;
 
