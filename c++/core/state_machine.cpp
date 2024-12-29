@@ -32,8 +32,10 @@ namespace enc
 
   void StateMachine::removeState(StateId stateId)
   {
-    if(stateId == 0 || stateId == 1)
+    if(stateId == 0 || stateId == -1)
+    {
       return; // Protect initial and NOP states
+    }
 
     if(stateId < _states.size())
       {

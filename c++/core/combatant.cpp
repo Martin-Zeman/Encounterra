@@ -3,6 +3,7 @@
 #include "actions/disengage.hpp"
 #include "core/rechargeable_factory.hpp"
 #include "effects/effect_tracker.hpp"
+#include "effects/action_enabler_effect.hpp"
 
 namespace enc
 {
@@ -509,6 +510,28 @@ bool Combatant::checkConcentration(Combatant* combatant, int dmg) {
     
     std::cout << _name << " maintains concentration" << std::endl;
     return true;
+}
+
+void Combatant::withActionEnablerEffect(Actoid &action, const std::function<void(bool)> &fn)
+{
+  if(auto *actionEnabler = dynamic_cast<ActionEnablerEffect *>(&action))
+    {
+      try
+        {
+          actionEnabler->enable();
+          fn(true);
+        }
+      catch(...)
+        {
+          actionEnabler->disable();
+          throw;
+        }
+      actionEnabler->disable();
+    }
+  else
+    {
+      fn(false);
+    }
 }
 
 void Combatant::addUndeadFortitude() { _passiveAbilities.insert(AbilityType::UNDEAD_FORTITUDE); }

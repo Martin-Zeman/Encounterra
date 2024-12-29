@@ -10,7 +10,7 @@
 #include <set>
 #include <blaze/Math.h>
 #include "core/interfaces.hpp"
-// #include "combat/action_dag.hpp"
+// #include "combat/action_fsm.hpp"
 #include "core/combatant.hpp"
 #include "core/battle_map.hpp"
 #include "core/threat_utils.hpp"
@@ -166,17 +166,17 @@ namespace enc
    */
 
   // PriorityTransitionsResult
-  // getPostTransitionsOfAllPriorityTransitions(const std::unique_ptr<StateMachine> &protoDag,
+  // getPostTransitionsOfAllPriorityTransitions(const std::unique_ptr<StateMachine> &protoFsm,
   //                                            const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction);
 
   /**
-   *  Builds action DAG for a combatant given the combatant's proto_dag. It determines eligible coords for each
-      action. Then the coords are pre-pended into the proto_dag to form the final DAG. However, Misty Step, Dodge and
+   *  Builds action FSM for a combatant given the combatant's proto_fsm. It determines eligible coords for each
+      action. Then the coords are pre-pended into the proto_fsm to form the final FSM. However, Misty Step, Dodge and
       Disengage require special treatment. Misty Step generates a special form of movement which is added as a transition
       to all post-Misty-Step states. Dodge and Disengage always make sense to be taken before any movement, therefore
       in their case coords are also pre-pended to their follow-up actions.
-      :param combatant: the combatant for whom the DAG is modeled
-      :param proto_dag: DAG (finite state machine) representing all possible actions for combatant. Doesn't model movement.
+      :param combatant: the combatant for whom the FSM is modeled
+      :param proto_fsm: FSM (finite state machine) representing all possible actions for combatant. Doesn't model movement.
       :param transition_name_to_action: dict mapping action names -> actions
       :param distances: the distances to all squares (result of Dijkstra)
       :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
@@ -184,24 +184,24 @@ namespace enc
           - dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
           - dict which maps a movement transition -> to target coord
    */
-  // std::optional<DagBuildResult> buildActionDag(Combatant *combatant, const std::unique_ptr<StateMachine> &protoDag,
+  // std::optional<DagBuildResult> buildActionFSM(Combatant *combatant, const std::unique_ptr<StateMachine> &protoFsm,
   //                                              const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
   //                                              const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths);
 
   /**
-   *  Finds the path through the DAG which represents the movement and actions with the highest calculated threat.
+   *  Finds the path through the FSM which represents the movement and actions with the highest calculated threat.
       We're taking advantage of the fact that as a result of the DFS traversal the coordinates in generated sequences are block-wise.
       Therefore, we can process the sequences by these coord-wise blocks and only call as_if_combatant_position once per block.
       To achieve this, coord_to_sequence_ids needs mapping between a target coordinate to all sequence ids which contain it, needs to be
       built.
-      :param combatant: the combatant for whom the DAG is modeled
-      :param dag: finite state machine representing all possible actions for combatant
+      :param combatant: the combatant for whom the FSM is modeled
+      :param fsm: finite state machine representing all possible actions for combatant
       :param transition_name_to_action: dict mapping non-movement transition names -> action objects
       :param transition_to_eligible_coords: dict mapping non-movement transition names -> their eligible coordinates
       :param movement_transition_to_coord_and_type: dict mapping movement transition names -> target coord, MovementThreatType
       :param distances: potentially already pre-computed distances to all coords
       :param shortest_paths: potentially already pre-computed shortest paths to all coords
-      :return: the longest path in the DAG as per the threat along its edges and nodes and a mapping of transitions names
+      :return: the longest path in the FSM as per the threat along its edges and nodes and a mapping of transitions names
       to special Misty Step paths
    */
   // std::optional<BestSequenceResult>

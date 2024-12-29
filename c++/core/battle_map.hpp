@@ -104,8 +104,8 @@ namespace enc
     void setCombatRound(uint32_t round);
     uint32_t getCombatRound();
     void withCombatantPosition(Combatant* combatant, const Coord& temporaryPosition, const std::function<void()>& fn);
-    void withCombatantWildshapeReplacement(Actoid &actoid, Combatant *combatant, const Coord &origCoords, const std::function<void(bool)> &fn);
-    std::optional<Coord> findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoords = std::nullopt);
+    void withCombatantWildshapeReplacement(Actoid &actoid, Combatant *combatant, const Coord &origCoord, const std::function<void(Combatant *)> &fn);
+    std::optional<Coord> findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoord = std::nullopt);
     std::vector<Combatant*> getPamEligibleCombatants(Combatant* combatant, const Coord& increment) const;
     std::vector<Combatant*> getAooEligibleCombatants(Combatant* combatant, const Coord& increment) const;
 

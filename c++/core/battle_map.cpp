@@ -1602,19 +1602,20 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
       }
   }
 
-  void BattleMap::withCombatantWildshapeReplacement(Actoid &actoid, Combatant *combatant, const Coord &origCoords,
-                                                    const std::function<void(bool)> &fn)
+  void BattleMap::withCombatantWildshapeReplacement(Actoid &actoid, Combatant *combatant, const Coord &origCoord,
+                                                    const std::function<void(Combatant *)> &fn)
   {
-    if(combatant != actoid.getFactory().getCombatant())
+    Combatant *actoidCombatant = actoid.getFactory().getCombatant();
+    if(combatant != actoidCombatant)
       {
         Coords beforeWildshapePosition = getCombatantCoordinates(*combatant);
-        
+
         Teams &teams = Teams::getInstance();
         try
           {
-            teams.replaceCombatant(*combatant, *actoid.getFactory().getCombatant());
+            teams.replaceCombatant(*combatant, *actoidCombatant);
 
-            auto wildshapePosition = findWildshapedCoordinate(combatant, actoid.getFactory().getCombatant()->getSize(), origCoords);
+            auto wildshapePosition = findWildshapedCoordinate(combatant, actoidCombatant->getSize(), origCoord);
 
             if(!wildshapePosition)
               {
@@ -1622,30 +1623,30 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
               }
 
             removeCombatant(*combatant);
-            setCombatantCoordinates(*actoid.getFactory().getCombatant(), *wildshapePosition);
+            setCombatantCoordinates(*actoidCombatant, *wildshapePosition);
 
-            fn(true);
+            fn(actoidCombatant); // Pass the wildshaped form
           }
         catch(...)
           {
-            teams.replaceCombatant(*actoid.getFactory().getCombatant(), *combatant);
-            removeCombatant(*actoid.getFactory().getCombatant());
+            teams.replaceCombatant(*actoidCombatant, *combatant);
+            removeCombatant(*actoidCombatant);
             setCombatantCoordinates(*combatant, beforeWildshapePosition.getRoot());
             throw;
           }
 
         // Restore original state
-        teams.replaceCombatant(*actoid.getFactory().getCombatant(), *combatant);
-        removeCombatant(*actoid.getFactory().getCombatant());
+        teams.replaceCombatant(*actoidCombatant, *combatant);
+        removeCombatant(*actoidCombatant);
         setCombatantCoordinates(*combatant, beforeWildshapePosition.getRoot());
       }
     else
       {
-        fn(false);
+        fn(combatant); // Pass the original combatant
       }
   }
 
-  std::optional<Coord> BattleMap::findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoords)
+  std::optional<Coord> BattleMap::findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoord)
   {
     // Get original position and convert to matrix coordinates
     Coord beforeWildshapeCoord = getCombatantCoordinates(*combatant).getRoot();
@@ -1667,9 +1668,9 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     mapAccessibilityMatrix(matrixCoord[0], matrixCoord[1]) = 1;
 
     // Mark original coordinates if provided
-    if(origCoords)
+    if(origCoord)
       {
-        mapAccessibilityMatrix(_size - (*origCoords)[1] - 1, (*origCoords)[0]) = 1;
+        mapAccessibilityMatrix(_size - (*origCoord)[1] - 1, (*origCoord)[0]) = 1;
       }
 
     // Calculate boundaries for possible positions

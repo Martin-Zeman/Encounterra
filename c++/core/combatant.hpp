@@ -201,6 +201,7 @@ namespace enc
      * @return true if concentration was maintained, false if it was lost
      */
     bool checkConcentration(Combatant *combatant, int dmg);
+    void withActionEnablerEffect(Actoid& action, const std::function<void(bool)>& fn);
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------

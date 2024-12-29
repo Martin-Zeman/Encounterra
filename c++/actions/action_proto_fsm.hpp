@@ -92,22 +92,22 @@ namespace enc
   std::vector<std::shared_ptr<ActoidFactory>> getAllFeasibleActionFactories(Combatant *combatant, int depth);
 
   /**
-   * Finds the path through the DAG which represents all possible movements and actions for a combatant.
-   * The DAG construction takes advantage of the fact that as a result of the DFS traversal, the actions
+   * Finds the path through the FSM which represents all possible movements and actions for a combatant.
+   * The FSM construction takes advantage of the fact that as a result of the DFS traversal, the actions
    * in generated sequences are coordianate-wise. Therefore, we can process the sequences by these
    * coord-wise blocks and call as_if_combatant_position once per block.
    *
-   * @param combatant The combatant for whom the DAG is modeled
+   * @param combatant The combatant for whom the FSM is modeled
    * @return The state machine representing all possible action combinations
    */
-  StateMachine generateProtoDAG(Combatant *combatant);
+  StateMachine generateProtoFSM(Combatant *combatant);
 
   /**
-   * A special variation of generateProtoDAG which generates an action DAG where only Wildshape
+   * A special variation of generateProtoFSM which generates an action FSM where only Wildshape
    * actions are allowed as the first action.
    *
-   * @param combatant The combatant for whom the DAG is modeled
+   * @param combatant The combatant for whom the FSM is modeled
    * @return The state machine representing all possible action combinations starting with Wildshape
    */
-  StateMachine generateWildshapeProtoDAG(Combatant *combatant);
+  StateMachine generateWildshapeProtoFSM(Combatant *combatant);
 }
