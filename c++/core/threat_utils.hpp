@@ -8,6 +8,7 @@
 #include "core/coords.hpp"
 #include "core/battle_map.hpp"
 #include "core/interfaces.hpp"
+#include "core/types.hpp"
 #include "effects/aoe_effect.hpp"
 
 namespace enc
@@ -17,6 +18,22 @@ namespace enc
 
   constexpr double DZ_CONSTANT = 0.33;
   constexpr double MAX_HP_MODIFIER_MULTIPLIER = 1.25;
+
+  struct PathSearchResult
+  {
+    std::vector<double> threat;
+    CoordVector path;
+  };
+
+  struct StateIdPairHash
+  {
+    size_t operator()(const std::pair<StateId, StateId> &p) const
+    {
+      size_t h1 = std::hash<StateId>{}(p.first);
+      size_t h2 = std::hash<StateId>{}(p.second);
+      return h1 ^ (h2 << 1);
+    }
+  };
 
   /**
    *  Calculates the increase in mean dmg for an attack-like ability using a flat to-hit bonus
@@ -92,7 +109,6 @@ namespace enc
    *  Estimates the mean dmg from enemies within radius they'd all attack the combatant
       @param combatant: the potential receiver of the dmg
       @param threatRadius: radius within which enemies are to be considered
-      @param battle_map:
       @param factoryFlags: the kind of factory which is relevant for this calculation(e.g. attacks only or any direct threat...)
       @return: estimated change in dmg, negative for advantage, positive for disadvantage
    */
@@ -101,7 +117,7 @@ namespace enc
   /**
    *  Calculates the probability of a successful saving throw given the DC and the ST bonus
       @param dc: DC
-      @param st_bonus: respective saving throw bonus
+      @param stBonus: respective saving throw bonus
       @return:
    */
   double getSavingThrowSuccessProb(int dc, int stBonus);
@@ -110,7 +126,7 @@ namespace enc
    *
    * Calculates the probability of a saving throw failure given the DC and the ST bonus
     @param dc: DC
-    @param st_bonus: respective saving throw bonus
+    @param stBonus: respective saving throw bonus
     @return:
    */
   double getSavingThrowFailProb(int dc, int stBonus);
@@ -135,19 +151,19 @@ namespace enc
  */
   double getThreatForStayingAtCoord(const Coords &coords, Combatant *combatant);
 
-/**
- *
-    A helper caching function which accumulates threats from AoE and AoO along a path.
-    Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
-    @param curr_coords_data: current coordinate as np.array
-    @param increment: the current coordinate increment
-    @param combatant: the moving combatant
-    @param effect_to_coords: mapping of AoE effects to their coordinates
-    @param disengaged: If True then don't include the AoOs
-    @return: accumulated threat (negative)
- */
+  /**
+   *
+      A helper caching function which accumulates threats from AoE and AoO along a path.
+      Caution: get_aoe_and_aoo_threat_for_increment uses a global cache which may need to be cleared!
+      @param currCoordsData: current coordinate as np.array
+      @param increment: the current coordinate increment
+      @param combatant: the moving combatant
+      @param effectToCoords: mapping of AoE effects to their coordinates
+      @param disengaged: If True then don't include the AoOs
+      @return: accumulated threat (negative)
+   */
   double getAoeAndAooThreatForIncrement(const CoordVector &currCoordsData, const Coord &increment, Combatant *combatant,
-                                        const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords, bool disengaged = false,
+                                        const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords, bool disengaged = false,
                                         bool dodged = false);
 
   /**
@@ -160,9 +176,9 @@ namespace enc
       @param dodged: If True then attacks at the moving combatant are calculated at a disadvantage
       @return: tuple of cumulative threats along the path
    */
-  std::vector<double>
-  accumulateThreatAlongPath(const CoordVector &path, Combatant *combatant,
-                            const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords, bool disengaged = false, bool dodged = false);
+  std::vector<double> accumulateThreatAlongPath(const CoordVector &path, Combatant *combatant,
+                                                const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords,
+                                                bool disengaged = false, bool dodged = false);
 
   /**
    *  Accumulates threats along a path. Also takes into account the threat associated with ending/starting a turn
@@ -172,8 +188,7 @@ namespace enc
       @param effectToCoords: mapping of AoE effects to their coordinates
       @return: accumulated threat (negative)
    */
-  std::pair<std::vector<double>, std::vector<std::string>>
-  calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
-                                 const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords);
+  PathSearchResult calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
+                                                  const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords);
 
 } // namespace enc

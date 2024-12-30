@@ -40,6 +40,34 @@ namespace std {
 namespace enc
 {
 
+  struct SequenceSearchResult
+  {
+    std::vector<std::shared_ptr<Actoid>> sequence;
+    std::pair<std::vector<double>, double> threat;
+    std::unordered_map<std::shared_ptr<Actoid>, CoordVector> msTransitionPaths;
+  };
+
+  struct ActoidVectorHash
+  {
+    size_t operator()(const std::vector<std::shared_ptr<Actoid>> &vec) const
+    {
+      size_t hash = 0;
+      for(const auto &actoid : vec)
+        {
+          hash ^= actoid->getHash() + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        }
+      return hash;
+    }
+  };
+
+  // struct ActoidVectorEqual
+  // {
+  //   bool operator()(const std::vector<std::shared_ptr<Actoid>> &lhs, const std::vector<std::shared_ptr<Actoid>> &rhs) const
+  //   {
+  //     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin(), [](const auto &l, const auto &r) { return l == r; });
+  //   }
+  // };
+
   struct ActionSequence
   {
     std::vector<std::shared_ptr<Actoid>> actions;
