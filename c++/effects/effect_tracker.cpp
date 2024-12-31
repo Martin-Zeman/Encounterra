@@ -76,7 +76,7 @@ namespace enc
     _effects = std::move(remainingEffects);
   }
 
-  std::unordered_set<std::shared_ptr<Effect>> EffectTracker::getAffectingCombatant(Combatant *combatant) const
+  std::vector<std::shared_ptr<Effect>> EffectTracker::getAffectingCombatant(Combatant *combatant) const
   {
     std::unordered_set<std::shared_ptr<Effect>> affectingEffects;
     for(const auto &effect : _effects)

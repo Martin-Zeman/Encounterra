@@ -32,7 +32,32 @@ namespace enc
 
   class ActoidFactory;
 
-  class Actoid
+  class BasicThreat
+  {
+  public:
+    virtual ~BasicThreat() = default;
+    virtual double calculateThreat(const Kwargs &kwargs) { return 0; };
+    virtual double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; };
+  };
+
+  class DirectThreat
+  {
+  public:
+    virtual ~DirectThreat() = default;
+    virtual double calculateThreatDelta(const ThreatModifiers &modifiers) const { return 0; };
+  };
+
+  class AoeThreat
+  {
+  public:
+    virtual ~AoeThreat() = default;
+    virtual double threatOnEnter(Combatant *target, const Kwargs &kwargs) const { return 0; };
+    virtual double threatOnMoveWithin(Combatant *target, const Kwargs &kwargs) const { return 0; };
+    virtual double threatOnStartOfTurn(Combatant *target, const Kwargs &kwargs) const { return 0; };
+    virtual double threatOnEndOfTurn(Combatant *target, const Kwargs &kwargs) const { return 0; };
+  };
+
+  class Actoid : public BasicThreat
   {
     mutable std::optional<size_t> _cachedHash;
 
@@ -67,6 +92,18 @@ namespace enc
     AbilityType _abilityType;
 
     virtual size_t hash() const = 0;
+  };
+
+  class AttackThreatModifier : public Actoid
+  {
+  protected:
+    AttackThreatModifier(ActoidFactory &factory, ActoidFlags flags = ActoidFlags::DEFAULT) : Actoid(factory, flags | ActoidFlags::IS_ATTACK_MODIFIER)
+    {}
+
+  public:
+    virtual ~AttackThreatModifier() = default;
+
+    virtual double calculateThreatForAttack(Combatant *combatant, Actoid *attack, const Kwargs &kwargs) = 0;
   };
 
   enum class FactoryFlags : uint32_t
@@ -142,35 +179,10 @@ namespace enc
     virtual double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const { return 0; }; //  Not always needed
   };
 
-  class Threat
-  {
-  public:
-    virtual ~Threat() = default;
-    virtual double calculateThreat(const Kwargs &kwargs) { return 0; };
-    virtual double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; };
-  };
-
-  class DirectThreat : public Threat
-  {
-  public:
-    virtual ~DirectThreat() = default;
-    virtual double calculateThreatDelta(const ThreatModifiers &modifiers) const { return 0; };
-  };
-
-  class AoeThreat : public Threat
-  {
-  public:
-    virtual ~AoeThreat() = default;
-    virtual double threatOnEnter(Combatant *target, const Kwargs & kwargs) const { return 0; };
-    virtual double threatOnMoveWithin(Combatant *target, const Kwargs & kwargs) const { return 0; };
-    virtual double threatOnStartOfTurn(Combatant *target, const Kwargs & kwargs) const { return 0; };
-    virtual double threatOnEndOfTurn(Combatant *target, const Kwargs & kwargs) const { return 0; };
-  };
-
   /**
    * A factory that modifies the user and the factories they have at their disposal
    */
-  class TransformerFactory : public Threat, public ActoidFactory
+  class TransformerFactory : public BasicThreat, public ActoidFactory
   {
   public:
     explicit TransformerFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType)

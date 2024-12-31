@@ -37,7 +37,7 @@ namespace enc
     Resource *_resource;
   };
 
-  class MistyStep : public Actoid, public Threat
+  class MistyStep : public Actoid
   {
   public:
     MistyStep(const Coord &coord, const MistyStepFactory &factory)

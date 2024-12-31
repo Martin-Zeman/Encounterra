@@ -137,7 +137,13 @@ namespace enc
     BattleMap::getInstance().removeCombatantIfDead(*target);
   }
 
-  std::shared_ptr<Actoid> ActionResolver::handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant *combatant)
+  ActionResult resolveByActoidFlags(const std::shared_ptr<Actoid> &action, Combatant *combatant)
+  {
+    // TODO:
+    return ActionResult::MISS;
+  }
+
+  std::shared_ptr<Actoid> handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant *combatant)
   {
     if(action->getFactory().getAbilityType() == AbilityType::STANDARD_MOVEMENT)
       {
@@ -157,35 +163,32 @@ namespace enc
     return nullptr;
   }
 
-  ActionResult ActionResolver::resolveByActoidFlags(const std::shared_ptr<Actoid> &action, Combatant *combatant)
+  ActionResult resolveAction(const std::shared_ptr<Actoid> &action, Combatant *combatant)
   {
-    // TODO:
-    return ActionResult::MISS;
-  }
-
-ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action, Combatant* combatant) 
-{
     // Takes care of possible wildshape
     combatant = combatant->getCurrentForm();
 
-    if (!action) {
+    if(!action)
+      {
         return ActionResult::UNFEASIBLE;
-    }
+      }
 
-    if (!checkFeasibility(combatant, *action)) {
+    if(!checkFeasibility(combatant, *action))
+      {
         auto newAction = handleErrorCase(action, combatant);
-        if (!newAction) {
+        if(!newAction)
+          {
             return ActionResult::UNFEASIBLE;
-        }
+          }
         useResources(combatant, *newAction);
         return resolveByActoidFlags(newAction, combatant);
-    }
+      }
 
     useResources(combatant, *action);
     return resolveByActoidFlags(action, combatant);
-}
+  }
 
-  void ActionResolver::resolveEffects(const std::unordered_set<std::shared_ptr<Effect>> &effects, Combatant *combatant)
+  void resolveEffects(const std::vector<std::shared_ptr<Effect>> &effects, Combatant *combatant)
   {
     for(const auto &effect : effects)
       {
@@ -235,4 +238,4 @@ ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action
           }
       }
   }
-  } // namespace enc
+} // namespace enc

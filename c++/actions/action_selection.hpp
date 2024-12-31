@@ -16,25 +16,27 @@
 #include "core/threat_utils.hpp"
 #include "core/state_machine.hpp"
 
-struct TransitionSet {
-    std::set<std::string> transitions;
-    
-    bool operator==(const TransitionSet& other) const {
-        return transitions == other.transitions;
-    }
+struct TransitionSet
+{
+  std::set<std::string> transitions;
+
+  bool operator==(const TransitionSet &other) const { return transitions == other.transitions; }
 };
 
-namespace std {
-    template<>
-    struct hash<TransitionSet> {
-        size_t operator()(const TransitionSet& ts) const {
-            size_t hash = 0;
-            for (const auto& str : ts.transitions) {
-                hash ^= std::hash<std::string>{}(str) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            }
-            return hash;
+namespace std
+{
+  template <> struct hash<TransitionSet>
+  {
+    size_t operator()(const TransitionSet &ts) const
+    {
+      size_t hash = 0;
+      for(const auto &str : ts.transitions)
+        {
+          hash ^= std::hash<std::string>{}(str) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
         }
-    };
+      return hash;
+    }
+  };
 }
 
 namespace enc
@@ -102,19 +104,22 @@ namespace enc
     }
   };
 
+  using ThreatScore = std::pair<std::vector<double>, double>; // [movement threat, action threat]
+
   using MovementTransitionMap = std::unordered_map<std::string, std::pair<Coord, MovementThreatType>>;
   using TransitionToEligibleCoords = std::unordered_map<std::string, CoordVector>;
-  using SequenceToThreat = std::unordered_map<size_t, std::pair<std::vector<double>, double>>; // first part is the movement component of the threat, second is the action component
+  using SequenceToThreat = std::unordered_map<size_t, std::pair<std::vector<double>, double>>; // first part is the movement component of the threat,
+                                                                                               // second is the action component
   using TransitionStepThreat = std::unordered_map<size_t, std::unordered_map<size_t, double>>;
   using CoordToSequenceIds = std::unordered_map<std::pair<Coord, MovementThreatType>, std::vector<size_t>>;
   using TransitionToMsPath = std::unordered_map<std::string, std::vector<std::string>>;
 
-//   struct DagBuildResult
-//   {
-//     std::unique_ptr<StateMachine> dag;
-//     MovementTransitionMap movementMap;
-//     TransitionToEligibleCoords eligibleCoords;
-//   };
+  //   struct DagBuildResult
+  //   {
+  //     std::unique_ptr<StateMachine> dag;
+  //     MovementTransitionMap movementMap;
+  //     TransitionToEligibleCoords eligibleCoords;
+  //   };
 
   struct DagBuildResult
   {
@@ -134,10 +139,8 @@ namespace enc
                                                        const std::unordered_map<size_t, std::string> &indexToTransition,
                                                        const std::unordered_map<std::string, std::string> &transitionToSimplified);
 
-  CoordToSequenceIds
-  createCoordToSequenceMapping(const std::vector<std::vector<std::string>> &sequences, const MovementTransitionMap &movementTransitionToCoordAndType);
 
-  double getDistToActionSequenceCoord(const std::vector<std::string> &sequence, const blaze::DynamicVector<int> &distances);
+  double getDistToActionSequenceCoord(const std::vector<std::shared_ptr<Actoid>> &sequence, const blaze::DynamicVector<int> &distances);
 
   /**
    *  Filters, minimizes, and sorts action sequences to find the one with maximum threat while maintaining minimum distance.
@@ -169,74 +172,17 @@ namespace enc
                         const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction);
 
   /**
-   *     A helper function which decodes an action which represents movement with the possibility of including Misty Step into a sequence of
-      actions which look like: regular movement (optional), Misty Step, regular movement (optional)
-      :param combatant: the combatant for whom the actions are translated
-      :param initial_coord: the initial coordinate of the combatant
-      :param ms_path: name of the current action to be decoded
-      :param actions: the list of actions to which we add the resulting sequence
-      :param ms_factory: Optimization to avoid reallocation: Misty Step factory instance
-      :return: None but actions shall be modified
+   * Finds the path through the FSM which represents the movement and actions with the highest calculated threat.
+   * We take advantage of the fact that as a result of the DFS traversal the coordinates in generated sequences
+   * are block-wise. Therefore, we can process the sequences by these coord-wise blocks and only call
+   * as_if_combatant_position once per block.
    */
-  void decodeMsPathToActions(Combatant *combatant, const Coord &initialCoord, const std::vector<std::string> &msPath,
-                             std::vector<std::shared_ptr<Actoid>> &actions, std::shared_ptr<ActoidFactory>& msFactory);
-
-  /**
-   *  Translates the string form of the longest path back to action objects
-      :param combatant: the combatant for whom the actions are translated
-      :param distances: potentially already pre-computed distances to all coords
-      :param shortest_paths: potentially already pre-computed shortest paths to all coords
-      :param transition_name_to_action: dictionary mapping of non-movement types to actions
-      :param movement_trans_to_coord_and_type: mapping from movement transition -> coord, MovementThreatType
-      :param sequence: list of best actions as strings
-      :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
-      :return: list of the following types: np.array, action, bonus action
-   */
-
-  // PriorityTransitionsResult
-  // getPostTransitionsOfAllPriorityTransitions(const std::unique_ptr<StateMachine> &protoFsm,
-  //                                            const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction);
-
-  /**
-   *  Builds action FSM for a combatant given the combatant's proto_fsm. It determines eligible coords for each
-      action. Then the coords are pre-pended into the proto_fsm to form the final FSM. However, Misty Step, Dodge and
-      Disengage require special treatment. Misty Step generates a special form of movement which is added as a transition
-      to all post-Misty-Step states. Dodge and Disengage always make sense to be taken before any movement, therefore
-      in their case coords are also pre-pended to their follow-up actions.
-      :param combatant: the combatant for whom the FSM is modeled
-      :param proto_fsm: FSM (finite state machine) representing all possible actions for combatant. Doesn't model movement.
-      :param transition_name_to_action: dict mapping action names -> actions
-      :param distances: the distances to all squares (result of Dijkstra)
-      :param shortest_paths: the shortest paths to all squares (result of Dijkstra)
-      :return: Tuple of:
-          - dict which maps threat -> (start_index, end_index) and a mapping from state name -> coord
-          - dict which maps a movement transition -> to target coord
-   */
-  // std::optional<DagBuildResult> buildActionFSM(Combatant *combatant, const std::unique_ptr<StateMachine> &protoFsm,
-  //                                              const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-  //                                              const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths);
-
-  /**
-   *  Finds the path through the FSM which represents the movement and actions with the highest calculated threat.
-      We're taking advantage of the fact that as a result of the DFS traversal the coordinates in generated sequences are block-wise.
-      Therefore, we can process the sequences by these coord-wise blocks and only call as_if_combatant_position once per block.
-      To achieve this, coord_to_sequence_ids needs mapping between a target coordinate to all sequence ids which contain it, needs to be
-      built.
-      :param combatant: the combatant for whom the FSM is modeled
-      :param fsm: finite state machine representing all possible actions for combatant
-      :param transition_name_to_action: dict mapping non-movement transition names -> action objects
-      :param transition_to_eligible_coords: dict mapping non-movement transition names -> their eligible coordinates
-      :param movement_transition_to_coord_and_type: dict mapping movement transition names -> target coord, MovementThreatType
-      :param distances: potentially already pre-computed distances to all coords
-      :param shortest_paths: potentially already pre-computed shortest paths to all coords
-      :return: the longest path in the FSM as per the threat along its edges and nodes and a mapping of transitions names
-      to special Misty Step paths
-   */
-  // std::optional<BestSequenceResult>
-  // findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-  //                  const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
-  //                  const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
-  //                  double infeasibilityMultiplier = 0.5);
+  SequenceSearchResult
+  findBestSequence(Combatant *combatant, const StateMachine &fsm,
+                   const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
+                   std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
+                   const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
+                   double infeasibilityMultiplier = 0.5);
 
   /**
    *     Calculates the next best action. The algorithm works in two phases. In the first phase when the combatant still has movement left,

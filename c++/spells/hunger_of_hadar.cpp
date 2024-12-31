@@ -126,7 +126,7 @@ namespace enc
     return totalThreat;
   }
 
-  double HungerOfHadar::calculateThreatDelta(const ThreatModifiers &modifiers)
+  double HungerOfHadar::calculateThreatDelta(const ThreatModifiers &modifiers) const
   {
     return 0.0; // Not relevant for this ability
   }
@@ -161,8 +161,8 @@ namespace enc
 
     if(!_factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
-        return getFreeCoordsInCartesianRange(Coords(_origin), distances, _factory._combatant->getSize(),
-                                                  HungerOfHadarFactory::range, _factory._combatant->_instanceId);
+        return battleMap.getFreeCoordsInCartesianRange(Coords(_origin), distances, _factory._combatant->getSize(),
+                                                  static_cast<int>(HungerOfHadarFactory::range), _factory._combatant->_instanceId);
       }
 
     const Coords &combatantPos = battleMap.getCombatantCoordinates(*_factory._combatant);

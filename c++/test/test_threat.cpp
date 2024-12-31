@@ -522,11 +522,11 @@ TEST_F(ThreatUtilsTest, RangedSpellWithEnemyAdjacent) {
 
     auto fireboltFactory = FireboltFactory(6, AbilityType::FIREBOLT, draconic_sorcerer_lvl_1, &draconic_sorcerer_lvl_1->getSpellslots());
     auto firebolt = fireboltFactory.create(bugbear);
-    auto threatEnemyAdjacent = std::dynamic_pointer_cast<Threat>(firebolt)->calculateThreat({});
+    auto threatEnemyAdjacent = std::dynamic_pointer_cast<BasicThreat>(firebolt)->calculateThreat({});
 
     battleMap->moveCombatant(*draconic_sorcerer_lvl_1, Coord{2, 14});
     // firebolt->clearCache();
-    auto threatNoEnemyAdjacent = std::dynamic_pointer_cast<Threat>(firebolt)->calculateThreat({});
+    auto threatNoEnemyAdjacent = std::dynamic_pointer_cast<BasicThreat>(firebolt)->calculateThreat({});
 
     EXPECT_GT(threatNoEnemyAdjacent, threatEnemyAdjacent);
 }
@@ -541,10 +541,10 @@ TEST_F(ThreatUtilsTest, RangedAttackWithEnemyAdjacent) {
 
     std::shared_ptr<ActoidFactory> shortbowAttack = goblin->getActionFactory(AbilityType::RANGED_ATTACK).lock();
     auto shortbowAtBugbear = shortbowAttack->create(bugbear);
-    auto threatEnemyAdjacent = std::dynamic_pointer_cast<Threat>(shortbowAtBugbear)->calculateThreat({});
+    auto threatEnemyAdjacent = std::dynamic_pointer_cast<BasicThreat>(shortbowAtBugbear)->calculateThreat({});
 
     battleMap->moveCombatant(*goblin, Coord{2, 14});
-    auto threatNoEnemyAdjacent = std::dynamic_pointer_cast<Threat>(shortbowAtBugbear)->calculateThreat({});
+    auto threatNoEnemyAdjacent = std::dynamic_pointer_cast<BasicThreat>(shortbowAtBugbear)->calculateThreat({});
 
     EXPECT_GT(threatNoEnemyAdjacent, threatEnemyAdjacent);
 }
@@ -572,7 +572,6 @@ TEST_F(ThreatUtilsTest, CalcThreatForPathWithMistyStepScenario1) {
 
     std::vector<std::shared_ptr<Actoid>> actoids;
     std::shared_ptr<ActoidFactory> msFactory = std::make_shared<MistyStepFactory>(draconic_sorcerer_lvl_5, &draconic_sorcerer_lvl_5->getSpellslots());
-    decodeMsPathToActions(draconic_sorcerer_lvl_5, battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_5).getRoot(), maxThreatPath, actoids, msFactory);
 
     EXPECT_EQ(actoids.size(), 6);
     EXPECT_TRUE(dynamic_cast<MovementIncrement*>(actoids[0].get()) != nullptr);
