@@ -1,6 +1,7 @@
 #include "actions/action_selection.hpp"
 #include "actions/movement.hpp"
 #include "actions/action_proto_fsm.hpp"
+#include "actions/break_grapple.hpp"
 #include "core/battle_map.hpp"
 #include "core/geometry.hpp"
 #include "effects/effect_tracker.hpp"
@@ -196,7 +197,7 @@ getNearestAndMinimize(
 SequenceSearchResult
 findBestSequence(Combatant *combatant, const StateMachine &fsm,
                  const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
-                 std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
+                 std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndMovementType,
                  const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
 {
   auto &battleMap = BattleMap::getInstance();
@@ -219,15 +220,15 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
   std::unordered_map<size_t, std::unordered_map<size_t, double>> sequenceIdxToTransitionStepThreat;
 
   // Track coordinate mappings
-  using CoordAndType = std::pair<Coord, MovementThreatType>;
-  std::unordered_map<CoordAndType, std::vector<size_t>> coordToSequenceIds;
+  using CoordAndMovementType = std::pair<Coord, MovementThreatType>;
+  std::unordered_map<CoordAndMovementType, std::vector<size_t>> coordToSequenceIds;
   // Remove Misty Step to current coordinate if it exists
   Coord currentCoords = battleMap.getCombatantCoordinates(*combatant).getRoot();
-  for(auto it = movementTransToCoordAndType.begin(); it != movementTransToCoordAndType.end();)
+  for(auto it = movementTransToCoordAndMovementType.begin(); it != movementTransToCoordAndMovementType.end();)
     {
       if(it->second.first == currentCoords && it->first->getAbilityType() == AbilityType::MISTY_STEP)
         {
-          it = movementTransToCoordAndType.erase(it);
+          it = movementTransToCoordAndMovementType.erase(it);
         }
       else
         {
@@ -236,8 +237,8 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
     }
 
   // DFS helper function
-  std::function<void(StateId, std::vector<std::shared_ptr<Actoid>> &, const CoordAndType *)> dfs;
-  dfs = [&](StateId currentState, std::vector<std::shared_ptr<Actoid>> &currentSequence, const CoordAndType *coord) {
+  std::function<void(StateId, std::vector<std::shared_ptr<Actoid>> &, const CoordAndMovementType *)> dfs;
+  dfs = [&](StateId currentState, std::vector<std::shared_ptr<Actoid>> &currentSequence, const CoordAndMovementType *coord) {
     if(currentState == -1)
       { // NOP state
         // Create sequence set without depth indicators
@@ -273,9 +274,9 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
       {
         currentSequence.push_back(action);
 
-        auto it = movementTransToCoordAndType.find(action);
-        const CoordAndType *newCoord = coord;
-        if(it != movementTransToCoordAndType.end())
+        auto it = movementTransToCoordAndMovementType.find(action);
+        const CoordAndMovementType *newCoord = coord;
+        if(it != movementTransToCoordAndMovementType.end())
           {
             newCoord = &it->second;
           }
@@ -366,7 +367,7 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
                       }
 
                     // Skip movement transitions
-                    if(movementTransToCoordAndType.contains(action))
+                    if(movementTransToCoordAndMovementType.contains(action))
                       {
                         continue;
                       }
@@ -483,6 +484,61 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
     = getNearestAndMinimize(sequences, sortedSequences, sequenceToThreat, distances, sequenceIdxToTransitionStepThreat);
 
   return {std::move(nearestSequence), std::move(maxThreat), std::move(transitionToMsPath)};
+}
+
+std::shared_ptr<Actoid> getAction(Combatant *combatant)
+{
+  auto &battleMap = BattleMap::getInstance();
+  // battleMap.clearCaches();
+
+  // Get current form (handles possible wildshape)
+  combatant = combatant->getCurrentForm();
+
+  // Handle grapple condition
+  if(auto grappleCondition = combatant->needsToBreakOutOfGrapple())
+    {
+      if(combatant->hasAction())
+        {
+          auto factory = std::make_unique<BreakGrappleFactory>(grappleCondition);
+          return factory->create(nullptr);
+        }
+    }
+
+  // Handle prone condition
+  if(combatant->isAffectedBy(Conditions::PRONE) && combatant->getMovement() >= combatant->getSpeed() / 2)
+    {
+      auto factory = std::make_unique<GetUpFactory>(combatant);
+      return factory->create(nullptr);
+    }
+
+  // Calculate paths
+  auto [distances, shortestPaths] = battleMap.calcDijkstra(*combatant);
+  combatant->setShortestPathsCache(shortestPaths);
+
+  // Check existing action plan
+  if(!combatant->getActionPlan().empty())
+    {
+      auto firstAction = combatant->getActionPlan().front();
+      if(auto *movement = dynamic_cast<MovementIncrement *>(firstAction.get()))
+        {
+          if(combatant->getMovement() > 0)
+            {
+              combatant->popActionPlan();
+              return firstAction;
+            }
+        }
+    }
+
+  // Calculate new action plan
+  auto newPlan = combatant->calculateActionPlan(distances, shortestPaths);
+  combatant->setActionPlan(std::move(newPlan));
+
+  if(combatant->getActionPlan().empty())
+    {
+      return nullptr; // Either no action possible or all actions already used
+    }
+
+  return combatant->popActionPlan();
 }
 
 } // namespace enc

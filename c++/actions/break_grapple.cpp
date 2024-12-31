@@ -1,0 +1,14 @@
+#include "actions/break_grapple.hpp"
+
+namespace enc
+{
+
+  BreakGrappleFactory::BreakGrappleFactory(Condition *grappleCondition)
+      : ActoidFactory("BreakGrappleFactory", "Break Grapple", nullptr, AbilityType::BREAK_GRAPPLE), _grappleCondition(grappleCondition)
+  {}
+
+  std::shared_ptr<Actoid> BreakGrappleFactory::create(void *target) { return std::make_shared<BreakGrapple>(*this); }
+
+  BreakGrapple::BreakGrapple(BreakGrappleFactory &factory) : Actoid(factory, ActoidFlags::IS_BREAK_GRAPPLE, AbilityType::BREAK_GRAPPLE) {}
+
+} // namespace enc

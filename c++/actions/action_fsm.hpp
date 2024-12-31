@@ -39,6 +39,12 @@ namespace enc
     }
   };
 
+  struct ActionDagResult
+  {
+    StateMachine fsm;
+    std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> movementTransToCoordAndType;
+    std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> transitionToEligibleCoords;
+  };
   // Regular expressions for movement patterns
   extern const std::regex regexMovementPattern;
   extern const std::regex regexMsMovementPattern;
@@ -127,8 +133,7 @@ namespace enc
    * @param shortestPaths The shortest paths to all squares (result of Dijkstra)
    * @return Tuple of final FSM and mapping from movement actions to (coord, MovementThreatType)
    */
-  std::pair<StateMachine, std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>>>
-  buildActionDag(Combatant *combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
-                 const blaze::DynamicMatrix<Coord> &shortestPaths);
+  ActionDagResult buildActionDag(Combatant *combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
+                                 const blaze::DynamicMatrix<Coord> &shortestPaths);
 
 } // namespace enc

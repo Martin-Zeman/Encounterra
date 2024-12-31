@@ -227,9 +227,8 @@ namespace enc
       }
   }
 
-  std::pair<StateMachine, std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>>>
-  buildActionDag(Combatant *combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
-                 const blaze::DynamicMatrix<Coord> &shortestPaths)
+  ActionDagResult buildActionDag(Combatant *combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
+                                 const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     auto &battleMap = BattleMap::getInstance();
     battleMap.calcVisibilityDictForAllCoords(combatant, shortestPaths);
@@ -328,7 +327,7 @@ namespace enc
     buildPriorityTransitions(fsm, postPriorityBonusActionTransitions, transitionToEligibleCoords, movementTransToCoordAndType,
                              PRIORITY_BONUS_ACTIONS);
 
-    return {std::move(fsm), std::move(movementTransToCoordAndType)};
+    return {std::move(fsm), std::move(movementTransToCoordAndType), std::move(transitionToEligibleCoords)};
   }
 
 } // namespace enc

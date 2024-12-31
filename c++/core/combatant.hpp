@@ -21,6 +21,7 @@
 #include "core/spellslots.hpp"
 #include "actions/action_types.hpp"
 #include "actions/action_constants.hpp"
+#include "actions/action_plan_strategy.hpp"
 #include "spells/firebolt.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
@@ -202,6 +203,12 @@ namespace enc
      */
     bool checkConcentration(Combatant *combatant, int dmg);
     void withActionEnablerEffect(Actoid& action, const std::function<void(bool)>& fn);
+    const std::vector<std::shared_ptr<Actoid>> &getActionPlan() const;
+    void setActionPlan(std::vector<std::shared_ptr<Actoid>> plan);
+    std::shared_ptr<Actoid> popActionPlan(); // Removes and returns first action
+    void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &cache);
+    std::vector<std::shared_ptr<Actoid>>
+    calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths);
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -514,7 +521,8 @@ namespace enc
     ResourceDepletionLevel _resouceDepletionLevel;
     std::shared_ptr<Spellslots> _spellslots;
     std::unordered_map<AbilityType, std::shared_ptr<Resource>> _resources;
-    std::vector<Actoid> _actionPlan; // TODO: This needs to support movement as well
+    std::unique_ptr<ActionPlanStrategy> _actionPlanStrategy;
+    std::vector<std::shared_ptr<Actoid>> _actionPlan;
     int _weaponDmgDealtThisTurn = 0; // This is used for ActionSurge
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
     std::weak_ptr<Effect> _concentrationEffect;

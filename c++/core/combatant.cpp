@@ -547,4 +547,23 @@ void Combatant::removeImmunity(DamageType dmgType) { _immunities.erase(dmgType);
 void Combatant::addVulnerability(DamageType dmgType) { _vulnerabities.insert(dmgType); }
 
 void Combatant::removeVulnerability(DamageType dmgType) { _vulnerabities.erase(dmgType); }
+
+std::vector<std::shared_ptr<Actoid>>
+Combatant::calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+{
+  return _actionPlanStrategy->calculateActionPlan(distances, shortestPaths);
 }
+
+const std::vector<std::shared_ptr<Actoid>> &Combatant::getActionPlan() const { return _actionPlan; }
+
+void Combatant::setActionPlan(std::vector<std::shared_ptr<Actoid>> plan) { _actionPlan = std::move(plan); }
+
+std::shared_ptr<Actoid> Combatant::popActionPlan()
+{
+  if(_actionPlan.empty())
+    return nullptr;
+  auto action = _actionPlan.front();
+  _actionPlan.erase(_actionPlan.begin());
+  return action;
+}
+} // namespace enc
