@@ -3,7 +3,7 @@
 namespace enc
 {
 
-  BreakGrappleFactory::BreakGrappleFactory(Condition *grappleCondition)
+  BreakGrappleFactory::BreakGrappleFactory(std::weak_ptr<ConditionWithDC> grappleCondition)
       : ActoidFactory("BreakGrappleFactory", "Break Grapple", nullptr, AbilityType::BREAK_GRAPPLE), _grappleCondition(grappleCondition)
   {}
 

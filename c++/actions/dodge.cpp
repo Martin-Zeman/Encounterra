@@ -20,4 +20,12 @@ namespace enc
   }
 
   std::string Dodge::toString() const { return "Dodge"; }
+
+  size_t Dodge::hash() const {
+    return std::hash<int>{}(static_cast<int>(getAbilityType()));
+  }
+
+  bool Dodge::equals(const Actoid &other) const {
+    return getAbilityType() == other.getAbilityType();
+  }
 }

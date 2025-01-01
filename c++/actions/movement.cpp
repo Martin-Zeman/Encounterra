@@ -63,4 +63,15 @@ namespace enc
       }
     return false;
   }
+
+  size_t GetUpFromProne::hash() const { return std::hash<int>{}(static_cast<int>(getFlags())); }
+
+  bool GetUpFromProne::equals(const Actoid &other) const
+  {
+    if(auto *getUp = dynamic_cast<const GetUpFromProne *>(&other))
+      {
+        return getFlags() == other.getFlags();
+      }
+    return false;
+  }
 }

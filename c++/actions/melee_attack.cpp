@@ -56,4 +56,23 @@ namespace enc
 
     return {};
   }
+
+  size_t MeleeAttack::hash() const
+  {
+    size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));
+    h ^= std::hash<int>{}(static_cast<int>(getFlags())) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_target._instanceId) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<std::string>{}(_factory._name) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
+
+  bool MeleeAttack::equals(const Actoid &other) const
+  {
+    if(auto *meleeAttack = dynamic_cast<const MeleeAttack *>(&other))
+      {
+        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _target._instanceId == meleeAttack->_target._instanceId
+               && _factory._name == meleeAttack->_factory._name;
+      }
+    return false;
+  }
 }

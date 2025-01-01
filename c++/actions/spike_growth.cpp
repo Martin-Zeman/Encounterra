@@ -1,9 +1,9 @@
-#include "spells/cloud_of_daggers.hpp"
+#include "spells/spike_growth.hpp"
 
 namespace enc
 {
 
-  size_t CloudOfDaggers::hash() const
+  size_t SpikeGrowth::hash() const
   {
     size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));
     h ^= std::hash<int>{}(static_cast<int>(getFlags())) + 0x9e3779b9 + (h << 6) + (h >> 2);
@@ -12,11 +12,11 @@ namespace enc
     return h;
   }
 
-  bool CloudOfDaggers::equals(const Actoid &other) const
+  bool SpikeGrowth::equals(const Actoid &other) const
   {
-    if(auto *cloudOfDaggers = dynamic_cast<const CloudOfDaggers *>(&other))
+    if(auto *spikeGrowth = dynamic_cast<const SpikeGrowth *>(&other))
       {
-        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _coord == cloudOfDaggers->_coord;
+        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _coord == spikeGrowth->_coord;
       }
     return false;
   }

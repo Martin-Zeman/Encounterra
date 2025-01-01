@@ -12,84 +12,22 @@
 #include <iostream>
 
 // Hash for CoordToSequenceIds
-namespace std {
-    template<>
-    struct hash<std::pair<std::array<int, 2>, enc::MovementThreatType>> {
-        size_t operator()(const std::pair<std::array<int, 2>, enc::MovementThreatType>& p) const {
-            size_t h1 = std::hash<int>{}(p.first[0]);
-            size_t h2 = std::hash<int>{}(p.first[1]);
-            size_t h3 = std::hash<std::underlying_type_t<enc::MovementThreatType>>{}(
-                static_cast<std::underlying_type_t<enc::MovementThreatType>>(p.second)
-            );
+// namespace std {
+//     template<>
+//     struct hash<std::pair<std::array<int, 2>, enc::MovementThreatType>> {
+//         size_t operator()(const std::pair<std::array<int, 2>, enc::MovementThreatType>& p) const {
+//             size_t h1 = std::hash<int>{}(p.first[0]);
+//             size_t h2 = std::hash<int>{}(p.first[1]);
+//             size_t h3 = std::hash<std::underlying_type_t<enc::MovementThreatType>>{}(
+//                 static_cast<std::underlying_type_t<enc::MovementThreatType>>(p.second)
+//             );
             
-            return h1 ^ (h2 << 1) ^ (h3 << 2);
-        }
-    };
-}
+//             return h1 ^ (h2 << 1) ^ (h3 << 2);
+//         }
+//     };
+// }
 
 namespace enc {
-
-namespace {
-    const std::regex REGEX_MOVEMENT_PATTERN(R"(([msdchio]+)_\((\d+), (\d+)\))");
-    const std::regex REGEX_MS_MOVEMENT_PATTERN(R"([mschdio_]+\((\d+), (\d+)\))");
-}
-
-std::vector<std::vector<std::string>> pruneSequences(const std::vector<std::vector<std::string>> &sequences,
-                                                     const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-                                                     const std::unordered_map<size_t, std::string> &indexToTransition,
-                                                     const std::unordered_map<std::string, std::string> &transitionToSimplified)
-{
-  std::set<std::string> sequenceSets;
-  std::vector<std::vector<std::string>> prunedSequences;
-
-  for(const auto &sequence : sequences)
-    {
-      std::set<std::string> currentSequenceSet;
-      for(const auto &txIdx : sequence)
-        {
-          auto it = transitionToSimplified.find(txIdx);
-          if(it != transitionToSimplified.end())
-            {
-              currentSequenceSet.insert(it->second);
-            }
-        }
-
-      std::string setKey = std::accumulate(currentSequenceSet.begin(), currentSequenceSet.end(), std::string{},
-                                           [](const std::string &a, const std::string &b) { return a + "," + b; });
-
-      if(sequenceSets.find(setKey) == sequenceSets.end())
-        {
-          prunedSequences.push_back(sequence);
-          sequenceSets.insert(setKey);
-        }
-      else
-        {
-          bool hasAttackModifier = false;
-          for(const auto &tx : sequence)
-            {
-              try
-                {
-                  const auto &action = transitionNameToAction.at(indexToTransition.at(std::stoul(tx)));
-                  if(action->hasFlag(ActoidFlags::IS_ATTACK_MODIFIER))
-                    {
-                      hasAttackModifier = true;
-                      break;
-                    }
-                }
-              catch(const std::exception &)
-                {
-                  continue;
-                }
-            }
-          if(hasAttackModifier)
-            {
-              prunedSequences.push_back(sequence);
-            }
-        }
-    }
-  return prunedSequences;
-}
-
 
 double getDistToActionSequenceCoord(const std::vector<std::shared_ptr<Actoid>> &sequence, const blaze::DynamicVector<int> &distances)
 {
@@ -494,14 +432,12 @@ std::shared_ptr<Actoid> getAction(Combatant *combatant)
   // Get current form (handles possible wildshape)
   combatant = combatant->getCurrentForm();
 
-  // Handle grapple condition
-  if(auto grappleCondition = combatant->needsToBreakOutOfGrapple())
+  // Handle grapple condition, TODO: Add more intelligence to this
+  auto grappleConditions = combatant->needsToBreakOutOfGrapple();
+  if(!grappleConditions.empty() && combatant->hasAction())
     {
-      if(combatant->hasAction())
-        {
-          auto factory = std::make_unique<BreakGrappleFactory>(grappleCondition);
-          return factory->create(nullptr);
-        }
+      auto factory = std::make_unique<BreakGrappleFactory>(grappleConditions[0]);
+      return factory->create(nullptr);
     }
 
   // Handle prone condition

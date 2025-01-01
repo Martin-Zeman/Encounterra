@@ -115,9 +115,10 @@ namespace enc
 
   bool Combatant::isAffectedBy(Conditions condition) const
   {
-    return std::any_of(_conditions.begin(), _conditions.end(), [condition](const Condition &c) { return containsCondition(c.conditionComposite, condition); })
+    return std::any_of(_conditions.begin(), _conditions.end(),
+                       [condition](const std::shared_ptr<Condition> &c) { return containsCondition(c->conditionComposite, condition); })
            || std::any_of(_dcConditions.begin(), _dcConditions.end(),
-                          [condition](const ConditionWithDC &c) { return containsCondition(c.conditionComposite, condition); });
+                          [condition](const std::shared_ptr<ConditionWithDC> &c) { return containsCondition(c->conditionComposite, condition); });
   }
 
   bool Combatant::isImmuneTo(DamageType dmgType) { return _immunities.find(dmgType) != _immunities.end(); }
@@ -130,28 +131,38 @@ namespace enc
     return _passiveAbilities.contains(ability);
   }
 
-  void Combatant::applyCondition(const Condition &condition)
+  void Combatant::applyCondition(std::shared_ptr<Condition> condition)
   {
-    _conditions.push_back(condition);
-    if(containsCondition(condition.conditionComposite, Conditions::SWALLOWED))
+    if(!condition)
       {
-        _swallower = condition.initiator;
+        return;
       }
+
+    if(containsCondition(condition->conditionComposite, Conditions::SWALLOWED))
+      {
+        _swallower = condition->initiator;
+      }
+    _conditions.push_back(std::move(condition));
   }
 
-  void Combatant::applyDCCondition(const ConditionWithDC &dcCondition)
+  void Combatant::applyDCCondition(std::shared_ptr<ConditionWithDC> dcCondition)
   {
-    _dcConditions.push_back(dcCondition);
-    if(containsCondition(dcCondition.conditionComposite, Conditions::SWALLOWED))
+    if(!dcCondition)
       {
-        _swallower = dcCondition.initiator;
+        return;
       }
+
+    if(containsCondition(dcCondition->conditionComposite, Conditions::SWALLOWED))
+      {
+        _swallower = dcCondition->initiator;
+      }
+    _dcConditions.push_back(std::move(dcCondition));
   }
 
   bool Combatant::removeCondition(Conditions condition, const Combatant *initiator)
   {
-    auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, initiator](const Condition &c) {
-      return containsCondition(c.conditionComposite, condition) && (!initiator || c.initiator == initiator);
+    auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, initiator](const std::shared_ptr<Condition> &c) {
+      return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
     });
     if(it != _conditions.end())
       {
@@ -167,8 +178,8 @@ namespace enc
 
   bool Combatant::removeDCCondition(Conditions condition, const Combatant *initiator)
   {
-    auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, initiator](const ConditionWithDC &c) {
-      return containsCondition(c.conditionComposite, condition) && (!initiator || c.initiator == initiator);
+    auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, initiator](const std::shared_ptr<ConditionWithDC> &c) {
+      return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
     });
     if(it != _dcConditions.end())
       {
@@ -203,43 +214,48 @@ namespace enc
   {
     for(const auto &cond : _dcConditions)
       {
-        if(containsCondition(cond.conditionComposite, Conditions::GRAPPLING) && cond.target.has_value())
+        if(containsCondition(cond->conditionComposite, Conditions::GRAPPLING) && cond->target.has_value())
           {
-            return cond.target.value();
+            return cond->target.value();
           }
       }
+
     for(const auto &cond : _conditions)
       {
-        if(containsCondition(cond.conditionComposite, Conditions::GRAPPLING) && cond.target.has_value())
+        if(containsCondition(cond->conditionComposite, Conditions::GRAPPLING) && cond->target.has_value())
           {
-            return cond.target.value();
+            return cond->target.value();
           }
       }
 
     return nullptr;
   }
 
-  std::optional<ConditionWithDC> Combatant::needsToBreakOutOfGrapple()
+  std::vector<std::weak_ptr<ConditionWithDC>> Combatant::needsToBreakOutOfGrapple() const
   {
+    std::vector<std::weak_ptr<ConditionWithDC>> grappleConditions;
     for(const auto &dcCond : _dcConditions)
       {
-        if(containsCondition(dcCond.conditionComposite, Conditions::GRAPPLED) && dcCond.phase == PhaseOfTurn::ACTION)
+        if(containsCondition(dcCond->conditionComposite, Conditions::GRAPPLED) && dcCond->phase == PhaseOfTurn::ACTION)
           {
-            return dcCond;
+            grappleConditions.push_back(dcCond);
           }
       }
-    return std::nullopt;
+    return grappleConditions;
   }
 
-  void Combatant::breakOutOfGrapple()
+  bool Combatant::breakOutOfGrapple(const std::weak_ptr<ConditionWithDC> &condition)
   {
-    auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [](const ConditionWithDC &cond) {
-      return containsCondition(cond.conditionComposite, Conditions::GRAPPLED) && cond.phase == PhaseOfTurn::ACTION;
-    });
-    if(it != _dcConditions.end())
+    if(auto sharedCond = condition.lock())
       {
-        _dcConditions.erase(it);
+        auto it = std::find(_dcConditions.begin(), _dcConditions.end(), sharedCond);
+        if(it != _dcConditions.end())
+          {
+            _dcConditions.erase(it);
+            return true;
+          }
       }
+    return false;
   }
 
   void Combatant::setConcentrationEffect(std::shared_ptr<Effect> effect)
@@ -532,6 +548,22 @@ void Combatant::withActionEnablerEffect(Actoid &action, const std::function<void
     {
       fn(false);
     }
+}
+
+void Combatant::withHasAction(const std::function<void()> &fn)
+{
+  bool originalHasAction = _hasAction;
+  try
+    {
+      _hasAction = true;
+      fn();
+    }
+  catch(...)
+    {
+      _hasAction = originalHasAction;
+      throw;
+    }
+  _hasAction = originalHasAction;
 }
 
 void Combatant::addUndeadFortitude() { _passiveAbilities.insert(AbilityType::UNDEAD_FORTITUDE); }

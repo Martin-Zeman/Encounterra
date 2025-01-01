@@ -25,4 +25,12 @@ namespace enc
   }
 
   std::string Disengage::toString() const { return "Disengage"; }
+
+  size_t Disengage::hash() const {
+    return std::hash<int>{}(static_cast<int>(getAbilityType()));
+  }
+
+  bool Disengage::equals(const Actoid &other) const {
+    return getAbilityType() == other.getAbilityType();
+  }
 }

@@ -12,7 +12,7 @@ namespace enc
     friend class Dodge;
 
   public:
-    DodgeFactory(Combatant *combatant) : ActoidFactory("DodgeFactory", "Dodge", combatant, AbilityType::DODGE) {}
+    DodgeFactory(Combatant *combatant, AbilityType abilityType = AbilityType::DODGE) : ActoidFactory("DodgeFactory", "Dodge", combatant, abilityType) {}
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
@@ -24,7 +24,7 @@ namespace enc
   class Dodge : public Actoid
   {
   public:
-    Dodge(ActoidFactory &factory) : Actoid(factory, ActoidFlags::LOCATION_INDEPENDENT | ActoidFlags::LOCATION_INDEPENDENT, AbilityType::DODGE) {}
+    Dodge(ActoidFactory &factory) : Actoid(factory, ActoidFlags::LOCATION_INDEPENDENT | ActoidFlags::LOCATION_INDEPENDENT, factory.getAbilityType()) {}
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;

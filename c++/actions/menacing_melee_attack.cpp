@@ -39,4 +39,5 @@ namespace enc
   {
     return std::make_shared<MenacingMeleeAttack>(AbilityType::MENACING_MELEE_ATTACK, *static_cast<Combatant *>(target), *this);
   }
+
 }

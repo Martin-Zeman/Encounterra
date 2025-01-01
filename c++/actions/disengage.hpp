@@ -11,7 +11,7 @@ namespace enc
     friend class Disengage;
 
   public:
-    DisengageFactory(Combatant *combatant) : ActoidFactory("DisengageFactory", "Disengage", combatant, AbilityType::DISENGAGE) {}
+    DisengageFactory(Combatant *combatant, AbilityType abilityType = AbilityType::DISENGAGE) : ActoidFactory("DisengageFactory", "Disengage", combatant, abilityType) {}
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
@@ -23,7 +23,7 @@ namespace enc
   class Disengage : public Actoid
   {
   public:
-    Disengage(ActoidFactory &factory) : Actoid(factory, ActoidFlags::LOCATION_INDEPENDENT | ActoidFlags::LOCATION_INDEPENDENT, AbilityType::DISENGAGE) {}
+    Disengage(ActoidFactory &factory) : Actoid(factory, ActoidFlags::LOCATION_INDEPENDENT | ActoidFlags::LOCATION_INDEPENDENT, factory.getAbilityType()) {}
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;

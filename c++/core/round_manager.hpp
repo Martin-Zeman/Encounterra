@@ -15,8 +15,7 @@ namespace enc
   class RoundManager
   {
   public:
-    RoundManager(std::vector<Combatant *> &combatants, int numRounds = 50)
-        : _combatants(combatants), _numRounds(numRounds), _actionResolver(), _currCombatant(nullptr)
+    RoundManager(std::vector<Combatant *> &combatants, int numRounds = 50) : _combatants(combatants), _numRounds(numRounds), _currCombatant(nullptr)
     {}
 
     void rollInitiative();
@@ -41,7 +40,6 @@ namespace enc
   private:
     std::vector<Combatant *> &_combatants;
     int _numRounds;
-    ActionResolver _actionResolver;
     Combatant *_currCombatant; // For serialization purposes
   };
-}
+} // namespace enc

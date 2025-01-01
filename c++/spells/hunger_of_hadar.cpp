@@ -162,7 +162,7 @@ namespace enc
     if(!_factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
         return battleMap.getFreeCoordsInCartesianRange(Coords(_origin), distances, _factory._combatant->getSize(),
-                                                  static_cast<int>(HungerOfHadarFactory::range), _factory._combatant->_instanceId);
+                                                       static_cast<int>(HungerOfHadarFactory::range), _factory._combatant->_instanceId);
       }
 
     const Coords &combatantPos = battleMap.getCombatantCoordinates(*_factory._combatant);
@@ -172,5 +172,23 @@ namespace enc
       }
 
     return std::nullopt;
+  }
+
+  size_t HungerOfHadar::hash() const
+  {
+    size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));
+    h ^= std::hash<int>{}(static_cast<int>(getFlags())) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_coord[0]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_coord[1]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
+
+  bool HungerOfHadar::equals(const Actoid &other) const
+  {
+    if(auto *hungerOfHadar = dynamic_cast<const HungerOfHadar *>(&other))
+      {
+        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _coord == hungerOfHadar->_coord;
+      }
+    return false;
   }
 }

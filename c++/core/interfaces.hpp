@@ -31,6 +31,8 @@ namespace enc
   inline ActoidFlags operator|(ActoidFlags a, ActoidFlags b) { return static_cast<ActoidFlags>(static_cast<int>(a) | static_cast<int>(b)); }
 
   class ActoidFactory;
+  class Combatant;
+  class Actoid;
 
   class BasicThreat
   {
@@ -128,8 +130,6 @@ namespace enc
 
   inline FactoryFlags operator|(FactoryFlags a, FactoryFlags b) { return static_cast<FactoryFlags>(static_cast<int>(a) | static_cast<int>(b)); }
 
-  // class ICombatant{};
-  class Combatant;
   class Resource;
 
   class ActoidFactory

@@ -156,4 +156,23 @@ namespace enc
       }
     return {};
   }
+
+  size_t Firebolt::hash() const
+  {
+    size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));
+    h ^= std::hash<int>{}(static_cast<int>(getFlags())) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_target._instanceId) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(static_cast<int>(_rollType)) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
+
+  bool Firebolt::equals(const Actoid &other) const
+  {
+    if(auto *firebolt = dynamic_cast<const Firebolt *>(&other))
+      {
+        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _target._instanceId == firebolt->_target._instanceId
+               && _rollType == firebolt->_rollType;
+      }
+    return false;
+  }
 }

@@ -181,7 +181,7 @@ namespace enc
 
             combatant->newTurn();
             auto effects = effectTracker.getAffectingCombatant(combatant);
-            _actionResolver.resolveEffects(effects, combatant);
+            resolveEffects(effects, combatant);
 
             if(combatant->isAffectedByAny(
                  {Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED, Conditions::PETRIFIED, Conditions::UNCONSCIOUS}))
@@ -206,7 +206,7 @@ namespace enc
                     break;
                   }
 
-                ActionResult resolution = _actionResolver.resolveAction(action, combatant);
+                ActionResult resolution = resolveAction(action, combatant);
                 if(resolution == ActionResult::UNFEASIBLE)
                   {
                     break;

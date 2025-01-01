@@ -5,6 +5,7 @@
 
 #include "actions/action_types.hpp"
 #include "core/interfaces.hpp"
+#include "core/state_machine.hpp"
 
 namespace enc
 {

@@ -121,18 +121,18 @@ namespace enc
     Combatant *getSwallower() const { return _swallower; }
     void setSwallower(Combatant *swallower) { _swallower = swallower; }
     bool isSwallowed() const { return _swallower != nullptr; }
-    const std::vector<Condition> &getConditions() const { return _conditions; }
-    const std::vector<ConditionWithDC> &getDCConditions() const { return _dcConditions; }
+    const std::vector<std::shared_ptr<Condition>> &getConditions() const { return _conditions; }
+    const std::vector<std::shared_ptr<ConditionWithDC>> &getDCConditions() const { return _dcConditions; }
     bool isAffectedBy(Conditions condition) const;
-    void applyCondition(const Condition &condition);
-    void applyDCCondition(const ConditionWithDC &dcCondition);
+    void applyCondition(std::shared_ptr<Condition> condition);
+    void applyDCCondition(std::shared_ptr<ConditionWithDC> dcCondition);
     bool removeCondition(Conditions condition, const Combatant *initiator = nullptr);
     bool removeDCCondition(Conditions condition, const Combatant *initiator = nullptr);
     void removeAllConditionsOfType(Conditions condition);
     Combatant *getInitiatorOfCondition(Conditions condition);
     Combatant *getGrappledTarget();
-    std::optional<ConditionWithDC> needsToBreakOutOfGrapple();
-    void breakOutOfGrapple();
+    std::vector<std::weak_ptr<ConditionWithDC>> needsToBreakOutOfGrapple() const;
+    bool breakOutOfGrapple(const std::weak_ptr<ConditionWithDC>& grappleCondition);
     void setConcentrationEffect(std::shared_ptr<Effect> effect);
     std::weak_ptr<Effect> getConcentrationEffect() { return _concentrationEffect; }
     void breakConcentration();
@@ -203,10 +203,10 @@ namespace enc
      */
     bool checkConcentration(Combatant *combatant, int dmg);
     void withActionEnablerEffect(Actoid& action, const std::function<void(bool)>& fn);
+    void withHasAction(const std::function<void()> &fn);
     const std::vector<std::shared_ptr<Actoid>> &getActionPlan() const;
     void setActionPlan(std::vector<std::shared_ptr<Actoid>> plan);
     std::shared_ptr<Actoid> popActionPlan(); // Removes and returns first action
-    void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &cache);
     std::vector<std::shared_ptr<Actoid>>
     calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths);
 
@@ -451,17 +451,19 @@ namespace enc
      */
 
   private:
-    template <typename ConditionType> Combatant *checkConditionList(const std::vector<ConditionType> &condList, Conditions condition) const
+    template <typename ConditionType>
+    Combatant *checkConditionList(const std::vector<std::shared_ptr<ConditionType>> &condList, Conditions condition) const
     {
       for(const auto &cond : condList)
         {
-          if(containsCondition(cond.conditionComposite, condition))
+          if(containsCondition(cond->conditionComposite, condition))
             {
-              return cond.initiator;
+              return cond->initiator;
             }
         }
       return nullptr;
     }
+
     int doReceiveDmg(int dmg, DamageType dmg_type);
 
     std::string _shortCode;
@@ -516,8 +518,8 @@ namespace enc
     Combatant *_swallower = nullptr;
     Combatant *_swallowedTarget = nullptr;
     Combatant *_constrictedTarget = nullptr;
-    std::vector<Condition> _conditions;
-    std::vector<ConditionWithDC> _dcConditions;
+    std::vector<std::shared_ptr<Condition>> _conditions;
+    std::vector<std::shared_ptr<ConditionWithDC>> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;
     std::shared_ptr<Spellslots> _spellslots;
     std::unordered_map<AbilityType, std::shared_ptr<Resource>> _resources;

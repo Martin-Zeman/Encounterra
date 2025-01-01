@@ -89,4 +89,25 @@ namespace enc
       }
     return {};
   }
+
+  size_t Fireball::hash() const
+  {
+    size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));
+    h ^= std::hash<int>{}(static_cast<int>(getFlags())) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_coord[0]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_coord[1]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<bool>{}(_empowered) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<bool>{}(_heightened) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
+
+  bool Fireball::equals(const Actoid &other) const
+  {
+    if(auto *fireball = dynamic_cast<const Fireball *>(&other))
+      {
+        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _coord == fireball->_coord
+               && _empowered == fireball->_empowered && _heightened == fireball->_heightened;
+      }
+    return false;
+  }
 }

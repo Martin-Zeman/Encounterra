@@ -97,4 +97,23 @@ namespace enc
 
     return {};
   }
+
+  size_t RangedAttack::hash() const
+  {
+    size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));
+    h ^= std::hash<int>{}(static_cast<int>(getFlags())) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_target._instanceId) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<std::string>{}(_factory._name) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    return h;
+  }
+
+  bool RangedAttack::equals(const Actoid &other) const
+  {
+    if(auto *rangedAttack = dynamic_cast<const RangedAttack *>(&other))
+      {
+        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags()
+               && _target._instanceId == rangedAttack->_target._instanceId && _factory._name == rangedAttack->_factory._name;
+      }
+    return false;
+  }
 }

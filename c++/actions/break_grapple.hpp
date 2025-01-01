@@ -3,6 +3,7 @@
 #include "core/interfaces.hpp"
 #include "actions/action_types.hpp"
 #include "core/conditions.hpp"
+#include <memory>
 
 namespace enc
 {
@@ -10,15 +11,18 @@ namespace enc
   class BreakGrappleFactory : public ActoidFactory
   {
   public:
-    explicit BreakGrappleFactory(Condition *grappleCondition);
+    explicit BreakGrappleFactory(std::weak_ptr<ConditionWithDC> grappleCondition);
 
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override { return {create(nullptr)}; }
+    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override 
+    { 
+      return {create(nullptr)}; 
+    }
 
     std::shared_ptr<Actoid> create(void *target) override;
     std::optional<Resource *> getResource() override { return {}; }
 
   private:
-    Condition *_grappleCondition;
+    std::weak_ptr<ConditionWithDC> _grappleCondition;
   };
 
   class BreakGrapple : public Actoid
@@ -34,6 +38,11 @@ namespace enc
     {
       return std::nullopt;
     }
+
+    bool equals(const Actoid &other) const override { return true;}
+
+  protected:
+    size_t hash() const override { return 0;}
   };
 
 } // namespace enc

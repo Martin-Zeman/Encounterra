@@ -16,7 +16,7 @@ std::vector<std::shared_ptr<Actoid>> DefaultActionPlanStrategy::calculateActionP
     auto [fsm, movementTransToCoordAndType, transitionToEligibleCoords] = 
         buildActionDag(_combatant, std::move(protoFsm), distances, shortestPaths);
 
-    if (fsm.getStates().empty()) {
+    if (fsm.getNumStates() == 2U) {  // TODO: Check if this is the right proxy for an empty FSM
         std::vector<std::shared_ptr<Actoid>> movement;
         if (_combatant->getMovement() > 0) {
             auto [nextTurnMovement, _] = getMovementAndThreatForNextTurn(distances, shortestPaths);
@@ -37,35 +37,31 @@ std::vector<std::shared_ptr<Actoid>> DefaultActionPlanStrategy::calculateActionP
 }
 
 std::pair<std::vector<std::shared_ptr<Actoid>>, std::array<double, 2>>
-DefaultActionPlanStrategy::getMovementAndThreatForNextTurn(
-    const blaze::DynamicVector<int>& distances,
-    const blaze::DynamicMatrix<Coord>& shortestPaths,
-    double infeasibilityMultiplier)
+DefaultActionPlanStrategy::getMovementAndThreatForNextTurn(const blaze::DynamicVector<int> &distances,
+                                                           const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
 {
-    return _combatant->withActionSimulation([&](Combatant* combatant) {
-        auto protoFsm = generateProtoFSM(combatant);
-        auto [fsm, transitionToEligibleCoords, movementTransToCoordAndType] = 
-            buildActionDag(combatant, std::move(protoFsm), distances, shortestPaths);
+  std::vector<std::shared_ptr<Actoid>> bestSequence;
+  std::array<double, 2> maxThreat{0.0, 0.0};
 
-        if (!fsm) {
-            return std::make_pair(std::vector<std::shared_ptr<Actoid>>{}, 
-                                std::array<double, 2>{0.0, 0.0});
-        }
+  _combatant->withHasAction([&]() {
+    auto protoFsm = generateProtoFSM(_combatant);
+    auto [fsm, movementTransToCoordAndType, transitionToEligibleCoords] = buildActionDag(_combatant, std::move(protoFsm), distances, shortestPaths);
 
-        auto [bestSequence, maxThreat, _] = 
-            findBestSequence(combatant, *fsm, transitionToEligibleCoords,
-                           movementTransToCoordAndType, distances, shortestPaths, 
-                           infeasibilityMultiplier);
+    if(fsm.getNumStates() > 2U)
+      {
+        auto [sequence, threat, _] = findBestSequence(_combatant, fsm, transitionToEligibleCoords, movementTransToCoordAndType, distances,
+                                                      shortestPaths, infeasibilityMultiplier);
+        bestSequence = std::move(sequence);
+        // Set movement threat to last element of the vector, and action threat
+        if(!threat.first.empty())
+          {
+            maxThreat[0] = threat.first.back();
+          }
+        maxThreat[1] = threat.second;
+      }
+  });
 
-        if (bestSequence.empty()) {
-            return std::make_pair(std::vector<std::shared_ptr<Actoid>>{}, 
-                                std::array<double, 2>{0.0, 0.0});
-        }
-
-        return std::make_pair(
-            extractMovement(distances, shortestPaths, bestSequence),
-            maxThreat);
-    });
+  return std::make_pair(extractMovement(distances, shortestPaths, bestSequence), maxThreat);
 }
 
 std::vector<std::shared_ptr<Actoid>> DefaultActionPlanStrategy::extractMovement(

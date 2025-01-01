@@ -37,15 +37,30 @@ namespace std
       return hash;
     }
   };
+
+  template <> struct hash<std::pair<std::array<int, 2>, enc::MovementThreatType>>
+  {
+    size_t operator()(const std::pair<std::array<int, 2>, enc::MovementThreatType> &p) const
+    {
+      size_t seed = 0;
+      // Hash the array elements
+      seed ^= hash<int>()(p.first[0]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      seed ^= hash<int>()(p.first[1]) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      // Hash the enum
+      seed ^= hash<int>()(static_cast<int>(p.second)) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      return seed;
+    }
+  };
 }
 
 namespace enc
 {
+  using ThreatScore = std::pair<std::vector<double>, double>; // [movement threat, action threat]
 
   struct SequenceSearchResult
   {
     std::vector<std::shared_ptr<Actoid>> sequence;
-    std::pair<std::vector<double>, double> threat;
+    ThreatScore threat;
     std::unordered_map<std::shared_ptr<Actoid>, CoordVector> msTransitionPaths;
   };
 
@@ -104,42 +119,6 @@ namespace enc
     }
   };
 
-  using ThreatScore = std::pair<std::vector<double>, double>; // [movement threat, action threat]
-
-  using MovementTransitionMap = std::unordered_map<std::string, std::pair<Coord, MovementThreatType>>;
-  using TransitionToEligibleCoords = std::unordered_map<std::string, CoordVector>;
-  using SequenceToThreat = std::unordered_map<size_t, std::pair<std::vector<double>, double>>; // first part is the movement component of the threat,
-                                                                                               // second is the action component
-  using TransitionStepThreat = std::unordered_map<size_t, std::unordered_map<size_t, double>>;
-  using CoordToSequenceIds = std::unordered_map<std::pair<Coord, MovementThreatType>, std::vector<size_t>>;
-  using TransitionToMsPath = std::unordered_map<std::string, std::vector<std::string>>;
-
-  //   struct DagBuildResult
-  //   {
-  //     std::unique_ptr<StateMachine> dag;
-  //     MovementTransitionMap movementMap;
-  //     TransitionToEligibleCoords eligibleCoords;
-  //   };
-
-  struct DagBuildResult
-  {
-    std::unique_ptr<StateMachine> dag;
-    std::unordered_map<std::string, std::pair<Coord, MovementThreatType>> movementTransToCoordAndType;
-  };
-
-  struct BestSequenceResult
-  {
-    std::vector<std::string> sequence;
-    TransitionToMsPath msPathMap;
-    std::array<double, 2> maxThreat;
-  };
-
-  std::vector<std::vector<std::string>> pruneSequences(const std::vector<std::vector<std::string>> &sequences,
-                                                       const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-                                                       const std::unordered_map<size_t, std::string> &indexToTransition,
-                                                       const std::unordered_map<std::string, std::string> &transitionToSimplified);
-
-
   double getDistToActionSequenceCoord(const std::vector<std::shared_ptr<Actoid>> &sequence, const blaze::DynamicVector<int> &distances);
 
   /**
@@ -156,20 +135,18 @@ namespace enc
    *   optimal action sequence among sets of actions with equal threat but different orders.
    *
    *   @param sequences: List of all action sequences in no particular order.
-   *   @param sorted_sequences: Indices of sequences sorted by threat in descending order.
-   *   @param sequence_to_threat: A dictionary mapping sequence index to its threat value.
+   *   @param sortedSequences: Indices of sequences sorted by threat in descending order.
+   *   @param sequenceToThreat: A dictionary mapping sequence index to its threat value.
    *   @param distances: A pre-computed dictionary of distances to all coordinates.
-   *   @param sequence_idx_to_transition_step_threat: A dictionary of dictionaries.  Maps for each sequence index to a dict
+   *   @param sequenceIdxToTransitionStepThreat: A dictionary of dictionaries.  Maps for each sequence index to a dict
    *   of individual transition indices -> threat contributions.
-   *   @param transition_name_to_action: dict mapping action names -> actions
-   *   @return: A tuple of the action sequence with maximum threat and more distant coordinate requirement after
+   *   @return: A pair of the action sequence with maximum threat and more distant coordinate requirement after
    *   minimization and the maximum threat.
    */
-  std::pair<std::vector<std::string>, std::pair<std::vector<double>, double>>
-  getNearestAndMinimize(std::vector<std::vector<std::string>> &sequences, const std::vector<size_t> &sortedSequences,
-                        const SequenceToThreat &sequenceToThreat, const blaze::DynamicVector<int> &distances,
-                        const TransitionStepThreat &sequenceIdxToTransitionStepThreat,
-                        const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction);
+  std::pair<std::vector<std::shared_ptr<Actoid>>, ThreatScore>
+  getNearestAndMinimize(std::vector<std::vector<std::shared_ptr<Actoid>>> &sequences, const std::vector<size_t> &sortedSequences,
+                        const std::unordered_map<size_t, ThreatScore> &sequenceToThreat, const blaze::DynamicVector<int> &distances,
+                        const std::unordered_map<size_t, std::unordered_map<size_t, double>> &sequenceIdxToTransitionStepThreat);
 
   /**
    * Finds the path through the FSM which represents the movement and actions with the highest calculated threat.
