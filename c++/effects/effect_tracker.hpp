@@ -39,7 +39,7 @@ namespace enc
 
     void endOfTurn(Combatant *combatant);
 
-    std::vector<std::shared_ptr<Effect>> getAffectingCombatant(Combatant *combatant) const;
+    std::vector<std::weak_ptr<Effect>> getAffectingCombatant(Combatant *combatant) const;
 
     bool isAffectingCombatant(Combatant *combatant, EffectType effectType) const;
 

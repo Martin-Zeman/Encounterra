@@ -20,6 +20,11 @@ namespace enc
 
     bool equals(const Actoid &other) const override;
 
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                 const blaze::DynamicMatrix<Coord> &coords = blaze::DynamicMatrix<Coord>()) override;
+
+    std::string toString() const override;
+
   protected:
     size_t hash() const override;
 
@@ -60,11 +65,16 @@ namespace enc
   class GetUpFromProne : public Actoid
   {
   public:
-    explicit GetUpFromProne(ActoidFactory &factory) : Actoid(factory, ActoidFlags::IS_GET_UP_FROM_PRONE) {}
+    explicit GetUpFromProne(ActoidFactory &factory) : Actoid(factory, ActoidFlags::IS_MOVEMENT) {}
 
     operator std::string() const { return "Get Up from Prone"; }
     std::string shorthandStr() const { return "Get Up from Prone"; }
     bool equals(const Actoid &other) const override;
+
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                 const blaze::DynamicMatrix<Coord> &coords = blaze::DynamicMatrix<Coord>()) override;
+
+    std::string toString() const override;
 
   protected:
     size_t hash() const override;

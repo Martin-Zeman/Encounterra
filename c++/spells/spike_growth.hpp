@@ -47,7 +47,7 @@ namespace enc
     Die _dmgDice;
   };
 
-  class SpikeGrowth : public Actoid, public LimitedDurationEffect, public AoeSphericEffect, public DirectThreat, public AoeThreat
+  class SpikeGrowth : public Actoid, public LimitedDurationEffect, public AoeSphericEffect, public DirectThreat
   {
   public:
     SpikeGrowth(const Coord &coord, const SpikeGrowthFactory &factory)

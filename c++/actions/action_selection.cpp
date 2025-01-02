@@ -369,11 +369,14 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
                         }
 
                       // Add threats from existing modifiers
-                      for(const auto& existingDeltaEffect : effectTracker.getAffectingCombatant(combatant))
+                      for(const auto &weakEffect : effectTracker.getAffectingCombatant(combatant))
                         {
-                          if(auto modifier = std::dynamic_pointer_cast<AttackThreatModifier>(existingDeltaEffect))
+                          if(auto effect = weakEffect.lock())
                             {
-                              threatAcc += modifier->calculateThreatForAttack(combatant, action.get(), {});
+                              if(auto modifier = std::dynamic_pointer_cast<AttackThreatModifier>(effect))
+                                {
+                                  threatAcc += modifier->calculateThreatForAttack(combatant, action.get(), {});
+                                }
                             }
                         }
 

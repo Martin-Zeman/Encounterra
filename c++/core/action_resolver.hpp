@@ -20,7 +20,7 @@ namespace enc
    * @param effects Set of effects to be applied
    * @param combatant The combatant to apply the effects to
    */
-  void resolveEffects(const std::vector<std::shared_ptr<Effect>> &effects, Combatant *combatant);
+  void resolveEffects(const std::vector<std::weak_ptr<Effect>> &effects, Combatant *combatant);
   void resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
                              bool halfOnSuccess = false, bool isSpellEffect = false);
   // TODO

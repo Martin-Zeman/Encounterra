@@ -44,7 +44,7 @@ namespace enc
     Die _dmgDice;
   };
 
-  class HungerOfHadar : public Actoid, public LimitedDurationEffect, public AoeSphericEffect, public DirectThreat, public AoeThreat
+  class HungerOfHadar : public Actoid, public LimitedDurationEffect, public AoeSphericEffect, public DirectThreat
   {
   public:
     HungerOfHadar(const Coord &coord, const HungerOfHadarFactory &factory);

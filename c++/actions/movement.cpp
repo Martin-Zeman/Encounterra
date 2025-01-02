@@ -25,7 +25,7 @@ namespace enc
         // if(!_combatant->hasMovement()) actually, how much movement a combatant has should not enter into this
         //   break;
 
-        increments.push_back(std::make_shared<MovementIncrement>(increment, isStandardMovement, static_cast<ActoidFactory&>(*this)));
+        increments.push_back(std::make_shared<MovementIncrement>(increment, isStandardMovement, static_cast<ActoidFactory &>(*this)));
 
         // _combatant->decrementMovement();
       }
@@ -64,6 +64,15 @@ namespace enc
     return false;
   }
 
+  std::optional<CoordVector>
+  MovementIncrement::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &coords)
+  {
+    // Movement increment doesn't need to calculate eligible coords
+    return std::nullopt;
+  }
+
+  std::string MovementIncrement::toString() const { return "(" + std::to_string(_increment[0]) + ", " + std::to_string(_increment[1]) + ")"; }
+
   size_t GetUpFromProne::hash() const { return std::hash<int>{}(static_cast<int>(getFlags())); }
 
   bool GetUpFromProne::equals(const Actoid &other) const
@@ -74,4 +83,12 @@ namespace enc
       }
     return false;
   }
+
+  std::optional<CoordVector> GetUpFromProne::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &coords)
+  {
+    // Getting up happens in place, no eligible coords needed
+    return std::nullopt;
+  }
+
+  std::string GetUpFromProne::toString() const { return "Get Up From Prone"; }
 }

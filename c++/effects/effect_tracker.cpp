@@ -76,16 +76,16 @@ namespace enc
     _effects = std::move(remainingEffects);
   }
 
-  std::vector<std::shared_ptr<Effect>> EffectTracker::getAffectingCombatant(Combatant *combatant) const
+  std::vector<std::weak_ptr<Effect>> EffectTracker::getAffectingCombatant(Combatant *combatant) const
   {
-    std::unordered_set<std::shared_ptr<Effect>> affectingEffects;
+    std::vector<std::weak_ptr<Effect>> affectingEffects;
     for(const auto &effect : _effects)
-      {
+    {
         if(effect->isAffecting(combatant))
-          {
-            affectingEffects.insert(effect);
-          }
-      }
+        {
+            affectingEffects.push_back(effect);
+        }
+    }
     return affectingEffects;
   }
 
