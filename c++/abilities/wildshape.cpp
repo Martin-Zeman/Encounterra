@@ -110,11 +110,8 @@ namespace enc
           {
             _form->addSavingThrowDiceMod(save, die);
           }
-        const auto &rollTypeMods = initiator->getSavingThrowRollTypeMods(save);
-        for(RollType type : rollTypeMods)
-          {
-            _form->addSavingThrowRollTypeMod(save, type);
-          }
+        RollType rollTypeMods = initiator->getSavingThrowRollTypeMods(save);
+        _form->setSavingThrowRollTypeMod(save, rollTypeMods);
       }
 
     // Copy action states
@@ -159,11 +156,8 @@ namespace enc
           {
             initiator->addSavingThrowDiceMod(save, die);
           }
-        const auto &rollTypeMods = currentForm->getSavingThrowRollTypeMods(save);
-        for(RollType type : rollTypeMods)
-          {
-            initiator->addSavingThrowRollTypeMod(save, type);
-          }
+        RollType rollTypeMods = currentForm->getSavingThrowRollTypeMods(save);
+        initiator->setSavingThrowRollTypeMod(save, rollTypeMods);
         currentForm->clearSavingThrowFlatMods(save);
         currentForm->clearSavingThrowDiceMods(save);
         currentForm->clearSavingThrowRollTypeMods(save);

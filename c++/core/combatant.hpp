@@ -165,8 +165,9 @@ namespace enc
     const std::vector<Die> &getSavingThrowDiceMods(SavingThrow type) const;
     void addSavingThrowDiceMod(SavingThrow type, const Die &mod);
     void clearSavingThrowDiceMods(SavingThrow type);
-    const std::unordered_set<RollType> &getSavingThrowRollTypeMods(SavingThrow type) const;
+    RollType getSavingThrowRollTypeMods(SavingThrow type) const;
     void addSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
+    void setSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
     void removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
     void clearSavingThrowRollTypeMods(SavingThrow type);
     std::weak_ptr<ActoidFactory> getActionFactory(AbilityType type);
@@ -511,7 +512,7 @@ namespace enc
       = {{SavingThrow::STR, 0}, {SavingThrow::DEX, 0}, {SavingThrow::CON, 0}, {SavingThrow::INT, 0}, {SavingThrow::WIS, 0}, {SavingThrow::CHA, 0}};
     std::unordered_map<SavingThrow, std::vector<int>> _savingThrowsFlatMod;
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
-    std::unordered_map<SavingThrow, std::unordered_set<RollType>> _savingThrowsRollTypeMod;
+    std::unordered_map<SavingThrow, RollType> _savingThrowsRollTypeMod;
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
     Combatant *_originalForm = this;
     Combatant *_currentWildshapeForm = nullptr;

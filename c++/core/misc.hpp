@@ -281,14 +281,30 @@ namespace enc
 
   enum class RollType : uint8_t
   {
-    STRAIGHT,
-    ADVANTAGE,
-    DISADVANTAGE
+    STRAIGHT = 1 << 0,    // 1
+    ADVANTAGE = 1 << 1,   // 2
+    DISADVANTAGE = 1 << 2 // 4
   };
 
   inline RollType operator|(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) | static_cast<uint8_t>(b)); }
 
-  // inline RollType operator&(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b)); }
+  inline RollType &operator|=(RollType &a, RollType b)
+  {
+    a = a | b;
+    return a;
+  }
+
+  inline RollType operator&(RollType a, RollType b) { return static_cast<RollType>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b)); }
+
+  inline bool operator==(RollType a, RollType b) { return static_cast<uint8_t>(a) == static_cast<uint8_t>(b); }
+
+  inline RollType operator~(RollType a) { return static_cast<RollType>(~static_cast<uint8_t>(a)); }
+
+  inline RollType &operator&=(RollType &a, RollType b)
+  {
+    a = static_cast<RollType>(static_cast<uint8_t>(a) & static_cast<uint8_t>(b));
+    return a;
+  }
 
   const std::unordered_map<RollType, std::map<int, int>> ROLL_TYPE_DELTA
     = {{RollType::STRAIGHT, {{1, 0},  {2, 0},  {3, 0},  {4, 0},  {5, 0},  {6, 0},  {7, 0},  {8, 0},  {9, 0},  {10, 0},
@@ -301,7 +317,7 @@ namespace enc
   // Function to safely get the delta value
   int getRollTypeDelta(RollType rollType, int rollNeeded, int defaultValue = 0);
 
-  RollType reconcileRollTypes(const std::unordered_set<RollType> &types);
+  RollType reconcileRollTypes(RollType types);
 
   std::vector<int> generateOutcomes(const Die &die);
 

@@ -71,9 +71,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -98,9 +99,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumOnePartialSpikeGrowth) {
     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -126,9 +128,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumOneAoe) {
     battleMap->setCombatantCoordinates(*goblin, Coord{7, 1});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -154,9 +157,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumAvoidedAoe) {
     battleMap->setCombatantCoordinates(*goblin, Coord{7, 1});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -184,9 +188,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumTwoOverlappingAoe) {
     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -218,9 +223,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumTwoOverlappingAoe) {
     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -246,9 +252,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumStartingInsideAoe) {
     battleMap->setCombatantCoordinates(*goblin, Coord{13, 3});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -269,9 +276,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumPassByOneAoo) {
     battleMap->setCombatantCoordinates(*bugbear, Coord{6, 4});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -300,9 +308,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumPassByTwoAoo) {
     battleMap->setCombatantCoordinates(*bugbear2, Coord{7, 4});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -324,9 +333,10 @@ TEST_F(ThreatUtilsTest, MediumSteppingAwayFromMediumAoo) {
     battleMap->setCombatantCoordinates(*goblin, Coord{3, 2});
 
     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{3, 5});
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -355,9 +365,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassByTwoAoo) {
     battleMap->setCombatantCoordinates(*bugbear2, Coord{7, 4});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *goblin);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -382,9 +393,10 @@ TEST_F(ThreatUtilsTest, LargeSteppingAwayFromHugeAoo) {
     battleMap->setCombatantCoordinates(*goblin, Coord{1, 1});
 
     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{1, 5});
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -410,9 +422,10 @@ TEST_F(ThreatUtilsTest, LargeSteppingAwayFromTwoMediumAoo) {
     battleMap->setCombatantCoordinates(*bugbear, Coord{4, 2});
 
     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{3, 5});
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -440,9 +453,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooArriveByThird) {
     battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{2, 8});
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *wild_heart_barbarian);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -476,9 +490,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooThroughAoeArriveByThird) {
     effectTracker->add(std::move(effect));
 
     auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *wild_heart_barbarian);
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -500,9 +515,10 @@ TEST_F(ThreatUtilsTest, MediumGettingOutOfDangerZone) {
     battleMap->setCombatantCoordinates(*bugbear, Coord{14, 1});
 
     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{6, 1});
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : EffectTracker::getInstance().getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
@@ -559,9 +575,10 @@ TEST_F(ThreatUtilsTest, CalcThreatForPathWithMistyStepScenario1) {
 
     auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_5, Coord{0, 14});
     ASSERT_TRUE(path.has_value());
-    std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
-    for (const auto& effect : effectTracker->getAoeEffects()) {
-        effectToCoords[effect.get()] = effect->getAffectedCoords();
+    std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+    for (const auto& weakEffect : effectTracker->getAoeEffects()) {
+        ASSERT_TRUE(weakEffect.lock());
+        effectToCoords[weakEffect.lock()] = weakEffect.lock()->getAffectedCoords();
     }
 
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_5);

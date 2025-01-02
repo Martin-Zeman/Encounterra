@@ -248,9 +248,12 @@ namespace enc
     auto &effectTracker = EffectTracker::getInstance();
 
     std::unordered_map<AoeEffect *, Coords> effectToCoords;
-    for(const auto &effect : effectTracker.getAoeEffects())
+    for(const auto &weakEffect : effectTracker.getAoeEffects())
       {
-        effectToCoords.at(effect.get()) = Coords(effect->getAffectedCoords());
+        if(auto effect = weakEffect.lock())
+          {
+            effectToCoords.at(effect.get()) = Coords(effect->getAffectedCoords());
+          }
       }
 
     // Process AoE effects
@@ -310,7 +313,6 @@ namespace enc
         {
           int preIncrementDist = getHopDistanceCoords(currCoordsData, affectedCoords);
           int postIncrementDist = getHopDistanceCoords(postIncrementCoords, affectedCoords);
-
           if(preIncrementDist == 1 && postIncrementDist == 0)
             {
               double threat = effect->threatOnEnter(combatant, {});

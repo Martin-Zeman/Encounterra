@@ -143,9 +143,12 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
   // Get effect to coords mapping
   std::unordered_map<std::shared_ptr<AoeEffect>, std::vector<Coord>> effectToCoords;
   auto &effectTracker = EffectTracker::getInstance();
-  for(const auto &effect : effectTracker.getAoeEffects())
+  for(const auto &weakEffect : effectTracker.getAoeEffects())
     {
-      effectToCoords[effect] = effect->getAffectedCoords();
+      if(auto effect = weakEffect.lock())
+        {
+          effectToCoords[effect] = effect->getAffectedCoords();
+        }
     }
 
   // We'll need these for tracking sequences and their threats

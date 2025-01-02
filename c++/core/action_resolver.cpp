@@ -8,7 +8,7 @@ namespace enc
 {
   bool hasAdvantageSavingThrow(SavingThrow savingThrow, Combatant *target, bool isSpellEffect)
   {
-    if(target->getSavingThrowRollTypeMods(savingThrow).contains(RollType::ADVANTAGE))
+    if((target->getSavingThrowRollTypeMods(savingThrow) & RollType::ADVANTAGE) == RollType::ADVANTAGE)
       {
         return true;
       }
@@ -37,7 +37,7 @@ namespace enc
 
   bool hasDisadvantageSavingThrow(SavingThrow savingThrow, Combatant *target)
   {
-    if(target->getSavingThrowRollTypeMods(savingThrow).contains(RollType::DISADVANTAGE))
+    if((target->getSavingThrowRollTypeMods(savingThrow) & RollType::DISADVANTAGE) == RollType::DISADVANTAGE)
       {
         return true;
       }
@@ -57,14 +57,14 @@ namespace enc
     auto stBonus = target->getSavingThrow(savingThrowType);
 
     // Determine advantage/disadvantage
-    std::unordered_set<RollType> types;
+    RollType types;
     if(hasAdvantageSavingThrow(savingThrowType, target, isSpellEffect))
       {
-        types.insert(RollType::ADVANTAGE);
+        types |= RollType::ADVANTAGE;
       }
     if(hasDisadvantageSavingThrow(savingThrowType, target))
       {
-        types.insert(RollType::DISADVANTAGE);
+        types |= RollType::DISADVANTAGE;
       }
     auto finalModifier = reconcileRollTypes(types);
 

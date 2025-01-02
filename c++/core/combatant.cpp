@@ -354,25 +354,27 @@ namespace enc
 
     void Combatant::clearSavingThrowDiceMods(SavingThrow type) { _savingThrowsDiceMod[type].clear(); }
 
-    const std::unordered_set<RollType> &Combatant::getSavingThrowRollTypeMods(SavingThrow type) const
+    RollType Combatant::getSavingThrowRollTypeMods(SavingThrow type) const
     {
       auto it = _savingThrowsRollTypeMod.find(type);
-      static const std::unordered_set<RollType> empty;
-      return it != _savingThrowsRollTypeMod.end() ? it->second : empty;
+      RollType straight = RollType::STRAIGHT;
+      return it != _savingThrowsRollTypeMod.end() ? it->second : straight;
     }
 
-    void Combatant::addSavingThrowRollTypeMod(SavingThrow type, RollType rollType) { _savingThrowsRollTypeMod[type].insert(rollType); }
+    void Combatant::addSavingThrowRollTypeMod(SavingThrow type, RollType rollType) { _savingThrowsRollTypeMod[type] |= rollType; }
+
+    void Combatant::setSavingThrowRollTypeMod(SavingThrow type, RollType rollType) { _savingThrowsRollTypeMod[type] = rollType; }
 
     void Combatant::removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType)
     {
       auto it = _savingThrowsRollTypeMod.find(type);
       if(it != _savingThrowsRollTypeMod.end())
         {
-          it->second.erase(rollType);
+          it->second &= ~rollType;
         }
     }
 
-    void Combatant::clearSavingThrowRollTypeMods(SavingThrow type) { _savingThrowsRollTypeMod[type].clear(); }
+    void Combatant::clearSavingThrowRollTypeMods(SavingThrow type) { _savingThrowsRollTypeMod.erase(type); }
 
     void Combatant::clearAllSavingThrowMods()
     {
@@ -427,8 +429,6 @@ int Combatant::receiveDmg(int dmg, DamageType dmg_type, int multiplier) {
     if (_currHp <= 0 && hasPassiveAbility(AbilityType::UNDEAD_FORTITUDE) && 
         multiplier == 1 && dmg_type != DamageType::Radiant) {
         
-        std::vector<RollType> rollTypes(_savingThrowsRollTypeMod[SavingThrow::CON].begin(),
-                                      _savingThrowsRollTypeMod[SavingThrow::CON].end());
         bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 
                                      5 + dmg, 
                                      reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));
@@ -471,8 +471,6 @@ int Combatant::receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>&
     if (_currHp <= 0 && hasPassiveAbility(AbilityType::UNDEAD_FORTITUDE) && 
         multiplier == 1 && !received_radiant_dmg) {
         
-        std::vector<RollType> rollTypes(_savingThrowsRollTypeMod[SavingThrow::CON].begin(),
-                                      _savingThrowsRollTypeMod[SavingThrow::CON].end());
         bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 
                                      5 + totalDmg,
                                      reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));

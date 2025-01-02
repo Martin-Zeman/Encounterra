@@ -21,7 +21,7 @@ namespace enc
   std::vector<std::shared_ptr<Actoid>> HungerOfHadarFactory::createAll(void *previousActionInDag)
   {
     auto &battleMap = BattleMap::getInstance();
-    auto [coord, _, _] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
+    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
     return {std::make_shared<HungerOfHadar>(coord, *this)};
   }
@@ -46,7 +46,7 @@ namespace enc
   double HungerOfHadarFactory::calculateMaxThreat() const
   {
     auto &battleMap = BattleMap::getInstance();
-    auto [coord, _, _] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
+    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
     HungerOfHadar effect(coord, *this);
     return effect.calculateThreat({});
@@ -61,7 +61,7 @@ namespace enc
 
   void HungerOfHadar::onStartOfTurn(Combatant *combatant)
   {
-    combatant->applyCondition(Condition(Conditions::BLINDED, _factory._combatant, this));
+    combatant->applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
     int damage = rollDice(_factory._dmgDice);
     combatant->receiveDmg(damage, _factory.dmgType);
     BattleMap::getInstance().removeCombatantIfDead(*combatant);
@@ -69,7 +69,7 @@ namespace enc
 
   void HungerOfHadar::onEndOfTurn(Combatant *combatant)
   {
-    combatant->applyCondition(Condition(Conditions::BLINDED, _factory._combatant, this));
+    combatant->applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
     int damage = rollDice(_factory._dmgDice);
 
     // Temporarily change damage type for acid damage
@@ -77,7 +77,10 @@ namespace enc
     resolveDmgSavingThrow(_factory._savingThrow, _factory._dc, shorthandStr(), damage, DamageType::Acid, combatant, false, true);
   }
 
-  void HungerOfHadar::onEnter(Combatant *combatant) { combatant->applyCondition(Condition(Conditions::BLINDED, _factory._combatant, this)); }
+  void HungerOfHadar::onEnter(Combatant *combatant)
+  {
+    combatant->applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
+  }
 
   void HungerOfHadar::onMoveWithin(Combatant *combatant)
   {

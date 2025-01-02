@@ -45,7 +45,7 @@ file (GLOB ACTIONS "actions/*.cpp")
 file (GLOB COMBATANTS "combatants/*.cpp")
 file (GLOB EFFECTS "effects/*.cpp")
 file (GLOB SPELLS "spells/*.cpp")
-file (GLOB UTILS "spells/*.cpp")
+file (GLOB UTILS "utils/*.cpp")
 list (APPEND SOURCES ${ABILITIES} ${ACTIONS} ${COMBATANTS} ${EFFECTS} ${SPELLS} ${UTILS})
 
 #----LIBRARY CREATION----

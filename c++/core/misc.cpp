@@ -22,31 +22,31 @@ namespace enc
    * If both advantage and disadvantage are present, returns straight roll.
    * Otherwise, returns the present modifier (or straight if none).
    *
-   * @param types Set of roll type modifiers
+   * @param types Combined roll type modifiers
    * @return The resulting single modifier
    */
-  RollType reconcileRollTypes(const std::unordered_set<RollType> &types)
+  RollType reconcileRollTypes(RollType types)
   {
-    bool hasAdvantage = types.contains(RollType::ADVANTAGE);
-    bool hasDisadvantage = types.contains(RollType::DISADVANTAGE);
-
-    // If both are present, it's a straight roll
-    if(hasAdvantage && hasDisadvantage)
+      bool hasAdvantage = static_cast<bool>(types & RollType::ADVANTAGE);
+      bool hasDisadvantage = static_cast<bool>(types & RollType::DISADVANTAGE);
+  
+      // If both are present, it's a straight roll
+      if(hasAdvantage && hasDisadvantage)
       {
-        return RollType::STRAIGHT;
+          return RollType::STRAIGHT;
       }
-
-    // Return the present modifier (or STRAIGHT if none)
-    if(hasAdvantage)
+  
+      // Return the present modifier (or STRAIGHT if none)
+      if(hasAdvantage)
       {
-        return RollType::ADVANTAGE;
+          return RollType::ADVANTAGE;
       }
-    if(hasDisadvantage)
+      if(hasDisadvantage)
       {
-        return RollType::DISADVANTAGE;
+          return RollType::DISADVANTAGE;
       }
-
-    return RollType::STRAIGHT;
+  
+      return RollType::STRAIGHT;
   }
 
   std::vector<int> generateOutcomes(const Die &die)

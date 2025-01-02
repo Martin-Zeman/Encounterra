@@ -101,9 +101,9 @@ namespace enc
     return false;
   }
 
-  std::vector<std::shared_ptr<AoeEffect>> EffectTracker::getAoeEffects() const
+  std::vector<std::weak_ptr<AoeEffect>> EffectTracker::getAoeEffects() const
   {
-    std::vector<std::shared_ptr<AoeEffect>> aoeEffects;
+    std::vector<std::weak_ptr<AoeEffect>> aoeEffects;
     for(const auto &effect : _effects)
       {
         if(auto aoeEffect = std::dynamic_pointer_cast<AoeEffect>(effect))
@@ -114,9 +114,9 @@ namespace enc
     return aoeEffects;
   }
 
-  std::vector<std::shared_ptr<Effect>> EffectTracker::getEffectsByInitiator(Combatant *initiator) const
+  std::vector<std::weak_ptr<Effect>> EffectTracker::getEffectsByInitiator(Combatant *initiator) const
   {
-    std::vector<std::shared_ptr<Effect>> initiatorEffects;
+    std::vector<std::weak_ptr<Effect>> initiatorEffects;
     for(const auto &effect : _effects)
       {
         if(effect->getInitiator() == initiator)
@@ -130,12 +130,16 @@ namespace enc
   void EffectTracker::combatantDied(Combatant *combatant)
   {
     auto initiatorEffects = getEffectsByInitiator(combatant);
-    for(const auto &effect : initiatorEffects)
+    for(const auto &weakEffect : initiatorEffects)
       {
-        effect->deactivate();
+        if(auto effect = weakEffect.lock())
+          {
+            effect->deactivate();
+            _effects.erase(
+              std::remove_if(_effects.begin(), _effects.end(), [combatant](const auto &effect) { return effect->getInitiator() == combatant; }),
+              _effects.end());
+          }
       }
-    _effects.erase(std::remove_if(_effects.begin(), _effects.end(), [combatant](const auto &effect) { return effect->getInitiator() == combatant; }),
-                   _effects.end());
   }
 
   // void createPostHasteLethargy(Combatant *initiator, Combatant *combatant)
@@ -170,11 +174,14 @@ namespace enc
 
   bool EffectTracker::isCombatantHiddenFrom(Combatant *combatant, Combatant *target) const
   {
-    for(const auto &effect : getEffectsByInitiator(combatant))
+    for(const auto &weakEffect : getEffectsByInitiator(combatant))
       {
-        if(effect->getEffectType() == EffectType::HIDE && effect->getTarget() == target)
+        if(auto effect = weakEffect.lock())
           {
-            return true;
+            if(effect->getEffectType() == EffectType::HIDE && effect->getTarget() == target)
+              {
+                return true;
+              }
           }
       }
     return false;
