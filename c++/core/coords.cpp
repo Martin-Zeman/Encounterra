@@ -35,6 +35,12 @@ namespace enc
 
   Coords Coords::operator+(const Coord &other) const { return Coords(*this, other); }
 
+  Coords &Coords::operator+=(const Coord &other)
+  {
+    *this = Coords(*this, other);
+    return *this;
+  }
+
   void Coords::initCoords(const Coord &coord)
   {
     switch(_size)

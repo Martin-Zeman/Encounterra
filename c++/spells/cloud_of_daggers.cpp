@@ -3,6 +3,47 @@
 namespace enc
 {
 
+  CloudOfDaggersFactory::CloudOfDaggersFactory(AbilityType abilityType, Combatant *caster, Resource *resource)
+      : DirectThreatFactory("CloudOfDaggersFactory", "Cloud of Daggers", caster, abilityType), _abilityType(abilityType), _resource(resource),
+        _dmgDice({{4, 4}})
+  {}
+
+  std::shared_ptr<Actoid> CloudOfDaggersFactory::create(void *target)
+  {
+    Coord *coord = static_cast<Coord *>(target);
+    return std::make_shared<CloudOfDaggers>(*coord, *this);
+  }
+
+  std::vector<std::shared_ptr<Actoid>> CloudOfDaggersFactory::createAll(void *previousActionInDag)
+  {
+    return {}; // TODO
+  }
+
+  double CloudOfDaggersFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
+  {
+    return 0.0; // TODO
+  }
+  double CloudOfDaggersFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const
+  {
+    return 0.0; // TODO
+  }
+  double CloudOfDaggersFactory::calculateMaxThreat() const
+  {
+    return 0.0; // TODO
+  }
+
+  CloudOfDaggers::CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory)
+      : Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType), Effect(factory._combatant),
+        LimitedDurationEffect(factory._combatant, 100), SphericAoe(coord, TRANSLATE_RADIUS.at(CloudOfDaggersFactory::target)), _coord(coord),
+        _factory(factory)
+  {}
+
+  void CloudOfDaggers::activate(const Kwargs &kwargs) { /*TODO*/ }
+  void CloudOfDaggers::deactivate() { /*TODO*/ }
+  bool CloudOfDaggers::deactivateForCombatant(Combatant *combatant) { return false; /*TODO*/ }
+  bool CloudOfDaggers::isAffecting(Combatant *combatant) const { return false; /*TODO*/ }
+  EffectType CloudOfDaggers::getEffectType() const { return EffectType::CLOUD_OF_DAGGERS; }
+
   size_t CloudOfDaggers::hash() const
   {
     size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));

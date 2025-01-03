@@ -30,6 +30,7 @@ namespace enc
     Vector2D getCenter() const override;
 
     Coords operator+(const Coord &other) const;
+    Coords& operator+=(const Coord& other);
     int operator()(size_t row, size_t col) const;
     bool areValidCoords(size_t mapSize) const;
     Size getSize() const;

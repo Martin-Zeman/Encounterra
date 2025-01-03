@@ -1,13 +1,22 @@
 #include "session.hpp"
+#include "combatants/acolyte.hpp"
 #include "combatants/battlemaster_fighter_lvl_5.hpp"
-#include "combatants/stone_giant.hpp"
+#include "combatants/brown_bear.hpp"
 #include "combatants/bugbear.hpp"
-#include "combatants/goblin.hpp"
+#include "combatants/dire_wolf.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
+#include "combatants/draconic_sorcerer_lvl_5.hpp"
+#include "combatants/giant_constrictor_snake.hpp"
+#include "combatants/giant_spider.hpp"
 #include "combatants/giant_toad.hpp"
-#include "combatants/ogre.hpp"
-#include "combatants/wild_heart_barbarian_lvl_3.hpp"
+#include "combatants/goblin.hpp"
 #include "combatants/green_dragon_wyrmling.hpp"
+#include "combatants/moon_druid_lvl_5.hpp"
+#include "combatants/night_hag.hpp"
+#include "combatants/ogre.hpp"
+#include "combatants/saber_toothed_tiger.hpp"
+#include "combatants/stone_giant.hpp"
+#include "combatants/wild_heart_barbarian_lvl_3.hpp"
 
 namespace enc
 {
@@ -15,13 +24,22 @@ namespace enc
   Session::Session() : _teams(Teams::getInstance())
   {
     // Register all combatant types
+    registerCombatantType<Acolyte>();
     registerCombatantType<BattlemasterFighterLvl5>();
+    registerCombatantType<BrownBear>();
     registerCombatantType<Bugbear>();
+    registerCombatantType<DireWolf>();
     registerCombatantType<DraconicSorcererLvl1>();
+    registerCombatantType<DraconicSorcererLvl5>();
+    registerCombatantType<GiantConstrictorSnake>();
+    registerCombatantType<GiantSpider>();
     registerCombatantType<GiantToad>();
     registerCombatantType<Goblin>();
     registerCombatantType<GreenDragonWyrmling>();
+    registerCombatantType<MoonDruidLvl5>();
+    registerCombatantType<NightHag>();
     registerCombatantType<Ogre>();
+    registerCombatantType<SaberToothedTiger>();
     registerCombatantType<StoneGiant>();
     registerCombatantType<WildHeartBarbarianLvl3>();
     // Register other combatant types...
@@ -43,14 +61,25 @@ namespace enc
     _combatants.push_back(std::move(combatant));
     generateUniqueShortCodes();
   }
-  
-  template <typename CombatantType> void Session::addCombatant(CombatantType* combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
+
+  template <typename CombatantType>
+  void Session::addCombatant(CombatantType *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
   {
     // For testing purposes
     int classId = CombatantType::getStaticClassId();
     combatant->setResourceDepletionLevel(resourceDepletionLevel);
     _teams.addCombatantToTeam(*combatant, teamColor);
     _combatants.emplace_back(std::move(std::unique_ptr<Combatant>(combatant)));
+    generateUniqueShortCodes();
+  }
+
+  void Session::addCombatant(Combatant *combatant, Color teamColor) { addCombatant(combatant, teamColor, ResourceDepletionLevel::FULLY_RESTED); }
+
+  void Session::addCombatant(Combatant *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
+  {
+    combatant->setResourceDepletionLevel(resourceDepletionLevel);
+    _teams.addCombatantToTeam(*combatant, teamColor);
+    _combatants.emplace_back(std::unique_ptr<Combatant>(combatant));
     generateUniqueShortCodes();
   }
 
@@ -61,25 +90,43 @@ namespace enc
   }
 
   // Explicit template instantiations
+  template void Session::addCombatant<Acolyte>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<BattlemasterFighterLvl5>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<BrownBear>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<Bugbear>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DireWolf>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl1>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DraconicSorcererLvl5>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantConstrictorSnake>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantSpider>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<GiantToad>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<Goblin>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<GreenDragonWyrmling>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<MoonDruidLvl5>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<NightHag>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<Ogre>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<SaberToothedTiger>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<StoneGiant>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl3>(Color, ResourceDepletionLevel);
 
-  template void Session::addCombatant<BattlemasterFighterLvl5>(BattlemasterFighterLvl5*, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<Bugbear>(Bugbear*, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<DraconicSorcererLvl1>(DraconicSorcererLvl1*, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<GiantToad>(GiantToad*, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<Goblin>(Goblin*, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<GreenDragonWyrmling>(GreenDragonWyrmling*, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<Ogre>(Ogre*, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<StoneGiant>(StoneGiant*, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<WildHeartBarbarianLvl3>(WildHeartBarbarianLvl3*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Acolyte>(Acolyte *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<BattlemasterFighterLvl5>(BattlemasterFighterLvl5 *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<BrownBear>(BrownBear *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Bugbear>(Bugbear *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DireWolf>(DireWolf *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DraconicSorcererLvl1>(DraconicSorcererLvl1 *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DraconicSorcererLvl5>(DraconicSorcererLvl5 *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantConstrictorSnake>(GiantConstrictorSnake *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantSpider>(GiantSpider *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantToad>(GiantToad *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Goblin>(Goblin *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GreenDragonWyrmling>(GreenDragonWyrmling *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<MoonDruidLvl5>(MoonDruidLvl5 *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<NightHag>(NightHag *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Ogre>(Ogre *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<SaberToothedTiger>(SaberToothedTiger *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<StoneGiant>(StoneGiant *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<WildHeartBarbarianLvl3>(WildHeartBarbarianLvl3 *, Color, ResourceDepletionLevel);
 
   // Add more explicit instantiations for other combatant types
 }

@@ -18,12 +18,10 @@ namespace enc
     struct Transition
     {
       std::shared_ptr<Actoid> action;
-      StateId origin;
       StateId destination;
     };
 
-    // Using vectors with StateId as index for better cache locality
-    std::vector<std::vector<Transition>> _states;
+    std::vector<std::vector<Transition>> _states; // Using vectors with StateId as index for better cache locality
     std::vector<std::vector<StateId>> _dependencies;
     StateId _currentState;
     StateId _nextAvailableId;

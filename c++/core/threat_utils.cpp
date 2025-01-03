@@ -280,7 +280,7 @@ namespace enc
   }
 
   double getAoeAndAooThreatForIncrement(const Coords &currCoordsData, const Coord &increment, Combatant *combatant,
-                                        const std::unordered_map<std::shared_ptr<AoeEffect>, Coords> &effectToCoords, bool disengaged, bool dodged)
+                                        const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords, bool disengaged, bool dodged)
   {
     auto rollType = dodged ? RollType::DISADVANTAGE : RollType::STRAIGHT;
     double threatAcc = 0.0;
@@ -333,7 +333,7 @@ namespace enc
 
   std::vector<double>
   accumulateThreatAlongPath(const CoordVector &path, Combatant *combatant,
-                            const std::unordered_map<std::shared_ptr<AoeEffect>, Coords> &effectToCoords, bool disengaged, bool dodged)
+                            const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords, bool disengaged, bool dodged)
   {
     double threatAcc = 0.0;
     auto &battleMap = BattleMap::getInstance();
@@ -363,71 +363,64 @@ namespace enc
     auto &battleMap = BattleMap::getInstance();
     auto currCoords = battleMap.getCombatantCoordinates(*combatant);
 
-    // No path case
+    // Handle empty path case
     if(path.empty())
       {
         return {{-getThreatForStayingAtCoord(currCoords, combatant)}, {}};
       }
 
-    // Build the Misty Step DAG
-    CoordVector coords = currCoords.get();
     StateMachine msDAG;
-
-    // Create initial state
-    StateId initialState = msDAG.getNextStateId();
-    msDAG.addNewState(initialState);
+    msDAG.addNewState(0);
 
     // Maps to track states and threats
-    std::unordered_map<Coord, StateId> coordToStateId;
     std::unordered_map<StateId, Coord> stateIdToCoord;
-    std::unordered_map<std::pair<StateId, StateId>, double, StateIdPairHash> transitionThreat;
+    std::unordered_map<StateId, StateId> stateToMsState;
+    std::unordered_map<std::pair<StateId, StateId>, double, PairHash> transitionThreat;
     std::unordered_map<StateId, std::pair<StateId, std::shared_ptr<Actoid>>> maxThreatPredecessor;
 
+    // Track path waypoints
+    CoordVector waypoints;
+    Coord currentPos = currCoords.get()[0];
+    waypoints.push_back(currentPos);
+
     // Build states and transitions along the path
-    Coord currentPos = coords[0];
-    StateId previousState = initialState;
-    StateId previousMsState = initialState;
+    StateId previousState = 0;
+    StateId previousMsState = 0;
 
-    coordToStateId[currentPos] = initialState;
-    stateIdToCoord[initialState] = currentPos;
+    stateIdToCoord[0] = currentPos;
 
-    // Build two branches: pre-MS movement and post-MS movement
-    CoordVector preMsPath;
-    CoordVector postMsPath;
+    // Create movement factories once for the entire path
+    auto moveFactory = std::make_shared<MovementFactory>(combatant, path, AbilityType::STANDARD_MOVEMENT);
+    auto msMoveFactory = std::make_shared<MovementFactory>(combatant, path, AbilityType::STANDARD_MOVEMENT);
+
     for(const auto &increment : path)
       {
+        double currThreat = getAoeAndAooThreatForIncrement(currCoords, increment, combatant, effectToCoords, false, false);
+        currCoords += increment;
         currentPos[0] += increment[0];
         currentPos[1] += increment[1];
-        coords.push_back(currentPos);
-        preMsPath.push_back(increment);
-        postMsPath.push_back(increment);
+        waypoints.push_back(currentPos);
 
         // Create states for both regular and post-MS versions
-        StateId newState = msDAG.getNextStateId();
-        StateId newMsState = msDAG.getNextStateId();
+        StateId newState = msDAG.getNextStateId();   // 1, 3, 5, ...
+        StateId newMsState = msDAG.getNextStateId(); // 2, 4, 6, ...
 
         msDAG.addNewState(newState);
         msDAG.addNewState(newMsState);
 
-        coordToStateId[currentPos] = newState;
         stateIdToCoord[newState] = currentPos;
         stateIdToCoord[newMsState] = currentPos;
+        stateToMsState[newState] = newMsState;
 
-        // Create factories with their respective paths
-        auto moveFactory = std::make_shared<MovementFactory>(combatant, preMsPath, AbilityType::STANDARD_MOVEMENT);
-        auto msMoveFactory = std::make_shared<MovementFactory>(combatant, postMsPath, AbilityType::STANDARD_MOVEMENT);
+        // Create individual movement actions
+        auto moveAction = moveFactory->create(nullptr);
+        auto msMoveAction = msMoveFactory->create(nullptr);
 
-        // Add movement transitions
-        auto moveActions = moveFactory->createAll();
-        auto msMoveActions = msMoveFactory->createAll();
-
-        if(!moveActions.empty() && !msMoveActions.empty())
+        if(moveAction && msMoveAction)
           {
-            msDAG.addTransition(moveActions.back(), previousState, newState);
-            msDAG.addTransition(msMoveActions.back(), previousMsState, newMsState);
+            msDAG.addTransition(moveAction, previousState, newState);
+            msDAG.addTransition(msMoveAction, previousMsState, newMsState);
 
-            // Calculate threats for transitions
-            double currThreat = getAoeAndAooThreatForIncrement({coords[coords.size() - 2]}, increment, combatant, effectToCoords, false, false);
             transitionThreat[{previousState, newState}] = currThreat;
             transitionThreat[{previousMsState, newMsState}] = currThreat;
           }
@@ -437,20 +430,22 @@ namespace enc
       }
 
     // Add Misty Step connections
-    for(size_t i = 0; i < coords.size() - 1; ++i)
+    for(size_t i = 0; i < waypoints.size() - 1; ++i)
       {
-        for(size_t j = i + 1; j < coords.size(); ++j)
+        for(size_t j = i + 1; j < waypoints.size(); ++j)
           {
-            if(std::hypot(coords[i][0] - coords[j][0], coords[i][1] - coords[j][1]) <= static_cast<double>(MistyStepFactory::range))
+            if(std::hypot(waypoints[j][0] - waypoints[i][0], waypoints[j][1] - waypoints[i][1]) <= static_cast<double>(MistyStepFactory::range))
               {
                 auto msFactory = std::make_shared<MistyStepFactory>(combatant, nullptr);
-                auto msAction = msFactory->create(&coords[j]); // Pass target coordinate directly
+                auto msAction = msFactory->create(&waypoints[j]);
 
                 if(msAction)
                   {
-                    StateId originState = coordToStateId[coords[i]];
-                    StateId destState = coordToStateId[coords[j]];
-                    msDAG.addTransition(msAction, originState, destState);
+                    // For i=0, use state 0 (root), otherwise use pre-MS state (2i-1)
+                    StateId originState = (i == 0) ? 0 : (2 * i - 1);
+                    // For j=0, use state 0 (root), otherwise use post-MS state (2j)
+                    StateId destMsState = (j == 0) ? 0 : (2 * j);
+                    msDAG.addTransition(msAction, originState, destMsState);
                   }
               }
           }
@@ -466,14 +461,15 @@ namespace enc
       {
         stateThreat[state] = MINUS_INF;
       }
-    stateThreat[sortedStates[0]] = 0.0;
+    stateThreat[0] = 0.0;
 
     // Calculate maximum threat path
     for(const auto &state : sortedStates)
       {
         for(const auto &[action, targetState] : msDAG.getForwardTransitions(state))
           {
-            double threatForTransition = action->getAbilityType() == AbilityType::MISTY_STEP ? 0.0 : transitionThreat[{state, targetState}];
+            double threatForTransition = (action->getAbilityType() == AbilityType::MISTY_STEP) ? 0.0 : transitionThreat[{state, targetState}];
+
             double totalThreat = (stateThreat[state] > MINUS_INF) ? stateThreat[state] + threatForTransition : 0.0;
 
             if(totalThreat > stateThreat[targetState])
@@ -487,6 +483,7 @@ namespace enc
     // Reconstruct the best path
     CoordVector bestPath;
     StateId currentState = sortedStates.back();
+
     while(maxThreatPredecessor.contains(currentState))
       {
         auto [prevState, action] = maxThreatPredecessor[currentState];

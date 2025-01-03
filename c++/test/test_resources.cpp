@@ -90,7 +90,7 @@ TEST_F(ResourceTest, MonsterWithRegularSpellslots)
 TEST_F(ResourceTest, UseResourcesSpellslots)
 {
     FireboltFactory fireboltFactory(1, AbilityType::FIREBOLT, draconic_sorcerer_lvl_5, &draconic_sorcerer_lvl_5->getSpellslots());
-    auto firebolt = fireboltFactory.create(&goblin);
+    auto firebolt = fireboltFactory.create(goblin);
     
     FireballFactory fireballFactory(1, AbilityType::FIREBALL, draconic_sorcerer_lvl_5, &draconic_sorcerer_lvl_5->getSpellslots());
     Coord targetCoord({0, 0});

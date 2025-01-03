@@ -22,9 +22,7 @@ namespace enc
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::OTHER;
 
-    MistyStepFactory(Combatant *caster, Resource *resource)
-        : ActoidFactory("MistyStepFactory", "Misty Step", caster, AbilityType::MISTY_STEP), _resource(resource)
-    {}
+    MistyStepFactory(Combatant *caster, Resource *resource);
 
     Coord findBestArgs() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
@@ -40,9 +38,7 @@ namespace enc
   class MistyStep : public Actoid
   {
   public:
-    MistyStep(const Coord &coord, const MistyStepFactory &factory)
-        : Actoid(const_cast<MistyStepFactory &>(factory), ActoidFlags::IS_SPELL, AbilityType::MISTY_STEP), _coord(coord), _factory(factory)
-    {}
+    MistyStep(const Coord &coord, const MistyStepFactory &factory);
 
     std::string toString() const override { return "MistyStep to (" + std::to_string(_coord[0]) + ", " + std::to_string(_coord[1]) + ")"; }
 

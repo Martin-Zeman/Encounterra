@@ -48,11 +48,7 @@ namespace enc
   class CloudOfDaggers : public Actoid, public LimitedDurationEffect, public SphericAoe, public DirectThreat, public AoeThreat
   {
   public:
-    CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory, RollType)
-        : Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType),
-          LimitedDurationEffect(factory._combatant, 100), SphericAoe(coord, TRANSLATE_RADIUS.at(CloudOfDaggersFactory::target)), _coord(coord),
-          _factory(factory)
-    {}
+    CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory);
 
     std::string toString() const override;
 
@@ -66,6 +62,12 @@ namespace enc
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
     bool equals(const Actoid &other) const override;
+
+    void activate(const Kwargs &kwargs = {}) override;
+    void deactivate() override;
+    bool deactivateForCombatant(Combatant *combatant) override;
+    bool isAffecting(Combatant *combatant) const override;
+    EffectType getEffectType() const override;
 
   protected:
     size_t hash() const override;

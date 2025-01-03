@@ -18,11 +18,12 @@ namespace enc
   {
   public:
     Session();
+    template <typename CombatantType> void addCombatant(Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
+
     template <typename CombatantType>
-    void addCombatant(Color teamColor, ResourceDepletionLevel resourceDepletionLevel = ResourceDepletionLevel::FULLY_RESTED);
-    template <typename CombatantType>
-    void addCombatant(CombatantType *combatant, Color teamColor,
-                      ResourceDepletionLevel resourceDepletionLevel = ResourceDepletionLevel::FULLY_RESTED); // For testing purposes
+    void addCombatant(CombatantType *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel); // For testing purposes
+    void addCombatant(Combatant *combatant, Color teamColor);
+    void addCombatant(Combatant *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
 
   private:
     void generateUniqueShortCodes()

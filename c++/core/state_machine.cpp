@@ -64,7 +64,7 @@ namespace enc
       {
         throw std::runtime_error("Origin or destination state does not exist");
       }
-    _states[origin].push_back({action, origin, dest});
+    _states[origin].push_back({action, dest});
     addDependency(origin, dest);
     _isDagDirty = true;
   }

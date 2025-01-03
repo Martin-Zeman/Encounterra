@@ -134,14 +134,14 @@ getNearestAndMinimize(
 
 SequenceSearchResult
 findBestSequence(Combatant *combatant, const StateMachine &fsm,
-                 const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
+                 const std::unordered_map<std::shared_ptr<Actoid>, CoordVector> &transitionToEligibleCoords,
                  std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndMovementType,
                  const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
 {
   auto &battleMap = BattleMap::getInstance();
 
   // Get effect to coords mapping
-  std::unordered_map<std::shared_ptr<AoeEffect>, std::vector<Coord>> effectToCoords;
+  std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
   auto &effectTracker = EffectTracker::getInstance();
   for(const auto &weakEffect : effectTracker.getAoeEffects())
     {

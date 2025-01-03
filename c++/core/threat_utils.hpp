@@ -191,8 +191,4 @@ namespace enc
   PathSearchResult calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
                                                   const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords);
 
-  std::vector<double>
-  accumulateThreatAlongPath(const CoordVector &path, Combatant *combatant,
-                            const std::unordered_map<std::shared_ptr<AoeEffect>, Coords> &effectToCoords, bool disengaged, bool dodged);
-
 } // namespace enc
