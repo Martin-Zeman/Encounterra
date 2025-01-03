@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include "spells/spell_stats.hpp"
 #include "core/misc.hpp"
 #include "core/interfaces.hpp"
@@ -24,7 +25,8 @@ namespace enc
 
     MistyStepFactory(Combatant *caster, Resource *resource);
 
-    Coord findBestArgs() const;
+    std::optional<Coord> getEligibleTargets() const;
+
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
@@ -39,6 +41,8 @@ namespace enc
   {
   public:
     MistyStep(const Coord &coord, const MistyStepFactory &factory);
+
+    ~MistyStep() override;
 
     std::string toString() const override { return "MistyStep to (" + std::to_string(_coord[0]) + ", " + std::to_string(_coord[1]) + ")"; }
 
@@ -56,4 +60,4 @@ namespace enc
     Coord _coord;
     const MistyStepFactory &_factory;
   };
-}
+} // namespace enc

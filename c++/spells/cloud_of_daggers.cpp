@@ -38,11 +38,37 @@ namespace enc
         _factory(factory)
   {}
 
+  CloudOfDaggers::~CloudOfDaggers() = default;
+
+  std::string CloudOfDaggers::toString() const
+  {
+    std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_CLOUD_OF_DAGGERS) ? "Quickened " : "";
+    std::stringstream ss;
+    ss << _coord;
+    return prefix + "Cloud of Daggers at " + ss.str();
+  }
+
+  std::string CloudOfDaggers::shorthandStr() const
+  {
+    std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_CLOUD_OF_DAGGERS) ? "Quickened " : "";
+    return prefix + "Cloud of Daggers";
+  }
+
   void CloudOfDaggers::activate(const Kwargs &kwargs) { /*TODO*/ }
   void CloudOfDaggers::deactivate() { /*TODO*/ }
   bool CloudOfDaggers::deactivateForCombatant(Combatant *combatant) { return false; /*TODO*/ }
   bool CloudOfDaggers::isAffecting(Combatant *combatant) const { return false; /*TODO*/ }
   EffectType CloudOfDaggers::getEffectType() const { return EffectType::CLOUD_OF_DAGGERS; }
+
+    std::optional<CoordVector>
+  CloudOfDaggers::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+  {
+    // TODO
+    return std::nullopt;
+  }
+
+  double CloudOfDaggers::calculateThreat(const Kwargs &kwargs) { return 0.0; /*TODO*/ }
+  double CloudOfDaggers::calculateThreatDelta(const ThreatModifiers &modifiers) const { return 0.0; /*TODO*/ }
 
   size_t CloudOfDaggers::hash() const
   {

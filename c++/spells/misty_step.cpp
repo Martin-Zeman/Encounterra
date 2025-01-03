@@ -1,4 +1,7 @@
 #include "spells/misty_step.hpp"
+#include "core/battle_map.hpp"
+#include "core/combatant.hpp"
+#include "core/geometry.hpp"
 
 namespace enc
 {
@@ -7,9 +10,46 @@ namespace enc
       : ActoidFactory("MistyStepFactory", "Misty Step", caster, AbilityType::MISTY_STEP), _resource(resource)
   {}
 
+  std::optional<Coord> MistyStepFactory::getEligibleTargets() const
+  {
+    Combatant *swallower = _combatant->getSwallower();
+    if(swallower)
+      {
+        return std::nullopt;
+      }
+
+    return Coord{0, 0};
+  }
+
+  std::vector<std::shared_ptr<Actoid>> MistyStepFactory::createAll(void *previousActionInDag)
+  {
+    auto coord = getEligibleTargets();
+    if(coord.has_value())
+      {
+        return {std::make_shared<MistyStep>(*coord, *this)};
+      }
+    return {};
+  }
+
+  std::shared_ptr<Actoid> MistyStepFactory::create(void *target)
+  {
+    if(!target)
+      {
+        return nullptr;
+      }
+    return std::make_shared<MistyStep>(*static_cast<Coord *>(target), *this);
+  }
+
   MistyStep::MistyStep(const Coord &coord, const MistyStepFactory &factory)
       : Actoid(const_cast<MistyStepFactory &>(factory), ActoidFlags::IS_SPELL, AbilityType::MISTY_STEP), _coord(coord), _factory(factory)
   {}
+
+  double MistyStep::calculateThreat(const Kwargs &kwargs)
+  {
+    return 0.0; // Misty Step is handled differently
+  }
+
+  MistyStep::~MistyStep() = default;
 
   size_t MistyStep::hash() const
   {
@@ -27,6 +67,20 @@ namespace enc
         return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _coord == mistyStep->_coord;
       }
     return false;
+  }
+
+  std::optional<CoordVector>
+  MistyStep::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+  {
+    if(_factory._combatant->getSwallower())
+      {
+        return std::nullopt;
+      }
+
+    auto &battleMap = BattleMap::getInstance();
+
+    const Coords &combatantPos = battleMap.getCombatantCoordinates(*_factory._combatant);
+    return CoordVector{combatantPos.getRoot()};
   }
 
 } // namespace enc

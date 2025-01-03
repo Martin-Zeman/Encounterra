@@ -50,6 +50,8 @@ namespace enc
   public:
     CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory);
 
+    ~CloudOfDaggers() override;
+
     std::string toString() const override;
 
     std::string shorthandStr() const;

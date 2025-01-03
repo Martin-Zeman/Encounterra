@@ -139,13 +139,13 @@ namespace enc
     std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_HUNGER_OF_HADAR) ? "Quickened " : "";
     std::stringstream ss;
     ss << _coord;
-    return prefix + "Hunger Of Hadar at " + ss.str();
+    return prefix + "Hunger of Hadar at " + ss.str();
   }
 
   std::string HungerOfHadar::shorthandStr() const
   {
     std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_HUNGER_OF_HADAR) ? "Quickened " : "";
-    return prefix + "Hunger Of Hadar";
+    return prefix + "Hunger of Hadar";
   }
 
   EffectType HungerOfHadar::getEffectType() const { return EffectType::HUNGER_OF_HADAR; }
