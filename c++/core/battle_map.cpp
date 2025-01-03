@@ -1656,12 +1656,16 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     MapMatrix mapAccessibilityMatrix(_size, _size, 0);
 
     // Get accessible coordinates from shortest paths
-    // Note: This part needs adaptation since we're not using the Python cache
-    // Instead, we'll use whatever coordinate calculation method you have
-    auto accessibleCoords = getFreeCoordsInHopRange(getCombatantCoordinates(*combatant));
-    for(const auto &coord : accessibleCoords)
+    const auto &shortestPaths = combatant->getShortestPathsCache();
+    for(size_t i = 0; i < shortestPaths.rows(); ++i)
       {
-        mapAccessibilityMatrix(_size - coord[1] - 1, coord[0]) = 1;
+        for(size_t j = 0; j < shortestPaths.columns(); ++j)
+          {
+            if(shortestPaths(i, j)[0] != -1)
+              {
+                mapAccessibilityMatrix(_size - i - 1, j) = 1;
+              }
+          }
       }
 
     // Mark current position as accessible

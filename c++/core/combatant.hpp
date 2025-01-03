@@ -185,7 +185,8 @@ namespace enc
     const std::vector<std::shared_ptr<Wildshape>> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
-    void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { *_shortestPathsCache = shortestPaths; }
+    void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths);
+    const blaze::DynamicMatrix<Coord> &getShortestPathsCache() const { return *_shortestPathsCache; }
     int receiveDmg(int dmg, DamageType dmg_type, int multiplier = 1);
     int receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>& dmg, int multiplier = 1);
     void addResistance(DamageType dmgType);
@@ -530,7 +531,7 @@ namespace enc
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
     std::weak_ptr<Effect> _concentrationEffect;
     std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
-    blaze::DynamicMatrix<Coord> *_shortestPathsCache = nullptr; // TODO: Do I still need this?
+    std::unique_ptr<blaze::DynamicMatrix<Coord>> _shortestPathsCache = nullptr; // TODO: Do I still need this?
     bool _uncannyDodgeActive = false;
 
   protected:

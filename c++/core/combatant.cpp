@@ -51,63 +51,67 @@ namespace enc
     _currInit = distrib(gen) + _initBonus;
   }
 
-  void Combatant::reset() {
-        _hasAction = true;
-        _hasBonusAction = true;
-        _hasReaction = true;
-        _currHp = _maxHp;
-        _movement = _speed;
-        _isDodging = false;
-        if (_spellslots)
-        {
-            _spellslots->reset();
-        }
-        for (auto& r : _resources)
-        {
-          r.second.reset();
-        }
-        _alreadyUsedSpellslotThisTurn = false;
-        if(_isShieldSpellActive)
-        {
-            _ac -= 5;
-        }
-        _isShieldSpellActive = false;
-        _conditions.clear();
-        _dcConditions.clear();
-        breakConcentration();
-        _hasHasteAction = false;
-        clearAllSavingThrowMods();
-        for (auto& ammo : _ammo)
-        {
-          ammo.second.reset();
-        }
-        _oneTimeAcbonus = 0 ; // Not really needed
-        _actionPlan.clear();
-        _weaponDmgDealtThisTurn = 0;
+  void Combatant::reset()
+  {
+    _hasAction = true;
+    _hasBonusAction = true;
+    _hasReaction = true;
+    _currHp = _maxHp;
+    _movement = _speed;
+    _isDodging = false;
+    if(_spellslots)
+      {
+        _spellslots->reset();
+      }
+    for(auto &r : _resources)
+      {
+        r.second.reset();
+      }
+    _alreadyUsedSpellslotThisTurn = false;
+    if(_isShieldSpellActive)
+      {
+        _ac -= 5;
+      }
+    _isShieldSpellActive = false;
+    _conditions.clear();
+    _dcConditions.clear();
+    breakConcentration();
+    _hasHasteAction = false;
+    clearAllSavingThrowMods();
+    for(auto &ammo : _ammo)
+      {
+        ammo.second.reset();
+      }
+    _oneTimeAcbonus = 0; // Not really needed
+    _actionPlan.clear();
+    _weaponDmgDealtThisTurn = 0;
   }
 
-  void Combatant::newTurn() {
-        _hasAction = true;
-        _hasBonusAction = true;
-        _hasReaction = true;
-        _movement = _speed;
-        // if (_isDodging)
-        // {
-        //     saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.STRAIGHT)
-        // }
-        // _isDodging = false # The effect tracker should be taking care of this
-        _alreadyUsedSpellslotThisTurn = false;
-        if (_isShieldSpellActive){
-            _ac -= 5;
-        }
-        _isShieldSpellActive = false;
-        _hasHasteAction = false;
-        _attackFsm.reset();
-        _actionPlan.clear();
-        if (_constrictedTarget != nullptr && !_constrictedTarget->isAlive()){
-            _constrictedTarget = nullptr;
-            }
-        _weaponDmgDealtThisTurn = 0;
+  void Combatant::newTurn()
+  {
+    _hasAction = true;
+    _hasBonusAction = true;
+    _hasReaction = true;
+    _movement = _speed;
+    // if (_isDodging)
+    // {
+    //     saving_throws_roll_type_mod[SavingThrow.DEX].add(RollType.STRAIGHT)
+    // }
+    // _isDodging = false # The effect tracker should be taking care of this
+    _alreadyUsedSpellslotThisTurn = false;
+    if(_isShieldSpellActive)
+      {
+        _ac -= 5;
+      }
+    _isShieldSpellActive = false;
+    _hasHasteAction = false;
+    _attackFsm.reset();
+    _actionPlan.clear();
+    if(_constrictedTarget != nullptr && !_constrictedTarget->isAlive())
+      {
+        _constrictedTarget = nullptr;
+      }
+    _weaponDmgDealtThisTurn = 0;
   }
 
   Combatant *Combatant::getCurrentForm() { return _currentWildshapeForm == nullptr ? _originalForm : _currentWildshapeForm; }
@@ -122,14 +126,12 @@ namespace enc
   }
 
   bool Combatant::isImmuneTo(DamageType dmgType) { return _immunities.find(dmgType) != _immunities.end(); }
-  
+
   bool Combatant::isResistantTo(DamageType dmgType) { return _resistances.find(dmgType) != _resistances.end(); }
 
   bool Combatant::isVulnerableTo(DamageType dmgType) { return _vulnerabities.find(dmgType) != _vulnerabities.end(); }
 
-  bool Combatant::hasPassiveAbility(AbilityType ability) const{
-    return _passiveAbilities.contains(ability);
-  }
+  bool Combatant::hasPassiveAbility(AbilityType ability) const { return _passiveAbilities.contains(ability); }
 
   void Combatant::applyCondition(std::shared_ptr<Condition> condition)
   {
@@ -302,298 +304,318 @@ namespace enc
   }
 
   std::weak_ptr<ActoidFactory> Combatant::getActionFactory(AbilityType type)
-    {
-        for (auto& factory : _actionFactories)
-        {
-            if (factory->getAbilityType() == type)
-            {
-                return std::weak_ptr<ActoidFactory>(factory);
-            }
-        }
-        return std::weak_ptr<ActoidFactory>();
-    }
+  {
+    for(auto &factory : _actionFactories)
+      {
+        if(factory->getAbilityType() == type)
+          {
+            return std::weak_ptr<ActoidFactory>(factory);
+          }
+      }
+    return std::weak_ptr<ActoidFactory>();
+  }
 
-    void Combatant::rollForRecharge()
-    {
-      for(auto &factory : _actionFactories)
-        {
-          if(factory->hasFlag(FactoryFlags::IS_RECHARGE))
-            {
-              static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
-            }
-        }
+  void Combatant::rollForRecharge()
+  {
+    for(auto &factory : _actionFactories)
+      {
+        if(factory->hasFlag(FactoryFlags::IS_RECHARGE))
+          {
+            static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
+          }
+      }
 
-      for(auto &factory : _bonusActionFactories)
-        {
-          if(factory->hasFlag(FactoryFlags::IS_RECHARGE))
-            {
-              static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
-            }
-        }
-    }
+    for(auto &factory : _bonusActionFactories)
+      {
+        if(factory->hasFlag(FactoryFlags::IS_RECHARGE))
+          {
+            static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
+          }
+      }
+  }
 
-    const std::vector<int> &Combatant::getSavingThrowFlatMods(SavingThrow type) const
-    {
-      auto it = _savingThrowsFlatMod.find(type);
-      static const std::vector<int> empty;
-      return it != _savingThrowsFlatMod.end() ? it->second : empty;
-    }
+  const std::vector<int> &Combatant::getSavingThrowFlatMods(SavingThrow type) const
+  {
+    auto it = _savingThrowsFlatMod.find(type);
+    static const std::vector<int> empty;
+    return it != _savingThrowsFlatMod.end() ? it->second : empty;
+  }
 
-    void Combatant::addSavingThrowFlatMod(SavingThrow type, int mod) { _savingThrowsFlatMod[type].push_back(mod); }
+  void Combatant::addSavingThrowFlatMod(SavingThrow type, int mod) { _savingThrowsFlatMod[type].push_back(mod); }
 
-    void Combatant::clearSavingThrowFlatMods(SavingThrow type) { _savingThrowsFlatMod[type].clear(); }
+  void Combatant::clearSavingThrowFlatMods(SavingThrow type) { _savingThrowsFlatMod[type].clear(); }
 
-    const std::vector<Die> &Combatant::getSavingThrowDiceMods(SavingThrow type) const
-    {
-      auto it = _savingThrowsDiceMod.find(type);
-      static const std::vector<Die> empty;
-      return it != _savingThrowsDiceMod.end() ? it->second : empty;
-    }
+  const std::vector<Die> &Combatant::getSavingThrowDiceMods(SavingThrow type) const
+  {
+    auto it = _savingThrowsDiceMod.find(type);
+    static const std::vector<Die> empty;
+    return it != _savingThrowsDiceMod.end() ? it->second : empty;
+  }
 
-    void Combatant::addSavingThrowDiceMod(SavingThrow type, const Die &mod) { _savingThrowsDiceMod[type].push_back(mod); }
+  void Combatant::addSavingThrowDiceMod(SavingThrow type, const Die &mod) { _savingThrowsDiceMod[type].push_back(mod); }
 
-    void Combatant::clearSavingThrowDiceMods(SavingThrow type) { _savingThrowsDiceMod[type].clear(); }
+  void Combatant::clearSavingThrowDiceMods(SavingThrow type) { _savingThrowsDiceMod[type].clear(); }
 
-    RollType Combatant::getSavingThrowRollTypeMods(SavingThrow type) const
-    {
-      auto it = _savingThrowsRollTypeMod.find(type);
-      RollType straight = RollType::STRAIGHT;
-      return it != _savingThrowsRollTypeMod.end() ? it->second : straight;
-    }
+  RollType Combatant::getSavingThrowRollTypeMods(SavingThrow type) const
+  {
+    auto it = _savingThrowsRollTypeMod.find(type);
+    RollType straight = RollType::STRAIGHT;
+    return it != _savingThrowsRollTypeMod.end() ? it->second : straight;
+  }
 
-    void Combatant::addSavingThrowRollTypeMod(SavingThrow type, RollType rollType) { _savingThrowsRollTypeMod[type] |= rollType; }
+  void Combatant::addSavingThrowRollTypeMod(SavingThrow type, RollType rollType) { _savingThrowsRollTypeMod[type] |= rollType; }
 
-    void Combatant::setSavingThrowRollTypeMod(SavingThrow type, RollType rollType) { _savingThrowsRollTypeMod[type] = rollType; }
+  void Combatant::setSavingThrowRollTypeMod(SavingThrow type, RollType rollType) { _savingThrowsRollTypeMod[type] = rollType; }
 
-    void Combatant::removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType)
-    {
-      auto it = _savingThrowsRollTypeMod.find(type);
-      if(it != _savingThrowsRollTypeMod.end())
-        {
-          it->second &= ~rollType;
-        }
-    }
+  void Combatant::removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType)
+  {
+    auto it = _savingThrowsRollTypeMod.find(type);
+    if(it != _savingThrowsRollTypeMod.end())
+      {
+        it->second &= ~rollType;
+      }
+  }
 
-    void Combatant::clearSavingThrowRollTypeMods(SavingThrow type) { _savingThrowsRollTypeMod.erase(type); }
+  void Combatant::clearSavingThrowRollTypeMods(SavingThrow type) { _savingThrowsRollTypeMod.erase(type); }
 
-    void Combatant::clearAllSavingThrowMods()
-    {
-      _savingThrowsFlatMod.clear();
-      _savingThrowsDiceMod.clear();
-      _savingThrowsRollTypeMod.clear();
-    }
+  void Combatant::clearAllSavingThrowMods()
+  {
+    _savingThrowsFlatMod.clear();
+    _savingThrowsDiceMod.clear();
+    _savingThrowsRollTypeMod.clear();
+  }
 
-    // Private helper for damage calculations
-int Combatant::doReceiveDmg(int dmg, DamageType dmgType) {
+  void Combatant::setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths)
+  {
+    if(!_shortestPathsCache)
+      {
+        _shortestPathsCache = std::make_unique<blaze::DynamicMatrix<Coord>>();
+      }
+    *_shortestPathsCache = shortestPaths;
+  }
+
+  // Private helper for damage calculations
+  int Combatant::doReceiveDmg(int dmg, DamageType dmgType)
+  {
     // Check immunities first
-    if (_immunities.find(dmgType) != _immunities.end()) {
+    if(_immunities.find(dmgType) != _immunities.end())
+      {
         std::cout << _name << " is immune to " << DAMAGE_TYPE_TO_STRING.at(dmgType) << " and reduces the damage to 0" << std::endl;
         return 0;
-    }
-    
+      }
+
     // Check resistances
-    if (_resistances.find(dmgType) != _resistances.end()) {
+    if(_resistances.find(dmgType) != _resistances.end())
+      {
         dmg = std::floor(dmg / 2);
-        std::cout << _name <<" is resistant to " << DAMAGE_TYPE_TO_STRING.at(dmgType) << " and reduces the damage to " << dmg << std::endl;
-    }
-    
+        std::cout << _name << " is resistant to " << DAMAGE_TYPE_TO_STRING.at(dmgType) << " and reduces the damage to " << dmg << std::endl;
+      }
+
     // Check vulnerabilities
-    if (_vulnerabities.find(dmgType) != _vulnerabities.end()) {
+    if(_vulnerabities.find(dmgType) != _vulnerabities.end())
+      {
         dmg *= 2;
         std::cout << _name << " is vulnerable to " << DAMAGE_TYPE_TO_STRING.at(dmgType) << " which doubles the damage to " << dmg << std::endl;
-    }
+      }
 
     // Apply uncanny dodge if active
-    if (_uncannyDodgeActive) {
+    if(_uncannyDodgeActive)
+      {
         dmg = std::floor(dmg / 2);
         std::cout << _name << " uses Uncanny Dodge which reduces the damage to " << dmg << std::endl;
-    }
-    
+      }
+
     assert(_temporaryHp >= 0);
     _temporaryHp -= dmg;
-    
-    if (_temporaryHp < 0) {
+
+    if(_temporaryHp < 0)
+      {
         _currHp += _temporaryHp;
         _temporaryHp = 0;
-    }
-    
+      }
+
     _dmgTypesTookLastRound.insert(dmgType);
     return dmg;
-}
+  }
 
-// Main damage receiving function
-int Combatant::receiveDmg(int dmg, DamageType dmg_type, int multiplier) {
+  int Combatant::receiveDmg(int dmg, DamageType dmg_type, int multiplier)
+  {
     dmg = doReceiveDmg(dmg, dmg_type);
-    
+
     // Undead Fortitude check
-    if (_currHp <= 0 && hasPassiveAbility(AbilityType::UNDEAD_FORTITUDE) && 
-        multiplier == 1 && dmg_type != DamageType::Radiant) {
-        
-        bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 
-                                     5 + dmg, 
-                                     reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));
-        if (saved) {
+    if(_currHp <= 0 && hasPassiveAbility(AbilityType::UNDEAD_FORTITUDE) && multiplier == 1 && dmg_type != DamageType::Radiant)
+      {
+        bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 5 + dmg, reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));
+        if(saved)
+          {
             _currHp = 1;
             std::cout << "Instead of dying, " << _name << " drops to 1 HP thanks to Undead Fortitude" << std::endl;
-        }
-    }
+          }
+      }
 
     // Handle wildshape damage overflow
-    if (_currHp <= 0 && getOriginalForm() != this) {
-        getOriginalForm()->_currHp += _currHp;  // Carry-over damage
+    if(_currHp <= 0 && getOriginalForm() != this)
+      {
+        getOriginalForm()->_currHp += _currHp; // Carry-over damage
         EffectTracker::getInstance().removeEffectFromCombatantByType(getOriginalForm(), EffectType::WILDSHAPE);
-    }
+      }
 
     // Handle effects of taking damage
-    if (dmg > 0) {
+    if(dmg > 0)
+      {
         checkConcentration(this, dmg);
-        
-        if (isAffectedBy(Conditions::AWAKENED_BY_DMG)) {
+
+        if(isAffectedBy(Conditions::AWAKENED_BY_DMG))
+          {
             std::cout << _name << " is awakened by taking damage" << std::endl;
             removeCondition(Conditions::AWAKENED_BY_DMG);
-        }
-    }
-    
-    return dmg;
-}
+          }
+      }
 
-int Combatant::receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>& dmg, int multiplier) {
+    return dmg;
+  }
+
+  int Combatant::receiveCompoundDmg(const std::vector<std::pair<int, DamageType>> &dmg, int multiplier)
+  {
     int totalDmg = 0;
     bool received_radiant_dmg = false;
-    
-    for (const auto& [damage, type] : dmg) {
+
+    for(const auto &[damage, type] : dmg)
+      {
         totalDmg += doReceiveDmg(damage, type);
-        if (type == DamageType::Radiant) {
+        if(type == DamageType::Radiant)
+          {
             received_radiant_dmg = true;
-        }
-    }
-    
-    if (_currHp <= 0 && hasPassiveAbility(AbilityType::UNDEAD_FORTITUDE) && 
-        multiplier == 1 && !received_radiant_dmg) {
-        
-        bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 
-                                     5 + totalDmg,
-                                     reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));
-        if (saved) {
+          }
+      }
+
+    if(_currHp <= 0 && hasPassiveAbility(AbilityType::UNDEAD_FORTITUDE) && multiplier == 1 && !received_radiant_dmg)
+      {
+        bool saved
+          = rollSavingThrow(_savingThrows.at(SavingThrow::CON), 5 + totalDmg, reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));
+        if(saved)
+          {
             _currHp = 1;
             std::cout << "Instead of dying, " << _name << " drops to 1 HP thanks to Undead Fortitude" << std::endl;
-        }
-    }
+          }
+      }
 
     //! @todo this is different now
-    if (_currHp <= 0 && getOriginalForm() != this) {
-        getOriginalForm()->_currHp += _currHp;  // Carry-over damage
+    if(_currHp <= 0 && getOriginalForm() != this)
+      {
+        getOriginalForm()->_currHp += _currHp; // Carry-over damage
         EffectTracker::getInstance().removeEffectFromCombatantByType(getOriginalForm(), EffectType::WILDSHAPE);
-    }
+      }
 
-    if (totalDmg > 0) {
+    if(totalDmg > 0)
+      {
         checkConcentration(this, totalDmg);
-        
-        if (isAffectedBy(Conditions::AWAKENED_BY_DMG)) {
+
+        if(isAffectedBy(Conditions::AWAKENED_BY_DMG))
+          {
             std::cout << _name << " is awakened by taking damage" << std::endl;
             removeCondition(Conditions::AWAKENED_BY_DMG);
-        }
-    }
+          }
+      }
 
     _uncannyDodgeActive = false;
     return totalDmg;
-}
+  }
 
-bool Combatant::checkConcentration(Combatant* combatant, int dmg) {
+  bool Combatant::checkConcentration(Combatant *combatant, int dmg)
+  {
     // If not concentrating, no check needed
-    if (!combatant->isConcentrating()) {
+    if(!combatant->isConcentrating())
+      {
         return true;
-    }
-    
+      }
+
     // Calculate DC for the check (higher of 10 or half the damage taken)
     int dc = std::max(10, dmg / 2);
-    
+
     // Roll the save
-    bool saved = rollSavingThrow(
-        _savingThrows.at(SavingThrow::CON),
-        dc,
-        reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON])
-    );
-    
+    bool saved = rollSavingThrow(_savingThrows.at(SavingThrow::CON), dc, reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON]));
+
     // If failed, break concentration
-    if (!saved) {
+    if(!saved)
+      {
         std::cout << _name << " fails their concentration check and loses concentration" << std::endl;
         combatant->breakConcentration();
         return false;
-    }
-    
+      }
+
     std::cout << _name << " maintains concentration" << std::endl;
     return true;
-}
+  }
 
-void Combatant::withActionEnablerEffect(Actoid &action, const std::function<void(bool)> &fn)
-{
-  if(auto *actionEnabler = dynamic_cast<ActionEnablerEffect *>(&action))
-    {
-      try
-        {
-          actionEnabler->enable();
-          fn(true);
-        }
-      catch(...)
-        {
-          actionEnabler->disable();
-          throw;
-        }
-      actionEnabler->disable();
-    }
-  else
-    {
-      fn(false);
-    }
-}
+  void Combatant::withActionEnablerEffect(Actoid &action, const std::function<void(bool)> &fn)
+  {
+    if(auto *actionEnabler = dynamic_cast<ActionEnablerEffect *>(&action))
+      {
+        try
+          {
+            actionEnabler->enable();
+            fn(true);
+          }
+        catch(...)
+          {
+            actionEnabler->disable();
+            throw;
+          }
+        actionEnabler->disable();
+      }
+    else
+      {
+        fn(false);
+      }
+  }
 
-void Combatant::withHasAction(const std::function<void()> &fn)
-{
-  bool originalHasAction = _hasAction;
-  try
-    {
-      _hasAction = true;
-      fn();
-    }
-  catch(...)
-    {
-      _hasAction = originalHasAction;
-      throw;
-    }
-  _hasAction = originalHasAction;
-}
+  void Combatant::withHasAction(const std::function<void()> &fn)
+  {
+    bool originalHasAction = _hasAction;
+    try
+      {
+        _hasAction = true;
+        fn();
+      }
+    catch(...)
+      {
+        _hasAction = originalHasAction;
+        throw;
+      }
+    _hasAction = originalHasAction;
+  }
 
-void Combatant::addUndeadFortitude() { _passiveAbilities.insert(AbilityType::UNDEAD_FORTITUDE); }
+  void Combatant::addUndeadFortitude() { _passiveAbilities.insert(AbilityType::UNDEAD_FORTITUDE); }
 
-void Combatant::addResistance(DamageType dmgType) { _resistances.insert(dmgType); }
+  void Combatant::addResistance(DamageType dmgType) { _resistances.insert(dmgType); }
 
-void Combatant::removeResistance(DamageType dmgType) { _resistances.erase(dmgType); }
+  void Combatant::removeResistance(DamageType dmgType) { _resistances.erase(dmgType); }
 
-void Combatant::addImmunity(DamageType dmgType) { _immunities.insert(dmgType); }
+  void Combatant::addImmunity(DamageType dmgType) { _immunities.insert(dmgType); }
 
-void Combatant::removeImmunity(DamageType dmgType) { _immunities.erase(dmgType); }
+  void Combatant::removeImmunity(DamageType dmgType) { _immunities.erase(dmgType); }
 
-void Combatant::addVulnerability(DamageType dmgType) { _vulnerabities.insert(dmgType); }
+  void Combatant::addVulnerability(DamageType dmgType) { _vulnerabities.insert(dmgType); }
 
-void Combatant::removeVulnerability(DamageType dmgType) { _vulnerabities.erase(dmgType); }
+  void Combatant::removeVulnerability(DamageType dmgType) { _vulnerabities.erase(dmgType); }
 
-std::vector<std::shared_ptr<Actoid>>
-Combatant::calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
-{
-  return _actionPlanStrategy->calculateActionPlan(distances, shortestPaths);
-}
+  std::vector<std::shared_ptr<Actoid>>
+  Combatant::calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+  {
+    return _actionPlanStrategy->calculateActionPlan(distances, shortestPaths);
+  }
 
-const std::vector<std::shared_ptr<Actoid>> &Combatant::getActionPlan() const { return _actionPlan; }
+  const std::vector<std::shared_ptr<Actoid>> &Combatant::getActionPlan() const { return _actionPlan; }
 
-void Combatant::setActionPlan(std::vector<std::shared_ptr<Actoid>> plan) { _actionPlan = std::move(plan); }
+  void Combatant::setActionPlan(std::vector<std::shared_ptr<Actoid>> plan) { _actionPlan = std::move(plan); }
 
-std::shared_ptr<Actoid> Combatant::popActionPlan()
-{
-  if(_actionPlan.empty())
-    return nullptr;
-  auto action = _actionPlan.front();
-  _actionPlan.erase(_actionPlan.begin());
-  return action;
-}
+  std::shared_ptr<Actoid> Combatant::popActionPlan()
+  {
+    if(_actionPlan.empty())
+      return nullptr;
+    auto action = _actionPlan.front();
+    _actionPlan.erase(_actionPlan.begin());
+    return action;
+  }
 } // namespace enc
