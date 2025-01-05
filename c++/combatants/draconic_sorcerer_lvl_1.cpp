@@ -5,13 +5,7 @@
 namespace enc
 {
 
-  DraconicSorcererLvl1::DraconicSorcererLvl1(int num)
-      : Combatant(CombatantType::SORCERER, Sorcerer::BEFORE_SUBCLASS, _classLevel, concatName(std::string(_className), num), 7, 15, 2, 5, 30, 0)
-  {
-    _instanceId = generateInstanceId();
-    addSpellSlots();
-    addFirebolt();
-  }
+  DraconicSorcererLvl1::DraconicSorcererLvl1(int num) : DraconicSorcererLvl1(concatName(std::string(_className), num)) {}
 
   DraconicSorcererLvl1::DraconicSorcererLvl1(const std::string &name)
       : Combatant(CombatantType::SORCERER, Sorcerer::BEFORE_SUBCLASS, _classLevel, name, 7, 15, 2, 5, 30, 0)

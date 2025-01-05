@@ -30,6 +30,9 @@ namespace enc
     std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
     std::shared_ptr<Actoid> create(void *target) override;
+
+    int getRange() const override { return static_cast<int>(HungerOfHadarFactory::range); }
+
     std::optional<Resource *> getResource() override { return _resource; }
 
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;

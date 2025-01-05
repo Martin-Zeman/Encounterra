@@ -35,6 +35,7 @@ namespace enc
 
     std::vector<Combatant *> getEligibleTargets() const;
     std::optional<Resource *> getResource() override { return &_ammo; }
+     int getRange() const override { return _attackRange; }
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
     double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;
     double calculateMaxThreat() const override;

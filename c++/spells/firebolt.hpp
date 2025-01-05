@@ -56,6 +56,7 @@ namespace enc
     std::shared_ptr<Actoid> create(void *target) override;
 
     std::optional<Resource *> getResource() override { return _resource; }
+    int getRange() const override { return static_cast<int>(FireboltFactory::range); }
 
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
     double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;

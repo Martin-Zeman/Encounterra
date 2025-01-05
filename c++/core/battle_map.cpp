@@ -1646,11 +1646,11 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
       }
   }
 
-  std::optional<Coord> BattleMap::findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoord)
+  std::optional<Coord> BattleMap::findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &actualOrigCoord)
   {
     // Get original position and convert to matrix coordinates
     Coord beforeWildshapeCoord = getCombatantCoordinates(*combatant).getRoot();
-    Coord matrixCoord = {static_cast<int>(_size - beforeWildshapeCoord[1] - 1), beforeWildshapeCoord[0]};
+    Coord beforeWildshapeCoordMC = {static_cast<int>(_size - beforeWildshapeCoord[1] - 1), beforeWildshapeCoord[0]}; // MC stands for Matrix Coordinates
 
     // Create accessibility matrix
     MapMatrix mapAccessibilityMatrix(_size, _size, 0);
@@ -1663,39 +1663,39 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
           {
             if(shortestPaths(i, j)[0] != -1)
               {
-                mapAccessibilityMatrix(_size - i - 1, j) = 1;
+                mapAccessibilityMatrix(_size - j - 1, i) = 1;
               }
           }
       }
 
     // Mark current position as accessible
-    mapAccessibilityMatrix(matrixCoord[0], matrixCoord[1]) = 1;
+    mapAccessibilityMatrix(beforeWildshapeCoordMC[0], beforeWildshapeCoordMC[1]) = 1;
 
     // Mark original coordinates if provided
-    if(origCoord)
+    if(actualOrigCoord)
       {
-        mapAccessibilityMatrix(_size - (*origCoord)[1] - 1, (*origCoord)[0]) = 1;
+        mapAccessibilityMatrix(_size - (*actualOrigCoord)[1] - 1, (*actualOrigCoord)[0]) = 1;
       }
 
     // Calculate boundaries for possible positions
-    int startRow = matrixCoord[0];
-    int endRow = std::min(matrixCoord[0] + static_cast<int>(size), static_cast<int>(_size - 1));
-    int startCol = std::max(matrixCoord[1] - static_cast<int>(size), 0);
-    int endCol = matrixCoord[1];
+    int startRow = beforeWildshapeCoordMC[0];
+    int endRow = std::min(beforeWildshapeCoordMC[0] + static_cast<int>(size), static_cast<int>(_size - 1));
+    int startCol = std::max(beforeWildshapeCoordMC[1] - static_cast<int>(size), 0);
+    int endCol = beforeWildshapeCoordMC[1];
 
     // Generate possible root coordinates
-    std::vector<std::pair<int, int>> possibleRootCoordinates;
+    std::vector<std::pair<int, int>> possibleRootCoordinatesMC;
     for(int row = startRow; row <= endRow; ++row)
       {
         for(int col = startCol; col <= endCol; ++col)
           {
-            possibleRootCoordinates.emplace_back(row, col);
+            possibleRootCoordinatesMC.emplace_back(row, col);
           }
       }
 
     // Check each possible position
     CoordVector resultCoordinates;
-    for(const auto &[rootRow, rootCol] : possibleRootCoordinates)
+    for(const auto &[rootRow, rootCol] : possibleRootCoordinatesMC)
       {
         // Check if the area would fit within bounds
         if(rootRow - static_cast<int>(size) < 0 || rootCol + static_cast<int>(size) >= static_cast<int>(_size))
@@ -1730,13 +1730,10 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
         return std::nullopt;
       }
 
-    // Convert original coordinate for distance comparison
-    Coord originalCoord = {matrixCoord[1], static_cast<int>(_size - 1 - matrixCoord[0])};
-
     // Sort by distance to original position
-    std::sort(resultCoordinates.begin(), resultCoordinates.end(), [&originalCoord](const Coord &a, const Coord &b) {
-      double distA = std::sqrt(std::pow(originalCoord[0] - a[0], 2) + std::pow(originalCoord[1] - a[1], 2));
-      double distB = std::sqrt(std::pow(originalCoord[0] - b[0], 2) + std::pow(originalCoord[1] - b[1], 2));
+    std::sort(resultCoordinates.begin(), resultCoordinates.end(), [&beforeWildshapeCoord](const Coord &a, const Coord &b) {
+      double distA = std::sqrt(std::pow(beforeWildshapeCoord[0] - a[0], 2) + std::pow(beforeWildshapeCoord[1] - a[1], 2));
+      double distB = std::sqrt(std::pow(beforeWildshapeCoord[0] - b[0], 2) + std::pow(beforeWildshapeCoord[1] - b[1], 2));
       return distA < distB;
     });
 

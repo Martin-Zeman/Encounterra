@@ -9,7 +9,7 @@
 namespace enc
 {
 
-  StateMachine::StateMachine() : _currentState(0), _nextAvailableId(1), _isDagDirty(true)
+  StateMachine::StateMachine() : _currentState(INITIAL_STATE), _nextAvailableId(2), _isDagDirty(true)
   {
     // Ensure space for initial and NOP states
     _states.resize(2);
@@ -18,10 +18,18 @@ namespace enc
 
   void StateMachine::addNewState(StateId id)
   {
-    if(id >= _states.size())
+    if(id == _states.size())
       {
         _states.resize(id + 1);
         _dependencies.resize(id + 1);
+      }
+    else if(id > _states.size())
+      {
+        throw std::runtime_error("State ID must be the next available ID");
+      }
+    else
+      {
+        throw std::runtime_error("State already exists");
       }
     _nextAvailableId = std::max(_nextAvailableId, id + 1);
   }
@@ -30,33 +38,33 @@ namespace enc
 
   StateId StateMachine::getNumStates() { return _states.size(); }
 
-  void StateMachine::removeState(StateId stateId)
-  {
-    if(stateId == 0 || stateId == -1)
-    {
-      return; // Protect initial and NOP states
-    }
+  // void StateMachine::removeState(StateId stateId)
+  // {
+  //   if(stateId == INITIAL_STATE || stateId == TERMINAL_STATE)
+  //   {
+  //     return; // Protect initial and NOP states
+  //   }
 
-    if(stateId < _states.size())
-      {
-        // Clear transitions from this state
-        _states[stateId].clear();
-        _dependencies[stateId].clear();
+  //   if(stateId < _states.size())
+  //     {
+  //       // Clear transitions from this state
+  //       _states[stateId].clear();
+  //       _dependencies[stateId].clear();
 
-        // Remove transitions to this state and dependencies
-        for(size_t i = 0; i < _states.size(); ++i)
-          {
-            auto &transitions = _states[i];
-            transitions.erase(
-              std::remove_if(transitions.begin(), transitions.end(), [stateId](const Transition &t) { return t.destination == stateId; }),
-              transitions.end());
+  //       // Remove transitions to this state and dependencies
+  //       for(size_t i = 0; i < _states.size(); ++i)
+  //         {
+  //           auto &transitions = _states[i];
+  //           transitions.erase(
+  //             std::remove_if(transitions.begin(), transitions.end(), [stateId](const Transition &t) { return t.destination == stateId; }),
+  //             transitions.end());
 
-            auto &deps = _dependencies[i];
-            deps.erase(std::remove(deps.begin(), deps.end(), stateId), deps.end());
-          }
-        _isDagDirty = true;
-      }
-  }
+  //           auto &deps = _dependencies[i];
+  //           deps.erase(std::remove(deps.begin(), deps.end(), stateId), deps.end());
+  //         }
+  //       _isDagDirty = true;
+  //     }
+  // }
 
   void StateMachine::addTransition(std::shared_ptr<Actoid> action, StateId origin, StateId dest)
   {

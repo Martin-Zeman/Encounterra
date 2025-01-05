@@ -12,6 +12,9 @@ namespace enc
 {
   using StateId = int;
 
+  constexpr StateId INITIAL_STATE = 0;
+  constexpr StateId TERMINAL_STATE = 1;
+
   class StateMachine
   {
   private:
@@ -38,7 +41,7 @@ namespace enc
 
     StateId getNumStates();
 
-    void removeState(StateId stateId);
+    // void removeState(StateId stateId);
 
     void addTransition(std::shared_ptr<Actoid> action, StateId origin, StateId dest);
 

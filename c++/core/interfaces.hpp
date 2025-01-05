@@ -174,7 +174,7 @@ namespace enc
     virtual double calculateMaxThreat() const = 0;
 
   public:
-    virtual int getRange() const { return std::numeric_limits<int>::max(); }
+    virtual int getRange() const = 0;
     virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const = 0;
     virtual double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const { return 0; }; //  Not always needed
   };

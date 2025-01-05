@@ -184,6 +184,7 @@ namespace enc
     void setAvailableWildshapeForms(std::vector<std::shared_ptr<Wildshape>> wildshapeForms) { _availableWildshapeForms = wildshapeForms; }
     const std::vector<std::shared_ptr<Wildshape>> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
+    void setDangerZoneAttack(DirectThreatFactory *dangerZoneAttack) { _dangerZoneAttack = dangerZoneAttack; }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
     void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths);
     const blaze::DynamicMatrix<Coord> &getShortestPathsCache() const { return *_shortestPathsCache; }

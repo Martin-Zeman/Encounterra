@@ -232,6 +232,10 @@ namespace enc
         const Coords &enemyPos = battleMap.getCombatantCoordinates(*enemy);
         DirectThreatFactory *dzFactory = enemy->getDangerZoneAttack();
 
+        auto speed = enemy->getSpeed();
+        auto range = dzFactory ? dzFactory->getRange() : 0;
+        auto distance = getHopDistanceCoords(enemyPos, coords) + delta;
+
         if(dzFactory && getHopDistanceCoords(enemyPos, coords) + delta <= enemy->getSpeed() + dzFactory->getRange())
           {
             threatAcc += dzFactory->calculateThreatToTarget(combatant, {{"considerDist", false}}) * DZ_CONSTANT;
@@ -252,7 +256,7 @@ namespace enc
       {
         if(auto effect = weakEffect.lock())
           {
-            effectToCoords.at(effect.get()) = Coords(effect->getAffectedCoords());
+            effectToCoords.emplace(effect.get(), effect->getAffectedCoords());
           }
       }
 
