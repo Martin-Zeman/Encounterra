@@ -32,6 +32,8 @@ namespace enc
   //   _actionFactories = {_dodgeFactory, _disengageFactory};
   // }
 
+  Combatant::~Combatant() { breakConcentration(); }
+
   std::string Combatant::toString() const { return _name; }
 
   bool Combatant::isAlive() const { return _currHp > 0; }
@@ -276,15 +278,22 @@ namespace enc
 
   void Combatant::breakConcentration()
   {
-    if(auto effect = _concentrationEffect.lock())
+    std::cout << "Breaking concentration for " << this << std::endl;
+    if(auto ptr = _concentrationEffect.lock())
       {
-        EffectTracker::getInstance().remove(effect);
+        std::cout << "  Effect ptr valid: " << ptr.get() << std::endl;
+        EffectTracker::getInstance().remove(ptr);
+      }
+    else
+      {
+        std::cout << "  No valid effect ptr" << std::endl;
       }
     _concentrationEffect.reset();
 
     // Also break concentration for original form if in wildshape
     if(_currentWildshapeForm != nullptr && _originalForm != this)
       {
+        std::cout << "  Breaking concentration for original form" << std::endl;
         _originalForm->_concentrationEffect.reset();
       }
   }

@@ -7,7 +7,7 @@ namespace enc
   std::weak_ptr<Effect> EffectTracker::add(std::shared_ptr<Effect> effect)
   {
     _effects.push_back(effect);
-    return std::weak_ptr<Effect>(effect);
+    return _effects.back();
   }
 
   void EffectTracker::remove(const std::shared_ptr<Effect> &effect)

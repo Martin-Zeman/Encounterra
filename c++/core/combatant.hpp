@@ -47,6 +47,7 @@ namespace enc
     // {},
     //           std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
+    ~Combatant();
 
     static constexpr uint32_t fnv1a_32(uint32_t initial, uint32_t value)
     {

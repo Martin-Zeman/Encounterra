@@ -44,6 +44,14 @@ namespace
         wild_heart_barbarian = new WildHeartBarbarianLvl3(1);
       }
 
+      void TearDown() override
+      {
+        // BattleMap::resetInstance();
+        // Teams::resetInstance();
+        // EffectTracker::resetInstance();
+        delete session;
+      }
+
     Combatant* draconic_sorcerer_lvl_1;
     Combatant* draconic_sorcerer_lvl_5;
     Combatant* goblin;

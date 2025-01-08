@@ -11,7 +11,7 @@ namespace enc
 
   SpikeGrowthFactory::SpikeGrowthFactory(AbilityType abilityType, Combatant *caster, Resource *resource)
       : DirectThreatFactory("SpikeGrowthFactory", "Spike Growth", caster, abilityType), _abilityType(abilityType), _resource(resource),
-        _dmgDice({4, 4})
+        _dmgDice({2, 4})
   {}
 
   Coord SpikeGrowthFactory::findBestArgs() const

@@ -139,7 +139,7 @@ namespace enc
     std::string _abilityName;
 
   protected:
-    Combatant *_combatant;
+    Combatant *_combatant = nullptr;
     uint32_t _flags;
     AbilityType _abilityType;
 
