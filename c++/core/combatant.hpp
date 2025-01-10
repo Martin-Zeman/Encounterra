@@ -114,12 +114,12 @@ namespace enc
     bool hasAlreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
     void setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
-    Combatant *getCurrentForm();
-    Combatant *getOriginalForm();
+    std::weak_ptr<Combatant> getCurrentForm();
+    std::weak_ptr<Combatant> getOriginalForm();
     void setOriginalForm(Combatant *form) { _originalForm = form; };
     void setCurrentWildshapeForm(Combatant *form) { _currentWildshapeForm = form; };
-    Combatant *getCurrentWildshapeForm() { return _currentWildshapeForm; };
-    Combatant *getSwallower() const { return _swallower; }
+    std::weak_ptr<Combatant> getCurrentWildshapeForm() { return _currentWildshapeForm; };
+    std::weak_ptr<Combatant> getSwallower() const { return _swallower; }
     void setSwallower(Combatant *swallower) { _swallower = swallower; }
     bool isSwallowed() const { return _swallower != nullptr; }
     const std::vector<std::shared_ptr<Condition>> &getConditions() const { return _conditions; }
@@ -130,8 +130,8 @@ namespace enc
     bool removeCondition(Conditions condition, const Combatant *initiator = nullptr);
     bool removeDCCondition(Conditions condition, const Combatant *initiator = nullptr);
     void removeAllConditionsOfType(Conditions condition);
-    Combatant *getInitiatorOfCondition(Conditions condition);
-    Combatant *getGrappledTarget();
+    std::weak_ptr<Combatant> getInitiatorOfCondition(Conditions condition);
+    std::weak_ptr<Combatant> getGrappledTarget();
     std::vector<std::weak_ptr<ConditionWithDC>> needsToBreakOutOfGrapple() const;
     bool breakOutOfGrapple(const std::weak_ptr<ConditionWithDC>& grappleCondition);
     void setConcentrationEffect(std::shared_ptr<Effect> effect);
@@ -205,7 +205,7 @@ namespace enc
      * @param dmg The amount of damage that triggered the check
      * @return true if concentration was maintained, false if it was lost
      */
-    bool checkConcentration(Combatant *combatant, int dmg);
+    bool checkConcentration(int dmg);
     void withActionEnablerEffect(Actoid& action, const std::function<void(bool)>& fn);
     void withHasAction(const std::function<void()> &fn);
     const std::vector<std::shared_ptr<Actoid>> &getActionPlan() const;
@@ -220,7 +220,7 @@ namespace enc
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
 
-    std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
+    std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, const std::shared_ptr<Combatant>& owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
                                                   DamageType damageType, int attackRange)
     {
       auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
@@ -228,7 +228,7 @@ namespace enc
       return factory;
     }
 
-    std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
+    std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, const std::shared_ptr<Combatant>& owner, int toHit, const std::vector<Die> &dmgDice,
                                                    int dmgBonus, DamageType damageType, int attackRange)
     {
       auto factory = std::make_shared<RangedAttackFactory>("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
@@ -456,7 +456,7 @@ namespace enc
 
   private:
     template <typename ConditionType>
-    Combatant *checkConditionList(const std::vector<std::shared_ptr<ConditionType>> &condList, Conditions condition) const
+    std::weak_ptr<Combatant> checkConditionList(const std::vector<std::shared_ptr<ConditionType>> &condList, Conditions condition) const
     {
       for(const auto &cond : condList)
         {
@@ -517,11 +517,11 @@ namespace enc
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
     std::unordered_map<SavingThrow, RollType> _savingThrowsRollTypeMod;
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
-    Combatant *_originalForm = this;
-    Combatant *_currentWildshapeForm = nullptr;
-    Combatant *_swallower = nullptr;
-    Combatant *_swallowedTarget = nullptr;
-    Combatant *_constrictedTarget = nullptr;
+    std::weak_ptr<Combatant> _originalForm = this;
+    std::weak_ptr<Combatant> _currentWildshapeForm;
+    std::weak_ptr<Combatant> _swallower;
+    std::weak_ptr<Combatant> _swallowedTarget;
+    std::weak_ptr<Combatant> _constrictedTarget;
     std::vector<std::shared_ptr<Condition>> _conditions;
     std::vector<std::shared_ptr<ConditionWithDC>> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;

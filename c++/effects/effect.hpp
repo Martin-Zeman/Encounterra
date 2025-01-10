@@ -41,15 +41,15 @@ namespace enc
   class Effect : public std::enable_shared_from_this<Effect>
   {
   public:
-    explicit Effect(Combatant *initiator, Combatant *target = nullptr) : _initiator(initiator), _target(target) {}
+    explicit Effect(const std::shared_ptr<Combatant>& initiator, const std::shared_ptr<Combatant>& target = nullptr) : _initiator(initiator), _target(target) {}
     virtual ~Effect() = default;
 
     // Pure virtual methods (must be implemented by derived classes)
     virtual EffectType getEffectType() const = 0;
     virtual void activate(const Kwargs &kwargs = {}) = 0;
     virtual void deactivate() = 0;
-    virtual bool deactivateForCombatant(Combatant *combatant) = 0;
-    virtual bool isAffecting(Combatant *combatant) const = 0;
+    virtual bool deactivateForCombatant(const std::shared_ptr<Combatant>& combatant) = 0;
+    virtual bool isAffecting(const std::shared_ptr<Combatant>& combatant) const = 0;
 
     virtual bool startOfTurnTick()
     {
@@ -57,12 +57,12 @@ namespace enc
     }
 
     // Virtual methods with default implementations
-    virtual bool combatantSavedAtEndOfTurn(Combatant *combatant)
+    virtual bool combatantSavedAtEndOfTurn(const std::shared_ptr<Combatant>& combatant)
     {
       return true; // Default: abilities that cannot be saved against
     }
 
-    virtual bool startOfTurnForCombatant(Combatant *combatant)
+    virtual bool startOfTurnForCombatant(const std::shared_ptr<Combatant>& combatant)
     {
       return true; // Default: all abilities
     }
@@ -70,11 +70,11 @@ namespace enc
     virtual bool newTurn() { return true; }
 
     // Non-virtual methods
-    Combatant *getInitiator() const { return _initiator; }
-    Combatant *getTarget() const { return _target; }
+    std::weak_ptr<Combatant> getInitiator() const { return _initiator; }
+    std::weak_ptr<Combatant> getTarget() const { return _target; }
 
   protected:
-    Combatant *_initiator;
-    Combatant *_target; // only relevant for Hide as of now
+    std::weak_ptr<Combatant> _initiator;
+    std::weak_ptr<Combatant> _target; // only relevant for Hide as of now
   };
 }

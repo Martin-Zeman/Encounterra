@@ -18,12 +18,13 @@ namespace enc
   {
   public:
     Session();
-    template <typename CombatantType> void addCombatant(Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
 
+    void addCombatant(std::shared_ptr<Combatant> combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
     template <typename CombatantType>
-    void addCombatant(CombatantType *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel); // For testing purposes
-    void addCombatant(Combatant *combatant, Color teamColor);
-    void addCombatant(Combatant *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
+    void
+    addCombatant(std::shared_ptr<CombatantType> combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel); // For testing purposes
+    template <typename CombatantType> void addCombatant(Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
+    void addCombatant(std::shared_ptr<Combatant> combatant, Color teamColor);
 
   private:
     void generateUniqueShortCodes()
@@ -120,12 +121,12 @@ namespace enc
         }
     }
 
-    std::vector<std::unique_ptr<Combatant>> _combatants;
+    std::vector<std::shared_ptr<Combatant>> _combatants;
     std::unordered_map<int, int> _typeCounter;
     Teams &_teams;
 
     // Map to store factory functions for each combatant type
-    std::unordered_map<int, std::function<std::unique_ptr<Combatant>(int)>> _combatantFactories;
+    std::unordered_map<int, std::function<std::shared_ptr<Combatant>(int)>> _combatantFactories;
 
     // Helper function to register combatant types
     template <typename CombatantType> void registerCombatantType();

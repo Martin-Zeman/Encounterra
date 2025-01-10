@@ -116,8 +116,11 @@ namespace enc
     _weaponDmgDealtThisTurn = 0;
   }
 
-  Combatant *Combatant::getCurrentForm() { return _currentWildshapeForm == nullptr ? _originalForm : _currentWildshapeForm; }
-  Combatant *Combatant::getOriginalForm() { return _originalForm; }
+  void Combatant::setIsWildshaped(bool isWildshaped) { _isWildshaped = isWildshaped; }
+
+  std::weak_ptr<Combatant> Combatant::getCurrentForm() { return _isWildshaped ? _wildshapeForm : weak_from_this(); }
+
+  std::weak_ptr<Combatant> Combatant::getOriginalForm() { return _isWildshaped ? _baseForm : weak_from_this(); }
 
   bool Combatant::isAffectedBy(Conditions condition) const
   {
@@ -163,7 +166,7 @@ namespace enc
     _dcConditions.push_back(std::move(dcCondition));
   }
 
-  bool Combatant::removeCondition(Conditions condition, const Combatant *initiator)
+  bool Combatant::removeCondition(Conditions condition, const const std::shared_ptr<Combatant>& initiator)
   {
     auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, initiator](const std::shared_ptr<Condition> &c) {
       return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
@@ -180,7 +183,7 @@ namespace enc
     return false;
   }
 
-  bool Combatant::removeDCCondition(Conditions condition, const Combatant *initiator)
+  bool Combatant::removeDCCondition(Conditions condition, const const std::shared_ptr<Combatant>& initiator)
   {
     auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, initiator](const std::shared_ptr<ConditionWithDC> &c) {
       return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
@@ -203,18 +206,18 @@ namespace enc
     while(removeCondition(condition)) {};
   }
 
-  Combatant *Combatant::getInitiatorOfCondition(Conditions condition)
+  std::weak_ptr<Combatant> Combatant::getInitiatorOfCondition(Conditions condition)
   {
     auto initiator = checkConditionList(_dcConditions, condition);
-    if(initiator)
+    if(!initiator.expired())
       {
         return initiator;
       }
 
-    return checkConditionList(_conditions, condition);
+    return checkConditionList(_conditions, condition); // TODO: How to handle this?
   }
 
-  Combatant *Combatant::getGrappledTarget()
+  std::weak_ptr<Combatant> Combatant::getGrappledTarget()
   {
     for(const auto &cond : _dcConditions)
       {
@@ -232,7 +235,7 @@ namespace enc
           }
       }
 
-    return nullptr;
+    return {};
   }
 
   std::vector<std::weak_ptr<ConditionWithDC>> Combatant::needsToBreakOutOfGrapple() const
@@ -270,9 +273,9 @@ namespace enc
     _concentrationEffect = EffectTracker::getInstance().add(effect);
 
     // Also set concentration for original form if in wildshape
-    if(_currentWildshapeForm != nullptr && _originalForm != this)
+    if(!_wildshapeForm.expired() && _baseForm != this)
       {
-        _originalForm->_concentrationEffect = _concentrationEffect;
+        _baseForm->_concentrationEffect = _concentrationEffect;
       }
   }
 
@@ -291,10 +294,10 @@ namespace enc
     _concentrationEffect.reset();
 
     // Also break concentration for original form if in wildshape
-    if(_currentWildshapeForm != nullptr && _originalForm != this)
+    if(!_wildshapeForm.expired() && _baseForm != this)
       {
         std::cout << "  Breaking concentration for original form" << std::endl;
-        _originalForm->_concentrationEffect.reset();
+        _baseForm->_concentrationEffect.reset();
       }
   }
 
@@ -531,10 +534,10 @@ namespace enc
     return totalDmg;
   }
 
-  bool Combatant::checkConcentration(Combatant *combatant, int dmg)
+  bool Combatant::checkConcentration(int dmg)
   {
     // If not concentrating, no check needed
-    if(!combatant->isConcentrating())
+    if(!isConcentrating())
       {
         return true;
       }
@@ -549,7 +552,7 @@ namespace enc
     if(!saved)
       {
         std::cout << _name << " fails their concentration check and loses concentration" << std::endl;
-        combatant->breakConcentration();
+        breakConcentration();
         return false;
       }
 

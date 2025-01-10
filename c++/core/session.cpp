@@ -45,6 +45,30 @@ namespace enc
     // Register other combatant types...
   }
 
+  void Session::addCombatant(std::shared_ptr<Combatant> combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
+  {
+    combatant->setResourceDepletionLevel(resourceDepletionLevel);
+    _teams.addCombatantToTeam(*combatant, teamColor);
+    _combatants.push_back(std::move(combatant)); // Move from the shared_ptr argument
+    generateUniqueShortCodes();
+  }
+
+  template <typename CombatantType>
+  void Session::addCombatant(std::shared_ptr<CombatantType> combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
+  {
+    int classId = CombatantType::getStaticClassId();
+    auto factoryIt = _combatantFactories.find(classId);
+
+    if(factoryIt == _combatantFactories.end())
+      {
+        throw std::runtime_error("Unsupported combatant type");
+      }
+    combatant->setResourceDepletionLevel(resourceDepletionLevel);
+    _teams.addCombatantToTeam(*combatant, teamColor);
+    _combatants.push_back(std::move(combatant));
+    generateUniqueShortCodes();
+  }
+
   template <typename CombatantType> void Session::addCombatant(Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
   {
     int classId = CombatantType::getStaticClassId();
@@ -62,25 +86,9 @@ namespace enc
     generateUniqueShortCodes();
   }
 
-  template <typename CombatantType>
-  void Session::addCombatant(CombatantType *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
+  void Session::addCombatant(std::shared_ptr<Combatant> combatant, Color teamColor)
   {
-    // For testing purposes
-    int classId = CombatantType::getStaticClassId();
-    combatant->setResourceDepletionLevel(resourceDepletionLevel);
-    _teams.addCombatantToTeam(*combatant, teamColor);
-    _combatants.emplace_back(std::move(std::unique_ptr<Combatant>(combatant)));
-    generateUniqueShortCodes();
-  }
-
-  void Session::addCombatant(Combatant *combatant, Color teamColor) { addCombatant(combatant, teamColor, ResourceDepletionLevel::FULLY_RESTED); }
-
-  void Session::addCombatant(Combatant *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
-  {
-    combatant->setResourceDepletionLevel(resourceDepletionLevel);
-    _teams.addCombatantToTeam(*combatant, teamColor);
-    _combatants.emplace_back(std::unique_ptr<Combatant>(combatant));
-    generateUniqueShortCodes();
+    addCombatant(std::move(combatant), teamColor, ResourceDepletionLevel::FULLY_RESTED);
   }
 
   template <typename CombatantType> void Session::registerCombatantType()
@@ -109,24 +117,24 @@ namespace enc
   template void Session::addCombatant<StoneGiant>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl3>(Color, ResourceDepletionLevel);
 
-  template void Session::addCombatant<Acolyte>(Acolyte *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<BattlemasterFighterLvl5>(BattlemasterFighterLvl5 *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<BrownBear>(BrownBear *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<Bugbear>(Bugbear *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<DireWolf>(DireWolf *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<DraconicSorcererLvl1>(DraconicSorcererLvl1 *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<DraconicSorcererLvl5>(DraconicSorcererLvl5 *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<GiantConstrictorSnake>(GiantConstrictorSnake *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<GiantSpider>(GiantSpider *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<GiantToad>(GiantToad *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<Goblin>(Goblin *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<GreenDragonWyrmling>(GreenDragonWyrmling *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<MoonDruidLvl5>(MoonDruidLvl5 *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<NightHag>(NightHag *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<Ogre>(Ogre *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<SaberToothedTiger>(SaberToothedTiger *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<StoneGiant>(StoneGiant *, Color, ResourceDepletionLevel);
-  template void Session::addCombatant<WildHeartBarbarianLvl3>(WildHeartBarbarianLvl3 *, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Acolyte>(std::shared_ptr<Acolyte>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<BattlemasterFighterLvl5>(std::shared_ptr<BattlemasterFighterLvl5>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<BrownBear>(std::shared_ptr<BrownBear>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Bugbear>(std::shared_ptr<Bugbear>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DireWolf>(std::shared_ptr<DireWolf>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DraconicSorcererLvl1>(std::shared_ptr<DraconicSorcererLvl1>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DraconicSorcererLvl5>(std::shared_ptr<DraconicSorcererLvl5>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantConstrictorSnake>(std::shared_ptr<GiantConstrictorSnake>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantSpider>(std::shared_ptr<GiantSpider>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantToad>(std::shared_ptr<GiantToad>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Goblin>(std::shared_ptr<Goblin>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GreenDragonWyrmling>(std::shared_ptr<GreenDragonWyrmling>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<MoonDruidLvl5>(std::shared_ptr<MoonDruidLvl5>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<NightHag>(std::shared_ptr<NightHag>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Ogre>(std::shared_ptr<Ogre>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<SaberToothedTiger>(std::shared_ptr<SaberToothedTiger>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<StoneGiant>(std::shared_ptr<StoneGiant>, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<WildHeartBarbarianLvl3>(std::shared_ptr<WildHeartBarbarianLvl3>, Color, ResourceDepletionLevel);
 
   // Add more explicit instantiations for other combatant types
 }
