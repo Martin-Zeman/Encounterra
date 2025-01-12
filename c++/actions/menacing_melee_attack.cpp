@@ -2,7 +2,7 @@
 
 namespace enc
 {
-  MenacingMeleeAttackFactory::MenacingMeleeAttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant,
+  MenacingMeleeAttackFactory::MenacingMeleeAttackFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant>& combatant,
                                                          AbilityType abilityType, int toHit, std::vector<Die> dmgDice, int dmgBonus,
                                                          DamageType dmgType, int attackRange, int critRange, Uses &&ammo,
                                                          std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg,

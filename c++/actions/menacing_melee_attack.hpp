@@ -11,7 +11,7 @@ namespace enc
     friend class MenacingMeleeAttack;
 
   public:
-    MenacingMeleeAttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType, int toHit,
+    MenacingMeleeAttackFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant>& combatant, AbilityType abilityType, int toHit,
                                std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(),
                                std::vector<std::unique_ptr<OnHit>> onHit = {}, std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false,
                                bool twoHanded = false, Die toHitBonusDie = {});

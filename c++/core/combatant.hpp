@@ -33,6 +33,11 @@ namespace enc
 
   using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
+  inline bool operator==(const std::shared_ptr<Combatant> &lhs, const Combatant &rhs)
+  {
+    return rhs == lhs; // Delegate to the member operator
+  }
+
   class Combatant/* : public ICombatant*/
   {
   public:
@@ -48,6 +53,12 @@ namespace enc
     //           std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
     ~Combatant();
+
+    bool operator==(const Combatant& other) const;
+    
+    bool operator!=(const Combatant& other) const;
+
+    bool operator==(const std::shared_ptr<Combatant>& other) const;
 
     static constexpr uint32_t fnv1a_32(uint32_t initial, uint32_t value)
     {
@@ -114,11 +125,11 @@ namespace enc
     bool hasAlreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
     void setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
+    void setWildshapeForm(const std::shared_ptr<Combatant> &form);
     std::weak_ptr<Combatant> getCurrentForm();
     std::weak_ptr<Combatant> getOriginalForm();
-    void setOriginalForm(Combatant *form) { _originalForm = form; };
-    void setCurrentWildshapeForm(Combatant *form) { _currentWildshapeForm = form; };
-    std::weak_ptr<Combatant> getCurrentWildshapeForm() { return _currentWildshapeForm; };
+    bool isWildshaped() const;
+    void setBaseForm(const std::shared_ptr<Combatant>& form);
     std::weak_ptr<Combatant> getSwallower() const { return _swallower; }
     void setSwallower(Combatant *swallower) { _swallower = swallower; }
     bool isSwallowed() const { return _swallower != nullptr; }
@@ -517,8 +528,8 @@ namespace enc
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
     std::unordered_map<SavingThrow, RollType> _savingThrowsRollTypeMod;
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
-    std::weak_ptr<Combatant> _originalForm = this;
-    std::weak_ptr<Combatant> _currentWildshapeForm;
+    std::weak_ptr<Combatant> _baseForm;
+    std::optional<std::weak_ptr<Combatant>> _wildshapeForm;
     std::weak_ptr<Combatant> _swallower;
     std::weak_ptr<Combatant> _swallowedTarget;
     std::weak_ptr<Combatant> _constrictedTarget;
@@ -539,7 +550,6 @@ namespace enc
   protected:
     Size _size{Size::MEDIUM};
     int _classId;
-    // int _instanceId;
     CombatantType _type;
     SubType _subtype;
     int _level;

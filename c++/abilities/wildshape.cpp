@@ -6,8 +6,8 @@
 
 namespace enc
 {
-  WildshapeFactory::WildshapeFactory(Combatant *combatant, AbilityType actionType)
-      : TransformerFactory("WildshapeFactory", "Wildshape", combatant, actionType), _combatant(combatant), _actionType(actionType)
+  WildshapeFactory::WildshapeFactory(const std::shared_ptr<Combatant>& combatant, AbilityType actionType)
+      : TransformerFactory("WildshapeFactory", "Wildshape", combatant, actionType), _actionType(actionType)
   {
     setFlag(FactoryFlags::TARGETS_SELF);
   }
@@ -32,14 +32,18 @@ namespace enc
 
   std::vector<std::shared_ptr<Actoid>> WildshapeFactory::createAll(void *previousActionInDag)
   {
-    const auto &forms = _combatant->getAvailableWildshapeForms();
-    std::vector<std::shared_ptr<Actoid>> result;
-    result.reserve(forms.size());
-    for(const auto &form : forms)
+    if(auto combatant = _combatant.lock())
       {
-        result.push_back(std::static_pointer_cast<Actoid>(form));
+        const auto &forms = combatant->getAvailableWildshapeForms();
+        std::vector<std::shared_ptr<Actoid>> result;
+        result.reserve(forms.size());
+        for(const auto &form : forms)
+          {
+            result.push_back(std::static_pointer_cast<Actoid>(form));
+          }
+        return result;
       }
-    return result;
+    return {};
   }
 
   std::shared_ptr<Actoid> WildshapeFactory::create(void *form)
@@ -51,25 +55,29 @@ namespace enc
   double WildshapeFactory::calculateThreat(const Kwargs &kwargs)
   {
     // TODO: Rework this, it needs some consideration for the dmg in Wildshape
-    auto forms = _combatant->getAvailableWildshapeForms();
-    if(forms.empty())
-      return 0.0;
+    if(auto combatant = _combatant.lock())
+      {
+        auto forms = combatant->getAvailableWildshapeForms();
+        if(forms.empty())
+          return 0.0;
 
-    if(_actionType == AbilityType::MOON_WILDSHAPE)
-      {
-        return 3 * _combatant->getLevel();
+        if(_actionType == AbilityType::MOON_WILDSHAPE)
+          {
+            return 3 * combatant->getLevel();
+          }
+        else
+          {
+            return combatant->getLevel();
+          }
       }
-    else
-      {
-        return _combatant->getLevel();
-      }
+    return 0.0;
   }
 
-  Wildshape::Wildshape(Combatant *combatant, std::unique_ptr<Combatant> form, WildshapeFactory &factory)
+  Wildshape::Wildshape(const std::shared_ptr<Combatant>& combatant, std::unique_ptr<Combatant> form, WildshapeFactory &factory)
       : Actoid(factory), Effect(combatant), CombatantEffect(combatant, std::vector<Combatant *>{combatant}), ActionEnablerEffect(combatant),
         _form(std::move(form)), _factory(factory)
   {
-    _form->setOriginalForm(combatant);
+    _form->setBaseForm(combatant);
   }
 
   std::string Wildshape::toString() const { return "Wildshape of " + getInitiator()->_name + " into " + _form->_name; }
@@ -78,7 +86,7 @@ namespace enc
   {
     auto &battleMap = BattleMap::getInstance();
     auto &effectTracker = EffectTracker::getInstance();
-    Combatant *initiator = initiator;
+    Combatant *initiator = getInitiator();
     effectTracker.add(shared_from_this());
 
     Teams &teams = Teams::getInstance();
@@ -91,7 +99,7 @@ namespace enc
     battleMap.removeCombatant(*initiator);
     battleMap.setCombatantCoordinates(*_form.get(), wildshapeCoord.value());
 
-    initiator->setCurrentWildshapeForm(_form.get());
+    initiator->setWildshapeForm(_form.get());
     _form->setCurrentHp(_form->getMaxHp());
     _form->setMovement(std::max(0, _form->getSpeed() - (initiator->getSpeed() - initiator->getMovement())));
 
@@ -162,7 +170,7 @@ namespace enc
         currentForm->clearSavingThrowDiceMods(save);
         currentForm->clearSavingThrowRollTypeMods(save);
       }
-    initiator->setCurrentWildshapeForm(nullptr);
+    initiator->setWildshapeForm(nullptr);
 
     // Copy back action states
     initiator->setHasAction(currentForm->hasAction());
@@ -183,7 +191,7 @@ namespace enc
   void Wildshape::enable()
   {
     Combatant *initiator = getInitiator();
-    initiator->setCurrentWildshapeForm(_form.get());
+    initiator->setWildshapeForm(_form.get());
 
     _form->setHasAction(initiator->hasAction());
     _form->setHasBonusAction(initiator->hasBonusAction());
@@ -196,7 +204,7 @@ namespace enc
   void Wildshape::disable()
   {
     Combatant *initiator = getInitiator();
-    initiator->setCurrentWildshapeForm(nullptr);
+    initiator->setWildshapeForm(nullptr);
 
     initiator->setHasAction(_form->hasAction());
     initiator->setHasBonusAction(_form->hasBonusAction());

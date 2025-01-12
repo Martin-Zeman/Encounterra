@@ -34,6 +34,12 @@ namespace enc
 
   Combatant::~Combatant() { breakConcentration(); }
 
+  bool Combatant::operator==(const Combatant &other) const { return _instanceId == other._instanceId; }
+
+  bool Combatant::operator!=(const Combatant &other) const { return !(*this == other); }
+
+  bool Combatant::operator==(const std::shared_ptr<Combatant> &other) const { return other && _instanceId == other->_instanceId; }
+
   std::string Combatant::toString() const { return _name; }
 
   bool Combatant::isAlive() const { return _currHp > 0; }
@@ -116,11 +122,35 @@ namespace enc
     _weaponDmgDealtThisTurn = 0;
   }
 
-  void Combatant::setIsWildshaped(bool isWildshaped) { _isWildshaped = isWildshaped; }
+  void Combatant::setWildshapeForm(const std::shared_ptr<Combatant> &form)
+  {
+    if(form)
+      {
+        _wildshapeForm = form;
+      }
+    else
+      {
+        _wildshapeForm = std::nullopt;
+      }
+  }
 
-  std::weak_ptr<Combatant> Combatant::getCurrentForm() { return _isWildshaped ? _wildshapeForm : weak_from_this(); }
+  std::weak_ptr<Combatant> Combatant::getCurrentForm()
+  {
+    if(_wildshapeForm && !_wildshapeForm->expired())
+      {
+        return *_wildshapeForm;
+      }
+    return _baseForm; // Will be empty if this is the base form
+  }
 
-  std::weak_ptr<Combatant> Combatant::getOriginalForm() { return _isWildshaped ? _baseForm : weak_from_this(); }
+  std::weak_ptr<Combatant> Combatant::getOriginalForm()
+  {
+    return _baseForm; // Will be empty if this is the base form
+  }
+
+  bool Combatant::isWildshaped() const { return _wildshapeForm.has_value() && !_wildshapeForm->expired(); }
+
+  void Combatant::setBaseForm(const std::shared_ptr<Combatant> &form) { _baseForm = form; }
 
   bool Combatant::isAffectedBy(Conditions condition) const
   {

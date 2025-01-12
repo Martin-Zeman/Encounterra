@@ -227,7 +227,7 @@ namespace enc
       }
   }
 
-  ActionDagResult buildActionDag(Combatant *combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
+  ActionDagResult buildActionDag(const std::shared_ptr<Combatant>& combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
                                  const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     auto &battleMap = BattleMap::getInstance();

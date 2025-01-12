@@ -21,7 +21,7 @@ namespace enc
     friend class Wildshape;
 
   public:
-    WildshapeFactory(Combatant *combatant, AbilityType actionType);
+    WildshapeFactory(const std::shared_ptr<Combatant>& combatant, AbilityType actionType);
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
     std::shared_ptr<Actoid> create(void *form) override;
@@ -32,22 +32,21 @@ namespace enc
     static std::vector<Size> getWildshapeFormSizes(int level, AbilityType actionType);
 
   protected:
-    Combatant *_combatant;
     AbilityType _actionType;
   };
 
   class Wildshape : public Actoid, virtual public CombatantEffect, virtual public ActionEnablerEffect, public DirectThreat
   {
   public:
-    Wildshape(Combatant *combatant, std::unique_ptr<Combatant> form, WildshapeFactory &factory);
+    Wildshape(const std::shared_ptr<Combatant>& combatant, std::shared_ptr<Combatant> form, WildshapeFactory &factory);
 
     ~Wildshape() override = default;
 
     EffectType getEffectType() const override { return EffectType::WILDSHAPE; }
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
-    bool deactivateForCombatant(Combatant *combatant) override;
-    bool isAffecting(Combatant *combatant) const override { return CombatantEffect::isAffecting(combatant); }
+    bool deactivateForCombatant(const std::shared_ptr<Combatant>& combatant) override;
+    bool isAffecting(const std::shared_ptr<Combatant>& combatant) const override { return CombatantEffect::isAffecting(combatant); }
 
     void enable() override;
     void disable() override;
@@ -74,7 +73,7 @@ namespace enc
   protected:
     size_t hash() const override;
 
-    std::unique_ptr<Combatant> _form;
+    std::shared_ptr<Combatant> _form;
     WildshapeFactory &_factory;
   };
 }

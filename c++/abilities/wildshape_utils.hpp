@@ -12,6 +12,6 @@ namespace enc
 
   std::vector<CombatantFactory> getAvailableWildshapeForms(int level, AbilityType actionType);
 
-  std::vector<std::shared_ptr<Wildshape>> preallocateWildshapeForms(Combatant *combatant, AbilityType actionType, WildshapeFactory &factory);
+  std::vector<std::shared_ptr<Wildshape>> preallocateWildshapeForms(const std::shared_ptr<Combatant>& combatant, AbilityType actionType, WildshapeFactory &factory);
 
 } // namespace enc
