@@ -33,31 +33,31 @@ namespace enc
 
     void remove(const std::shared_ptr<Effect> &effect);
 
-    void startOfTurnTick(Combatant *combatant);
+    void startOfTurnTick(const std::shared_ptr<Combatant> &combatant);
 
-    void startOfTurn(Combatant *combatant);
+    void startOfTurn(const std::shared_ptr<Combatant> &ombatant);
 
-    void endOfTurn(Combatant *combatant);
+    void endOfTurn(const std::shared_ptr<Combatant> &combatant);
 
-    std::vector<std::weak_ptr<Effect>> getAffectingCombatant(Combatant *combatant) const;
+    std::vector<std::weak_ptr<Effect>> getAffectingCombatant(const std::shared_ptr<Combatant> &combatant) const;
 
-    bool isAffectingCombatant(Combatant *combatant, EffectType effectType) const;
+    bool isAffectingCombatant(const std::shared_ptr<Combatant> &combatant, EffectType effectType) const;
 
     std::vector<std::weak_ptr<AoeEffect>> getAoeEffects() const;
 
-    std::vector<std::weak_ptr<Effect>> getEffectsByInitiator(Combatant *initiator) const;
+    std::vector<std::weak_ptr<Effect>> getEffectsByInitiator(const std::shared_ptr<Combatant> &initiator) const;
 
-    void combatantDied(Combatant *combatant);
+    void combatantDied(const std::shared_ptr<Combatant> &combatant);
 
-    void createPostHasteLethargy(Combatant *initiator, Combatant *combatant);
+    void createPostHasteLethargy(const std::shared_ptr<Combatant> &initiator, const std::shared_ptr<Combatant> &combatant);
 
-    void removeEffectFromCombatantByType(Combatant *combatant, EffectType effectType);
+    void removeEffectFromCombatantByType(const std::shared_ptr<Combatant> &combatant, EffectType effectType);
 
-    void removeEffectFromCombatant(Combatant *combatant, const std::shared_ptr<Effect>& effect);
+    void removeEffectFromCombatant(const std::shared_ptr<Combatant> &ombatant, const std::shared_ptr<Effect>& effect);
 
-    bool isCombatantHiddenFrom(Combatant *combatant, Combatant *target) const;
+    bool isCombatantHiddenFrom(const std::shared_ptr<Combatant> &combatant, const std::shared_ptr<Combatant> &target) const;
 
-    // bool isAffectedByVowOfEnmity(Combatant *initiator, Combatant *target) const;
+    // bool isAffectedByVowOfEnmity(const std::shared_ptr<Combatant> &initiator, const std::shared_ptr<Combatant> &target) const;
 
     void reset();
 

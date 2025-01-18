@@ -10,15 +10,15 @@ namespace enc
   class CombatantEffect : virtual public Effect
   {
   public:
-    explicit CombatantEffect(Combatant* initiator, const std::vector<Combatant*>& combatants = {});
-    
-    bool isAffecting(Combatant* combatant) const override;
-    
+    explicit CombatantEffect(const std::shared_ptr<Combatant> &initiator, const std::vector<std::shared_ptr<Combatant>> &combatants = {});
+
+    bool isAffecting(const std::shared_ptr<Combatant> &combatant) const override;
+
     // Allow derived classes to access combatants
-    const std::vector<Combatant*>& getCombatants() const { return _combatants; }
-    
+    std::vector<std::shared_ptr<Combatant>> getCombatants() const;
+
   protected:
-    std::vector<Combatant*> _combatants;
+    std::vector<std::weak_ptr<Combatant>> _combatants;
   };
 
 } // namespace enc

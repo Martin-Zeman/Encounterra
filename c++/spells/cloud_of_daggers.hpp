@@ -26,7 +26,7 @@ namespace enc
     static constexpr DamageType dmgType = DamageType::Slashing;
 
     //! @todo Can I remove the resource here?
-    CloudOfDaggersFactory(AbilityType abilityType, Combatant *caster, Resource *resource);
+    CloudOfDaggersFactory(AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource);
 
     std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
@@ -37,8 +37,8 @@ namespace enc
 
     std::optional<Resource *> getResource() override { return _resource; }
 
-    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
-    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;
+    double calculateThreatToTarget(const std::shared_ptr<Combatant> &target, const Kwargs &kwargs) const override;
+    double calculateThreatToTargetDelta(const std::shared_ptr<Combatant> &target, const ThreatModifiers &modifiers) const override;
     double calculateMaxThreat() const override;
 
   private:
@@ -59,7 +59,7 @@ namespace enc
     std::string shorthandStr() const;
 
     double calculateThreat(const Kwargs &kwargs) override;
-    // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
+    // double calculateThreatForAttack(const std::shared_ptr<Combatant> &attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
@@ -69,8 +69,8 @@ namespace enc
 
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
-    bool deactivateForCombatant(Combatant *combatant) override;
-    bool isAffecting(Combatant *combatant) const override;
+    bool deactivateForCombatant(const std::shared_ptr<Combatant> &combatant) override;
+    bool isAffecting(const std::shared_ptr<Combatant> &combatant) const override;
     EffectType getEffectType() const override;
 
   protected:

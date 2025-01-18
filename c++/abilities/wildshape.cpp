@@ -48,7 +48,7 @@ namespace enc
 
   std::shared_ptr<Actoid> WildshapeFactory::create(void *form)
   {
-    auto *formPtr = static_cast<std::unique_ptr<Combatant> *>(form);
+    auto *formPtr = static_cast<std::shared_ptr<Combatant> *>(form);
     return std::make_shared<Wildshape>(_combatant, std::move(*formPtr), *this);
   }
 
@@ -73,61 +73,65 @@ namespace enc
     return 0.0;
   }
 
-  Wildshape::Wildshape(const std::shared_ptr<Combatant>& combatant, std::unique_ptr<Combatant> form, WildshapeFactory &factory)
-      : Actoid(factory), Effect(combatant), CombatantEffect(combatant, std::vector<Combatant *>{combatant}), ActionEnablerEffect(combatant),
+  Wildshape::Wildshape(const std::shared_ptr<Combatant>& combatant, std::shared_ptr<Combatant> form, WildshapeFactory &factory)
+      : Actoid(factory), Effect(combatant), CombatantEffect(combatant, std::vector<std::shared_ptr<Combatant>>{combatant}), ActionEnablerEffect(combatant),
         _form(std::move(form)), _factory(factory)
   {
     _form->setBaseForm(combatant);
   }
 
-  std::string Wildshape::toString() const { return "Wildshape of " + getInitiator()->_name + " into " + _form->_name; }
+  std::string Wildshape::toString() const { return "Wildshape of " + getInitiator().lock()->_name + " into " + _form->_name; }
 
   void Wildshape::activate(const Kwargs &kwargs)
   {
     auto &battleMap = BattleMap::getInstance();
     auto &effectTracker = EffectTracker::getInstance();
-    Combatant *initiator = getInitiator();
+    auto initiatorPtr = getInitiator().lock();
+    if(!initiatorPtr)
+      {
+        throw std::runtime_error("Invalid initiator in Wildshape::activate");
+      }
     effectTracker.add(shared_from_this());
 
     Teams &teams = Teams::getInstance();
-    teams.replaceCombatant(*initiator, *_form.get());
-    auto wildshapeCoord = battleMap.findWildshapedCoordinate(initiator, _form->getSize());
+    teams.replaceCombatant(*initiatorPtr, *_form.get());
+    auto wildshapeCoord = battleMap.findWildshapedCoordinate(initiatorPtr, _form->getSize());
     if(!wildshapeCoord.has_value())
       {
         throw std::runtime_error("No space for the wildshape form!");
       }
-    battleMap.removeCombatant(*initiator);
+    battleMap.removeCombatant(*initiatorPtr);
     battleMap.setCombatantCoordinates(*_form.get(), wildshapeCoord.value());
 
-    initiator->setWildshapeForm(_form.get());
+    initiatorPtr->setWildshapeForm(_form.get());
     _form->setCurrentHp(_form->getMaxHp());
-    _form->setMovement(std::max(0, _form->getSpeed() - (initiator->getSpeed() - initiator->getMovement())));
+    _form->setMovement(std::max(0, _form->getSpeed() - (initiatorPtr->getSpeed() - initiatorPtr->getMovement())));
 
     static const std::array<SavingThrow, 3> mentalSaves = {SavingThrow::INT, SavingThrow::WIS, SavingThrow::CHA};
 
     for(SavingThrow save : mentalSaves)
       {
-        _form->setSavingThrow(save, initiator->getSavingThrow(save));
-        const auto &flatMods = initiator->getSavingThrowFlatMods(save);
+        _form->setSavingThrow(save, initiatorPtr->getSavingThrow(save));
+        const auto &flatMods = initiatorPtr->getSavingThrowFlatMods(save);
         for(int mod : flatMods)
           {
             _form->addSavingThrowFlatMod(save, mod);
           }
-        const auto &diceMods = initiator->getSavingThrowDiceMods(save);
+        const auto &diceMods = initiatorPtr->getSavingThrowDiceMods(save);
         for(const Die &die : diceMods)
           {
             _form->addSavingThrowDiceMod(save, die);
           }
-        RollType rollTypeMods = initiator->getSavingThrowRollTypeMods(save);
+        RollType rollTypeMods = initiatorPtr->getSavingThrowRollTypeMods(save);
         _form->setSavingThrowRollTypeMod(save, rollTypeMods);
       }
 
     // Copy action states
-    _form->setHasAction(initiator->hasAction());
-    _form->setHasBonusAction(initiator->hasBonusAction());
-    _form->setHasHasteAction(initiator->hasHasteAction());
-    _form->setHasReaction(initiator->hasReaction());
-    _form->setConcentrationEffect(initiator->getConcentrationEffect().lock());
+    _form->setHasAction(initiatorPtr->hasAction());
+    _form->setHasBonusAction(initiatorPtr->hasBonusAction());
+    _form->setHasHasteAction(initiatorPtr->hasHasteAction());
+    _form->setHasReaction(initiatorPtr->hasReaction());
+    _form->setConcentrationEffect(initiatorPtr->getConcentrationEffect().lock());
 
     // Transfer eligible factories
     transferFactories();

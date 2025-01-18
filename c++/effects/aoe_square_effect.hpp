@@ -8,7 +8,7 @@ namespace enc
   class AoeSquareEffect : public SquareAoe, public AoeEffect
   {
   public:
-    AoeSquareEffect(Combatant *initiator, const Coord &origin, int length) : SquareAoe(origin, length), AoeEffect(initiator) {}
+    AoeSquareEffect(const std::shared_ptr<Combatant> &initiator, const Coord &origin, int length) : SquareAoe(origin, length), AoeEffect(initiator) {}
 
     // void activate(const Kwargs &kwargs = {}) override
     // {

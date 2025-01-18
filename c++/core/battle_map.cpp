@@ -55,7 +55,7 @@ namespace enc
 
             if(combatantId != -1)
               {
-                const Combatant *combatant = teams.getCombatantById(combatantId);
+                std::weak_ptr<Combatant> weakCombatant = teams.getCombatantById(combatantId);
                 if(combatant && !combatant->isSwallowed())
                   {
                     if(color)
@@ -201,7 +201,7 @@ namespace enc
     // Handle impassable terrain and other combatants
     for(const auto &[currCombatantId, coords] : _combatantCoordinateCache)
       {
-        if(currCombatantId != combatant._instanceId && teams.getCombatantById(currCombatantId)->isAlive())
+        if(currCombatantId != combatant._instanceId && teams.getCombatantById(currCombatantId).lock()->isAlive())
           {
             for(const auto &coord : coords.get())
               {
@@ -495,7 +495,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
       int combatantId = getCombatantGridValueAt(adjacentCoord);
       if(combatantId != -1)
         {
-          const Combatant *potentialAlly = Teams::getInstance().getCombatantById(combatantId);
+          std::weak_ptr<Combatant> weakPotentialAlly = Teams::getInstance().getCombatantById(combatantId);
           if(potentialAlly && potentialAlly != &combatant && Teams::getInstance().areAllies(combatant, *potentialAlly)
              && !potentialAlly->isAffectedByAny({Conditions::INCAPACITATED}))
             {
@@ -839,20 +839,24 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
   bool BattleMap::removeCombatantIfDead(Combatant &combatant)
   {
-    Combatant *targetToRemove = combatant.getOriginalForm();
-
-    if(!targetToRemove->isAlive())
+    std::weak_ptr<Combatant> weakTargetToRemove = combatant.getOriginalForm();
+    if (auto targetToRemove = weakTargetToRemove.lock())
       {
-        if(auto *grappler = targetToRemove->getInitiatorOfCondition(Conditions::GRAPPLED))
+        if(!targetToRemove->isAlive())
           {
-            grappler->removeCondition(Conditions::GRAPPLING);
+            if(auto grappler = targetToRemove->getInitiatorOfCondition(Conditions::GRAPPLED).lock())
+              {
+                grappler->removeCondition(Conditions::GRAPPLING);
+              }
+            targetToRemove->onDie();
+            // spdlog::info("{} died", targetToRemove._name);
+            removeCombatant(*targetToRemove);
+            return false;
           }
-        targetToRemove->onDie();
-        // spdlog::info("{} died", targetToRemove._name);
-        removeCombatant(*targetToRemove);
-        return false;
       }
-    return true;
+      else{
+        throw std::runtime_error("Cannot remove combatant because they're alreay removed.");
+      }
   }
 
   void BattleMap::resetCombatantsToInitialPositions(const std::unordered_map<int, Coords> initialPositions){
@@ -864,14 +868,14 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
   int BattleMap::getCombatantGridValueAt(const Coord &coord) const { return _combatantGrid(coord[0], coord[1]); }
 
-  blaze::StaticMatrix<int, 2, 2> BattleMap::getHarmfulBoundingBox(const Combatant *caster, int inflation)
+  blaze::StaticMatrix<int, 2, 2> BattleMap::getHarmfulBoundingBox(const std::shared_ptr<Combatant> &caster, int inflation)
   {
     blaze::StaticMatrix<int, 2, 2> bb = {{static_cast<int>(_size), static_cast<int>(_size)}, {0, 0}}; // top right, bottom left
     Teams &teams = Teams::getInstance();
 
     for(const auto &[combatantId, coords] : _combatantCoordinateCache)
       {
-        const Combatant *combatant = teams.getCombatantById(combatantId);
+        std::weak_ptr<Combatant> weakCombatant = teams.getCombatantById(combatantId);
         if(teams.areEnemies(*caster, *combatant))
           {
             const CoordVector &coordsVector = coords.get();
@@ -894,7 +898,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return bb;
   }
 
-  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulCircular(const Combatant *caster, int spellRange, int radius)
+  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulCircular(const std::shared_ptr<Combatant> &caster, int spellRange, int radius)
   {
     auto bb = getHarmfulBoundingBox(caster, radius);
     int maxScore = std::numeric_limits<int>::lowest();
@@ -902,8 +906,8 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     std::vector<Combatant *> affectedCombatants;
     Teams &teams = Teams::getInstance();
 
-    const Combatant *swallower = caster->getSwallower();
-    const Coords &caster_coords = swallower ? _combatantCoordinateCache.at(swallower->_instanceId) : _combatantCoordinateCache.at(caster->_instanceId);
+    std::weak_ptr<Combatant> swallower = caster->getSwallower();
+    const Coords &caster_coords = !swallower.expired() ? _combatantCoordinateCache.at(swallower.lock()->_instanceId) : _combatantCoordinateCache.at(caster->_instanceId);
 
     for(int x = bb(0, 0); x <= bb(1, 0); ++x)
       {
@@ -922,7 +926,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
             for(const auto &[combatantId, coords] : _combatantCoordinateCache)
               {
-                const Combatant *combatant = teams.getCombatantById(combatantId);
+                std::weak_ptr<Combatant> weakCombatant = teams.getCombatantById(combatantId);
                 if(getCartesianDistanceCoords(coords, curr_coords) <= radius)
                   {
                     score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
@@ -942,7 +946,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return {bestPlacement, maxScore, affectedCombatants};
   }
 
-  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulSquare(const Combatant *caster, int spellRange, int length)
+  std::tuple<Coord, int, std::vector<Combatant *>> BattleMap::findBestPlacementHarmfulSquare(const std::shared_ptr<Combatant> &caster, int spellRange, int length)
   {
     auto bb = getHarmfulBoundingBox(caster, length);
     int max_score = std::numeric_limits<int>::lowest();
@@ -969,7 +973,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
             for(const auto &[combatantId, coords] : _combatantCoordinateCache)
               {
-                const Combatant *combatant = teams.getCombatantById(combatantId);
+                std::weak_ptr<Combatant> weakCombatant = teams.getCombatantById(combatantId);
                 if(getCartesianDistanceCoords(coords, curr_coords) == 0)
                   {
                     score += teams.areEnemies(*caster, *combatant) && combatant->isAlive() ? 1 : -4;
@@ -993,11 +997,11 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return std::make_tuple(Coord{}, 0, std::vector<Combatant *>{});
   }
 
-  std::optional<std::tuple<Coord, double, int>> BattleMap::findBestPlacementHarmfulCone(const Combatant *caster, int radius)
+  std::optional<std::tuple<Coord, double, int>> BattleMap::findBestPlacementHarmfulCone(const std::shared_ptr<Combatant> &caster, int radius)
   {
     std::vector<Vector2D> enemyPositions;
     Teams &teams = Teams::getInstance();
-    for(Combatant *enemy : teams.getAliveEnemies(*caster))
+    for(std::weak_ptr<Combatant> weakEnemy : teams.getAliveEnemies(*caster))
       {
         enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_instanceId).getCenter());
       }
@@ -1093,11 +1097,11 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return bestPoses[0];
   }
 
-  std::optional<std::tuple<Coord, double, int>> BattleMap::findBestPlacementHarmfulLine(const Combatant *caster, int length, int width)
+  std::optional<std::tuple<Coord, double, int>> BattleMap::findBestPlacementHarmfulLine(const std::shared_ptr<Combatant> &caster, int length, int width)
   {
     std::vector<Vector2D> enemyPositions;
     Teams &teams = Teams::getInstance();
-    for(Combatant *enemy : teams.getAliveEnemies(*caster))
+    for(std::weak_ptr<Combatant> weakEnemy : teams.getAliveEnemies(*caster))
       {
         enemyPositions.push_back(_combatantCoordinateCache.at(enemy->_instanceId).getCenter());
       }
@@ -1194,17 +1198,17 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return bestPoses[0];
   }
 
-  std::vector<Combatant *> BattleMap::getCombatantsAffectedBySphereAoE(const Combatant *caster, SpellTarget targetTemplate,
+  std::vector<std::weak_ptr<Combatant>> BattleMap::getCombatantsAffectedBySphereAoE(const std::shared_ptr<Combatant> &caster, SpellTarget targetTemplate,
                                                                        SpellType abilityType, const Coord &origin) const
   {
-    std::vector<Combatant *> affectedCombatants;
+    std::vector<std::weak_ptr<Combatant>> affectedCombatants;
     Teams &teams = Teams::getInstance();
     double radius = TRANSLATE_RADIUS.at(targetTemplate);
     Coords originCoords(origin);
 
     for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
       {
-        Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
+        std::weak_ptr<Combatant> weakPotentialTarget = teams.getCombatantById(potentialTargetId);
         if(!potentialTarget->isAlive())
           continue;
         
@@ -1228,8 +1232,8 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return affectedCombatants;
   }
 
-  std::vector<Combatant *>
-  BattleMap::getCombatantsAffectedByConeAoE(const Combatant *caster, SpellTarget targetTemplate, const Coord &origin, double angle) const
+  std::vector<std::weak_ptr<Combatant>>
+  BattleMap::getCombatantsAffectedByConeAoE(const std::shared_ptr<Combatant> &caster, SpellTarget targetTemplate, const Coord &origin, double angle) const
   {
     int radius = TRANSLATE_CONE.at(targetTemplate);
     Teams &teams = Teams::getInstance();
@@ -1238,7 +1242,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
     for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
       {
-        Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
+        std::weak_ptr<Combatant> weakPotentialTarget = teams.getCombatantById(potentialTargetId);
         if(!potentialTarget->isAlive())
           continue;
 
@@ -1256,16 +1260,21 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return affectedCombatants;
   }
 
-  std::vector<Combatant *>
-  BattleMap::getCombatantsAffectedByLineAoE(const Combatant *caster, const Coord &origin, double angle, int length, int width) const
+  std::vector<std::weak_ptr<Combatant>>
+  BattleMap::getCombatantsAffectedByLineAoE(const std::shared_ptr<Combatant> &caster, const Coord &origin, double angle, int length, int width) const
   {
     std::set<Coord> affectedCoords = getAffectedByLine(origin, angle, length, width, _size);
     Teams &teams = Teams::getInstance();
-    std::vector<Combatant *> affectedCombatants;
+    std::vector<std::weak_ptr<Combatant>> affectedCombatants;
 
     for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
       {
-        Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
+        std::weak_ptr<Combatant> weakPotentialTarget = teams.getCombatantById(potentialTargetId);
+        auto potentialTarget = weakPotentialTarget.lock();
+        if (!potentialTarget)
+          {
+            continue;
+          }
         if(!potentialTarget->isAlive())
           continue;
 
@@ -1283,9 +1292,9 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return affectedCombatants;
   }
 
-  std::vector<Combatant *> BattleMap::getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const
+  std::vector<std::weak_ptr<Combatant>> BattleMap::getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const
   {
-    std::vector<Combatant *> affectedCombatants;
+    std::vector<std::weak_ptr<Combatant>> affectedCombatants;
     Teams &teams = Teams::getInstance();
     CoordVector affectedCoords = getCoordsAffectedBySquareAoE(origin, TRANSLATE_BOX.at(targetTemplate), _size);
 
@@ -1424,7 +1433,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
           @param theoretical_root_coord theoretical root coordinate for combatant
           @return dict mapping enemy -> Visibility
    */
-  std::unordered_map<const Combatant *, Visibility> BattleMap::calcVisibilityDict(const Combatant *combatant, const Coord &theoreticalRootCoord)
+  std::unordered_map<const Combatant *, Visibility> BattleMap::calcVisibilityDict(const std::shared_ptr<Combatant> &combatant, const Coord &theoreticalRootCoord)
   {
     std::unordered_map<const Combatant *, Visibility> ret;
     Teams &teams = Teams::getInstance();
@@ -1477,11 +1486,12 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
       = calcVisibilityDict(combatant, Coord{currentPosition.getRoot()[0], currentPosition.getRoot()[1]});
   }
 
-  Visibility BattleMap::getVisibilityFromCoord(const Coord &fromCoord, const Combatant * target) const {
+  Visibility BattleMap::getVisibilityFromCoord(const Coord &fromCoord, const std::shared_ptr<Combatant> &target) const
+  {
     return _visibilityDictForAllCoords.at(fromCoord).at(target);
   }
 
-  std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithinRadius(const Combatant *combatant, int radius)
+  std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithinRadius(const std::shared_ptr<Combatant> &combatant, int radius)
   {
     std::vector<Combatant *> result;
     Teams &teams = Teams::getInstance();
@@ -1495,9 +1505,9 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return result;
   }
 
-  std::vector<Combatant *> BattleMap::getNonSwallowedAlliesWithinRadius(const Combatant *combatant, int radius)
+  std::vector<std::weak_ptr<Combatant>> BattleMap::getNonSwallowedAlliesWithinRadius(const std::shared_ptr<Combatant> &combatant, int radius)
   {
-    std::vector<Combatant *> result;
+    std::vector<std::weak_ptr<Combatant>> result;
     Teams &teams = Teams::getInstance();
     for(auto *a : teams.getAliveNonSwallowedAllies(*combatant))
       {
@@ -1509,9 +1519,9 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return result;
   }
 
-  std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithinHopDistance(const Combatant *combatant, int distance)
+  std::vector<std::weak_ptr<Combatant>> BattleMap::getNonSwallowedEnemiesWithinHopDistance(const std::shared_ptr<Combatant> &combatant, int distance)
   {
-    std::vector<Combatant *> result;
+    std::vector<std::weak_ptr<Combatant>> result;
     Teams &teams = Teams::getInstance();
     for(auto *e : teams.getAliveNonSwallowedEnemies(*combatant))
       {
@@ -1523,9 +1533,9 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return result;
   }
 
-  std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithoutHopDistance(const Combatant *combatant, int distance)
+  std::vector<std::weak_ptr<Combatant>> BattleMap::getNonSwallowedEnemiesWithoutHopDistance(const std::shared_ptr<Combatant> &combatant, int distance)
   {
-    std::vector<Combatant *> result;
+    std::vector<std::weak_ptr<Combatant>> result;
     Teams &teams = Teams::getInstance();
     for(auto *e : teams.getAliveNonSwallowedEnemies(*combatant))
       {
@@ -1605,44 +1615,51 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
   void BattleMap::withCombatantWildshapeReplacement(Actoid &actoid, Combatant &combatant, const Coord &origCoord,
                                                     const std::function<void(const Combatant &)> &fn)
   {
-    Combatant *actoidCombatant = actoid.getFactory().getCombatant();
-    if(combatant != actoidCombatant)
+    std::weak_ptr<Combatant> weakActoidCombatant = actoid.getFactory().getCombatant();
+    if(auto actoidCombatant = weakActoidCombatant.lock())
       {
-        Coords beforeWildshapePosition = getCombatantCoordinates(combatant);
-
-        Teams &teams = Teams::getInstance();
-        try
+        if(combatant != actoidCombatant)
           {
-            teams.replaceCombatant(combatant, actoidCombatant);
+            Coords beforeWildshapePosition = getCombatantCoordinates(combatant);
 
-            auto wildshapePosition = findWildshapedCoordinate(combatant, actoidCombatant->getSize(), origCoord);
-
-            if(!wildshapePosition)
+            Teams &teams = Teams::getInstance();
+            try
               {
-                throw std::runtime_error("Could not find valid wildshape position");
+                teams.replaceCombatant(combatant, *actoidCombatant);
+
+                auto wildshapePosition = findWildshapedCoordinate(combatant, actoidCombatant->getSize(), origCoord);
+
+                if(!wildshapePosition)
+                  {
+                    throw std::runtime_error("Could not find valid wildshape position");
+                  }
+
+                removeCombatant(*combatant);
+                setCombatantCoordinates(*actoidCombatant, *wildshapePosition);
+
+                fn(actoidCombatant); // Pass the wildshaped form
+              }
+            catch(...)
+              {
+                teams.replaceCombatant(*actoidCombatant, combatant);
+                removeCombatant(*actoidCombatant);
+                setCombatantCoordinates(combatant, beforeWildshapePosition.getRoot());
+                throw;
               }
 
-            removeCombatant(*combatant);
-            setCombatantCoordinates(*actoidCombatant, *wildshapePosition);
-
-            fn(actoidCombatant); // Pass the wildshaped form
-          }
-        catch(...)
-          {
+            // Restore original state
             teams.replaceCombatant(*actoidCombatant, combatant);
             removeCombatant(*actoidCombatant);
             setCombatantCoordinates(combatant, beforeWildshapePosition.getRoot());
-            throw;
           }
-
-        // Restore original state
-        teams.replaceCombatant(*actoidCombatant, combatant);
-        removeCombatant(*actoidCombatant);
-        setCombatantCoordinates(combatant, beforeWildshapePosition.getRoot());
+        else
+          {
+            fn(combatant); // Pass the original combatant
+          }
       }
     else
       {
-        fn(combatant); // Pass the original combatant
+        throw std::runtime_error("Actoid combatant is not available");
       }
   }
 
@@ -1740,9 +1757,9 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return resultCoordinates[0];
   }
 
-  std::vector<Combatant *> BattleMap::getPamEligibleCombatants(Combatant *combatant, const Coord &increment) const
+  std::vector<std::weak_ptr<Combatant>> BattleMap::getPamEligibleCombatants(const std::shared_ptr<Combatant> &combatant, const Coord &increment) const
   {
-    std::vector<Combatant *> eligibleCombatants;
+    std::vector<std::weak_ptr<Combatant>> eligibleCombatants;
 
     // Retrieve the combatant's current position
     auto combatantCoordIt = _combatantCoordinateCache.find(combatant->_instanceId);
@@ -1758,7 +1775,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     // Iterate over all other combatants in the map
     for(const auto &[currCombatantId, coords] : _combatantCoordinateCache)
       {
-        Combatant * currCombatant = teams.getCombatantById(currCombatantId);
+        std::weak_ptr<Combatant> weakCurrCombatant = teams.getCombatantById(currCombatantId);
         if(currCombatantId != combatant->_instanceId && teams.areEnemies(*currCombatant, *combatant))
           {
             // Skip if the combatant is incapacitated or affected by certain conditions
@@ -1793,15 +1810,15 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     return eligibleCombatants;
   }
 
-  std::vector<Combatant *> BattleMap::getAooEligibleCombatants(Combatant *combatant, const Coord &increment) const
+  std::vector<std::weak_ptr<Combatant>> BattleMap::getAooEligibleCombatants(const std::shared_ptr<Combatant> &combatant, const Coord &increment) const
   {
-    std::vector<Combatant *> eligibleCombatants;
+    std::vector<std::weak_ptr<Combatant>> eligibleCombatants;
     Teams& teams = Teams::getInstance();
 
     // Iterate over all combatants on the map
     for(const auto &[currCombatantId, pos] : _combatantCoordinateCache)
       {
-        Combatant * currCombatant = teams.getCombatantById(currCombatantId);
+        std::weak_ptr<Combatant> weakCurrCombatant = teams.getCombatantById(currCombatantId);
         if(currCombatantId != combatant->_instanceId && currCombatant->isAlive() && teams.areEnemies(*currCombatant, *combatant))
           {
             // Skip if the combatant is incapacitated or affected by certain conditions

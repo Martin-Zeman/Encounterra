@@ -6,7 +6,7 @@
 
 namespace enc
 {
-  bool AoeEffect::isAffecting(Combatant *combatant) const
+  bool AoeEffect::isAffecting(const std::shared_ptr<Combatant> &combatant) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
     CoordVector coords = getAffectedCoords();

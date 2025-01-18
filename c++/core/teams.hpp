@@ -20,11 +20,11 @@ namespace enc
 
     static void resetInstance();
 
-    void addCombatantToTeam(Combatant& combatant, Color teamColor);
+    void addCombatantToTeam(const std::shared_ptr<Combatant> &combatant, Color teamColor);
 
-    void replaceCombatant(const Combatant& combatantOld, Combatant& combatantNew);
+    void replaceCombatant(const std::shared_ptr<Combatant> &combatantOld, const std::shared_ptr<Combatant> &combatantNew);
 
-    std::string getTeamColorCode(const Combatant& combatant) const;
+    std::string getTeamColorCode(const Combatant &combatant) const;
 
     Color getTeamColor(const Combatant& combatant) const;
 
@@ -40,21 +40,21 @@ namespace enc
 
     Color getTeam(const Combatant &combatant) const;
 
-    std::vector<Combatant *> getAllAllies(const Combatant &combatant) const;
+    std::vector<std::weak_ptr<Combatant>> getAllAllies(const Combatant &combatant) const;
 
-    std::vector<Combatant *> getAllEnemies(const Combatant &combatant) const;
+    std::vector<std::weak_ptr<Combatant>> getAllEnemies(const Combatant &combatant) const;
 
-    std::vector<Combatant *> getAliveEnemies(const Combatant &combatant) const;
+    std::vector<std::weak_ptr<Combatant>> getAliveEnemies(const Combatant &combatant) const;
 
-    std::vector<Combatant *> getAliveNonSwallowedEnemies(const Combatant &combatant) const;
+    std::vector<std::weak_ptr<Combatant>> getAliveNonSwallowedEnemies(const Combatant &combatant) const;
 
-    std::vector<Combatant *> getAliveNonSwallowedAllies(const Combatant &combatant) const;
+    std::vector<std::weak_ptr<Combatant>> getAliveNonSwallowedAllies(const Combatant &combatant) const;
 
-    std::vector<Combatant *> getAliveCombatants(const Combatant *excludeCombatant) const;
+    std::vector<std::weak_ptr<Combatant>> getAliveCombatants(const Combatant &excludeCombatant) const;
 
-    std::vector<Combatant *> getAliveAllies(const Combatant &combatant) const;
+    std::vector<std::weak_ptr<Combatant>> getAliveAllies(const Combatant &combatant) const;
 
-    Combatant *getCombatantById(int id) const;
+    std::weak_ptr<Combatant> getCombatantById(int id) const;
 
   private:
     Teams() = default;
@@ -64,7 +64,7 @@ namespace enc
     static std::unique_ptr<Teams> _instance;
     std::unordered_map<Color, std::vector<int>> _colorToCombatantIds;
     std::unordered_map<int, Color> _combatantIdToTeamColor;
-    std::unordered_map<int, Combatant*> _idToCombatant;
+    std::unordered_map<int, std::weak_ptr<Combatant>> _idToCombatant;
 
     static std::string toString(Color color)
     {

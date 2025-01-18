@@ -28,7 +28,7 @@ namespace enc
     return std::make_shared<Fireball>(*coord, *this);
   }
 
-  double FireballFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
+  double FireballFactory::calculateThreatToTarget(const std::shared_ptr<Combatant> &target, const Kwargs &kwargs) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
     if(battleMap.getCartesianDistanceCombatants(*_combatant, *target)
