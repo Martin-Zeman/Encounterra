@@ -20,7 +20,7 @@ namespace enc
     //   // Implementation
     // }
 
-    // bool deactivateForCombatant(Combatant *combatant) override
+    // bool deactivateForCombatant(Combatant &combatant) override
     // {
     //   // Implementation
     //   return true;

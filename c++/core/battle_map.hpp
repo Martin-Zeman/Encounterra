@@ -79,36 +79,34 @@ namespace enc
     bool removeCombatantIfDead(Combatant &combatant);
     void resetCombatantsToInitialPositions(const std::unordered_map<int, Coords> initialPositions);
     int getCombatantGridValueAt(const Coord &coord) const;
-    std::tuple<Coord, int, std::vector<Combatant *>>
-    findBestPlacementHarmfulCircular(const std::shared_ptr<Combatant> &caster, int spellRange, int radius);
-    std::tuple<Coord, int, std::vector<Combatant *>>
-    findBestPlacementHarmfulSquare(const std::shared_ptr<Combatant> &caster, int spellRange, int length);
-    std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulCone(const std::shared_ptr<Combatant> &caster, int radius);
-    std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulLine(const std::shared_ptr<Combatant> &caster, int length, int width);
+    std::tuple<Coord, int, std::vector<std::weak_ptr<Combatant>>>
+    findBestPlacementHarmfulCircular(const Combatant &caster, int spellRange, int radius);
+    std::tuple<Coord, int, std::vector<std::weak_ptr<Combatant>>>
+    findBestPlacementHarmfulSquare(const Combatant &caster, int spellRange, int length);
+    std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulCone(const Combatant &caster, int radius);
+    std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulLine(const Combatant &caster, int length, int width);
 
-    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedBySphereAoE(const std::shared_ptr<Combatant> &caster, SpellTarget targetTemplate, SpellType abilityType, const Coord &origin) const;
-    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedByConeAoE(const std::shared_ptr<Combatant> &caster, SpellTarget targetTemplate, const Coord &origin, double angle) const;
-    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedByLineAoE(const std::shared_ptr<Combatant> &caster, const Coord &origin, double angle, int length, int width) const;
+    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedBySphereAoE(const Combatant &caster, SpellTarget targetTemplate, SpellType abilityType, const Coord &origin) const;
+    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedByConeAoE(const Combatant &caster, SpellTarget targetTemplate, const Coord &origin, double angle) const;
+    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedByLineAoE(const Combatant &caster, const Coord &origin, double angle, int length, int width) const;
     std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const;
     Visibility getVisibility(const Coords &observer, const Coords &target);
-    std::unordered_map<const Combatant *, Visibility> calcVisibilityDict(const std::shared_ptr<Combatant> &combatant, const Coord &theoreticalRootCoord);
-    void calcVisibilityDictForAllCoords(const Combatant *combatant, const blaze::DynamicMatrix<Coord> &shortestPaths);
-    Visibility getVisibilityFromCoord(const Coord &fromCoord, const std::shared_ptr<Combatant> &target) const;
-    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithinRadius(const std::shared_ptr<Combatant> &combatant, int radius);
-    std::vector<std::weak_ptr<Combatant>> getNonSwallowedAlliesWithinRadius(const std::shared_ptr<Combatant> &combatant, int radius);
-    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithinHopDistance(const std::shared_ptr<Combatant> &combatant, int distance);
-    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithoutHopDistance(const std::shared_ptr<Combatant> &combatant, int distance);
+    std::unordered_map<int, Visibility> calcVisibilityDict(const Combatant &combatant, const Coord &theoreticalRootCoord);
+    void calcVisibilityDictForAllCoords(const Combatant &combatant, const blaze::DynamicMatrix<Coord> &shortestPaths);
+    Visibility getVisibilityFromCoord(const Coord &fromCoord, const Combatant &target) const;
+    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithinRadius(const Combatant &combatant, int radius);
+    std::vector<std::weak_ptr<Combatant>> getNonSwallowedAlliesWithinRadius(const Combatant &combatant, int radius);
+    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithinHopDistance(const Combatant &combatant, int distance);
+    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithoutHopDistance(const Combatant &combatant, int distance);
     bool isDifficultTerrainAt(const Coords &coords) const;
     void pushCombatantAwayFrom(const Vector2D &origin, Combatant *targetCombatant, int distance);
     void setCombatRound(uint32_t round);
     uint32_t getCombatRound();
-    void withCombatantPosition(Combatant *combatant, const Coord &temporaryPosition, const std::function<void()> &fn);
-    void withCombatantWildshapeReplacement(Actoid &actoid, const Combatant &combatant, const Coord &origCoord,
-                                           const std::function<void(const Combatant &)> &fn);
-    std::optional<Coord>
-    findWildshapedCoordinate(const std::shared_ptr<Combatant> &combatant, Size size, const std::optional<Coord> &actualOrigCoord = std::nullopt);
-    std::vector<std::weak_ptr<Combatant>> getPamEligibleCombatants(const std::shared_ptr<Combatant> &combatant, const Coord &increment) const;
-    std::vector<std::weak_ptr<Combatant>> getAooEligibleCombatants(const std::shared_ptr<Combatant> &combatant, const Coord &increment) const;
+    void withCombatantPosition(const Combatant &combatant, const Coord &temporaryPosition, const std::function<void()> &fn);
+    void withCombatantWildshapeReplacement(Actoid &actoid, Combatant &combatant, const Coord &origCoord, const std::function<void(const Combatant &)> &fn);
+    std::optional<Coord> findWildshapedCoordinate(const Combatant &combatant, Size size, const std::optional<Coord> &actualOrigCoord = std::nullopt);
+    std::vector<std::weak_ptr<Combatant>> getPamEligibleCombatants(const Combatant &combatant, const Coord &increment) const;
+    std::vector<std::weak_ptr<Combatant>> getAooEligibleCombatants(const Combatant &combatant, const Coord &increment) const;
 
   private:
     size_t _size;
@@ -122,7 +120,7 @@ namespace enc
     std::unordered_set<Coord> _difficultSet;
     std::vector<Obstacle> _obstacles;
     // std::unordered_map<std::pair<int, int>, std::unordered_map<const Combatant*, Visibility>, PairHash> _visibilityDictForAllCoords;
-    std::unordered_map<Coord, std::unordered_map<const Combatant*, Visibility>> _visibilityDictForAllCoords;
+    std::unordered_map<Coord, std::unordered_map<int, Visibility>> _visibilityDictForAllCoords; // coord -> combatantId -> visibility
     uint32_t _combatRound = 0U; // this isn't the best place for it
 
 
@@ -133,6 +131,6 @@ namespace enc
     bool isEmptyOrSelf(int x, int y, int combatantId) const;
     bool areEmptyOrSelf(const Coords &coords, const Combatant &combatant) const;
     void fillRegion(MapMatrix &mask, const Coord &coord, int offset, int value);
-    blaze::StaticMatrix<int, 2, 2> getHarmfulBoundingBox(const std::shared_ptr<Combatant> &caster, int inflation);
+    blaze::StaticMatrix<int, 2, 2> getHarmfulBoundingBox(const Combatant &caster, int inflation);
   };
 }

@@ -5,10 +5,10 @@
 namespace enc
 {
 
-  AttackFactory::AttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType, int toHit, std::vector<Die> dmgDice,
-                               int dmgBonus, DamageType dmgType, int attackRange, int critRange, Uses &&ammo,
-                               std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg, bool usesDex, bool twoHanded,
-                               Die toHitBonusDie)
+  AttackFactory::AttackFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant> &combatant,
+                               AbilityType abilityType, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange,
+                               int critRange, Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg,
+                               bool usesDex, bool twoHanded, Die toHitBonusDie)
       : DirectThreatFactory(name, abilityName, combatant, abilityType), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType),
         _attackRange(attackRange), _shortRange(attackRange / 4), _critRange(critRange), _ammo(std::move(ammo)), _onHit(std::move(onHit)),
         _extraDmg(extraDmg), _usesDex(usesDex), _twoHanded(twoHanded), _toHitBonusDie(toHitBonusDie)
@@ -84,19 +84,19 @@ namespace enc
     return *this;
   }
 
-  std::vector<Combatant *> AttackFactory::getEligibleTargets() const
+  std::vector<std::weak_ptr<Combatant>> AttackFactory::getEligibleTargets() const
   {
-    Combatant *swallower = _combatant->getSwallower();
-    if(swallower)
+    auto combatant = _combatant.lock();
+    if(auto swallower = combatant->getSwallowerPtr())
       {
         return {swallower};
       }
 
     Teams &teams = Teams::getInstance();
-    return teams.getAliveNonSwallowedEnemies(*_combatant);
+    return teams.getAliveNonSwallowedEnemies(*combatant);
   }
 
-  double AttackFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
+  double AttackFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {
     bool considerDist = false;
     RollType rollType = RollType::STRAIGHT;
@@ -111,26 +111,27 @@ namespace enc
       }
 
     int toHitTotal = _toHit;
-    toHitTotal += getRollTypeDelta(rollType, std::max(0, std::min(target->getAC() - toHitTotal, 20)));
+    toHitTotal += getRollTypeDelta(rollType, std::max(0, std::min(target.getAC() - toHitTotal, 20)));
     if(_toHitBonusDie[0] > 0)
       {
         toHitTotal += avgRoll(_toHitBonusDie);
       }
 
-    if(!considerDist || BattleMap::getInstance().getHopDistanceCombatants(*_combatant, *target) <= _attackRange)
+    auto combatant = _combatant.lock();
+    if(!considerDist || BattleMap::getInstance().getHopDistanceCombatants(*combatant, target) <= _attackRange)
       {
         double acc
-          = meanDmg(toHitTotal, _dmgDice, _dmgBonus, target->getAC(), target->isImmuneTo(_dmgType), target->isResistantTo(_dmgType), _critRange);
+          = meanDmg(toHitTotal, _dmgDice, _dmgBonus, target.getAC(), target.isImmuneTo(_dmgType), target.isResistantTo(_dmgType), _critRange);
 
         for(const auto &extra : _extraDmg)
           {
-            acc += meanDmg(toHitTotal, {extra.first}, 0, target->getAC(), target->isImmuneTo(extra.second), target->isResistantTo(extra.second),
+            acc += meanDmg(toHitTotal, {extra.first}, 0, target.getAC(), target.isImmuneTo(extra.second), target.isResistantTo(extra.second),
                            _critRange);
           }
 
         for(const auto &oh : _onHit)
           {
-            acc += calcPHit(toHitTotal, target->getAC()) * oh->calculateThreat(_combatant, target);
+            acc += calcPHit(toHitTotal, target.getAC()) * oh->calculateThreat(*combatant, target);
           }
 
         return acc;
@@ -139,7 +140,7 @@ namespace enc
     return 0.0;
   }
 
-  double AttackFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const
+  double AttackFactory::calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const
   {
     double avgToHitBonusDieRoll = 0;
     if(_toHitBonusDie[0] > 0)
@@ -148,17 +149,18 @@ namespace enc
       }
     double baselineToHit = _toHit + avgToHitBonusDieRoll;
     double baseline
-      = meanDmg(baselineToHit, _dmgDice, _dmgBonus, target->getAC(), target->isImmuneTo(_dmgType), target->isResistantTo(_dmgType), _critRange);
+      = meanDmg(baselineToHit, _dmgDice, _dmgBonus, target.getAC(), target.isImmuneTo(_dmgType), target.isResistantTo(_dmgType), _critRange);
 
     for(const auto &extra : _extraDmg)
       {
-        baseline += meanDmg(baselineToHit, {extra.first}, 0, target->getAC(), target->isImmuneTo(extra.second), target->isResistantTo(extra.second),
+        baseline += meanDmg(baselineToHit, {extra.first}, 0, target.getAC(), target.isImmuneTo(extra.second), target.isResistantTo(extra.second),
                             _critRange);
       }
 
+    auto combatant = _combatant.lock();
     for(const auto &oh : _onHit)
       {
-        baseline += calcPHit(baselineToHit, target->getAC()) * oh->calculateThreat(_combatant, target);
+        baseline += calcPHit(baselineToHit, target.getAC()) * oh->calculateThreat(*combatant, target);
       }
 
     int modDmgFlat = modifiers.getOrDefault(ThreatModifierType::DMG_BONUS_FLAT, 0);
@@ -170,7 +172,7 @@ namespace enc
     int targetAC = modifiers.getOrDefault(ThreatModifierType::TARGET_AC, 0);
     RollType rollType = modifiers.getOrDefault(ThreatModifierType::ROLL_TYPE, RollType::STRAIGHT);
 
-    int totalTargetAC = target->getAC() + targetAC;
+    int totalTargetAC = target.getAC() + targetAC;
     double toHitTotal = std::floor(baselineToHit + modToHitFlat + avgRoll(modToHitDie));
 
     try
@@ -193,18 +195,18 @@ namespace enc
         std::vector<Die> totalDmgDice = _dmgDice;
         totalDmgDice.insert(totalDmgDice.end(), modDmgDie.begin(), modDmgDie.end());
 
-        modified = meanDmg(toHitTotal, totalDmgDice, _dmgBonus + modDmgFlat, totalTargetAC, target->isImmuneTo(_dmgType),
-                           target->isResistantTo(_dmgType), totalCrit);
+        modified = meanDmg(toHitTotal, totalDmgDice, _dmgBonus + modDmgFlat, totalTargetAC, target.isImmuneTo(_dmgType),
+                           target.isResistantTo(_dmgType), totalCrit);
 
         for(const auto &extra : _extraDmg)
           {
-            modified += meanDmg(toHitTotal, {extra.first}, 0, totalTargetAC, target->isImmuneTo(extra.second), target->isResistantTo(extra.second),
+            modified += meanDmg(toHitTotal, {extra.first}, 0, totalTargetAC, target.isImmuneTo(extra.second), target.isResistantTo(extra.second),
                                 totalCrit);
           }
 
         for(const auto &oh : _onHit)
           {
-            modified += calcPHit(toHitTotal, totalTargetAC) * oh->calculateThreat(_combatant, target);
+            modified += calcPHit(toHitTotal, totalTargetAC) * oh->calculateThreat(*combatant, target);
           }
       }
     catch(const std::exception &e)
@@ -218,7 +220,7 @@ namespace enc
 
   double AttackFactory::calculateMaxThreat() const
   {
-    std::vector<Combatant *> targets = getEligibleTargets();
+    std::vector<std::weak_ptr<Combatant>> targets = getEligibleTargets();
 
     if(targets.empty())
       {
@@ -227,26 +229,38 @@ namespace enc
 
     double maxThreat = std::numeric_limits<double>::lowest();
 
-    for(auto *target : targets)
+    for(auto weakTarget : targets)
       {
-        double threat = calculateThreatToTarget(target, {});
-        if(threat > maxThreat)
+        if(auto target = weakTarget.lock())
           {
-            maxThreat = threat;
+            double threat = calculateThreatToTarget(*target, {});
+            if(threat > maxThreat)
+              {
+                maxThreat = threat;
+              }
           }
+        return maxThreat;
       }
-
-    return maxThreat;
   }
 
   std::string Attack::toString() const
   {
-    std::string formPrefix = "";
-    if(_factory.getCombatant()->getCurrentForm() != _factory.getCombatant()->getOriginalForm())
+    auto combatant = _factory.getCombatant().lock();
+
+    std::string formPrefix;
+    if(auto currentForm = combatant->getCurrentForm().lock())
       {
-        formPrefix = std::string(_factory.getCombatant()->getCurrentForm()->_name) + " ";
+        if(auto originalForm = combatant->getOriginalForm().lock())
+          {
+            if(currentForm != originalForm)
+              {
+                formPrefix = currentForm->_name + " ";
+              }
+          }
       }
+
     std::string hastedPrefix = (_abilityType > AbilityType::HASTE_ACTION_DELIMITER && _abilityType < AbilityType::PASSIVE_DELIMITER) ? "Hasted " : "";
+
     return formPrefix + hastedPrefix + _factory._name + " on " + _target._name;
   }
 
@@ -256,7 +270,7 @@ namespace enc
     return hastedPrefix + _factory._name;
   }
 
-  double Attack::calculateThreat(const Kwargs &kwargs) { return _factory.calculateThreatToTarget(&_target, kwargs); }
+  double Attack::calculateThreat(const Kwargs &kwargs) { return _factory.calculateThreatToTarget(_target, kwargs); }
 
-  double Attack::calculateThreatDelta(const ThreatModifiers &modifiers) const { return _factory.calculateThreatToTargetDelta(&_target, modifiers); }
-}
+  double Attack::calculateThreatDelta(const ThreatModifiers &modifiers) const { return _factory.calculateThreatToTargetDelta(_target, modifiers); }
+  }

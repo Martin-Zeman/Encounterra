@@ -21,7 +21,7 @@ namespace enc
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
-        result.push_back(std::make_shared<MeleeAttack>(AbilityType::MELEE_ATTACK, *target, *this));
+        result.push_back(std::make_shared<MeleeAttack>(AbilityType::MELEE_ATTACK, *target.lock(), *this));
       }
     return result;
   }
@@ -33,25 +33,25 @@ namespace enc
   {
     MeleeAttackFactory &factory = dynamic_cast<MeleeAttackFactory &>(getFactory());
     BattleMap &battleMap = BattleMap::getInstance();
-    Combatant *swallower = factory._combatant->getSwallower();
 
-    if(swallower)
+    auto combatant = factory._combatant.lock();
+    if(auto swallower = combatant->getSwallowerPtr())
       {
-        if(swallower == &_target)
+        if(*swallower == _target)
           {
-            return CoordVector{battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
+            return CoordVector{battleMap.getCombatantCoordinates(*combatant).getRoot()};
           }
         return {};
       }
 
-    if(!factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+    if(!combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
-        return battleMap.getFreeCoordsInHopRange(battleMap.getCombatantCoordinates(_target).get(), distances, factory._combatant->getSize(),
-                                                 factory._attackRange, factory._combatant->_instanceId);
+        return battleMap.getFreeCoordsInHopRange(battleMap.getCombatantCoordinates(_target).get(), distances, combatant->getSize(),
+                                                 factory._attackRange, combatant->_instanceId);
       }
-    else if(battleMap.getHopDistanceCombatants(*factory._combatant, _target) <= factory._attackRange)
+    else if(battleMap.getHopDistanceCombatants(*combatant, _target) <= factory._attackRange)
       {
-        return CoordVector{battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
+        return CoordVector{battleMap.getCombatantCoordinates(*combatant).getRoot()};
       }
 
     return {};

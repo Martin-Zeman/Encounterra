@@ -33,12 +33,7 @@ namespace enc
 
   using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
-  inline bool operator==(const std::shared_ptr<Combatant> &lhs, const Combatant &rhs)
-  {
-    return rhs == lhs; // Delegate to the member operator
-  }
-
-  class Combatant/* : public ICombatant*/
+  class Combatant
   {
   public:
     std::string _name;
@@ -55,10 +50,11 @@ namespace enc
     ~Combatant();
 
     bool operator==(const Combatant& other) const;
-    
+    bool operator==(Combatant& other) const;
+
     bool operator!=(const Combatant& other) const;
 
-    bool operator==(const std::shared_ptr<Combatant>& other) const;
+    // bool operator==(const std::shared_ptr<Combatant>& other) const;
 
     static constexpr uint32_t fnv1a_32(uint32_t initial, uint32_t value)
     {
@@ -130,9 +126,10 @@ namespace enc
     std::weak_ptr<Combatant> getOriginalForm();
     bool isWildshaped() const;
     void setBaseForm(const std::shared_ptr<Combatant>& form);
-    std::weak_ptr<Combatant> getSwallower() const { return _swallower; }
-    void setSwallower(Combatant *swallower) { _swallower = swallower; }
-    bool isSwallowed() const { return _swallower != nullptr; }
+    std::optional<std::weak_ptr<Combatant>> getSwallower() const { return _swallower; }
+    std::shared_ptr<Combatant> getSwallowerPtr() const { return _swallower ? _swallower->lock() : nullptr; }
+    void setSwallower(const std::shared_ptr<Combatant> &swallower) { _swallower = swallower; }
+    bool isSwallowed() const { return _swallower.has_value() && !_swallower.value().expired(); }
     const std::vector<std::shared_ptr<Condition>> &getConditions() const { return _conditions; }
     const std::vector<std::shared_ptr<ConditionWithDC>> &getDCConditions() const { return _dcConditions; }
     bool isAffectedBy(Conditions condition) const;
@@ -141,8 +138,8 @@ namespace enc
     bool removeCondition(Conditions condition, const Combatant *initiator = nullptr);
     bool removeDCCondition(Conditions condition, const Combatant *initiator = nullptr);
     void removeAllConditionsOfType(Conditions condition);
-    std::weak_ptr<Combatant> getInitiatorOfCondition(Conditions condition);
-    std::weak_ptr<Combatant> getGrappledTarget();
+    std::optional<std::weak_ptr<Combatant>> getInitiatorOfCondition(Conditions condition);
+    std::optional<std::weak_ptr<Combatant>> getGrappledTarget();
     std::vector<std::weak_ptr<ConditionWithDC>> needsToBreakOutOfGrapple() const;
     bool breakOutOfGrapple(const std::weak_ptr<ConditionWithDC>& grappleCondition);
     void setConcentrationEffect(std::shared_ptr<Effect> effect);
@@ -151,9 +148,9 @@ namespace enc
     bool isConcentrating() const;
     bool isAffectedByAny(const std::vector<Conditions> &conditions) const;
     void setResourceDepletionLevel(ResourceDepletionLevel level) { _resouceDepletionLevel = level; }
-    bool isImmuneTo(DamageType dmgType);
-    bool isResistantTo(DamageType dmgType);
-    bool isVulnerableTo(DamageType dmgType);
+    bool isImmuneTo(DamageType dmgType) const;
+    bool isResistantTo(DamageType dmgType) const;
+    bool isVulnerableTo(DamageType dmgType) const;
     Spellslots &getSpellslots() { return *_spellslots; }
     int getLevel() const { return _level; }
     int getCurrentHp() const { return _currHp; }
@@ -168,8 +165,8 @@ namespace enc
     void decrementMovement(int dist = 1) { _movement -= dist; }
     int getSpeed() const { return _speed; }
     bool hasPassiveAbility(AbilityType ability) const;
-    const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
-    int getSavingThrow(SavingThrow st) { return _savingThrows.at(st); }
+    const std::unordered_map<SavingThrow, int> &getSavingThrows() const { return _savingThrows; }
+    int getSavingThrow(SavingThrow st) const { return _savingThrows.at(st); }
     void setSavingThrow(SavingThrow st, int value) { _savingThrows.at(st) = value; }
     const std::vector<int> &getSavingThrowFlatMods(SavingThrow type) const;
     void addSavingThrowFlatMod(SavingThrow type, int mod);
@@ -185,10 +182,10 @@ namespace enc
     std::weak_ptr<ActoidFactory> getActionFactory(AbilityType type);
     void clearAllSavingThrowMods();
     void rollForRecharge();
-    const std::vector<std::shared_ptr<ActoidFactory>> &getActionFactoriesConst() { return _actionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactoriesConst() { return _bonusActionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactoriesConst() { return _reactionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactoriesConst() { return _hasteActionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getActionFactoriesConst() const { return _actionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactoriesConst() const { return _bonusActionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactoriesConst() const { return _reactionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactoriesConst() const { return _hasteActionFactories; }
     std::vector<std::shared_ptr<ActoidFactory>> &getActionFactories() { return _actionFactories; }
     std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactories() { return _bonusActionFactories; }
     std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactories() { return _reactionFactories; }
@@ -208,7 +205,7 @@ namespace enc
     void removeImmunity(DamageType dmgType);
     void addVulnerability(DamageType dmgType);
     void removeVulnerability(DamageType dmgType);
-    bool isDodging() { return _isDodging; }
+    bool isDodging() const { return _isDodging; }
     /**
      * Handles concentration checks when a combatant takes damage.
      *
@@ -467,7 +464,7 @@ namespace enc
 
   private:
     template <typename ConditionType>
-    std::weak_ptr<Combatant> checkConditionList(const std::vector<std::shared_ptr<ConditionType>> &condList, Conditions condition) const
+    std::optional<std::weak_ptr<Combatant>> checkConditionList(const std::vector<std::shared_ptr<ConditionType>> &condList, Conditions condition) const
     {
       for(const auto &cond : condList)
         {
@@ -476,7 +473,7 @@ namespace enc
               return cond->initiator;
             }
         }
-      return nullptr;
+      return std::nullopt;
     }
 
     int doReceiveDmg(int dmg, DamageType dmg_type);
@@ -530,9 +527,9 @@ namespace enc
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
     std::weak_ptr<Combatant> _baseForm;
     std::optional<std::weak_ptr<Combatant>> _wildshapeForm;
-    std::weak_ptr<Combatant> _swallower;
-    std::weak_ptr<Combatant> _swallowedTarget;
-    std::weak_ptr<Combatant> _constrictedTarget;
+    std::optional<std::weak_ptr<Combatant>> _swallower;
+    std::optional<std::weak_ptr<Combatant>> _swallowedTarget;
+    std::optional<std::weak_ptr<Combatant>> _constrictedTarget;
     std::vector<std::shared_ptr<Condition>> _conditions;
     std::vector<std::shared_ptr<ConditionWithDC>> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;
@@ -555,4 +552,7 @@ namespace enc
     int _level;
   };
 
-}
+  inline bool operator==(const std::shared_ptr<Combatant> &lhs, const Combatant &rhs) { return lhs && (lhs->_instanceId == rhs._instanceId); }
+
+  inline bool operator==(const Combatant &lhs, const std::shared_ptr<Combatant> &rhs) { return rhs && (lhs._instanceId == rhs->_instanceId); }
+} // namespace enc

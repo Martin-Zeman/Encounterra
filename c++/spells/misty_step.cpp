@@ -6,14 +6,13 @@
 namespace enc
 {
 
-  MistyStepFactory::MistyStepFactory(Combatant *caster, Resource *resource)
+  MistyStepFactory::MistyStepFactory(const std::shared_ptr<Combatant> &caster, Resource *resource)
       : ActoidFactory("MistyStepFactory", "Misty Step", caster, AbilityType::MISTY_STEP), _resource(resource)
   {}
 
   std::optional<Coord> MistyStepFactory::getEligibleTargets() const
   {
-    Combatant *swallower = _combatant->getSwallower();
-    if(swallower)
+    if(_combatant.lock()->getSwallowerPtr())
       {
         return std::nullopt;
       }
@@ -72,14 +71,15 @@ namespace enc
   std::optional<CoordVector>
   MistyStep::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
-    if(_factory._combatant->getSwallower())
+    auto combatant = _factory._combatant.lock();
+    if(combatant->getSwallowerPtr())
       {
         return std::nullopt;
       }
 
     auto &battleMap = BattleMap::getInstance();
 
-    const Coords &combatantPos = battleMap.getCombatantCoordinates(*_factory._combatant);
+    const Coords &combatantPos = battleMap.getCombatantCoordinates(*combatant);
     return CoordVector{combatantPos.getRoot()};
   }
 

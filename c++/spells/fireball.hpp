@@ -39,7 +39,7 @@ namespace enc
 
     std::optional<Resource *> getResource() override { return _resource; }
 
-    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
+    double calculateThreatToTarget(const Combatant& target, const Kwargs &kwargs) const override;
     double calculateMaxThreat() const override;
 
   private:

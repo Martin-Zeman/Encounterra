@@ -12,7 +12,8 @@ namespace enc
   Coord FireballFactory::findBestArgs() const
   {
     BattleMap & battleMap = BattleMap::getInstance();
-    auto [coord, maxScore, affectedCombatants] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(FireballFactory::range), TRANSLATE_RADIUS.at(FireballFactory::target));
+    auto [coord, maxScore, affectedCombatants] = battleMap.findBestPlacementHarmfulCircular(
+      *_combatant.lock(), static_cast<int>(FireballFactory::range), TRANSLATE_RADIUS.at(FireballFactory::target));
     return coord;
   }
 
@@ -28,15 +29,15 @@ namespace enc
     return std::make_shared<Fireball>(*coord, *this);
   }
 
-  double FireballFactory::calculateThreatToTarget(const std::shared_ptr<Combatant> &target, const Kwargs &kwargs) const
+  double FireballFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
-    if(battleMap.getCartesianDistanceCombatants(*_combatant, *target)
+    if(battleMap.getCartesianDistanceCombatants(*_combatant.lock(), target)
        <= static_cast<double>(static_cast<int>(FireballFactory::range) + TRANSLATE_RADIUS.at(FireballFactory::target)))
       {
-        return std::min(static_cast<double>(target->getCurrentHp()),
-                        meanDmgDcAttack(_dc, _dmgDice, true, target->getSavingThrows().at(_savingThrow), target->isImmuneTo(FireballFactory::dmgType),
-                                        target->isResistantTo(FireballFactory::dmgType)));
+        return std::min(static_cast<double>(target.getCurrentHp()),
+                        meanDmgDcAttack(_dc, _dmgDice, true, target.getSavingThrows().at(_savingThrow), target.isImmuneTo(FireballFactory::dmgType),
+                                        target.isResistantTo(FireballFactory::dmgType)));
       }
     return 0;
   }
@@ -53,15 +54,16 @@ namespace enc
     BattleMap &battleMap = BattleMap::getInstance();
     Teams &teams = Teams::getInstance();
     const FireballFactory &factory = dynamic_cast<const FireballFactory &>(getFactory());
-    std::vector<Combatant *> affectedCombatants
-      = battleMap.getCombatantsAffectedBySphereAoE(factory._combatant, FireballFactory::target, SpellType::HARMFUL, _coord);
+    std::vector<std::weak_ptr<Combatant>> affectedCombatants
+      = battleMap.getCombatantsAffectedBySphereAoE(*factory._combatant.lock(), FireballFactory::target, SpellType::HARMFUL, _coord);
     double acc = 0.0;
-    for(auto aff : affectedCombatants)
+    for(auto weakAff : affectedCombatants)
       {
+        auto aff = weakAff.lock();
         double avgDmg = std::min(static_cast<double>(aff->getCurrentHp()),
                                  meanDmgDcAttack(factory._dc, factory._dmgDice, true, aff->getSavingThrows().at(factory._savingThrow),
                                                  aff->isImmuneTo(FireballFactory::dmgType), aff->isResistantTo(FireballFactory::dmgType)));
-        acc += (teams.areEnemies(*factory._combatant, *aff) ? 1.0 : -3.0) * avgDmg;
+        acc += (teams.areEnemies(*factory._combatant.lock(), *aff) ? 1.0 : -3.0) * avgDmg;
       }
     return acc;
   }
@@ -70,21 +72,21 @@ namespace enc
   Fireball::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     FireballFactory &factory = dynamic_cast<FireballFactory &>(getFactory());
-    Combatant *swallower = factory._combatant->getSwallower();
-    if(swallower)
+    auto combatant = factory._combatant.lock();
+    if(combatant->getSwallowerPtr())
       {
         return {};
       }
     BattleMap &battleMap = BattleMap::getInstance();
-    if(!factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+    if(!combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
-        return battleMap.getFreeCoordsInCartesianRange(Coords(_coord), distances, factory._combatant->getSize(),
-                                                       static_cast<int>(FireballFactory::range), factory._combatant->_instanceId);
+        return battleMap.getFreeCoordsInCartesianRange(Coords(_coord), distances, combatant->getSize(),
+                                                       static_cast<int>(FireballFactory::range), combatant->_instanceId);
       }
-    else if(getCartesianDistanceCoords(battleMap.getCombatantCoordinates(*factory._combatant), Coords(_coord))
+    else if(getCartesianDistanceCoords(battleMap.getCombatantCoordinates(*combatant), Coords(_coord))
             <= static_cast<int>(FireballFactory::range))
       {
-        CoordVector coords = {battleMap.getCombatantCoordinates(*factory._combatant).getRoot()};
+        CoordVector coords = {battleMap.getCombatantCoordinates(*combatant).getRoot()};
         return coords;
       }
     return {};

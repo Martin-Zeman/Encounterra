@@ -48,8 +48,8 @@ namespace enc
     virtual EffectType getEffectType() const = 0;
     virtual void activate(const Kwargs &kwargs = {}) = 0;
     virtual void deactivate() = 0;
-    virtual bool deactivateForCombatant(const std::shared_ptr<Combatant>& combatant) = 0;
-    virtual bool isAffecting(const std::shared_ptr<Combatant>& combatant) const = 0;
+    virtual bool deactivateForCombatant(Combatant &combatant) = 0;
+    virtual bool isAffecting(const Combatant& combatant) const = 0;
 
     virtual bool startOfTurnTick()
     {
@@ -57,12 +57,12 @@ namespace enc
     }
 
     // Virtual methods with default implementations
-    virtual bool combatantSavedAtEndOfTurn(const std::shared_ptr<Combatant>& combatant)
+    virtual bool combatantSavedAtEndOfTurn(Combatant &combatant)
     {
       return true; // Default: abilities that cannot be saved against
     }
 
-    virtual bool startOfTurnForCombatant(const std::shared_ptr<Combatant>& combatant)
+    virtual bool startOfTurnForCombatant(Combatant &combatant)
     {
       return true; // Default: all abilities
     }
@@ -71,10 +71,10 @@ namespace enc
 
     // Non-virtual methods
     std::weak_ptr<Combatant> getInitiator() const { return _initiator; }
-    std::weak_ptr<Combatant> getTarget() const { return _target; }
+    std::shared_ptr<Combatant> getTargetPtr() const { return _target ?  _target->lock() : nullptr; }
 
   protected:
     std::weak_ptr<Combatant> _initiator;
-    std::weak_ptr<Combatant> _target; // only relevant for Hide as of now
+    std::optional<std::weak_ptr<Combatant>> _target; // only relevant for Hide as of now
   };
 }

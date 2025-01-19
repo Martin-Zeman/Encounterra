@@ -6,11 +6,11 @@
 
 namespace enc
 {
-  bool AoeEffect::isAffecting(const std::shared_ptr<Combatant> &combatant) const
+  bool AoeEffect::isAffecting(const Combatant &combatant) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
     CoordVector coords = getAffectedCoords();
 
-    return getHopDistanceCoords(battleMap.getCombatantCoordinates(*combatant), coords) == 0;
+    return getHopDistanceCoords(battleMap.getCombatantCoordinates(combatant), coords) == 0;
   }
 }

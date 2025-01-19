@@ -45,8 +45,8 @@ namespace enc
     EffectType getEffectType() const override { return EffectType::WILDSHAPE; }
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
-    bool deactivateForCombatant(const std::shared_ptr<Combatant>& combatant) override;
-    bool isAffecting(const std::shared_ptr<Combatant>& combatant) const override { return CombatantEffect::isAffecting(combatant); }
+    bool deactivateForCombatant(Combatant &combatant) override;
+    bool isAffecting(const Combatant &combatant) const override { return CombatantEffect::isAffecting(combatant); }
 
     void enable() override;
     void disable() override;

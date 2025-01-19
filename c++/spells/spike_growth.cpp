@@ -9,7 +9,7 @@
 namespace enc
 {
 
-  SpikeGrowthFactory::SpikeGrowthFactory(AbilityType abilityType, Combatant *caster, Resource *resource)
+  SpikeGrowthFactory::SpikeGrowthFactory(AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource)
       : DirectThreatFactory("SpikeGrowthFactory", "Spike Growth", caster, abilityType), _abilityType(abilityType), _resource(resource),
         _dmgDice({2, 4})
   {}
@@ -17,8 +17,8 @@ namespace enc
   Coord SpikeGrowthFactory::findBestArgs() const
   {
     BattleMap &battleMap = BattleMap::getInstance();
-    auto [coord, maxScore, affectedCombatants] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(SpikeGrowthFactory::range),
-                                                                                            TRANSLATE_RADIUS.at(SpikeGrowthFactory::target));
+    auto [coord, maxScore, affectedCombatants] = battleMap.findBestPlacementHarmfulCircular(
+      *_combatant.lock(), static_cast<int>(SpikeGrowthFactory::range), TRANSLATE_RADIUS.at(SpikeGrowthFactory::target));
     return coord;
   }
 
@@ -34,9 +34,9 @@ namespace enc
     return std::make_shared<SpikeGrowth>(*coord, *this);
   }
 
-  double SpikeGrowthFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const { return avgRoll(_dmgDice); }
+  double SpikeGrowthFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const { return avgRoll(_dmgDice); }
 
-  double SpikeGrowthFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const
+  double SpikeGrowthFactory::calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const
   {
     return 0.0; // No need
   }
@@ -63,15 +63,19 @@ namespace enc
   {
     BattleMap &battleMap = BattleMap::getInstance();
     Teams &teams = Teams::getInstance();
+    auto combatant = _factory._combatant.lock();
 
-    std::vector<Combatant *> affectedCombatants
-      = battleMap.getCombatantsAffectedBySphereAoE(_factory._combatant, SpikeGrowthFactory::target, SpellType::HARMFUL, _coord);
+    std::vector<std::weak_ptr<Combatant>> affectedCombatants
+      = battleMap.getCombatantsAffectedBySphereAoE(*combatant, SpikeGrowthFactory::target, SpellType::HARMFUL, _coord);
 
     double acc = 0.0;
-    for(auto *aff : affectedCombatants)
+    for(auto weakAffectedCombatant : affectedCombatants)
       {
-        double avgDmg = avgRoll(_factory._dmgDice);
-        acc += (teams.areEnemies(*_factory._combatant, *aff) ? 1.0 : -3.0) * avgDmg;
+        if(auto aff = weakAffectedCombatant.lock())
+          {
+            double avgDmg = avgRoll(_factory._dmgDice);
+            acc += (teams.areEnemies(*combatant, *aff) ? 1.0 : -3.0) * avgDmg;
+          }
       }
     return acc;
   }
@@ -84,22 +88,21 @@ namespace enc
   std::optional<CoordVector>
   SpikeGrowth::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
-    Combatant *swallower = _factory._combatant->getSwallower();
-    if(swallower)
+    auto combatant = _factory._combatant.lock();
+    if(combatant->getSwallowerPtr())
       {
         return std::nullopt;
       }
 
     BattleMap &battleMap = BattleMap::getInstance();
-    if(!_factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+    if(!combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
-        return battleMap.getFreeCoordsInCartesianRange(Coords(_coord), distances, _factory._combatant->getSize(),
-                                                       static_cast<int>(SpikeGrowthFactory::range), _factory._combatant->_instanceId);
+        return battleMap.getFreeCoordsInCartesianRange(Coords(_coord), distances, combatant->getSize(), static_cast<int>(SpikeGrowthFactory::range),
+                                                       combatant->_instanceId);
       }
-    else if(getCartesianDistanceCoords(battleMap.getCombatantCoordinates(*_factory._combatant), Coords(_coord))
-            <= static_cast<int>(SpikeGrowthFactory::range))
+    else if(getCartesianDistanceCoords(battleMap.getCombatantCoordinates(*combatant), Coords(_coord)) <= static_cast<int>(SpikeGrowthFactory::range))
       {
-        return CoordVector{battleMap.getCombatantCoordinates(*_factory._combatant).getRoot()};
+        return CoordVector{battleMap.getCombatantCoordinates(*combatant).getRoot()};
       }
 
     return std::nullopt;
@@ -107,35 +110,35 @@ namespace enc
 
   void SpikeGrowth::activate(const Kwargs &kwargs)
   {
-    _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
+    _factory._combatant.lock()->setConcentrationEffect(Effect::shared_from_this());
   }
 
-  void SpikeGrowth::deactivate() { _factory._combatant->breakConcentration(); }
-  bool SpikeGrowth::deactivateForCombatant(Combatant *combatant) {
+  void SpikeGrowth::deactivate() { _factory._combatant.lock()->breakConcentration(); }
+  bool SpikeGrowth::deactivateForCombatant(Combatant &combatant) {
     assert(false);
   }
 
-  void SpikeGrowth::onEnter(Combatant *combatant)
+  void SpikeGrowth::onEnter(Combatant &combatant)
   {
     int damage = rollDice(_factory._dmgDice);
-    combatant->receiveDmg(damage, SpikeGrowthFactory::dmgType);
-    BattleMap::getInstance().removeCombatantIfDead(*combatant);
+    combatant.receiveDmg(damage, SpikeGrowthFactory::dmgType);
+    BattleMap::getInstance().removeCombatantIfDead(combatant);
   }
 
-  void SpikeGrowth::onMoveWithin(Combatant *combatant)
+  void SpikeGrowth::onMoveWithin(Combatant &combatant)
   {
     int damage = rollDice(_factory._dmgDice);
-    combatant->receiveDmg(damage, SpikeGrowthFactory::dmgType);
-    BattleMap::getInstance().removeCombatantIfDead(*combatant);
+    combatant.receiveDmg(damage, SpikeGrowthFactory::dmgType);
+    BattleMap::getInstance().removeCombatantIfDead(combatant);
   }
 
-  void SpikeGrowth::onExit(Combatant *combatant) {/*NOP*/};
-  void SpikeGrowth::onStartOfTurn(Combatant *combatant) { /*NOP */};
-  void SpikeGrowth::onEndOfTurn(Combatant *combatant) {/*NOP*/ };
+  void SpikeGrowth::onExit(Combatant &combatant) { /*NOP*/ };
+  void SpikeGrowth::onStartOfTurn(Combatant &combatant) { /*NOP */ };
+  void SpikeGrowth::onEndOfTurn(Combatant &combatant) { /*NOP*/ };
 
-  double SpikeGrowth::threatOnEnter(Combatant *target, const Kwargs & kwargs) const { return avgRoll(_factory._dmgDice); }
+  double SpikeGrowth::threatOnEnter(const Combatant &target, const Kwargs &kwargs) const { return avgRoll(_factory._dmgDice); }
 
-  double SpikeGrowth::threatOnMoveWithin(Combatant *target, const Kwargs & kwargs) const { return avgRoll(_factory._dmgDice); }
+  double SpikeGrowth::threatOnMoveWithin(const Combatant &target, const Kwargs &kwargs) const { return avgRoll(_factory._dmgDice); }
 
   size_t SpikeGrowth::hash() const
   {

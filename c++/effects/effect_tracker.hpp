@@ -12,52 +12,53 @@ namespace enc
   class EffectTracker
   {
   public:
-
     // Delete copy constructor and assignment operator
-    EffectTracker(const EffectTracker&) = delete;
-    EffectTracker& operator=(const EffectTracker&) = delete;
+    EffectTracker(const EffectTracker &) = delete;
+    EffectTracker &operator=(const EffectTracker &) = delete;
 
     // Singleton access method
-    static EffectTracker& getInstance() {
-        static EffectTracker instance;
-        return instance;
+    static EffectTracker &getInstance()
+    {
+      static EffectTracker instance;
+      return instance;
     }
 
     // Reset singleton for testing
-    static void resetInstance() {
-        auto& instance = getInstance();
-        instance.reset();
+    static void resetInstance()
+    {
+      auto &instance = getInstance();
+      instance.reset();
     }
 
     std::weak_ptr<Effect> add(std::shared_ptr<Effect> effect);
 
     void remove(const std::shared_ptr<Effect> &effect);
 
-    void startOfTurnTick(const std::shared_ptr<Combatant> &combatant);
+    void startOfTurnTick(const Combatant &combatant);
 
-    void startOfTurn(const std::shared_ptr<Combatant> &ombatant);
+    void startOfTurn(Combatant &ombatant);
 
-    void endOfTurn(const std::shared_ptr<Combatant> &combatant);
+    void endOfTurn(Combatant &combatant);
 
-    std::vector<std::weak_ptr<Effect>> getAffectingCombatant(const std::shared_ptr<Combatant> &combatant) const;
+    std::vector<std::weak_ptr<Effect>> getAffectingCombatant(const Combatant &combatant) const;
 
-    bool isAffectingCombatant(const std::shared_ptr<Combatant> &combatant, EffectType effectType) const;
+    bool isAffectingCombatant(const Combatant &combatant, EffectType effectType) const;
 
     std::vector<std::weak_ptr<AoeEffect>> getAoeEffects() const;
 
-    std::vector<std::weak_ptr<Effect>> getEffectsByInitiator(const std::shared_ptr<Combatant> &initiator) const;
+    std::vector<std::weak_ptr<Effect>> getEffectsByInitiator(const Combatant &initiator) const;
 
-    void combatantDied(const std::shared_ptr<Combatant> &combatant);
+    void combatantDied(const Combatant &combatant);
 
-    void createPostHasteLethargy(const std::shared_ptr<Combatant> &initiator, const std::shared_ptr<Combatant> &combatant);
+    void createPostHasteLethargy(const Combatant &initiator, const Combatant &combatant);
 
-    void removeEffectFromCombatantByType(const std::shared_ptr<Combatant> &combatant, EffectType effectType);
+    void removeEffectFromCombatantByType(Combatant &combatant, EffectType effectType);
 
-    void removeEffectFromCombatant(const std::shared_ptr<Combatant> &ombatant, const std::shared_ptr<Effect>& effect);
+    void removeEffectFromCombatant(Combatant &combatant, const std::shared_ptr<Effect> &effect);
 
-    bool isCombatantHiddenFrom(const std::shared_ptr<Combatant> &combatant, const std::shared_ptr<Combatant> &target) const;
+    bool isCombatantHiddenFrom(const Combatant &combatant, const Combatant &target) const;
 
-    // bool isAffectedByVowOfEnmity(const std::shared_ptr<Combatant> &initiator, const std::shared_ptr<Combatant> &target) const;
+    // bool isAffectedByVowOfEnmity(const Combatant&initiator, const Combatant&target) const;
 
     void reset();
 

@@ -12,7 +12,7 @@ namespace enc
   public:
     explicit CombatantEffect(const std::shared_ptr<Combatant> &initiator, const std::vector<std::shared_ptr<Combatant>> &combatants = {});
 
-    bool isAffecting(const std::shared_ptr<Combatant> &combatant) const override;
+    bool isAffecting(const Combatant &combatant) const override;
 
     // Allow derived classes to access combatants
     std::vector<std::shared_ptr<Combatant>> getCombatants() const;

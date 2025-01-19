@@ -19,11 +19,11 @@ namespace enc
     return {}; // TODO
   }
 
-  double CloudOfDaggersFactory::calculateThreatToTarget(const std::shared_ptr<Combatant> &target, const Kwargs &kwargs) const
+  double CloudOfDaggersFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {
     return 0.0; // TODO
   }
-  double CloudOfDaggersFactory::calculateThreatToTargetDelta(const std::shared_ptr<Combatant> &target, const ThreatModifiers &modifiers) const
+  double CloudOfDaggersFactory::calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const
   {
     return 0.0; // TODO
   }
@@ -56,8 +56,8 @@ namespace enc
 
   void CloudOfDaggers::activate(const Kwargs &kwargs) { /*TODO*/ }
   void CloudOfDaggers::deactivate() { /*TODO*/ }
-  bool CloudOfDaggers::deactivateForCombatant(Combatant *combatant) { return false; /*TODO*/ }
-  bool CloudOfDaggers::isAffecting(Combatant *combatant) const { return false; /*TODO*/ }
+  bool CloudOfDaggers::deactivateForCombatant(Combatant &combatant) { return false; /*TODO*/ }
+  bool CloudOfDaggers::isAffecting(const Combatant &combatant) const { return false; /*TODO*/ }
   EffectType CloudOfDaggers::getEffectType() const { return EffectType::CLOUD_OF_DAGGERS; }
 
     std::optional<CoordVector>

@@ -23,7 +23,7 @@ namespace enc
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
-        result.push_back(std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *target, *this));
+        result.push_back(std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *target.lock(), *this));
       }
     return result;
   }
@@ -38,30 +38,30 @@ namespace enc
   {
     RangedAttackFactory &factory = dynamic_cast<RangedAttackFactory &>(getFactory());
     BattleMap &battleMap = BattleMap::getInstance();
-    Combatant *swallower = factory._combatant->getSwallower();
-    Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).getRoot();
+    auto combatant = factory._combatant.lock();
+    Coord currCoord = battleMap.getCombatantCoordinates(*combatant).getRoot();
 
-    if(swallower)
+    if(auto swallower = combatant->getSwallowerPtr())
       {
-        if(swallower == &_target)
+        if(*swallower == _target)
           {
             return CoordVector{currCoord};
           }
         return {};
       }
 
-    if(!factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+    if(!combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
         CoordVector freeCoordsInRange
-          = battleMap.getFreeCoordsInCartesianRange(battleMap.getCombatantCoordinates(_target).get(), distances, factory._combatant->getSize(),
-                                                    factory._attackRange, factory._combatant->_instanceId);
+          = battleMap.getFreeCoordsInCartesianRange(battleMap.getCombatantCoordinates(_target).get(), distances, combatant->getSize(),
+                                                    factory._attackRange, combatant->_instanceId);
 
-        if(!EffectTracker::getInstance().isCombatantHiddenFrom(factory._combatant, &_target))
+        if(!EffectTracker::getInstance().isCombatantHiddenFrom(*combatant, _target))
           {
             CoordVector visibleCoords;
             std::copy_if(freeCoordsInRange.begin(), freeCoordsInRange.end(), std::back_inserter(visibleCoords),
                          [&battleMap, this](const Coord &coord) {
-                           return battleMap.getVisibilityFromCoord(coord, &_target) != Visibility::NONE;
+                           return battleMap.getVisibilityFromCoord(coord, _target) != Visibility::NONE;
                          });
             return visibleCoords;
           }
@@ -71,11 +71,11 @@ namespace enc
             CoordVector transitionCoords;
             for(const auto &coord : freeCoordsInRange)
               {
-                if(battleMap.getVisibilityFromCoord(coord, &_target) != Visibility::NONE)
+                if(battleMap.getVisibilityFromCoord(coord, _target) != Visibility::NONE)
                   {
                     try
                       {
-                        if(battleMap.getVisibilityFromCoord(shortestPaths(coord[0], coord[1]), &_target) == Visibility::NONE)
+                        if(battleMap.getVisibilityFromCoord(shortestPaths(coord[0], coord[1]), _target) == Visibility::NONE)
                           {
                             transitionCoords.push_back(coord);
                           }
@@ -89,8 +89,8 @@ namespace enc
             return transitionCoords;
           }
       }
-    else if(battleMap.getCartesianDistanceCombatants(*factory._combatant, _target) <= factory._attackRange
-            && battleMap.getVisibilityFromCoord(currCoord, &_target) != Visibility::NONE)
+    else if(battleMap.getCartesianDistanceCombatants(*combatant, _target) <= factory._attackRange
+            && battleMap.getVisibilityFromCoord(currCoord, _target) != Visibility::NONE)
       {
         return CoordVector{currCoord};
       }

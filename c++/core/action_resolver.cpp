@@ -6,55 +6,55 @@
 
 namespace enc
 {
-  bool hasAdvantageSavingThrow(SavingThrow savingThrow, Combatant *target, bool isSpellEffect)
+  bool hasAdvantageSavingThrow(SavingThrow savingThrow, const Combatant &target, bool isSpellEffect)
   {
-    if((target->getSavingThrowRollTypeMods(savingThrow) & RollType::ADVANTAGE) == RollType::ADVANTAGE)
+    if((target.getSavingThrowRollTypeMods(savingThrow) & RollType::ADVANTAGE) == RollType::ADVANTAGE)
       {
         return true;
       }
 
-    if(savingThrow == SavingThrow::DEX && target->hasPassiveAbility(AbilityType::DANGER_SENSE)
-       && !target->isAffectedByAny({Conditions::INCAPACITATED, Conditions::BLINDED, Conditions::DEAFENED}))
+    if(savingThrow == SavingThrow::DEX && target.hasPassiveAbility(AbilityType::DANGER_SENSE)
+       && !target.isAffectedByAny({Conditions::INCAPACITATED, Conditions::BLINDED, Conditions::DEAFENED}))
       {
-        std::cout << target->_name << " gains advantage through Danger Sense" << std::endl;
+        std::cout << target._name << " gains advantage through Danger Sense" << std::endl;
         return true;
       }
 
-    if(savingThrow == SavingThrow::DEX && target->isDodging())
+    if(savingThrow == SavingThrow::DEX && target.isDodging())
       {
-        std::cout << target->_name << " gains advantage by dodging" << std::endl;
+        std::cout << target._name << " gains advantage by dodging" << std::endl;
         return true;
       }
 
-    if(isSpellEffect && target->hasPassiveAbility(AbilityType::MAGIC_RESISTANCE))
+    if(isSpellEffect && target.hasPassiveAbility(AbilityType::MAGIC_RESISTANCE))
       {
-        std::cout << target->_name << " gains advantage through Magic Resistance" << std::endl;
+        std::cout << target._name << " gains advantage through Magic Resistance" << std::endl;
         return true;
       }
 
     return false;
   }
 
-  bool hasDisadvantageSavingThrow(SavingThrow savingThrow, Combatant *target)
+  bool hasDisadvantageSavingThrow(SavingThrow savingThrow, const Combatant &target)
   {
-    if((target->getSavingThrowRollTypeMods(savingThrow) & RollType::DISADVANTAGE) == RollType::DISADVANTAGE)
+    if((target.getSavingThrowRollTypeMods(savingThrow) & RollType::DISADVANTAGE) == RollType::DISADVANTAGE)
       {
         return true;
       }
 
-    if(savingThrow == SavingThrow::DEX && target->isAffectedByAny({Conditions::RESTRAINED}))
+    if(savingThrow == SavingThrow::DEX && target.isAffectedByAny({Conditions::RESTRAINED}))
       {
-        std::cout << target->_name << " is restrained" << std::endl;
+        std::cout << target._name << " is restrained" << std::endl;
         return true;
       }
 
     return false;
   }
 
-  void resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
+  void resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant &target,
                              bool halfOnSuccess, bool isSpellEffect)
   {
-    auto stBonus = target->getSavingThrow(savingThrowType);
+    auto stBonus = target.getSavingThrow(savingThrowType);
 
     // Determine advantage/disadvantage
     RollType types;
@@ -97,7 +97,7 @@ namespace enc
     else
       {
         // Add bonus dice modifiers
-        for(const auto &bonusDie : target->getSavingThrowDiceMods(savingThrowType))
+        for(const auto &bonusDie : target.getSavingThrowDiceMods(savingThrowType))
           {
             int bonusDiceRoll = rollDice(bonusDie);
             std::cout << "Adding " << bonusDiceRoll << " from bonus " << bonusDie << "to the roll" << std::endl;
@@ -109,86 +109,86 @@ namespace enc
     // Apply damage
     if(!saved)
       {
-        if(savingThrowType == SavingThrow::DEX && target->hasPassiveAbility(AbilityType::EVASION))
+        if(savingThrowType == SavingThrow::DEX && target.hasPassiveAbility(AbilityType::EVASION))
           {
             dmg /= 2;
-            std::cout << target->_name << " failed the save but only receives " << dmg << " damage thanks to Evasion" << std::endl;
+            std::cout << target._name << " failed the save but only receives " << dmg << " damage thanks to Evasion" << std::endl;
           }
         else
           {
-            std::cout << abilityName << " deals " << dmg << " to " << target->_name << std::endl;
-            target->receiveDmg(dmg, dmgType);
+            std::cout << abilityName << " deals " << dmg << " to " << target._name << std::endl;
+            target.receiveDmg(dmg, dmgType);
           }
       }
     else if(halfOnSuccess)
       {
-        if(savingThrowType == SavingThrow::DEX && target->hasPassiveAbility(AbilityType::EVASION))
+        if(savingThrowType == SavingThrow::DEX && target.hasPassiveAbility(AbilityType::EVASION))
           {
-            std::cout << target->_name << " made the save and receives no damage thanks to Evasion" << std::endl;
+            std::cout << target._name << " made the save and receives no damage thanks to Evasion" << std::endl;
           }
         else
           {
             dmg /= 2;
-            std::cout << abilityName << " deals " << dmg << " to " << target->_name << std::endl;
-            target->receiveDmg(dmg, dmgType);
+            std::cout << abilityName << " deals " << dmg << " to " << target._name << std::endl;
+            target.receiveDmg(dmg, dmgType);
           }
       }
 
-    BattleMap::getInstance().removeCombatantIfDead(*target);
+    BattleMap::getInstance().removeCombatantIfDead(target);
   }
 
-  ActionResult resolveByActoidFlags(const std::shared_ptr<Actoid> &action, Combatant *combatant)
+  ActionResult resolveByActoidFlags(const std::shared_ptr<Actoid> &action, Combatant &combatant)
   {
     // TODO:
     return ActionResult::MISS;
   }
 
-  std::shared_ptr<Actoid> handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant *combatant)
+  std::shared_ptr<Actoid> handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant &combatant)
   {
     if(action->getFactory().getAbilityType() == AbilityType::STANDARD_MOVEMENT)
       {
-        std::cerr << combatant->_name << " doesn't have enough movement to enter difficult terrain" << std::endl;
-        combatant->setMovement(0); // This can be caused by difficult terrain which is ok, but we must avoid endless looping
+        std::cerr << combatant._name << " doesn't have enough movement to enter difficult terrain" << std::endl;
+        combatant.setMovement(0); // This can be caused by difficult terrain which is ok, but we must avoid endless looping
         return nullptr;
       }
 
-    if(combatant->hasAction())
+    if(combatant.hasAction())
       {
-        std::cerr << "Action " << action->toString() << " by " << combatant->_name << " is not feasible. Taking the Dodge action!" << std::endl;
+        std::cerr << "Action " << action->toString() << " by " << combatant._name << " is not feasible. Taking the Dodge action!" << std::endl;
         auto dodgeFactory = std::make_shared<DodgeFactory>(combatant);
         return dodgeFactory->create({});
       }
 
-    std::cerr << "Action " << action->toString() << " by " << combatant->_name << " is not feasible" << std::endl;
+    std::cerr << "Action " << action->toString() << " by " << combatant._name << " is not feasible" << std::endl;
     return nullptr;
   }
 
-  ActionResult resolveAction(const std::shared_ptr<Actoid> &action, Combatant *combatant)
+  ActionResult resolveAction(const std::shared_ptr<Actoid> &action, Combatant &combatant)
   {
     // Takes care of possible wildshape
-    combatant = combatant->getCurrentForm();
+    auto currentForm = combatant.getCurrentForm().lock();
 
     if(!action)
       {
         return ActionResult::UNFEASIBLE;
       }
 
-    if(!checkFeasibility(combatant, *action))
+    if(!checkFeasibility(*currentForm, *action))
       {
-        auto newAction = handleErrorCase(action, combatant);
+        auto newAction = handleErrorCase(action, *currentForm);
         if(!newAction)
           {
             return ActionResult::UNFEASIBLE;
           }
-        useResources(combatant, *newAction);
-        return resolveByActoidFlags(newAction, combatant);
+        useResources(*currentForm, *newAction);
+        return resolveByActoidFlags(newAction, *currentForm);
       }
 
-    useResources(combatant, *action);
-    return resolveByActoidFlags(action, combatant);
+    useResources(*currentForm, *action);
+    return resolveByActoidFlags(action, *currentForm);
   }
 
-  void resolveEffects(const std::vector<std::weak_ptr<Effect>> &effects, Combatant *combatant)
+  void resolveEffects(const std::vector<std::weak_ptr<Effect>> &effects, Combatant &combatant)
   {
     for(const auto &weakEffect : effects)
       {
@@ -200,15 +200,15 @@ namespace enc
               {
               case EffectType::HASTE:
               case EffectType::TWINNED_HASTE:
-                combatant->setMovement(combatant->getSpeed() * 2);
-                combatant->setHasHasteAction(true);
+                combatant.setMovement(combatant.getSpeed() * 2);
+                combatant.setHasHasteAction(true);
                 break;
 
               case EffectType::POST_HASTE_LETHARGY:
-                combatant->setMovement(0);
-                combatant->setHasAction(false);
-                combatant->setHasBonusAction(false);
-                combatant->setHasReaction(false);
+                combatant.setMovement(0);
+                combatant.setHasAction(false);
+                combatant.setHasBonusAction(false);
+                combatant.setHasReaction(false);
                 break;
 
               case EffectType::RAGE:

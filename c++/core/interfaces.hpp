@@ -53,10 +53,10 @@ namespace enc
   {
   public:
     virtual ~AoeThreat() = default;
-    virtual double threatOnEnter(const std::shared_ptr<Combatant>& target, const Kwargs &kwargs) const { return 0; };
-    virtual double threatOnMoveWithin(const std::shared_ptr<Combatant>& target, const Kwargs &kwargs) const { return 0; };
-    virtual double threatOnStartOfTurn(const std::shared_ptr<Combatant>& target, const Kwargs &kwargs) const { return 0; };
-    virtual double threatOnEndOfTurn(const std::shared_ptr<Combatant>& target, const Kwargs &kwargs) const { return 0; };
+    virtual double threatOnEnter(const Combatant &target, const Kwargs &kwargs) const { return 0; };
+    virtual double threatOnMoveWithin(const Combatant &target, const Kwargs &kwargs) const { return 0; };
+    virtual double threatOnStartOfTurn(const Combatant &target, const Kwargs &kwargs) const { return 0; };
+    virtual double threatOnEndOfTurn(const Combatant &target, const Kwargs &kwargs) const { return 0; };
   };
 
   class Actoid : public BasicThreat
@@ -175,8 +175,8 @@ namespace enc
 
   public:
     virtual int getRange() const = 0;
-    virtual double calculateThreatToTarget(const std::shared_ptr<Combatant>& target, const Kwargs &kwargs) const = 0;
-    virtual double calculateThreatToTargetDelta(const std::shared_ptr<Combatant>& target, const ThreatModifiers &modifiers) const { return 0; }; //  Not always needed
+    virtual double calculateThreatToTarget(const Combatant& target, const Kwargs &kwargs) const = 0;
+    virtual double calculateThreatToTargetDelta(const Combatant& target, const ThreatModifiers &modifiers) const { return 0; }; //  Not always needed
   };
 
   /**

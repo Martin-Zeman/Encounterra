@@ -6,7 +6,7 @@
 namespace enc
 {
 
-  void useResources(Combatant *combatant, Actoid &actoid)
+  void useResources(Combatant &combatant, Actoid &actoid)
   {
     switch(actoid.getAbilityType())
       {
@@ -19,7 +19,7 @@ namespace enc
           {
             throw std::runtime_error("Fireball factory must have an associated resource!");
           }
-        combatant->setAlreadyUsedSpellslotThisTurn(true);
+        combatant.setAlreadyUsedSpellslotThisTurn(true);
         break;
 
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;

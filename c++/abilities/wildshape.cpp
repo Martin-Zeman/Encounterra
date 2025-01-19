@@ -186,7 +186,7 @@ namespace enc
     restoreFactories();
   }
 
-  bool Wildshape::deactivateForCombatant(Combatant *combatant)
+  bool Wildshape::deactivateForCombatant(Combatant &combatant)
   {
     deactivate();
     return false;

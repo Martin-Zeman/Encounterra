@@ -95,5 +95,5 @@ namespace enc
 
   class Combatant;
   
-  void useResources(Combatant *combatant, Actoid &actoid);
+  void useResources(Combatant &combatant, Actoid &actoid);
 }

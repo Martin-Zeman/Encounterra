@@ -24,18 +24,20 @@ namespace enc
     combatant->setTeamColor(teamColor);
   }
 
-  void Teams::replaceCombatant(const std::shared_ptr<Combatant>&combatantOld, const std::shared_ptr<Combatant>&combatantNew)
+  void Teams::replaceCombatant(const Combatant &combatantOld, const Combatant &combatantNew)
   {
-    Color teamColor = _combatantIdToTeamColor[combatantOld->_instanceId];
-    _combatantIdToTeamColor[combatantNew->_instanceId] = teamColor;
-    _combatantIdToTeamColor.erase(combatantOld->_instanceId);
+    std::weak_ptr<Combatant> newWeakPtr = getCombatantById(combatantNew._instanceId);
+
+    Color teamColor = _combatantIdToTeamColor[combatantOld._instanceId];
+    _combatantIdToTeamColor[combatantNew._instanceId] = teamColor;
+    _combatantIdToTeamColor.erase(combatantOld._instanceId);
 
     auto &teamIds = _colorToCombatantIds[teamColor];
-    teamIds.erase(std::remove(teamIds.begin(), teamIds.end(), combatantOld->_instanceId), teamIds.end());
-    teamIds.push_back(combatantNew->_instanceId);
+    teamIds.erase(std::remove(teamIds.begin(), teamIds.end(), combatantOld._instanceId), teamIds.end());
+    teamIds.push_back(combatantNew._instanceId);
 
-    _idToCombatant.erase(combatantOld->_instanceId);
-    _idToCombatant[combatantNew->_instanceId] = combatantNew;
+    _idToCombatant.erase(combatantOld._instanceId);
+    _idToCombatant[combatantNew._instanceId] = newWeakPtr;
   }
 
   std::string Teams::getTeamColorCode(const Combatant &combatant) const { return toString(_combatantIdToTeamColor.at(combatant._instanceId)); }
@@ -142,7 +144,7 @@ namespace enc
           {
             for(int id : ids)
               {
-                if(auto enemy = _idToCombatant.at(id).lock(); enemy && enemy->isAlive() && enemy->getSwallower().expired())
+                if(auto enemy = _idToCombatant.at(id).lock(); enemy && enemy->isAlive() && !enemy->getSwallowerPtr())
                   {
                     result.push_back(enemy);
                   }
@@ -158,7 +160,7 @@ namespace enc
     Color combatantTeam = getTeam(combatant);
     for(int id : _colorToCombatantIds.at(combatantTeam))
       {
-        if(auto ally = _idToCombatant.at(id).lock(); ally && ally->isAlive() && ally->getSwallower().expired() && ally != combatant)
+        if(auto ally = _idToCombatant.at(id).lock(); ally && ally->isAlive() && !ally->getSwallowerPtr() && ally != combatant)
           {
             result.push_back(ally);
           }

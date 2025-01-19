@@ -14,13 +14,13 @@ namespace enc
       }
   }
 
-  bool CombatantEffect::isAffecting(const std::shared_ptr<Combatant> &combatant) const
+  bool CombatantEffect::isAffecting(const Combatant &combatant) const
   {
     for(const auto &weakCombatant : _combatants)
       {
         if(auto storedCombatant = weakCombatant.lock())
           {
-            if(storedCombatant == combatant)
+            if(*storedCombatant == combatant)
               {
                 return true;
               }

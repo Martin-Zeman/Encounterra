@@ -35,10 +35,11 @@ namespace enc
   Combatant::~Combatant() { breakConcentration(); }
 
   bool Combatant::operator==(const Combatant &other) const { return _instanceId == other._instanceId; }
+  bool Combatant::operator==(Combatant &other) const { return _instanceId == other._instanceId; }
 
   bool Combatant::operator!=(const Combatant &other) const { return !(*this == other); }
 
-  bool Combatant::operator==(const std::shared_ptr<Combatant> &other) const { return other && _instanceId == other->_instanceId; }
+  // bool Combatant::operator==(const std::shared_ptr<Combatant> &other) const { return other && _instanceId == other->_instanceId; }
 
   std::string Combatant::toString() const { return _name; }
 
@@ -115,9 +116,15 @@ namespace enc
     _hasHasteAction = false;
     _attackFsm.reset();
     _actionPlan.clear();
-    if(_constrictedTarget != nullptr && !_constrictedTarget->isAlive())
+    if(_constrictedTarget)
       {
-        _constrictedTarget = nullptr;
+        if(auto target = _constrictedTarget->lock())
+          {
+            if(!target->isAlive())
+              {
+                _constrictedTarget = std::nullopt;
+              }
+          }
       }
     _weaponDmgDealtThisTurn = 0;
   }
@@ -160,11 +167,11 @@ namespace enc
                           [condition](const std::shared_ptr<ConditionWithDC> &c) { return containsCondition(c->conditionComposite, condition); });
   }
 
-  bool Combatant::isImmuneTo(DamageType dmgType) { return _immunities.find(dmgType) != _immunities.end(); }
+  bool Combatant::isImmuneTo(DamageType dmgType) const { return _immunities.find(dmgType) != _immunities.end(); }
 
-  bool Combatant::isResistantTo(DamageType dmgType) { return _resistances.find(dmgType) != _resistances.end(); }
+  bool Combatant::isResistantTo(DamageType dmgType) const { return _resistances.find(dmgType) != _resistances.end(); }
 
-  bool Combatant::isVulnerableTo(DamageType dmgType) { return _vulnerabities.find(dmgType) != _vulnerabities.end(); }
+  bool Combatant::isVulnerableTo(DamageType dmgType) const { return _vulnerabities.find(dmgType) != _vulnerabities.end(); }
 
   bool Combatant::hasPassiveAbility(AbilityType ability) const { return _passiveAbilities.contains(ability); }
 
@@ -196,7 +203,7 @@ namespace enc
     _dcConditions.push_back(std::move(dcCondition));
   }
 
-  bool Combatant::removeCondition(Conditions condition, const const std::shared_ptr<Combatant>& initiator)
+  bool Combatant::removeCondition(Conditions condition, const std::shared_ptr<Combatant>& initiator)
   {
     auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, initiator](const std::shared_ptr<Condition> &c) {
       return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
@@ -206,14 +213,14 @@ namespace enc
         _conditions.erase(it);
         if(condition == Conditions::SWALLOWED)
           {
-            _swallower = nullptr;
+            _swallower = std::nullopt;
           }
         return true;
       }
     return false;
   }
 
-  bool Combatant::removeDCCondition(Conditions condition, const const std::shared_ptr<Combatant>& initiator)
+  bool Combatant::removeDCCondition(Conditions condition, const std::shared_ptr<Combatant>& initiator)
   {
     auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, initiator](const std::shared_ptr<ConditionWithDC> &c) {
       return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
@@ -223,7 +230,7 @@ namespace enc
         _dcConditions.erase(it);
         if(condition == Conditions::SWALLOWED)
           {
-            _swallower = nullptr;
+            _swallower = std::nullopt;
           }
         return true;
       }
@@ -236,18 +243,18 @@ namespace enc
     while(removeCondition(condition)) {};
   }
 
-  std::weak_ptr<Combatant> Combatant::getInitiatorOfCondition(Conditions condition)
+  std::optional<std::weak_ptr<Combatant>> Combatant::getInitiatorOfCondition(Conditions condition)
   {
     auto initiator = checkConditionList(_dcConditions, condition);
-    if(!initiator.expired())
+    if(initiator && !initiator->expired()) // Use -> to access the weak_ptr inside the optional
       {
         return initiator;
       }
 
-    return checkConditionList(_conditions, condition); // TODO: How to handle this?
+    return checkConditionList(_conditions, condition);
   }
 
-  std::weak_ptr<Combatant> Combatant::getGrappledTarget()
+  std::optional<std::weak_ptr<Combatant>> Combatant::getGrappledTarget()
   {
     for(const auto &cond : _dcConditions)
       {
@@ -505,7 +512,7 @@ namespace enc
     // Handle effects of taking damage
     if(dmg > 0)
       {
-        checkConcentration(this, dmg);
+        checkConcentration(dmg);
 
         if(isAffectedBy(Conditions::AWAKENED_BY_DMG))
           {
@@ -551,7 +558,7 @@ namespace enc
 
     if(totalDmg > 0)
       {
-        checkConcentration(this, totalDmg);
+        checkConcentration(totalDmg);
 
         if(isAffectedBy(Conditions::AWAKENED_BY_DMG))
           {

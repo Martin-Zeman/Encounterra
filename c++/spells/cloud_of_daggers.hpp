@@ -37,8 +37,8 @@ namespace enc
 
     std::optional<Resource *> getResource() override { return _resource; }
 
-    double calculateThreatToTarget(const std::shared_ptr<Combatant> &target, const Kwargs &kwargs) const override;
-    double calculateThreatToTargetDelta(const std::shared_ptr<Combatant> &target, const ThreatModifiers &modifiers) const override;
+    double calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const override;
+    double calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const override;
     double calculateMaxThreat() const override;
 
   private:
@@ -69,8 +69,8 @@ namespace enc
 
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
-    bool deactivateForCombatant(const std::shared_ptr<Combatant> &combatant) override;
-    bool isAffecting(const std::shared_ptr<Combatant> &combatant) const override;
+    bool deactivateForCombatant(Combatant &combatant) override;
+    bool isAffecting(const Combatant &combatant) const override;
     EffectType getEffectType() const override;
 
   protected:

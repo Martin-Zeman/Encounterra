@@ -25,7 +25,7 @@ namespace enc
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Cold;
 
-    HungerOfHadarFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource);
+    HungerOfHadarFactory(int dc, AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource);
 
     std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
@@ -35,8 +35,8 @@ namespace enc
 
     std::optional<Resource *> getResource() override { return _resource; }
 
-    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
-    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;
+    double calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const override;
+    double calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const override;
     double calculateMaxThreat() const override;
 
   private:
@@ -55,15 +55,15 @@ namespace enc
     std::string toString() const override;
     std::string shorthandStr() const;
 
-    void onStartOfTurn(Combatant *combatant) override;
-    void onEndOfTurn(Combatant *combatant) override;
-    void onEnter(Combatant *combatant) override;
-    void onMoveWithin(Combatant *combatant) override;
-    void onExit(Combatant *combatant) override;
+    void onStartOfTurn(Combatant &combatant) override;
+    void onEndOfTurn(Combatant &combatant) override;
+    void onEnter(Combatant &combatant) override;
+    void onMoveWithin(Combatant &combatant) override;
+    void onExit(Combatant &combatant) override;
 
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
-    bool deactivateForCombatant(Combatant *combatant) override;
+    bool deactivateForCombatant(Combatant &combatant) override;
 
     double calculateThreat(const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;

@@ -5,21 +5,21 @@
 namespace enc
 {
 
-  bool checkFeasibility(Combatant *combatant, Actoid &actoid)
+  bool checkFeasibility(const Combatant &combatant, Actoid &actoid)
   {
     bool result = false;
     AbilityType abilityType = actoid.getAbilityType();
     if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
       {
-        result = combatant->hasAction();
+        result = combatant.hasAction();
       }
     else if(abilityType > AbilityType::BONUS_ACTION_DELIMITER && abilityType < AbilityType::REACTION_DELIMITER)
       {
-        result = combatant->hasBonusAction();
+        result = combatant.hasBonusAction();
       }
     else if(abilityType > AbilityType::HASTE_ACTION_DELIMITER && abilityType < AbilityType::PASSIVE_DELIMITER)
       {
-        result = combatant->hasHasteAction();
+        result = combatant.hasHasteAction();
       }
     else
       {
@@ -61,7 +61,7 @@ namespace enc
             {
               throw std::runtime_error("Actoid factory must have an associated resource!");
             }
-          result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+          result &= !combatant.hasAlreadyUsedSpellslotThisTurn();
           break;
         }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
@@ -71,21 +71,21 @@ namespace enc
     return result;
   }
 
-  bool checkFeasibilityLight(Combatant *combatant, ActoidFactory &factory)
+  bool checkFeasibilityLight(const Combatant &combatant, ActoidFactory &factory)
   {
     bool result = false;
     AbilityType abilityType = factory.getAbilityType();
     if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
       {
-        result = combatant->hasAction();
+        result = combatant.hasAction();
       }
     else if(abilityType > AbilityType::BONUS_ACTION_DELIMITER && abilityType < AbilityType::REACTION_DELIMITER)
       {
-        result = combatant->hasBonusAction();
+        result = combatant.hasBonusAction();
       }
     else if(abilityType > AbilityType::HASTE_ACTION_DELIMITER && abilityType < AbilityType::PASSIVE_DELIMITER)
       {
-        result = combatant->hasHasteAction();
+        result = combatant.hasHasteAction();
       }
     else
       {
@@ -123,7 +123,7 @@ namespace enc
             {
               throw std::runtime_error("ActoidFactory factory must have an associated resource!");
             }
-          result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+          result &= !combatant.hasAlreadyUsedSpellslotThisTurn();
           break;
         }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;

@@ -11,7 +11,7 @@
 
 namespace enc
 {
-  HungerOfHadarFactory::HungerOfHadarFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource)
+  HungerOfHadarFactory::HungerOfHadarFactory(int dc, AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource)
       : DirectThreatFactory("HungerOfHadarFactory", "Hunger of Hadar", caster, abilityType), _dc(dc), _abilityType(abilityType), _resource(resource),
         _savingThrow(SavingThrow::DEX), _dmgDice({{2, 6}})
   {
@@ -21,24 +21,24 @@ namespace enc
   std::vector<std::shared_ptr<Actoid>> HungerOfHadarFactory::createAll(void *previousActionInDag)
   {
     auto &battleMap = BattleMap::getInstance();
-    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
+    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(*_combatant.lock(), static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
     return {std::make_shared<HungerOfHadar>(coord, *this)};
   }
 
   std::shared_ptr<Actoid> HungerOfHadarFactory::create(void *target) { return std::make_shared<HungerOfHadar>(*static_cast<Coord *>(target), *this); }
 
-  double HungerOfHadarFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
+  double HungerOfHadarFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {
     // The 0.5 is a heuristic expressing that most targets would leave the area
-    auto avgDmg = std::min(static_cast<double>(target->getCurrentHp()),
-                           meanDmgDcAttack(_dc, {_dmgDice}, false, target->getSavingThrow(_savingThrow), target->isImmuneTo(DamageType::Acid),
-                                           target->isResistantTo(DamageType::Acid)));
+    auto avgDmg = std::min(static_cast<double>(target.getCurrentHp()),
+                           meanDmgDcAttack(_dc, {_dmgDice}, false, target.getSavingThrow(_savingThrow), target.isImmuneTo(DamageType::Acid),
+                                           target.isResistantTo(DamageType::Acid)));
 
     return avgRoll(_dmgDice) + 0.5 * avgDmg;
   }
 
-  double HungerOfHadarFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const
+  double HungerOfHadarFactory::calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const
   {
     return 0.0; // No need
   }
@@ -46,7 +46,7 @@ namespace enc
   double HungerOfHadarFactory::calculateMaxThreat() const
   {
     auto &battleMap = BattleMap::getInstance();
-    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
+    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(*_combatant.lock(), static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
     HungerOfHadar effect(coord, *this);
     return effect.calculateThreat({});
@@ -59,17 +59,17 @@ namespace enc
         _coord(coord), _factory(factory)
   {}
 
-  void HungerOfHadar::onStartOfTurn(Combatant *combatant)
+  void HungerOfHadar::onStartOfTurn(Combatant &combatant)
   {
-    combatant->applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
+    combatant.applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
     int damage = rollDice(_factory._dmgDice);
-    combatant->receiveDmg(damage, _factory.dmgType);
-    BattleMap::getInstance().removeCombatantIfDead(*combatant);
+    combatant.receiveDmg(damage, _factory.dmgType);
+    BattleMap::getInstance().removeCombatantIfDead(combatant);
   }
 
-  void HungerOfHadar::onEndOfTurn(Combatant *combatant)
+  void HungerOfHadar::onEndOfTurn(Combatant &combatant)
   {
-    combatant->applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
+    combatant.applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
     int damage = rollDice(_factory._dmgDice);
 
     // Temporarily change damage type for acid damage
@@ -77,33 +77,33 @@ namespace enc
     resolveDmgSavingThrow(_factory._savingThrow, _factory._dc, shorthandStr(), damage, DamageType::Acid, combatant, false, true);
   }
 
-  void HungerOfHadar::onEnter(Combatant *combatant)
+  void HungerOfHadar::onEnter(Combatant &combatant)
   {
-    combatant->applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
+    combatant.applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
   }
 
-  void HungerOfHadar::onMoveWithin(Combatant *combatant)
+  void HungerOfHadar::onMoveWithin(Combatant &combatant)
   {
     // No effect when moving within area
   }
 
-  void HungerOfHadar::onExit(Combatant *combatant) { combatant->removeCondition(Conditions::BLINDED, _factory._combatant); }
+  void HungerOfHadar::onExit(Combatant &combatant) { combatant.removeCondition(Conditions::BLINDED, _factory._combatant); }
 
   void HungerOfHadar::activate(const Kwargs &kwargs)
   {
     auto &effectTracker = EffectTracker::getInstance();
     effectTracker.add(Effect::shared_from_this());
-    _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
+    _factory._combatant.lock()->setConcentrationEffect(Effect::shared_from_this());
     // TODO: Make area difficult terrain
   }
 
   void HungerOfHadar::deactivate()
   {
-    _factory._combatant->breakConcentration();
+    _factory._combatant.lock()->breakConcentration();
     // TODO: Remove difficult terrain
   }
 
-  bool HungerOfHadar::deactivateForCombatant(Combatant *combatant) { throw std::runtime_error("Not implemented"); }
+  bool HungerOfHadar::deactivateForCombatant(Combatant &combatant) { throw std::runtime_error("Not implemented"); }
 
   double HungerOfHadar::calculateThreat(const Kwargs &kwargs)
   {
@@ -155,20 +155,21 @@ namespace enc
   std::optional<CoordVector>
   HungerOfHadar::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
-    if(_factory._combatant->getSwallower())
+    auto combatant = _factory._combatant.lock();
+    if(combatant->getSwallowerPtr())
       {
         return std::nullopt;
       }
 
     auto &battleMap = BattleMap::getInstance();
 
-    if(!_factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+    if(!combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
-        return battleMap.getFreeCoordsInCartesianRange(Coords(_origin), distances, _factory._combatant->getSize(),
-                                                       static_cast<int>(HungerOfHadarFactory::range), _factory._combatant->_instanceId);
+        return battleMap.getFreeCoordsInCartesianRange(Coords(_origin), distances, combatant->getSize(),
+                                                       static_cast<int>(HungerOfHadarFactory::range), combatant->_instanceId);
       }
 
-    const Coords &combatantPos = battleMap.getCombatantCoordinates(*_factory._combatant);
+    const Coords &combatantPos = battleMap.getCombatantCoordinates(*combatant);
     if(getCartesianDistanceCoords(combatantPos, _origin) <= static_cast<double>(HungerOfHadarFactory::range))
       {
         return CoordVector{combatantPos.getRoot()};

@@ -26,7 +26,7 @@ namespace enc
     static constexpr DamageType dmgType = DamageType::Piercing;
 
     //! @todo Can I remove the resource here?
-    SpikeGrowthFactory(AbilityType abilityType, Combatant *caster, Resource *resource);
+    SpikeGrowthFactory(AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource);
 
     Coord findBestArgs() const;
 
@@ -39,8 +39,8 @@ namespace enc
 
     std::optional<Resource *> getResource() override { return _resource; }
 
-    double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
-    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;
+    double calculateThreatToTarget(const Combatant& target, const Kwargs &kwargs) const override;
+    double calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const override;
     double calculateMaxThreat() const override;
 
   private:
@@ -75,16 +75,16 @@ namespace enc
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
-    bool deactivateForCombatant(Combatant *combatant) override;
-    void onEnter(Combatant *combatant) override;
-    void onMoveWithin(Combatant *combatant) override;
+    bool deactivateForCombatant(Combatant &combatant) override;
+    void onEnter(Combatant &combatant) override;
+    void onMoveWithin(Combatant &combatant) override;
 
-    void onExit(Combatant *combatant) override;
-    void onStartOfTurn(Combatant *combatant) override;
-    void onEndOfTurn(Combatant *combatant) override;
+    void onExit(Combatant &combatant) override;
+    void onStartOfTurn(Combatant &combatant) override;
+    void onEndOfTurn(Combatant &combatant) override;
 
-    double threatOnEnter(Combatant *target, const Kwargs &kwargs) const override;
-    double threatOnMoveWithin(Combatant *target, const Kwargs &kwargs) const override;
+    double threatOnEnter(const Combatant &target, const Kwargs &kwargs) const override;
+    double threatOnMoveWithin(const Combatant &target, const Kwargs &kwargs) const override;
 
     const CoordVector &getAffectedCoords() const { return SphericAoe::getAffectedCoords(); }
 

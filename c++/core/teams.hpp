@@ -22,7 +22,7 @@ namespace enc
 
     void addCombatantToTeam(const std::shared_ptr<Combatant> &combatant, Color teamColor);
 
-    void replaceCombatant(const std::shared_ptr<Combatant> &combatantOld, const std::shared_ptr<Combatant> &combatantNew);
+    void replaceCombatant(const Combatant &combatantOld, const Combatant &combatantNew);
 
     std::string getTeamColorCode(const Combatant &combatant) const;
 

@@ -7,7 +7,7 @@
 namespace enc
 {
 
-  FireboltFactory::FireboltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource)
+  FireboltFactory::FireboltFactory(int toHit, AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource)
       : DirectThreatFactory("FireboltFactory", "Firebolt", caster, abilityType), _toHit(toHit), _resource(resource),
         _dmgDice(FireboltFactory::getDmgDice(caster->getLevel()))
   {
@@ -36,30 +36,29 @@ namespace enc
     return std::make_shared<Firebolt>(*static_cast<Combatant*>(target), *this);
   }
 
-  double FireboltFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
+  double FireboltFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
-    Combatant *swallower = target->getSwallower();
     // Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).getRoot();
-    if(swallower)
+    if(target.getSwallowerPtr())
       {
         return 0;
       }
-    if(battleMap.getCartesianDistanceCombatants(*_combatant, *target) <= static_cast<int>(FireboltFactory::range))
+    if(battleMap.getCartesianDistanceCombatants(*_combatant.lock(), target) <= static_cast<int>(FireboltFactory::range))
       {
-        auto rollType = battleMap.isEnemyAdjacent(*_combatant) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
-        int acDifference = std::max(0, std::min(20, target->getAC() - _toHit));
+        auto rollType = battleMap.isEnemyAdjacent(*_combatant.lock()) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
+        int acDifference = std::max(0, std::min(20, target.getAC() - _toHit));
         int toHitTotal = _toHit + ROLL_TYPE_DELTA.at(rollType).at(acDifference);
-        return meanDmg(toHitTotal, {_dmgDice}, 0, target->getAC(), target->isImmuneTo(FireboltFactory::dmgType),
-                       target->isResistantTo(FireboltFactory::dmgType), ROLL_TYPE_CRIT_DELTA.at(rollType));
+        return meanDmg(toHitTotal, {_dmgDice}, 0, target.getAC(), target.isImmuneTo(FireboltFactory::dmgType),
+                       target.isResistantTo(FireboltFactory::dmgType), ROLL_TYPE_CRIT_DELTA.at(rollType));
       }
 
     return 0;
   }
 
-  double FireboltFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const
+  double FireboltFactory::calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const
   {
-    if(target->isImmuneTo(FireboltFactory::dmgType))
+    if(target.isImmuneTo(FireboltFactory::dmgType))
       {
         return 0;
       }
@@ -69,17 +68,17 @@ namespace enc
     RollType rollType = modifiers.getOrDefault(ThreatModifierType::ROLL_TYPE, RollType::STRAIGHT);
     int targetAC = modifiers.getOrDefault(ThreatModifierType::TARGET_AC, 0);
 
-    int totalTargetAC = targetAC + target->getAC();
+    int totalTargetAC = targetAC + target.getAC();
     double toHitTotal = _toHit + modToHitFlat + avgRoll(modToHitDie);
     int needToRollAtLeast = std::max(0, std::min(totalTargetAC - static_cast<int>(toHitTotal), 20));
     toHitTotal += ROLL_TYPE_DELTA.at(rollType).at(needToRollAtLeast);
     double totalCrit = ROLL_TYPE_CRIT_DELTA.at(rollType);
 
-    double modifiedThreat = meanDmg(toHitTotal, {_dmgDice}, 0, totalTargetAC, target->isImmuneTo(FireboltFactory::dmgType),
-                                    target->isResistantTo(FireboltFactory::dmgType), totalCrit);
+    double modifiedThreat = meanDmg(toHitTotal, {_dmgDice}, 0, totalTargetAC, target.isImmuneTo(FireboltFactory::dmgType),
+                                    target.isResistantTo(FireboltFactory::dmgType), totalCrit);
 
-    double originalThreat = meanDmg(_toHit, {_dmgDice}, 0, target->getAC(), target->isImmuneTo(FireboltFactory::dmgType),
-                                    target->isResistantTo(FireboltFactory::dmgType), 1);
+    double originalThreat = meanDmg(_toHit, {_dmgDice}, 0, target.getAC(), target.isImmuneTo(FireboltFactory::dmgType),
+                                    target.isResistantTo(FireboltFactory::dmgType), 1);
 
     return modifiedThreat - originalThreat;
   }
@@ -113,7 +112,7 @@ namespace enc
   double Firebolt::calculateThreat(const Kwargs &kwargs)
   {
     BattleMap &battleMap = BattleMap::getInstance();
-    auto rollType = battleMap.isEnemyAdjacent(*_factory._combatant) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
+    auto rollType = battleMap.isEnemyAdjacent(*(_factory._combatant.lock())) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
     int acDifference = std::max(0, std::min(20, _target.getAC() - _factory._toHit));
     int toHitTotal = _factory._toHit + ROLL_TYPE_DELTA.at(rollType).at(acDifference);
     return meanDmg(toHitTotal, {_factory._dmgDice}, 0, _target.getAC(), _target.isImmuneTo(FireboltFactory::dmgType),
@@ -124,7 +123,7 @@ namespace enc
   // double Firebolt::calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; }
 
   double Firebolt::calculateThreatDelta(const ThreatModifiers &modifiers) const { 
-    return _factory.calculateThreatToTargetDelta(&_target, modifiers);
+    return _factory.calculateThreatToTargetDelta(_target, modifiers);
    }
 
   std::optional<CoordVector>
@@ -132,11 +131,11 @@ namespace enc
   {
     FireboltFactory &factory = dynamic_cast<FireboltFactory &>(getFactory());
     BattleMap &battleMap = BattleMap::getInstance();
-    Combatant *swallower = factory._combatant->getSwallower();
-    Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).getRoot();
-    if(swallower)
+    auto combatant = factory._combatant.lock();
+    Coord currCoord = battleMap.getCombatantCoordinates(*combatant).getRoot();
+    if(auto swallower = combatant->getSwallowerPtr())
       {
-        if(swallower == &_target)
+        if(*swallower == _target)
           {
             CoordVector coords = {currCoord};
             return coords;
@@ -144,12 +143,12 @@ namespace enc
         return {};
       }
 
-    if(!factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+    if(!combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
-        return battleMap.getFreeCoordsInCartesianRange(battleMap.getCombatantCoordinates(_target).get(), distances, factory._combatant->getSize(),
-                                                       static_cast<int>(FireboltFactory::range), factory._combatant->_instanceId);
+        return battleMap.getFreeCoordsInCartesianRange(battleMap.getCombatantCoordinates(_target).get(), distances, combatant->getSize(),
+                                                       static_cast<int>(FireboltFactory::range), combatant->_instanceId);
       }
-    else if(battleMap.getCartesianDistanceCombatants(*factory._combatant, _target) <= static_cast<int>(FireboltFactory::range))
+    else if(battleMap.getCartesianDistanceCombatants(*combatant, _target) <= static_cast<int>(FireboltFactory::range))
       {
         CoordVector coords = {currCoord};
         return coords;
