@@ -122,10 +122,13 @@ namespace enc
     void setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
     void setWildshapeForm(const std::shared_ptr<Combatant> &form);
-    std::weak_ptr<Combatant> getCurrentForm();
-    std::weak_ptr<Combatant> getOriginalForm();
+    void setBaseForm(const std::shared_ptr<Combatant> &form);
+    Combatant &getCurrentForm();
+    Combatant &getOriginalForm();
     bool isWildshaped() const;
-    void setBaseForm(const std::shared_ptr<Combatant>& form);
+    std::shared_ptr<Combatant> getWildshapePtr() const;
+    std::shared_ptr<Combatant> getBaseFormPtr() const;
+    bool isBaseForm() const;
     std::optional<std::weak_ptr<Combatant>> getSwallower() const { return _swallower; }
     std::shared_ptr<Combatant> getSwallowerPtr() const { return _swallower ? _swallower->lock() : nullptr; }
     void setSwallower(const std::shared_ptr<Combatant> &swallower) { _swallower = swallower; }
@@ -135,15 +138,16 @@ namespace enc
     bool isAffectedBy(Conditions condition) const;
     void applyCondition(std::shared_ptr<Condition> condition);
     void applyDCCondition(std::shared_ptr<ConditionWithDC> dcCondition);
-    bool removeCondition(Conditions condition, const Combatant *initiator = nullptr);
-    bool removeDCCondition(Conditions condition, const Combatant *initiator = nullptr);
+    bool removeCondition(Conditions condition, const std::optional<std::weak_ptr<Combatant>> &initiator = std::nullopt);
+    bool removeDCCondition(Conditions condition, const std::optional<std::weak_ptr<Combatant>> &initiator = std::nullopt);
     void removeAllConditionsOfType(Conditions condition);
     std::optional<std::weak_ptr<Combatant>> getInitiatorOfCondition(Conditions condition);
     std::optional<std::weak_ptr<Combatant>> getGrappledTarget();
     std::vector<std::weak_ptr<ConditionWithDC>> needsToBreakOutOfGrapple() const;
     bool breakOutOfGrapple(const std::weak_ptr<ConditionWithDC>& grappleCondition);
     void setConcentrationEffect(std::shared_ptr<Effect> effect);
-    std::weak_ptr<Effect> getConcentrationEffect() { return _concentrationEffect; }
+    const std::optional<std::weak_ptr<Effect>> &getConcentrationEffect() const { return _concentrationEffect; }
+    std::shared_ptr<Effect> getConcentrationEffectPtr() const { return _concentrationEffect ? _concentrationEffect->lock() : nullptr; }
     void breakConcentration();
     bool isConcentrating() const;
     bool isAffectedByAny(const std::vector<Conditions> &conditions) const;
@@ -525,7 +529,7 @@ namespace enc
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
     std::unordered_map<SavingThrow, RollType> _savingThrowsRollTypeMod;
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
-    std::weak_ptr<Combatant> _baseForm;
+    std::optional<std::weak_ptr<Combatant>> _baseForm;
     std::optional<std::weak_ptr<Combatant>> _wildshapeForm;
     std::optional<std::weak_ptr<Combatant>> _swallower;
     std::optional<std::weak_ptr<Combatant>> _swallowedTarget;
@@ -539,7 +543,7 @@ namespace enc
     std::vector<std::shared_ptr<Actoid>> _actionPlan;
     int _weaponDmgDealtThisTurn = 0; // This is used for ActionSurge
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
-    std::weak_ptr<Effect> _concentrationEffect;
+    std::optional<std::weak_ptr<Effect>> _concentrationEffect;
     std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
     std::unique_ptr<blaze::DynamicMatrix<Coord>> _shortestPathsCache = nullptr; // TODO: Do I still need this?
     bool _uncannyDodgeActive = false;
