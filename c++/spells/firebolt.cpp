@@ -120,7 +120,7 @@ namespace enc
   }
 
   // Default
-  // double Firebolt::calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) { return 0; }
+  // double Firebolt::calculateThreatForAttack(const Combatant &attacker, Actoid *attack, const Kwargs &kwargs) { return 0; }
 
   double Firebolt::calculateThreatDelta(const ThreatModifiers &modifiers) const { 
     return _factory.calculateThreatToTargetDelta(_target, modifiers);

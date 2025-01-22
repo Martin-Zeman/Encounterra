@@ -39,7 +39,7 @@ namespace enc
   public:
     virtual ~BasicThreat() = default;
     virtual double calculateThreat(const Kwargs &kwargs) { return 0; };
-    virtual double calculateThreatForAttack(const std::shared_ptr<Combatant>& attacker, Actoid *attack, const Kwargs &kwargs) { return 0; };
+    virtual double calculateThreatForAttack(const Combatant &attacker, Actoid *attack, const Kwargs &kwargs) { return 0; };
   };
 
   class DirectThreat
@@ -105,7 +105,7 @@ namespace enc
   public:
     virtual ~AttackThreatModifier() = default;
 
-    virtual double calculateThreatForAttack(const std::shared_ptr<Combatant>& combatant, Actoid *attack, const Kwargs &kwargs) = 0;
+    virtual double calculateThreatForAttack(const Combatant &attacker, Actoid *attack, const Kwargs &kwargs) = 0;
   };
 
   enum class FactoryFlags : uint32_t

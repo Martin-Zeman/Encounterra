@@ -33,7 +33,7 @@ namespace enc
 
   using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
-  class Combatant
+  class Combatant : public std::enable_shared_from_this<Effect>
   {
   public:
     std::string _name;
@@ -256,7 +256,7 @@ namespace enc
     std::shared_ptr<ActoidFactory> addDisengage() { return nullptr; }
     std::shared_ptr<ActoidFactory> addFireball() { return nullptr; }
     std::shared_ptr<ActoidFactory> addFirebolt() { 
-      auto factory = std::make_shared<FireboltFactory>(_spellToHit, AbilityType::FIREBOLT, this, _spellslots.get());
+      auto factory = std::make_shared<FireboltFactory>(_spellToHit, AbilityType::FIREBOLT, shared_from_this(), _spellslots.get());
       _actionFactories.emplace_back(factory);
       return factory;
 

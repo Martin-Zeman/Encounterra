@@ -43,7 +43,7 @@ DefaultActionPlanStrategy::getMovementAndThreatForNextTurn(const blaze::DynamicV
   std::vector<std::shared_ptr<Actoid>> bestSequence;
   std::array<double, 2> maxThreat{0.0, 0.0};
 
-  _combatant->withHasAction([&]() {
+  _combatant.withHasAction([&]() {
     auto protoFsm = generateProtoFSM(_combatant);
     auto [fsm, movementTransToCoordAndType, transitionToEligibleCoords] = buildActionDag(_combatant, std::move(protoFsm), distances, shortestPaths);
 
@@ -75,7 +75,7 @@ std::vector<std::shared_ptr<Actoid>> DefaultActionPlanStrategy::extractMovement(
     for (const auto& action : sequence) {
         if (auto* movement = dynamic_cast<MovementIncrement*>(action.get())) {
             const Coord& targetCoord = movement->getIncrement();
-            auto pathOpt = battleMap.getPathToCoord(*_combatant, targetCoord, 
+            auto pathOpt = battleMap.getPathToCoord(_combatant, targetCoord, 
                                                   distances, shortestPaths, true);
             if (pathOpt) {
                 MovementFactory generator(_combatant, *pathOpt, AbilityType::STANDARD_MOVEMENT);

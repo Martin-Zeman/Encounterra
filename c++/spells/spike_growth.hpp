@@ -68,7 +68,7 @@ namespace enc
     EffectType getEffectType() const override { return EffectType::SPIKE_GROWTH; }
 
     double calculateThreat(const Kwargs &kwargs) override;
-    // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
+    // double calculateThreatForAttack(const Combatant &attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),

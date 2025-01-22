@@ -166,26 +166,26 @@ namespace enc
   ActionResult resolveAction(const std::shared_ptr<Actoid> &action, Combatant &combatant)
   {
     // Takes care of possible wildshape
-    auto currentForm = combatant.getCurrentForm().lock();
+    Combatant &currentForm = combatant.getCurrentForm();
 
     if(!action)
       {
         return ActionResult::UNFEASIBLE;
       }
 
-    if(!checkFeasibility(*currentForm, *action))
+    if(!checkFeasibility(currentForm, *action))
       {
-        auto newAction = handleErrorCase(action, *currentForm);
+        auto newAction = handleErrorCase(action, currentForm);
         if(!newAction)
           {
             return ActionResult::UNFEASIBLE;
           }
-        useResources(*currentForm, *newAction);
-        return resolveByActoidFlags(newAction, *currentForm);
+        useResources(currentForm, *newAction);
+        return resolveByActoidFlags(newAction, currentForm);
       }
 
-    useResources(*currentForm, *action);
-    return resolveByActoidFlags(action, *currentForm);
+    useResources(currentForm, *action);
+    return resolveByActoidFlags(action, currentForm);
   }
 
   void resolveEffects(const std::vector<std::weak_ptr<Effect>> &effects, Combatant &combatant)

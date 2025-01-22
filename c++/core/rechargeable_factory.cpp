@@ -12,7 +12,7 @@ namespace enc
       {
         if(!(*resource)->hasUses() && roll >= _rechargeValue)
           {
-            std::cout << _combatant->_name << "'s " << _name << " recharges" << std::endl;
+            std::cout << _combatant.lock()->name << "'s " << _name << " recharges" << std::endl;
             (*resource)->reset();
           }
       }

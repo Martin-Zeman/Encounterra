@@ -59,7 +59,7 @@ namespace enc
     std::string shorthandStr() const;
 
     double calculateThreat(const Kwargs &kwargs) override;
-    // double calculateThreatForAttack(const std::shared_ptr<Combatant> &attacker, Actoid *attack, const Kwargs &kwargs) override;
+    // double calculateThreatForAttack(const Combatant &attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
