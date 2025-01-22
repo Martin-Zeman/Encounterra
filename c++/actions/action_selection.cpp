@@ -133,7 +133,7 @@ getNearestAndMinimize(
 
 
 SequenceSearchResult
-findBestSequence(Combatant *combatant, const StateMachine &fsm,
+findBestSequence(Combatant &combatant, const StateMachine &fsm,
                  const std::unordered_map<std::shared_ptr<Actoid>, CoordVector> &transitionToEligibleCoords,
                  std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndMovementType,
                  const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
@@ -164,7 +164,7 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
   using CoordAndMovementType = std::pair<Coord, MovementThreatType>;
   std::unordered_map<CoordAndMovementType, std::vector<size_t>> coordToSequenceIds;
   // Remove Misty Step to current coordinate if it exists
-  Coord currentCoords = battleMap.getCombatantCoordinates(*combatant).getRoot();
+  Coord currentCoords = battleMap.getCombatantCoordinates(combatant).getRoot();
   for(auto it = movementTransToCoordAndMovementType.begin(); it != movementTransToCoordAndMovementType.end();)
     {
       if(it->second.first == currentCoords && it->first->getAbilityType() == AbilityType::MISTY_STEP)
@@ -240,7 +240,7 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
         {
           const auto &[coord, movementType] = coordAndType;
 
-          auto pathOpt = battleMap.getPathToCoord(*combatant, coord, distances, shortestPaths, true);
+          auto pathOpt = battleMap.getPathToCoord(combatant, coord, distances, shortestPaths, true);
           if(!pathOpt)
             continue; // Note that an empty path is still valid
 
@@ -313,13 +313,13 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
                         continue;
                       }
 
-                    battleMap.withCombatantWildshapeReplacement(*action, combatant, coord, [&](Combatant *transformedCombatant) {
+                    battleMap.withCombatantWildshapeReplacement(*action, combatant, coord, [&](Combatant &transformedCombatant) {
                       if(!action->hasFlag(ActoidFlags::LOCATION_INDEPENDENT))
                         {
                           if(tIdx == 1)
                             {
                               // First location-dependent action after movement
-                              feasibilityMultiplier = distances[coord[0] * battleMap.getGridSize() + coord[1]] <= combatant->getMovement()
+                              feasibilityMultiplier = distances[coord[0] * battleMap.getGridSize() + coord[1]] <= combatant.getMovement()
                                                         ? 1.0
                                                         : infeasibilityMultiplier;
                               firstFeasibilityCheckDone = true;
@@ -337,7 +337,7 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
                                   // Location-dependent action follows location-independent action
                                   feasibilityMultiplier
                                     = (std::find(eligibleCoordsOpt->begin(), eligibleCoordsOpt->end(), coord) != eligibleCoordsOpt->end()
-                                       && distances[coord[0] * battleMap.getGridSize() + coord[1]] <= combatant->getMovement())
+                                       && distances[coord[0] * battleMap.getGridSize() + coord[1]] <= combatant.getMovement())
                                         ? 1.0
                                         : infeasibilityMultiplier;
                                   firstFeasibilityCheckDone = true;
@@ -347,7 +347,7 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
                                   // Two location-dependent actions in succession
                                   int remainingDist = getHopDistanceCoords(*eligibleCoordsOpt, std::vector<Coord>{coord});
                                   feasibilityMultiplier
-                                    = remainingDist <= combatant->getMovement() - distances[coord[0] * battleMap.getGridSize() + coord[1]]
+                                    = remainingDist <= combatant.getMovement() - distances[coord[0] * battleMap.getGridSize() + coord[1]]
                                         ? 1.0
                                         : infeasibilityMultiplier;
                                 }
@@ -430,57 +430,57 @@ findBestSequence(Combatant *combatant, const StateMachine &fsm,
   return {std::move(nearestSequence), std::move(maxThreat), std::move(transitionToMsPath)};
 }
 
-std::shared_ptr<Actoid> getAction(Combatant *combatant)
+std::shared_ptr<Actoid> getAction(Combatant &combatant)
 {
   auto &battleMap = BattleMap::getInstance();
   // battleMap.clearCaches();
 
   // Get current form (handles possible wildshape)
-  combatant = combatant->getCurrentForm();
+  Combatant &combatant = combatant.getCurrentForm();
 
   // Handle grapple condition, TODO: Add more intelligence to this
-  auto grappleConditions = combatant->needsToBreakOutOfGrapple();
-  if(!grappleConditions.empty() && combatant->hasAction())
+  auto grappleConditions = combatant.needsToBreakOutOfGrapple();
+  if(!grappleConditions.empty() && combatant.hasAction())
     {
       auto factory = std::make_unique<BreakGrappleFactory>(grappleConditions[0]);
       return factory->create(nullptr);
     }
 
   // Handle prone condition
-  if(combatant->isAffectedBy(Conditions::PRONE) && combatant->getMovement() >= combatant->getSpeed() / 2)
+  if(combatant.isAffectedBy(Conditions::PRONE) && combatant.getMovement() >= combatant.getSpeed() / 2)
     {
       auto factory = std::make_unique<GetUpFactory>(combatant);
       return factory->create(nullptr);
     }
 
   // Calculate paths
-  auto [distances, shortestPaths] = battleMap.calcDijkstra(*combatant);
-  combatant->setShortestPathsCache(shortestPaths);
+  auto [distances, shortestPaths] = battleMap.calcDijkstra(combatant);
+  combatant.setShortestPathsCache(shortestPaths);
 
   // Check existing action plan
-  if(!combatant->getActionPlan().empty())
+  if(!combatant.getActionPlan().empty())
     {
-      auto firstAction = combatant->getActionPlan().front();
+      auto firstAction = combatant.getActionPlan().front();
       if(auto *movement = dynamic_cast<MovementIncrement *>(firstAction.get()))
         {
-          if(combatant->getMovement() > 0)
+          if(combatant.getMovement() > 0)
             {
-              combatant->popActionPlan();
+              combatant.popActionPlan();
               return firstAction;
             }
         }
     }
 
   // Calculate new action plan
-  auto newPlan = combatant->calculateActionPlan(distances, shortestPaths);
-  combatant->setActionPlan(std::move(newPlan));
+  auto newPlan = combatant.calculateActionPlan(distances, shortestPaths);
+  combatant.setActionPlan(std::move(newPlan));
 
-  if(combatant->getActionPlan().empty())
+  if(combatant.getActionPlan().empty())
     {
       return nullptr; // Either no action possible or all actions already used
     }
 
-  return combatant->popActionPlan();
+  return combatant.popActionPlan();
 }
 
 } // namespace enc

@@ -118,13 +118,13 @@ namespace enc
     void setHasBonusAction(bool has) { _hasBonusAction = has; }
     void setHasHasteAction(bool has) { _hasHasteAction = has; }
     void setHasReaction(bool has) { _hasReaction = has; }
-    bool hasAlreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
+    bool hasAlreadyUsedSpellslotThisTurn() const { return _alreadyUsedSpellslotThisTurn; }
     void setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
     void setWildshapeForm(const std::shared_ptr<Combatant> &form);
     void setBaseForm(const std::shared_ptr<Combatant> &form);
     Combatant &getCurrentForm();
-    Combatant &getOriginalForm();
+    Combatant &getBaseForm();
     bool isWildshaped() const;
     std::shared_ptr<Combatant> getWildshapePtr() const;
     std::shared_ptr<Combatant> getBaseFormPtr() const;

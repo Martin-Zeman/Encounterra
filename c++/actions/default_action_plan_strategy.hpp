@@ -14,7 +14,7 @@ namespace enc
   class DefaultActionPlanStrategy : public ActionPlanStrategy
   {
   public:
-    explicit DefaultActionPlanStrategy(Combatant *combatant) : ActionPlanStrategy(combatant) {}
+    explicit DefaultActionPlanStrategy(Combatant &combatant) : ActionPlanStrategy(combatant) {}
 
     std::vector<std::shared_ptr<Actoid>>
     calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths) override;

@@ -248,15 +248,9 @@ namespace enc
     auto combatant = _factory.getCombatant().lock();
 
     std::string formPrefix;
-    if(auto currentForm = combatant->getCurrentForm().lock())
+    if(auto wildshapeForm = combatant->getWildshapePtr())
       {
-        if(auto originalForm = combatant->getOriginalForm().lock())
-          {
-            if(currentForm != originalForm)
-              {
-                formPrefix = currentForm->_name + " ";
-              }
-          }
+        formPrefix = wildshapeForm->_name + " ";
       }
 
     std::string hastedPrefix = (_abilityType > AbilityType::HASTE_ACTION_DELIMITER && _abilityType < AbilityType::PASSIVE_DELIMITER) ? "Hasted " : "";

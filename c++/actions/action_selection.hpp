@@ -155,7 +155,7 @@ namespace enc
    * withCombatantPosition once per block.
    */
   SequenceSearchResult
-  findBestSequence(Combatant *combatant, const StateMachine &fsm,
+  findBestSequence(Combatant &combatant, const StateMachine &fsm,
                    const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
                    std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
                    const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
@@ -167,6 +167,6 @@ namespace enc
    *  the best action is recalculated every time to react to any possible changes on the battle_map.
    *  @return: the next best actoid
    */
-  std::shared_ptr<Actoid> getAction(Combatant *combatant);
+  std::shared_ptr<Actoid> getAction(Combatant &combatant);
 
 } // namespace enc

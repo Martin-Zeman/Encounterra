@@ -842,16 +842,19 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
   bool BattleMap::removeCombatantIfDead(Combatant &combatant)
   {
-    std::shared_ptr<Combatant> targetToRemove = combatant.getOriginalForm().lock();
-    if(!targetToRemove->isAlive())
+    Combatant& targetToRemove = combatant.getBaseForm();
+    if(!targetToRemove.isAlive())
       {
-        if(auto grappler = targetToRemove->getInitiatorOfCondition(Conditions::GRAPPLED).lock())
+        if(auto weakGrappler = targetToRemove.getInitiatorOfCondition(Conditions::GRAPPLED))
           {
-            grappler->removeCondition(Conditions::GRAPPLING);
+            if(auto grappler = weakGrappler->lock())
+              {
+                grappler->removeCondition(Conditions::GRAPPLING);
+              }
           }
-        targetToRemove->onDie();
+        targetToRemove.onDie();
         // spdlog::info("{} died", targetToRemove._name);
-        removeCombatant(*targetToRemove);
+        removeCombatant(targetToRemove);
         return false;
       }
   }
@@ -1620,7 +1623,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
   }
 
   void BattleMap::withCombatantWildshapeReplacement(Actoid &actoid, Combatant &combatant, const Coord &origCoord,
-                                                    const std::function<void(const Combatant &)> &fn)
+                                                    const std::function<void(Combatant &)> &fn)
   {
     std::weak_ptr<Combatant> weakActoidCombatant = actoid.getFactory().getCombatant();
     if(auto actoidCombatant = weakActoidCombatant.lock())

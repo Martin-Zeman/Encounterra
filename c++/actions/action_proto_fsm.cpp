@@ -7,19 +7,19 @@
 namespace enc
 {
 
-  std::vector<std::shared_ptr<ActoidFactory>> getAllFeasibleActionFactories(Combatant *combatant, int depth)
+  std::vector<std::shared_ptr<ActoidFactory>> getAllFeasibleActionFactories(Combatant &combatant, int depth)
   {
     std::vector<std::shared_ptr<ActoidFactory>> allActionFactories;
     // Reserve maximum possible size
-    allActionFactories.reserve(combatant->getActionFactoriesConst().size() + combatant->getBonusActionFactoriesConst().size()
-                               + combatant->getHasteActionFactoriesConst().size());
+    allActionFactories.reserve(combatant.getActionFactoriesConst().size() + combatant.getBonusActionFactoriesConst().size()
+                               + combatant.getHasteActionFactoriesConst().size());
 
-    auto feasibleActionFactories = getFeasibleFactories(combatant->getActionFactoriesConst(), combatant);
+    auto feasibleActionFactories = getFeasibleFactories(combatant.getActionFactoriesConst(), combatant);
     allActionFactories.insert(allActionFactories.end(), feasibleActionFactories.begin(), feasibleActionFactories.end());
 
     if(depth > 1)
       {
-        auto feasibleBonusActionFactories = getFeasibleFactories(combatant->getBonusActionFactoriesConst(), combatant);
+        auto feasibleBonusActionFactories = getFeasibleFactories(combatant.getBonusActionFactoriesConst(), combatant);
         // Filter out Misty Step
         feasibleBonusActionFactories.erase(std::remove_if(feasibleBonusActionFactories.begin(), feasibleBonusActionFactories.end(),
                                                           [](const auto &factory) { return factory->getAbilityType() == AbilityType::MISTY_STEP; }),
@@ -28,17 +28,17 @@ namespace enc
       }
     else
       {
-        auto feasibleBonusActionFactories = getFeasibleFactories(combatant->getBonusActionFactoriesConst(), combatant);
+        auto feasibleBonusActionFactories = getFeasibleFactories(combatant.getBonusActionFactoriesConst(), combatant);
         allActionFactories.insert(allActionFactories.end(), feasibleBonusActionFactories.begin(), feasibleBonusActionFactories.end());
       }
 
-    auto feasibleHasteActionFactories = getFeasibleFactories(combatant->getHasteActionFactoriesConst(), combatant);
+    auto feasibleHasteActionFactories = getFeasibleFactories(combatant.getHasteActionFactoriesConst(), combatant);
     allActionFactories.insert(allActionFactories.end(), feasibleHasteActionFactories.begin(), feasibleHasteActionFactories.end());
 
     return allActionFactories;
   }
 
-  StateMachine generateProtoFSM(Combatant *combatant)
+  StateMachine generateProtoFSM(Combatant &combatant)
   {
     StateMachine fsm;
     std::unordered_map<ActionFootprint, StateId, ActionFootprintHash> stateFootprintToStateId;
@@ -61,9 +61,9 @@ namespace enc
      *  Note: This function assumes that it's called within the context of `generate_proto_fsm`
      *  where the FSM and other necessary structures are initialized.
      */
-    std::function<void(Combatant *, StateId, int, std::shared_ptr<Actoid>, const ActionFootprint *)> dfs;
+    std::function<void(Combatant &, StateId, int, std::shared_ptr<Actoid>, const ActionFootprint *)> dfs;
 
-    dfs = [&](Combatant *subject, StateId previousStateId, int depth, std::shared_ptr<Actoid> actionTaken, const ActionFootprint *previousFeasibleActions) {
+    dfs = [&](Combatant &subject, StateId previousStateId, int depth, std::shared_ptr<Actoid> actionTaken, const ActionFootprint *previousFeasibleActions) {
       auto feasibleActionFactories = getAllFeasibleActionFactories(subject, depth);
       std::vector<std::shared_ptr<Actoid>> feasibleActions;
       for(const auto &factory : feasibleActionFactories)
@@ -101,15 +101,15 @@ namespace enc
           auto &battleMap = BattleMap::getInstance();
           for(const auto &fa : feasibleActions)
             {
-              auto exportedResources = subject->exportResources();
+              auto exportedResources = subject.exportResources();
               useResources(subject, *fa);
 
-              subject->withActionEnablerEffect(*fa, [&](bool actionEnablerUsed) {
+              subject.withActionEnablerEffect(*fa, [&](bool actionEnablerUsed) {
                 if(actionEnablerUsed)
                   {
                     auto &battleMap = BattleMap::getInstance();
                     battleMap.withCombatantWildshapeReplacement(
-                      *fa, subject, battleMap.getCombatantCoordinates(*subject).getRoot(), [&](Combatant *finalCombatantForm) {
+                      *fa, subject, battleMap.getCombatantCoordinates(subject).getRoot(), [&](Combatant &finalCombatantForm) {
                         auto newFeasibleActionFactories = getAllFeasibleActionFactories(finalCombatantForm, depth);
                         std::vector<std::shared_ptr<Actoid>> newActions;
                         newActions.reserve(newFeasibleActionFactories.size() * 4);
@@ -138,7 +138,7 @@ namespace enc
                   }
               });
 
-              subject->importResources(exportedResources);
+              subject.importResources(exportedResources);
             }
         }
       else
@@ -156,15 +156,15 @@ namespace enc
     return fsm;
   }
 
-  StateMachine generateWildshapeProtoFSM(Combatant *combatant)
+  StateMachine generateWildshapeProtoFSM(Combatant &combatant)
   {
     StateMachine fsm;
     std::unordered_map<ActionFootprint, StateId, ActionFootprintHash> stateFootprintToStateId;
     std::unordered_set<ActionFootprint, ActionFootprintHash> visited;
 
-    std::function<void(Combatant *, StateId, int, std::shared_ptr<Actoid>)> dfs;
+    std::function<void(Combatant &, StateId, int, std::shared_ptr<Actoid>)> dfs;
 
-    dfs = [&](Combatant *subject, StateId previousStateId, int depth, std::shared_ptr<Actoid> actionTaken) {
+    dfs = [&](Combatant &subject, StateId previousStateId, int depth, std::shared_ptr<Actoid> actionTaken) {
       auto feasibleActionFactories = getAllFeasibleActionFactories(subject, depth);
       std::vector<std::shared_ptr<Actoid>> feasibleActions;
       for(const auto &factory : feasibleActionFactories)
@@ -201,15 +201,15 @@ namespace enc
                   continue;
                 }
 
-              auto exportedResources = subject->exportResources();
+              auto exportedResources = subject.exportResources();
               useResources(subject, *fa);
 
               auto &battleMap = BattleMap::getInstance();
-              subject->withActionEnablerEffect(*fa, [&](bool actionEnablerUsed) {
+              subject.withActionEnablerEffect(*fa, [&](bool actionEnablerUsed) {
                 if(actionEnablerUsed)
                   {
                     battleMap.withCombatantWildshapeReplacement(
-                      *fa, subject, battleMap.getCombatantCoordinates(*subject).getRoot(), [&](Combatant *finalCombatantForm) {
+                      *fa, subject, battleMap.getCombatantCoordinates(subject).getRoot(), [&](Combatant &finalCombatantForm) {
                         auto newFeasibleActionFactories = getAllFeasibleActionFactories(finalCombatantForm, depth);
                         std::vector<std::shared_ptr<Actoid>> newActions;
                         newActions.reserve(newFeasibleActionFactories.size() * 4);
@@ -238,7 +238,7 @@ namespace enc
                   }
               });
 
-              subject->importResources(exportedResources);
+              subject.importResources(exportedResources);
             }
         }
       else

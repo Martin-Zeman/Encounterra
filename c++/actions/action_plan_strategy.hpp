@@ -13,14 +13,14 @@ namespace enc
   class ActionPlanStrategy
   {
   public:
-    explicit ActionPlanStrategy(Combatant *combatant) : _combatant(combatant) {}
+    explicit ActionPlanStrategy(Combatant &combatant) : _combatant(combatant) {}
     virtual ~ActionPlanStrategy() = default;
 
     virtual std::vector<std::shared_ptr<Actoid>>
     calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths) = 0;
 
   protected:
-    Combatant *_combatant;
+    Combatant& _combatant;
   };
 
 } // namespace enc

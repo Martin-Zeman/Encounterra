@@ -4,6 +4,7 @@
 #include "core/rechargeable_factory.hpp"
 #include "effects/effect_tracker.hpp"
 #include "effects/action_enabler_effect.hpp"
+#include "actions/default_action_plan_strategy.cpp"
 
 namespace enc
 {
@@ -19,6 +20,7 @@ namespace enc
     _disengageFactory = std::make_shared<DisengageFactory>(this);
     _actionFactories.push_back(_dodgeFactory);
     _actionFactories.push_back(_disengageFactory);
+    _actionPlanStrategy = std::make_unique<DefaultActionPlanStrategy>(*this);
   }
 
   // Combatant::Combatant(std::string name, int hp, int ac, int initBonus, int spellToHit, int speed, int dc,
@@ -142,7 +144,7 @@ namespace enc
     return *this;
   }
 
-  Combatant &Combatant::getOriginalForm()
+  Combatant &Combatant::getBaseForm()
   {
     if(_baseForm && !_baseForm->expired())
       {
@@ -505,10 +507,11 @@ namespace enc
       }
 
     // Handle wildshape damage overflow
-    if(_currHp <= 0 && getOriginalForm() != this)
+    auto baseFormPtr = getBaseFormPtr();
+    if(_currHp <= 0 && baseFormPtr)
       {
-        getOriginalForm()->_currHp += _currHp; // Carry-over damage
-        EffectTracker::getInstance().removeEffectFromCombatantByType(getOriginalForm(), EffectType::WILDSHAPE);
+        baseFormPtr->_currHp += _currHp; // Carry-over damage
+        EffectTracker::getInstance().removeEffectFromCombatantByType(*baseFormPtr, EffectType::WILDSHAPE);
       }
 
     // Handle effects of taking damage
@@ -551,11 +554,11 @@ namespace enc
           }
       }
 
-    //! @todo this is different now
-    if(_currHp <= 0 && getOriginalForm() != this)
+    auto baseFormPtr = getBaseFormPtr();
+    if(_currHp <= 0 && baseFormPtr)
       {
-        getOriginalForm()->_currHp += _currHp; // Carry-over damage
-        EffectTracker::getInstance().removeEffectFromCombatantByType(getOriginalForm(), EffectType::WILDSHAPE);
+        baseFormPtr->_currHp += _currHp; // Carry-over damage
+        EffectTracker::getInstance().removeEffectFromCombatantByType(*baseFormPtr, EffectType::WILDSHAPE);
       }
 
     if(totalDmg > 0)

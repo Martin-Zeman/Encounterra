@@ -89,7 +89,7 @@ namespace enc
     std::shared_ptr<DummyActoid> createTestActoid(const std::string &name) { return std::make_shared<DummyActoid>(*this, name); }
   };
 
-  std::vector<std::shared_ptr<ActoidFactory>> getAllFeasibleActionFactories(Combatant *combatant, int depth);
+  std::vector<std::shared_ptr<ActoidFactory>> getAllFeasibleActionFactories(const Combatant &combatant, int depth);
 
   /**
    * Finds the path through the FSM which represents all possible movements and actions for a combatant.
@@ -100,7 +100,7 @@ namespace enc
    * @param combatant The combatant for whom the FSM is modeled
    * @return The state machine representing all possible action combinations
    */
-  StateMachine generateProtoFSM(Combatant *combatant);
+  StateMachine generateProtoFSM(Combatant &combatant);
 
   /**
    * A special variation of generateProtoFSM which generates an action FSM where only Wildshape
@@ -109,5 +109,5 @@ namespace enc
    * @param combatant The combatant for whom the FSM is modeled
    * @return The state machine representing all possible action combinations starting with Wildshape
    */
-  StateMachine generateWildshapeProtoFSM(Combatant *combatant);
+  StateMachine generateWildshapeProtoFSM(Combatant &combatant);
 }

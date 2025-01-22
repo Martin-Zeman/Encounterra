@@ -227,7 +227,7 @@ namespace enc
       }
   }
 
-  ActionDagResult buildActionDag(const std::shared_ptr<Combatant>& combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
+  ActionDagResult buildActionDag(Combatant &combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
                                  const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     auto &battleMap = BattleMap::getInstance();
@@ -249,17 +249,17 @@ namespace enc
 
     // Get eligible coordinates for each type of action
     std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> transitionToEligibleCoords;
-    for(const auto &[action, _] : fsm.getForwardTransitions(0))
+    for(auto &[action, _] : fsm.getForwardTransitions(0))
       {
         if(action->getAbilityType() == AbilityType::MISTY_STEP)
           continue;
 
-        auto origForm = action->getFactory().getCombatant()->getOriginalForm();
+        auto origForm = action->getFactory().getCombatant().lock()->getBaseForm();
         if(action->getFactory().getCombatant() != origForm->getCurrentForm())
           {
             // Handle wildshape form actions
-            battleMap.withCombatantWildshapeReplacement(*action, origForm, battleMap.getCombatantCoordinates(*origForm).getRoot(),
-                                                        [&](Combatant *form) {
+            battleMap.withCombatantWildshapeReplacement(*action, origForm, battleMap.getCombatantCoordinates(origForm).getRoot(),
+                                                        [&](Combatant &form) {
                                                           if(auto coords = action->getEligibleCoords(distances, shortestPaths))
                                                             {
                                                               transitionToEligibleCoords[action] = *coords;

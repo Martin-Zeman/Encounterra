@@ -18,7 +18,7 @@ std::vector<std::shared_ptr<Actoid>> DefaultActionPlanStrategy::calculateActionP
 
     if (fsm.getNumStates() == 2U) {  // TODO: Check if this is the right proxy for an empty FSM
         std::vector<std::shared_ptr<Actoid>> movement;
-        if (_combatant->getMovement() > 0) {
+        if (_combatant.getMovement() > 0) {
             auto [nextTurnMovement, _] = getMovementAndThreatForNextTurn(distances, shortestPaths);
             return nextTurnMovement;
         }

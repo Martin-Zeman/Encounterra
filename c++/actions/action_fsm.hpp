@@ -133,7 +133,7 @@ namespace enc
    * @param shortestPaths The shortest paths to all squares (result of Dijkstra)
    * @return Tuple of final FSM and mapping from movement actions to (coord, MovementThreatType)
    */
-  ActionDagResult buildActionDag(Combatant *combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
+  ActionDagResult buildActionDag(Combatant &combatant, StateMachine protoFsm, const blaze::DynamicVector<int> &distances,
                                  const blaze::DynamicMatrix<Coord> &shortestPaths);
 
 } // namespace enc

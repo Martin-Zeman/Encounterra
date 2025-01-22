@@ -38,7 +38,7 @@ namespace enc
   public:
     static const std::unordered_map<AbilityType, std::string> MOVEMENT_TYPE_NAMES;
 
-    MovementFactory(Combatant *combatant, CoordVector path, AbilityType movementType = AbilityType::STANDARD_MOVEMENT);
+    MovementFactory(const std::shared_ptr<Combatant>& combatant, CoordVector path, AbilityType movementType = AbilityType::STANDARD_MOVEMENT);
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
     std::shared_ptr<Actoid> create(void *target) override;
@@ -54,7 +54,7 @@ namespace enc
   {
     friend class GetUpFromProne; // Allow GetUpFromProne to access private members of GetUpFactory
   public:
-    GetUpFactory(Combatant *combatant) : ActoidFactory("Get Up Factory", "Get Up", combatant, AbilityType::GET_UP_FROM_PRONE) {}
+    GetUpFactory(const std::shared_ptr<Combatant>& combatant) : ActoidFactory("Get Up Factory", "Get Up", combatant, AbilityType::GET_UP_FROM_PRONE) {}
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override { return {create(nullptr)}; }
 

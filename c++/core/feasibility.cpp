@@ -133,7 +133,7 @@ namespace enc
     return result;
   }
 
-  std::vector<std::shared_ptr<ActoidFactory>> getFeasibleFactories(const std::vector<std::shared_ptr<ActoidFactory>> &factories, Combatant *combatant)
+  std::vector<std::shared_ptr<ActoidFactory>> getFeasibleFactories(const std::vector<std::shared_ptr<ActoidFactory>> &factories, const Combatant &combatant)
   {
     std::vector<std::shared_ptr<ActoidFactory>> feasible;
     feasible.reserve(factories.size());
