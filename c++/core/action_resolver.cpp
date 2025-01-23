@@ -155,7 +155,9 @@ namespace enc
     if(combatant.hasAction())
       {
         std::cerr << "Action " << action->toString() << " by " << combatant._name << " is not feasible. Taking the Dodge action!" << std::endl;
-        auto dodgeFactory = std::make_shared<DodgeFactory>(combatant);
+        auto dodgeFactory = std::make_shared<DodgeFactory>(
+          std::shared_ptr<Combatant>(&combatant, [](Combatant *) {}) // non-owning shared_ptr, TODO: I don't like this
+        );
         return dodgeFactory->create({});
       }
 

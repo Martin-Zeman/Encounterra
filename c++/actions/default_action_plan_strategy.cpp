@@ -77,11 +77,13 @@ std::vector<std::shared_ptr<Actoid>> DefaultActionPlanStrategy::extractMovement(
             const Coord& targetCoord = movement->getIncrement();
             auto pathOpt = battleMap.getPathToCoord(_combatant, targetCoord, 
                                                   distances, shortestPaths, true);
-            if (pathOpt) {
-                MovementFactory generator(_combatant, *pathOpt, AbilityType::STANDARD_MOVEMENT);
+            if(pathOpt)
+              {
+                MovementFactory generator(std::shared_ptr<Combatant>(&_combatant, [](Combatant *) {}), // non-owning shared_ptr, TODO: I don't like this
+                                          *pathOpt, AbilityType::STANDARD_MOVEMENT);
                 auto moveActions = generator.createAll();
                 actions.insert(actions.end(), moveActions.begin(), moveActions.end());
-            }
+              }
             break;  // Only process first movement action
         }
     }

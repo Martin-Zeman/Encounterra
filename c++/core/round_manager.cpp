@@ -16,7 +16,7 @@ namespace enc
   void RoundManager::orderByInitiative()
   {
     std::sort(_combatants.begin(), _combatants.end(),
-              [](const Combatant *a, const Combatant *b) { return a->getCurrentInit() > b->getCurrentInit(); });
+              [](const std::shared_ptr<Combatant> &a, const std::shared_ptr<Combatant> &b) { return a->getCurrentInit() > b->getCurrentInit(); });
 
     std::cout << "--------------INITIATIVE ORDER--------------\n";
     for(const auto &combatant : _combatants)
@@ -42,7 +42,7 @@ namespace enc
       }
   }
 
-  bool RoundManager::goesBeforeInInitiative(Combatant *combatant1, Combatant *combatant2) const
+  bool RoundManager::goesBeforeInInitiative(const Combatant &combatant1, const Combatant &combatant2) const
   {
     auto it1 = std::find(_combatants.begin(), _combatants.end(), combatant1);
     auto it2 = std::find(_combatants.begin(), _combatants.end(), combatant2);
@@ -171,8 +171,8 @@ namespace enc
             std::cout << battleMap.toString() << "\n";
 
             combatant->rollForRecharge();
-            effectTracker.startOfTurnTick(combatant);
-            effectTracker.startOfTurn(combatant);
+            effectTracker.startOfTurnTick(*combatant);
+            effectTracker.startOfTurn(*combatant);
 
             if(!combatant->isAlive())
               {
@@ -180,14 +180,14 @@ namespace enc
               }
 
             combatant->newTurn();
-            auto effects = effectTracker.getAffectingCombatant(combatant);
-            resolveEffects(effects, combatant);
+            auto effects = effectTracker.getAffectingCombatant(*combatant);
+            resolveEffects(effects, *combatant);
 
             if(combatant->isAffectedByAny(
                  {Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED, Conditions::PETRIFIED, Conditions::UNCONSCIOUS}))
               {
                 std::cout << combatant->toString() << " is affected by a condition which prevents any action. Skipping turn\n";
-                effectTracker.endOfTurn(combatant);
+                effectTracker.endOfTurn(*combatant);
                 combatant->onEndOfTurn();
                 continue;
               }
@@ -200,13 +200,13 @@ namespace enc
 
             while(true)
               {
-                auto action = getAction(combatant);
+                auto action = getAction(*combatant);
                 if(!action)
                   {
                     break;
                   }
 
-                ActionResult resolution = resolveAction(action, combatant);
+                ActionResult resolution = resolveAction(action, *combatant);
                 if(resolution == ActionResult::UNFEASIBLE)
                   {
                     break;
@@ -220,14 +220,14 @@ namespace enc
 
                 if(!combatant->isAlive())
                   {
-                    effectTracker.combatantDied(combatant);
+                    effectTracker.combatantDied(*combatant);
                     break;
                   }
               }
 
             if(combatant->isAlive())
               {
-                effectTracker.endOfTurn(combatant);
+                effectTracker.endOfTurn(*combatant);
                 combatant->onEndOfTurn();
               }
           }
@@ -241,8 +241,8 @@ namespace enc
   {
     for(const auto &combatant : _combatants)
       {
-        Combatant *currentForm = combatant->getCurrentForm();
-        std::string status = currentForm->isAlive() ? "alive with " + std::to_string(currentForm->getCurrentHp()) + " hp" : "dead";
+        Combatant &currentForm = combatant->getCurrentForm();
+        std::string status = currentForm.isAlive() ? "alive with " + std::to_string(currentForm.getCurrentHp()) + " hp" : "dead";
 
         std::cout << combatant->toString() << " is " << status << "\n";
       }

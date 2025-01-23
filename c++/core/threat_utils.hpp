@@ -176,7 +176,7 @@ namespace enc
       @param dodged: If True then attacks at the moving combatant are calculated at a disadvantage
       @return: tuple of cumulative threats along the path
    */
-  std::vector<double> accumulateThreatAlongPath(const CoordVector &path, const Combatant &combatant,
+  std::vector<double> accumulateThreatAlongPath(const CoordVector &path, Combatant &combatant,
                                                 const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords,
                                                 bool disengaged = false, bool dodged = false);
 

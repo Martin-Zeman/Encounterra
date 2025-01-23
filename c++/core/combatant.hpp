@@ -33,7 +33,7 @@ namespace enc
 
   using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
-  class Combatant : public std::enable_shared_from_this<Effect>
+  class Combatant : public std::enable_shared_from_this<Combatant>
   {
   public:
     std::string _name;

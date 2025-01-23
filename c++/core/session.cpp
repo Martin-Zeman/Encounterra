@@ -48,7 +48,7 @@ namespace enc
   void Session::addCombatant(std::shared_ptr<Combatant> combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
   {
     combatant->setResourceDepletionLevel(resourceDepletionLevel);
-    _teams.addCombatantToTeam(*combatant, teamColor);
+    _teams.addCombatantToTeam(combatant, teamColor);
     _combatants.push_back(std::move(combatant)); // Move from the shared_ptr argument
     generateUniqueShortCodes();
   }
@@ -64,7 +64,7 @@ namespace enc
         throw std::runtime_error("Unsupported combatant type");
       }
     combatant->setResourceDepletionLevel(resourceDepletionLevel);
-    _teams.addCombatantToTeam(*combatant, teamColor);
+    _teams.addCombatantToTeam(combatant, teamColor);
     _combatants.push_back(std::move(combatant));
     generateUniqueShortCodes();
   }
@@ -81,7 +81,7 @@ namespace enc
 
     auto combatant = factoryIt->second(++_typeCounter[classId] + 1);
     combatant->setResourceDepletionLevel(resourceDepletionLevel);
-    _teams.addCombatantToTeam(*combatant, teamColor);
+    _teams.addCombatantToTeam(combatant, teamColor);
     _combatants.push_back(std::move(combatant));
     generateUniqueShortCodes();
   }

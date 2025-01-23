@@ -440,7 +440,7 @@ namespace enc
   }
 
   template <typename DistType>
-  std::tuple<const Combatant *, DistType> BattleMap::getNearest(const Combatant &combatant, Side side, DistanceMetric distType) const
+  std::tuple<std::weak_ptr<Combatant>, DistType> BattleMap::getNearest(const Combatant &combatant, Side side, DistanceMetric distType) const
   {
     auto teamFunc = (side == Side::ENEMY) ? &Teams::areEnemies : &Teams::areAllies;
 
@@ -459,7 +459,7 @@ namespace enc
       }
 
     DistType minDist = std::numeric_limits<DistType>::max();
-    const Combatant *nearest = nullptr;
+    std::weak_ptr<Combatant> nearest;
     const Coords &selfPosition = getCombatantCoordinates(combatant);
 
     for(const auto &[potentialTarget, coord] : _combatantCoordinateCache)
@@ -467,15 +467,18 @@ namespace enc
         if(potentialTarget == combatant._instanceId)
           continue;
 
-        const Combatant *potentialTargetCombatant = Teams::getInstance().getCombatantById(potentialTarget);
+        std::weak_ptr<Combatant> weakPotentialTargetCombatant = Teams::getInstance().getCombatantById(potentialTarget);
+        auto potentialTargetCombatant = weakPotentialTargetCombatant.lock();
         if(!potentialTargetCombatant || !potentialTargetCombatant->isAlive())
+        {
           continue;
+        }
 
         DistType dist = distFunc(selfPosition, coord);
         if((Teams::getInstance().*teamFunc)(*potentialTargetCombatant, combatant) && dist < minDist)
           {
             minDist = dist;
-            nearest = potentialTargetCombatant;
+            nearest = weakPotentialTargetCombatant;
           }
       }
 
@@ -485,7 +488,7 @@ namespace enc
 bool BattleMap::isEnemyAdjacent(const Combatant &combatant) const
 {
   auto [nearest, dist] = getNearest<int>(combatant, Side::ENEMY, DistanceMetric::HOP);
-  return nearest && dist == 1;
+  return !nearest.expired() && dist == 1;
 }
 
 bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combatant &target) const

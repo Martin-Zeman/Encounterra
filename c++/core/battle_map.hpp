@@ -65,7 +65,7 @@ namespace enc
     std::optional<Coord> getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
                                                       const Coords &targetLocation, const blaze::DynamicVector<int> &distances, int rng = 1);
     template <typename DistType>
-    std::tuple<const Combatant *, DistType>
+    std::tuple<std::weak_ptr<Combatant>, DistType>
     getNearest(const Combatant &combatant, Side side = Side::ENEMY, DistanceMetric distType = DistanceMetric::HOP) const;
     bool isEnemyAdjacent(const Combatant &combatant) const;
     bool isAllyAdjacentToTarget(const Combatant &combatant, const Combatant &target) const;
