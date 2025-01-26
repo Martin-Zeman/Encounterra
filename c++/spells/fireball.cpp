@@ -13,7 +13,7 @@ namespace enc
   {
     BattleMap & battleMap = BattleMap::getInstance();
     auto [coord, maxScore, affectedCombatants] = battleMap.findBestPlacementHarmfulCircular(
-      *_combatant.lock(), static_cast<int>(FireballFactory::range), TRANSLATE_RADIUS.at(FireballFactory::target));
+      *_combatant, static_cast<int>(FireballFactory::range), TRANSLATE_RADIUS.at(FireballFactory::target));
     return coord;
   }
 
@@ -32,7 +32,7 @@ namespace enc
   double FireballFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
-    if(battleMap.getCartesianDistanceCombatants(*_combatant.lock(), target)
+    if(battleMap.getCartesianDistanceCombatants(*_combatant, target)
        <= static_cast<double>(static_cast<int>(FireballFactory::range) + TRANSLATE_RADIUS.at(FireballFactory::target)))
       {
         return std::min(static_cast<double>(target.getCurrentHp()),
@@ -54,8 +54,8 @@ namespace enc
     BattleMap &battleMap = BattleMap::getInstance();
     Teams &teams = Teams::getInstance();
     const FireballFactory &factory = dynamic_cast<const FireballFactory &>(getFactory());
-    std::vector<std::weak_ptr<Combatant>> affectedCombatants
-      = battleMap.getCombatantsAffectedBySphereAoE(*factory._combatant.lock(), FireballFactory::target, SpellType::HARMFUL, _coord);
+    std::vector<Combatant*> affectedCombatants
+      = battleMap.getCombatantsAffectedBySphereAoE(*factory._combatant, FireballFactory::target, SpellType::HARMFUL, _coord);
     double acc = 0.0;
     for(auto weakAff : affectedCombatants)
       {
@@ -63,7 +63,7 @@ namespace enc
         double avgDmg = std::min(static_cast<double>(aff->getCurrentHp()),
                                  meanDmgDcAttack(factory._dc, factory._dmgDice, true, aff->getSavingThrows().at(factory._savingThrow),
                                                  aff->isImmuneTo(FireballFactory::dmgType), aff->isResistantTo(FireballFactory::dmgType)));
-        acc += (teams.areEnemies(*factory._combatant.lock(), *aff) ? 1.0 : -3.0) * avgDmg;
+        acc += (teams.areEnemies(*factory._combatant, *aff) ? 1.0 : -3.0) * avgDmg;
       }
     return acc;
   }
@@ -72,8 +72,8 @@ namespace enc
   Fireball::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     FireballFactory &factory = dynamic_cast<FireballFactory &>(getFactory());
-    auto combatant = factory._combatant.lock();
-    if(combatant->getSwallowerPtr())
+    auto combatant = factory._combatant;
+    if(combatant->getSwallower())
       {
         return {};
       }

@@ -8,6 +8,6 @@ namespace enc
   class AoeSphericEffect : public SphericAoe, virtual public AoeEffect
   {
   public:
-    AoeSphericEffect(const std::shared_ptr<Combatant> &initiator, const Coord &coord, int radius) : SphericAoe(coord, radius), AoeEffect(initiator) {}
+    AoeSphericEffect(Combatant *initiator, const Coord &coord, int radius) : SphericAoe(coord, radius), AoeEffect(initiator) {}
   };
 }

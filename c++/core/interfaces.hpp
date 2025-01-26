@@ -139,12 +139,12 @@ namespace enc
     std::string _abilityName;
 
   protected:
-    std::weak_ptr<Combatant> _combatant;
+    Combatant *_combatant;
     uint32_t _flags;
     AbilityType _abilityType;
 
   public:
-    ActoidFactory(std::string name, std::string abilityName, const std::shared_ptr<Combatant>& combatant, AbilityType abilityType)
+    ActoidFactory(std::string name, std::string abilityName, Combatant *combatant, AbilityType abilityType)
         : _name(name), _abilityName(abilityName), _combatant(combatant), _flags(static_cast<uint32_t>(FactoryFlags::DEFAULT)),
           _abilityType(abilityType)
     {}
@@ -152,8 +152,8 @@ namespace enc
     void clearFlag(FactoryFlags flag) { _flags &= ~static_cast<uint32_t>(flag); }
     bool hasFlag(FactoryFlags flag) const { return (_flags & static_cast<uint32_t>(flag)) != 0; }
     uint32_t getFlags() const { return _flags; }
-    std::weak_ptr<Combatant> getCombatant() { return _combatant; }
-    void setCombatant(const std::shared_ptr<Combatant>& combatant) { _combatant = combatant; }
+    Combatant *getCombatant() { return _combatant; }
+    void setCombatant(Combatant *combatant) { _combatant = combatant; }
     virtual ~ActoidFactory() = default;
     virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) = 0;
     virtual std::shared_ptr<Actoid> create(void *target) = 0;
@@ -166,7 +166,7 @@ namespace enc
   class DirectThreatFactory : public ActoidFactory
   {
   protected:
-    DirectThreatFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant>& combatant, AbilityType abilityType)
+    DirectThreatFactory(const std::string &name, const std::string &abilityName, Combatant* combatant, AbilityType abilityType)
         : ActoidFactory(name, abilityName, combatant, abilityType)
     {
       setFlag(FactoryFlags::IS_DIRECT_THREAT);
@@ -185,7 +185,7 @@ namespace enc
   class TransformerFactory : public BasicThreat, public ActoidFactory
   {
   public:
-    explicit TransformerFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant>& combatant, AbilityType abilityType)
+    explicit TransformerFactory(const std::string &name, const std::string &abilityName, Combatant* combatant, AbilityType abilityType)
         : ActoidFactory(name, abilityName, combatant, abilityType)
     {}
 

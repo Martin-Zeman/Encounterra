@@ -6,7 +6,7 @@
 
 namespace enc
 {
-  WildshapeFactory::WildshapeFactory(const std::shared_ptr<Combatant>& combatant, AbilityType actionType)
+  WildshapeFactory::WildshapeFactory(Combatant* combatant, AbilityType actionType)
       : TransformerFactory("WildshapeFactory", "Wildshape", combatant, actionType), _actionType(actionType)
   {
     setFlag(FactoryFlags::TARGETS_SELF);
@@ -32,7 +32,7 @@ namespace enc
 
   std::vector<std::shared_ptr<Actoid>> WildshapeFactory::createAll(void *previousActionInDag)
   {
-    if(auto combatant = _combatant.lock())
+    if(auto combatant = _combatant)
       {
         const auto &forms = combatant->getAvailableWildshapeForms();
         std::vector<std::shared_ptr<Actoid>> result;
@@ -55,7 +55,7 @@ namespace enc
   double WildshapeFactory::calculateThreat(const Kwargs &kwargs)
   {
     // TODO: Rework this, it needs some consideration for the dmg in Wildshape
-    if(auto combatant = _combatant.lock())
+    if(auto combatant = _combatant)
       {
         auto forms = combatant->getAvailableWildshapeForms();
         if(forms.empty())
@@ -73,29 +73,29 @@ namespace enc
     return 0.0;
   }
 
-  Wildshape::Wildshape(const std::shared_ptr<Combatant>& combatant, std::shared_ptr<Combatant> form, WildshapeFactory &factory)
-      : Actoid(factory), Effect(combatant), CombatantEffect(combatant, std::vector<std::shared_ptr<Combatant>>{combatant}), ActionEnablerEffect(combatant),
-        _form(std::move(form)), _factory(factory)
+  Wildshape::Wildshape(Combatant &combatant, Combatant *form, WildshapeFactory &factory)
+      : Actoid(factory), Effect(combatant), CombatantEffect(combatant, std::vector<std::shared_ptr<Combatant>>{combatant}),
+        ActionEnablerEffect(combatant), _form(std::move(form)), _factory(factory)
   {
     _form->setBaseForm(combatant);
   }
 
-  std::string Wildshape::toString() const { return "Wildshape of " + getInitiator().lock()->_name + " into " + _form->_name; }
+  std::string Wildshape::toString() const { return "Wildshape of " + getInitiator()->_name + " into " + _form->_name; }
 
   void Wildshape::activate(const Kwargs &kwargs)
   {
     auto &battleMap = BattleMap::getInstance();
     auto &effectTracker = EffectTracker::getInstance();
-    auto initiatorPtr = getInitiator().lock();
+    Combatant *initiatorPtr = getInitiator();
     if(!initiatorPtr)
       {
         throw std::runtime_error("Invalid initiator in Wildshape::activate");
       }
-    effectTracker.add(shared_from_this());
+    effectTracker.add(this);
 
     Teams &teams = Teams::getInstance();
     teams.replaceCombatant(*initiatorPtr, *_form.get());
-    auto wildshapeCoord = battleMap.findWildshapedCoordinate(initiatorPtr, _form->getSize());
+    auto wildshapeCoord = battleMap.findWildshapedCoordinate(*initiatorPtr, _form->getSize());
     if(!wildshapeCoord.has_value())
       {
         throw std::runtime_error("No space for the wildshape form!");

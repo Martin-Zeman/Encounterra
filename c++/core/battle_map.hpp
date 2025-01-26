@@ -65,7 +65,7 @@ namespace enc
     std::optional<Coord> getNearestFreeAdjacentCoords(const Combatant &combatant, const Coords &myLocation, Size combatantSize,
                                                       const Coords &targetLocation, const blaze::DynamicVector<int> &distances, int rng = 1);
     template <typename DistType>
-    std::tuple<std::weak_ptr<Combatant>, DistType>
+    std::tuple<Combatant *, DistType>
     getNearest(const Combatant &combatant, Side side = Side::ENEMY, DistanceMetric distType = DistanceMetric::HOP) const;
     bool isEnemyAdjacent(const Combatant &combatant) const;
     bool isAllyAdjacentToTarget(const Combatant &combatant, const Combatant &target) const;
@@ -79,25 +79,25 @@ namespace enc
     bool removeCombatantIfDead(Combatant &combatant);
     void resetCombatantsToInitialPositions(const std::unordered_map<int, Coords> initialPositions);
     int getCombatantGridValueAt(const Coord &coord) const;
-    std::tuple<Coord, int, std::vector<std::weak_ptr<Combatant>>>
+    std::tuple<Coord, int, std::vector<Combatant*>>
     findBestPlacementHarmfulCircular(const Combatant &caster, int spellRange, int radius);
-    std::tuple<Coord, int, std::vector<std::weak_ptr<Combatant>>>
+    std::tuple<Coord, int, std::vector<Combatant*>>
     findBestPlacementHarmfulSquare(const Combatant &caster, int spellRange, int length);
     std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulCone(const Combatant &caster, int radius);
     std::optional<std::tuple<Coord, double, int>> findBestPlacementHarmfulLine(const Combatant &caster, int length, int width);
 
-    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedBySphereAoE(const Combatant &caster, SpellTarget targetTemplate, SpellType abilityType, const Coord &origin) const;
-    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedByConeAoE(const Combatant &caster, SpellTarget targetTemplate, const Coord &origin, double angle) const;
-    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedByLineAoE(const Combatant &caster, const Coord &origin, double angle, int length, int width) const;
-    std::vector<std::weak_ptr<Combatant>> getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const;
+    std::vector<Combatant*> getCombatantsAffectedBySphereAoE(const Combatant &caster, SpellTarget targetTemplate, SpellType abilityType, const Coord &origin) const;
+    std::vector<Combatant*> getCombatantsAffectedByConeAoE(const Combatant &caster, SpellTarget targetTemplate, const Coord &origin, double angle) const;
+    std::vector<Combatant*> getCombatantsAffectedByLineAoE(const Combatant &caster, const Coord &origin, double angle, int length, int width) const;
+    std::vector<Combatant*> getCombatantsAffectedByBoxAoE(SpellTarget targetTemplate, const Coord &origin) const;
     Visibility getVisibility(const Coords &observer, const Coords &target);
     std::unordered_map<int, Visibility> calcVisibilityDict(const Combatant &combatant, const Coord &theoreticalRootCoord);
     void calcVisibilityDictForAllCoords(const Combatant &combatant, const blaze::DynamicMatrix<Coord> &shortestPaths);
     Visibility getVisibilityFromCoord(const Coord &fromCoord, const Combatant &target) const;
-    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithinRadius(const Combatant &combatant, int radius);
-    std::vector<std::weak_ptr<Combatant>> getNonSwallowedAlliesWithinRadius(const Combatant &combatant, int radius);
-    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithinHopDistance(const Combatant &combatant, int distance);
-    std::vector<std::weak_ptr<Combatant>> getNonSwallowedEnemiesWithoutHopDistance(const Combatant &combatant, int distance);
+    std::vector<Combatant*> getNonSwallowedEnemiesWithinRadius(const Combatant &combatant, int radius);
+    std::vector<Combatant*> getNonSwallowedAlliesWithinRadius(const Combatant &combatant, int radius);
+    std::vector<Combatant*> getNonSwallowedEnemiesWithinHopDistance(const Combatant &combatant, int distance);
+    std::vector<Combatant*> getNonSwallowedEnemiesWithoutHopDistance(const Combatant &combatant, int distance);
     bool isDifficultTerrainAt(const Coords &coords) const;
     void pushCombatantAwayFrom(const Vector2D &origin, Combatant *targetCombatant, int distance);
     void setCombatRound(uint32_t round);
@@ -105,8 +105,8 @@ namespace enc
     void withCombatantPosition(const Combatant &combatant, const Coord &temporaryPosition, const std::function<void()> &fn);
     void withCombatantWildshapeReplacement(Actoid &actoid, Combatant &combatant, const Coord &origCoord, const std::function<void(Combatant &)> &fn);
     std::optional<Coord> findWildshapedCoordinate(const Combatant &combatant, Size size, const std::optional<Coord> &actualOrigCoord = std::nullopt);
-    std::vector<std::weak_ptr<Combatant>> getPamEligibleCombatants(const Combatant &combatant, const Coord &increment) const;
-    std::vector<std::weak_ptr<Combatant>> getAooEligibleCombatants(const Combatant &combatant, const Coord &increment) const;
+    std::vector<Combatant*> getPamEligibleCombatants(const Combatant &combatant, const Coord &increment) const;
+    std::vector<Combatant*> getAooEligibleCombatants(const Combatant &combatant, const Coord &increment) const;
 
   private:
     size_t _size;

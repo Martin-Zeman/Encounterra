@@ -21,7 +21,7 @@ namespace enc
     friend class Wildshape;
 
   public:
-    WildshapeFactory(const std::shared_ptr<Combatant>& combatant, AbilityType actionType);
+    WildshapeFactory(Combatant* combatant, AbilityType actionType);
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
     std::shared_ptr<Actoid> create(void *form) override;
@@ -38,7 +38,7 @@ namespace enc
   class Wildshape : public Actoid, virtual public CombatantEffect, virtual public ActionEnablerEffect, public DirectThreat
   {
   public:
-    Wildshape(const std::shared_ptr<Combatant>& combatant, std::shared_ptr<Combatant> form, WildshapeFactory &factory);
+    Wildshape(Combatant &combatant, Combatant *form, WildshapeFactory &factory);
 
     ~Wildshape() override = default;
 
@@ -73,7 +73,7 @@ namespace enc
   protected:
     size_t hash() const override;
 
-    std::shared_ptr<Combatant> _form;
+    Combatant *_form;
     WildshapeFactory &_factory;
   };
 }

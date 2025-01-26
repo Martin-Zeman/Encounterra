@@ -15,8 +15,7 @@ namespace enc
 
   void RoundManager::orderByInitiative()
   {
-    std::sort(_combatants.begin(), _combatants.end(),
-              [](const std::shared_ptr<Combatant> &a, const std::shared_ptr<Combatant> &b) { return a->getCurrentInit() > b->getCurrentInit(); });
+    std::sort(_combatants.begin(), _combatants.end(), [](Combatant *a, Combatant *b) { return a->getCurrentInit() > b->getCurrentInit(); });
 
     std::cout << "--------------INITIATIVE ORDER--------------\n";
     for(const auto &combatant : _combatants)

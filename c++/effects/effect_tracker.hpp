@@ -30,9 +30,9 @@ namespace enc
       instance.reset();
     }
 
-    std::weak_ptr<Effect> add(std::shared_ptr<Effect> effect);
+    Effect *add(Effect *effect);
 
-    void remove(const std::shared_ptr<Effect> &effect);
+    void remove(Effect *effect);
 
     void startOfTurnTick(const Combatant &combatant);
 
@@ -40,13 +40,13 @@ namespace enc
 
     void endOfTurn(Combatant &combatant);
 
-    std::vector<std::weak_ptr<Effect>> getAffectingCombatant(const Combatant &combatant) const;
+    std::vector<Effect *> getAffectingCombatant(const Combatant &combatant) const;
 
     bool isAffectingCombatant(const Combatant &combatant, EffectType effectType) const;
 
-    std::vector<std::weak_ptr<AoeEffect>> getAoeEffects() const;
+    std::vector<AoeEffect *> getAoeEffects() const;
 
-    std::vector<std::weak_ptr<Effect>> getEffectsByInitiator(const Combatant &initiator) const;
+    std::vector<Effect *> getEffectsByInitiator(const Combatant &initiator) const;
 
     void combatantDied(const Combatant &combatant);
 
@@ -54,7 +54,7 @@ namespace enc
 
     void removeEffectFromCombatantByType(Combatant &combatant, EffectType effectType);
 
-    void removeEffectFromCombatant(Combatant &combatant, const std::shared_ptr<Effect> &effect);
+    void removeEffectFromCombatant(Combatant &combatant, Effect *effect);
 
     bool isCombatantHiddenFrom(const Combatant &combatant, const Combatant &target) const;
 
@@ -65,6 +65,6 @@ namespace enc
   private:
     EffectTracker() = default;
 
-    std::vector<std::shared_ptr<Effect>> _effects;
+    std::vector<Effect *> _effects;
   };
 }

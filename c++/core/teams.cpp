@@ -89,10 +89,10 @@ namespace enc
 
   Color Teams::getTeam(const Combatant &combatant) const { return _combatantIdToTeamColor.at(combatant._instanceId); }
 
-  std::vector<std::weak_ptr<Combatant>> Teams::getAllAllies(const Combatant &combatant) const
+  std::vector<Combatant*> Teams::getAllAllies(const Combatant &combatant) const
   {
     std::vector<int> allyIds = _colorToCombatantIds.at(_combatantIdToTeamColor.at(combatant._instanceId));
-    std::vector<std::weak_ptr<Combatant>> allies;
+    std::vector<Combatant*> allies;
     allies.reserve(allyIds.size());
     for(auto id : allyIds)
       {
@@ -101,11 +101,11 @@ namespace enc
     return allies;
   }
 
-  std::vector<std::weak_ptr<Combatant>> Teams::getAllEnemies(const Combatant &combatant) const
+  std::vector<Combatant*> Teams::getAllEnemies(const Combatant &combatant) const
   {
     Color otherTeam = (_combatantIdToTeamColor.at(combatant._instanceId) == Color::BLUE) ? Color::RED : Color::BLUE;
     std::vector<int> enemyIds = _colorToCombatantIds.at(otherTeam);
-    std::vector<std::weak_ptr<Combatant>> enemies;
+    std::vector<Combatant*> enemies;
     enemies.reserve(enemyIds.size());
     for(auto id : enemyIds)
       {
@@ -114,9 +114,9 @@ namespace enc
     return enemies;
   }
 
-  std::vector<std::weak_ptr<Combatant>> Teams::getAliveEnemies(const Combatant &combatant) const
+  std::vector<Combatant*> Teams::getAliveEnemies(const Combatant &combatant) const
   {
-    std::vector<std::weak_ptr<Combatant>> result;
+    std::vector<Combatant*> result;
     Color combatantTeam = getTeam(combatant);
     for(const auto &[color, ids] : _colorToCombatantIds)
       {
@@ -134,9 +134,9 @@ namespace enc
     return result;
   }
 
-  std::vector<std::weak_ptr<Combatant>> Teams::getAliveNonSwallowedEnemies(const Combatant &combatant) const
+  std::vector<Combatant*> Teams::getAliveNonSwallowedEnemies(const Combatant &combatant) const
   {
-    std::vector<std::weak_ptr<Combatant>> result;
+    std::vector<Combatant*> result;
     Color combatantTeam = getTeam(combatant);
     for(const auto &[color, ids] : _colorToCombatantIds)
       {
@@ -154,9 +154,9 @@ namespace enc
     return result;
   }
 
-  std::vector<std::weak_ptr<Combatant>> Teams::getAliveNonSwallowedAllies(const Combatant &combatant) const
+  std::vector<Combatant*> Teams::getAliveNonSwallowedAllies(const Combatant &combatant) const
   {
-    std::vector<std::weak_ptr<Combatant>> result;
+    std::vector<Combatant*> result;
     Color combatantTeam = getTeam(combatant);
     for(int id : _colorToCombatantIds.at(combatantTeam))
       {
@@ -168,9 +168,9 @@ namespace enc
     return result;
   }
 
-  std::vector<std::weak_ptr<Combatant>> Teams::getAliveCombatants(const Combatant &excludeCombatant) const
+  std::vector<Combatant*> Teams::getAliveCombatants(const Combatant &excludeCombatant) const
   {
-    std::vector<std::weak_ptr<Combatant>> result;
+    std::vector<Combatant*> result;
     for(const auto &[id, combatant] : _idToCombatant)
       {
         if(auto cmbt = combatant.lock(); cmbt && cmbt->isAlive() && *cmbt != excludeCombatant)
@@ -181,9 +181,9 @@ namespace enc
     return result;
   }
 
-  std::vector<std::weak_ptr<Combatant>> Teams::getAliveAllies(const Combatant &combatant) const
+  std::vector<Combatant*> Teams::getAliveAllies(const Combatant &combatant) const
   {
-    std::vector<std::weak_ptr<Combatant>> result;
+    std::vector<Combatant*> result;
     Color combatantTeam = getTeam(combatant);
     for(int id : _colorToCombatantIds.at(combatantTeam))
       {
@@ -196,6 +196,6 @@ namespace enc
     return result;
   }
 
-  std::weak_ptr<Combatant> Teams::getCombatantById(int id) const { return _idToCombatant.at(id); }
+  Combatant *Teams::getCombatantById(int id) const { return _idToCombatant.at(id); }
 
 } // namespace enc

@@ -36,13 +36,6 @@ namespace enc
 
   Combatant::~Combatant() { breakConcentration(); }
 
-  bool Combatant::operator==(const Combatant &other) const { return _instanceId == other._instanceId; }
-  bool Combatant::operator==(Combatant &other) const { return _instanceId == other._instanceId; }
-
-  bool Combatant::operator!=(const Combatant &other) const { return !(*this == other); }
-
-  // bool Combatant::operator==(const std::shared_ptr<Combatant> &other) const { return other && _instanceId == other->_instanceId; }
-
   std::string Combatant::toString() const { return _name; }
 
   bool Combatant::isAlive() const { return _currHp > 0; }
@@ -118,45 +111,38 @@ namespace enc
     _hasHasteAction = false;
     _attackFsm.reset();
     _actionPlan.clear();
-    if(_constrictedTarget)
+    if(_constrictedTarget && !_constrictedTarget->isAlive())
       {
-        if(auto target = _constrictedTarget->lock())
-          {
-            if(!target->isAlive())
-              {
-                _constrictedTarget = std::nullopt;
-              }
-          }
+        _constrictedTarget = nullptr;
       }
     _weaponDmgDealtThisTurn = 0;
   }
 
-  void Combatant::setWildshapeForm(const std::shared_ptr<Combatant> &form) { _wildshapeForm = std::weak_ptr<Combatant>(form); }
+  void Combatant::setWildshapeForm(Combatant *form) { _wildshapeForm = form; }
 
-  void Combatant::setBaseForm(const std::shared_ptr<Combatant> &form) { _baseForm = std::weak_ptr<Combatant>(form); }
+  void Combatant::setBaseForm(Combatant *form) { _baseForm = form; }
 
   Combatant &Combatant::getCurrentForm()
   {
-    if(_wildshapeForm && !_wildshapeForm->expired())
+    if(_wildshapeForm)
       {
-        return *(_wildshapeForm->lock());
+        return *_wildshapeForm;
       }
     return *this;
   }
 
   Combatant &Combatant::getBaseForm()
   {
-    if(_baseForm && !_baseForm->expired())
+    if(_baseForm)
       {
-        return *(_baseForm->lock());
+        return *_baseForm;
       }
     return *this;
   }
 
-  bool Combatant::isWildshaped() const { return _wildshapeForm && !_wildshapeForm->expired(); }
+  bool Combatant::isWildshaped() const { return _wildshapeForm != nullptr; }
 
-  std::shared_ptr<Combatant> Combatant::getWildshapePtr() const { return _wildshapeForm ?  _wildshapeForm->lock() : nullptr; }
-  std::shared_ptr<Combatant> Combatant::getBaseFormPtr() const { return _baseForm ?  _baseForm->lock() : nullptr; }
+  bool Combatant::isBaseForm() const { return _baseForm != nullptr; }
 
   bool Combatant::isAffectedBy(Conditions condition) const
   {
@@ -202,10 +188,10 @@ namespace enc
     _dcConditions.push_back(std::move(dcCondition));
   }
 
-  bool Combatant::removeCondition(Conditions condition, const std::optional<std::weak_ptr<Combatant>> &initiator)
+  bool Combatant::removeCondition(Conditions condition, Combatant *initiator)
   {
-    auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, &initiator](const std::shared_ptr<Condition> &c) {
-      return containsCondition(c->conditionComposite, condition) && (!initiator.has_value() || (c->initiator.lock() == initiator->lock()));
+    auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, initiator](const std::shared_ptr<Condition> &c) {
+      return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
     });
 
     if(it != _conditions.end())
@@ -213,24 +199,25 @@ namespace enc
         _conditions.erase(it);
         if(condition == Conditions::SWALLOWED)
           {
-            _swallower = std::nullopt;
+            _swallower = nullptr;
           }
         return true;
       }
     return false;
   }
 
-  bool Combatant::removeDCCondition(Conditions condition, const std::optional<std::weak_ptr<Combatant>> &initiator)
+  bool Combatant::removeDCCondition(Conditions condition, Combatant *initiator)
   {
-    auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, &initiator](const std::shared_ptr<ConditionWithDC> &c) {
-      return containsCondition(c->conditionComposite, condition) && (!initiator.has_value() || c->initiator.lock() == initiator->lock());
+    auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, initiator](const std::shared_ptr<ConditionWithDC> &c) {
+      return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
     });
+
     if(it != _dcConditions.end())
       {
         _dcConditions.erase(it);
         if(condition == Conditions::SWALLOWED)
           {
-            _swallower = std::nullopt;
+            _swallower = nullptr;
           }
         return true;
       }
@@ -243,36 +230,38 @@ namespace enc
     while(removeCondition(condition)) {};
   }
 
-  std::optional<std::weak_ptr<Combatant>> Combatant::getInitiatorOfCondition(Conditions condition)
+  Combatant *Combatant::getInitiatorOfCondition(Conditions condition)
   {
+    // First check DC conditions
     auto initiator = checkConditionList(_dcConditions, condition);
-    if(initiator && !initiator->expired()) // Use -> to access the weak_ptr inside the optional
+    if(initiator)
       {
         return initiator;
       }
 
+    // Then check regular conditions
     return checkConditionList(_conditions, condition);
   }
 
-  std::optional<std::weak_ptr<Combatant>> Combatant::getGrappledTarget()
+  Combatant *Combatant::getGrappledTarget()
   {
     for(const auto &cond : _dcConditions)
       {
-        if(containsCondition(cond->conditionComposite, Conditions::GRAPPLING) && cond->target.has_value())
+        if(containsCondition(cond->conditionComposite, Conditions::GRAPPLING) && cond->target)
           {
-            return cond->target.value();
+            return cond->target;
           }
       }
 
     for(const auto &cond : _conditions)
       {
-        if(containsCondition(cond->conditionComposite, Conditions::GRAPPLING) && cond->target.has_value())
+        if(containsCondition(cond->conditionComposite, Conditions::GRAPPLING) && cond->target)
           {
-            return cond->target.value();
+            return cond->target;
           }
       }
 
-    return {};
+    return nullptr;
   }
 
   std::vector<std::weak_ptr<ConditionWithDC>> Combatant::needsToBreakOutOfGrapple() const
@@ -302,19 +291,19 @@ namespace enc
     return false;
   }
 
-  void Combatant::setConcentrationEffect(std::shared_ptr<Effect> effect)
+  void Combatant::setConcentrationEffect(Effect *effect)
   {
     breakConcentration();
+    _concentrationEffect = effect;
+    EffectTracker::getInstance().add(effect);
 
-    _concentrationEffect = EffectTracker::getInstance().add(std::move(effect));
-
-    if(auto baseForm = getBaseFormPtr())
+    if(_baseForm)
       {
-        baseForm->_concentrationEffect = _concentrationEffect;
+        _baseForm->_concentrationEffect = effect;
       }
-    else if(auto wildshapeForm = getWildshapePtr())
+    else if(_wildshapeForm)
       {
-        wildshapeForm->_concentrationEffect = _concentrationEffect;
+        _wildshapeForm->_concentrationEffect = effect;
       }
   }
 
@@ -322,27 +311,17 @@ namespace enc
   {
     std::cout << "Breaking concentration for " << this << std::endl;
 
-    if(_concentrationEffect && !_concentrationEffect->expired())
+    if(_concentrationEffect)
       {
-        if(auto ptr = _concentrationEffect->lock())
-          {
-            std::cout << "  Effect ptr valid: " << ptr.get() << std::endl;
-            EffectTracker::getInstance().remove(ptr);
-          }
+        EffectTracker::getInstance().remove(_concentrationEffect);
       }
-    _concentrationEffect = std::nullopt;
+    _concentrationEffect = nullptr;
 
-    if(auto baseForm = getBaseFormPtr())
-      {
-        baseForm->_concentrationEffect = std::nullopt;
-      }
-    else if(auto wildshapeForm = getWildshapePtr())
-      {
-        wildshapeForm->_concentrationEffect = std::nullopt;
-      }
+    Combatant &baseForm = getBaseForm(); // in case we were wildshaped
+    baseForm._concentrationEffect = nullptr;
   }
 
-  bool Combatant::isConcentrating() const { return _concentrationEffect && !_concentrationEffect->expired(); }
+  bool Combatant::isConcentrating() const { return _concentrationEffect != nullptr; }
 
   bool Combatant::isAffectedByAny(const std::vector<Conditions> &conditions) const
   {
@@ -506,12 +485,10 @@ namespace enc
           }
       }
 
-    // Handle wildshape damage overflow
-    auto baseFormPtr = getBaseFormPtr();
-    if(_currHp <= 0 && baseFormPtr)
+    if(_currHp <= 0 && _baseForm)
       {
-        baseFormPtr->_currHp += _currHp; // Carry-over damage
-        EffectTracker::getInstance().removeEffectFromCombatantByType(*baseFormPtr, EffectType::WILDSHAPE);
+        _baseForm->_currHp += _currHp; // Carry-over damage
+        EffectTracker::getInstance().removeEffectFromCombatantByType(*_baseForm, EffectType::WILDSHAPE);
       }
 
     // Handle effects of taking damage
@@ -554,11 +531,10 @@ namespace enc
           }
       }
 
-    auto baseFormPtr = getBaseFormPtr();
-    if(_currHp <= 0 && baseFormPtr)
+    if(_currHp <= 0 && _baseForm)
       {
-        baseFormPtr->_currHp += _currHp; // Carry-over damage
-        EffectTracker::getInstance().removeEffectFromCombatantByType(*baseFormPtr, EffectType::WILDSHAPE);
+        _baseForm->_currHp += _currHp; // Carry-over damage
+        EffectTracker::getInstance().removeEffectFromCombatantByType(*_baseForm, EffectType::WILDSHAPE);
       }
 
     if(totalDmg > 0)

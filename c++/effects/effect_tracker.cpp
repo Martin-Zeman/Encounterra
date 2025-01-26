@@ -4,13 +4,13 @@
 
 namespace enc
 {
-  std::weak_ptr<Effect> EffectTracker::add(std::shared_ptr<Effect> effect)
+  Effect* EffectTracker::add(Effect* effect)
   {
     _effects.push_back(effect);
     return _effects.back();
   }
 
-  void EffectTracker::remove(const std::shared_ptr<Effect> &effect)
+  void EffectTracker::remove(Effect* effect)
   {
     effect->deactivate();
     _effects.erase(std::remove(_effects.begin(), _effects.end(), effect), _effects.end());
@@ -18,11 +18,11 @@ namespace enc
 
   void EffectTracker::startOfTurnTick(const Combatant &combatant)
   {
-    std::vector<std::shared_ptr<Effect>> remainingEffects;
+    std::vector<Effect *> remainingEffects;
 
     for(const auto &effect : _effects)
       {
-        if(combatant == *effect->getInitiator().lock())
+        if(combatant == *effect->getInitiator())
           {
             bool keep = effect->startOfTurnTick();
             if(!keep)
@@ -31,14 +31,14 @@ namespace enc
                 continue; // Effect expired
               }
           }
-        remainingEffects.push_back(effect); // Effect persists
+        remainingEffects.push_back(effect);  // Effect persists
       }
     _effects = std::move(remainingEffects);
   }
 
   void EffectTracker::startOfTurn(Combatant &combatant)
   {
-    std::vector<std::shared_ptr<Effect>> remainingEffects;
+    std::vector<Effect *> remainingEffects;
 
     for(const auto &effect : _effects)
       {
@@ -57,7 +57,7 @@ namespace enc
 
   void EffectTracker::endOfTurn(Combatant &combatant)
   {
-    std::vector<std::shared_ptr<Effect>> remainingEffects;
+    std::vector<Effect *> remainingEffects;
 
     for(const auto &effect : _effects)
       {
@@ -67,7 +67,7 @@ namespace enc
               {
                 if(!effect->deactivateForCombatant(combatant))
                   {
-                    continue; // Effect's been saved against or ceased
+                    continue;
                   }
               }
           }
@@ -76,16 +76,16 @@ namespace enc
     _effects = std::move(remainingEffects);
   }
 
-  std::vector<std::weak_ptr<Effect>> EffectTracker::getAffectingCombatant(const Combatant&combatant) const
+  std::vector<Effect *> EffectTracker::getAffectingCombatant(const Combatant &combatant) const
   {
-    std::vector<std::weak_ptr<Effect>> affectingEffects;
+    std::vector<Effect *> affectingEffects;
     for(const auto &effect : _effects)
-    {
+      {
         if(effect->isAffecting(combatant))
-        {
+          {
             affectingEffects.push_back(effect);
-        }
-    }
+          }
+      }
     return affectingEffects;
   }
 
@@ -101,12 +101,12 @@ namespace enc
     return false;
   }
 
-  std::vector<std::weak_ptr<AoeEffect>> EffectTracker::getAoeEffects() const
+  std::vector<AoeEffect *> EffectTracker::getAoeEffects() const
   {
-    std::vector<std::weak_ptr<AoeEffect>> aoeEffects;
+    std::vector<AoeEffect *> aoeEffects;
     for(const auto &effect : _effects)
       {
-        if(auto aoeEffect = std::dynamic_pointer_cast<AoeEffect>(effect))
+        if(auto aoeEffect = dynamic_cast<AoeEffect *>(effect))
           {
             aoeEffects.push_back(aoeEffect);
           }
@@ -114,12 +114,12 @@ namespace enc
     return aoeEffects;
   }
 
-  std::vector<std::weak_ptr<Effect>> EffectTracker::getEffectsByInitiator(const Combatant &initiator) const
+  std::vector<Effect *> EffectTracker::getEffectsByInitiator(const Combatant &initiator) const
   {
-    std::vector<std::weak_ptr<Effect>> initiatorEffects;
+    std::vector<Effect *> initiatorEffects;
     for(const auto &effect : _effects)
       {
-        if(*effect->getInitiator().lock() == initiator)
+        if(*effect->getInitiator() == initiator)
           {
             initiatorEffects.push_back(effect);
           }
@@ -130,15 +130,12 @@ namespace enc
   void EffectTracker::combatantDied(const Combatant &combatant)
   {
     auto initiatorEffects = getEffectsByInitiator(combatant);
-    for(const auto &weakEffect : initiatorEffects)
+    for(const auto &effect : initiatorEffects)
       {
-        if(auto effect = weakEffect.lock())
-          {
-            effect->deactivate();
-            _effects.erase(
-              std::remove_if(_effects.begin(), _effects.end(), [&combatant](const auto &effect) { return *effect->getInitiator().lock() == combatant; }),
-              _effects.end());
-          }
+        effect->deactivate();
+        _effects.erase(
+          std::remove_if(_effects.begin(), _effects.end(), [&combatant](const auto &effect) { return *effect->getInitiator() == combatant; }),
+          _effects.end());
       }
   }
 
@@ -149,7 +146,7 @@ namespace enc
 
   void EffectTracker::removeEffectFromCombatantByType(Combatant &combatant, EffectType effectType)
   {
-    std::vector<std::shared_ptr<Effect>> remainingEffects;
+    std::vector<Effect *> remainingEffects;
     for(const auto &effect : _effects)
       {
         if(effect->isAffecting(combatant) && effect->getEffectType() == effectType)
@@ -164,7 +161,7 @@ namespace enc
     _effects = std::move(remainingEffects);
   }
 
-  void EffectTracker::removeEffectFromCombatant(Combatant &combatant, const std::shared_ptr<Effect>& effect)
+  void EffectTracker::removeEffectFromCombatant(Combatant &combatant, Effect *effect)
   {
     if(!effect->deactivateForCombatant(combatant))
       {
@@ -174,15 +171,12 @@ namespace enc
 
   bool EffectTracker::isCombatantHiddenFrom(const Combatant &combatant, const Combatant &target) const
   {
-    for(const auto &weakEffect : getEffectsByInitiator(combatant))
+    for(const auto &effect : getEffectsByInitiator(combatant))
       {
-        if(auto effect = weakEffect.lock())
+        auto tgt = effect->getTarget();
+        if(effect->getEffectType() == EffectType::HIDE && tgt && *tgt == target)
           {
-            auto tgt = effect->getTargetPtr();
-            if(effect->getEffectType() == EffectType::HIDE && tgt && *tgt == target)
-              {
-                return true;
-              }
+            return true;
           }
       }
     return false;

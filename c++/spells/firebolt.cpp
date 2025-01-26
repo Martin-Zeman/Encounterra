@@ -7,7 +7,7 @@
 namespace enc
 {
 
-  FireboltFactory::FireboltFactory(int toHit, AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource)
+  FireboltFactory::FireboltFactory(int toHit, AbilityType abilityType, Combatant * caster, Resource *resource)
       : DirectThreatFactory("FireboltFactory", "Firebolt", caster, abilityType), _toHit(toHit), _resource(resource),
         _dmgDice(FireboltFactory::getDmgDice(caster->getLevel()))
   {
@@ -44,9 +44,9 @@ namespace enc
       {
         return 0;
       }
-    if(battleMap.getCartesianDistanceCombatants(*_combatant.lock(), target) <= static_cast<int>(FireboltFactory::range))
+    if(battleMap.getCartesianDistanceCombatants(*_combatant, target) <= static_cast<int>(FireboltFactory::range))
       {
-        auto rollType = battleMap.isEnemyAdjacent(*_combatant.lock()) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
+        auto rollType = battleMap.isEnemyAdjacent(*_combatant) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
         int acDifference = std::max(0, std::min(20, target.getAC() - _toHit));
         int toHitTotal = _toHit + ROLL_TYPE_DELTA.at(rollType).at(acDifference);
         return meanDmg(toHitTotal, {_dmgDice}, 0, target.getAC(), target.isImmuneTo(FireboltFactory::dmgType),
@@ -112,7 +112,7 @@ namespace enc
   double Firebolt::calculateThreat(const Kwargs &kwargs)
   {
     BattleMap &battleMap = BattleMap::getInstance();
-    auto rollType = battleMap.isEnemyAdjacent(*(_factory._combatant.lock())) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
+    auto rollType = battleMap.isEnemyAdjacent(*(_factory._combatant)) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
     int acDifference = std::max(0, std::min(20, _target.getAC() - _factory._toHit));
     int toHitTotal = _factory._toHit + ROLL_TYPE_DELTA.at(rollType).at(acDifference);
     return meanDmg(toHitTotal, {_factory._dmgDice}, 0, _target.getAC(), _target.isImmuneTo(FireboltFactory::dmgType),
@@ -131,7 +131,7 @@ namespace enc
   {
     FireboltFactory &factory = dynamic_cast<FireboltFactory &>(getFactory());
     BattleMap &battleMap = BattleMap::getInstance();
-    auto combatant = factory._combatant.lock();
+    auto combatant = factory._combatant;
     Coord currCoord = battleMap.getCombatantCoordinates(*combatant).getRoot();
     if(auto swallower = combatant->getSwallowerPtr())
       {

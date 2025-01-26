@@ -23,13 +23,13 @@
 #include "actions/action_constants.hpp"
 #include "actions/action_plan_strategy.hpp"
 #include "spells/firebolt.hpp"
-#include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 
 namespace enc
 {
 
   class Wildshape;
+  class Effect;
 
   using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
@@ -48,13 +48,6 @@ namespace enc
     //           std::unordered_set<DamageType> immunities = {}, std::unordered_set<DamageType> vulnerabities = {});
 
     ~Combatant();
-
-    bool operator==(const Combatant& other) const;
-    bool operator==(Combatant& other) const;
-
-    bool operator!=(const Combatant& other) const;
-
-    // bool operator==(const std::shared_ptr<Combatant>& other) const;
 
     static constexpr uint32_t fnv1a_32(uint32_t initial, uint32_t value)
     {
@@ -121,33 +114,29 @@ namespace enc
     bool hasAlreadyUsedSpellslotThisTurn() const { return _alreadyUsedSpellslotThisTurn; }
     void setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
-    void setWildshapeForm(const std::shared_ptr<Combatant> &form);
-    void setBaseForm(const std::shared_ptr<Combatant> &form);
+    void setWildshapeForm(Combatant* form);
+    void setBaseForm(Combatant *form);
     Combatant &getCurrentForm();
     Combatant &getBaseForm();
     bool isWildshaped() const;
-    std::shared_ptr<Combatant> getWildshapePtr() const;
-    std::shared_ptr<Combatant> getBaseFormPtr() const;
     bool isBaseForm() const;
-    std::optional<std::weak_ptr<Combatant>> getSwallower() const { return _swallower; }
-    std::shared_ptr<Combatant> getSwallowerPtr() const { return _swallower ? _swallower->lock() : nullptr; }
-    void setSwallower(const std::shared_ptr<Combatant> &swallower) { _swallower = swallower; }
-    bool isSwallowed() const { return _swallower.has_value() && !_swallower.value().expired(); }
+    Combatant *getSwallower() const { return _swallower; }
+    void setSwallower(Combatant *swallower) { _swallower = swallower; }
+    bool isSwallowed() const { return _swallower != nullptr; }
     const std::vector<std::shared_ptr<Condition>> &getConditions() const { return _conditions; }
     const std::vector<std::shared_ptr<ConditionWithDC>> &getDCConditions() const { return _dcConditions; }
     bool isAffectedBy(Conditions condition) const;
     void applyCondition(std::shared_ptr<Condition> condition);
     void applyDCCondition(std::shared_ptr<ConditionWithDC> dcCondition);
-    bool removeCondition(Conditions condition, const std::optional<std::weak_ptr<Combatant>> &initiator = std::nullopt);
-    bool removeDCCondition(Conditions condition, const std::optional<std::weak_ptr<Combatant>> &initiator = std::nullopt);
+    bool removeCondition(Conditions condition, Combatant *initiator = nullptr);
+    bool removeDCCondition(Conditions condition, Combatant *initiator = nullptr);
     void removeAllConditionsOfType(Conditions condition);
-    std::optional<std::weak_ptr<Combatant>> getInitiatorOfCondition(Conditions condition);
-    std::optional<std::weak_ptr<Combatant>> getGrappledTarget();
+    Combatant *getInitiatorOfCondition(Conditions condition);
+    Combatant *getGrappledTarget();
     std::vector<std::weak_ptr<ConditionWithDC>> needsToBreakOutOfGrapple() const;
     bool breakOutOfGrapple(const std::weak_ptr<ConditionWithDC>& grappleCondition);
-    void setConcentrationEffect(std::shared_ptr<Effect> effect);
-    const std::optional<std::weak_ptr<Effect>> &getConcentrationEffect() const { return _concentrationEffect; }
-    std::shared_ptr<Effect> getConcentrationEffectPtr() const { return _concentrationEffect ? _concentrationEffect->lock() : nullptr; }
+    void setConcentrationEffect(Effect *effect);
+    Effect *getConcentrationEffect() const { return _concentrationEffect; }
     void breakConcentration();
     bool isConcentrating() const;
     bool isAffectedByAny(const std::vector<Conditions> &conditions) const;
@@ -467,8 +456,8 @@ namespace enc
      */
 
   private:
-    template <typename ConditionType>
-    std::optional<std::weak_ptr<Combatant>> checkConditionList(const std::vector<std::shared_ptr<ConditionType>> &condList, Conditions condition) const
+
+    template <typename ConditionType> Combatant *checkConditionList(const std::vector<std::shared_ptr<ConditionType>> &condList, Conditions condition)
     {
       for(const auto &cond : condList)
         {
@@ -477,7 +466,7 @@ namespace enc
               return cond->initiator;
             }
         }
-      return std::nullopt;
+      return nullptr;
     }
 
     int doReceiveDmg(int dmg, DamageType dmg_type);
@@ -529,11 +518,11 @@ namespace enc
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
     std::unordered_map<SavingThrow, RollType> _savingThrowsRollTypeMod;
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
-    std::optional<std::weak_ptr<Combatant>> _baseForm;
-    std::optional<std::weak_ptr<Combatant>> _wildshapeForm;
-    std::optional<std::weak_ptr<Combatant>> _swallower;
-    std::optional<std::weak_ptr<Combatant>> _swallowedTarget;
-    std::optional<std::weak_ptr<Combatant>> _constrictedTarget;
+    Combatant *_baseForm{this};
+    Combatant *_wildshapeForm{nullptr};
+    Combatant *_swallower{nullptr};
+    Combatant *_swallowedTarget{nullptr};
+    Combatant *_constrictedTarget{nullptr};
     std::vector<std::shared_ptr<Condition>> _conditions;
     std::vector<std::shared_ptr<ConditionWithDC>> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;
@@ -543,7 +532,7 @@ namespace enc
     std::vector<std::shared_ptr<Actoid>> _actionPlan;
     int _weaponDmgDealtThisTurn = 0; // This is used for ActionSurge
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
-    std::optional<std::weak_ptr<Effect>> _concentrationEffect;
+    Effect *_concentrationEffect{nullptr};
     std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
     std::unique_ptr<blaze::DynamicMatrix<Coord>> _shortestPathsCache = nullptr; // TODO: Do I still need this?
     bool _uncannyDodgeActive = false;
@@ -556,7 +545,4 @@ namespace enc
     int _level;
   };
 
-  inline bool operator==(const std::shared_ptr<Combatant> &lhs, const Combatant &rhs) { return lhs && (lhs->_instanceId == rhs._instanceId); }
-
-  inline bool operator==(const Combatant &lhs, const std::shared_ptr<Combatant> &rhs) { return rhs && (lhs._instanceId == rhs->_instanceId); }
 } // namespace enc

@@ -5,10 +5,10 @@
 namespace enc
 {
 
-  AttackFactory::AttackFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant> &combatant,
-                               AbilityType abilityType, int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange,
-                               int critRange, Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg,
-                               bool usesDex, bool twoHanded, Die toHitBonusDie)
+  AttackFactory::AttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType, int toHit,
+                               std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange, Uses &&ammo,
+                               std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg, bool usesDex, bool twoHanded,
+                               Die toHitBonusDie)
       : DirectThreatFactory(name, abilityName, combatant, abilityType), _toHit(toHit), _dmgDice(dmgDice), _dmgBonus(dmgBonus), _dmgType(dmgType),
         _attackRange(attackRange), _shortRange(attackRange / 4), _critRange(critRange), _ammo(std::move(ammo)), _onHit(std::move(onHit)),
         _extraDmg(extraDmg), _usesDex(usesDex), _twoHanded(twoHanded), _toHitBonusDie(toHitBonusDie)
@@ -84,10 +84,10 @@ namespace enc
     return *this;
   }
 
-  std::vector<std::weak_ptr<Combatant>> AttackFactory::getEligibleTargets() const
+  std::vector<Combatant*> AttackFactory::getEligibleTargets() const
   {
-    auto combatant = _combatant.lock();
-    if(auto swallower = combatant->getSwallowerPtr())
+    auto combatant = _combatant;
+    if(Combatant* swallower = combatant->getSwallower())
       {
         return {swallower};
       }
@@ -117,7 +117,7 @@ namespace enc
         toHitTotal += avgRoll(_toHitBonusDie);
       }
 
-    auto combatant = _combatant.lock();
+    auto combatant = _combatant;
     if(!considerDist || BattleMap::getInstance().getHopDistanceCombatants(*combatant, target) <= _attackRange)
       {
         double acc
@@ -157,7 +157,7 @@ namespace enc
                             _critRange);
       }
 
-    auto combatant = _combatant.lock();
+    auto combatant = _combatant;
     for(const auto &oh : _onHit)
       {
         baseline += calcPHit(baselineToHit, target.getAC()) * oh->calculateThreat(*combatant, target);
@@ -220,7 +220,7 @@ namespace enc
 
   double AttackFactory::calculateMaxThreat() const
   {
-    std::vector<std::weak_ptr<Combatant>> targets = getEligibleTargets();
+    std::vector<Combatant *> targets = getEligibleTargets();
 
     if(targets.empty())
       {
@@ -229,15 +229,12 @@ namespace enc
 
     double maxThreat = std::numeric_limits<double>::lowest();
 
-    for(auto weakTarget : targets)
+    for(Combatant *target : targets)
       {
-        if(auto target = weakTarget.lock())
+        double threat = calculateThreatToTarget(*target, {});
+        if(threat > maxThreat)
           {
-            double threat = calculateThreatToTarget(*target, {});
-            if(threat > maxThreat)
-              {
-                maxThreat = threat;
-              }
+            maxThreat = threat;
           }
         return maxThreat;
       }
@@ -245,12 +242,12 @@ namespace enc
 
   std::string Attack::toString() const
   {
-    auto combatant = _factory.getCombatant().lock();
+    Combatant* combatant = _factory.getCombatant();
 
     std::string formPrefix;
-    if(auto wildshapeForm = combatant->getWildshapePtr())
+    if(combatant->isWildshaped())
       {
-        formPrefix = wildshapeForm->_name + " ";
+        formPrefix = combatant->getCurrentForm()._name + " ";
       }
 
     std::string hastedPrefix = (_abilityType > AbilityType::HASTE_ACTION_DELIMITER && _abilityType < AbilityType::PASSIVE_DELIMITER) ? "Hasted " : "";

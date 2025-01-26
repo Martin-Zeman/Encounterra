@@ -3,8 +3,7 @@
 
 namespace enc
 {
-  CombatantEffect::CombatantEffect(const std::shared_ptr<Combatant> &initiator, const std::vector<std::shared_ptr<Combatant>> &combatants)
-      : Effect(initiator)
+  CombatantEffect::CombatantEffect(Combatant *initiator, const std::vector<Combatant *> &combatants) : Effect(initiator)
   {
     // Convert shared_ptrs to weak_ptrs when storing
     _combatants.reserve(combatants.size());
@@ -16,31 +15,27 @@ namespace enc
 
   bool CombatantEffect::isAffecting(const Combatant &combatant) const
   {
-    for(const auto &weakCombatant : _combatants)
+    for(const auto &cbt : _combatants)
       {
-        if(auto storedCombatant = weakCombatant.lock())
+        if(*cbt == combatant)
           {
-            if(*storedCombatant == combatant)
-              {
-                return true;
-              }
+            return true;
           }
       }
     return false;
   }
 
-  std::vector<std::shared_ptr<Combatant>> CombatantEffect::getCombatants() const
-  {
-    std::vector<std::shared_ptr<Combatant>> result;
-    result.reserve(_combatants.size());
-    for(const auto &weakCombatant : _combatants)
-      {
-        if(auto combatant = weakCombatant.lock())
-          {
-            result.push_back(combatant);
-          }
-      }
-    return result;
-  }
+  const std::vector<Combatant *> &CombatantEffect::getCombatants() const { return _combatants; }
+
+  // std::vector<Combatant *> CombatantEffect::getCombatants() const
+  // {
+  //   std::vector<Combatant *> result;
+  //   result.reserve(_combatants.size());
+  //   for(const auto &combatant : _combatants)
+  //     {
+  //       result.push_back(combatant);
+  //     }
+  //   return result;
+  // }
 
 } // namespace enc

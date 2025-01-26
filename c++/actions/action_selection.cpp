@@ -436,51 +436,51 @@ std::shared_ptr<Actoid> getAction(Combatant &combatant)
   // battleMap.clearCaches();
 
   // Get current form (handles possible wildshape)
-  Combatant &combatant = combatant.getCurrentForm();
+  Combatant &currentForm = combatant.getCurrentForm();
 
   // Handle grapple condition, TODO: Add more intelligence to this
-  auto grappleConditions = combatant.needsToBreakOutOfGrapple();
-  if(!grappleConditions.empty() && combatant.hasAction())
+  auto grappleConditions = currentForm.needsToBreakOutOfGrapple();
+  if(!grappleConditions.empty() && currentForm.hasAction())
     {
       auto factory = std::make_unique<BreakGrappleFactory>(grappleConditions[0]);
       return factory->create(nullptr);
     }
 
   // Handle prone condition
-  if(combatant.isAffectedBy(Conditions::PRONE) && combatant.getMovement() >= combatant.getSpeed() / 2)
+  if(currentForm.isAffectedBy(Conditions::PRONE) && currentForm.getMovement() >= currentForm.getSpeed() / 2)
     {
-      auto factory = std::make_unique<GetUpFactory>(combatant);
+      auto factory = std::make_unique<GetUpFactory>(currentForm);
       return factory->create(nullptr);
     }
 
   // Calculate paths
-  auto [distances, shortestPaths] = battleMap.calcDijkstra(combatant);
-  combatant.setShortestPathsCache(shortestPaths);
+  auto [distances, shortestPaths] = battleMap.calcDijkstra(currentForm);
+  currentForm.setShortestPathsCache(shortestPaths);
 
   // Check existing action plan
-  if(!combatant.getActionPlan().empty())
+  if(!currentForm.getActionPlan().empty())
     {
-      auto firstAction = combatant.getActionPlan().front();
+      auto firstAction = currentForm.getActionPlan().front();
       if(auto *movement = dynamic_cast<MovementIncrement *>(firstAction.get()))
         {
-          if(combatant.getMovement() > 0)
+          if(currentForm.getMovement() > 0)
             {
-              combatant.popActionPlan();
+              currentForm.popActionPlan();
               return firstAction;
             }
         }
     }
 
   // Calculate new action plan
-  auto newPlan = combatant.calculateActionPlan(distances, shortestPaths);
-  combatant.setActionPlan(std::move(newPlan));
+  auto newPlan = currentForm.calculateActionPlan(distances, shortestPaths);
+  currentForm.setActionPlan(std::move(newPlan));
 
-  if(combatant.getActionPlan().empty())
+  if(currentForm.getActionPlan().empty())
     {
       return nullptr; // Either no action possible or all actions already used
     }
 
-  return combatant.popActionPlan();
+  return currentForm.popActionPlan();
 }
 
 } // namespace enc

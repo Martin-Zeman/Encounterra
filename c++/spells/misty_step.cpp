@@ -6,13 +6,13 @@
 namespace enc
 {
 
-  MistyStepFactory::MistyStepFactory(const std::shared_ptr<Combatant> &caster, Resource *resource)
+  MistyStepFactory::MistyStepFactory(Combatant * caster, Resource *resource)
       : ActoidFactory("MistyStepFactory", "Misty Step", caster, AbilityType::MISTY_STEP), _resource(resource)
   {}
 
   std::optional<Coord> MistyStepFactory::getEligibleTargets() const
   {
-    if(_combatant.lock()->getSwallowerPtr())
+    if(_combatant->getSwallowerPtr())
       {
         return std::nullopt;
       }
@@ -71,7 +71,7 @@ namespace enc
   std::optional<CoordVector>
   MistyStep::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
-    auto combatant = _factory._combatant.lock();
+    auto combatant = _factory._combatant;
     if(combatant->getSwallowerPtr())
       {
         return std::nullopt;

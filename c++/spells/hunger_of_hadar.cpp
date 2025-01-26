@@ -11,7 +11,7 @@
 
 namespace enc
 {
-  HungerOfHadarFactory::HungerOfHadarFactory(int dc, AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource)
+  HungerOfHadarFactory::HungerOfHadarFactory(int dc, AbilityType abilityType, Combatant * caster, Resource *resource)
       : DirectThreatFactory("HungerOfHadarFactory", "Hunger of Hadar", caster, abilityType), _dc(dc), _abilityType(abilityType), _resource(resource),
         _savingThrow(SavingThrow::DEX), _dmgDice({{2, 6}})
   {
@@ -21,7 +21,7 @@ namespace enc
   std::vector<std::shared_ptr<Actoid>> HungerOfHadarFactory::createAll(void *previousActionInDag)
   {
     auto &battleMap = BattleMap::getInstance();
-    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(*_combatant.lock(), static_cast<int>(HungerOfHadarFactory::range),
+    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(*_combatant, static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
     return {std::make_shared<HungerOfHadar>(coord, *this)};
   }
@@ -46,7 +46,7 @@ namespace enc
   double HungerOfHadarFactory::calculateMaxThreat() const
   {
     auto &battleMap = BattleMap::getInstance();
-    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(*_combatant.lock(), static_cast<int>(HungerOfHadarFactory::range),
+    auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(*_combatant, static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
     HungerOfHadar effect(coord, *this);
     return effect.calculateThreat({});
@@ -93,13 +93,13 @@ namespace enc
   {
     auto &effectTracker = EffectTracker::getInstance();
     effectTracker.add(Effect::shared_from_this());
-    _factory._combatant.lock()->setConcentrationEffect(Effect::shared_from_this());
+    _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
     // TODO: Make area difficult terrain
   }
 
   void HungerOfHadar::deactivate()
   {
-    _factory._combatant.lock()->breakConcentration();
+    _factory._combatant->breakConcentration();
     // TODO: Remove difficult terrain
   }
 
@@ -155,7 +155,7 @@ namespace enc
   std::optional<CoordVector>
   HungerOfHadar::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
-    auto combatant = _factory._combatant.lock();
+    auto combatant = _factory._combatant;
     if(combatant->getSwallowerPtr())
       {
         return std::nullopt;

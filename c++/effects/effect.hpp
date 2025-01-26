@@ -1,7 +1,8 @@
 #pragma once
 
-#include <memory>
 #include "core/types.hpp"
+#include "core/combatant.hpp"
+#include "core/operator_overloads.hpp"
 
 namespace enc
 {
@@ -38,10 +39,10 @@ namespace enc
     VOW_OF_ENMITY
   };
 
-  class Effect : public std::enable_shared_from_this<Effect>
+  class Effect
   {
   public:
-    explicit Effect(const std::shared_ptr<Combatant>& initiator, const std::shared_ptr<Combatant>& target = nullptr) : _initiator(initiator), _target(target) {}
+    explicit Effect(Combatant *initiator, Combatant *target = nullptr) : _initiator(initiator), _target(target) {}
     virtual ~Effect() = default;
 
     // Pure virtual methods (must be implemented by derived classes)
@@ -70,11 +71,11 @@ namespace enc
     virtual bool newTurn() { return true; }
 
     // Non-virtual methods
-    std::weak_ptr<Combatant> getInitiator() const { return _initiator; }
-    std::shared_ptr<Combatant> getTargetPtr() const { return _target ?  _target->lock() : nullptr; }
+    Combatant *getInitiator() const { return _initiator; }
+    Combatant *getTarget() const { return _target; }
 
   protected:
-    std::weak_ptr<Combatant> _initiator;
-    std::optional<std::weak_ptr<Combatant>> _target; // only relevant for Hide as of now
+    Combatant *_initiator;
+    Combatant *_target{nullptr}; // only relevant for Hide as of now
   };
 }

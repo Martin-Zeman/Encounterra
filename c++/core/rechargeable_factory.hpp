@@ -12,7 +12,7 @@ namespace enc
     int _rechargeValue;
 
   public:
-    RechargeableFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant>& combatant, AbilityType abilityType, int rechargeValue)
+    RechargeableFactory(const std::string &name, const std::string &abilityName, Combatant& combatant, AbilityType abilityType, int rechargeValue)
         : ActoidFactory(name, abilityName, combatant, abilityType), _rechargeValue(rechargeValue)
     {
       setFlag(FactoryFlags::IS_RECHARGE);

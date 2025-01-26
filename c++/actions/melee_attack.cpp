@@ -4,7 +4,7 @@
 
 namespace enc
 {
-  MeleeAttackFactory::MeleeAttackFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant>& combatant, AbilityType abilityType,
+  MeleeAttackFactory::MeleeAttackFactory(const std::string &name, const std::string &abilityName, Combatant& combatant, AbilityType abilityType,
                                          int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange,
                                          Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg, bool usesDex,
                                          bool twoHanded, Die toHitBonusDie)
@@ -34,8 +34,8 @@ namespace enc
     MeleeAttackFactory &factory = dynamic_cast<MeleeAttackFactory &>(getFactory());
     BattleMap &battleMap = BattleMap::getInstance();
 
-    auto combatant = factory._combatant.lock();
-    if(auto swallower = combatant->getSwallowerPtr())
+    auto combatant = factory._combatant;
+    if(Combatant *swallower = combatant->getSwallower())
       {
         if(*swallower == _target)
           {

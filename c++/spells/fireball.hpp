@@ -23,7 +23,7 @@ namespace enc
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Fire;
 
-    FireballFactory(int dc, AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource, bool hasSpellSculpting = false)
+    FireballFactory(int dc, AbilityType abilityType, Combatant * caster, Resource *resource, bool hasSpellSculpting = false)
         : DirectThreatFactory("FireballFactory", "Fireball", caster, abilityType), _dc(dc), _resource(resource),
           _hasSpellSculpting(hasSpellSculpting), _savingThrow(SavingThrow::DEX), _dmgDice({{8, 6}})
     {

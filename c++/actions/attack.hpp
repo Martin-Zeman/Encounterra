@@ -17,7 +17,7 @@ namespace enc
     friend class Attack;
 
   public:
-    AttackFactory(const std::string &name, const std::string &abilityName, const std::shared_ptr<Combatant> &, AbilityType abilityType, int toHit,
+    AttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType, int toHit,
                   std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange = 1, Uses &&ammo = Uses(),
                   std::vector<std::unique_ptr<OnHit>> onHit = {}, std::vector<DmgDieWithType> extraDmg = {}, bool usesDex = false,
                   bool twoHanded = false, Die toHitBonusDie = {});
@@ -33,7 +33,7 @@ namespace enc
     //! This ensures that you get a proper copy of the derived class, even when working with base class pointers.
     virtual std::unique_ptr<AttackFactory> clone() const = 0;
 
-    std::vector<std::weak_ptr<Combatant>> getEligibleTargets() const;
+    std::vector<Combatant*> getEligibleTargets() const;
     std::optional<Resource *> getResource() override { return &_ammo; }
      int getRange() const override { return _attackRange; }
      double calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const override;

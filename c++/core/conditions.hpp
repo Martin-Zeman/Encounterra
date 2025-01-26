@@ -41,12 +41,12 @@ namespace enc
   struct Condition
   {
     Conditions conditionComposite;
-    std::weak_ptr<Combatant> initiator;
-    std::optional<Effect *> effect;
-    std::optional<std::weak_ptr<Combatant>> target; // TODO: wouldn't just optional be enough here?
+    Combatant *initiator;
+    Effect *effect;
+    Combatant *target; // TODO: wouldn't just optional be enough here?
 
-    Condition(Conditions conds, const std::shared_ptr<Combatant>& init, Effect *eff = nullptr, const std::shared_ptr<Combatant>& targ = nullptr)
-        : conditionComposite(conds), initiator(init), effect(eff), target(targ)
+    Condition(Conditions conds, Combatant *init, Effect *eff = nullptr, Combatant *tgt = nullptr)
+        : conditionComposite(conds), initiator(init), effect(eff), target(tgt)
     {}
   };
 
@@ -56,9 +56,9 @@ namespace enc
     int dc;
     PhaseOfTurn phase;
 
-    ConditionWithDC(Conditions conds, SavingThrow savingThrow, int difficultyClass, const std::shared_ptr<Combatant>& init, PhaseOfTurn phaseTurn,
-                    Effect *eff = nullptr, const std::shared_ptr<Combatant>& targ = nullptr)
-        : Condition(conds, init, eff, targ), st(savingThrow), dc(difficultyClass), phase(phaseTurn)
+    ConditionWithDC(Conditions conds, SavingThrow savingThrow, int difficultyClass, Combatant *init, PhaseOfTurn phaseTurn, Effect *eff = nullptr,
+                    Combatant *tgt = nullptr)
+        : Condition(conds, init, eff, tgt), st(savingThrow), dc(difficultyClass), phase(phaseTurn)
     {}
   };
 

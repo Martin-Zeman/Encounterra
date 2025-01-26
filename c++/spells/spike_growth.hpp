@@ -26,7 +26,7 @@ namespace enc
     static constexpr DamageType dmgType = DamageType::Piercing;
 
     //! @todo Can I remove the resource here?
-    SpikeGrowthFactory(AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource);
+    SpikeGrowthFactory(AbilityType abilityType, Combatant * caster, Resource *resource);
 
     Coord findBestArgs() const;
 

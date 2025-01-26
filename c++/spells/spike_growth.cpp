@@ -9,7 +9,7 @@
 namespace enc
 {
 
-  SpikeGrowthFactory::SpikeGrowthFactory(AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource)
+  SpikeGrowthFactory::SpikeGrowthFactory(AbilityType abilityType, Combatant * caster, Resource *resource)
       : DirectThreatFactory("SpikeGrowthFactory", "Spike Growth", caster, abilityType), _abilityType(abilityType), _resource(resource),
         _dmgDice({2, 4})
   {}
@@ -18,7 +18,7 @@ namespace enc
   {
     BattleMap &battleMap = BattleMap::getInstance();
     auto [coord, maxScore, affectedCombatants] = battleMap.findBestPlacementHarmfulCircular(
-      *_combatant.lock(), static_cast<int>(SpikeGrowthFactory::range), TRANSLATE_RADIUS.at(SpikeGrowthFactory::target));
+      *_combatant, static_cast<int>(SpikeGrowthFactory::range), TRANSLATE_RADIUS.at(SpikeGrowthFactory::target));
     return coord;
   }
 
@@ -63,9 +63,9 @@ namespace enc
   {
     BattleMap &battleMap = BattleMap::getInstance();
     Teams &teams = Teams::getInstance();
-    auto combatant = _factory._combatant.lock();
+    auto combatant = _factory._combatant;
 
-    std::vector<std::weak_ptr<Combatant>> affectedCombatants
+    std::vector<Combatant*> affectedCombatants
       = battleMap.getCombatantsAffectedBySphereAoE(*combatant, SpikeGrowthFactory::target, SpellType::HARMFUL, _coord);
 
     double acc = 0.0;
@@ -88,7 +88,7 @@ namespace enc
   std::optional<CoordVector>
   SpikeGrowth::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
-    auto combatant = _factory._combatant.lock();
+    auto combatant = _factory._combatant;
     if(combatant->getSwallowerPtr())
       {
         return std::nullopt;
@@ -110,10 +110,10 @@ namespace enc
 
   void SpikeGrowth::activate(const Kwargs &kwargs)
   {
-    _factory._combatant.lock()->setConcentrationEffect(Effect::shared_from_this());
+    _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
   }
 
-  void SpikeGrowth::deactivate() { _factory._combatant.lock()->breakConcentration(); }
+  void SpikeGrowth::deactivate() { _factory._combatant->breakConcentration(); }
   bool SpikeGrowth::deactivateForCombatant(Combatant &combatant) {
     assert(false);
   }

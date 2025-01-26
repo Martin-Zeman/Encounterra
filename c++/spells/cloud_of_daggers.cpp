@@ -3,7 +3,7 @@
 namespace enc
 {
 
-  CloudOfDaggersFactory::CloudOfDaggersFactory(AbilityType abilityType, const std::shared_ptr<Combatant> &caster, Resource *resource)
+  CloudOfDaggersFactory::CloudOfDaggersFactory(AbilityType abilityType, Combatant *caster, Resource *resource)
       : DirectThreatFactory("CloudOfDaggersFactory", "Cloud of Daggers", caster, abilityType), _abilityType(abilityType), _resource(resource),
         _dmgDice({{4, 4}})
   {}
@@ -33,8 +33,8 @@ namespace enc
   }
 
   CloudOfDaggers::CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory)
-      : Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType), Effect(factory._combatant.lock()),
-        LimitedDurationEffect(factory._combatant.lock(), 100), SphericAoe(coord, TRANSLATE_RADIUS.at(CloudOfDaggersFactory::target)), _coord(coord),
+      : Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType), Effect(factory._combatant),
+        LimitedDurationEffect(factory._combatant, 100), SphericAoe(coord, TRANSLATE_RADIUS.at(CloudOfDaggersFactory::target)), _coord(coord),
         _factory(factory)
   {}
 

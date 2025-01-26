@@ -23,7 +23,7 @@ namespace enc
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::OTHER;
 
-    MistyStepFactory(const std::shared_ptr<Combatant> &caster, Resource *resource);
+    MistyStepFactory(Combatant * caster, Resource *resource);
 
     std::optional<Coord> getEligibleTargets() const;
 
