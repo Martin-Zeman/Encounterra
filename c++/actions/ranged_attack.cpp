@@ -6,7 +6,7 @@
 
 namespace enc
 {
-  RangedAttackFactory::RangedAttackFactory(const std::string &name, const std::string &abilityName, Combatant& combatant, AbilityType abilityType,
+  RangedAttackFactory::RangedAttackFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType,
                                            int toHit, std::vector<Die> dmgDice, int dmgBonus, DamageType dmgType, int attackRange, int critRange,
                                            Uses &&ammo, std::vector<std::unique_ptr<OnHit>> onHit, std::vector<DmgDieWithType> extraDmg, bool usesDex,
                                            bool twoHanded, Die toHitBonusDie)
@@ -23,7 +23,7 @@ namespace enc
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
-        result.push_back(std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *target.lock(), *this));
+        result.push_back(std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *target, *this));
       }
     return result;
   }

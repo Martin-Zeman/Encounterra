@@ -33,7 +33,7 @@ namespace enc
 
   using FactoryCreator = std::function<std::shared_ptr<ActoidFactory>()>;
 
-  class Combatant : public std::enable_shared_from_this<Combatant>
+  class Combatant
   {
   public:
     std::string _name;
@@ -134,7 +134,7 @@ namespace enc
     Combatant *getInitiatorOfCondition(Conditions condition);
     Combatant *getGrappledTarget();
     std::vector<std::weak_ptr<ConditionWithDC>> needsToBreakOutOfGrapple() const;
-    bool breakOutOfGrapple(const std::weak_ptr<ConditionWithDC>& grappleCondition);
+    bool breakOutOfGrapple(ConditionWithDC *grappleCondition);
     void setConcentrationEffect(Effect *effect);
     Effect *getConcentrationEffect() const { return _concentrationEffect; }
     void breakConcentration();
@@ -245,7 +245,7 @@ namespace enc
     std::shared_ptr<ActoidFactory> addDisengage() { return nullptr; }
     std::shared_ptr<ActoidFactory> addFireball() { return nullptr; }
     std::shared_ptr<ActoidFactory> addFirebolt() { 
-      auto factory = std::make_shared<FireboltFactory>(_spellToHit, AbilityType::FIREBOLT, shared_from_this(), _spellslots.get());
+      auto factory = std::make_shared<FireboltFactory>(_spellToHit, AbilityType::FIREBOLT, this, _spellslots.get());
       _actionFactories.emplace_back(factory);
       return factory;
 
@@ -523,8 +523,8 @@ namespace enc
     Combatant *_swallower{nullptr};
     Combatant *_swallowedTarget{nullptr};
     Combatant *_constrictedTarget{nullptr};
-    std::vector<std::shared_ptr<Condition>> _conditions;
-    std::vector<std::shared_ptr<ConditionWithDC>> _dcConditions;
+    std::vector<Condition *> _conditions;
+    std::vector<ConditionWithDC *> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;
     std::shared_ptr<Spellslots> _spellslots;
     std::unordered_map<AbilityType, std::shared_ptr<Resource>> _resources;

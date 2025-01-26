@@ -464,12 +464,11 @@ namespace enc
         if(potentialTarget == combatant._instanceId)
           continue;
 
-        std::weak_ptr<Combatant> weakPotentialTargetCombatant = Teams::getInstance().getCombatantById(potentialTarget);
-        auto potentialTargetCombatant = weakPotentialTargetCombatant.lock();
+        Combatant *potentialTargetCombatant = Teams::getInstance().getCombatantById(potentialTarget);
         if(!potentialTargetCombatant || !potentialTargetCombatant->isAlive())
-        {
-          continue;
-        }
+          {
+            continue;
+          }
 
         DistType dist = distFunc(selfPosition, coord);
         if((Teams::getInstance().*teamFunc)(*potentialTargetCombatant, combatant) && dist < minDist)

@@ -163,7 +163,7 @@ namespace enc
       @return: accumulated threat (negative)
    */
   double getAoeAndAooThreatForIncrement(const CoordVector &currCoordsData, const Coord &increment, const Combatant &combatant,
-                                        const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords, bool disengaged = false,
+                                        const std::unordered_map<AoeEffect*, CoordVector> &effectToCoords, bool disengaged = false,
                                         bool dodged = false);
 
   /**
@@ -177,7 +177,7 @@ namespace enc
       @return: tuple of cumulative threats along the path
    */
   std::vector<double> accumulateThreatAlongPath(const CoordVector &path, Combatant &combatant,
-                                                const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords,
+                                                const std::unordered_map<AoeEffect*, CoordVector> &effectToCoords,
                                                 bool disengaged = false, bool dodged = false);
 
   /**
@@ -189,6 +189,6 @@ namespace enc
       @return: accumulated threat (negative)
    */
   PathSearchResult calcThreatForPathWithMistyStep(const CoordVector &path, const Combatant &combatant,
-                                                  const std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> &effectToCoords);
+                                                  const std::unordered_map<AoeEffect*, CoordVector> &effectToCoords);
 
 } // namespace enc

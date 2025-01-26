@@ -190,56 +190,53 @@ namespace enc
     return resolveByActoidFlags(action, currentForm);
   }
 
-  void resolveEffects(const std::vector<std::weak_ptr<Effect>> &effects, Combatant &combatant)
+  void resolveEffects(const std::vector<Effect *> &effects, Combatant &combatant)
   {
-    for(const auto &weakEffect : effects)
+    for(Effect *effect : effects)
       {
-        if(auto effect = weakEffect.lock())
+        EffectType effectType = effect->getEffectType();
+
+        switch(effectType)
           {
-            EffectType effectType = effect->getEffectType();
+          case EffectType::HASTE:
+          case EffectType::TWINNED_HASTE:
+            combatant.setMovement(combatant.getSpeed() * 2);
+            combatant.setHasHasteAction(true);
+            break;
 
-            switch(effectType)
-              {
-              case EffectType::HASTE:
-              case EffectType::TWINNED_HASTE:
-                combatant.setMovement(combatant.getSpeed() * 2);
-                combatant.setHasHasteAction(true);
-                break;
+          case EffectType::POST_HASTE_LETHARGY:
+            combatant.setMovement(0);
+            combatant.setHasAction(false);
+            combatant.setHasBonusAction(false);
+            combatant.setHasReaction(false);
+            break;
 
-              case EffectType::POST_HASTE_LETHARGY:
-                combatant.setMovement(0);
-                combatant.setHasAction(false);
-                combatant.setHasBonusAction(false);
-                combatant.setHasReaction(false);
-                break;
+          case EffectType::RAGE:
+          case EffectType::TOTEM_RAGE:
+          case EffectType::WILDSHAPE:
+          case EffectType::DODGE:
+          case EffectType::DISENGAGE:
+          case EffectType::RECKLESS_ATTACK:
+          case EffectType::FLAMING_SPHERE:
+          case EffectType::SPIKE_GROWTH:
+          case EffectType::CLOUD_OF_DAGGERS:
+          case EffectType::HUNGER_OF_HADAR:
+          case EffectType::FAERIE_FIRE:
+          case EffectType::HOLD_PERSON:
+          case EffectType::DIGESTION:
+          case EffectType::BLESS:
+          case EffectType::REGENERATION:
+          case EffectType::SLEEP:
+          case EffectType::SHIELD_OF_FAITH:
+          case EffectType::SHILLELAGH:
+          case EffectType::MENACING_ATTACK_FRIGHTENED:
+          case EffectType::VOW_OF_ENMITY:
+          case EffectType::RAY_OF_FROST:
+          case EffectType::PARALYZING_ATTACK_PARALYZED:
+            // TODO: track if the barbarian attacked or received damage
+            break;
 
-              case EffectType::RAGE:
-              case EffectType::TOTEM_RAGE:
-              case EffectType::WILDSHAPE:
-              case EffectType::DODGE:
-              case EffectType::DISENGAGE:
-              case EffectType::RECKLESS_ATTACK:
-              case EffectType::FLAMING_SPHERE:
-              case EffectType::SPIKE_GROWTH:
-              case EffectType::CLOUD_OF_DAGGERS:
-              case EffectType::HUNGER_OF_HADAR:
-              case EffectType::FAERIE_FIRE:
-              case EffectType::HOLD_PERSON:
-              case EffectType::DIGESTION:
-              case EffectType::BLESS:
-              case EffectType::REGENERATION:
-              case EffectType::SLEEP:
-              case EffectType::SHIELD_OF_FAITH:
-              case EffectType::SHILLELAGH:
-              case EffectType::MENACING_ATTACK_FRIGHTENED:
-              case EffectType::VOW_OF_ENMITY:
-              case EffectType::RAY_OF_FROST:
-              case EffectType::PARALYZING_ATTACK_PARALYZED:
-                // TODO: track if the barbarian attacked or received damage
-                break;
-
-              default: std::cerr << "Unknown effect " << static_cast<int>(effectType) << std::endl; break;
-              }
+          default: std::cerr << "Unknown effect " << static_cast<int>(effectType) << std::endl; break;
           }
       }
   }

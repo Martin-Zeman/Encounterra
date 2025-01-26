@@ -69,13 +69,10 @@ namespace enc
       = battleMap.getCombatantsAffectedBySphereAoE(*combatant, SpikeGrowthFactory::target, SpellType::HARMFUL, _coord);
 
     double acc = 0.0;
-    for(auto weakAffectedCombatant : affectedCombatants)
+    for(Combatant *aff : affectedCombatants)
       {
-        if(auto aff = weakAffectedCombatant.lock())
-          {
             double avgDmg = avgRoll(_factory._dmgDice);
             acc += (teams.areEnemies(*combatant, *aff) ? 1.0 : -3.0) * avgDmg;
-          }
       }
     return acc;
   }
@@ -89,7 +86,7 @@ namespace enc
   SpikeGrowth::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     auto combatant = _factory._combatant;
-    if(combatant->getSwallowerPtr())
+    if(combatant->getSwallower())
       {
         return std::nullopt;
       }
@@ -110,7 +107,7 @@ namespace enc
 
   void SpikeGrowth::activate(const Kwargs &kwargs)
   {
-    _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
+    _factory._combatant->setConcentrationEffect(this);
   }
 
   void SpikeGrowth::deactivate() { _factory._combatant->breakConcentration(); }

@@ -38,7 +38,7 @@ namespace enc
   class Wildshape : public Actoid, virtual public CombatantEffect, virtual public ActionEnablerEffect, public DirectThreat
   {
   public:
-    Wildshape(Combatant &combatant, Combatant *form, WildshapeFactory &factory);
+    Wildshape(Combatant *combatant, Combatant *form, WildshapeFactory &factory);
 
     ~Wildshape() override = default;
 

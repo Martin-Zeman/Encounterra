@@ -140,9 +140,9 @@ namespace enc
     return *this;
   }
 
-  bool Combatant::isWildshaped() const { return _wildshapeForm != nullptr; }
+  bool Combatant::isWildshaped() const { return _baseForm != nullptr; }
 
-  bool Combatant::isBaseForm() const { return _baseForm != nullptr; }
+  bool Combatant::isBaseForm() const { return _baseForm == nullptr; }
 
   bool Combatant::isAffectedBy(Conditions condition) const
   {
@@ -277,16 +277,13 @@ namespace enc
     return grappleConditions;
   }
 
-  bool Combatant::breakOutOfGrapple(const std::weak_ptr<ConditionWithDC> &condition)
+  bool Combatant::breakOutOfGrapple(ConditionWithDC *condition)
   {
-    if(auto sharedCond = condition.lock())
+    auto it = std::find(_dcConditions.begin(), _dcConditions.end(), condition);
+    if(it != _dcConditions.end())
       {
-        auto it = std::find(_dcConditions.begin(), _dcConditions.end(), sharedCond);
-        if(it != _dcConditions.end())
-          {
-            _dcConditions.erase(it);
-            return true;
-          }
+        _dcConditions.erase(it);
+        return true;
       }
     return false;
   }

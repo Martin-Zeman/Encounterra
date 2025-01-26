@@ -252,13 +252,15 @@ namespace enc
     for(auto &[action, _] : fsm.getForwardTransitions(0))
       {
         if(action->getAbilityType() == AbilityType::MISTY_STEP)
-          continue;
+          {
+            continue;
+          }
 
-        auto origForm = action->getFactory().getCombatant().lock()->getBaseForm();
-        if(action->getFactory().getCombatant() != origForm->getCurrentForm())
+        Combatant& baseForm = action->getFactory().getCombatant()->getBaseForm();
+        if(baseForm != action->getFactory().getCombatant())
           {
             // Handle wildshape form actions
-            battleMap.withCombatantWildshapeReplacement(*action, origForm, battleMap.getCombatantCoordinates(origForm).getRoot(),
+            battleMap.withCombatantWildshapeReplacement(*action, baseForm, battleMap.getCombatantCoordinates(baseForm).getRoot(),
                                                         [&](Combatant &form) {
                                                           if(auto coords = action->getEligibleCoords(distances, shortestPaths))
                                                             {

@@ -73,8 +73,8 @@ namespace enc
     return 0.0;
   }
 
-  Wildshape::Wildshape(Combatant &combatant, Combatant *form, WildshapeFactory &factory)
-      : Actoid(factory), Effect(combatant), CombatantEffect(combatant, std::vector<std::shared_ptr<Combatant>>{combatant}),
+  Wildshape::Wildshape(Combatant *combatant, Combatant *form, WildshapeFactory &factory)
+      : Actoid(factory), Effect(combatant), CombatantEffect(combatant, std::vector<Combatant*>{combatant}),
         ActionEnablerEffect(combatant), _form(std::move(form)), _factory(factory)
   {
     _form->setBaseForm(combatant);
@@ -94,16 +94,16 @@ namespace enc
     effectTracker.add(this);
 
     Teams &teams = Teams::getInstance();
-    teams.replaceCombatant(*initiatorPtr, *_form.get());
+    teams.replaceCombatant(*initiatorPtr, *_form);
     auto wildshapeCoord = battleMap.findWildshapedCoordinate(*initiatorPtr, _form->getSize());
     if(!wildshapeCoord.has_value())
       {
         throw std::runtime_error("No space for the wildshape form!");
       }
     battleMap.removeCombatant(*initiatorPtr);
-    battleMap.setCombatantCoordinates(*_form.get(), wildshapeCoord.value());
+    battleMap.setCombatantCoordinates(*_form, wildshapeCoord.value());
 
-    initiatorPtr->setWildshapeForm(_form.get());
+    initiatorPtr->setWildshapeForm(_form);
     _form->setCurrentHp(_form->getMaxHp());
     _form->setMovement(std::max(0, _form->getSpeed() - (initiatorPtr->getSpeed() - initiatorPtr->getMovement())));
 
@@ -131,7 +131,7 @@ namespace enc
     _form->setHasBonusAction(initiatorPtr->hasBonusAction());
     _form->setHasHasteAction(initiatorPtr->hasHasteAction());
     _form->setHasReaction(initiatorPtr->hasReaction());
-    _form->setConcentrationEffect(initiatorPtr->getConcentrationEffect().lock());
+    _form->setConcentrationEffect(initiatorPtr->getConcentrationEffect());
 
     // Transfer eligible factories
     transferFactories();
@@ -141,46 +141,46 @@ namespace enc
   {
     auto &battleMap = BattleMap::getInstance();
     Combatant *initiator = getInitiator();
-    Combatant *currentForm = initiator->getCurrentWildshapeForm();
+    Combatant &currentForm = initiator->getCurrentForm();
 
-    currentForm->onDie();
+    currentForm.onDie();
     Teams &teams = Teams::getInstance();
-    teams.replaceCombatant(*currentForm, *initiator);
+    teams.replaceCombatant(currentForm, *initiator);
 
-    auto position = battleMap.getCombatantCoordinates(*currentForm);
-    battleMap.removeCombatant(*currentForm);
+    auto position = battleMap.getCombatantCoordinates(currentForm);
+    battleMap.removeCombatant(currentForm);
     battleMap.setCombatantCoordinates(*initiator, position.getRoot());
 
-    initiator->setMovement(std::min(initiator->getSpeed(), currentForm->getMovement()));
+    initiator->setMovement(std::min(initiator->getSpeed(), currentForm.getMovement()));
     // Copy ALL saving throw modifiers back to the original form before clearing them
     static const std::array<SavingThrow, 6> ALL_SAVES
       = {SavingThrow::STR, SavingThrow::DEX, SavingThrow::CON, SavingThrow::INT, SavingThrow::WIS, SavingThrow::CHA};
 
     for(SavingThrow save : ALL_SAVES)
       {
-        const auto &flatMods = currentForm->getSavingThrowFlatMods(save);
+        const auto &flatMods = currentForm.getSavingThrowFlatMods(save);
         for(int mod : flatMods)
           {
             initiator->addSavingThrowFlatMod(save, mod);
           }
-        const auto &diceMods = currentForm->getSavingThrowDiceMods(save);
+        const auto &diceMods = currentForm.getSavingThrowDiceMods(save);
         for(const Die &die : diceMods)
           {
             initiator->addSavingThrowDiceMod(save, die);
           }
-        RollType rollTypeMods = currentForm->getSavingThrowRollTypeMods(save);
+        RollType rollTypeMods = currentForm.getSavingThrowRollTypeMods(save);
         initiator->setSavingThrowRollTypeMod(save, rollTypeMods);
-        currentForm->clearSavingThrowFlatMods(save);
-        currentForm->clearSavingThrowDiceMods(save);
-        currentForm->clearSavingThrowRollTypeMods(save);
+        currentForm.clearSavingThrowFlatMods(save);
+        currentForm.clearSavingThrowDiceMods(save);
+        currentForm.clearSavingThrowRollTypeMods(save);
       }
     initiator->setWildshapeForm(nullptr);
 
     // Copy back action states
-    initiator->setHasAction(currentForm->hasAction());
-    initiator->setHasBonusAction(currentForm->hasBonusAction());
-    initiator->setHasHasteAction(currentForm->hasHasteAction());
-    initiator->setHasReaction(currentForm->hasReaction());
+    initiator->setHasAction(currentForm.hasAction());
+    initiator->setHasBonusAction(currentForm.hasBonusAction());
+    initiator->setHasHasteAction(currentForm.hasHasteAction());
+    initiator->setHasReaction(currentForm.hasReaction());
 
     // Reset factories
     restoreFactories();
@@ -195,7 +195,7 @@ namespace enc
   void Wildshape::enable()
   {
     Combatant *initiator = getInitiator();
-    initiator->setWildshapeForm(_form.get());
+    initiator->setWildshapeForm(_form);
 
     _form->setHasAction(initiator->hasAction());
     _form->setHasBonusAction(initiator->hasBonusAction());
@@ -298,7 +298,7 @@ namespace enc
 
         return eligibleCoords;
       }
-    else if(auto coord = battleMap.findWildshapedCoordinate(initiator, _form->getSize()))
+    else if(auto coord = battleMap.findWildshapedCoordinate(*initiator, _form->getSize()))
       {
         return battleMap.getCombatantCoordinates(*initiator).get();
       }
@@ -337,7 +337,7 @@ namespace enc
         if(factory->hasFlag(FactoryFlags::TRANSITIONS_TO_WILDSHAPE))
           {
             auto factoryCopy = factory;
-            factoryCopy->setCombatant(_form.get());
+            factoryCopy->setCombatant(_form);
             targetFactories.push_back(std::move(factoryCopy));
           }
       }

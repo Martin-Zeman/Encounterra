@@ -92,8 +92,8 @@ namespace enc
   void HungerOfHadar::activate(const Kwargs &kwargs)
   {
     auto &effectTracker = EffectTracker::getInstance();
-    effectTracker.add(Effect::shared_from_this());
-    _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
+    effectTracker.add(this);
+    _factory._combatant->setConcentrationEffect(this);
     // TODO: Make area difficult terrain
   }
 

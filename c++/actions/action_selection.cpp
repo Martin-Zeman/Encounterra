@@ -141,14 +141,11 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
   auto &battleMap = BattleMap::getInstance();
 
   // Get effect to coords mapping
-  std::unordered_map<std::shared_ptr<AoeEffect>, CoordVector> effectToCoords;
+  std::unordered_map<AoeEffect *, CoordVector> effectToCoords;
   auto &effectTracker = EffectTracker::getInstance();
-  for(const auto &weakEffect : effectTracker.getAoeEffects())
+  for(AoeEffect *effect : effectTracker.getAoeEffects())
     {
-      if(auto effect = weakEffect.lock())
-        {
-          effectToCoords[effect] = effect->getAffectedCoords();
-        }
+      effectToCoords[effect] = effect->getAffectedCoords();
     }
 
   // We'll need these for tracking sequences and their threats
@@ -372,14 +369,11 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
                         }
 
                       // Add threats from existing modifiers
-                      for(const auto &weakEffect : effectTracker.getAffectingCombatant(combatant))
+                      for(Effect *effect : effectTracker.getAffectingCombatant(combatant))
                         {
-                          if(auto effect = weakEffect.lock())
+                          if(auto modifier = std::dynamic_pointer_cast<AttackThreatModifier>(effect))
                             {
-                              if(auto modifier = std::dynamic_pointer_cast<AttackThreatModifier>(effect))
-                                {
-                                  threatAcc += modifier->calculateThreatForAttack(combatant, action.get(), {});
-                                }
+                              threatAcc += modifier->calculateThreatForAttack(combatant, action.get(), {});
                             }
                         }
 
